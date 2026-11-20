@@ -1,328 +1,38 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-clustered: Clustered Heatmap
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-09
 """
 
 import os
-import sys
 
 import numpy as np
+import pandas as pd
+from pygal.graph.graph import Graph
+from pygal.style import Style
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import pdist
 
 
-THEME = os.getenv("ANYPLOT_THEME", "light")
-
-# Temporarily remove current directory from path to avoid name collision
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
-
-from pygal.graph.graph import Graph  # noqa: E402
-from pygal.style import Style  # noqa: E402
-
-
-# Restore path
-sys.path.insert(0, _cwd)
-
 # Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-class ClusteredHeatmap(Graph):
-    """Custom Clustered Heatmap for pygal - displays matrix with hierarchical clustering dendrograms."""
+# Constants
+# imprint_div: blue (low) -> theme-adaptive midpoint -> matte red (high), centered on zero
+DIVERGING_STOPS = ["#4467A3", PAGE_BG, "#AE3030"]
 
-    def __init__(self, *args, **kwargs):
-        self.matrix_data = kwargs.pop("matrix_data", [])
-        self.row_labels = kwargs.pop("row_labels", [])
-        self.col_labels = kwargs.pop("col_labels", [])
-        self.colormap = kwargs.pop("colormap", [])
-        self.show_values = kwargs.pop("show_values", False)
-        self.row_linkage = kwargs.pop("row_linkage", None)
-        self.col_linkage = kwargs.pop("col_linkage", None)
-        self.row_order = kwargs.pop("row_order", None)
-        self.col_order = kwargs.pop("col_order", None)
-        self.colorbar_label = kwargs.pop("colorbar_label", "Value")
-        super().__init__(*args, **kwargs)
+# Columns: set these to your table's labels
+ROW_AXIS = "Drugs"  # role: row_labels
+COL_AXIS = "Cell lines"  # role: column_labels
+VALUE = "log IC50 (µM)"  # role: matrix
 
-    def _interpolate_color(self, value, min_val, max_val):
-        """Interpolate color for diverging colormap."""
-        if max_val == min_val:
-            return self.colormap[len(self.colormap) // 2]
-
-        normalized = (value - min_val) / (max_val - min_val)
-        normalized = max(0, min(1, normalized))
-
-        pos = normalized * (len(self.colormap) - 1)
-        idx1 = int(pos)
-        idx2 = min(idx1 + 1, len(self.colormap) - 1)
-        frac = pos - idx1
-
-        c1 = self.colormap[idx1]
-        c2 = self.colormap[idx2]
-
-        r1, g1, b1 = int(c1[1:3], 16), int(c1[3:5], 16), int(c1[5:7], 16)
-        r2, g2, b2 = int(c2[1:3], 16), int(c2[3:5], 16), int(c2[5:7], 16)
-
-        r = int(r1 + (r2 - r1) * frac)
-        g = int(g1 + (g2 - g1) * frac)
-        b = int(b1 + (b2 - b1) * frac)
-
-        return f"#{r:02x}{g:02x}{b:02x}"
-
-    def _get_text_color(self, bg_color):
-        """Get contrasting text color based on background brightness."""
-        r, g, b = int(bg_color[1:3], 16), int(bg_color[3:5], 16), int(bg_color[5:7], 16)
-        brightness = (r * 299 + g * 587 + b * 114) / 1000
-        return "#ffffff" if brightness < 140 else INK
-
-    def _draw_dendrogram(self, group, linkage_matrix, x_offset, y_offset, width, height, orientation="left"):
-        """Draw dendrogram from hierarchical clustering linkage matrix."""
-        if linkage_matrix is None or len(linkage_matrix) == 0:
-            return
-
-        dend = dendrogram(linkage_matrix, no_plot=True, orientation=orientation)
-
-        icoord = np.array(dend["icoord"])
-        dcoord = np.array(dend["dcoord"])
-
-        max_d = dcoord.max() if dcoord.max() > 0 else 1
-        n_leaves = len(dend["leaves"])
-        stroke_width = 3
-
-        for i in range(len(icoord)):
-            if orientation in ("left", "right"):
-                xs = dcoord[i] / max_d * width
-                ys = (icoord[i] / (n_leaves * 10)) * height
-
-                if orientation == "left":
-                    xs = width - xs
-
-                path_data = f"M {x_offset + xs[0]} {y_offset + ys[0]} "
-                for j in range(1, 4):
-                    path_data += f"L {x_offset + xs[j]} {y_offset + ys[j]} "
-
-            else:
-                xs = (icoord[i] / (n_leaves * 10)) * width
-                ys = dcoord[i] / max_d * height
-
-                if orientation == "top":
-                    ys = height - ys
-
-                path_data = f"M {x_offset + xs[0]} {y_offset + ys[0]} "
-                for j in range(1, 4):
-                    path_data += f"L {x_offset + xs[j]} {y_offset + ys[j]} "
-
-            path = self.svg.node(group, "path")
-            path.set("d", path_data)
-            path.set("fill", "none")
-            path.set("stroke", INK_SOFT)
-            path.set("stroke-width", str(stroke_width))
-
-    def _plot(self):
-        """Draw the clustered heatmap with dendrograms."""
-        if not self.matrix_data:
-            return
-
-        matrix = np.array(self.matrix_data)
-        if self.row_order is not None:
-            matrix = matrix[self.row_order, :]
-            reordered_row_labels = [self.row_labels[i] for i in self.row_order]
-        else:
-            reordered_row_labels = self.row_labels
-
-        if self.col_order is not None:
-            matrix = matrix[:, self.col_order]
-            reordered_col_labels = [self.col_labels[i] for i in self.col_order]
-        else:
-            reordered_col_labels = self.col_labels
-
-        n_rows, n_cols = matrix.shape
-
-        min_val = matrix.min()
-        max_val = matrix.max()
-        abs_max = max(abs(min_val), abs(max_val))
-        min_val, max_val = -abs_max, abs_max
-
-        plot_width = self.view.width
-        plot_height = self.view.height
-
-        axis_label_width = 80
-        row_dend_width = 280
-        col_dend_height = 180
-        label_margin_left = 280
-        label_margin_bottom = 300
-        label_margin_top = 80
-        colorbar_width = 180
-
-        heatmap_x = axis_label_width + row_dend_width + label_margin_left
-        heatmap_width = plot_width - heatmap_x - colorbar_width - 20
-        heatmap_height = plot_height - col_dend_height - label_margin_bottom - label_margin_top
-
-        cell_width = heatmap_width / n_cols
-        cell_height = heatmap_height / n_rows
-
-        plot_node = self.nodes["plot"]
-        heatmap_group = self.svg.node(plot_node, class_="clustered-heatmap")
-
-        self._draw_dendrogram(
-            heatmap_group,
-            self.row_linkage,
-            self.view.x(0) + axis_label_width + 40,
-            self.view.y(n_rows) + label_margin_top,
-            row_dend_width - 40,
-            heatmap_height,
-            orientation="left",
-        )
-
-        self._draw_dendrogram(
-            heatmap_group,
-            self.col_linkage,
-            self.view.x(0) + heatmap_x,
-            self.view.y(n_rows) + heatmap_height + label_margin_top + 10,
-            heatmap_width,
-            col_dend_height,
-            orientation="bottom",
-        )
-
-        row_font_size = min(38, int(cell_height * 0.7))
-        for i, label in enumerate(reordered_row_labels):
-            x = self.view.x(0) + heatmap_x - 15
-            y = self.view.y(n_rows) + label_margin_top + i * cell_height + cell_height / 2
-            text_node = self.svg.node(heatmap_group, "text", x=x, y=y + row_font_size * 0.35)
-            text_node.set("text-anchor", "end")
-            text_node.set("fill", INK)
-            text_node.set("style", f"font-size:{row_font_size}px;font-weight:600;font-family:sans-serif")
-            text_node.text = label
-
-        col_font_size = min(30, int(cell_width * 0.5))
-        for j, label in enumerate(reordered_col_labels):
-            x = self.view.x(0) + heatmap_x + j * cell_width + cell_width / 2
-            y = self.view.y(n_rows) + label_margin_top + heatmap_height + col_dend_height + 25
-            text_node = self.svg.node(heatmap_group, "text", x=x, y=y)
-            text_node.set("text-anchor", "start")
-            text_node.set("fill", INK)
-            text_node.set("style", f"font-size:{col_font_size}px;font-weight:600;font-family:sans-serif")
-            text_node.set("transform", f"rotate(45, {x}, {y})")
-            text_node.text = label
-
-        value_font_size = min(28, int(min(cell_width, cell_height) * 0.35))
-        for i in range(n_rows):
-            for j in range(n_cols):
-                value = matrix[i, j]
-                color = self._interpolate_color(value, min_val, max_val)
-
-                x = self.view.x(0) + heatmap_x + j * cell_width
-                y = self.view.y(n_rows) + label_margin_top + i * cell_height
-
-                rect = self.svg.node(
-                    heatmap_group, "rect", x=x, y=y, width=cell_width - 1, height=cell_height - 1, rx=2, ry=2
-                )
-                rect.set("fill", color)
-                rect.set("stroke", PAGE_BG)
-                rect.set("stroke-width", "1")
-
-                if self.show_values:
-                    text_color = self._get_text_color(color)
-                    text_x = x + cell_width / 2
-                    text_y = y + cell_height / 2 + value_font_size * 0.35
-
-                    text_node = self.svg.node(heatmap_group, "text", x=text_x, y=text_y)
-                    text_node.set("text-anchor", "middle")
-                    text_node.set("fill", text_color)
-                    text_node.set("style", f"font-size:{value_font_size}px;font-weight:bold;font-family:sans-serif")
-                    text_node.text = f"{value:.1f}"
-
-        colorbar_bar_width = 45
-        colorbar_height = heatmap_height * 0.75
-        colorbar_x = self.view.x(0) + heatmap_x + heatmap_width + 40
-        colorbar_y = self.view.y(n_rows) + label_margin_top + (heatmap_height - colorbar_height) / 2
-
-        n_segments = 60
-        segment_height = colorbar_height / n_segments
-        for seg_i in range(n_segments):
-            seg_value = max_val - (max_val - min_val) * seg_i / (n_segments - 1)
-            seg_color = self._interpolate_color(seg_value, min_val, max_val)
-            seg_y = colorbar_y + seg_i * segment_height
-
-            self.svg.node(
-                heatmap_group,
-                "rect",
-                x=colorbar_x,
-                y=seg_y,
-                width=colorbar_bar_width,
-                height=segment_height + 1,
-                fill=seg_color,
-            )
-
-        self.svg.node(
-            heatmap_group,
-            "rect",
-            x=colorbar_x,
-            y=colorbar_y,
-            width=colorbar_bar_width,
-            height=colorbar_height,
-            fill="none",
-            stroke=INK_SOFT,
-            stroke_width="2",
-        )
-
-        cb_label_size = 32
-        for val, y_pos in [
-            (max_val, colorbar_y),
-            (0, colorbar_y + colorbar_height / 2),
-            (min_val, colorbar_y + colorbar_height),
-        ]:
-            text_node = self.svg.node(
-                heatmap_group, "text", x=colorbar_x + colorbar_bar_width + 12, y=y_pos + cb_label_size * 0.35
-            )
-            text_node.set("fill", INK)
-            text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
-            text_node.text = f"{val:+.1f}"
-
-        cb_title_size = 36
-        cb_title_x = colorbar_x + colorbar_bar_width / 2
-        cb_title_y = colorbar_y - 25
-        text_node = self.svg.node(heatmap_group, "text", x=cb_title_x, y=cb_title_y)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", INK)
-        text_node.set("style", f"font-size:{cb_title_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = self.colorbar_label
-
-        axis_label_size = 48
-        genes_label_x = self.view.x(0) + 50
-        genes_label_y = self.view.y(n_rows) + label_margin_top + heatmap_height / 2
-        genes_text = self.svg.node(heatmap_group, "text", x=genes_label_x, y=genes_label_y)
-        genes_text.set("text-anchor", "middle")
-        genes_text.set("fill", INK)
-        genes_text.set("style", f"font-size:{axis_label_size}px;font-weight:bold;font-family:sans-serif")
-        genes_text.set("transform", f"rotate(-90, {genes_label_x}, {genes_label_y})")
-        genes_text.text = "Drugs"
-
-        samples_label_x = self.view.x(0) + heatmap_x + heatmap_width / 2
-        samples_label_y = (
-            self.view.y(n_rows) + label_margin_top + heatmap_height + col_dend_height + label_margin_bottom - 40
-        )
-        samples_text = self.svg.node(heatmap_group, "text", x=samples_label_x, y=samples_label_y)
-        samples_text.set("text-anchor", "middle")
-        samples_text.set("fill", INK)
-        samples_text.set("style", f"font-size:{axis_label_size}px;font-weight:bold;font-family:sans-serif")
-        samples_text.text = "Cell Lines"
-
-    def _compute(self):
-        """Compute the box for rendering."""
-        n_rows = len(self.matrix_data) if self.matrix_data else 1
-        n_cols = len(self.matrix_data[0]) if self.matrix_data and len(self.matrix_data) > 0 else 1
-        self._box.xmin = 0
-        self._box.xmax = n_cols
-        self._box.ymin = 0
-        self._box.ymax = n_rows
-
-
-# Data: Cell-line drug sensitivity (IC50 values) - different domain from tumor/normal gene expression
+# Data: replace this block with your own labeled matrix, for example df = pd.read_csv("ic50.csv", index_col=0)
 np.random.seed(42)
 
 drugs = [
@@ -339,62 +49,197 @@ drugs = [
     "Gefitinib",
     "Lapatinib",
 ]
-
 cell_lines = ["A549", "HCT116", "HT29", "MCF7", "MDA231", "OVCAR3", "SKOV3", "SW480", "U87", "KHOS"]
 
-n_drugs = len(drugs)
-n_lines = len(cell_lines)
+sensitivity_data = np.zeros((len(drugs), len(cell_lines)))
 
-sensitivity_data = np.zeros((n_drugs, n_lines))
-
-# Chemotherapy drugs (Paclitaxel, Doxorubicin, Cisplatin, Gemcitabine, 5-FU, Irinotecan)
-# Higher sensitivity (lower IC50) in epithelial-origin lung/colon lines
+# Chemotherapy drugs: sensitive epithelial lines, resistant mesenchymal lines
 chemo_drugs = [0, 1, 2, 3, 4, 5]
 epithelial_lines = [0, 1, 2, 7]
 mesenchymal_lines = [3, 4]
-
 for i in chemo_drugs:
     for j in epithelial_lines:
-        sensitivity_data[i, j] = np.random.randn() * 0.6 - 1.2  # High sensitivity
+        sensitivity_data[i, j] = np.random.randn() * 0.6 - 1.2
     for j in mesenchymal_lines:
-        sensitivity_data[i, j] = np.random.randn() * 0.6 + 0.9  # Low sensitivity
+        sensitivity_data[i, j] = np.random.randn() * 0.6 + 0.9
     for j in [5, 6, 8, 9]:
-        sensitivity_data[i, j] = np.random.randn() * 0.7  # Moderate
+        sensitivity_data[i, j] = np.random.randn() * 0.7
 
-# Targeted drugs (Bortezomib, Sorafenib, Sunitinib, Erlotinib, Gefitinib, Lapatinib)
+# Targeted drugs: sensitive EGFR-mutant lines, weaker elsewhere
 targeted_drugs = [6, 7, 8, 9, 10, 11]
 for i in targeted_drugs:
     for j in [8, 9]:
-        sensitivity_data[i, j] = np.random.randn() * 0.5 - 1.3  # EGFR-mutant lines
+        sensitivity_data[i, j] = np.random.randn() * 0.5 - 1.3
     for j in [0, 1, 2, 3]:
-        sensitivity_data[i, j] = np.random.randn() * 0.5 + 0.5  # Lower sensitivity
+        sensitivity_data[i, j] = np.random.randn() * 0.5 + 0.5
     for j in [4, 5, 6, 7]:
-        sensitivity_data[i, j] = np.random.randn() * 0.6  # Variable
+        sensitivity_data[i, j] = np.random.randn() * 0.6
 
-row_linkage = linkage(pdist(sensitivity_data), method="ward")
-col_linkage = linkage(pdist(sensitivity_data.T), method="ward")
+df = pd.DataFrame(sensitivity_data, index=pd.Index(drugs, name=ROW_AXIS), columns=pd.Index(cell_lines, name=COL_AXIS))
 
-row_dend = dendrogram(row_linkage, no_plot=True)
-col_dend = dendrogram(col_linkage, no_plot=True)
-row_order = row_dend["leaves"]
-col_order = col_dend["leaves"]
 
-matrix_data = sensitivity_data.tolist()
+# Plot: reads only df and the constants above
+def lerp_color(stops, t):
+    """Piecewise-linear interpolation through hex color stops, t in [0, 1]."""
+    pos = min(max(t, 0.0), 1.0) * (len(stops) - 1)
+    k = min(int(pos), len(stops) - 2)
+    frac = pos - k
+    c0, c1 = stops[k], stops[k + 1]
+    rgb = [round(int(c0[i : i + 2], 16) + (int(c1[i : i + 2], 16) - int(c0[i : i + 2], 16)) * frac) for i in (1, 3, 5)]
+    return "#{:02x}{:02x}{:02x}".format(*rgb)
 
-# Diverging colormap: blue (low sensitivity/high IC50) -> white (neutral) -> red (high sensitivity/low IC50)
-diverging_colormap = [
-    "#0d47a1",
-    "#1565c0",
-    "#1e88e5",
-    "#42a5f5",
-    "#90caf9",
-    "#e3f2fd",
-    "#ffebee",
-    "#ffcdd2",
-    "#ef9a9a",
-    "#e53935",
-    "#c62828",
-]
+
+row_linkage = linkage(pdist(df.to_numpy()), method="ward")
+col_linkage = linkage(pdist(df.T.to_numpy()), method="ward")
+row_order = dendrogram(row_linkage, no_plot=True)["leaves"]
+col_order = dendrogram(col_linkage, no_plot=True)["leaves"]
+table = df.iloc[row_order, col_order]
+
+limit = float(np.nanmax(np.abs(table.to_numpy())))
+n_rows, n_cols = table.shape
+
+
+class ClusteredHeatmap(Graph):
+    """pygal has no clustered heatmap: this Graph subclass draws it as SVG inside the plot node."""
+
+    def __init__(self, *args, **kwargs):
+        self.table = kwargs.pop("table")
+        self.row_linkage = kwargs.pop("row_linkage")
+        self.col_linkage = kwargs.pop("col_linkage")
+        super().__init__(*args, **kwargs)
+
+    def _text(self, group, x, y, text, size, anchor="start", weight="normal", fill=INK, transform=None):
+        node = self.svg.node(group, "text", x=x, y=y)
+        node.set("text-anchor", anchor)
+        node.set("fill", fill)
+        node.set("style", f"font-size:{size}px;font-weight:{weight};font-family:sans-serif")
+        if transform:
+            node.set("transform", transform)
+        node.text = text
+
+    def _dendrogram(self, group, link, x0, y0, width, height, rows):
+        """Draw a dendrogram: root far from the matrix, leaves touching it."""
+        dend = dendrogram(link, no_plot=True)
+        icoord, dcoord = np.array(dend["icoord"]), np.array(dend["dcoord"])
+        leaf = icoord / (len(dend["leaves"]) * 10)
+        depth = dcoord / dcoord.max()
+        for lf, dp in zip(leaf, depth, strict=True):
+            if rows:  # leaves on the right edge, root on the left
+                points = [(x0 + width * (1 - d), y0 + height * p) for p, d in zip(lf, dp, strict=True)]
+            else:  # leaves on the bottom edge, root on top
+                points = [(x0 + width * p, y0 + height * (1 - d)) for p, d in zip(lf, dp, strict=True)]
+            path = self.svg.node(group, "path")
+            path.set("d", "M " + " L ".join(f"{px:.1f} {py:.1f}" for px, py in points))
+            path.set("fill", "none")
+            path.set("stroke", INK_SOFT)
+            path.set("stroke-width", "4")
+            path.set("stroke-linejoin", "round")
+
+    def _plot(self):
+        values = self.table.to_numpy()
+        rows, cols = values.shape
+        group = self.svg.node(self.nodes["plot"], class_="clustered-heatmap")
+
+        # Layout in plot-area pixels: axis title | row dendrogram | row labels | cells | colorbar
+        row_font, col_font, axis_font = 46, 42, 54
+        label_w = int(max(len(str(r)) for r in self.table.index) * row_font * 0.58) + 24
+        ylabel_w, row_dend_w, colorbar_w = 70, 250, 50
+        right_w = colorbar_w + 190
+        col_dend_h = 200
+        bottom_h = 150 + axis_font + 40
+        heat_x = ylabel_w + row_dend_w + label_w
+        heat_w = self.view.width - heat_x - right_w
+        heat_y = col_dend_h + 10
+        heat_h = self.view.height - heat_y - bottom_h
+        cell_w, cell_h = heat_w / cols, heat_h / rows
+
+        self._dendrogram(group, self.row_linkage, ylabel_w, heat_y, row_dend_w - 20, heat_h, rows=True)
+        self._dendrogram(group, self.col_linkage, heat_x, 0, heat_w, col_dend_h, rows=False)
+
+        for i, name in enumerate(self.table.index):
+            self._text(
+                group,
+                heat_x - 16,
+                heat_y + (i + 0.5) * cell_h + row_font * 0.35,
+                str(name),
+                row_font,
+                anchor="end",
+                weight="600",
+            )
+
+        for j, name in enumerate(self.table.columns):
+            x, y = heat_x + (j + 0.5) * cell_w, heat_y + heat_h + 36
+            self._text(group, x, y, str(name), col_font, weight="600", transform=f"rotate(45, {x:.1f}, {y:.1f})")
+
+        for i in range(rows):
+            for j in range(cols):
+                value = values[i, j]
+                fill = "none" if np.isnan(value) else lerp_color(DIVERGING_STOPS, (value / limit + 1) / 2)
+                rect = self.svg.node(
+                    group,
+                    "rect",
+                    x=heat_x + j * cell_w,
+                    y=heat_y + i * cell_h,
+                    width=cell_w - 2,
+                    height=cell_h - 2,
+                    rx=4,
+                    ry=4,
+                )
+                rect.set("fill", fill)
+
+        # Colorbar: top = +limit, bottom = -limit
+        bar_h = heat_h * 0.75
+        bar_x, bar_y = heat_x + heat_w + 50, heat_y + (heat_h - bar_h) / 2
+        n_seg = 80
+        for s in range(n_seg):
+            t = 1 - s / (n_seg - 1)
+            self.svg.node(
+                group,
+                "rect",
+                x=bar_x,
+                y=bar_y + s * bar_h / n_seg,
+                width=colorbar_w,
+                height=bar_h / n_seg + 1,
+                fill=lerp_color(DIVERGING_STOPS, t),
+            )
+        self.svg.node(
+            group,
+            "rect",
+            x=bar_x,
+            y=bar_y,
+            width=colorbar_w,
+            height=bar_h,
+            fill="none",
+            stroke=INK_SOFT,
+            stroke_width="2",
+        )
+        for val, y in [(limit, bar_y), (0, bar_y + bar_h / 2), (-limit, bar_y + bar_h)]:
+            self._text(group, bar_x + colorbar_w + 14, y + 13, f"{val:+.1f}", 36)
+        title_x, title_y = bar_x + colorbar_w + 14 + 115, bar_y + bar_h / 2
+        self._text(
+            group,
+            title_x,
+            title_y,
+            VALUE,
+            40,
+            anchor="middle",
+            weight="bold",
+            transform=f"rotate(90, {title_x:.1f}, {title_y:.1f})",
+        )
+
+        # Axis titles
+        x, y = 28, heat_y + heat_h / 2
+        self._text(
+            group, x, y, ROW_AXIS, axis_font, anchor="middle", weight="bold", transform=f"rotate(-90, {x}, {y:.1f})"
+        )
+        self._text(
+            group, heat_x + heat_w / 2, self.view.height - 10, COL_AXIS, axis_font, anchor="middle", weight="bold"
+        )
+
+    def _compute(self):
+        self._box.xmin, self._box.xmax = 0, self.table.shape[1]
+        self._box.ymin, self._box.ymax = 0, self.table.shape[0]
+
 
 custom_style = Style(
     background=PAGE_BG,
@@ -402,39 +247,28 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_SOFT,
-    colors=("#009E73",),
-    title_font_size=28,
-    label_font_size=18,
-    major_label_font_size=16,
-    legend_font_size=16,
-    value_font_size=14,
+    colors=IMPRINT_PALETTE,
+    title_font_size=60,
+    label_font_size=44,
+    major_label_font_size=40,
+    legend_font_size=40,
+    value_font_size=36,
     stroke_width=3,
 )
 
 chart = ClusteredHeatmap(
-    width=4800,
-    height=2700,
+    width=2400,
+    height=2400,
     style=custom_style,
-    title="heatmap-clustered · pygal · anyplot.ai",
-    matrix_data=matrix_data,
-    row_labels=drugs,
-    col_labels=cell_lines,
-    colormap=diverging_colormap,
-    colorbar_label="Sensitivity (log IC50)",
+    title="heatmap-clustered · python · pygal · anyplot.ai",
+    table=table,
     row_linkage=row_linkage,
     col_linkage=col_linkage,
-    row_order=row_order,
-    col_order=col_order,
-    show_values=False,
     show_legend=False,
-    margin=100,
-    margin_top=180,
-    margin_bottom=80,
-    margin_left=60,
     show_x_labels=False,
     show_y_labels=False,
+    margin=40,
 )
-
 chart.add("", [0])
 
 chart.render_to_png(f"plot-{THEME}.png")
