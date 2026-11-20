@@ -2,49 +2,56 @@ library: bokeh
 language: python
 specification_id: scatter-marginal
 created: '2025-12-26T14:59:10Z'
-updated: '2026-05-09T05:26:23Z'
-generated_by: claude-haiku
-workflow_run: 25592742758
+updated: '2026-11-20T01:02:04Z'
+generated_by: claude-sonnet
+workflow_run: 44649584325
 issue: 2005
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 84
 review:
   strengths:
-  - Excellent theme-adaptive styling with no readability issues in either render
-  - Proper use of Bokeh layouts and composition patterns for multi-panel visualization
-  - Clean, professional typography hierarchy with correct font sizing for 4800×2700px
-    canvas
-  - 'Data colors (Okabe-Ito #009E73) are consistently applied and accessible'
-  - Well-aligned marginal histograms that enhance understanding of distributions
-  - Deterministic data generation with clear structure and proper Selenium export
-    setup
+  - Marginals share the scatter's x_range / y_range, so the histogram peaks line up
+    exactly with the point clouds and pan/zoom stays linked in the HTML
+  - 'Clear hierarchy: opaque-ish brand-green points (alpha 0.65) as the main panel,
+    marginals in a quieter 0.45-alpha tint with page-colored bin separators'
+  - Correct 3200x1800 canvas with tight, aligned panel borders and the title carried
+    by the top marginal
+  - Plausible adult height/weight data with a realistic slope and a few outliers
+  - Theme tokens threaded through every panel; both renders fully readable
   weaknesses:
-  - Design excellence is solid but not exceptional—meets all requirements without
-    distinctive refinement
-  - 'Minor domain realism consideration: Height values (20-80cm range) are unconventional
-    for Height(cm) variable'
+  - 'VQ-05 (both): 1 px seam lines (clearest in dark) in a light color cross the whole
+    canvas between the panels (a vertical line at x ~ 2595 px top to bottom and a
+    horizontal line at y ~ 430 px across the full width, plus an outline at the top
+    of the corner cell) → no lines between panels; every pixel of the canvas in PAGE_BG.
+    Likely cause: sub-pixel gaps in the column/row layout expose the HTML page''s
+    default white background; set the document/page background to PAGE_BG (for example
+    a styles background on the layout or a gridplot with merged borders).'
+  - 'CQ-01 (code): a style_axes() helper function (lines 58-70) in a script that should
+    be flat, and the scatter''s y-axis styling is then repeated by hand (lines 87-91)
+    → inline the styling per panel or loop over the axes without defining a function.
+    Likely cause: the helper only accepts one axis.'
+  - 'Suggestion: a light KDE outline over each histogram would show the distribution
+    shape more smoothly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "scatter-marginal · bokeh · anyplot.ai" in dark ink (28pt), axis labels in dark primary text (22pt), tick labels in soft secondary text (18pt) - all clearly readable
-      Data: 200 scatter points in Okabe-Ito green (#009E73) with alpha=0.65, top histogram showing X distribution, right histogram showing Y distribution, both in matching green
-      Grid: Subtle grid lines at 0.10 alpha
-      Legibility verdict: PASS - all text readable, no light-on-light issues, professional appearance
+      Background: warm off-white #FAF8F1 across all panels.
+      Chrome: bold title 'scatter-marginal · python · bokeh · anyplot.ai' above the top marginal in dark ink; italic axis titles 'Height (cm)', 'Weight (kg)', 'Count' in dark ink; tick labels in INK_SOFT; subtle grid; thin INK_SOFT frames. A faint 1 px seam line between the panels.
+      Data: 200 #009E73 points at alpha 0.65 in the lower-left scatter (positive correlation, heights 151-196 cm, weights 38-99 kg); top x histogram and sideways right y histogram in a quieter 0.45-alpha green with page-colored bin separators, aligned with the scatter axes; empty top-right corner.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title in light ink (#F0EFE8), axis labels in light primary text, tick labels in light secondary text (#B8B7B0) - all clearly readable, no dark-on-dark failures
-      Data: Identical scatter points and histogram colors as light render (Okabe-Ito green #009E73), properly maintained across theme flip
-      Grid: Subtle grid lines visible at 0.10 alpha
-      Legibility verdict: PASS - all text readable, brand green visible and accessible, proper theme adaptation
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, ticks in light grey - all readable, no dark-on-dark. Light 1 px seam lines are clearly visible crossing the canvas between the panels (vertical at the scatter/right-marginal boundary, horizontal at the top-marginal/scatter boundary).
+      Data: identical #009E73 points and histograms as the light render; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,45 +59,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized and colored for both themes
+        comment: Title 50pt, axis titles 42pt, ticks 34pt (bokeh reference sizes);
+          marginal count ticks 28pt still read clearly; all text readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no colliding elements
+        comment: No text collisions; 200 translucent points overlap only mildly
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter points, histograms, and grid all clearly visible
+        comment: Size-22 markers at alpha 0.65 suit 200 points; histogram bars clearly
+          visible in both themes; no legend needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito brand green, single series, accessible
+        comment: Single brand-green series, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Well-proportioned marginal layout, nothing cut off
+        passed: false
+        comment: Canvas 3200x1800, panels well proportioned, but 1 px page-seam lines
+          cross the canvas between the panels (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, labels descriptive with units
+        comment: '''Height (cm)'', ''Weight (kg)'', ''Count'' - descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds correct for both themes'
+        comment: '#009E73 first series, #FAF8F1 / #1A1A17 backgrounds, data colors
+          identical across themes'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -98,19 +110,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Solid default implementation with clear design intent
+        comment: 'Raised one: marginals in a quieter 0.45-alpha tint of the point
+          color give a clear primary/secondary hierarchy, title carried by the top
+          marginal'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Subtle grid, removed spines, generous whitespace
+        comment: 'Raised one: page-colored bin separators on both histograms and near-zero
+          gaps with left/bottom borders aligned across panels'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Marginal distributions support narrative of joint relationships
+        comment: 'Default: data displayed, no focal point chosen beyond the Notes'
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with marginal distributions
+        comment: Scatter with top and right marginal histograms, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Top/right marginals, proper alignment
+        comment: Scatter lower-left (C1), shared axes (C2), sideways right marginal
+          from zero (C3), translucent points and small gaps (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct, full data range shown
+        comment: Points at exact values; marginals share x_range / y_range with the
+          scatter; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed for single series
+        comment: Title 'scatter-marginal · python · bokeh · anyplot.ai' correct; no
+          legend needed (N/A)
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -148,35 +166,39 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows scatter, X-distribution, Y-distribution
+        comment: Shows correlation, joint density and both univariate distributions
+          with visible lumps and tails
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Height/Weight domain with minor scale consideration
+        passed: true
+        comment: Adult height (mean 170 cm) vs weight (around 70 kg) - plausible and
+          neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 200 points adequate, value ranges slightly unconventional
+        passed: true
+        comment: 'Checked axes: heights 151-196 cm, weights 38-99 kg, slope ~0.9 kg/cm
+          - sensible'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Simple procedural script, no unnecessary abstraction
+        passed: false
+        comment: A style_axes() helper function in a script that should be flat (defect
+          line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with np.random.seed(42)
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -188,30 +210,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, idiomatic patterns
+        comment: Appropriate complexity; np.histogram feeds quad glyphs
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current Bokeh 3
+          API and CDP viewport pin
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper figure creation, ColumnDataSource, layout composition
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: false
-        comment: Good use of layouts and range linking
+        comment: 'Raised one: ColumnDataSource from the tidy df, column-name glyph
+          arguments, column/row layout composition'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Raised one: marginals share the scatter''s Range objects, so pan/zoom
+          stays linked across the three panels in the HTML'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-20T00:58:18Z'
 impl_tags:
   dependencies:
   - selenium
@@ -225,3 +253,5 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
