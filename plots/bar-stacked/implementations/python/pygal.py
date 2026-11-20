@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-stacked: Stacked Bar Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-09
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-20
 """
 
 import os
@@ -13,79 +13,84 @@ for path in ("", ".", script_dir):
     if path in sys.path:
         sys.path.remove(path)
 
+import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
-# Theme tokens from default-style-guide.md
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette: first series always #009E73
-IMPRINT = (
-    "#009E73",  # bluish green (brand)
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-    "#BD8233",  # reddish purple
-    "#AE3030",  # orange
+# Imprint palette: all eight positions, one per component in order
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Columns: set these to your table's column names
+SPRINT = "Sprint"  # role: category
+TASK_TYPE = "Task type"  # role: component
+HOURS = "Team hours"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("hours.csv")
+# Team hours per task type across six sprints, largest component first
+_sprints = ["Sprint 1", "Sprint 2", "Sprint 3", "Sprint 4", "Sprint 5", "Sprint 6"]
+_hours = {
+    "Development": [212, 236, 198, 244, 228, 205],
+    "Code review": [64, 71, 82, 69, 77, 88],
+    "Testing": [48, 55, 91, 63, 84, 97],
+    "Meetings": [42, 38, 45, 36, 40, 33],
+}
+df = pd.DataFrame(
+    {
+        SPRINT: [s for task in _hours for s in _sprints],
+        TASK_TYPE: [task for task, values in _hours.items() for _ in values],
+        HOURS: [v for values in _hours.values() for v in values],
+    }
 )
 
-# Data: Energy consumption by source across quarters (in millions of kWh)
-categories = ["Q1", "Q2", "Q3", "Q4"]
-sources = {
-    "Solar": [45.2, 62.1, 78.5, 55.3],
-    "Wind": [72.3, 68.5, 51.2, 64.7],
-    "Hydro": [38.1, 45.6, 52.3, 48.9],
-    "Nuclear": [95.4, 96.2, 97.1, 98.3],
-}
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=SPRINT, columns=TASK_TYPE, values=HOURS, sort=False)
+table = table.reindex(columns=df[TASK_TYPE].dropna().unique())
 
-# Custom style for 4800x2700 canvas with proper theme-adaptive colors
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    value_colors=("#FFFFFF",) * len(table.columns),
+    stroke_width=2.5,
 )
 
-# Create stacked bar chart with visible grid lines
 chart = pygal.StackedBar(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="bar-stacked · pygal · anyplot.ai",
-    x_title="Quarter",
-    y_title="Energy (Million kWh)",
+    title="bar-stacked · python · pygal · anyplot.ai",
+    x_title=SPRINT,
+    y_title=HOURS,
     show_y_guides=True,
     show_x_guides=False,
     legend_at_bottom=True,
-    legend_box_size=24,
-    spacing=80,
-    margin=60,
-    margin_top=120,
-    margin_bottom=180,
+    legend_box_size=36,
+    spacing=40,
+    margin=50,
     print_values=True,
     print_values_position="center",
-    value_formatter=lambda x: f"{x:.1f}",
-    show_legend=True,
+    value_formatter=lambda x: f"{x:.0f}",
     truncate_legend=-1,
 )
 
-# Set x-axis labels
-chart.x_labels = categories
-
-# Add data series (stacked components)
-for source_name, values in sources.items():
-    chart.add(source_name, values)
+chart.x_labels = table.index.tolist()
+for task in table.columns:
+    chart.add(str(task), table[task].tolist())
 
 os.chdir(script_dir)
 chart.render_to_png(f"plot-{THEME}.png")

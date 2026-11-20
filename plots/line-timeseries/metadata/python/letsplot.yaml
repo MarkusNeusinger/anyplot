@@ -2,43 +2,53 @@ library: letsplot
 language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:30:51Z'
-updated: '2026-05-09T03:50:13Z'
-generated_by: claude-haiku
-workflow_run: 25590562472
+updated: '2026-11-20T00:55:03Z'
+generated_by: claude-sonnet
+workflow_run: 44648681825
 issue: 2006
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 82
 review:
   strengths:
-  - Excellent theme-adaptive chrome implementation with proper use of theme tokens
-    across both light and dark renders
-  - Clean visual hierarchy through layered geoms (line → smooth → extremes)
-  - Proper handling of datetime data with intelligent date formatting
-  - All text elements explicitly sized and fully readable in both themes
-  - Realistic, well-chosen example data that meaningfully demonstrates the plot type
-  - Solid color palette compliance with Okabe-Ito standards
+  - True datetime axis with one tick per calendar month formatted '%b %Y', matching
+    the one-year span
+  - Theme tokens threaded through title, axis titles, ticks and backgrounds; both
+    renders fully readable
+  - Annual maximum and minimum enlarged as markers give the reader two focal points
+  - Clean six-zone layout with column constants; the data block can be swapped for
+    a CSV
+  - Native geom_smooth LOESS stat and interactive HTML export
   weaknesses:
-  - Design excellence could be elevated through additional visual refinement (e.g.,
-    more sophisticated grid styling, slightly refined typography choices)
-  - DE-02 and DE-03 leave room for enhanced visual polish and emphasis techniques
-    to create even stronger data storytelling
+  - 'VQ-07 (both): the LOESS curve is drawn in #D4A574 (light) / #8B7355 (dark), a
+    non-Imprint tan whose hex changes between themes, while data colors must stay
+    identical → an Imprint position or the theme-adaptive neutral token at reduced
+    alpha. Likely cause: geom_smooth(color=ACCENT_SOFT).'
+  - 'SC-02, DE-02 (both): grid lines are solid INK_SOFT at full opacity and compete
+    with the data line instead of staying subordinate (C3) → ink at about 15 % opacity
+    per the style guide''s grid token. Likely cause: panel_grid_major=element_line(color=INK_SOFT,
+    size=0.25).'
+  - 'DE-02 (both): the panel is enclosed by a four-sided frame, top and right spines
+    included → keep only the left and bottom axis lines. Likely cause: the default
+    panel border left in place; set panel_border=element_blank().'
+  - 'Suggestion: the 45-degree month labels may fit horizontally at this width; flat
+    labels would read faster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and properly set
-      Chrome: Title, axis labels, and tick labels all dark-colored and clearly readable against light background
-      Data: Primary line in teal-green (#009E73), brownish-tan LOESS smoothing overlay, larger points highlighting extremes
-      Legibility verdict: PASS - All text clearly readable, excellent contrast
+      Background: warm off-white #FAF8F1 across canvas and panel
+      Chrome: bold dark title 'line-timeseries · python · letsplot · anyplot.ai' top-left (~55% width), bold 'Date' and 'Temperature (°C)' axis titles, grey tick labels; month ticks Jan 2024 to Jan 2025 rotated 45 degrees; y ticks -5 to 35; solid grey grid on both axes; four-sided panel frame
+      Data: #009E73 daily line with small translucent dots (365 points), a tan LOESS curve tracing the seasonal arc, two enlarged green markers at the annual minimum (mid-Jan, ~-7.5) and maximum (late Jul, ~35.5)
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and properly set
-      Chrome: Title, axis labels, and tick labels all light-colored and clearly readable; no dark-on-dark failures observed
-      Data: Primary line remains teal-green (#009E73, identical to light render), smoothing curve identical, extreme points matching
-      Legibility verdict: PASS - All text clearly readable, no theme adaptation failures
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels light grey; grid light grey; no dark-on-dark text
+      Data: green line and markers identical to light; the LOESS curve switches to a darker brown (#8B7355) instead of keeping its hex
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -46,71 +56,76 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (24/20/16pt); all readable across themes
+        comment: Title 16 pt, axis titles 12 pt bold, ticks 10 pt; all readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels rotated 45°; no overlapping text
+        comment: No text collisions; month labels rotated 45 degrees and clear of
+          each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All data elements clearly visible and well-adapted to density
+        comment: '365 points: 0.8 line with small translucent dots; extremes clearly
+          marked'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colorblind-safe; strong contrast throughout
+        comment: Single green series with strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins; plot fills 60-70% of canvas appropriately
+        comment: 3200x1800 canvas (gate passed); balanced margins, title ~55% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id/library/site; Y-axis includes units
+        comment: '''Date'' and ''Temperature (°C)'' with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73; theme-correct backgrounds and chrome'
+        passed: false
+        comment: 'Data line #009E73 and backgrounds correct, but the LOESS curve uses
+          a non-Imprint tan that changes hex between themes (defect line)'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful design with LOESS overlay; theme-adaptive tokens; well-configured
+        passed: false
+        comment: Style-guide baseline typography; nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
-        passed: true
-        comment: Subtle grid; generous whitespace; polished presentation
+        passed: false
+        comment: Four-sided panel frame and full-strength solid grid lines go against
+          the spine and grid rules (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Clear seasonal narrative; LOESS emphasizes trend; visual hierarchy
-          guides viewer
+        passed: false
+        comment: 'Implementation-chosen focal points: annual maximum and minimum enlarged
+          as markers'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -118,25 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series line plot
+        comment: Correct time series line plot on a datetime axis
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Intelligent date formatting; grid on both axes; datetime handling
+        passed: false
+        comment: Date formatting, monthly ticks, grid on both axes present; grid not
+          kept subordinate (C3, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis dates, Y-axis temperature; all data visible
+        comment: Each observation at its timestamp; y axis spans data, not forced
+          to zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed (single series)
+        comment: Title in mandated format; single series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -146,19 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows seasonal pattern, daily variation, peak/trough extremes
+        comment: Seasonal cycle, daily noise, extremes; no missing values marked,
+          so C4 does not apply
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Year-long temperature readings; realistic and comprehensible
+        comment: 'Daily air temperature over a year: plausible, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible values; correct proportions for real-world temperatures
+        comment: -7 to 35 °C, plausible for a temperate climate; no Check values in
+          the spec
     code_quality:
       score: 10
       max: 10
@@ -168,48 +187,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean structure; imports → data → theme → plot → save
+        comment: 'Six-zone layout: head, column constants, data block, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering
+        comment: Straightforward; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG and HTML output
+        comment: Saves plot-{THEME}.png and .html with current ggsave API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: ggplot2-style grammar; proper datetime handling
+        passed: false
+        comment: Grammar-of-graphics layering with data= override per layer, scale_x_datetime(format=),
+          single theme() object
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses geom_smooth (LOESS); theme-adaptive styling
+        passed: false
+        comment: Native geom_smooth(method='loess') stat and interactive HTML export
+          with built-in tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-20T00:51:11Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -219,6 +243,6 @@ impl_tags:
   - data-generation
   dataprep:
   - time-series
+  - regression
   styling:
   - alpha-blending
-  - publication-ready

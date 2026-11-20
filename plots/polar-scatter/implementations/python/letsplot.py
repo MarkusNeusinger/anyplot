@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-scatter: Polar Scatter Plot
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-09
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-20
 """
 
 import os
@@ -21,74 +21,66 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (categorical)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Generate synthetic wind measurement data
+# Constants
+COMPASS_DEGREES = [0, 45, 90, 135, 180, 225, 270, 315]
+COMPASS_LABELS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+
+# Columns: set these to your table's column names
+DIRECTION = "Wind direction (°)"  # role: theta
+SPEED = "Wind speed (m/s)"  # role: radius
+TIME_OF_DAY = "Time of day"  # role: category
+
+# Data: replace this block with your own table, for example df = pd.read_csv("wind.csv")
 np.random.seed(42)
 n_points = 120
 
-# Simulate wind direction with prevailing winds from SW and NE
-# Use mixture of von Mises distributions for realistic directional clustering
+# Prevailing winds from W and SW, drawn per 45-degree sector
 direction_probs = np.array([0.05, 0.15, 0.08, 0.05, 0.05, 0.12, 0.30, 0.20])  # N, NE, E, SE, S, SW, W, NW
-direction_centers = np.array([0, 45, 90, 135, 180, 225, 270, 315])
-
-# Sample primary direction centers
+direction_centers = np.array(COMPASS_DEGREES)
 chosen_sectors = np.random.choice(8, size=n_points, p=direction_probs / direction_probs.sum())
-# Add variance within each sector
-directions = direction_centers[chosen_sectors] + np.random.uniform(-20, 20, n_points)
-directions = directions % 360
+directions = (direction_centers[chosen_sectors] + np.random.uniform(-20, 20, n_points)) % 360
 
-# Wind speed (m/s) - Weibull-like distribution, stronger from SW-W directions
+# Weibull-like speeds, stronger from the SW-W side
 base_speed = np.random.weibull(2.0, n_points) * 6 + 2
-# Increase speed for SW-W winds
-direction_factor = 1 + 0.4 * np.sin(np.radians(directions - 240))
-speeds = base_speed * direction_factor
-speeds = np.clip(speeds, 1, 22)
+speeds = np.clip(base_speed * (1 + 0.4 * np.sin(np.radians(directions - 240))), 1, 22)
 
-# Time of day for color encoding (morning: 6-12, afternoon: 12-18, evening: 18-24)
-hour = np.random.choice([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], size=n_points)
+hour = np.random.choice(np.arange(6, 22), size=n_points)
 time_of_day = np.where(hour < 12, "Morning", np.where(hour < 18, "Afternoon", "Evening"))
 
-# Create DataFrame
-df = pd.DataFrame({"direction": directions, "speed": speeds, "time_of_day": time_of_day})
+df = pd.DataFrame({DIRECTION: directions, SPEED: speeds, TIME_OF_DAY: time_of_day})
+df[TIME_OF_DAY] = pd.Categorical(df[TIME_OF_DAY], categories=["Morning", "Afternoon", "Evening"], ordered=True)
 
-# Order time of day for legend
-df["time_of_day"] = pd.Categorical(df["time_of_day"], categories=["Morning", "Afternoon", "Evening"], ordered=True)
-
-# Create polar scatter plot
-# coord_polar: start=0 means 12 o'clock (North), direction=1 is clockwise
+# Plot: coord_polar starts at 12 o'clock and runs clockwise
 plot = (
-    ggplot(df, aes(x="direction", y="speed", color="time_of_day"))
-    + geom_point(size=5, alpha=0.75)
+    ggplot(df, aes(x=DIRECTION, y=SPEED, color=TIME_OF_DAY))
+    + geom_point(size=3, alpha=0.75)
     + coord_polar(start=0, direction=1)
-    + scale_x_continuous(
-        breaks=[0, 45, 90, 135, 180, 225, 270, 315],
-        labels=["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
-        limits=[0, 360],
-        expand=[0, 0],
-    )
-    + scale_y_continuous(limits=[0, None], expand=[0, 0.05])
-    + scale_color_manual(values=IMPRINT, name="Time of Day")
-    + labs(title="polar-scatter · letsplot · anyplot.ai", x="", y="Wind Speed (m/s)")
+    + scale_x_continuous(breaks=COMPASS_DEGREES, labels=COMPASS_LABELS, limits=[0, 360], expand=[0, 0])
+    + scale_y_continuous(limits=[0, df[SPEED].max() * 1.08], expand=[0, 0])
+    + scale_color_manual(values=IMPRINT_PALETTE)
+    + labs(title="polar-scatter · python · letsplot · anyplot.ai", x="")
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK_SOFT, size=0.3),
         panel_grid_minor=element_line(color=INK_SOFT, size=0.2),
-        plot_title=element_text(size=24, hjust=0.5, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        axis_title_y=element_text(size=20, color=INK),
+        plot_title=element_text(size=16, hjust=0.5, color=INK),
+        axis_text=element_text(size=11, color=INK_SOFT),
+        axis_title_y=element_text(size=13, color=INK),
         axis_line=element_line(color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_position="right",
+        legend_title=element_text(size=10, color=INK),
+        legend_text=element_text(size=9, color=INK_SOFT),
+        legend_position=[1.0, 1.0],
+        legend_justification=[1, 1],
     )
-    + ggsize(1200, 1200)  # Square format for polar plot, scaled 3x = 3600x3600
+    + ggsize(600, 600)
 )
 
-# Save as PNG and HTML
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")

@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-stacked: Stacked Bar Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-09
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-20
 """
 
 import os
@@ -9,6 +9,7 @@ import sys
 import time
 from pathlib import Path
 
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -29,120 +30,133 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per component in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Monthly energy consumption by source (in gigawatt-hours)
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: category
+SOURCE = "Energy source"  # role: component
+ENERGY = "Energy production (GWh)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("energy.csv")
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-sources = ["Solar", "Wind", "Hydro", "Natural Gas"]
-colors = IMPRINT
-
-data = {
+production = {
     "Solar": [85, 92, 110, 125, 145, 165, 175, 160, 140, 115, 95, 80],
     "Wind": [120, 130, 125, 110, 95, 85, 80, 90, 105, 125, 140, 145],
     "Hydro": [105, 100, 95, 90, 85, 75, 70, 75, 85, 95, 110, 115],
     "Natural Gas": [65, 60, 55, 50, 45, 40, 35, 40, 50, 60, 70, 80],
 }
-
-# Calculate bottom positions for stacking
-bottoms = {src: [0] * len(months) for src in sources}
-running_total = [0] * len(months)
-for src in sources:
-    bottoms[src] = running_total.copy()
-    running_total = [r + v for r, v in zip(running_total, data[src], strict=True)]
-
-# Create figure
-p = figure(
-    x_range=months,
-    width=4800,
-    height=2700,
-    title="bar-stacked · bokeh · anyplot.ai",
-    x_axis_label="Month",
-    y_axis_label="Energy Production (GWh)",
-    toolbar_location=None,
+df = pd.DataFrame(
+    {
+        MONTH: months * len(production),
+        SOURCE: [name for name in production for _ in months],
+        ENERGY: [v for values in production.values() for v in values],
+    }
 )
 
-# Create stacked bars
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=MONTH, columns=SOURCE, values=ENERGY, sort=False)
+sources = list(table.columns)
+categories = list(table.index)
+tops = table.cumsum(axis=1)
+bottoms = tops - table
+
+p = figure(
+    x_range=categories,
+    width=3200,
+    height=1800,
+    title="bar-stacked · python · bokeh · anyplot.ai",
+    x_axis_label=MONTH,
+    y_axis_label=ENERGY,
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
+)
+
 legend_items = []
-for src, color in zip(sources, colors, strict=True):
-    source = ColumnDataSource(
-        data={
-            "x": months,
-            "top": [b + v for b, v in zip(bottoms[src], data[src], strict=True)],
-            "bottom": bottoms[src],
-            "value": data[src],
-            "source": [src] * len(months),
+for i, src in enumerate(sources):
+    rows = ColumnDataSource(
+        {
+            MONTH: categories,
+            "top": tops[src].to_numpy(),
+            "bottom": bottoms[src].to_numpy(),
+            ENERGY: table[src].to_numpy(),
+            SOURCE: [src] * len(categories),
         }
     )
     renderer = p.vbar(
-        x="x", top="top", bottom="bottom", width=0.6, source=source, color=color, line_color=PAGE_BG, line_width=1.5
+        x=MONTH,
+        top="top",
+        bottom="bottom",
+        width=0.7,
+        source=rows,
+        color=IMPRINT_PALETTE[i],
+        line_color=PAGE_BG,
+        line_width=2,
     )
-    legend_items.append(LegendItem(label=src, renderers=[renderer]))
-
-    # Add hover tool
-    hover = HoverTool(
-        renderers=[renderer], tooltips=[("Month", "@x"), ("Source", "@source"), ("Production", "@value{0} GWh")]
+    legend_items.append(LegendItem(label=str(src), renderers=[renderer]))
+    p.add_tools(
+        HoverTool(
+            renderers=[renderer],
+            tooltips=[(MONTH, f"@{{{MONTH}}}"), (SOURCE, f"@{{{SOURCE}}}"), (ENERGY, f"@{{{ENERGY}}}{{0}}")],
+        )
     )
-    p.add_tools(hover)
 
-# Add legend
+# Legend beside the plot so it never covers a stack
 legend = Legend(
     items=legend_items,
-    location="top_right",
-    label_text_font_size="18pt",
-    spacing=12,
-    padding=15,
+    title=SOURCE,
+    title_text_font_size="30pt",
+    title_text_color=INK,
+    label_text_font_size="30pt",
+    label_text_color=INK_SOFT,
+    spacing=14,
+    padding=20,
     background_fill_color=ELEVATED_BG,
     background_fill_alpha=0.95,
     border_line_color=INK_SOFT,
-    label_text_color=INK_SOFT,
-    glyph_height=28,
-    glyph_width=28,
+    glyph_height=36,
+    glyph_width=36,
 )
-p.add_layout(legend)
+p.add_layout(legend, "right")
 
-# Style the plot
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 
-# Grid styling
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.15
 
-# Axis styling
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
-# Plot background
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 
-# Set y-axis range with padding
 p.y_range.start = 0
-p.y_range.end = max(running_total) * 1.1
+p.y_range.end = float(tops.to_numpy().max()) * 1.08
 
-# Determine output directory
+# Save
 impl_dir = Path(__file__).parent
 os.chdir(impl_dir)
-
-# Save HTML
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot to PNG with headless Chrome
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -156,6 +170,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{(impl_dir / f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(str(impl_dir / f"plot-{THEME}.png"))
 driver.quit()

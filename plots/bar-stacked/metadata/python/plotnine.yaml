@@ -12,52 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 74
 review:
   strengths:
-  - Perfect visual quality with all text legible, no overlap, proper Okabe-Ito palette,
-    and theme-correct chrome in both renders
-  - 'Full specification compliance: correct stacked bar chart type, all required features
-    present, proper data mapping and title format'
-  - Excellent code quality with clean, deterministic, idiomatic plotnine usage
-  - Strong theme implementation with adaptive tokens that correctly render both light
-    and dark surfaces with no readability failures
-  - Value labels positioned in segment centers using position_stack(vjust=0.5) add
-    clarity to composition interpretation
+  - Electronics, the largest component, sits at the bottom of every stack and the
+    legend reads top to bottom in the stack's order, via an ordered pd.Categorical
+  - position_stack(vjust=0.5) centres bold white value labels in each segment
+  - Theme tokens applied to every chrome element; both renders read cleanly
+  - 'Sports gets #009E73, then Imprint positions 2-4 in canonical order'
   weaknesses:
-  - 'Design Excellence low: plot is technically correct and professional but reads
-    as well-configured default rather than distinctive visual sophistication'
-  - All four spines visible - could remove top/right for minimal L-shaped design
-  - No visual storytelling or emphasis - plot displays data but doesn't create visual
-    hierarchy or guide viewer to specific insight
+  - 'SC-04 (both): the title reads ''bar-stacked · plotnine · anyplot.ai'' without
+    the language → ''bar-stacked · python · plotnine · anyplot.ai''. Likely cause:
+    labs(title=...) string.'
+  - 'VQ-05 (both): Canvas dimensions drifted from the required target. Actual: 4800x2700.
+    Closest valid target: 3200x1800 (+1600 x +900, too large) → figure_size (8, 4.5)
+    saved at dpi=400, width=8, height=4.5, units=''in''. Likely cause: figure_size=(16,
+    9) with plot.save(dpi=300).'
+  - 'CQ-01 (code): there is no column constant for the required roles category, component
+    and value, and ''Quarter'', ''Category'' and ''Sales'' are typed again in aes()
+    at lines 58-62 → one string constant per role above the data block (QUARTER, CATEGORY,
+    SALES with a # role: comment) used everywhere below it. Likely cause: column names
+    typed where they are used.'
+  - 'CQ-01 (code): IMPRINT lists 4 of the 8 positions, sized to the sample''s components
+    → list all eight Imprint positions and pass limits from the data to scale_fill_manual.
+    Likely cause: a palette sized to the sample data.'
+  - 'CQ-04 (code): the sys.path filter with a ''# noqa: E402'' import block (lines
+    13-16) works around module shadowing and has no effect on either render → remove
+    it and import plotnine at the top. Likely cause: a local-run workaround left in
+    the file.'
+  - 'CQ-04 (code): the comment ''Okabe-Ito palette'' sits over the Imprint colors
+    it describes → name the palette Imprint. Likely cause: a stale comment.'
+  - 'Suggestion: total labels above each stack, which the Notes invite, would show
+    the quarter-on-quarter growth directly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 ✓
-      Title: Bold 24pt "bar-stacked · plotnine · anyplot.ai" clearly visible in dark text
-      Axis labels: "Quarter" (x) and "Sales (thousands USD)" (y) at 20pt, clearly readable
-      Tick labels: Q1-Q4 and 0-175 scale at 16pt, fully readable in secondary text color
-      Data colors: Okabe-Ito palette with Sports#009E73, Home#D55E00, Clothing#0072B2, Electronics#CC79A7 - all distinct
-      Data labels: White segment values positioned at centers using position_stack(vjust=0.5) - readable
-      Grid: Subtle light lines at 10% opacity
-      Legend: Right-positioned with clear category labels
-      Legibility verdict: PASS ✓
+      Background: warm off-white #FAF8F1; canvas 4800x2700.
+      Chrome: bold dark title 'bar-stacked · plotnine · anyplot.ai' (no language segment); axis titles 'Quarter' and 'Sales (thousands USD)' in dark ink; ticks Q1-Q4 and 0-150 in soft grey; thin panel border; faint grid; compact 'Category' legend on the right in an elevated box. All readable.
+      Data: four stacked bars from a zero baseline, bottom to top Electronics #BD8233, Clothing #4467A3, Home #C475FD, Sports #009E73; totals 123-173. White bold value labels centred in each segment. Legend lists Sports, Home, Clothing, Electronics top to bottom, matching the stack.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 ✓
-      Title: Bold white text on dark background, clearly visible
-      Axis labels: Light text (#F0EFE8 range) at 20pt, clearly readable
-      Tick labels: Light color at 16pt, readable against dark background - no dark-on-dark failures
-      Data colors: IDENTICAL to light render - Sports#009E73, Home#D55E00, Clothing#0072B2, Electronics#CC79A7 unchanged
-      Data labels: White segment values on colored segments, fully readable
-      Grid: Subtle lines visible at 10% opacity on dark surface
-      Legend: Dark box (#242420) with light text (#B8B7B0) and subtle border, readable
-      Chrome adaptation: All text and background colors properly theme-flipped; only data colors stay constant
-      Legibility verdict: PASS ✓
-
-    Both renders confirmed theme-correct with no readability issues.
+      Background: warm near-black #1A1A17.
+      Chrome: light title, axis titles and ticks, light panel border, faint grid, #242420 legend box with light text; no dark-on-dark text.
+      Data: segment colors identical to the light render; white labels readable on all fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -65,78 +66,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
-          Perfectly readable in both light and dark themes.'
+        comment: Explicit sizes, title 24 pt, axis titles 20 pt, ticks 16 pt, value
+          labels bold and legible; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis, y-axis, legend, and segment labels all fully readable with
-          no collisions.
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked segments clearly visible with distinct colors; value labels
-          optimally positioned using position_stack(vjust=0.5).
+        comment: Solid segments, legend swatches match the fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; segments distinguishable by
-          hue and luminance.
+        comment: Four hues of different lightness, no red-green pair
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Figure (16×9) fills canvas appropriately with balanced margins; legend
-          naturally positioned.
+        passed: false
+        comment: Saved PNG is 4800x2700, off the 3200x1800 canvas contract (defect
+          line); proportions otherwise balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive with units.
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Okabe-Ito pos 1); others in canonical order.
-          Backgrounds #FAF8F1 light/#1A1A17 dark. Theme-adaptive chrome. Data colors
-          identical between renders.'
+        comment: 'Sports #009E73 first, Imprint positions 2-4 in order, correct backgrounds,
+          colors identical across themes'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: false
-        comment: Professional and intentional (explicit palette, theme tokens) but
-          reads as well-configured default rather than custom/publication-ready. No
-          distinctive visual sophistication.
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Some refinement (grid customization, margins balanced) but all four
-          spines visible. Could remove top/right for minimal L-shaped design.
+        comment: The library prompt's border and subtle grid, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy, emphasis, or narrative.
-          No focal points or visual contrast to guide viewer.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -144,25 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart showing composition variation.
+        comment: Stacked bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: categories, stacked components, values, legend.'
+        comment: 'C1-C4 met: shared zero baseline, Electronics (largest) at the bottom
+          of every bar with the legend in stack order, distinct colors, even bars;
+          C5 total labels optional'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all data visible.
+        comment: Correct mapping, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; legend labels match data.
+        passed: false
+        comment: Title lacks the language segment (defect line); legend correct
     data_quality:
       score: 15
       max: 15
@@ -172,75 +167,75 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all stacked bar aspects: composition variation, relative sizes,
-          totals.'
+        comment: 4x4 data with varying totals and composition
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly sales by product category - real, neutral, comprehensible
-          scenario.
+        comment: Quarterly sales by product category, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (18-68k USD segments, 130-180k totals) are factually plausible.
+        comment: Segments 18-68 kUSD, totals 123-173 kUSD match the stack tops
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → save. No functions/classes.'
+        passed: false
+        comment: Linear, but no column-role constants, column names typed in aes(),
+          and a 4-entry palette sized to the sample (defect lines)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data (dictionary → DataFrame).
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path manipulation justified.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, idiomatic. No over-engineering.
+        passed: false
+        comment: sys.path filter with a noqa E402 import block, and an 'Okabe-Ito
+          palette' comment over the Imprint colors (defect lines)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at 300 dpi.
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Masterful ggplot2 grammar: proper aes(), geom_bar, position_stack,
-          scale_fill_manual, theme().'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
+        passed: true
+        comment: 'aes, geom_bar, position_stack, ordered Categorical for stacking:
+          the expected pattern, nothing beyond'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
         passed: false
-        comment: Uses geom_text with position_stack for value labels and theme-aware
-          tokens. Shows proficiency but not creatively distinctive - could be replicated
-          in other libraries.
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies: []
   techniques:

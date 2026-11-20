@@ -2,120 +2,141 @@ library: bokeh
 language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:37:38Z'
-updated: '2026-05-09T01:14:12Z'
-generated_by: claude-haiku
-workflow_run: 25587091693
+updated: '2026-11-20T00:28:44Z'
+generated_by: claude-sonnet
+workflow_run: 44644888003
 issue: 1878
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/bokeh/plot-dark.html
-quality_score: 96
+quality_score: 49
 review:
   strengths:
-  - Perfect theme-adaptive implementation with identical data colors in both renders
-    and correct chrome adaptation
-  - Sophisticated Bezier curve rendering for smooth alluvial flows
-  - 'Excellent Okabe-Ito palette compliance: Democratic #009E73, Republican #D55E00,
-    Independent #0072B2, Other #CC79A7'
-  - Professional typography hierarchy and legibility across all sizes (28pt title
-    to 18pt legend)
-  - Appropriate transparency (alpha=0.5) for handling overlapping ribbon flows
-  - Clean design with no chartjunk, generous whitespace, and well-placed legend
-  weaknesses: []
+  - 'Direct labels at every column replace a legend: values on the end columns, names
+    in the middle (C4)'
+  - Each party keeps one Imprint color at every time point, bands colored by source
+    at alpha 0.5, distinguishable in both themes (C3)
+  - Correct 3200x1800 canvas via the CDP viewport pin, chrome theme-correct in both
+    renders
+  - Smoothstep ribbons with horizontal tangents attach cleanly to block edges
+  weaknesses:
+  - 'DQ-02 (both): the scenario is real US party politics: Democratic and Republican
+    carrying invented voter-migration numbers → replace it with a non-political scenario,
+    e.g. customer plan tiers (Free, Basic, Pro, Churned) across quarters. Likely cause:
+    the transitions dict in the Data block.'
+  - 'SC-02, DQ-03 (both): flows are not conserved, so bands leave from above their
+    source blocks (C2): the 2016 Republican block is 35M but sends 37M, 2016 Other
+    is 3M but sends 5M, 2020 Other is 2M but sends 4M; 2016 Independent receives 19M
+    but sends 17M → each middle block''s outflow equal to its inflow (delta 0). Likely
+    cause: the 2016→2020 and 2020→2024 rows of the transitions dict.'
+  - 'VQ-01 (both): category labels at 26pt are below the 34pt tick-label reference
+    and read small beside the 34pt column headers → 34pt (+8 pt). Likely cause: label.update(text_font_size="26pt").'
+  - 'VQ-02 (both): the middle-column labels (for example ''Other'' at 2016 and 2020,
+    ''Independent'' at 2016) sit on top of crossing bands, readable only through a
+    0.7 halo → place them where no band passes, e.g. inside or left of the block edge.
+    Likely cause: Label x = t_idx + node_width/2 + 0.03 for the middle columns.'
+  - 'CQ-01 (code): line 36 has no column constant for the required role `value` →
+    one string constant per required column role above the Data block, each with a
+    trailing # role: <role> comment naming a spec role. Likely cause: column names
+    are typed where they are used instead of once, above the block.'
+  - 'Suggestion: bring the column headers closer to the blocks'' bottom edge to use
+    the empty strip at the bottom of the canvas.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "alluvial-basic · bokeh · anyplot.ai" is bold and centered (28pt) in dark text (#1A1A17). Subtitle "Voter Migration Between Parties (values in millions)" in secondary gray (#4A4A44). Time point labels (2012, 2016, 2020, 2024) at bottom in bold dark text (24pt). Category labels on sides with population values (e.g., "Democratic (90M)") in secondary gray (22pt). Legend in top-right with category names and colored squares, background #FFFDF6, text #4A4A44. All text clearly readable against light background.
-      Data: Four category columns (Democratic, Republican, Independent, Other) with colored rectangles representing population. Bezier-curve ribbons flow between categories across four time periods (2012→2016→2020→2024). Colors: Democratic #009E73 (brand green), Republican #D55E00 (orange), Independent #0072B2 (blue), Other #CC79A7 (reddish purple). Ribbons have alpha=0.5 to show overlapping flows. Node widths consistent, ribbon widths proportional to transition magnitudes.
-      Legibility verdict: PASS - All elements clearly visible and readable in light theme
+      Background: warm off-white #FAF8F1, no axes or grid.
+      Chrome: bold title 'alluvial-basic · python · bokeh · anyplot.ai' centered, muted subtitle 'Voter Migration Between Parties (values in millions)', bold year headers 2012/2016/2020/2024 under the columns. Category labels with values left of 2012 and right of 2024, names with a page-colored halo right of the middle blocks. All text dark and readable.
+      Data: four columns of stacked blocks: Democratic #009E73, Republican #C475FD, Independent #4467A3, Other #BD8233; translucent smoothstep bands colored by source. Several bands leave from above their source blocks (2016 Republican, 2016 Other, 2020 Other) because flows are not conserved.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title "alluvial-basic · bokeh · anyplot.ai" in light text (#F0EFE8, 28pt). Subtitle in secondary light gray (#B8B7B0). Time point labels in primary light text (#F0EFE8, 24pt). Category labels in secondary light gray (#B8B7B0, 22pt). Legend box background #242420 (elevated dark), text #B8B7B0, border #B8B7B0. No dark-on-dark failures detected.
-      Data: All Okabe-Ito colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7). Ribbon layout, proportions, and transparency (alpha=0.5) identical. Node and flow structure matches light render perfectly.
-      Legibility verdict: PASS - All text and data elements clearly readable against dark background; correct theme adaptation with no contrast failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, headers and middle labels in light ink, subtitle and end labels in soft light gray; middle-label halos dark. No dark-on-dark text. A thin gray frame surrounds the plot area.
+      Data: block colors identical to light; bands darker through alpha on the dark page but still distinguishable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All font sizes (28pt title, 22pt labels, 18pt legend) explicitly
-          set and readable in both light and dark themes
+        passed: false
+        comment: Title 50pt, headers/subtitle 34pt explicitly set and readable in
+          both themes; category labels at 26pt sit below the 34pt tick reference (defect
+          line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Category labels, time points, nodes, and legend positioned without
-          collisions; transparency handles ribbon overlap appropriately
+        passed: false
+        comment: Middle-column labels sit on top of crossing bands; the 0.7 page-colored
+          halo keeps them readable (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes and ribbons clearly visible with appropriate alpha-blending
-          (0.5) for density management
+        comment: Blocks and bands clearly visible; thin bands for rare transitions
+          are permitted (C6)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety; no red-green sole signaling
+        comment: Four well-separated Imprint hues, alpha 0.5 bands distinguishable
+          in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 dimensions well-proportioned; generous margins; no clipping
+        comment: 3200x1800, diagram fills the canvas with balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id/library/source; subtitle explains data with
-          units
+        comment: No axes; subtitle states the unit (values in millions), headers name
+          years
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; follows Okabe-Ito order; backgrounds correct
-          (#FAF8F1 light, #1A1A17 dark); both renders theme-correct'
+        comment: 'Imprint canonical order starting #009E73; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-correct'
     design_excellence:
-      score: 17
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: Sophisticated Bezier curves, custom legend construction, and thoughtful
-          transparency handling show design beyond defaults
+        passed: false
+        comment: 'Typographic hierarchy decided for this chart: bold column headers,
+          muted subtitle, values only on the end columns, names alone in the middle'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: No unnecessary elements; clean backgrounds with proper theming; subtle
-          legend styling
+        passed: false
+        comment: Page-colored label halos in the middle columns, outside labels on
+          end columns, page-colored block separators
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Flow ribbons create clear narrative of voter migration; color consistency
-          enables tracking; clear focal point
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -123,29 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial diagram with flow-proportional band widths
+        comment: Correct basic alluvial diagram, no extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: 4 time points, 4 categories, flow values,
-          consistent colors, clear labels'
+        passed: false
+        comment: 'C1, C3, C4, C5 met; C2 missed: several bands leave from above their
+          source blocks (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: chronological time points; Y: category stacking with value-proportional
-          heights; flows: transition magnitudes'
+        comment: Time left to right, block heights and band widths proportional to
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data categories perfectly
+        comment: Title 'alluvial-basic · python · bokeh · anyplot.ai' correct; direct
+          labels replace a legend
     data_quality:
-      score: 15
+      score: 8
       max: 15
       items:
       - id: DQ-01
@@ -153,90 +175,87 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full alluvial capabilities: nodes, flows, multi-stage transitions,
-          proportional sizing'
+        comment: Stable, growing, shrinking categories and crossing transitions shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 0
         max: 5
-        passed: true
-        comment: Election data with voter migration is plausible, neutral, and real-world
-          appropriate
+        passed: false
+        comment: 'Real US parties (Democratic, Republican) carrying invented voter
+          numbers: real politics (defect line)'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 4 time points, 4 categories, millions-scale values all sensible for
-          domain
+        passed: false
+        comment: 'Checked flow conservation: outflows of the 2016 and 2020 blocks
+          do not match their inflows (defect line)'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No unnecessary functions; linear flow; clear data definitions
+        passed: false
+        comment: Linear script, but no column constant for the `value` role (defect
+          line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data; np.random.seed(42) present for consistency
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; no waste
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; Bezier calculations elegant
+        comment: Smoothstep ribbon is compact; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct file naming: plot-light.png, plot-dark.png, plot-light.html,
-          plot-dark.html'
+        comment: plot-{THEME}.png and .html via Selenium with CDP viewport pin
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Proper figure(), quad(), patch(), Label, Legend, LegendItem usage;
-          theme-adaptive implementation
+        passed: false
+        comment: figure/quad/patch/Label usage; default
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Bezier curves, custom legend construction, HTML+Selenium pattern
-          show strong mastery
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-20T00:25:01Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - bezier-curves
-  - custom-legend
-  - patches
-  - annotations
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - alpha-blending
-  - publication-ready
+  - minimal-chrome
