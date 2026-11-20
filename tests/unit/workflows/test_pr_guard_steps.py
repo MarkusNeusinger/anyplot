@@ -81,6 +81,9 @@ def asked(entry):
 if key == "pr view":
     if fields == "state":
         print(os.environ.get("GH_STATE", "OPEN"))
+    elif "-q" in args and args[args.index("-q") + 1] == ".labels[].name":
+        for label in json.loads(os.environ.get("GH_PR_JSON", "{}")).get("labels", []):
+            print(label["name"])
     else:
         print(json.dumps(asked(json.loads(os.environ.get("GH_PR_JSON", "{}")))))
 elif key == "pr list":
@@ -569,7 +572,7 @@ class TestImplRepair:
     def test_the_pipelines_own_pull_request_passes(self, tmp_path, shell):
         run = self._check(tmp_path, own_pr(7, BRANCH), shell=shell)
         assert run.rc == 0, run.log
-        assert run.outputs == {"allowed": "true", "branch": BRANCH}
+        assert run.outputs == {"allowed": "true", "branch": BRANCH, "head_sha": HEAD_SHA}
 
     def test_the_checkout_uses_the_checked_branch_and_follows_the_check(self):
         names = [s.get("name") for s in _jobs("impl-repair.yml")["repair"]["steps"]]
@@ -1154,6 +1157,179 @@ class TestImplMergeLostAnswer:
         run, state = _merge_run(origin, update=update, views="fail")
         assert run.rc == 1 and state["merges"] == 1
         assert run.errors() == ["::error::Merge failed after 5 attempts"]
+
+
+# --- results are written only onto the head that was checked ----------------------------------
+
+
+class WriteOrigin:
+    """A bare origin whose implementation branch holds the reviewed commit, and the job's checkout of it."""
+
+    META = "plots/spec-a/metadata/python/plotly.yaml"
+
+    def __init__(self, tmp: Path) -> None:
+        self.tmp = tmp
+        self.env = _git_env(tmp)
+        seed, self.origin, self.ws = tmp / "seed", tmp / "origin.git", tmp / "ws"
+        seed.mkdir()
+        _git(seed, self.env, "init", "-q", "-b", "main")
+        (seed / self.META).parent.mkdir(parents=True)
+        (seed / self.META).write_text("quality_score: null\n", encoding="utf-8")
+        impl = seed / "plots" / "spec-a" / "implementations" / "python" / "plotly.py"
+        impl.parent.mkdir(parents=True)
+        impl.write_text("import plotly\n", encoding="utf-8")
+        _git(seed, self.env, "add", "-A")
+        _git(seed, self.env, "commit", "-q", "-m", "generated")
+        _git(seed, self.env, "branch", BRANCH)
+        subprocess.run([REAL_GIT, "clone", "-q", "--bare", str(seed), str(self.origin)], env=self.env, check=True)
+        subprocess.run([REAL_GIT, "clone", "-q", str(self.origin), str(self.ws)], env=self.env, check=True)
+        self.head = _git(self.ws, self.env, "rev-parse", f"origin/{BRANCH}")
+        _git(self.ws, self.env, "checkout", "-q", self.head)
+
+    def push_elsewhere(self) -> str:
+        """Another run or a person pushes to the branch; returns the new head."""
+        other = self.tmp / "other"
+        if not other.exists():
+            subprocess.run(
+                [REAL_GIT, "clone", "-q", "-b", BRANCH, str(self.origin), str(other)], env=self.env, check=True
+            )
+        _git(other, self.env, "commit", "-q", "--allow-empty", "-m", "pushed meanwhile")
+        _git(other, self.env, "push", "-q", "origin", f"HEAD:refs/heads/{BRANCH}")
+        return _git(other, self.env, "rev-parse", "HEAD")
+
+    def branch_head(self) -> str:
+        return _git(self.origin, self.env, "rev-parse", f"refs/heads/{BRANCH}")
+
+
+# The verdict labels the early verdict step may have set.
+VERDICT_LABELS = [{"name": n} for n in ("quality:91", "ai-approved", "regen:improved")]
+
+
+class TestReviewWritesOntoTheCheckedHead:
+    """ "Update metadata and implementation header" writes the review only onto the commit it reviewed."""
+
+    STEP = "Update metadata and implementation header"
+
+    def _script(self, meanwhile: str = "") -> str:
+        """The step's checkout and its commit-and-push, with the metadata update in between replaced."""
+        script = _step("impl-review.yml", self.STEP)["run"]
+        checkout = 'git checkout -B "$BRANCH" "origin/$BRANCH"\n'
+        head = script[: script.index(checkout) + len(checkout)]
+        # The remote stays the test's origin.
+        head = re.sub(r'git remote set-url origin "[^"]*"\n', "", head)
+        push = script[script.index("# Commit and push") :]
+        update = f'echo "quality_score: 91" > "$METADATA_FILE"\n{meanwhile}\n'
+        return _render(head + update + push)
+
+    def _run(self, origin: WriteOrigin, *, shell=PIPEFAIL, meanwhile: str = "") -> Run:
+        return _run(
+            self._script(meanwhile),
+            origin.tmp,
+            cwd=origin.ws,
+            shell=shell,
+            PR_NUM="7",
+            HEAD_SHA=origin.head,
+            SPEC_ID="spec-a",
+            LIBRARY="plotly",
+            LANGUAGE="python",
+            EXT=".py",
+            BRANCH=BRANCH,
+            REVIEW_CARRIED="false",
+            GH_PR_JSON=json.dumps({**own_pr(7, BRANCH), "labels": VERDICT_LABELS}),
+            GIT_CONFIG_GLOBAL=origin.env["GIT_CONFIG_GLOBAL"],
+            GIT_CONFIG_NOSYSTEM="1",
+        )
+
+    @SHELLS
+    def test_the_reviewed_head_gets_the_review_as_before(self, tmp_path, shell):
+        origin = WriteOrigin(tmp_path)
+        run = self._run(origin, shell=shell)
+        assert run.rc == 0, run.log
+        new = origin.branch_head()
+        assert new != origin.head and _git(origin.origin, origin.env, "rev-parse", f"{new}^") == origin.head
+        assert "head_moved" not in run.outputs and _writes(run.gh) == []
+
+    @SHELLS
+    def test_a_branch_that_moved_during_the_review_gets_nothing(self, tmp_path, shell):
+        origin = WriteOrigin(tmp_path)
+        moved = origin.push_elsewhere()
+        run = self._run(origin, shell=shell)
+        assert run.rc == 1 and run.outputs == {"head_moved": "true"}
+        assert origin.branch_head() == moved
+        (error,) = run.errors()
+        assert error == (
+            f"::error::{BRANCH} is at {moved[:12]}, not at the reviewed {origin.head[:12]}: "
+            "nothing was written; the review must run again on the new head"
+        )
+        # The verdict labels this run set come off; the score label stays.
+        removed = sorted(c[c.index("--remove-label") + 1] for c in run.gh if c[:2] == ["pr", "edit"])
+        assert removed == ["ai-approved", "regen:improved"]
+
+    @SHELLS
+    def test_a_branch_that_moves_before_the_push_is_not_overwritten(self, tmp_path, shell):
+        origin = WriteOrigin(tmp_path)
+        other = tmp_path / "other"
+        subprocess.run(
+            [REAL_GIT, "clone", "-q", "-b", BRANCH, str(origin.origin), str(other)], env=origin.env, check=True
+        )
+        meanwhile = (
+            f'git -C "{other}" -c user.name=o -c user.email=o@o commit -q --allow-empty -m meanwhile\n'
+            f'git -C "{other}" push -q origin HEAD:{BRANCH}'
+        )
+        run = self._run(origin, shell=shell, meanwhile=meanwhile)
+        assert run.rc == 1 and run.outputs == {"head_moved": "true"}
+        assert origin.branch_head() == _git(other, origin.env, "rev-parse", "HEAD")
+        assert len(run.errors()) == 1
+
+    def test_the_push_is_a_plain_push(self):
+        script = _code_only(_step("impl-review.yml", self.STEP)["run"])
+        pushes = re.findall(r"git push[^\n]*", script)
+        assert pushes == ['git push origin "$BRANCH"; then']
+        assert "--force" not in script and "push -f" not in script
+
+    def test_a_refused_write_asks_for_one_review_of_the_new_head(self):
+        """The re-review rescue runs for it; the verdict step, which dispatches merge or repair, does not."""
+        rescue = _step("impl-review.yml", "Re-dispatch review after a post-score failure")
+        assert "steps.metadata.outputs.head_moved == 'true'" in rescue["if"]
+        verdict = _step("impl-review.yml", "Add verdict label and take action")
+        assert "always()" not in verdict["if"] and "failure()" not in verdict["if"]
+
+
+class TestRepairStartsFromTheCheckedHead:
+    def _checkout(self, origin: WriteOrigin, head_sha: str, shell=PIPEFAIL) -> Run:
+        _git(origin.ws, origin.env, "checkout", "-q", "main")
+        return _run(
+            _step("impl-repair.yml", "Checkout PR branch")["run"],
+            origin.tmp,
+            cwd=origin.ws,
+            shell=shell,
+            BRANCH=BRANCH,
+            HEAD_SHA=head_sha,
+            GITHUB_ENV=str(origin.tmp / "github_env"),
+        )
+
+    @SHELLS
+    def test_the_checked_head_is_repaired(self, tmp_path, shell):
+        origin = WriteOrigin(tmp_path)
+        run = self._checkout(origin, origin.head, shell)
+        assert run.rc == 0, run.log
+        assert f"start_sha={origin.head}" in (tmp_path / "github_env").read_text(encoding="utf-8")
+
+    @SHELLS
+    def test_a_branch_that_moved_after_the_check_is_refused_before_the_session(self, tmp_path, shell):
+        origin = WriteOrigin(tmp_path)
+        moved = origin.push_elsewhere()
+        run = self._checkout(origin, origin.head, shell)
+        assert run.rc == 1
+        assert run.errors() == [
+            f"::error::{BRANCH} is at {moved[:12]}, not at the checked {origin.head[:12]}: "
+            "no repair on a commit the guard did not check"
+        ]
+
+    def test_the_guard_hands_on_the_checked_head(self):
+        assert (
+            _step("impl-repair.yml", "Checkout PR branch")["env"]["HEAD_SHA"] == "${{ steps.guard.outputs.head_sha }}"
+        )
 
 
 # --- impl-review-retry -------------------------------------------------------------------------

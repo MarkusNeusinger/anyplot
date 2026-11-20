@@ -11,6 +11,8 @@ pull request's JSON on stdin.
 from __future__ import annotations
 
 import ast
+import contextlib
+import io
 import json
 import shutil
 import subprocess
@@ -241,23 +243,45 @@ class TestRunnerPython:
 # --- the CLI, as the workflows run it -------------------------------------------------------
 
 
-@pytest.fixture
-def staged(tmp_path: Path) -> Path:
-    """A copy of the guard alone, the way "Stage the pull request guard" leaves it."""
+@pytest.fixture(params=["staged-copy", "in-process"])
+def staged(request, tmp_path: Path) -> Path | None:
+    """A copy of the guard alone, the way "Stage the pull request guard" leaves it.
+
+    `None` for the second run of every CLI test: the same calls through
+    `pr_guard.main` in this process, where the coverage run sees them.
+    """
+    if request.param == "in-process":
+        return None
     target = tmp_path / "pr-guard" / "pr_guard.py"
     target.parent.mkdir()
     shutil.copyfile(pr_guard.__file__, target)
     return target
 
 
-def run(staged: Path, mode: str, stdin: str, *args: str, libraries: str = " ".join(LIBS)):
-    return subprocess.run(
-        [sys.executable, "-I", str(staged), mode, "--repo", REPO, "--libraries", libraries, *args],
-        input=stdin,
-        capture_output=True,
-        text=True,
-        cwd=staged.parent.parent,
-    )
+def invoke(staged: Path | None, argv: list[str], stdin: str = "") -> subprocess.CompletedProcess[str]:
+    if staged is not None:
+        return subprocess.run(
+            [sys.executable, "-I", str(staged), *argv],
+            input=stdin,
+            capture_output=True,
+            text=True,
+            cwd=staged.parent.parent,
+        )
+    out, err, real_stdin = io.StringIO(), io.StringIO(), sys.stdin
+    sys.stdin = io.StringIO(stdin)
+    try:
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            try:
+                code = pr_guard.main(argv)
+            except SystemExit as exc:  # argparse's own exit
+                code = exc.code if isinstance(exc.code, int) else 1
+    finally:
+        sys.stdin = real_stdin
+    return subprocess.CompletedProcess(argv, code, out.getvalue(), err.getvalue())
+
+
+def run(staged: Path | None, mode: str, stdin: str, *args: str, libraries: str = " ".join(LIBS)):
+    return invoke(staged, [mode, "--repo", REPO, "--libraries", libraries, *args], stdin)
 
 
 class TestCheckCli:
@@ -301,13 +325,13 @@ class TestCheckCli:
 
     @pytest.mark.parametrize(("libraries", "repo"), [("", REPO), ("Altair", REPO), ("altair", "anyplot"), ("a", "o/")])
     def test_bad_arguments_exit_2(self, staged, libraries, repo):
-        result = subprocess.run(
-            [sys.executable, "-I", str(staged), "check", "--repo", repo, "--libraries", libraries, "--number", "1"],
-            input=json.dumps(own()),
-            capture_output=True,
-            text=True,
-        )
+        argv = ["check", "--repo", repo, "--libraries", libraries, "--number", "1"]
+        result = invoke(staged, argv, json.dumps(own()))
         assert result.returncode == 2 and result.stdout == "reason=guard_failed\n"
+
+    def test_bad_arguments_to_filter_exit_2_and_print_nothing(self, staged):
+        result = invoke(staged, ["filter", "--repo", "anyplot", "--libraries", "altair"], "[]")
+        assert result.returncode == 2 and result.stdout == ""
 
     def test_a_too_deeply_nested_document_is_unreadable(self, staged):
         result = run(staged, "check", "[" * 100_000 + "]" * 100_000, "--number", "13275")
@@ -318,10 +342,8 @@ class TestSpecIdCli:
     """As the workflows call it: the value after `--`, so one that starts with a hyphen is a value too."""
 
     @staticmethod
-    def _run(staged: Path, value: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(
-            [sys.executable, "-I", str(staged), "spec-id", "--", value], capture_output=True, text=True
-        )
+    def _run(staged: Path | None, value: str) -> subprocess.CompletedProcess[str]:
+        return invoke(staged, ["spec-id", "--", value])
 
     @pytest.mark.parametrize("value", ["scatter-basic", "a", "a1-b2-c3", "x" * 100])
     def test_a_spec_id_in_the_catalogues_shape_is_printed(self, staged, value):

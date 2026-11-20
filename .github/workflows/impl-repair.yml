@@ -194,19 +194,28 @@ jobs:
             refuse "$REASON"
           fi
           BRANCH=$(sed -n 's/^branch=//p' <<< "$GUARD_OUT")
-          [ -n "$BRANCH" ] || refuse guard_failed
+          HEAD_SHA=$(sed -n 's/^head_sha=//p' <<< "$GUARD_OUT")
+          [ -n "$BRANCH" ] && [ -n "$HEAD_SHA" ] || refuse guard_failed
           {
             echo "allowed=true"
             echo "branch=$BRANCH"
+            echo "head_sha=$HEAD_SHA"
           } >> "$GITHUB_OUTPUT"
 
+      # The repair starts from the commit the guard checked, never from one
+      # the branch moved to since.
       - name: Checkout PR branch
         env:
           BRANCH: ${{ steps.guard.outputs.branch }}
+          HEAD_SHA: ${{ steps.guard.outputs.head_sha }}
         run: |
           echo "branch=$BRANCH" >> $GITHUB_ENV
           git fetch origin "$BRANCH"
           git checkout "$BRANCH"
+          if [ "$(git rev-parse HEAD)" != "$HEAD_SHA" ]; then
+            echo "::error::${BRANCH} is at $(git rev-parse --short=12 HEAD), not at the checked ${HEAD_SHA:0:12}: no repair on a commit the guard did not check"
+            exit 1
+          fi
           # The head this repair starts from; "Check the repair's push" needs it.
           echo "start_sha=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
@@ -582,6 +591,16 @@ jobs:
           rc=0; git diff --quiet "origin/$BRANCH" -- "$IMPL_FILE" || rc=$?
           if [ "$rc" != 0 ]; then
             fail "${IMPL_FILE} in the workspace is not the pushed file, so the renders may come from unpushed code (git diff exit ${rc})"
+          fi
+          # The push landed, as a plain push on top of the checked commit: the
+          # branch holds this workspace's commit and still descends from
+          # START_SHA. A push refused because the branch moved during the
+          # session leaves the branch somewhere else.
+          if ! git merge-base --is-ancestor "$START_SHA" "origin/$BRANCH" 2>/dev/null; then
+            fail "${BRANCH} no longer descends from ${START_SHA:0:7}, the commit the repair started from"
+          fi
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$BRANCH")" ]; then
+            fail "${BRANCH} is at $(git rev-parse --short "origin/$BRANCH"), not at the repair's commit $(git rev-parse --short HEAD): the repair's push did not land"
           fi
           echo "::notice::The repair pushed ${IMPL_FILE} at $(git rev-parse --short "origin/$BRANCH"), and the workspace holds that file"
 

@@ -11,7 +11,9 @@
   label, comment or dispatch, only a fixed reason code in the run log, and
   anything the checker cannot read is refused. impl-merge merges only the head
   commit it checked or GitHub's own merges of `main` into it, and treats a pull
-  request found merged as merged only at such a head; the review's write-back
+  request found merged as merged only at such a head; review and repair write
+  only onto the commit that was checked and never over a branch that moved
+  meanwhile; the review's write-back
   cleanup closes only the pipeline's own write-back pull requests; repair takes
   its review feedback from the reviewer's own comment only, and the automatic
   retries count only the workflows' own comments. (#13280)

@@ -2337,9 +2337,13 @@ jobs:
       # score and review are written back unchanged, marked as carried, and
       # the header gets the carried score with the measured versions.
       - name: Update metadata and implementation header
+        id: metadata
         if: (steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && (steps.regen.outputs.is_regen != 'true' || steps.gate.outputs.verdict == 'merge')) || (steps.adapt.outputs.review_skipped == 'true' && steps.gate.outputs.verdict == 'merge')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
+          # The commit the guard checked and the review read.
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
@@ -2363,9 +2367,31 @@ jobs:
           METADATA_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
           IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
 
+          # The review read HEAD_SHA. A branch that moved since holds a commit
+          # nobody reviewed: nothing is written onto it, the verdict labels
+          # this run set come off, and "Re-dispatch review after a post-score
+          # failure" asks for one review of the new head (head_moved).
+          refuse_moved() {
+            local verdicts="ai-approved ai-rejected regen:improved regen:adapt regen:adapt-overruled" on label attempt
+            echo "::error::${BRANCH} is at ${1:0:12}, not at the reviewed ${HEAD_SHA:0:12}: nothing was written; the review must run again on the new head"
+            # Labels that cannot be read are all taken as present.
+            on=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2>/dev/null) || on=$(tr ' ' '\n' <<< "$verdicts")
+            for label in $verdicts; do
+              grep -qxF "$label" <<< "$on" || continue
+              for attempt in 1 2 3; do
+                gh pr edit "$PR_NUM" --remove-label "$label" 2>/dev/null && break
+                [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+              done
+            done
+            echo "head_moved=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          }
+
           # Configure git auth and checkout the PR branch
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git fetch origin "$BRANCH"
+          BRANCH_HEAD=$(git rev-parse "origin/$BRANCH")
+          [ "$BRANCH_HEAD" = "$HEAD_SHA" ] || refuse_moved "$BRANCH_HEAD"
           git checkout -B "$BRANCH" "origin/$BRANCH"
 
           # Last net under "Restore the stored review": a metadata file that
@@ -2703,7 +2729,12 @@ jobs:
             else
               git commit -m "chore(${LIBRARY}): store the review for ${SPEC_ID}"
             fi
-            git push origin "$BRANCH"
+            # A plain push: it is refused when the branch moved after the
+            # check above, and that refusal is the same stop.
+            if ! git push origin "$BRANCH"; then
+              git fetch -q origin "$BRANCH" 2>/dev/null || true
+              refuse_moved "$(git rev-parse -q --verify "origin/$BRANCH" 2>/dev/null || echo unknown)"
+            fi
             echo "::notice::Changes committed to ${BRANCH}"
           fi
 
@@ -2726,8 +2757,11 @@ jobs:
       # gets `ai-review-failed`, which watchdog Case 1 rescues once (a
       # regeneration is only flagged).
       # The retry runs on this run's ref, so a branch smoke stays on its branch.
+      # It also runs when "Update metadata and implementation header" refused a
+      # branch that moved during the review (head_moved): that step took its
+      # verdict labels off again, and the new head needs its own review.
       - name: Re-dispatch review after a post-score failure
-        if: failure() && steps.early_verdict.conclusion != 'success' && ((steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true')
+        if: failure() && (steps.metadata.outputs.head_moved == 'true' || steps.early_verdict.conclusion != 'success') && ((steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
