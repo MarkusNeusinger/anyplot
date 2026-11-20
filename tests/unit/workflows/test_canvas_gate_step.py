@@ -334,6 +334,25 @@ class TestLightAsBefore:
         assert "Signed delta: +600 × -600 — width is 600 px over; height is 600 px short." in line
         assert "rendered a landscape canvas but the canvas of plot-dark.png is square; reconsider orientation." in line
 
+    def test_both_off_on_different_targets_aim_at_the_light_target(self, gate):
+        """Neither render is on a canvas, so the light render's target is the one both lines name."""
+        result = gate.light((3000, 1800)).dark((2300, 2400)).run(library="plotnine")
+        assert result.returncode == 0, result.stderr
+        fields = _fields(gate.notices(result)[0])
+        assert (fields["light"], fields["dark"], fields["same_target"]) == ("fail", "fail", "no")
+        light, dark = gate.weaknesses()
+        assert light == check_canvas(3000, 1800, "plotnine").defect_line.replace("VQ-05 (both):", "VQ-05 (light):", 1)
+        assert dark == (
+            "VQ-05 (dark): plot-dark.png is not on the canvas of plot-light.png. "
+            "Actual: 2300×2400, closest valid target 2400×2400; plot-light.png is 3000×1800, "
+            "closest valid target 3200×1800 (±16 px tolerance). "
+            "Signed delta to the light render's target: -900 × +600 — width is 900 px short; height is 600 px over. "
+            "Both renders must share one canvas, the one the spec's orientation calls for. "
+            "Likely cause: the two theme runs draw different canvases, so a size or save option probably depends "
+            "on the theme: set it once, outside any `ANYPLOT_THEME` branch. "
+            "Re-render both themes at the same target; the post-render gate enforces this."
+        )
+
     @pytest.mark.parametrize("dark", ["missing", "unreadable"])
     def test_a_drifted_light_beside_a_dark_that_does_not_open_gets_both_lines(self, gate, dark):
         gate.light((3000, 1800))

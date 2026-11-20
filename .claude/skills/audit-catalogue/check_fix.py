@@ -43,9 +43,14 @@ import sys
 import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import catalogue
 from catalogue import Pair
+
+
+if TYPE_CHECKING:
+    from core.canvas import CanvasVerdict
 
 
 RENDER_NAME = re.compile(r"(^|/)plot-[^/]*\.(png|html|webp)$")
@@ -159,16 +164,18 @@ def validator_problems(
     return problems, warnings
 
 
-def same_canvas_problem(targets: dict[str, tuple[int, int]]) -> str | None:
+def same_canvas_problem(verdicts: dict[str, CanvasVerdict]) -> str | None:
     """impl-review's canvas gate also wants both themes nearest one canvas: a size set inside a theme branch can put
     each render on a canonical canvas of its own, which passes each theme's check and fails the gate."""
-    light, dark = targets.get("light"), targets.get("dark")
-    if light is None or dark is None or light == dark:
+    light, dark = verdicts.get("light"), verdicts.get("dark")
+    if light is None or dark is None or light.target == dark.target:
         return None
-    return (
-        f"dark: on the {dark[0]}x{dark[1]} canvas while light is on {light[0]}x{light[1]}; "
-        "the canvas gate wants both renders on one canvas"
-    )
+
+    def where(verdict: CanvasVerdict) -> str:
+        width, height = verdict.target
+        return f"on the {width}x{height} canvas" if verdict.ok else f"off the canvas, nearest {width}x{height}"
+
+    return f"dark: {where(dark)} while light is {where(light)}; the canvas gate wants both renders on one canvas"
 
 
 def render_pair(pair: Pair, code: str, *, repo: Path, out: Path) -> tuple[dict[str, str], list[str], list[str]]:
@@ -184,7 +191,7 @@ def render_pair(pair: Pair, code: str, *, repo: Path, out: Path) -> tuple[dict[s
     summary: dict[str, str] = {}
     problems: list[str] = []
     warnings: list[str] = []
-    targets: dict[str, tuple[int, int]] = {}
+    verdicts: dict[str, CanvasVerdict] = {}
     target = out / pair.spec / pair.library
     target.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="audit-render-") as scratch:
@@ -221,7 +228,7 @@ def render_pair(pair: Pair, code: str, *, repo: Path, out: Path) -> tuple[dict[s
                 problems.append(f"{theme}: the render is not a PNG")
                 continue
             summary[theme] = f"{verdict.width}x{verdict.height} (target {verdict.target[0]}x{verdict.target[1]})"
-            targets[theme] = verdict.target
+            verdicts[theme] = verdict
             if not verdict.ok:
                 problems.append(f"{theme}: off the canvas target, {summary[theme]}")
             empty, rubric = check_blank(kept, max_blank_ratio=MAX_BACKGROUND_RATIO), check_blank(kept)
@@ -229,7 +236,7 @@ def render_pair(pair: Pair, code: str, *, repo: Path, out: Path) -> tuple[dict[s
                 problems.append(f"{theme}: {empty.message}")
             elif not rubric.passed:
                 warnings.append(f"{theme}: {rubric.message}; thin marks do that, look at the PNG")
-    mismatch = same_canvas_problem(targets)
+    mismatch = same_canvas_problem(verdicts)
     if mismatch:
         problems.append(mismatch)
     return summary, problems, warnings

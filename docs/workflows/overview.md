@@ -319,7 +319,10 @@ When a render misses, the step writes one defect line per render that missed to 
 | `(light)` | Only the light render drifted, or the two drifted to different sizes. |
 | `(dark)` | The dark render drifted, sits on the other canvas than the light render, or doesn't open. |
 
-The target in a line is the closest canonical canvas, with one exception: when the light render drifted and the dark render sits on a canonical canvas, that canvas is the target both share. The light line then aims at it, and the dark render gets no line. A light render far off its canvas, such as one at half scale, can be closer to the other canvas, which would send the repair the wrong way.
+The target in a line is the closest canonical canvas, with two exceptions:
+
+- When the light render drifted and the dark render sits on a canonical canvas, that canvas is the target both share. The light line then aims at it, and the dark render gets no line. A light render far off its canvas, such as one at half scale, can be closer to the other canvas, which would send the repair the wrong way.
+- When the dark render is closer to the other canvas than the light render, in any other case, its `(dark)` line says it isn't on the canvas of `plot-light.png` and measures its delta to the light render's target. A dark render at 2400 × 2400 beside a light render at 3200 × 1800 gets a delta of −800 × +600.
 
 The review copies every line into its weaknesses and sets VQ-05 to 0. A first generation then goes to repair; a regeneration is kept with the code `canvas_failed`.
 
