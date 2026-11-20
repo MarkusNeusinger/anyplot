@@ -10,7 +10,10 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   trimmed (samples, then top values, then ranges, with `truncated`) to fit its cap; and,
   when the user pasted notes with the table that passed the pre-filter and the scope
   judge, those notes as `user_notes`, fenced as `<user_notes>` after their own preamble
-  (`policy.user_notes_block`), so the root can read them again in a later turn.
+  (`policy.user_notes_block`), so the root can read them again in a later turn. The
+  session block of a paste's summary turn carries the same result without the notes and the
+  file's name (`profile_result`, `agent.profile_block`), so that turn describes the table in
+  force also when the root does not call the tool.
 * `get_spec_brief`: title, description, data roles and notes of the spec, fenced as
   `<spec_text>` (spec text starts as a public issue).
 * `get_current_code(version)`: the exported `plot.py` of a version (0 is the latest),
@@ -293,14 +296,14 @@ def _with_profile(
     return result
 
 
-async def get_dataset_profile(tool_context: ToolContext) -> dict[str, Any]:
-    """Return the profile of the user's dataset: row count, typed columns and a few sample cells, and `to_long` when the table is wide for this plot."""
-    view = _view(tool_context)
-    if view is None:
-        return _error("session_not_open")
-    stored = _stored(view, tool_context)
-    if stored is None:
-        return _not_ready("no_dataset")
+def profile_result(view: SessionView, stored: StoredDataset) -> dict[str, Any]:
+    """What `get_dataset_profile` returns for `stored`, without the pasted notes and the file's name: the row count,
+    the bindings in force, `to_long` when the table is wide for this plot, and the trimmed profile, each text fenced
+    as data under its preamble.
+
+    The session block of a paste's summary turn carries this same result (`agent.profile_block`), so the root reads
+    the shape it knows from the tool there; the notes and the file's name reach that turn by the action's message or
+    the note's paste context, which is why they stay out of it."""
     profile = stored.profile
     base: dict[str, Any] = {"status": "ok", "rows": profile.rows}
     if view.bindings:
@@ -311,9 +314,20 @@ async def get_dataset_profile(tool_context: ToolContext) -> dict[str, Any]:
     if suggestion is not None:
         # The page offers it as `.to_long()`; the column names are the user's, so fenced as data.
         base["to_long"] = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(suggestion.body(), ensure_ascii=False))
-    # The profile keeps its own budget; the notes pasted with the data (judged at the paste) come on top, so the
-    # root can read them again after the context filter dropped the summary turn that carried them.
-    result = _with_profile(base, profile, "get_dataset_profile", limit=PROFILE_RESULT_BYTES)
+    # The profile keeps its own budget; the notes pasted with the data (judged at the paste) come on top in the tool,
+    # so the root can read them again after the context filter dropped the summary turn that carried them.
+    return _with_profile(base, profile, "get_dataset_profile", limit=PROFILE_RESULT_BYTES)
+
+
+async def get_dataset_profile(tool_context: ToolContext) -> dict[str, Any]:
+    """Return the profile of the user's dataset: row count, typed columns and a few sample cells, and `to_long` when the table is wide for this plot."""
+    view = _view(tool_context)
+    if view is None:
+        return _error("session_not_open")
+    stored = _stored(view, tool_context)
+    if stored is None:
+        return _not_ready("no_dataset")
+    result = profile_result(view, stored)
     if stored.context_lines:
         result["user_notes"] = user_notes_block(stored.context_lines)
     if stored.file_name:
