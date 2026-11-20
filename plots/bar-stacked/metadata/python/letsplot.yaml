@@ -12,110 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 74
 review:
   strengths:
-  - 'Perfect theme-adaptive implementation: data colors identical across light/dark
-    renders, chrome correctly inverted, all text readable in both themes'
-  - Clean, professional appearance with proper Okabe-Ito palette usage and correct
-    design token application
-  - Correct stacked bar composition clearly demonstrates part-to-whole relationships
-    for quarterly sales by product
-  - Idiomatic letsplot syntax with proper ggplot2 grammar, geom_bar positioning, scale_fill_manual,
-    and comprehensive theme configuration
+  - Native position='stack' keeps the component order identical in every bar
+  - layer_tooltips() gives the HTML view per-segment product and value
+  - Theme tokens thread through all chrome; both renders readable
   weaknesses:
-  - Minimal customization beyond specification requirements; design choices are functional
-    but not exceptional
-  - No data labels or annotations on bars; total value annotations could enhance storytelling
-  - Distinctive library features rely on standard tooltip integration rather than
-    advanced letsplot techniques
+  - 'VQ-05 (both): canvas is 4800x2700 → 3200x1800 (-1600 x -900). Likely cause: ggsize(1600,
+    900) with scale=3 instead of ggsize(800, 450) with scale=4.'
+  - 'VQ-01 (both): tick and legend text at 16 on a 1600-wide canvas read about 20
+    % below the library reference (10 at 800 wide) → reference proportions. Likely
+    cause: font sizes chosen for the old ggsize.'
+  - 'SC-04 (both): title ''bar-stacked · letsplot · anyplot.ai'' lacks the language
+    segment → ''bar-stacked · python · letsplot · anyplot.ai''. Likely cause: the
+    labs(title=...) string.'
+  - 'DE-02 (both): four-sided panel frame → L-shaped frame, left and bottom only.
+    Likely cause: lets-plot''s default panel_border left on.'
+  - 'CQ-01 (code): the data block (line 26) is not closed by a # Plot marker, column
+    names are typed inline with no role constants, and IMPRINT lists 4 of 8 positions
+    → column constants with # role comments above a # Data … # Plot block and the
+    full Imprint list. Likely cause: the script predates the adaptable-code layout.'
+  - 'Suggestion: total labels above each stack (the Notes allow them) would put the
+    quarter totals in numbers.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title, axis labels ("Quarter", "Sales (Thousands $)"), tick labels (0-450, Q1-Q4) all dark and clearly readable against light background ✓
-      Data: Four stacked bars in Okabe-Ito order: Electronics (#009E73, bottom), Furniture (#D55E00), Clothing (#0072B2), Office Supplies (#CC79A7, top); white separator lines enhance definition ✓
-      Grid: Subtle horizontal grid lines visible without competing with data ✓
-      Legend: Right-positioned with clear product labels ✓
-      Legibility verdict: PASS — All text is easily readable; no light-on-light issues
+      Background: warm off-white #FAF8F1, 4800x2700.
+      Chrome: title 'bar-stacked · letsplot · anyplot.ai' top-left; axis titles and ticks in dark ink, comparatively small for the canvas; four-sided panel frame; small framed legend 'Product' on the right. All readable.
+      Data: four stacks of Electronics #009E73, Furniture #C475FD, Clothing #4467A3, Office Supplies #BD8233 with white separators; totals 315, 377, 386, 430.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title and all labels light-colored and clearly readable against dark background; no dark-on-dark failures ✓
-      Data: Colors IDENTICAL to light render (#009E73, #D55E00, #0072B2, #CC79A7); only background/text adapted to theme ✓
-      Grid: Subtle horizontal lines visible; properly themed ✓
-      Legend: Light text with clear labels ✓
-      Legibility verdict: PASS — All text contrasts appropriately; plot fully functional in dark theme
+      Background: warm near-black #1A1A17.
+      Chrome: light ink for title, axis titles, ticks and legend; no dark-on-dark text.
+      Data: identical fills to the light render, white separators.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text properly sized and colored for both light and dark themes
+        comment: Theme-correct, but tick and legend text at 16 on a 1600-wide canvas
+          reads below the library reference (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing; no colliding elements
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four stacked components fully visible
+        comment: Bars and legend swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe
+        comment: Distinct hues and lightness
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Good proportions; proper margins
+        passed: false
+        comment: Canvas 4800x2700, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id/library; axes have units
+        comment: Descriptive axis titles with unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds match tokens; both renders theme-correct'
+        comment: 'Imprint order, #009E73 first, correct backgrounds in both renders'
     design_excellence:
-      score: 11
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Solid use of Okabe-Ito and tokens; professional but not exceptional
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 1
         max: 6
-        passed: true
-        comment: L-shaped spines, subtle grid; minimal customization
+        passed: false
+        comment: Four-sided panel frame breaks the L-shaped spine rule (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Clear stacked composition; straightforward without extra emphasis
+        passed: false
+        comment: Data displayed, no chosen hierarchy
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -123,25 +126,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart
+        comment: Stacked bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple series, distinct colors, legend, title all present
+        comment: C1-C4 met; C5 n/a
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: quarters; Y: sales; all data shown'
+        comment: Correct mapping, all data shown
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Correct format; labels match data
+        comment: Title lacks the language segment (defect line); legend fine
     data_quality:
       score: 15
       max: 15
@@ -151,71 +154,73 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four product categories with realistic ranges
+        comment: 4x4 composition with unequal totals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly sales by product; plausible and neutral
+        comment: Quarterly sales by product line
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible; cumulative totals logical
+        comment: Checked stack tops 315, 377, 386, 430 on the axis
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Linear script; no unnecessary abstractions
+        passed: false
+        comment: 'No # Plot marker after the data block, no column constants, palette
+          cut to 4 positions (defect lines)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pd, lets_plot used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Proper ggplot2 grammar; geom_bar with position=stack; theme tokens
-          correct
+        comment: Standard grammar-of-graphics usage
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: layer_tooltips() used; standard for interactive letsplot
+        passed: false
+        comment: layer_tooltips() hover
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-c82e6bcb31
 impl_tags:
   dependencies: []
   techniques:
