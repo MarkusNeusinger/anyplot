@@ -17,4 +17,4 @@
   `attempt=`, and `canvas_gate_report.py` reads them. The audit skill's local
   render check applies the same one-canvas rule. On 2026-11-20 no live pair
   had a light render on the canvas and a dark render off it, so no pair that
-  passes today fails the new check.
+  passes today fails the new check. (#13241)
