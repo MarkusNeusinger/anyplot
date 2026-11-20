@@ -2,40 +2,47 @@ library: plotnine
 language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:36:31Z'
-updated: '2026-05-10T10:51:39Z'
-generated_by: claude-haiku
-workflow_run: 25626680565
+updated: '2026-11-20T17:36:40Z'
+generated_by: claude-sonnet
+workflow_run: 44783857027
 issue: 2331
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 79
 review:
   strengths:
-  - Perfect visual quality with all text explicitly sized and readable in both themes
-  - Flawless spec compliance with all required features implemented (diagonal reference
-    line, 10 bins, ECE metric)
-  - Thoughtful point sizing by bin count provides visual hierarchy showing data density
-  - Clean code with proper reproducibility (seed set) and theme-adaptive styling
-  - Idiomatic plotnine usage with effective theme customization using design tokens
+  - Bins computed in one groupby().agg() with mean predicted, fraction positive and
+    count, and ECE as a single count-weighted expression
+  - coord_fixed(ratio=1) puts both axes on one probability scale so the dashed diagonal
+    reads as perfect calibration
+  - ECE placed in a subtitle clearly tied to the single model; theme tokens flip all
+    chrome correctly between light and dark
   weaknesses:
-  - Point size encoding could be more explicit with a caption explaining bin count
-    representation
+  - 'DE-02 (both): all four spines are drawn as a closed panel box where nothing requires
+    them → remove the top and right spines (L-shaped frame) or the border entirely.
+    Likely cause: panel_border=element_rect(color=INK_SOFT, ...) in anyplot_theme.'
+  - 'DQ-02 (both): the scenario is a generic, unnamed classifier with columns ''True
+    label'' / ''Predicted probability'' → name a concrete domain (e.g. ''Defaulted''
+    / ''Predicted default probability'' for a credit-risk model). Likely cause: the
+    Y_TRUE / Y_PROB column names and the data comment.'
+  - 'Suggestion: an optional histogram of predicted probabilities as a small secondary
+    panel (allowed by the Notes) would show where predictions bunch.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) surface with subtle grid
-      Chrome: Title "calibration-curve · plotnine · anyplot.ai (ECE = 0.069)" and axis labels are dark text on light background, clearly readable
-      Data: Calibration curve rendered in brand green (#009E73) with points sized proportionally to bin counts; diagonal dashed reference line in light gray showing perfect calibration; X-axis (0-1) shows mean predicted probability, Y-axis shows fraction of positives
-      Legibility verdict: PASS - All text is clearly visible with good contrast
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas, full panel border in soft ink
+      Chrome: title 'calibration-curve · python · plotnine · anyplot.ai' in dark ink, subtitle 'ECE = 0.069 · point size shows samples per bin' in soft ink, axis titles 'Mean predicted probability' / 'Fraction of positives (observed)', ticks 0.00-1.00; all readable
+      Data: #009E73 line through 10 bin points sized by sample count, dashed dark-grey diagonal; curve below the diagonal at mid range, crossing above near 0.85
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) surface with subtle light grid
-      Chrome: Title and axis labels are light text (#F0EFE8) on dark background, clearly readable with no dark-on-dark contrast issues
-      Data: Calibration curve in identical brand green (#009E73), confirming data colors remain constant across themes; points and reference line fully visible against dark background
-      Legibility verdict: PASS - All text is clearly visible; no theme-adaptation failures
+      Background: warm near-black #1A1A17, same layout
+      Chrome: title and axis titles in light ink, ticks and subtitle in soft light grey, panel border light grey; no dark-on-dark text
+      Data: identical #009E73 curve and points; diagonal flips to light grey and stays clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -46,71 +53,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both light and dark themes
+        comment: Title 12 pt, axis titles 11 pt, ticks 9 pt, subtitle 10 pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all labels well-positioned
+        comment: No text collisions; subtitle sits clear of the panel
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points and lines clearly visible; point sizing varies appropriately
-          by bin count
+        comment: 10 bin markers sized 2-5 by count, all visible incl. the smallest
+          top bin; 1.0 line width
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 is colorblind-safe with excellent contrast'
+        comment: Single green series against a neutral dashed diagonal; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format (1:1) appropriate for symmetric calibration plot; proper
-          margins and utilization
+        comment: 2400x2400 square canvas (gate passed); balanced margins, title ~70%
+          width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with appropriate units and context
+        comment: '''Mean predicted probability'' / ''Fraction of positives (observed)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1 (light) and #1A1A17 (dark),
-          both renders theme-correct'
+        comment: 'Curve #009E73; backgrounds #FAF8F1 / #1A1A17; chrome tokens flip
+          correctly'
     design_excellence:
-      score: 14
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Strong design: point sizing by bin count is thoughtful and intentional;
-          brand color professional; typography explicit'
+        comment: 'Style-guide baseline: title/subtitle hierarchy, theme tokens; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: L-shaped frame with spines removed; subtle grid; generous whitespace
+        passed: false
+        comment: All four spines drawn via panel_border where nothing requires them
+          (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Calibration story clear: curve deviation shows overconfidence; point
-          size shows data density'
+        comment: Data displayed; no hierarchy chosen beyond the Notes (point-size-by-count
+          is an unrequested channel, no credit)
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +129,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calibration curve with diagonal reference line
+        comment: 'Reliability diagram: binned points joined by straight segments'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: diagonal, 10 bins, ECE metric'
+        comment: Diagonal reference (C2), 10 equal-width bins, ECE in subtitle (C3),
+          unsmoothed points (C1); C4/C5 conditional, not triggered
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show full 0-1 range
+        comment: x = mean predicted, y = fraction positive, both 0-1 under coord_fixed;
+          marks at their computed values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed for single series
+        comment: Title 'calibration-curve · python · plotnine · anyplot.ai'; single
+          model, no legend needed (N/A)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -148,19 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Data shows model overconfidence; realistic calibration scenario
+        comment: 'Curve sits under the diagonal through mid range and crosses above
+          at the top: over- and underconfidence both shown'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Binary classification with calibration shift; neutral and realistic
+        passed: false
+        comment: 'Plausible but generic: ''True label'' / ''Predicted probability''
+          of an unnamed classifier (defect line)'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2000 samples with 10 bins appropriate; probability 0-1 standard
+        comment: 2000 samples, 10 bins, probabilities in [0,1]; ECE 0.069 computed
+          from the bins (no Check values in spec)
     code_quality:
       score: 10
       max: 10
@@ -170,59 +185,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean script structure without unnecessary functions
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: plotnine, numpy, pandas'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity
+        comment: Binning in one groupby().agg(); ECE one expression
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-light.png and plot-dark.png with 300 DPI
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, 6x6 in)
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Idiomatic plotnine patterns: ggplot + geom_line + geom_point + theme
-          customization'
+        comment: Standard ggplot layering and theme(); nothing beyond the library
+          prompt
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: true
-        comment: Uses scale_size_identity() with aesthetic mapping; theme tokens for
-          dark mode support
-    total:
-      score: 90
-      max: 100
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-20T17:32:55Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
+  - groupby-aggregation
+  dataprep:
   - binning
-  dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
