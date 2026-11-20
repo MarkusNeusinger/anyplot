@@ -42,6 +42,8 @@ from typing import Any
 import pytest
 import yaml
 
+from tests.unit.workflows.pr_guard_support import own_pr, stage_guard
+
 
 REPO_ROOT = Path(__file__).parent.parent.parent.parent
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
@@ -454,6 +456,8 @@ class TestRepairCrashRetryBudget:
         "MODEL": "sonnet",
         "REPOSITORY": "owner/repo",
         "RUN_ID": "1",
+        # The guard step passed the pull request.
+        "GUARD_ALLOWED": "true",
     }
 
     def _crash(self, tmp_path: Path, **env: str) -> tuple[subprocess.CompletedProcess[str], list[list[str]]]:
@@ -548,13 +552,14 @@ class TestWatchdogCase1:
 
     def _scan(self, tmp_path: Path, labels: str = "ai-review-failed", **env: str):
         prs = [
-            {
-                "number": 7,
-                "labels": [{"name": name} for name in labels.split()],
-                "headRefName": "implementation/spec-a/plotly",
-                "updatedAt": "2026-01-01T00:00:00Z",
-            }
+            own_pr(
+                7,
+                "implementation/spec-a/plotly",
+                labels=[{"name": name} for name in labels.split()],
+                updatedAt="2026-01-01T00:00:00Z",
+            )
         ]
+        stage_guard(tmp_path / "runner")
         return _run(
             _step("watchdog-stuck-jobs.yml", "Scan and dispatch")["run"],
             tmp_path,

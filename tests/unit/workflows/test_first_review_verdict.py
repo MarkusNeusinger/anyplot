@@ -169,7 +169,9 @@ class TestLaterReviewsStartBlind:
         # watchdog bootstrap of a scored PR runs at attempt 0. Only a review
         # that a render hash mismatch stopped has nothing to hide.
         assert hide["if"] == "steps.render_stop.outputs.stopped != 'true'"
-        assert restore["if"] == "always()"
+        # Always, once the pull request passed the guard: a refused one has
+        # nothing hidden and no ids to build the paths from.
+        assert restore["if"] == "always() && steps.pr.outputs.specification_id != ''"
         # Neither can fail the job.
         assert hide["continue-on-error"] is True and restore["continue-on-error"] is True
         assert "git commit" not in hide["run"] and "git add" not in hide["run"]

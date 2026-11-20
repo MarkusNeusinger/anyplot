@@ -20,6 +20,11 @@ run-name: "Watchdog: scan ${{ github.event_name == 'workflow_dispatch' && '(manu
 #   4. daily-regen's cron silently starved by GitHub's scheduler (no run
 #      for >26 h outside the quiet window) — re-dispatched manually.
 #
+# Only the pipeline's own PRs are scanned: from this repository, on an
+# `implementation/<spec-id>/<library>` branch with a registered library
+# (automation/scripts/pr_guard.py). Any other is skipped with a log line and
+# never labelled or dispatched, and never counts as a pair's open PR.
+#
 # PRs labelled `ai-review-paused` or `ai-repair-paused` (Claude stopped the
 # review or repair at a spend or usage limit, or refused its credentials) are
 # skipped: daily-regen's pair mode resumes them. PRs labelled
@@ -69,6 +74,31 @@ jobs:
         with:
           fetch-depth: 1
 
+      # The pipeline acts only on its own pull requests: same repository,
+      # head branch implementation/<spec-id>/<library> with a registered
+      # library. The guard (automation/scripts/pr_guard.py) and the library
+      # list it checks against come from GUARD_REF, the workflow's own commit,
+      # never from a pull request's tree, and are staged before any step reads
+      # a pull request. The same step, word for word, stands in every job that
+      # takes a pull request (tests/unit/workflows/test_pr_guard_steps.py);
+      # docs/workflows/overview.md#pull-requests-the-pipeline-acts-on.
+      - name: Stage the pull request guard
+        env:
+          GUARD_REF: ${{ github.sha }}
+        run: |
+          G="$RUNNER_TEMP/pr-guard"
+          mkdir -p "$G/core"
+          if ! git show "${GUARD_REF}:automation/scripts/pr_guard.py" > "$G/pr_guard.py" \
+             || ! git show "${GUARD_REF}:core/constants.py" > "$G/core/constants.py" \
+             || ! (cd "$G" && python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))") > "$G/libraries" \
+             || ! [ -s "$G/libraries" ]; then
+            rm -f "$G/pr_guard.py" "$G/libraries"
+            echo "::error::guard_failed: the pull request guard could not be staged from ${GUARD_REF}; no pull request is acted on"
+            echo "- Pull request guard: \`guard_failed\`, not staged from ${GUARD_REF}; no pull request was acted on" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "Pull request guard staged from ${GUARD_REF}; libraries: $(cat "$G/libraries")"
+
       - name: Scan and dispatch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -81,6 +111,11 @@ jobs:
           REGEN_PAIRS: ${{ vars.REGEN_PAIRS_PER_DAY }}
         run: |
           set -euo pipefail
+          # A dispatch input: digits only before it enters arithmetic.
+          if ! [[ "$STALE_HOURS" =~ ^[0-9]{1,4}$ ]]; then
+            echo "::error::bad_input: stale_hours does not have its expected shape (whole hours)"
+            exit 1
+          fi
           STALE_SEC=$(( STALE_HOURS * 3600 ))
           NOW=$(date -u +%s)
 
@@ -122,10 +157,12 @@ jobs:
             [[ "$DRY_RUN" == "true" ]] && return 0
             for i in 1 2 3 4 5 6; do
               sleep 10
-              n=$(gh run list --workflow=impl-generate.yml --limit 30 --json displayTitle,createdAt \
-                --jq "[.[] | select(.displayTitle == \"Generate: $lib for $spec\" and .createdAt >= \"$t0\")] | length" \
-                2>/dev/null || echo 0)
-              if (( n > 0 )); then
+              # Values go to jq as arguments, and the count is compared only
+              # once it is digits.
+              n=$(gh run list --workflow=impl-generate.yml --limit 30 --json displayTitle,createdAt 2>/dev/null \
+                | jq --arg title "Generate: $lib for $spec" --arg t0 "$t0" \
+                    '[.[] | select(.displayTitle == $title and .createdAt >= $t0)] | length' 2>/dev/null) || n=0
+              if [[ "$n" =~ ^[0-9]+$ ]] && [ "$n" -gt 0 ]; then
                 return 0
               fi
             done
@@ -179,19 +216,73 @@ jobs:
           }
 
           # Resolve issue number → spec_id by parsing the issue title prefix
-          # `[spec-id] ...` (set by spec-create.yml when the spec lands).
+          # `[spec-id] ...` (set by spec-create.yml when the spec lands). The
+          # title is the issue author's text: only a value in the catalogue's
+          # spec id shape (the guard's `spec-id` check) comes back, anything
+          # else is "no spec id".
           spec_id_for_issue() {
-            local issue_num="$1"
-            gh issue view "$issue_num" --json title --jq '.title' \
-              | grep -oP '^\[\K[^]]+' || true
+            local issue_num="$1" title candidate
+            title=$(gh issue view "$issue_num" --json title --jq '.title' 2>/dev/null) || return 0
+            candidate=$(grep -oP '^\[\K[^]]+' <<< "$title" | head -n 1) || true
+            python3 "$PR_GUARD" spec-id -- "$candidate" 2>/dev/null || true
+          }
+
+          # Only the pipeline's own pull requests ("Stage the pull request
+          # guard"): every listing below goes through the guard's filter, and
+          # a pull request it skips is never labelled, closed or dispatched.
+          # A skip is a plain log line, not a warning, so a foreign pull
+          # request does not raise one on every scan for as long as it stays
+          # open. Prints the own entries of the JSON array on stdin.
+          PR_GUARD="$RUNNER_TEMP/pr-guard/pr_guard.py"
+          LIBRARIES=$(cat "$RUNNER_TEMP/pr-guard/libraries")
+          own_prs() {
+            python3 "$PR_GUARD" filter --repo "$GH_REPO" --libraries "$LIBRARIES"
+          }
+          # A library from a label, before it goes into a dispatch input.
+          registered_library() {
+            [[ "$1" =~ ^[a-z0-9]+$ ]] && [[ " $LIBRARIES " == *" $1 "* ]]
+          }
+          GUARD_FIELDS="number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName"
+
+          # How many of the pipeline's own pull requests are open for one
+          # (spec, library) pair. `head:` matches a branch of that name in
+          # any repository, and by prefix: only the pipeline's own count, and
+          # only that exact branch. Prints nothing when the listing or the
+          # guard fails, so the caller dispatches nothing this scan.
+          open_own_prs() {
+            local branch="implementation/$1/$2" listed own
+            if ! listed=$(gh pr list --state open --search "head:$branch" --json "$GUARD_FIELDS") \
+               || ! own=$(own_prs <<<"$listed"); then
+              echo "::warning::the open PRs of ${branch} could not be listed and checked — no generation retry this scan" >&2
+              return 0
+            fi
+            jq --arg b "$branch" '[.[] | select(.headRefName == $b)] | length' <<<"$own"
           }
 
           ##### A) Scan open implementation PRs ##############################
           # `gh pr list --search "head:..."` does not support prefix matching,
-          # so list all open PRs and filter client-side by branch name.
-          PRS_JSON=$(gh pr list --state open --limit 200 \
-            --json number,labels,headRefName,updatedAt \
+          # so list all open PRs and filter client-side by branch name. Up to
+          # 1000, far more than are ever open, so pull requests that the
+          # guard skips below cannot crowd the pipeline's own out of the list.
+          PRS_JSON=$(gh pr list --state open --limit 1000 \
+            --json "${GUARD_FIELDS},labels,updatedAt" \
             --jq '[.[] | select(.headRefName | startswith("implementation/"))]')
+          LISTED=$(jq 'length' <<<"$PRS_JSON")
+          # A filter that fails while the scan runs skips section A only; B
+          # and C still run. (A guard that could not be staged stops the job
+          # before this step.)
+          if OWN_JSON=$(own_prs <<<"$PRS_JSON"); then
+            SKIPPED=$(( LISTED - $(jq 'length' <<<"$OWN_JSON") ))
+            PRS_JSON="$OWN_JSON"
+          else
+            echo "::warning::the open implementation PRs could not be checked against the pull request guard — none scanned this time"
+            PRS_JSON='[]'
+            SKIPPED=0
+          fi
+          if (( SKIPPED > 0 )); then
+            echo "::notice::${SKIPPED} open implementation PR(s) skipped: not the pipeline's own (the lines above name them)"
+            echo "- ${SKIPPED} open implementation PR(s) skipped: not the pipeline's own pull requests" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
           echo "Scanning $(jq 'length' <<<"$PRS_JSON") open implementation PR(s)"
 
@@ -492,6 +583,10 @@ jobs:
               case "$label" in
                 generate:*)
                   lib="${label#generate:}"
+                  if ! registered_library "$lib"; then
+                    echo "::warning::Issue #$num: a generate: label names no registered library — skipped"
+                    continue
+                  fi
                   marker="watchdog:retried-$lib"
                   if echo " $labels " | grep -q " $marker "; then
                     echo "::warning::Issue #$num: generate:$lib already retried by watchdog — needs manual attention"
@@ -504,9 +599,7 @@ jobs:
                     echo "::warning::Issue #$num: cannot resolve spec_id from title; skipping generate:$lib"
                     continue
                   fi
-                  open_pr=$(gh pr list --state open \
-                    --search "head:implementation/$spec_id/$lib" \
-                    --json number --jq 'length')
+                  open_pr=$(open_own_prs "$spec_id" "$lib")
                   if [[ "$open_pr" == "0" ]]; then
                     ensure_label "$marker" "5319e7" "Watchdog retried $lib once"
                     if dispatch_generate "Issue #$num: generate (stuck pending) $lib" \
@@ -519,6 +612,10 @@ jobs:
                 impl:*:failed)
                   lib_failed="${label#impl:}"
                   lib="${lib_failed%:failed}"
+                  if ! registered_library "$lib"; then
+                    echo "::warning::Issue #$num: an impl:*:failed label names no registered library — skipped"
+                    continue
+                  fi
                   marker="watchdog:retried-$lib"
                   if echo " $labels " | grep -q " $marker "; then
                     echo "::warning::Issue #$num: $lib already retried by watchdog — needs manual attention"
@@ -531,9 +628,7 @@ jobs:
                     echo "::warning::Issue #$num: cannot resolve spec_id from title; skipping impl:$lib:failed"
                     continue
                   fi
-                  open_pr=$(gh pr list --state open \
-                    --search "head:implementation/$spec_id/$lib" \
-                    --json number --jq 'length')
+                  open_pr=$(open_own_prs "$spec_id" "$lib")
                   if [[ "$open_pr" == "0" ]]; then
                     ensure_label "$marker" "5319e7" "Watchdog retried $lib once"
                     if dispatch_generate "Issue #$num: generate (failed) $lib" \

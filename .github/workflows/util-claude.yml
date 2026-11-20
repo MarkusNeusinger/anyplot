@@ -248,7 +248,9 @@ jobs:
       # did not have.
       - name: Stop when Claude stopped the session
         if: steps.claude_cost.outputs.stopped == 'true'
+        env:
+          STOP_REASON: ${{ steps.claude_cost.outputs.stop_reason }}
         run: |
-          echo "::error::Claude stopped the session (${{ steps.claude_cost.outputs.stop_reason }}); the retry is skipped"
+          echo "::error::Claude stopped the session (${STOP_REASON//[^a-z_]/}); the retry is skipped"
           exit 1
 

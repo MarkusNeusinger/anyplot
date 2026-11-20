@@ -38,6 +38,8 @@ from typing import Any
 import pytest
 import yaml
 
+from tests.unit.workflows.pr_guard_support import own_pr, stage_guard
+
 
 WORKFLOWS_DIR = Path(__file__).parent.parent.parent.parent / ".github" / "workflows"
 ACTION = "anthropics/claude-code-action@"
@@ -638,6 +640,9 @@ def _run(tmp_path: Path, script: str, **env: str) -> tuple[subprocess.CompletedP
 
 
 def _run_step(tmp_path: Path, filename: str, name: str, **env: str):
+    if name == "Handle repair failure":
+        # The repair's guard step passed the pull request (test_pr_guard_steps.py runs the other cases).
+        env = {"GUARD_ALLOWED": "true", **env}
     return _run(tmp_path, _step(filename, name)["run"], **env)
 
 
@@ -925,14 +930,12 @@ def test_the_watchdog_skips_paused_prs(tmp_path, labels):
     (bin_dir / "gh").write_text(FAKE_GH_WATCHDOG, encoding="utf-8")
     (bin_dir / "gh").chmod(0o755)
     prs = [
-        {
-            "number": 7,
-            "labels": [{"name": n} for n in labels],
-            "headRefName": "implementation/spec-a/plotly",
-            "updatedAt": "2026-01-01T00:00:00Z",
-        }
+        own_pr(
+            7, "implementation/spec-a/plotly", labels=[{"name": n} for n in labels], updatedAt="2026-01-01T00:00:00Z"
+        )
     ]
     log = tmp_path / "gh.log"
+    stage_guard(tmp_path / "runner")
     script = _step("watchdog-stuck-jobs.yml", "Scan and dispatch")["run"]
     base = {k: v for k, v in os.environ.items() if not k.startswith(("GIT_", "GH_"))}
     result = subprocess.run(
@@ -948,6 +951,7 @@ def test_the_watchdog_skips_paused_prs(tmp_path, labels):
             "STALE_HOURS": "4",
             "DRY_RUN": "false",
             "REGEN_PAIRS": "",
+            "RUNNER_TEMP": str(tmp_path / "runner"),
         },
         capture_output=True,
         text=True,

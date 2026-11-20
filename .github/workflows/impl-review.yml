@@ -122,16 +122,59 @@ jobs:
         with:
           python-version-file: '.python-version'
 
+      # The pipeline acts only on its own pull requests: same repository,
+      # head branch implementation/<spec-id>/<library> with a registered
+      # library. The guard (automation/scripts/pr_guard.py) and the library
+      # list it checks against come from GUARD_REF, the workflow's own commit,
+      # never from a pull request's tree, and are staged before any step reads
+      # a pull request. The same step, word for word, stands in every job that
+      # takes a pull request (tests/unit/workflows/test_pr_guard_steps.py);
+      # docs/workflows/overview.md#pull-requests-the-pipeline-acts-on.
+      - name: Stage the pull request guard
+        env:
+          GUARD_REF: ${{ github.sha }}
+        run: |
+          G="$RUNNER_TEMP/pr-guard"
+          mkdir -p "$G/core"
+          if ! git show "${GUARD_REF}:automation/scripts/pr_guard.py" > "$G/pr_guard.py" \
+             || ! git show "${GUARD_REF}:core/constants.py" > "$G/core/constants.py" \
+             || ! (cd "$G" && python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))") > "$G/libraries" \
+             || ! [ -s "$G/libraries" ]; then
+            rm -f "$G/pr_guard.py" "$G/libraries"
+            echo "::error::guard_failed: the pull request guard could not be staged from ${GUARD_REF}; no pull request is acted on"
+            echo "- Pull request guard: \`guard_failed\`, not staged from ${GUARD_REF}; no pull request was acted on" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "Pull request guard staged from ${GUARD_REF}; libraries: $(cat "$G/libraries")"
+
       - name: Extract PR info
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ inputs.pr_number || github.event.client_payload.pr_number }}
           MODEL_INPUT: ${{ inputs.model }}
           MODEL_PAYLOAD: ${{ github.event.client_payload.model }}
           REVIEW_MODEL_INPUT: ${{ inputs.review_model }}
           REVIEW_MODEL_PAYLOAD: ${{ github.event.client_payload.review_model }}
         run: |
+          # Only one of the pipeline's own pull requests goes past this point
+          # ("Stage the pull request guard"). Until the guard has passed it,
+          # nothing the pull request carries (its branch name, its body)
+          # reaches a command, a path, a pattern or $GITHUB_OUTPUT; a refusal
+          # checks out nothing of it and writes nothing to it, and leaves one
+          # error line and one summary line with a fixed reason code.
+          G="$RUNNER_TEMP/pr-guard"
+          PR_SHOWN="${PR_NUMBER//[^0-9]/}"
+          PR_SHOWN="${PR_SHOWN:0:10}"
+          refuse() {
+            echo "::error::PR #${PR_SHOWN} refused (${1}): not one of the pipeline's own pull requests; nothing of it was checked out, labelled or commented on"
+            echo "- PR #${PR_SHOWN} refused: \`${1}\`, not one of the pipeline's own pull requests" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+          # gh pr view also takes a URL or a branch name for its argument.
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]{0,9}$ ]] || refuse bad_number
+
           # Retry gh pr view — transient API blips were the dominant impl-review
           # failure mode (5x in 24h on 2026-05-06). Three attempts with linear
           # backoff (5s, 10s); keep stderr separate from stdout so warnings
@@ -139,10 +182,12 @@ jobs:
           # Under $RUNNER_TEMP, away from the files the reviewer reads under
           # /tmp: a regeneration's PR body records the stored score
           # ("previous quality N").
-          PR_DATA=""
+          READ_OK=0
           for attempt in 1 2 3; do
-            if gh pr view "$PR_NUMBER" --json headRefName,headRefOid,body > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
-              PR_DATA=$(cat "$RUNNER_TEMP/pr.json")
+            if gh pr view "$PR_NUMBER" --repo "$REPOSITORY" \
+                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName,body \
+                 > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
+              READ_OK=1
               break
             fi
             PERR=$(head -c 500 "$RUNNER_TEMP/pr.err" | tr '\n' ' ')
@@ -151,17 +196,30 @@ jobs:
               sleep $((attempt * 5))
             fi
           done
-          if [ -z "$PR_DATA" ]; then
-            echo "::error::gh pr view failed after 3 attempts for PR #${PR_NUMBER}"
-            exit 1
-          fi
-          HEAD_REF=$(echo "$PR_DATA" | jq -r '.headRefName')
-          HEAD_SHA=$(echo "$PR_DATA" | jq -r '.headRefOid')
-          BODY=$(echo "$PR_DATA" | jq -r '.body')
+          [ "$READ_OK" -eq 1 ] || refuse pr_unreadable
 
-          # Extract spec-id and library from branch: implementation/{spec-id}/{library}
-          SPEC_ID=$(echo "$HEAD_REF" | cut -d'/' -f2)
-          LIBRARY=$(echo "$HEAD_REF" | cut -d'/' -f3)
+          # Exit 1 prints one `reason=<code>` line; any other non-zero status
+          # is a guard that did not answer, and refuses as well.
+          GUARD_RC=0
+          GUARD_OUT=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
+            --number "$PR_NUMBER" < "$RUNNER_TEMP/pr.json") || GUARD_RC=$?
+          if [ "$GUARD_RC" -ne 0 ]; then
+            REASON=guard_failed
+            if [ "$GUARD_RC" -eq 1 ] && [[ "$GUARD_OUT" =~ ^reason=([a-z_]{1,40})$ ]]; then
+              REASON="${BASH_REMATCH[1]}"
+            fi
+            refuse "$REASON"
+          fi
+          guard_value() { sed -n "s/^$1=//p" <<< "$GUARD_OUT"; }
+          HEAD_REF=$(guard_value branch)
+          HEAD_SHA=$(guard_value head_sha)
+          # implementation/{spec-id}/{library}, as the guard read it from the branch
+          SPEC_ID=$(guard_value spec_id)
+          LIBRARY=$(guard_value library)
+          if [ -z "$HEAD_REF" ] || [ -z "$HEAD_SHA" ] || [ -z "$SPEC_ID" ] || [ -z "$LIBRARY" ]; then
+            refuse guard_failed
+          fi
+          BODY=$(jq -r '.body // ""' "$RUNNER_TEMP/pr.json")
 
           # Extract issue number from PR body
           ISSUE_NUMBER=$(echo "$BODY" | grep -oP '\*\*Parent Issue:\*\* #\K\d+' | head -1 || echo "")
@@ -195,8 +253,8 @@ jobs:
               # LANGUAGE/EXT are only derived in the next step, so match the
               # library's file in any language directory. SPEC_ID and LIBRARY
               # come from the implementation/{spec-id}/{library} branch name,
-              # whose contract ([a-z0-9-] ids, alphanumeric library names)
-              # keeps them free of regex metacharacters.
+              # whose contract ([a-z0-9-] ids, registered library names; the
+              # guard checked it above) keeps them free of regex metacharacters.
               ON_MAIN=$(git ls-tree -r --name-only origin/main -- "plots/${SPEC_ID}/implementations/" 2>/dev/null || true)
               if grep -qE "^plots/${SPEC_ID}/implementations/[a-z]+/${LIBRARY}\.[A-Za-z]+$" <<< "$ON_MAIN"; then
                 MODEL="sonnet"
@@ -329,6 +387,8 @@ jobs:
           echo "ext=$EXT"           >> $GITHUB_OUTPUT
 
       - name: Checkout PR code
+        env:
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |
           # Keep the regen helpers from THIS workflow's ref before switching to
           # the PR head: the gate's parser must match the workflow that calls
@@ -348,8 +408,8 @@ jobs:
           # The reviewer's step-10 self-check (`check-feedback`) runs this
           # same workflow-ref copy of the gate.
           cp automation/scripts/regen_gate.py /tmp/anyplot-regen-gate.py
-          git fetch origin ${{ steps.pr.outputs.head_sha }}
-          git checkout ${{ steps.pr.outputs.head_sha }}
+          git fetch origin "$HEAD_SHA"
+          git checkout "$HEAD_SHA"
 
       # Pre-merge test hook (impl-generate.yml dispatches the review on its own
       # ref when run from a feature branch): review with that branch's
@@ -1569,7 +1629,8 @@ jobs:
       # and the metadata file comes back from $RUNNER_TEMP; if that move
       # fails, git restores the branch's copy, which is the same file.
       - name: Restore the stored review
-        if: always()
+        # Nothing was hidden when the guard refused the pull request.
+        if: always() && steps.pr.outputs.specification_id != ''
         continue-on-error: true
         env:
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -1733,11 +1794,11 @@ jobs:
           # `--paginate --jq` prints one count per page, so the pages are
           # summed. A read that fails three times counts as a spent budget
           # (fail closed): the brown-out that breaks the read must not buy a
-          # second automatic re-review.
+          # second automatic re-review. Only the workflow's own comments count.
           RETRY_COUNT=""
           for attempt in 1 2 3; do
             if PAGES=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
-                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/retry-count.err) \
+                 --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/retry-count.err) \
                && RETRY_COUNT=$(printf '%s\n' "$PAGES" | jq -s 'add // 0' 2>> /tmp/retry-count.err) \
                && [[ "$RETRY_COUNT" =~ ^[0-9]+$ ]]; then
               break
@@ -2276,9 +2337,13 @@ jobs:
       # score and review are written back unchanged, marked as carried, and
       # the header gets the carried score with the measured versions.
       - name: Update metadata and implementation header
+        id: metadata
         if: (steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && (steps.regen.outputs.is_regen != 'true' || steps.gate.outputs.verdict == 'merge')) || (steps.adapt.outputs.review_skipped == 'true' && steps.gate.outputs.verdict == 'merge')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
+          # The commit the guard checked and the review read.
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
@@ -2302,9 +2367,31 @@ jobs:
           METADATA_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
           IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
 
+          # The review read HEAD_SHA. A branch that moved since holds a commit
+          # nobody reviewed: nothing is written onto it, the verdict labels
+          # this run set come off, and "Re-dispatch review after a post-score
+          # failure" asks for one review of the new head (head_moved).
+          refuse_moved() {
+            local verdicts="ai-approved ai-rejected regen:improved regen:adapt regen:adapt-overruled" on label attempt
+            echo "::error::${BRANCH} is at ${1:0:12}, not at the reviewed ${HEAD_SHA:0:12}: nothing was written; the review must run again on the new head"
+            # Labels that cannot be read are all taken as present.
+            on=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2>/dev/null) || on=$(tr ' ' '\n' <<< "$verdicts")
+            for label in $verdicts; do
+              grep -qxF "$label" <<< "$on" || continue
+              for attempt in 1 2 3; do
+                gh pr edit "$PR_NUM" --remove-label "$label" 2>/dev/null && break
+                [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+              done
+            done
+            echo "head_moved=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          }
+
           # Configure git auth and checkout the PR branch
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git fetch origin "$BRANCH"
+          BRANCH_HEAD=$(git rev-parse "origin/$BRANCH")
+          [ "$BRANCH_HEAD" = "$HEAD_SHA" ] || refuse_moved "$BRANCH_HEAD"
           git checkout -B "$BRANCH" "origin/$BRANCH"
 
           # Last net under "Restore the stored review": a metadata file that
@@ -2642,7 +2729,12 @@ jobs:
             else
               git commit -m "chore(${LIBRARY}): store the review for ${SPEC_ID}"
             fi
-            git push origin "$BRANCH"
+            # A plain push: it is refused when the branch moved after the
+            # check above, and that refusal is the same stop.
+            if ! git push origin "$BRANCH"; then
+              git fetch -q origin "$BRANCH" 2>/dev/null || true
+              refuse_moved "$(git rev-parse -q --verify "origin/$BRANCH" 2>/dev/null || echo unknown)"
+            fi
             echo "::notice::Changes committed to ${BRANCH}"
           fi
 
@@ -2665,8 +2757,11 @@ jobs:
       # gets `ai-review-failed`, which watchdog Case 1 rescues once (a
       # regeneration is only flagged).
       # The retry runs on this run's ref, so a branch smoke stays on its branch.
+      # It also runs when "Update metadata and implementation header" refused a
+      # branch that moved during the review (head_moved): that step took its
+      # verdict labels off again, and the new head needs its own review.
       - name: Re-dispatch review after a post-score failure
-        if: failure() && steps.early_verdict.conclusion != 'success' && ((steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true')
+        if: failure() && (steps.metadata.outputs.head_moved == 'true' || steps.early_verdict.conclusion != 'success') && ((steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
@@ -2751,11 +2846,12 @@ jobs:
           # Paginate so the marker is found even on PRs with >30 comments.
           # `--paginate --jq` prints one count per page, so the pages are
           # summed. An unreadable budget counts as spent (fail closed): the
-          # brown-out that brought this step here must not lift the cap.
+          # brown-out that brought this step here must not lift the cap. Only
+          # the workflow's own comments count.
           RETRY_COUNT=""
           for attempt in 1 2 3; do
             if PAGES=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
-                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/rescue-gh.err) \
+                 --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/rescue-gh.err) \
                && RETRY_COUNT=$(printf '%s\n' "$PAGES" | jq -s 'add // 0' 2>> /tmp/rescue-gh.err) \
                && [[ "$RETRY_COUNT" =~ ^[0-9]+$ ]]; then
               break
@@ -2912,13 +3008,18 @@ jobs:
           fi
 
           # 4. A newer re-score supersedes an open write-back of this pair, and a
-          # rescue re-run of this kept PR reuses the branch name.
+          # rescue re-run of this kept PR reuses the branch name. Only the
+          # pipeline's own write-backs are closed: the identity `check-pr`
+          # asks of the PR it merges (this repository, the bot's authorship,
+          # base main, the label, the branch shape), via `own-open`.
+          WB_FIELDS="number,state,headRefName,labels,author,isCrossRepository,baseRefName"
           OPEN=""
           LISTED=0
           for attempt in 1 2 3; do
-            if OPEN=$(gh pr list --state open --label review-writeback --limit 100 --json number,headRefName \
-                        --jq ".[] | select(.headRefName | startswith(\"review-writeback/${SPEC_ID}/${LIBRARY}/\")) | .number" \
-                        2> /tmp/anyplot-writeback-gh.err); then
+            if LISTED_JSON=$(gh pr list --state open --label review-writeback --limit 100 --json "$WB_FIELDS" \
+                        2> /tmp/anyplot-writeback-gh.err) \
+               && OPEN=$(python3 "$TOOL" own-open --spec "$SPEC_ID" --library "$LIBRARY" <<< "$LISTED_JSON" \
+                        2>> /tmp/anyplot-writeback-gh.err); then
               LISTED=1
               break
             fi
@@ -2988,8 +3089,12 @@ jobs:
               WB_PR=$(grep -oE '[0-9]+$' /tmp/anyplot-writeback-pr.txt | tail -1 || true)
               [ -n "$WB_PR" ] && break
             fi
-            # A create that succeeded but lost its response.
-            WB_PR=$(gh pr list --state open --head "$WB_BRANCH" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+            # A create that succeeded but lost its response: the pipeline's own
+            # write-back from the branch (`--head` matches the name anywhere).
+            WB_PR=""
+            if LISTED_JSON=$(gh pr list --state open --head "$WB_BRANCH" --json "$WB_FIELDS" 2>/dev/null); then
+              WB_PR=$(python3 "$TOOL" own-open --branch "$WB_BRANCH" <<< "$LISTED_JSON" 2>/dev/null | head -n 1) || WB_PR=""
+            fi
             [ -n "$WB_PR" ] && break
             echo "::warning::gh pr create failed (attempt ${attempt}/3): $(head -c 300 /tmp/anyplot-writeback-gh.err | tr '\n' ' ')"
             [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
