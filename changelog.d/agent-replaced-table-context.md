@@ -8,4 +8,4 @@
   came in. Before, the note "Convert the column day to dates." sent with a
   table whose `day` held text got the answer that the column already held
   dates, taken from the first table. A visitor who adjusts the data and says
-  "try again" is still understood.
+  "try again" is still understood. (#13348)
