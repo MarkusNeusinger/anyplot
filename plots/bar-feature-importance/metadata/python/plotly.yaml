@@ -2,48 +2,50 @@ library: plotly
 language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:38:54Z'
-updated: '2026-05-10T01:08:10Z'
-generated_by: claude-haiku
-workflow_run: 25616128429
+updated: '2026-11-20T15:46:24Z'
+generated_by: claude-sonnet
+workflow_run: 44765427577
 issue: 2276
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Perfect spec compliance with all required features (sorting, gradient coloring,
-    error bars, annotations)
-  - Flawless theme-adaptive implementation — both light and dark renders fully readable
-    with no dark-on-dark failures
-  - Strong visual hierarchy through opacity-gradient technique that emphasizes importance
-    progression
-  - Clean, elegant code with proper reproducibility seeding
-  - Realistic, well-contextualized data (credit scoring domain)
-  - Proper use of Plotly's interactive features (hovertemplate, manual annotations)
+  - Native go.Bar error_x draws the ensemble std centered on each bar end, visible
+    against every gradient step in both themes
+  - Value labels are placed from the data (importance + std + a gap scaled to the
+    axis reach) so every label clears its whisker
+  - Axis range and label gap derive from the data, and the column constants with a
+    pd.notna guard keep the file adaptable
+  - 'Theme tokens thread through every chrome element: no dark-on-dark text, warm
+    page colors in both renders'
+  - hovertemplate gives the HTML view the exact importance per feature
   weaknesses:
-  - 'Design Excellence does not reach highest tier: standard margins and no custom
-    typography choices'
-  - Library Mastery is solid but doesn't exploit Plotly's most advanced features (callbacks,
-    selection/filtering, interactivity beyond hover)
+  - 'VQ-07 (both): the importance gradient is an opacity ramp of #009E73 toward the
+    page color (alpha 0.3-1.0), not one of the two allowed continuous colormaps →
+    map importance onto imprint_seq (#009E73 → #4467A3). Likely cause: the colors
+    list built from rgba(0, 158, 115, 0.3 + 0.7 * share).'
+  - 'Suggestion: the 10 px value labels could take a slightly darker ink than the
+    ticks so the precise numbers stand out from the axis chrome.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec requirement
-      Chrome: Title "bar-feature-importance · plotly · anyplot.ai" in dark INK color (28px), X-axis label "Importance Score" (22px), feature names on Y-axis (18px), all clearly readable. Grid lines subtle at 10% opacity. Margins appropriate (l=180, r=100, t=100, b=80).
-      Data: Bars use Okabe-Ito brand green #009E73 with opacity gradient (0.3 to 1.0) based on importance. Error bars visible with INK_SOFT color. Importance values annotated at bar ends in INK_SOFT (16px).
-      Legibility verdict: PASS - All text clearly visible, proper contrast, no overlaps
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'bar-feature-importance · python · plotly · anyplot.ai' centered in dark ink; x-axis title 'Importance score'; ticks 0-0.2 and 15 feature names in INK_SOFT; subtle vertical grid; left and bottom axis lines. All readable.
+      Data: 15 horizontal bars sorted highest (age, 0.179) at top to lowest (investment_portfolio, 0.005), #009E73 at full opacity fading to ~30% opacity, thin green outline; dark-gray error bars centered on each bar end; value labels to the right of each whisker.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec requirement
-      Chrome: Title, axis labels, tick labels, and annotations all rendered in light INK colors (INK for primary, INK_SOFT #B8B7B0 for secondary). All elements clearly visible against dark background. Grid lines at 10% opacity of light color. No dark-on-dark failures.
-      Data: Bars use identical green gradient as light render - color is identical, only opacity-based emphasis maintained. Error bars visible. Annotations visible in light text.
-      Legibility verdict: PASS - All text clearly visible, excellent contrast in dark theme, data colors identical to light render, no theme-adaptation failures
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis title in light ink, ticks and feature names in light gray #B8B7B0; grid subtle; no dark-on-dark text.
+      Data: same #009E73 bars with the same alpha ramp (weak bars blend toward the dark page but stay distinct through their green outline); light-gray error bars and value labels.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,75 +53,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes properly scaled (title 28px, labels 22px, ticks 18px,
-          annotations 16px) and readable in both themes
+        comment: Title 16 px, axis title 12 px, ticks and value labels 10 px, all
+          at the plotly references and explicitly set; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Feature names, importance values, and error bars well-separated with
-          no collisions
+        comment: Value labels sit past each whisker with a gap; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars with gradient opacity, error bars, and annotations all clearly
-          visible
+        comment: '15 bars clearly visible, weakest bars outlined in #009E73; error
+          bars thin but visible against every fill step in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 is CVD-safe; opacity gradient provides emphasis
-          beyond hue'
+        comment: Single hue with a lightness ramp; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Appropriate margins for 4800×2700px canvas; good proportions and
-          spacing
+        comment: 3200x1800 canvas, plot fills most of the canvas, balanced margins,
+          title ~45% of width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled 'Importance Score', y-axis has feature names, title
-          format correct
+        comment: '''Importance score'' on x (a unitless score); feature names on y
+          need no axis title'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 light/#1A1A17 dark; both
-          renders theme-correct'
+        passed: false
+        comment: 'Brand #009E73 and correct page colors, but the importance gradient
+          is an opacity ramp of #009E73 rather than imprint_seq (defect line)'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Theme-adaptive tokens properly implemented; gradient opacity technique;
-          bar borders add definition. Professional but not elaborate.
+        comment: 'The style-guide baseline: theme tokens, explicit font sizes, Imprint
+          brand green; nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Minimal chrome; subtle grid; generous margins; shows intentional
-          refinement above defaults
+        comment: Spine and grid rules met; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Sorted bars with gradient opacity create clear focal point; annotations
-          provide precision; effective narrative
+        comment: Sorting and gradient are what the Notes prescribe; no further hierarchy
+          chosen
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal bar chart correctly implemented
+        comment: Horizontal feature-importance bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Features sorted by importance; gradient coloring; error bars; text
-          annotations all present
+        comment: Sorted highest at top, sequential gradient, error bars, value annotations,
+          all C1-C5 shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Importance Score; Y: Features; all 15 features displayed'
+        comment: Bars from the zero baseline to their importance; error bars centered
+          on bar ends
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend omitted (single series)
+        comment: Title 'bar-feature-importance · python · plotly · anyplot.ai'; no
+          legend needed (single series)
     data_quality:
       score: 15
       max: 15
@@ -158,21 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Comprehensive feature importance display with error bars and gradient
-          visualization
+        comment: Dominant features, long tail, ensemble std as error bars
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Features plausible for credit scoring model; importance values realistic
-          (0.005–0.179); neutral data
+        comment: Credit-risk model features, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: X-axis range sensible; 15 features optimal for readability
+        comment: 'Importances 0.005-0.179 summing to ~1, std 10-30% of value: sensible
+          for a random forest; no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -182,57 +182,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward linear flow
+        comment: Imports, column constants, Data block, Plot, Save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects; all imports used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; proper use of hovertemplate and
-          annotations
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Writes plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html;
+          autosize=False
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses go.Figure(), go.Bar(), theme env var, and layout config appropriately
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses hovertemplate, fig.add_annotation(), error bars, custom rgba
-          colors. Could exploit more advanced features.
+        comment: go.Bar with native error_x and autorange reversed; correct but standard
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: hovertemplate and annotations are what every plotly version uses;
+          nothing distinctive beyond it
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-20T15:42:48Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
+  - alpha-blending
   - gradient-fill
+  - minimal-chrome
