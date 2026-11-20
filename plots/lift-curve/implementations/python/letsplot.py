@@ -8,7 +8,24 @@ import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
+from lets_plot import (
+    LetsPlot,
+    aes,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_line,
+    geom_point,
+    geom_text,
+    ggplot,
+    ggsave,
+    ggsize,
+    labs,
+    scale_x_continuous,
+    scale_y_continuous,
+    theme,
+)
 
 
 LetsPlot.setup_html()
