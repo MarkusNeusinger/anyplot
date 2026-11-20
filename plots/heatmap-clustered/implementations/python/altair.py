@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-clustered: Clustered Heatmap
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-09
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import pdist
 
@@ -20,183 +21,168 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Gene expression analysis with 20 genes and 15 samples
+# Imprint diverging colormap: red - theme-adaptive midpoint - blue
+IMPRINT_DIV = ["#AE3030", PAGE_BG, "#4467A3"]
+
+# Columns: set these to your table's names
+GENE = "Genes"  # role: row_labels
+SAMPLE = "Samples"  # role: column_labels
+EXPRESSION = "Expression (log2 ratio)"  # role: matrix
+
+# Data: replace this block with your own labeled matrix, for example df = pd.read_csv("expression.csv", index_col=0)
+# Gene expression of 20 genes in 15 samples with four co-expressed gene groups
 np.random.seed(42)
+matrix = np.random.randn(20, 15)
+matrix[0:5, 0:5] += 2.5
+matrix[0:5, 10:15] -= 1.5
+matrix[5:10, 5:10] += 2.0
+matrix[5:10, 0:3] -= 1.0
+matrix[10:15, 10:15] += 2.5
+matrix[10:15, 5:8] -= 1.5
+matrix[15:20, 0:5] += 1.5
+matrix[15:20, 5:10] -= 2.0
+matrix[15:20, 10:15] += 1.0
+df = pd.DataFrame(
+    matrix,
+    index=[f"Gene_{i + 1:02d}" for i in range(matrix.shape[0])],
+    columns=[f"Sample_{j + 1:02d}" for j in range(matrix.shape[1])],
+)
 
-n_genes = 20
-n_samples = 15
+# Plot: reads only df and the constants above
+n_genes, n_samples = df.shape
 
-# Create gene and sample labels
-gene_labels = [f"Gene_{i + 1:02d}" for i in range(n_genes)]
-sample_labels = [f"Sample_{i + 1:02d}" for i in range(n_samples)]
+# Hierarchical clustering (Ward linkage, Euclidean distance) on rows and columns
+row_dendro = dendrogram(linkage(pdist(df.to_numpy()), method="ward"), no_plot=True)
+col_dendro = dendrogram(linkage(pdist(df.to_numpy().T), method="ward"), no_plot=True)
+clustered = df.iloc[row_dendro["leaves"], col_dendro["leaves"]]
+gene_order = list(clustered.index)
+sample_order = list(clustered.columns)
 
-# Generate realistic gene expression data with natural clusters
-base_expression = np.random.randn(n_genes, n_samples)
+# Long table of cells for the heatmap
+cells = clustered.rename_axis(index=GENE, columns=SAMPLE).stack().rename(EXPRESSION).reset_index()
 
-# Cluster 1: Genes 0-4 (upregulated in samples 0-4)
-base_expression[0:5, 0:5] += 2.5
-base_expression[0:5, 10:15] -= 1.5
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+gene_f, sample_f, expr_f = (name.translate(ESCAPE) for name in (GENE, SAMPLE, EXPRESSION))
 
-# Cluster 2: Genes 5-9 (upregulated in samples 5-9)
-base_expression[5:10, 5:10] += 2.0
-base_expression[5:10, 0:3] -= 1.0
 
-# Cluster 3: Genes 10-14 (upregulated in samples 10-14)
-base_expression[10:15, 10:15] += 2.5
-base_expression[10:15, 5:8] -= 1.5
+def branches(dendro, leaf_axis):
+    """Dendrogram links as segments; leaf k sits at position k, merge height on the other axis."""
+    rows = []
+    for leaf_c, height in zip(dendro["icoord"], dendro["dcoord"], strict=True):
+        pos = [(c - 5) / 10 for c in leaf_c]
+        for k in range(3):
+            rows.append({"p1": pos[k], "h1": height[k], "p2": pos[k + 1], "h2": height[k + 1]})
+    seg = pd.DataFrame(rows)
+    return seg if leaf_axis == "x" else seg.assign(p1=n_genes - 1 - seg["p1"], p2=n_genes - 1 - seg["p2"])
 
-# Cluster 4: Genes 15-19 (varied pattern)
-base_expression[15:20, 0:5] += 1.5
-base_expression[15:20, 5:10] -= 2.0
-base_expression[15:20, 10:15] += 1.0
 
-expression_data = base_expression
+# Layout in view pixels (square canvas, scale_factor 4)
+DENDRO = 70
+HEAT_W, HEAT_H = 295, 400
 
-# Perform hierarchical clustering
-row_linkage = linkage(pdist(expression_data, metric="euclidean"), method="ward")
-col_linkage = linkage(pdist(expression_data.T, metric="euclidean"), method="ward")
+row_seg = branches(row_dendro, "y")
+col_seg = branches(col_dendro, "x")
+row_top = row_seg[["h1", "h2"]].to_numpy().max()
+col_top = col_seg[["h1", "h2"]].to_numpy().max()
 
-# Get dendrogram ordering
-row_dendro = dendrogram(row_linkage, no_plot=True)
-col_dendro = dendrogram(col_linkage, no_plot=True)
-
-row_order = row_dendro["leaves"]
-col_order = col_dendro["leaves"]
-
-# Reorder data and labels
-clustered_data = expression_data[row_order, :][:, col_order]
-ordered_gene_labels = [gene_labels[i] for i in row_order]
-ordered_sample_labels = [sample_labels[i] for i in col_order]
-
-# Create DataFrame for heatmap
-heatmap_data = []
-for i, gene in enumerate(ordered_gene_labels):
-    for j, sample in enumerate(ordered_sample_labels):
-        heatmap_data.append(
-            {"Gene": gene, "Sample": sample, "Expression": clustered_data[i, j], "row_idx": i, "col_idx": j}
-        )
-
-df_heatmap = pd.DataFrame(heatmap_data)
-
-# Create row dendrogram data
-row_lines = []
-for i in range(len(row_dendro["icoord"])):
-    xs = row_dendro["icoord"][i]
-    ys = row_dendro["dcoord"][i]
-    for j in range(3):
-        row_lines.append({"x": ys[j], "y": xs[j], "x2": ys[j + 1], "y2": xs[j + 1], "group": i})
-row_dendro_lines = pd.DataFrame(row_lines)
-
-# Flip y-coordinates to match heatmap orientation
-max_y = row_dendro_lines["y"].max()
-row_dendro_lines["y"] = max_y - row_dendro_lines["y"]
-row_dendro_lines["y2"] = max_y - row_dendro_lines["y2"]
-
-# Normalize row dendrogram coordinates
-row_max_height = row_dendro_lines["x"].max()
-row_dendro_lines["x"] = row_max_height - row_dendro_lines["x"]
-row_dendro_lines["x2"] = row_max_height - row_dendro_lines["x2"]
-row_dendro_lines["y"] = row_dendro_lines["y"] / 10 - 0.5
-row_dendro_lines["y2"] = row_dendro_lines["y2"] / 10 - 0.5
-
-# Create column dendrogram data
-col_lines = []
-for i in range(len(col_dendro["icoord"])):
-    xs = col_dendro["icoord"][i]
-    ys = col_dendro["dcoord"][i]
-    for j in range(3):
-        col_lines.append({"x": xs[j], "y": ys[j], "x2": xs[j + 1], "y2": ys[j + 1], "group": i})
-col_dendro_lines = pd.DataFrame(col_lines)
-
-# Normalize column dendrogram coordinates
-col_dendro_lines["x"] = col_dendro_lines["x"] / 10 - 0.5
-col_dendro_lines["x2"] = col_dendro_lines["x2"] / 10 - 0.5
-
-# Row dendrogram chart (left side)
 row_dendro_chart = (
-    alt.Chart(row_dendro_lines)
+    alt.Chart(row_seg)
     .mark_rule(strokeWidth=1.5, color=INK_SOFT)
     .encode(
-        x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[0, row_max_height])),
-        y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-0.5, n_genes - 0.5])),
-        x2="x2:Q",
-        y2="y2:Q",
+        x=alt.X("h1:Q", axis=None, scale=alt.Scale(domain=[row_top, 0])),
+        x2="h2:Q",
+        y=alt.Y("p1:Q", axis=None, scale=alt.Scale(domain=[-0.5, n_genes - 0.5])),
+        y2="p2:Q",
     )
-    .properties(width=150, height=600)
+    .properties(width=DENDRO, height=HEAT_H)
 )
 
-# Column dendrogram chart (top)
-col_max_height = col_dendro_lines["y"].max()
 col_dendro_chart = (
-    alt.Chart(col_dendro_lines)
+    alt.Chart(col_seg)
     .mark_rule(strokeWidth=1.5, color=INK_SOFT)
     .encode(
-        x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-0.5, n_samples - 0.5])),
-        y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[0, col_max_height])),
-        x2="x2:Q",
-        y2="y2:Q",
+        x=alt.X("p1:Q", axis=None, scale=alt.Scale(domain=[-0.5, n_samples - 0.5])),
+        x2="p2:Q",
+        y=alt.Y("h1:Q", axis=None, scale=alt.Scale(domain=[0, col_top])),
+        y2="h2:Q",
     )
-    .properties(width=800, height=120)
+    .properties(width=HEAT_W, height=DENDRO)
 )
 
-# Heatmap with interactive features
 heatmap = (
-    alt.Chart(df_heatmap)
+    alt.Chart(cells)
     .mark_rect()
     .encode(
         x=alt.X(
-            "Sample:N",
-            sort=ordered_sample_labels,
-            axis=alt.Axis(
-                title="Samples", labelFontSize=18, titleFontSize=22, labelAngle=-45, labelColor=INK_SOFT, titleColor=INK
-            ),
+            sample_f,
+            type="ordinal",
+            sort=sample_order,
+            title=SAMPLE,
+            axis=alt.Axis(labelFontSize=9, titleFontSize=12, labelAngle=-45, labelColor=INK_SOFT, titleColor=INK),
         ),
         y=alt.Y(
-            "Gene:N",
-            sort=ordered_gene_labels,
-            axis=alt.Axis(title="Genes", labelFontSize=18, titleFontSize=22, labelColor=INK_SOFT, titleColor=INK),
+            gene_f,
+            type="ordinal",
+            sort=gene_order,
+            title=GENE,
+            axis=alt.Axis(labelFontSize=9, titleFontSize=12, labelColor=INK_SOFT, titleColor=INK),
         ),
         color=alt.Color(
-            "Expression:Q",
-            scale=alt.Scale(scheme="brownbluegreen", domainMid=0),
+            expr_f,
+            type="quantitative",
+            title=EXPRESSION,
+            scale=alt.Scale(range=IMPRINT_DIV, domainMid=0),
             legend=alt.Legend(
-                title="Expression",
-                titleFontSize=18,
-                labelFontSize=16,
-                gradientLength=400,
+                titleFontSize=11,
+                labelFontSize=10,
+                gradientLength=200,
+                titleLimit=120,
                 fillColor=ELEVATED_BG,
                 strokeColor=INK_SOFT,
+                labelColor=INK_SOFT,
+                titleColor=INK,
+                padding=6,
             ),
         ),
-        tooltip=["Gene:N", "Sample:N", alt.Tooltip("Expression:Q", format=".2f")],
+        tooltip=[
+            alt.Tooltip(gene_f, title=GENE),
+            alt.Tooltip(sample_f, title=SAMPLE),
+            alt.Tooltip(expr_f, title=EXPRESSION, format=".2f"),
+        ],
     )
-    .properties(width=800, height=600)
+    .properties(width=HEAT_W, height=HEAT_H)
     .interactive()
 )
 
-# Empty corner space for layout
-empty_corner = (
+# The empty corner keeps both dendrograms flush with the heatmap
+corner = (
     alt.Chart(pd.DataFrame({"x": [0]}))
     .mark_point(opacity=0)
     .encode(x=alt.X("x:Q", axis=None), y=alt.Y("x:Q", axis=None))
-    .properties(width=150, height=120)
+    .properties(width=DENDRO, height=DENDRO)
 )
 
-# Combine charts into clustered heatmap layout
-top_row = alt.hconcat(empty_corner, col_dendro_chart, spacing=0)
-bottom_row = alt.hconcat(row_dendro_chart, heatmap, spacing=0)
-
 chart = (
-    alt.vconcat(top_row, bottom_row, spacing=0)
+    alt.vconcat(alt.hconcat(corner, col_dendro_chart, spacing=0), alt.hconcat(row_dendro_chart, heatmap, spacing=0))
     .properties(
-        title=alt.Title("heatmap-clustered · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
+        title=alt.Title("heatmap-clustered · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
         background=PAGE_BG,
+        spacing=0,
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
-    .configure_concat(spacing=0)
-    .configure_axis(domainColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK)
+    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the square target canvas
+TW, TH = 2400, 2400
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TW}x{TH}; shrink the view sizes")
+canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+canvas.save(f"plot-{THEME}.png")
