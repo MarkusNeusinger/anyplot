@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-scatter: Polar Scatter Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-09
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-20
 """
 
 import os
@@ -12,12 +12,14 @@ import pandas as pd
 import seaborn as sns
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 sns.set_theme(
     style="ticks",
@@ -30,91 +32,90 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": PAGE_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Data - Wind measurements with prevailing directions
-np.random.seed(42)
-n_points = 120
+# Constants
+COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]  # 45-degree compass ticks
 
-# Morning winds: predominantly from SW (around 225 degrees)
-morning_angles = np.random.normal(225, 30, n_points // 2) % 360
-morning_speeds = np.random.gamma(3, 3, n_points // 2) + 5
+# Columns: set these to your table's column names
+DIRECTION = "Wind direction (deg)"  # role: theta
+SPEED = "Wind speed (m/s)"  # role: radius
+SEASON = "Season"  # role: category
 
-# Afternoon winds: predominantly from NE (around 45 degrees)
-afternoon_angles = np.random.normal(45, 40, n_points // 2) % 360
-afternoon_speeds = np.random.gamma(2.5, 4, n_points // 2) + 3
+# Data: replace this block with your own table, for example df = pd.read_csv("wind.csv")
+rng = np.random.default_rng(7)
+n_winter, n_summer = 65, 55
 
-# Combine data
-angles_deg = np.concatenate([morning_angles, afternoon_angles])
-speeds = np.concatenate([morning_speeds, afternoon_speeds])
-time_of_day = ["Morning"] * (n_points // 2) + ["Afternoon"] * (n_points // 2)
+# Winter: a strong, steady westerly
+winter_dir = rng.normal(270, 22, n_winter) % 360
+winter_speed = rng.gamma(6, 1.6, n_winter) + 3
 
-# Convert to radians for plotting
-angles_rad = np.deg2rad(angles_deg)
+# Summer: lighter westerlies with a weak easterly tail
+easterly = rng.random(n_summer) < 0.25
+summer_dir = np.where(easterly, rng.normal(85, 25, n_summer), rng.normal(255, 40, n_summer)) % 360
+summer_speed = rng.gamma(4, 1.3, n_summer) + 1.5
 
-# Create DataFrame for seaborn
-df = pd.DataFrame({"angle_rad": angles_rad, "speed": speeds, "time_of_day": time_of_day})
+df = pd.DataFrame(
+    {
+        DIRECTION: np.concatenate([winter_dir, summer_dir]),
+        SPEED: np.concatenate([winter_speed, summer_speed]),
+        SEASON: ["Winter"] * n_winter + ["Summer"] * n_summer,
+    }
+)
 
-# Create polar plot
-fig = plt.figure(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot
+fig = plt.figure(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax = fig.add_subplot(111, projection="polar")
 
-# Create scatter with Okabe-Ito colors
+# Radians internally; degrees and compass points for display
+theta = np.deg2rad(df[DIRECTION])
+n_seasons = df[SEASON].nunique()
 sns.scatterplot(
-    data=df,
-    x="angle_rad",
-    y="speed",
-    hue="time_of_day",
-    palette=IMPRINT,
-    hue_order=["Morning", "Afternoon"],
-    s=150,
+    data=df.assign(_theta=theta),
+    x="_theta",
+    y=SPEED,
+    hue=SEASON,
+    palette=IMPRINT_PALETTE[:n_seasons],
+    s=40,
     alpha=0.7,
-    ax=ax,
     edgecolor=PAGE_BG,
-    linewidth=0.5,
+    linewidth=0.4,
+    ax=ax,
 )
 
-# Configure polar plot appearance
 ax.set_theta_zero_location("N")
 ax.set_theta_direction(-1)
+ax.set_xticks(np.deg2rad(np.arange(0, 360, 45)))
+ax.set_xticklabels(COMPASS, fontsize=10, color=INK_SOFT)
+ax.set_xlabel("")
 
-# Set angular ticks with cardinal directions
-ax.set_xticks(np.deg2rad([0, 45, 90, 135, 180, 225, 270, 315]))
-ax.set_xticklabels(["N", "NE", "E", "SE", "S", "SW", "W", "NW"], fontsize=18, color=INK_SOFT)
+ax.set_ylim(0, df[SPEED].max() * 1.1)
+ax.set_rlabel_position(157.5)
+ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
+ax.set_ylabel(SPEED, fontsize=10, labelpad=28)
+ax.grid(True, linewidth=0.6)
 
-# Configure radial axis
-max_speed = max(speeds)
-ax.set_ylim(0, max_speed * 1.1)
-ax.tick_params(axis="y", labelsize=16, colors=INK_SOFT)
+ax.set_title("polar-scatter · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=18, color=INK)
 
-# Add radial label on the left side
-ax.text(np.deg2rad(330), max_speed * 0.5, "Wind Speed (m/s)", fontsize=16, ha="center", va="center", color=INK)
-
-# Style the grid
-ax.grid(True, alpha=0.15, linewidth=0.8)
-
-# Title
-ax.set_title("polar-scatter · seaborn · anyplot.ai", fontsize=24, fontweight="medium", pad=20, color=INK)
-
-# Legend
-legend = ax.legend(
-    title="Time of Day",
-    title_fontsize=16,
-    fontsize=16,
+ax.get_legend().remove()
+handles, labels = ax.get_legend_handles_labels()
+legend = fig.legend(
+    handles,
+    labels,
+    title=SEASON,
+    title_fontsize=9,
+    fontsize=8,
     loc="upper right",
-    bbox_to_anchor=(1.1, 1.0),
+    bbox_to_anchor=(0.99, 0.97),
     framealpha=0.9,
-    facecolor=PAGE_BG,
-    edgecolor=INK_SOFT,
 )
-if legend.get_title():
-    legend.get_title().set_color(INK)
-    for t in legend.texts:
-        t.set_color(INK)
+legend.get_title().set_color(INK)
+for t in legend.texts:
+    t.set_color(INK)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.1, right=0.9, top=0.88, bottom=0.08)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
