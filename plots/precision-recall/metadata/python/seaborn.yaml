@@ -2,49 +2,61 @@ library: seaborn
 language: python
 specification_id: precision-recall
 created: '2025-12-26T19:11:19Z'
-updated: '2026-05-10T05:36:10Z'
-generated_by: claude-haiku
-workflow_run: 25620713903
+updated: '2026-11-20T16:27:39Z'
+generated_by: claude-sonnet
+workflow_run: 44772423552
 issue: 2274
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 79
 review:
   strengths:
-  - 'Perfect visual quality (30/30): all text sizes explicitly set, readable in both
-    themes'
-  - 'Flawless theme adaptation: data colors constant across light/dark, chrome perfectly
-    adapted'
-  - 'Complete spec compliance: all required features implemented (PR curves, AP scores,
-    baseline)'
-  - 'Strong data storytelling: color hierarchy guides viewer (green=best, orange=moderate,
-    blue=poor)'
-  - 'Excellent code quality: clean, reproducible, proper seaborn idioms'
-  - 'Expert library mastery: theme-adaptive chrome through sns.set_theme() rc configuration'
+  - Theme tokens threaded through sns.set_theme(rc=...) so title, ticks, spines, grid
+    and legend box all flip correctly between the light and dark renders
+  - Curves and AP are computed with sklearn's precision_recall_curve and average_precision_score
+    and drawn as true post-steps, so the sawtooth at low recall is faithful
+  - Each legend entry carries its model's AP and the baseline entry its positive ratio,
+    making the ranking readable without annotations
+  - Exact 3200x1800 canvas with the style guide's reference font sizes, and an adaptable
+    data block with column constants that tolerates missing scores per model
   weaknesses:
-  - 'Design Excellence is solid but incremental (12/20): follows seaborn defaults
-    rather than exceptional custom aesthetic sophistication beyond Okabe-Ito colors'
+  - 'VQ-03 (both): Model C''s curve lies on the dashed random-classifier baseline
+    from about recall 0.25 to 1.0 and covers its dashes, so the baseline is hard to
+    tell apart there → keep the weakest model visibly above the baseline (about +0.03
+    precision) through the data. Likely cause: Model C''s scores drawn from the same
+    beta(2, 2) for both classes.'
+  - 'DQ-02 (both): the classifiers are labelled Model A, Model B and Model C, which
+    read as generic in a fraud-detection scenario → name plausible model types (for
+    example Gradient boosting, Logistic regression, Rule-based screen). Likely cause:
+    the SCORES constant list.'
+  - 'LM-01 (code): every mark is drawn with matplotlib''s ax.step and ax.fill_between
+    while seaborn only sets the theme and despines → draw the curves from a tidy recall/precision
+    frame with sns.lineplot(data=..., x=..., y=..., hue=model, estimator=None, sort=False,
+    drawstyle=''steps-post'', palette=IMPRINT_PALETTE[:n]). Likely cause: the per-model
+    loop around ax.step.'
+  - 'Suggestion: drop or lighten the stacked area fills, whose overlapping tints blend
+    Model B''s region into a grey-violet that no legend entry explains.'
+  - 'Suggestion: faint iso-F1 contours behind the curves, each labelled with its F1
+    value, which the Notes invite.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, tick labels all visible in dark text; legend clean and positioned upper right
-      Data: Three stepped PR curves in Okabe-Ito order (green #009E73, orange #D55E00, blue #0072B2); semi-transparent fills show area under curve; dashed baseline at P=0.10
-      Legibility verdict: PASS - all text readable, excellent contrast, grid subtle and non-intrusive
+      Background: warm off-white #FAF8F1 across canvas and axes.
+      Chrome: title "precision-recall · python · seaborn · anyplot.ai" in dark ink at the top centre; x-axis "Recall (sensitivity)" 0.0-1.0, y-axis "Precision (positive predictive value)" 0.0-1.0; dark-grey ticks, left and bottom spines only, subtle horizontal grid; legend upper right on an elevated cream box. All text readable.
+      Data: three stepped PR curves with translucent fills: Model A #009E73 (AP 0.81) falling from 1.0 to about 0.25, Model B #C475FD (AP 0.32) with a sawtooth at low recall falling to about 0.12, Model C #4467A3 (AP 0.12) hugging the dashed dark-grey baseline at P = 0.10 for most of the recall range.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: All text rendered in light colors (#F0EFE8 primary, #B8B7B0 secondary); excellent contrast against dark background; legend box adapted to #242420
-      Data: Identical data colors to light render (only chrome flipped); stepped curves and fills clearly distinguishable
-      Legibility verdict: PASS - no dark-on-dark failures, all elements readable, theme tokens correctly applied
-
-    Theme consistency: Data colors (Okabe-Ito positions 1-3) are identical between renders; only theme-adaptive chrome (background, text, grid, legend box) has changed. No text readability issues in either render.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and legend text in light ink, ticks and spines light grey, grid faint; legend box #242420 with light border. No dark-on-dark text.
+      Data: identical curve colors and shapes to the light render; baseline dashes now light grey and visible; fills read darker against the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,67 +64,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt, 20pt, 16pt), perfectly readable
-          in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, the style-guide
+          reference sizes; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text collisions, clean layout with proper spacing
+        comment: No text collisions; the legend sits in the empty upper-right corner
+          above Model A's curve
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Stepped lines and fills optimally sized, three series distinctly
-          visible
+        comment: Curves at 2 px are clear, but Model C's curve lies on the dashed
+          baseline from recall about 0.25 to 1.0 and covers its dashes (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe, strong luminance contrast
+        comment: Green, violet and blue differ in hue and lightness; the baseline
+          is dashed and neutral, not color-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins
+        comment: 3200x1800 canvas, no canvas-gate file; title about 48% of the width,
+          balanced axis titles, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (Recall, Precision)
+        comment: '''Recall (sensitivity)'' and ''Precision (positive predictive value)''
+          are descriptive; unitless ratios'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Perfect Okabe-Ito order, correct backgrounds, theme-chrome flawless
+        comment: 'Imprint positions 1-3 in canonical order (#009E73, #C475FD, #4467A3),
+          identical in both renders; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured defaults, not exceptional custom design
+        passed: true
+        comment: The style-guide baseline (sizes, tokens, elevated legend box), nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, generous whitespace
+        passed: false
+        comment: Spines despined and a subtle y grid, as the style guide mandates;
+          nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Color hierarchy guides viewer; visual hierarchy through data choice
+        passed: false
+        comment: Data displayed with AP in the legend as the Notes ask; no focal point
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +142,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct precision-recall curve with stepped lines
+        comment: Precision-recall curves, precision on y against recall on x
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: AP scores, baseline, multiple models all present
+        comment: Stepped curves (C1), horizontal baseline at the positive ratio (C2),
+          AP per curve in the legend (C3), distinct colors with legend (C5); iso-F1
+          curves are optional (C4, 'if drawn')
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correctly mapped, all data visible
+        comment: Steps drawn where='post' through sklearn's computed threshold points;
+          full 0-1 recall range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format, legend with AP scores
+        comment: Title 'precision-recall · python · seaborn · anyplot.ai'; legend
+          entries name each model with its AP and the baseline with its ratio
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -150,19 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full spectrum of model performance, baseline reference
+        comment: Strong, moderate and no-skill classifiers show the full range from
+          near-perfect to baseline, with the expected low-recall sawtooth
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Fraud detection with 10% prevalence is realistic and neutral
+        comment: Fraud detection at 10% prevalence is plausible and neutral, but the
+          models are labelled Model A-C (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values factually correct and proportionally accurate
+        comment: 'Checked: baseline 0.10 equals 100/1000 positives and is computed
+          from the labels; AP values come from average_precision_score. No ''Check
+          values:'' in the spec'
     code_quality:
       score: 10
       max: 10
@@ -172,54 +200,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions/classes
+        comment: Linear script, no functions; column constants and a separated Data
+          block
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: seed(42) set, deterministic output
+        comment: RandomState(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake functionality
+        comment: One loop over models; curves and AP via sklearn's precision_recall_curve
+          and average_precision_score
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png format
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 10
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Expert sns.set_theme() with comprehensive rc configuration
+        passed: false
+        comment: seaborn only sets the theme and despines; every mark is matplotlib
+          ax.step / fill_between (defect line)
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Theme-adaptive chrome through rc configuration is distinctive
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-20T16:23:29Z'
 impl_tags:
   dependencies:
   - sklearn
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
