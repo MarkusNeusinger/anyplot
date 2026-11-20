@@ -11,6 +11,13 @@ target=WxH delta=+dx+dy attempt=<n>` lines emitted by the gate step in
 `.github/workflows/impl-review.yml`, and prints a per-library first-attempt
 pass/fail-rate table.
 
+`status` is the verdict on both theme renders; `actual`, `target` and `delta`
+are the light render's. Since the gate checks plot-dark.png too, the line goes
+on after `attempt=` with `light=<pass|fail> dark=<pass|fail|missing|unreadable>`
+and, when the dark render opened, `dark_actual= dark_target= dark_delta=
+same_target=<yes|no>`. Older lines end at `attempt=`. A failure's delta in the
+table is that of the render that drifted: the dark render's when only it did.
+
 The goal is to spot libraries whose **prompt** is leaking (high first-attempt
 fail rate → wasted compute on repair) so we know when to tighten the library
 prompt rather than accept gate firing as steady-state.
@@ -39,6 +46,12 @@ LINE_RE = re.compile(
     r"canvas_gate\s+library=(?P<lib>\S+)\s+status=(?P<status>pass|fail)\s+"
     r"actual=(?P<aw>\d+)x(?P<ah>\d+)\s+target=(?P<tw>\d+)x(?P<th>\d+)\s+"
     r"delta=(?P<dw>[+-]?\d+)x(?P<dh>[+-]?\d+)\s+attempt=(?P<attempt>\d+)"
+)
+# The fields right after `attempt=` (matched from there); a line from before
+# the dark check has none.
+THEMES_RE = re.compile(
+    r"\s+light=(?P<light>pass|fail)\s+dark=(?P<dark>\S+)"
+    r"(?:\s+dark_actual=\d+x\d+\s+dark_target=\d+x\d+\s+dark_delta=(?P<ddw>[+-]?\d+)x(?P<ddh>[+-]?\d+))?"
 )
 
 
@@ -123,6 +136,10 @@ def parse_lines(lines: list[str]) -> list[dict]:
         m = LINE_RE.search(line)
         if not m:
             continue
+        themes = THEMES_RE.match(line, m.end())
+        dark_delta = None
+        if themes and themes.group("ddw") is not None:
+            dark_delta = (int(themes.group("ddw")), int(themes.group("ddh")))
         records.append(
             {
                 "library": m.group("lib"),
@@ -131,9 +148,23 @@ def parse_lines(lines: list[str]) -> list[dict]:
                 "target": (int(m.group("tw")), int(m.group("th"))),
                 "delta": (int(m.group("dw")), int(m.group("dh"))),
                 "attempt": int(m.group("attempt")),
+                "light": themes.group("light") if themes else None,
+                "dark": themes.group("dark") if themes else None,
+                "dark_delta": dark_delta,
             }
         )
     return records
+
+
+def failed_delta(record: dict) -> tuple[int, int] | None:
+    """The delta of the render that drifted: the light render's, or the dark's when only it did.
+
+    None when only the dark render failed without a size of its own (missing,
+    unreadable) or sat on the other canonical canvas within tolerance.
+    """
+    if record.get("light") != "pass":
+        return record["delta"]
+    return record.get("dark_delta") if record.get("dark") == "fail" else None
 
 
 def aggregate(records: list[dict]) -> dict[str, LibStats]:
@@ -148,7 +179,9 @@ def aggregate(records: list[dict]) -> dict[str, LibStats]:
             s.first_pass += 1
         else:
             s.first_fail += 1
-            s.deltas.append(r["delta"])
+            delta = failed_delta(r)
+            if delta is not None:
+                s.deltas.append(delta)
     return stats
 
 
@@ -161,7 +194,9 @@ def render_table(stats: dict[str, LibStats]) -> str:
     for lib in sorted(stats):
         s = stats[lib]
         adw, adh = s.avg_delta
-        delta_col = "—" if s.first_fail == 0 else f"{adw:+.0f}×{adh:+.0f}"
+        # A failure with no drifted render (a dark render missing, unreadable or
+        # on the other canvas) has no delta: "+0×+0" would read as no drift.
+        delta_col = "—" if not s.deltas else f"{adw:+.0f}×{adh:+.0f}"
         flag = "  ← prompt still leaking" if s.fail_rate > 0.20 else ""
         rows.append((lib, s.runs, s.first_pass, s.first_fail, f"{s.fail_rate * 100:5.1f}%", delta_col, flag))
 

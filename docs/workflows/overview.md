@@ -136,6 +136,7 @@ impl-generate.yml
        v
 impl-review.yml
   |-- Checks the staged render.sha256 against the PR head (only a match lets the review run)
+  |-- Checks that both theme renders sit on the same canonical canvas (a miss forces VQ-05 to 0)
   |-- Checks the file's static contract: title, theme, save target, colours, colormaps (record-only)
   |-- Python: adaptability check of the PR's file and its predecessor (record-only)
   |-- Python: readiness check of the staged scan record against the PR head and main
@@ -305,6 +306,42 @@ That command generates the file anew, and for a pair that is live on `main` the 
 `scripts/migrate_render_and_upload.py`, the manual re-render that promotes straight from staging, copies only the `plot-*` objects, as `impl-merge.yml` does, so a staged `render.sha256` or `adapt/` record never reaches production.
 
 A re-review of the same staging after the review's header commit, such as a manual re-run, reads `match` through the code hash (`via=code`). A repair renders after that commit, so its render hash already covers the rewritten header.
+
+#### Canvas gate
+
+Every render must be 3200 × 1800 (landscape) or 2400 × 2400 (square), within 16 px. `impl-review.yml` checks that in "Canvas dimension gate", before the review, on both theme renders: `plot-light.png` and `plot-dark.png` must each sit on a canonical canvas, and both on the same one. The JavaScript libraries get the same check: their render harness owns the pixels, so only the repair hint differs.
+
+When a render misses, the step writes one defect line per render that missed to `/tmp/anyplot-canvas-gate.txt`. A line for a render that drifted names its actual size, the target, the signed delta, and the likely cause. A line for a dark render that doesn't open says so, with the error, and names the light render's size. The render tag says which render failed:
+
+| Render tag | When |
+|---|---|
+| `(both)` | Both renders drifted to the same size. This is the line the gate wrote before it read the dark render. |
+| `(light)` | Only the light render drifted, or the two drifted to different sizes. |
+| `(dark)` | The dark render drifted, sits on the other canvas than the light render, or doesn't open. |
+
+The target in a line is the closest canonical canvas, with two exceptions:
+
+- When the light render drifted and the dark render sits on a canonical canvas, that canvas is the target both share. The light line then aims at it, and the dark render gets no line. A light render far off its canvas, such as one at half scale, can be closer to the other canvas, which would send the repair the wrong way.
+- When the dark render is closer to the other canvas than the light render, in any other case, its `(dark)` line says it isn't on the canvas of `plot-light.png` and measures its delta to the light render's target. A dark render at 2400 × 2400 beside a light render at 3200 × 1800 gets a delta of −800 × +600.
+
+The review copies every line into its weaknesses and sets VQ-05 to 0. A first generation then goes to repair; a regeneration is kept with the code `canvas_failed`.
+
+A dark render that doesn't open fails the gate without failing the job: `impl-generate.yml` never stages a pair without both renders, so such a render is a defect of the run, and only the verdict step can send the PR to repair. A light render that doesn't open stops the step and fails the job. A missing render of either theme never reaches the gate, because "Verify both theme renders exist" stops the job first. The gate still names a missing dark render in a `(dark)` line instead of crashing.
+
+The step prints one notice line, which `automation/scripts/canvas_gate_report.py` reads:
+
+```text
+canvas_gate library=plotly status=fail actual=3200x1800 target=3200x1800 delta=+0x+0 attempt=1 light=pass dark=fail dark_actual=3000x1800 dark_target=3200x1800 dark_delta=-200x+0 same_target=yes
+```
+
+`status` is the verdict on both renders. `actual`, `target`, and `delta` are the light render's own measurement against its closest canvas, as before. After `attempt` come:
+
+- `light`: the light render's own verdict, `pass` or `fail`.
+- `dark`: the dark render's own verdict against its closest canvas: `pass`, `fail`, `missing`, or `unreadable`.
+- `dark_actual`, `dark_target`, and `dark_delta`: the dark render's measurement, only when it opened.
+- `same_target`: `yes` when both renders are closest to the same canvas, only when the dark render opened.
+
+On 2026-11-20, the production renders of all 4,863 pairs agreed: no pair had its light render on a canvas and its dark render off it or on the other one. The 899 pairs whose renders are off the canvas, mostly the older 4800 × 2700 and 3600 × 3600 sizes, are off in both themes.
 
 #### Contract check (record-only)
 

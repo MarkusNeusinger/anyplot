@@ -3,7 +3,11 @@
 The parity tests run the inline script of impl-review.yml's "Canvas dimension
 gate" step on the same PNG as ``core.canvas`` and require identical lines and
 an identical defect file: until the workflow switches to the module, the two
-must not drift. Fixture PNGs are generated in ``tmp_path``; none is committed.
+must not drift. The step also reads ``plot-dark.png``; here it gets a dark
+render of the same size, so its notice line is the module's followed by the
+dark render's fields, which ``core.canvas`` leaves to the step (the step's own
+tests: tests/unit/workflows/test_canvas_gate_step.py). Fixture PNGs are
+generated in ``tmp_path``; none is committed.
 """
 
 from __future__ import annotations
@@ -71,9 +75,14 @@ def _workflow_script() -> str:
 
 
 def _run_workflow_gate(tmp_path: Path, width: int, height: int, library: str, attempt: str) -> tuple[list[str], str]:
-    """Run the workflow's script on a PNG of that size; its stdout lines and gate file ('' when none)."""
+    """Run the workflow's script on a light and a dark PNG of that size.
+
+    Returns its stdout lines, with the notice line cut back to the module's
+    fields, and its gate file ('' when none).
+    """
     work = tmp_path / "workflow"
-    _write_png(work / "plot_images" / "plot-light.png", width, height)
+    for theme in ("light", "dark"):
+        _write_png(work / "plot_images" / f"plot-{theme}.png", width, height)
     gate_file = tmp_path / "workflow-gate.txt"
     script = _workflow_script()
     assert WORKFLOW_GATE_FILE in script
@@ -83,7 +92,22 @@ def _run_workflow_gate(tmp_path: Path, width: int, height: int, library: str, at
         [sys.executable, "-c", script], cwd=work, env=env, capture_output=True, text=True, check=False
     )
     assert result.returncode == 0, result.stderr
-    return result.stdout.splitlines(), gate_file.read_text(encoding="utf-8") if gate_file.exists() else ""
+    gate = gate_file.read_text(encoding="utf-8") if gate_file.exists() else ""
+    return [_light_part(line, width, height) for line in result.stdout.splitlines()], gate
+
+
+def _light_part(line: str, width: int, height: int) -> str:
+    """A notice line without the dark fields, which must describe a dark render of the light's size."""
+    if not line.startswith("::notice::canvas_gate "):
+        return line
+    light, dark = line.split(" light=", 1)
+    verdict = check_canvas(width, height, "any")
+    (tw, th), (dw, dh) = verdict.target, verdict.delta
+    assert dark == (
+        f"{verdict.status} dark={verdict.status} dark_actual={width}x{height} dark_target={tw}x{th} "
+        f"dark_delta={dw:+d}x{dh:+d} same_target=yes"
+    )
+    return light
 
 
 def _run_module_gate(
