@@ -842,9 +842,11 @@ jobs:
           exit 0
 
       # Canvas dimension gate — runs before the AI review.
-      # The saved PNG must be exactly 3200×1800 (landscape) or 2400×2400 (square)
-      # within ±16 px (≤0.5 %). On drift, write /tmp/anyplot-canvas-gate.txt with
-      # a synthetic weakness (named actual+target+signed delta + likely cause).
+      # Both saved PNGs must be exactly 3200×1800 (landscape) or 2400×2400
+      # (square) within ±16 px (≤0.5 %), and both on the same one of the two.
+      # On a miss, write /tmp/anyplot-canvas-gate.txt with a synthetic weakness
+      # per render that missed (named actual+target+signed delta + likely
+      # cause), tagged (both) when the two renders drifted alike.
       # ai-quality-review.md reads that file and treats canvas_gate=fail as a
       # MUST-flag weakness that forces VQ-05 to 0, which drags the quality_score
       # below the repair threshold — re-routing a fresh generation into
@@ -852,7 +854,15 @@ jobs:
       # there is no repair: the regen gate reads the same file and keeps the
       # live implementation. Never raw `exit 1` here: impl-repair.yml is
       # dispatched by the verdict step only, so a hard step failure would leave
-      # a dead PR with no retry path.
+      # a dead PR with no retry path. A dark render that is missing or does not
+      # open is therefore a gate failure, not a crash: impl-generate never
+      # stages a pair without both renders, so it is a defect of the run.
+      # plot-light.png is opened unguarded: a light render that does not open
+      # stops the step, and "Verify both theme renders exist" has already
+      # stopped the job on a missing one.
+      # The notice line keeps its fields up to `attempt=` (canvas_gate_report.py
+      # reads them; `actual`/`target`/`delta` stay the light render's) and adds
+      # the dark render's after it; `status` is the verdict on both.
       - name: Canvas dimension gate
         if: steps.render_stop.outputs.stopped != 'true'
         env:
@@ -875,46 +885,77 @@ jobs:
           ATTEMPT = os.environ["ATTEMPT"]
           TOLERANCE = 16  # ≤0.5 % on the 3200-axis
           TARGETS = [(3200, 1800), (2400, 2400)]
+          # Both renders are drawn by the same code, so a size that differs
+          # between them points at a size set inside a theme branch.
+          THEME_CAUSE = "so a size or save option probably depends on the theme: set it once, outside any `ANYPLOT_THEME` branch."
+
+
+          def nearest(width, height):
+              """The closer target, so the repair feedback names the right one."""
+              return min(TARGETS, key=lambda t: abs(width - t[0]) + abs(height - t[1]))
+
+
+          def within(width, height, target):
+              return abs(width - target[0]) <= TOLERANCE and abs(height - target[1]) <= TOLERANCE
+
+
+          def direction_of(dx, dy):
+              parts = []
+              if dx < 0:
+                  parts.append(f"width is {-dx} px short")
+              elif dx > 0:
+                  parts.append(f"width is {dx} px over")
+              if dy < 0:
+                  parts.append(f"height is {-dy} px short")
+              elif dy > 0:
+                  parts.append(f"height is {dy} px over")
+              return "; ".join(parts) or "axes on target individually but combined off"
+
 
           path = Path("plot_images/plot-light.png")
           with Image.open(path) as img:
               w, h = img.size
 
-          # Pick the closer target so the repair feedback names the right one.
-          tw, th = min(TARGETS, key=lambda t: abs(w - t[0]) + abs(h - t[1]))
+          tw, th = nearest(w, h)
           dw, dh = w - tw, h - th
-          ok = abs(dw) <= TOLERANCE and abs(dh) <= TOLERANCE
+          ok = within(w, h, (tw, th))
 
-          status = "pass" if ok else "fail"
+          # The dark render. Whatever keeps it from opening is a failed render,
+          # never a crash of the step (see the comment above the step).
+          dark_size = None
+          dark_problem = ""
+          try:
+              with Image.open("plot_images/plot-dark.png") as img:
+                  dark_size = img.size
+          except FileNotFoundError:
+              dark = "missing"
+          except Exception as exc:
+              dark = "unreadable"
+              dark_problem = " ".join(f"{type(exc).__name__}: {exc}".split())[:160]
+
+          dark_fields = ""
+          same_target = True
+          if dark_size is not None:
+              dark_w, dark_h = dark_size
+              dark_tw, dark_th = nearest(dark_w, dark_h)
+              dark_dw, dark_dh = dark_w - dark_tw, dark_h - dark_th
+              dark = "pass" if within(dark_w, dark_h, (dark_tw, dark_th)) else "fail"
+              same_target = (dark_tw, dark_th) == (tw, th)
+              dark_fields = (
+                  f" dark_actual={dark_w}x{dark_h} dark_target={dark_tw}x{dark_th} "
+                  f"dark_delta={dark_dw:+d}x{dark_dh:+d} same_target={'yes' if same_target else 'no'}"
+              )
+
+          passed = ok and dark == "pass" and same_target
+          status = "pass" if passed else "fail"
           print(
               f"::notice::canvas_gate library={LIBRARY} status={status} "
-              f"actual={w}x{h} target={tw}x{th} delta={dw:+d}x{dh:+d} attempt={ATTEMPT}"
+              f"actual={w}x{h} target={tw}x{th} delta={dw:+d}x{dh:+d} attempt={ATTEMPT} "
+              f"light={'pass' if ok else 'fail'} dark={dark}{dark_fields}"
           )
 
-          if ok:
+          if passed:
               sys.exit(0)
-
-          # Build the synthetic weakness — include actual, target, signed delta,
-          # direction, possible aspect mismatch, and library-specific likely cause.
-          # This is what impl-repair sees in metadata.review.weaknesses.
-          direction_parts = []
-          if dw < 0:
-              direction_parts.append(f"width is {-dw} px short")
-          elif dw > 0:
-              direction_parts.append(f"width is {dw} px over")
-          if dh < 0:
-              direction_parts.append(f"height is {-dh} px short")
-          elif dh > 0:
-              direction_parts.append(f"height is {dh} px over")
-          direction = "; ".join(direction_parts) or "axes on target individually but combined off"
-
-          aspect_note = ""
-          # Aspect-mismatch hint: actual is landscape-ish but closest target is square (or vice versa)
-          actual_aspect = w / h if h else 1
-          if (tw, th) == (2400, 2400) and actual_aspect > 1.2:
-              aspect_note = " — the implementation rendered a landscape canvas but the closest target is square; reconsider orientation."
-          elif (tw, th) == (3200, 1800) and actual_aspect < 0.85:
-              aspect_note = " — the implementation rendered a portrait/square canvas but the closest target is landscape; reconsider orientation."
 
           # Library-specific likely cause (concrete repair hints, not generic).
           causes = {
@@ -936,17 +977,69 @@ jobs:
           }
           cause = causes.get(LIBRARY, f"Review `prompts/library/{LIBRARY}.md` 'Canvas — hard rule' section.")
 
-          # A defect line (regen_gate.DEFECT_RE): the review copies it verbatim.
-          weakness = (
-              f"VQ-05 (both): Canvas dimensions drifted from required target. "
-              f"Actual: {w}×{h}. Closest valid target: {tw}×{th} (±{TOLERANCE} px tolerance). "
-              f"Signed delta: {dw:+d} × {dh:+d} — {direction}.{aspect_note} "
-              f"{cause} "
-              f"Re-render at exactly {tw}×{th}; the post-render gate enforces this."
-          )
 
-          Path("/tmp/anyplot-canvas-gate.txt").write_text(weakness, encoding="utf-8")
-          print(f"::warning::Canvas gate FAILED — wrote synthetic weakness to /tmp/anyplot-canvas-gate.txt: {weakness}")
+          def drift_line(width, height, render, note=""):
+              """The synthetic weakness for one size: actual, target, signed delta,
+              direction, possible aspect mismatch and the library's likely cause.
+
+              A defect line (regen_gate.DEFECT_RE): the review copies it verbatim,
+              and impl-repair sees it in metadata.review.weaknesses.
+              """
+              ttw, tth = nearest(width, height)
+              ddw, ddh = width - ttw, height - tth
+              aspect_note = ""
+              # Aspect-mismatch hint: actual is landscape-ish but closest target is square (or vice versa)
+              actual_aspect = width / height if height else 1
+              if (ttw, tth) == (2400, 2400) and actual_aspect > 1.2:
+                  aspect_note = " — the implementation rendered a landscape canvas but the closest target is square; reconsider orientation."
+              elif (ttw, tth) == (3200, 1800) and actual_aspect < 0.85:
+                  aspect_note = " — the implementation rendered a portrait/square canvas but the closest target is landscape; reconsider orientation."
+              line = (
+                  f"VQ-05 (both): Canvas dimensions drifted from required target. "
+                  f"Actual: {width}×{height}. Closest valid target: {ttw}×{tth} (±{TOLERANCE} px tolerance). "
+                  f"Signed delta: {ddw:+d} × {ddh:+d} — {direction_of(ddw, ddh)}.{aspect_note} "
+                  f"{cause} "
+                  f"{note}"
+                  f"Re-render at exactly {ttw}×{tth}; the post-render gate enforces this."
+              )
+              return line.replace("VQ-05 (both):", f"VQ-05 ({render}):", 1)
+
+
+          # One defect line per render that missed, light first. Two renders that
+          # drifted to the same size share one (both) line, the line core.canvas writes.
+          lines = []
+          dark_on_target = dark == "pass" and same_target
+          if not ok:
+              note = f"plot-dark.png is {dark_w}×{dark_h}, on target, {THEME_CAUSE} " if dark_on_target else ""
+              lines.append(drift_line(w, h, "both" if dark_size == (w, h) else "light", note))
+          if dark in ("missing", "unreadable"):
+              what = "is missing" if dark == "missing" else f"does not open as an image ({dark_problem})"
+              lines.append(
+                  f"VQ-05 (dark): plot-dark.png {what}; plot-light.png is {w}×{h}. "
+                  f"Both theme renders are required, on the same canvas. "
+                  f"Likely cause: the dark-theme run (`ANYPLOT_THEME=dark`) failed, saved under another name or wrote a broken file. "
+                  f"Render both themes at exactly {tw}×{th}; the post-render gate enforces this."
+              )
+          elif dark_size != (w, h) and not same_target:
+              # Nearer the other canonical canvas: the target both renders
+              # share is the light render's, so the delta is measured from it.
+              xdw, xdh = dark_w - tw, dark_h - th
+              lines.append(
+                  f"VQ-05 (dark): plot-dark.png is not on the canvas of plot-light.png. "
+                  f"Actual: {dark_w}×{dark_h}, closest valid target {dark_tw}×{dark_th}; plot-light.png is {w}×{h}, "
+                  f"closest valid target {tw}×{th} (±{TOLERANCE} px tolerance). "
+                  f"Signed delta to the light render's target: {xdw:+d} × {xdh:+d} — {direction_of(xdw, xdh)}. "
+                  f"Both renders must share one canvas, the one the spec's orientation calls for. "
+                  f"Likely cause: the two theme runs draw different canvases, {THEME_CAUSE} "
+                  f"Re-render both themes at the same target; the post-render gate enforces this."
+              )
+          elif dark_size != (w, h) and dark == "fail":
+              note = f"plot-light.png is {w}×{h}, " + (f"on target, {THEME_CAUSE} " if ok else "and both renders must share one canvas. ")
+              lines.append(drift_line(dark_w, dark_h, "dark", note))
+
+          Path("/tmp/anyplot-canvas-gate.txt").write_text("\n".join(lines), encoding="utf-8")
+          for weakness in lines:
+              print(f"::warning::Canvas gate FAILED — wrote synthetic weakness to /tmp/anyplot-canvas-gate.txt: {weakness}")
           PY
 
       # Record-only: the generator prompt's static contract (the mandated

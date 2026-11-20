@@ -136,6 +136,7 @@ impl-generate.yml
        v
 impl-review.yml
   |-- Checks the staged render.sha256 against the PR head (only a match lets the review run)
+  |-- Checks that both theme renders sit on the same canonical canvas (a miss forces VQ-05 to 0)
   |-- Checks the file's static contract: title, theme, save target, colours, colormaps (record-only)
   |-- Python: adaptability check of the PR's file and its predecessor (record-only)
   |-- Python: readiness check of the staged scan record against the PR head and main
@@ -305,6 +306,32 @@ That command generates the file anew, and for a pair that is live on `main` the 
 `scripts/migrate_render_and_upload.py`, the manual re-render that promotes straight from staging, copies only the `plot-*` objects, as `impl-merge.yml` does, so a staged `render.sha256` or `adapt/` record never reaches production.
 
 A re-review of the same staging after the review's header commit, such as a manual re-run, reads `match` through the code hash (`via=code`). A repair renders after that commit, so its render hash already covers the rewritten header.
+
+#### Canvas gate
+
+Every render is 3200 × 1800 (landscape) or 2400 × 2400 (square), within 16 px. `impl-review.yml` checks that in "Canvas dimension gate", before the review, on both theme renders: `plot-light.png` and `plot-dark.png` must each sit on a canonical canvas, and both on the same one. The JavaScript libraries get the same check: their render harness owns the pixels, so only the repair hint differs.
+
+When a render misses, the step writes one defect line per render that missed to `/tmp/anyplot-canvas-gate.txt`. Each line names the actual size, the target, the signed delta, and the likely cause. The render tag says which render failed:
+
+| Render tag | When |
+|---|---|
+| `(both)` | Both renders drifted to the same size. This is the line the gate wrote before it read the dark render. |
+| `(light)` | Only the light render drifted, or the two drifted to different sizes. |
+| `(dark)` | The dark render drifted, sits on the other canvas than the light render, is missing, or doesn't open. |
+
+The review copies every line into its weaknesses and sets VQ-05 to 0. A first generation then goes to repair; a regeneration is kept with the code `canvas_failed`.
+
+A missing or unreadable dark render is a gate failure, not a crash: `impl-generate.yml` never stages a pair without both renders, so such a render is a defect of the run, and the step never fails the job by itself. A light render that doesn't open still stops the step, as it did before the gate read the dark render. "Verify both theme renders exist" stops the job on a missing file before the gate runs.
+
+The step prints one notice line, which `automation/scripts/canvas_gate_report.py` reads:
+
+```text
+canvas_gate library=plotly status=fail actual=3200x1800 target=3200x1800 delta=+0x+0 attempt=1 light=pass dark=fail dark_actual=3000x1800 dark_target=3200x1800 dark_delta=-200x+0 same_target=yes
+```
+
+`status` is the verdict on both renders. `actual`, `target`, and `delta` are the light render's, as before. The fields after `attempt` are the dark render's: `dark` is `pass`, `fail`, `missing`, or `unreadable`, and `same_target` says whether both renders are nearest to the same canvas.
+
+On 2026-11-20, the production renders of all 4,863 pairs agreed: no pair had its light render on a canvas and its dark render off it or on the other one. The 899 pairs whose renders are off the canvas, mostly the older 4800 × 2700 and 3600 × 3600 sizes, are off in both themes.
 
 #### Contract check (record-only)
 

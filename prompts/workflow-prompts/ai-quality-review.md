@@ -69,7 +69,7 @@ A plot that's perfect in one theme but unreadable in the other still **fails** �
 
 ### 5c2. MANDATORY: Canvas dimension gate (if present)
 
-The workflow's pre-check step (`impl-review.yml` → "Canvas dimension gate") measures the saved `plot-light.png` against the two canonical canvas sizes (3200×1800 landscape, 2400×2400 square, ±16 px tolerance). When the gate fails, it writes the synthetic weakness to `/tmp/anyplot-canvas-gate.txt`.
+The workflow's pre-check step (`impl-review.yml` → "Canvas dimension gate") measures the saved `plot-light.png` and `plot-dark.png` against the two canonical canvas sizes (3200×1800 landscape, 2400×2400 square, ±16 px tolerance) and requires both renders on the same one. When the gate fails, it writes the synthetic weakness to `/tmp/anyplot-canvas-gate.txt`.
 
 **Before scoring, check whether `/tmp/anyplot-canvas-gate.txt` exists:**
 
@@ -78,8 +78,8 @@ ls -la /tmp/anyplot-canvas-gate.txt 2>/dev/null && cat /tmp/anyplot-canvas-gate.
 ```
 
 If it **does** exist:
-- The file contains a single paragraph, already a defect line (8a): `VQ-05 (both): Canvas dimensions drifted from required target. Actual: WxH. Closest valid target: TWxTH (±16 px tolerance). Signed delta: ±dx × ±dy — direction. Most likely cause: …`
-- **Copy that paragraph verbatim into your `weaknesses` array as the FIRST item.** Do not paraphrase; the repair model needs the literal "actual=WxH" and signed delta numbers to know which knob to turn and which direction.
+- The file contains one line per render that failed, each already a defect line (8a): usually one, `VQ-05 (both): Canvas dimensions drifted from required target. Actual: WxH. Closest valid target: TWxTH (±16 px tolerance). Signed delta: ±dx × ±dy — direction. Most likely cause: …`. The render tag is `(light)` or `(dark)` when only that render failed or the two failed differently (two lines then); a `(dark)` line also covers a dark render that is missing, does not open, or sits on the other canvas than the light one.
+- **Copy every line verbatim into your `weaknesses` array as the FIRST items, in the file's order.** Do not paraphrase; the repair model needs the literal "actual=WxH" and signed delta numbers to know which knob to turn and which direction.
 - **Set VQ-05 (Layout & Canvas) to 0/4 regardless of other observations.** Canvas drift is a hard rule.
 - Keep scoring the other categories honestly — useful signal for repair is good signal — but do **not** lift VQ-05 just because the visual proportions look fine inside the wrong-sized canvas.
 - On a regeneration (`IS_REGENERATION` is `true`) there is no repair: the regen gate reads the same file and keeps the live implementation. Still do step 8b — the comparison is recorded for the next attempt.
