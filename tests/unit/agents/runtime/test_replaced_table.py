@@ -178,6 +178,53 @@ def marked(turns: list[Turn]) -> bool:
     return any(REPLACED_TABLE_LINE in part for _, parts in turns for part in parts)
 
 
+def alternating(turns: list[Turn]) -> bool:
+    """No two turns of one role follow each other, and in a user turn the tool answers come before any text."""
+    roles = [role for role, _ in turns]
+    if any(first == second for first, second in zip(roles, roles[1:], strict=False)):
+        return False
+    for role, parts in turns:
+        answers = [index for index, part in enumerate(parts) if part.startswith("result:")]
+        if role == "user" and answers and answers != list(range(len(answers))):
+            return False
+    return True
+
+
+def thinking_kept(before: list[types.Content], after: list[types.Content]) -> bool:
+    """Every content of `after` that holds a call holds the thinking of each content of `before` that held that call,
+    the same parts, in front of its other parts."""
+    for kept in after:
+        held = kept.parts or []
+        for source in before:
+            calls = [part for part in source.parts or [] if part.function_call is not None]
+            if not any(call is part for call in calls for part in held):
+                continue
+            thoughts = [
+                part
+                for part in source.parts or []
+                if part.function_call is None and (part.thought or (part.thought_signature and not part.text))
+            ]
+            if not all(any(thought is part for part in held[: len(thoughts)]) for thought in thoughts):
+                return False
+    return True
+
+
+def filtered(contents: list[types.Content]) -> list[types.Content]:
+    """`without_replaced_table`, with the request's shape checked: the roles alternate, a user content holds its tool
+    answers first, and a call that stays keeps its thinking."""
+    result = without_replaced_table(contents)
+    assert alternating(shape(result)), shape(result)
+    assert thinking_kept(contents, result), shape(result)
+    return result
+
+
+def checked(requests: list[list[Turn]]) -> list[list[Turn]]:
+    """Recorded requests, each checked to alternate as the API takes it."""
+    for turns in requests:
+        assert alternating(turns), turns
+    return requests
+
+
 def paired(turns: list[Turn]) -> bool:
     """Every call of the request has its answer right after it, and no answer stands without its call."""
     for index, (role, parts) in enumerate(turns):
@@ -223,7 +270,7 @@ class TestRequest:
     def test_the_first_tables_exchanges_go_and_the_discussion_stays(self) -> None:
         contents = [*self.EARLIER, user(NOTE)]
 
-        kept = without_replaced_table(contents)
+        kept = filtered(contents)
 
         assert shape(kept) == DISCUSSION
 
@@ -236,7 +283,7 @@ class TestRequest:
             contents += [user(f"ask {name}"), *exchange, reply(f"did {name}")]
         contents.append(user(NOTE))
 
-        kept = shape(without_replaced_table(contents))
+        kept = shape(filtered(contents))
 
         called = {part.removeprefix("call:") for _, parts in kept for part in parts if part.startswith("call:")}
         assert called == set(DISCUSSION_TOOLS) and paired(kept)
@@ -264,7 +311,7 @@ class TestRequest:
         both_answers = answers(("get_dataset_profile", "a"), ("get_spec_brief", "b"))
         contents = [user(ACTION), both, both_answers, reply(SUMMARY), user(NOTE)]
 
-        kept = shape(without_replaced_table(contents))
+        kept = shape(filtered(contents))
 
         assert kept == [
             ("user", [f"text:{ACTION}"]),
@@ -274,6 +321,95 @@ class TestRequest:
             ("user", [MARKED_NOTE]),
         ]
         assert paired(kept)
+
+    def test_a_kept_answer_before_a_removed_exchange_takes_the_turn_into_its_content(self) -> None:
+        """An earlier turn that ended without a reply after a `get_spec_brief` and a `get_dataset_profile`: the kept
+        answer and the marked turn would follow each other as two user contents, so they are one, the answer first,
+        and the kept call keeps the thinking that led to it."""
+        contents = [
+            user(ACTION),
+            call("get_spec_brief", "c1", thought="read the plot first"),
+            answer("get_spec_brief", "c1"),
+            call("get_dataset_profile", "c2", thought="now the table"),
+            answer("get_dataset_profile", "c2"),
+            user(NOTE),
+        ]
+
+        kept = filtered(contents)
+
+        assert shape(kept) == [
+            ("user", [f"text:{ACTION}"]),
+            ("assistant", ["thinking", "call:get_spec_brief"]),
+            ("user", ["result:get_spec_brief", MARKED_NOTE]),
+        ]
+        assert kept[1].parts is not None and kept[1].parts[0].thought_signature == b"sig"
+
+    def test_user_turns_that_only_removed_exchanges_parted_become_one_text(self) -> None:
+        """An earlier turn whose only answer was the first table's profile: its message and the next user turn are one
+        user content with one text, so the reply check still reads both as the user's; a second text part that starts
+        with `[server]` would read to it as another agent's relayed message."""
+        contents = [user(ACTION), call("get_dataset_profile", "c1"), answer("get_dataset_profile", "c1"), user(NOTE)]
+
+        kept = filtered(contents)
+
+        assert shape(kept) == [("user", [f"text:{ACTION}\n\n{REPLACED_TABLE_LINE}\n\n{NOTE}"])]
+        assert not _relayed(kept[0])
+        middle = [user("only 2024"), call("prepare_data", "c2"), answer("prepare_data", "c2"), reply("Kept 2024.")]
+        assert shape(filtered([*contents[:3], *middle, user(NOTE)])) == [
+            ("user", [f"text:{ACTION}\n\nonly 2024"]),
+            ("assistant", ["text:Kept 2024."]),
+            ("user", [MARKED_NOTE]),
+        ]
+
+    def test_thinking_goes_only_where_no_call_stays(self) -> None:
+        """A content with a call that stays keeps its thinking, the same parts in front: with extended thinking a kept
+        `tool_use` stays with the thinking that led to it. One whose calls all go, or that holds a reply only, loses
+        it."""
+        both = types.Content(
+            role="model",
+            parts=[
+                types.Part(text="profile and plot", thought=True, thought_signature=b"sig"),
+                types.Part(function_call=types.FunctionCall(id="a", name="get_dataset_profile", args={})),
+                types.Part(function_call=types.FunctionCall(id="b", name="get_spec_brief", args={})),
+            ],
+        )
+        thought_reply = types.Content(
+            role="model", parts=[types.Part(text="dates, so no change", thought=True), types.Part(text=SUMMARY)]
+        )
+        both_answers = answers(("get_dataset_profile", "a"), ("get_spec_brief", "b"))
+        contents = [user(ACTION), both, both_answers, thought_reply, user(NOTE)]
+
+        kept = filtered(contents)
+
+        assert shape(kept) == [
+            ("user", [f"text:{ACTION}"]),
+            ("assistant", ["thinking", "call:get_spec_brief"]),
+            ("user", ["result:get_spec_brief"]),
+            ("assistant", [f"text:{SUMMARY}"]),
+            ("user", [MARKED_NOTE]),
+        ]
+        assert kept[1].parts is not None and both.parts is not None and kept[1].parts[0] is both.parts[0]
+
+    def test_a_text_beside_a_removed_call_joins_a_kept_call_behind_its_thinking(self) -> None:
+        """Two contents of the root that now follow each other become one, its thinking first, where the model writes
+        it."""
+        contents = [
+            user(ACTION),
+            call("get_dataset_profile", "c1", text="Let me read the table."),
+            answer("get_dataset_profile", "c1"),
+            call("get_spec_brief", "c2", thought="and the plot"),
+            answer("get_spec_brief", "c2"),
+            reply(SUMMARY),
+            user(NOTE),
+        ]
+
+        assert shape(filtered(contents)) == [
+            ("user", [f"text:{ACTION}"]),
+            ("assistant", ["thinking", "text:Let me read the table.", "call:get_spec_brief"]),
+            ("user", ["result:get_spec_brief"]),
+            ("assistant", [f"text:{SUMMARY}"]),
+            ("user", [MARKED_NOTE]),
+        ]
 
     def test_text_beside_a_call_that_goes_stays_and_joins_the_reply_after_it(self) -> None:
         """The two replies of the root that now follow each other become one content, so the turns still alternate."""
@@ -285,7 +421,7 @@ class TestRequest:
             user(NOTE),
         ]
 
-        kept = shape(without_replaced_table(contents))
+        kept = shape(filtered(contents))
 
         assert kept == [
             ("user", [f"text:{ACTION}"]),
@@ -301,7 +437,7 @@ class TestRequest:
         thought = types.Content(role="model", parts=[types.Part(text="dates, so no change", thought=True)])
         contents = [user(ACTION), bare, thought, signed, user(NOTE)]
 
-        kept = without_replaced_table(contents)
+        kept = filtered(contents)
 
         assert shape(kept) == DISCUSSION
         assert kept[1].parts is not None and kept[1].parts[0].thought_signature == b"sig"
@@ -310,7 +446,7 @@ class TestRequest:
         own = [call("get_dataset_profile", "c2", thought="read the new table"), answer("get_dataset_profile", "c2")]
         contents = [*self.EARLIER, user(NOTE), *own]
 
-        kept = without_replaced_table(contents)
+        kept = filtered(contents)
 
         assert kept[3:] == own
         assert shape(kept)[:3] == DISCUSSION
@@ -320,9 +456,9 @@ class TestRequest:
         alone = [user(NOTE)]
         own = [user(NOTE), call("get_dataset_profile", "c2"), answer("get_dataset_profile", "c2")]
 
-        assert without_replaced_table(alone) is alone
-        assert without_replaced_table(own) is own
-        assert without_replaced_table([]) == []
+        assert filtered(alone) is alone
+        assert filtered(own) is own
+        assert filtered([]) == []
 
     def test_the_line_stands_inside_the_users_own_first_part(self) -> None:
         """A part of its own would make the action line, which starts with `[action] `, read as another agent's relayed
@@ -330,7 +466,7 @@ class TestRequest:
         text = f"{ACTION}\n\nThe user pasted the notes below together with the data."
         contents = [*self.EARLIER, user(text)]
 
-        current = without_replaced_table(contents)[-1]
+        current = filtered(contents)[-1]
 
         assert current.parts is not None and len(current.parts) == 1
         assert current.parts[0].text == f"{REPLACED_TABLE_LINE}\n\n{text}"
@@ -340,9 +476,9 @@ class TestRequest:
         contents = [*self.EARLIER, user(NOTE)]
         before = [content.model_copy(deep=True) for content in contents]
 
-        once = without_replaced_table(contents)
+        once = filtered(contents)
 
-        assert without_replaced_table(once) == once
+        assert filtered(once) == once
         assert contents == before  # the request's contents were read, never changed in place
 
     def test_the_line_is_fixed_english_without_a_figure(self) -> None:
@@ -355,7 +491,7 @@ class TestRequest:
         refused = [user(withheld_text("out_of_scope")), halt(refusal("out_of_scope", "en"))]
         contents = [*self.EARLIER, *refused, user(NOTE)]
 
-        kept = without_replaced_table(without_refused_turns(contents))
+        kept = filtered(without_refused_turns(contents))
 
         assert shape(kept) == DISCUSSION
         assert without_refused_turns(contents) == [*self.EARLIER, user(NOTE)]  # as it was without this filter
@@ -446,7 +582,7 @@ async def test_the_note_after_a_replacing_paste_keeps_the_talk_and_loses_the_fir
 
     await say(client, sid, {"text": NOTE})
 
-    summary_first, summary_second, first, second = root_requests(fake)
+    summary_first, summary_second, first, second = checked(root_requests(fake))
     assert first == DISCUSSION
     assert second == [*first, ("assistant", ["call:get_dataset_profile"]), ("user", ["result:get_dataset_profile"])]
     assert paired(first) and paired(second)
@@ -482,7 +618,7 @@ async def test_every_other_turn_reaches_the_root_as_adk_builds_it(client: httpx.
     await say(client, sid, {"text": "Which column is text?"})
     await say(client, sid, {"action": "summarize_data"})
 
-    later, again = root_requests(fake)[-2:]
+    later, again = checked(root_requests(fake))[-2:]
     earlier = [
         ("user", [f"text:{ACTION}"]),
         ("assistant", ["thinking", "call:get_dataset_profile"]),
@@ -546,7 +682,7 @@ async def test_a_refused_turn_and_the_first_table_both_leave_the_request(
 
     await say(client, sid, {"text": NOTE})
 
-    assert root_requests(fake)[-1] == [
+    assert checked(root_requests(fake))[-1] == [
         ("user", [f"text:{ACTION}"]),
         ("assistant", [f"text:{SUMMARY}"]),
         ("user", [MARKED_NOTE]),

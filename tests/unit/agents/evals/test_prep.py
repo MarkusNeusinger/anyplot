@@ -51,7 +51,7 @@ from agents.evals.prep import (
 from agents.main import ACTION_MESSAGES, Runtime
 
 from ..runtime.fakes import FakeAnthropic
-from ..runtime.test_replaced_table import anthropic_shape
+from ..runtime.test_replaced_table import alternating, anthropic_shape
 
 
 OPERATIONS = (
@@ -1517,6 +1517,7 @@ class TestRun:
         told, misled = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
 
         first, after_profile, only = [anthropic_shape(call["messages"]) for call in fake.calls]
+        assert alternating(first) and alternating(after_profile) and alternating(only)
         # What the server itself puts before the root on that turn (the new table's profile among it) holds no stale
         # value, so only a reply that took one from earlier names one; the fixture test checks the refusal of a
         # `set_type`, which lists the forms the chat reads.
@@ -1560,6 +1561,7 @@ class TestRun:
 
         (result,) = asyncio.run(run_cases([again], runtime=runtime(), services=services))
 
+        assert all(alternating(anthropic_shape(call["messages"])) for call in fake.calls)
         assert anthropic_shape(fake.calls[0]["messages"]) == [
             ("user", [f"text:{again.before_message}"]),
             ("assistant", [f"text:{again.before_reply}"]),
