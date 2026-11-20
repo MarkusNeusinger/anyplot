@@ -2,46 +2,51 @@ library: letsplot
 language: python
 specification_id: polar-scatter
 created: '2025-12-26T16:15:15Z'
-updated: '2026-05-09T10:59:25Z'
-generated_by: claude-haiku
-workflow_run: 25599231213
+updated: '2026-11-20T02:15:21Z'
+generated_by: claude-sonnet
+workflow_run: 44658288015
 issue: 2023
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 82
 review:
   strengths:
-  - Flawless theme adaptation in both light and dark renders with no contrast or readability
-    failures
-  - Correct Okabe-Ito palette consistently applied across both renders
-  - Proper use of synthetic wind data with realistic prevailing direction clustering
-  - Clean, reproducible code with clear data generation logic
-  - Appropriate square canvas format for polar coordinates
-  - All spec requirements met with competent implementation
+  - Clean polar scatter via coord_polar(start=0, direction=1) with compass labels
+    from scale_x_continuous breaks/labels, clockwise from north as a wind rose reads
+  - Radius axis starts at 0 and is sized from the data (max * 1.08), so every marker
+    sits inside the rim
+  - Imprint palette in canonical order with identical data colors and correctly flipped
+    chrome in both themes
+  - Legend placed in the empty top-right corner, letting the square polar panel use
+    nearly the full canvas
+  - Column constants and a replaceable data block keep the script adaptable; HTML
+    export keeps lets-plot's native hover tooltips
   weaknesses:
-  - 'Design excellence is conservative: uses defaults (theme_minimal) without custom
-    refinement or intentional visual hierarchy'
-  - 'Library mastery is minimal: coord_polar is standard grammar-of-graphics, not
-    distinctive to lets-plot; no showcase of interactive features or advanced layer
-    composition'
-  - Data storytelling could emphasize the prevailing wind pattern more through visual
-    hierarchy or annotation
+  - 'DQ-03 (code): the comment ''Weibull-like speeds, stronger from the SW-W side''
+    misstates the data: 1 + 0.4*sin(direction - 240 deg) peaks at 330 deg, and the
+    render''s fastest winds (13-16 m/s) sit at NW → shift the phase to sin(direction
+    - 150) so the peak lands at 240 deg, or correct the comment to NW. Likely cause:
+    the sine phase offset of 240 instead of 150.'
+  - 'Suggestion: legend text at 9 px sits just under the 10 px legend reference; 10
+    px would match the legend title.'
+  - 'Suggestion: the hour draw (lines 53-54) only feeds the three-way bucket; drawing
+    the time-of-day category directly would be shorter.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title, axis labels (N, NE, E, SE, S, SW, W, NW), tick labels all clearly visible in dark ink color (#1A1A17)
-      Data: Three categories (Morning green #009E73, Afternoon orange #D55E00, Evening blue #0072B2) properly color-encoded with good contrast; 120 data points well-distributed
-      Legibility verdict: PASS - All text readable, no contrast issues
+      Background: warm off-white #FAF8F1 (a ~30 px transparent margin rings the PNG, an export artifact that shows the page behind)
+      Chrome: centered title 'polar-scatter · python · letsplot · anyplot.ai' in dark ink; compass labels N..NW and radius ticks 0-20 in INK_SOFT; 'Wind speed (m/s)' radius title on the left; thin grey rings every 2.5 m/s and spokes every 22.5 deg, lighter than the markers; legend 'Time of day' in an elevated box top right
+      Data: 120 markers in #009E73 (Morning), #C475FD (Afternoon), #4467A3 (Evening) at alpha 0.75; clusters W/NW and NE, empty E/SE, outliers to 16 m/s at NW and NE
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title, axis labels, tick labels all clearly visible in light ink color (#F0EFE8); grid subtle but visible
-      Data: Data colors identical to light render (green, orange, blue only - chrome is what flipped); radial and angular gridlines maintained
-      Legibility verdict: PASS - All text readable, no dark-on-dark failures, theme adaptation complete and correct
+      Background: warm near-black #1A1A17
+      Chrome: title in light ink, ticks and compass labels in #B8B7B0, grid light grey and subtle; legend box #242420 with light text; no dark-on-dark text
+      Data: identical marker colors and positions to the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,48 +57,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized and colored for legibility in both renders
+        comment: All sizes set explicitly (title 16, axis text 11, axis title 13,
+          legend 10/9); every text element readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Alpha=0.75 handles marker overlaps well; no text collisions
+        comment: No text collisions; the few touching markers stay distinguishable
+          through alpha 0.75
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Radial and angular gridlines visible and appropriately subtle; marker
-          size is clear
+        comment: 120 points at size 3 with alpha 0.75 suit the density; legend glyphs
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with adequate contrast
+        comment: Green, lavender and blue separate well in luminance and hue; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600×3600 format ideal for polar plots; proper centering and
-          padding
+        comment: Square 2400x2400 canvas; the polar panel fills most of the canvas,
+          legend tucked into the empty top-right corner
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in spec format; y-axis includes units; angular labels clear
+        comment: Radius titled 'Wind speed (m/s)'; angular axis labelled with compass
+          directions
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order preserved, backgrounds correct,
-          both renders properly themed'
+        comment: 'Imprint order #009E73, #C475FD, #4467A3 identical in both renders;
+          #FAF8F1 / #1A1A17 backgrounds, chrome flips correctly'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -101,21 +109,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses theme_minimal() but no custom design beyond requirements
+        comment: 'Style-guide baseline: Imprint palette, theme tokens, explicit sizes;
+          nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle refinement with proper theme colors and spacing but minimal
-          customization
+        comment: Legend moved into the unused top-right corner via legend_position
+          coordinates, freeing width for the polar panel; grid otherwise inherited
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Wind direction clustering and time-of-day encoding show narrative
-          but could be emphasized more
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -125,29 +133,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Authentic polar scatter with angular and radial dimensions
+        comment: Genuine polar scatter via coord_polar
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required elements present: degree labels, cardinal directions,
-          gridlines, color categories'
+        comment: Radial gridlines every 2.5 m/s, compass ticks every 45 deg, radius
+          from 0 past the max, legend for the color encoding, centred with padding;
+          C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Direction to angle, speed to radius, 120 points displayed, appropriate
-          ranges
+        comment: Direction to angle (clockwise from N), speed to radius; all 120 points
+          inside the rim at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in spec format; legend labels match categorical variable
+        comment: Title 'polar-scatter · python · letsplot · anyplot.ai' correct; legend
+          'Time of day' with readable entries
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -155,22 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full range of polar scatter features: directional clustering, speed
-          variation, categorical stratification'
+        comment: Prevailing-direction clusters, empty E/SE sectors, a far NE outlier
+          and interleaved categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Meteorologically plausible wind data with realistic prevailing winds
-          and speeds (1-22 m/s)
+        comment: 'Wind observations by time of day: a real, neutral meteorology scenario'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Wind direction (0-360°) and speed (0-22 m/s) scales sensible for
-          domain
+        passed: false
+        comment: 'Checked: speeds 1-16 m/s plausible, directions 0-360; but the ''stronger
+          from the SW-W side'' comment misstates the data (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -180,31 +189,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear straightforward code
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no simulated interactivity
+        comment: Lean, column constants, no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html; uses current ggsave() API
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
       score: 4
       max: 10
@@ -214,21 +223,27 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Follows ggplot2 grammar of graphics; correct coord_polar, scales,
-          ggsave but not distinctive
+        comment: Correct grammar-of-graphics usage (coord_polar start/direction, scale
+          breaks/labels); nothing beyond the usual pattern
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses standard grammar-of-graphics coord_polar; minimal lets-plot-specific
-          features
+        comment: Generic usage; nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-20T02:10:34Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
