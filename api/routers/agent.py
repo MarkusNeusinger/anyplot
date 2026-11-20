@@ -288,8 +288,9 @@ _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f]")  # C0, DEL and C1: never sh
 _MAX_EVENT_CHARS = 64 * 1024
 _MAX_DONE_EVENT_CHARS = 512 * 1024
 """The cap of a `done` event: after a turn in which the assistant changed the data it carries
-`dataset` (20 preview rows, the profile of up to 50 columns, the bindings, the change lines
-and up to 50 spec roles), which at every schema maximum is about 393,000 characters. The agents service proves
+`dataset` (20 preview rows, the profile of up to 50 columns, the bindings, the change lines with
+the turn's marks, and up to 50 spec roles), which at every schema maximum is about 510,000 characters. The agents
+service proves
 that its largest `done` fits (`agents/stream.py`, `MAX_DONE_EVENT_CHARS`, the same number;
 copied, because the API image does not ship the agents package)."""
 _QUEUED_STEP = "queued"

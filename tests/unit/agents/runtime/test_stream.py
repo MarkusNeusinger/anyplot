@@ -30,6 +30,7 @@ from agents.anyplot.schemas import (
     ColumnProfile,
     DatasetProfile,
 )
+from agents.anyplot.turn_marks import table_facts, turn_marks
 from agents.main import MAX_ROLE_DESCRIPTION_CHARS, AgentsError, _role_body, check_caller, decode_claims
 from agents.stream import MAX_DONE_EVENT_CHARS, MAX_DONE_ROLES, MAX_VIEW_PARTS, Translator, sse
 from core.spec_roles import TYPE_WORDS, DataRole
@@ -155,6 +156,14 @@ class TestTranslator:
         bindings = [Binding(role=f"{'R' * 30}{index:02d}", column=name) for index, name in enumerate(names)]
         # A `generate_data` call answers a change line and a warning per series; two data calls in one turn.
         lines = 2 * max(MAX_OPERATIONS, 1 + MAX_SERIES)
+        # The turn's marks after them: a line per role of the start's bindings and of the end's, at most two full
+        # binding sets, each line the longest one, a role that took a new column instead of another.
+        moved = [Binding(role=bindings[0].role, column=names[1])]
+        (mark,) = turn_marks(
+            table_facts("start", profile.model_copy(update={"columns": columns[:1]}), bindings[:1]),
+            table_facts("end", profile.model_copy(update={"columns": columns[1:2]}), moved),
+        )
+        marks = [mark.line] * (2 * MAX_COLUMNS)
         # The roles as `_role_body` writes them, every field at its widest, the description control characters.
         role = DataRole(
             name="R" * 32,
@@ -178,7 +187,7 @@ class TestTranslator:
             **dataset_payload(stored, bindings, can_undo=False, original_version=10**6),
             "roles": roles,
             "suggestion": suggestion,
-            "changes": ["\x01" * MAX_NOTE_CHARS] * lines,
+            "changes": ["\x01" * MAX_NOTE_CHARS] * lines + marks,
         }
         payload = {
             "llm_calls": 10**6,

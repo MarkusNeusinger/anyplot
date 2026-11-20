@@ -1,6 +1,7 @@
 /**
- * One bar per UTC day, with the first and the last date under it: the strip of the stats page's
- * visitors, machine readers and shared links tiles (`stripGeometry.ts`).
+ * One bar per day, with the first and the last date under it: the strip of the stats page's
+ * visitors, machine readers and shared links tiles (`stripGeometry.ts`). The visitors tile's
+ * days are the Plausible site's (Europe/Zurich), the other two tiles' are UTC days.
  *
  * One series, so one colour and no legend: the tile's title says what a bar is. A bar's height
  * alone encodes the day's number (`columnPx`). Each day's full-height column is its own hover and
