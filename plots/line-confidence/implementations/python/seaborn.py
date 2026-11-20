@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-confidence: Line Plot with Confidence Interval
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-09
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -17,9 +18,11 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Set theme for seaborn
+# Imprint palette: position 1 is the single series
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
+
 sns.set_theme(
     style="ticks",
     rc={
@@ -37,57 +40,46 @@ sns.set_theme(
     },
 )
 
-# Data - Daily temperature forecast with growing confidence interval
-np.random.seed(42)
+# Columns: set these to your table's column names
+TIME = "Discharge time (min)"  # role: x
+VOLTAGE = "Cell voltage (V)"  # role: y
+LOWER = "Lower bound (V)"  # role: y_lower
+UPPER = "Upper bound (V)"  # role: y_upper
 
-# Generate daily forecast for 30 days
-days = np.arange(1, 31)
+# Data: replace this block with your own table, for example df = pd.read_csv("forecast.csv")
+# Predicted Li-ion cell voltage under constant load, 95% interval from a model ensemble
+rng = np.random.default_rng(42)
+minutes = np.arange(0, 181, 6)
+predicted = 4.15 - 0.0022 * minutes - 0.55 * np.exp((minutes - 180) / 22) + rng.normal(0, 0.006, len(minutes))
+half_width = 1.96 * (0.008 + 0.00022 * minutes)  # the ensemble spreads out with discharge time
+df = pd.DataFrame({TIME: minutes, VOLTAGE: predicted, LOWER: predicted - half_width, UPPER: predicted + half_width})
 
-# Create a realistic temperature trend with daily variation
-base_temp = 18 + days * 0.3  # Warming trend
-daily_cycle = 3 * np.sin(2 * np.pi * days / 7)  # Weekly pattern
-noise = np.random.randn(len(days)) * 1.5
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Central forecast
-y_forecast = base_temp + daily_cycle + noise
-
-# Confidence interval - widens as forecast horizon extends
-uncertainty = 1.5 + days * 0.15  # Growing uncertainty
-y_lower = y_forecast - 1.96 * uncertainty
-y_upper = y_forecast + 1.96 * uncertainty
-
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-
-# Plot confidence band using fill_between
-ax.fill_between(days, y_lower, y_upper, alpha=0.25, color=BRAND, label="95% Confidence Interval")
-
-# Plot central line
-ax.plot(days, y_forecast, color=BRAND, linewidth=3, label="Forecast", marker="o", markersize=5)
+ax.fill_between(df[TIME], df[LOWER], df[UPPER], color=BRAND, alpha=0.25, linewidth=0, label="95% prediction interval")
+sns.lineplot(
+    data=df, x=TIME, y=VOLTAGE, color=BRAND, linewidth=2, marker="o", markersize=3.5, label="Predicted voltage", ax=ax
+)
 
 # Style
-ax.set_xlabel("Day", fontsize=20, color=INK)
-ax.set_ylabel("Temperature (°C)", fontsize=20, color=INK)
-ax.set_title(
-    "Temperature Forecast · line-confidence · seaborn · anyplot.ai", fontsize=24, color=INK, fontweight="medium"
-)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+title = "Battery Discharge Forecast · line-confidence · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=round(12 * min(1.0, 67 / len(title))), fontweight="medium", color=INK)
+ax.set_xlabel(TIME, fontsize=10)
+ax.set_ylabel(VOLTAGE, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.yaxis.grid(True, linewidth=0.8)
+ax.set_axisbelow(True)
+sns.despine(ax=ax)
 
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
+# Band first in the legend, then the line
+handles, labels = ax.get_legend_handles_labels()
+order = [labels.index("95% prediction interval"), labels.index("Predicted voltage")]
+ax.legend([handles[i] for i in order], [labels[i] for i in order], fontsize=8, loc="lower left", framealpha=0.95)
 
-# Grid
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, linestyle="-")
+ax.set_xlim(df[TIME].min(), df[TIME].max())
+pad = 0.04 * (df[UPPER].max() - df[LOWER].min())
+ax.set_ylim(df[LOWER].min() - pad, df[UPPER].max() + pad)
 
-# Legend - position to avoid overlap with data
-ax.legend(fontsize=16, loc="lower right", framealpha=0.95)
-
-# Set axis limits with padding
-ax.set_xlim(0, 31)
-ax.set_ylim(min(y_lower) - 2, max(y_upper) + 2)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
