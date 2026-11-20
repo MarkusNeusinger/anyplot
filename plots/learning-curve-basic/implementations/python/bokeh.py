@@ -1,7 +1,7 @@
 """ anyplot.ai
 learning-curve-basic: Model Learning Curve
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-10
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-20
 """
 
 import os
@@ -16,149 +16,93 @@ if str(script_dir) in sys.path:
     sys.path.remove(str(script_dir))
 
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import Band, ColumnDataSource, HoverTool, Legend, LegendItem  # noqa: E402
+from bokeh.models import Band, ColumnDataSource  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-TRAIN_COLOR = "#009E73"  # Position 1: brand green
-VAL_COLOR = "#C475FD"  # Position 2: vermillion
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulate learning curve for a classification model
-np.random.seed(42)
+# Columns: set these to your table's column names
+TRAIN_SIZE = "Training set size (samples)"  # role: train_sizes
+TRAIN_SCORE = "Training accuracy"  # role: train_scores
+VALIDATION_SCORE = "Validation accuracy"  # role: validation_scores
+FOLD = "Fold"  # role: extra
+SCORE_AXIS = "Accuracy"  # y axis title shared by both curves
 
-# Training set sizes (10 points from 10% to 100% of data)
-train_sizes = np.array([50, 100, 200, 300, 400, 500, 600, 700, 800, 900])
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+# One row per training size and cross-validation fold (simulated 5-fold CV of a classifier)
+rng = np.random.default_rng(42)
+sizes = np.array([50, 100, 200, 300, 400, 500, 600, 700, 800, 900])
+fold_offsets = np.array([-1.5, -0.5, 0.0, 0.5, 1.5])  # mean 0, std 1: folds spread around each mean
 
-# Simulate 5-fold cross-validation scores
-n_folds = 5
-n_sizes = len(train_sizes)
+# Training accuracy stays high and dips slightly; validation accuracy climbs with more data
+train_mean = 0.99 - 0.02 * np.log(sizes / sizes[0]) / np.log(sizes[-1] / sizes[0])
+train_std = 0.01 + 0.01 * (1 - sizes / sizes[-1])
+val_mean = 0.65 + 0.25 * (1 - np.exp(-sizes / 300))
+val_std = 0.08 * np.exp(-sizes / 400) + 0.01
 
-# Training scores: start high and stay high (slight decrease as model generalizes)
-train_scores_mean = 0.99 - 0.02 * np.log(train_sizes / train_sizes[0]) / np.log(train_sizes[-1] / train_sizes[0])
-train_scores_std = 0.01 + 0.01 * (1 - train_sizes / train_sizes[-1])
+rows = []
+for i, size in enumerate(sizes):
+    train_scores = train_mean[i] + train_std[i] * rng.permutation(fold_offsets)
+    val_scores = val_mean[i] + val_std[i] * rng.permutation(fold_offsets)
+    rows += [(size, fold + 1, t, v) for fold, (t, v) in enumerate(zip(train_scores, val_scores, strict=True))]
+df = pd.DataFrame(rows, columns=[TRAIN_SIZE, FOLD, TRAIN_SCORE, VALIDATION_SCORE])
 
-# Validation scores: start low, improve with more data (typical learning curve shape)
-validation_scores_mean = 0.65 + 0.25 * (1 - np.exp(-train_sizes / 300))
-validation_scores_std = 0.08 * np.exp(-train_sizes / 400) + 0.01
+# Plot: reads only df and the constants above
+curves = {}
+for score, label in ((TRAIN_SCORE, "Training score"), (VALIDATION_SCORE, "Validation score")):
+    by_size = df.groupby(TRAIN_SIZE)[score]
+    stats = pd.DataFrame({"mean": by_size.mean(), "std": by_size.std(ddof=0)}).reset_index()
+    stats["lower"] = stats["mean"] - stats["std"]
+    stats["upper"] = stats["mean"] + stats["std"]
+    curves[label] = stats
 
-# Create bands for confidence intervals (±1 std)
-train_upper = train_scores_mean + train_scores_std
-train_lower = train_scores_mean - train_scores_std
-val_upper = validation_scores_mean + validation_scores_std
-val_lower = validation_scores_mean - validation_scores_std
+y_low = min(s["lower"].min() for s in curves.values())
+y_high = max(s["upper"].max() for s in curves.values())
+y_pad = (y_high - y_low) * 0.06
 
-# Create ColumnDataSource for training data
-train_source = ColumnDataSource(
-    data={"x": train_sizes, "y": train_scores_mean, "upper": train_upper, "lower": train_lower}
-)
-
-# Create ColumnDataSource for validation data
-val_source = ColumnDataSource(
-    data={"x": train_sizes, "y": validation_scores_mean, "upper": val_upper, "lower": val_lower}
-)
-
-# Create figure (4800 x 2700 px for 16:9)
 p = figure(
-    width=4800,
-    height=2700,
-    title="learning-curve-basic · bokeh · anyplot.ai",
-    x_axis_label="Training Set Size (samples)",
-    y_axis_label="Accuracy Score",
-    tools="pan,wheel_zoom,box_zoom,reset,save",
+    width=3200,
+    height=1800,
+    title="learning-curve-basic · python · bokeh · anyplot.ai",
+    x_axis_label=TRAIN_SIZE,
+    y_axis_label=SCORE_AXIS,
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=60,
 )
+p.y_range.start = y_low - y_pad
+p.y_range.end = y_high + y_pad
 
-# Add confidence bands for training scores (Okabe-Ito: brand green)
-train_band = Band(
-    base="x",
-    lower="lower",
-    upper="upper",
-    source=train_source,
-    fill_color=TRAIN_COLOR,
-    fill_alpha=0.2,
-    line_color=TRAIN_COLOR,
-    line_alpha=0.3,
-)
-p.add_layout(train_band)
+for i, (label, stats) in enumerate(curves.items()):
+    color = IMPRINT_PALETTE[i]
+    source = ColumnDataSource(stats)
+    p.add_layout(Band(base=TRAIN_SIZE, lower="lower", upper="upper", source=source, fill_color=color, fill_alpha=0.22))
+    p.line(x=TRAIN_SIZE, y="mean", source=source, line_color=color, line_width=5, legend_label=label)
+    p.scatter(x=TRAIN_SIZE, y="mean", source=source, color=color, size=16, legend_label=label)
 
-# Add confidence bands for validation scores (Okabe-Ito: vermillion)
-val_band = Band(
-    base="x",
-    lower="lower",
-    upper="upper",
-    source=val_source,
-    fill_color=VAL_COLOR,
-    fill_alpha=0.3,
-    line_color=VAL_COLOR,
-    line_alpha=0.4,
-)
-p.add_layout(val_band)
-
-# Plot training score line
-train_line = p.line(x="x", y="y", source=train_source, line_color=TRAIN_COLOR, line_width=4, line_alpha=0.9)
-
-# Plot training score markers
-train_scatter = p.scatter(x="x", y="y", source=train_source, color=TRAIN_COLOR, size=22, alpha=0.9)
-
-# Plot validation score line
-val_line = p.line(x="x", y="y", source=val_source, line_color=VAL_COLOR, line_width=4, line_alpha=0.9)
-
-# Plot validation score markers
-val_scatter = p.scatter(x="x", y="y", source=val_source, color=VAL_COLOR, size=22, alpha=0.9)
-
-# Add hover tool for interactivity (Bokeh distinctive feature)
-hover_train = HoverTool(
-    renderers=[train_scatter],
-    tooltips=[
-        ("Type", "Training Score"),
-        ("Samples", "@x{0}"),
-        ("Accuracy", "@y{0.000}"),
-        ("Std Range", "@lower{0.000} - @upper{0.000}"),
-    ],
-    mode="mouse",
-)
-p.add_tools(hover_train)
-
-hover_val = HoverTool(
-    renderers=[val_scatter],
-    tooltips=[
-        ("Type", "Validation Score"),
-        ("Samples", "@x{0}"),
-        ("Accuracy", "@y{0.000}"),
-        ("Std Range", "@lower{0.000} - @upper{0.000}"),
-    ],
-    mode="mouse",
-)
-p.add_tools(hover_val)
-
-# Create legend - positioned inside plot area, top-left for better visibility
-legend = Legend(
-    items=[
-        LegendItem(label="Training Score", renderers=[train_line, train_scatter]),
-        LegendItem(label="Validation Score", renderers=[val_line, val_scatter]),
-    ],
-    location="top_left",
-)
-
-p.add_layout(legend, "center")
-
-# Styling - increased sizes for better readability on 4800x2700 canvas
-p.title.text_font_size = "36pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_font_style = "bold"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_color = INK_SOFT
@@ -168,38 +112,31 @@ p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 
-# Legend styling - larger and more prominent
+p.legend.location = "bottom_right"
 p.legend.label_text_font_size = "34pt"
-p.legend.background_fill_alpha = 0.95
+p.legend.label_text_color = INK_SOFT
 p.legend.background_fill_color = ELEVATED_BG
+p.legend.background_fill_alpha = 0.95
 p.legend.border_line_color = INK_SOFT
 p.legend.border_line_width = 2
-p.legend.label_text_color = INK_SOFT
-p.legend.padding = 25
-p.legend.spacing = 20
+p.legend.padding = 20
+p.legend.spacing = 14
 p.legend.glyph_width = 50
 p.legend.glyph_height = 40
 
-# Grid styling
+p.grid.grid_line_color = INK
 p.grid.grid_line_alpha = 0.10
 p.grid.grid_line_dash = "dashed"
-p.grid.grid_line_color = INK
 
-# Axis range to show all data with padding
-p.y_range.start = 0.55
-p.y_range.end = 1.02
-
-# Theme-adaptive background and borders
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
-# Save as HTML for interactive version
+# Save HTML, then screenshot it with headless Chrome for the PNG
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome for PNG (Selenium)
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -213,6 +150,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)  # let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()

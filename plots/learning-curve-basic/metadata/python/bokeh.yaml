@@ -2,50 +2,46 @@ library: bokeh
 language: python
 specification_id: learning-curve-basic
 created: '2025-12-26T17:37:56Z'
-updated: '2026-05-10T03:49:43Z'
-generated_by: claude-haiku
-workflow_run: 25618654156
+updated: '2026-11-20T16:20:34Z'
+generated_by: claude-sonnet
+workflow_run: 44771206317
 issue: 2275
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 83
 review:
   strengths:
-  - Exceptional text legibility with explicitly set font sizes across all elements
-  - Perfect theme adaptation with data colors identical between light and dark renders
-  - Excellent use of bokeh distinctive features (Band, HoverTool, ColumnDataSource)
-  - Complete spec compliance with all required features
-  - High-quality, realistic example data showing typical learning curve behavior
-  - All visual elements properly scaled for large canvas (4800×2700)
-  - No text overlap or legibility issues in either light or dark theme
+  - Band annotation and line/scatter glyphs share one ColumnDataSource per curve,
+    so band and mean line come from the same groupby statistics
+  - Means and ±1 std computed from tidy per-fold rows with pandas groupby rather than
+    typed in
+  - Theme tokens threaded through title, axes, ticks, legend and grid; both renders
+    read cleanly
+  - legend_label on line and scatter merges them into one legend entry per curve
   weaknesses:
-  - Design Excellence (12/20) prevents higher score. While technically excellent,
-    styling follows well-configured defaults rather than custom masterpiece
-  - 'DE-01 (4/8): Could enhance aesthetic sophistication with more intentional design
-    choices beyond standard Okabe-Ito application'
-  - 'DE-02 (4/6): Could refine visual polish with adjusted spine treatment, more refined
-    grid styling'
-  - 'DE-03 (4/6): Could strengthen data storytelling by emphasizing the convergence/bias-variance
-    learning curve insight through greater visual hierarchy'
+  - 'DQ-03 (both): the simulated training-fold accuracies reach about 1.02 at 50 samples
+    (0.99 + 1.5 × 0.02), above the metric''s maximum of 1, and the training band''s
+    top edge sits above the 1.0 gridline → keep every fold score at or below 1.0 (about
+    −0.02). Likely cause: train_mean + train_std * fold_offsets in the data block
+    without a clip to 1.0.'
+  - 'Suggestion: a HoverTool on the mean markers showing size, mean and ±std would
+    add value in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title in dark text (36pt), axis labels dark (28pt), ticks dark (22pt), legend with light background and dark text (34pt) — all clearly readable
-      Data: Green (#009E73) training line with light green band, orange (#D55E00) validation line with peach band. Data markers (size 22) clearly visible.
-      Legibility verdict: PASS — excellent contrast, no dark-on-light or light-on-light issues
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: bold dark title 'learning-curve-basic · python · bokeh · anyplot.ai' at about 54% of the width; italic axis titles 'Training set size (samples)' and 'Accuracy'; soft-ink ticks 200-800 and 0.6-1; faint dashed grid; legend lower right on an elevated box — all readable
+      Data: training line and markers #009E73 with a light green ±1 std band near 0.97-0.99; validation #C475FD rising from 0.69 to 0.89 with a purple band widest at 50 samples
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title, axis labels, ticks all in light text (#F0EFE8 primary, #B8B7B0 secondary) — all clearly readable on dark background, no dark-on-dark failures
-      Data: Training and validation colors identical to light render (green #009E73, orange #D55E00) — data identity preserved. Confidence bands same structure.
-      Legibility verdict: PASS — excellent contrast in dark theme, proper theme-adaptive text colors applied throughout, no legibility failures
-
-    Theme Legibility Conclusion:
-    Both renders PASS all legibility checks. Data colors constant across themes. Chrome (text, grid, legend box, axes) properly theme-aware. No text is dark-on-dark or light-on-light. Brand green (#009E73) visible and readable in both themes.
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks and legend text in light soft ink, legend box #242420 — all readable, no dark-on-dark
+      Data: line and marker colors identical to the light render; bands read as dark green and dark purple at the same alpha, both curves visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,51 +52,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 36pt, labels 28pt, ticks 22pt,
-          legend 34pt. Perfectly readable in both themes.'
+        comment: Title 50pt, axis titles 42pt, ticks and legend 34pt, all explicitly
+          set; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements. Legend and labels properly spaced.
+        comment: No text collisions; legend sits in the empty lower-right corner clear
+          of both curves and bands
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (size 22) and lines (width 4) optimally sized for 10 data
-          points. Bands clearly distinguishable.
+        comment: '10 sizes per curve: 5 px lines with 16 px markers, bands at alpha
+          0.22 keep both curves visible; legend glyphs match the marks in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) provides excellent contrast.
-          Colorblind-safe.'
+        comment: Green vs purple, CVD-safe and high contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 70-80% of canvas with balanced margins. Legend well-positioned.
+        comment: 3200x1800, title about 54% of the width, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis with units: ''Training Set Size (samples)''. Y-axis descriptive:
-          ''Accuracy Score''.'
+        comment: '''Training set size (samples)'' and ''Accuracy'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Second #D55E00 (Okabe-Ito position
-          2). Backgrounds #FAF8F1 (light) and #1A1A17 (dark). Theme-adaptive chrome
-          throughout.'
+        comment: 'Training #009E73, validation #C475FD (Imprint 1 and 2); backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-adaptive'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -108,23 +103,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional use of Okabe-Ito palette and typography hierarchy. However,
-          styling follows well-configured defaults rather than custom masterpiece.
-          Lacks publication-level polish.
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Grid styling customized (dashed, alpha 0.10). Legend background configured.
-          Good whitespace. Could benefit from more refined visual polish.
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Visual hierarchy present with training above validation. Convergence
-          story implicit in data. Could strengthen emphasis on bias-variance insight.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -134,30 +125,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct learning curve with two lines and confidence bands.
+        comment: Learning curve with two lines and bands; no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Training and validation lines, confidence bands, legend, axis labels
-          all present.
+        comment: Bands (±1 std), metric-labelled y axis, legend, sample-size x axis,
+          distinct colors; C1–C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis training set sizes (50-900), Y-axis accuracy (0.55-1.02).
-          All data visible.
+        comment: Lines pass through the fold mean at every size, straight segments,
+          y range from the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''learning-curve-basic · bokeh · anyplot.ai''. Legend labels
-          accurate.'
+        comment: '''learning-curve-basic · python · bokeh · anyplot.ai''; legend ''Training
+          score'' / ''Validation score'''
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -165,22 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all learning curve aspects: high training, low initial validation,
-          convergence, cross-fold variability.'
+        comment: High training score, rising validation score, gap, wider bands at
+          small sizes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classification model with accuracy scores, 5-fold CV, realistic sample
-          progression. Neutral, domain-appropriate.
+        comment: 5-fold CV accuracy of a classifier, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Training scores (0.98-0.99) realistic for well-fitted model. Validation
-          (0.65-0.88) realistic for learning pattern.
+        passed: false
+        comment: Fold accuracies reach about 1.02 at 50 samples, above the metric's
+          maximum of 1 (defect line)
     code_quality:
       score: 10
       max: 10
@@ -190,61 +180,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save. No unnecessary functions.'
+        comment: Linear, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output.
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No dead code. Appropriate stdlib includes.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No fake functionality. Efficient ColumnDataSource
-          use.
+        comment: groupby mean/std from tidy per-fold rows; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html. Current bokeh 3.9.0 API.
+        comment: plot-{THEME}.html + .png via Selenium with CDP viewport pin; Bokeh
+          3 API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Expert use of bokeh patterns: ColumnDataSource, Band for intervals,
-          HoverTool, custom Legend with LegendItem, theme-aware colors. Per bokeh.md
-          guidelines.'
+        passed: false
+        comment: ColumnDataSource per curve, Band annotation sharing the source, legend_label
+          merging line and scatter into one entry
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Band model for confidence intervals, HoverTool with tooltips, ColumnDataSource
-          pattern, custom legend, Selenium export per bokeh guide.
+        passed: false
+        comment: bokeh's Band annotation model driven by the same ColumnDataSource
+          as the glyphs
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-20T16:17:03Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - custom-legend
-  - hover-tooltips
+  - layer-composition
   - html-export
   patterns:
   - data-generation
+  - groupby-aggregation
+  - iteration-over-groups
   - columndatasource
   dataprep: []
   styling:
