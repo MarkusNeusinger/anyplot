@@ -129,4 +129,5 @@ def test_adk_loader_finds_the_app_with_its_plugins(monkeypatch: pytest.MonkeyPat
         "ShippedReplyPlugin",
         "ReplyLanguagePlugin",
         "ContextFilterPlugin",
+        "ReplacedTablePlugin",
     ]

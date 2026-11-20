@@ -35,10 +35,13 @@
   pipeline through `ctx.run_node`, so a walk from the root would miss them;
   `ALL_AGENTS` lists every agent for the registry test.
 * `app` carries the plugins in their fixed order, `ScopeGuard → Budget → ToolSafety →
-  EmptyReply → RootRefusal → NumberProvenance → ShippedReply → ReplyLanguage → ContextFilter(6)`
+  EmptyReply → RootRefusal → NumberProvenance → ShippedReply → ReplyLanguage → ContextFilter(6) →
+  ReplacedTable`
   (EmptyReply, RootRefusal and NumberProvenance after Budget, which books the response they ask
   for again, and before the checks that read the answer they put in that response's place; the filter also
-  takes the refused turns out of the root's request, `without_refused_turns`), behind the
+  takes the refused turns out of the root's request, `without_refused_turns`, and ReplacedTable, on the summary
+  turn of a paste that replaced data, the replaced table's tool exchanges, keeping every user message and reply,
+  `plugins/replaced_table.py`), behind the
   development-only fixture seed when
   `AGENT_DEV_FIXTURE` is set, and, on Claude only, a context-cache config so ADK
   marks Claude prompt-cache breakpoints. `adk web agents` finds `app` in this module.
@@ -75,6 +78,7 @@ from .plugins.budget import BudgetPlugin
 from .plugins.empty_reply import EmptyReplyPlugin
 from .plugins.ledger import CURRENT_LEDGER, ledger_for
 from .plugins.number_provenance import NumberProvenancePlugin
+from .plugins.replaced_table import ReplacedTablePlugin, summary_turn
 from .plugins.reply_language import ReplyLanguagePlugin
 from .plugins.root_refusal import RootRefusalPlugin
 from .plugins.scope_guard import ScopeGuardPlugin, withheld_messages, without_refused_turns
@@ -444,10 +448,11 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append(f"- {CONVERSIONS_HEADING.format(count=len(found))}")
             lines.append(fence("user_data", "\n".join(candidate.line() for candidate in found)))
             telemetry.note_conversion(session_id, "asked")  # until `prepare_data` makes a column in this turn
-        if view.summary_pending or (ledger is not None and ledger.summary_turn):
+        if summary_turn(view, ledger):
             # The first turn on a paste: a typed message is the user's note with it (root.md, the summary rule). For
             # every call of the turn: the reply after the root's own `prepare_data`, on a version that is no paste,
-            # is still the summary, with the row count after the change (the prep eval's `no_row_count` misses).
+            # is still the summary, with the row count after the change (the prep eval's `no_row_count` misses). The
+            # request filter of a paste that replaced data reads the same condition (`plugins/replaced_table.py`).
             replaced = replaced_earlier_data(services.datasets, session_id, view)
             lines.append(PASTED_LINE + (REPLACED_DATA_LINE if replaced else ""))
             before = view_before(context.state, dataset, view.language)
@@ -595,9 +600,12 @@ def build_plugins() -> list[BasePlugin]:
         NumberProvenancePlugin(),
         ShippedReplyPlugin(),
         ReplyLanguagePlugin(),
-        # The filter comes last and edits the request ReplyLanguage has kept, in place, so a second ask of any
+        # The filters come last and edit the request ReplyLanguage has kept, in place, so a second ask of any
         # reply check starts from the same cleaned contents.
         ContextFilterPlugin(num_invocations_to_keep=CONTEXT_INVOCATIONS, custom_filter=without_refused_turns),
+        # A plugin of its own, since it needs the agent and the session's state, which ADK's custom filter does not
+        # get; after the trim, so it reads the invocations the root will see.
+        ReplacedTablePlugin(),
     ]
     settings = get_settings()
     if settings.dev_fixture and settings.is_development:

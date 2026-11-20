@@ -21,6 +21,7 @@ from agents.anyplot.models import VertexClaude
 from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.empty_reply import EmptyReplyPlugin
 from agents.anyplot.plugins.number_provenance import NumberProvenancePlugin
+from agents.anyplot.plugins.replaced_table import ReplacedTablePlugin
 from agents.anyplot.plugins.reply_language import ReplyLanguagePlugin
 from agents.anyplot.plugins.root_refusal import RootRefusalPlugin
 from agents.anyplot.plugins.scope_guard import ScopeGuardPlugin
@@ -144,6 +145,7 @@ class TestRegistry:
             ShippedReplyPlugin,
             ReplyLanguagePlugin,
             ContextFilterPlugin,
+            ReplacedTablePlugin,
         ]
         assert not any(isinstance(plugin, LoggingPlugin) for plugin in plugins)
         assert agent_module.app.name == "anyplot" and agent_module.app.root_agent is agent_module.root_agent
