@@ -1,13 +1,14 @@
 """ anyplot.ai
 elbow-curve: Elbow Curve for K-Means Clustering
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-10
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-20
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -17,10 +18,10 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
-ACCENT = "#C475FD"
 
-# Configure seaborn theme with theme-adaptive colors
+# Imprint palette: first series is always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 sns.set_theme(
     style="ticks",
     rc={
@@ -32,80 +33,79 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Simulate realistic elbow curve data
-np.random.seed(42)
-k_values = list(range(1, 11))
+# Columns: set these to your table's column names
+K = "Number of clusters (k)"  # role: k_values
+INERTIA = "Inertia (within-cluster sum of squares)"  # role: inertia
 
-# Realistic inertia values showing typical elbow pattern
-inertias = [
-    2800,  # k=1
-    1650,  # k=2
-    950,  # k=3
-    520,  # k=4 - elbow point
-    450,  # k=5
-    400,  # k=6
-    365,  # k=7
-    340,  # k=8
-    320,  # k=9
-    305,  # k=10
-]
+# Data: replace this block with your own table, for example df = pd.read_csv("inertia.csv")
+rng = np.random.default_rng(42)
+base_inertia = [2800, 1650, 950, 520, 450, 400, 365, 340, 320, 305]
+df = pd.DataFrame(
+    {K: np.arange(1, len(base_inertia) + 1), INERTIA: np.array(base_inertia) + rng.uniform(-10, 10, len(base_inertia))}
+)
 
-# Add small noise for realism
-noise = np.random.uniform(-10, 10, len(inertias))
-inertias = [max(0, i + n) for i, n in zip(inertias, noise, strict=True)]
+# Plot: reads only df and the constants above
+# Elbow = the point farthest from the chord joining the first and last points (normalised axes)
+kx = (df[K] - df[K].min()) / (df[K].max() - df[K].min())
+ky = (df[INERTIA] - df[INERTIA].min()) / (df[INERTIA].max() - df[INERTIA].min())
+chord_gap = (kx + ky - 1).abs() if ky.iloc[0] > ky.iloc[-1] else (kx - ky).abs()
+elbow = df.loc[chord_gap.idxmax()]
 
-# Create figure and plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot the elbow curve with seaborn
 sns.lineplot(
-    x=k_values,
-    y=inertias,
+    data=df,
+    x=K,
+    y=INERTIA,
     ax=ax,
-    color=BRAND,
-    linewidth=3.5,
+    color=IMPRINT_PALETTE[0],
+    linewidth=2.0,
     marker="o",
-    markersize=16,
-    markerfacecolor=ACCENT,
-    markeredgecolor=BRAND,
-    markeredgewidth=2.5,
+    markersize=8,
+    markerfacecolor=IMPRINT_PALETTE[0],
+    markeredgecolor=PAGE_BG,
+    markeredgewidth=1.2,
 )
 
-# Annotate the elbow point (k=4)
-elbow_k = 4
-elbow_inertia = inertias[elbow_k - 1]
+# Highlight the elbow at its own data point
+ax.plot(
+    elbow[K],
+    elbow[INERTIA],
+    marker="o",
+    markersize=13,
+    markerfacecolor=IMPRINT_PALETTE[1],
+    markeredgecolor=INK,
+    markeredgewidth=1.5,
+    zorder=5,
+)
 ax.annotate(
-    f"Elbow Point (k={elbow_k})",
-    xy=(elbow_k, elbow_inertia),
-    xytext=(elbow_k + 2, elbow_inertia + 400),
-    fontsize=18,
-    arrowprops={"arrowstyle": "->", "color": INK, "lw": 2},
-    color=INK,
+    f"Elbow at k = {int(elbow[K])}",
+    xy=(elbow[K], elbow[INERTIA]),
+    xytext=(40, 30),
+    textcoords="offset points",
+    fontsize=10,
     fontweight="bold",
+    color=INK,
+    arrowprops={"arrowstyle": "->", "color": INK, "lw": 1.2},
 )
 
-# Labels and styling
-ax.set_xlabel("Number of Clusters (k)", fontsize=20, color=INK)
-ax.set_ylabel("Inertia (Within-Cluster Sum of Squares)", fontsize=20, color=INK)
-ax.set_title("elbow-curve · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.set_xticks(k_values)
+# Style
+ax.set_title("elbow-curve · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(K, fontsize=10, color=INK)
+ax.set_ylabel(INERTIA, fontsize=10, color=INK)
+ax.set_xticks(df[K])
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.set_ylim(0, df[INERTIA].max() * 1.08)
+sns.despine(ax=ax)
+ax.yaxis.grid(True, linewidth=0.6)
+ax.set_axisbelow(True)
 
-# Spine styling
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for spine in ("left", "bottom"):
-    ax.spines[spine].set_color(INK_SOFT)
-
-# Subtle y-axis grid
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
