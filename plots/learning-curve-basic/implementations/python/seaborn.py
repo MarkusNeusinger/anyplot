@@ -1,7 +1,7 @@
 """ anyplot.ai
 learning-curve-basic: Model Learning Curve
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-10
+Quality: 76/100 | Updated: 2026-05-10
 """
 
 import os

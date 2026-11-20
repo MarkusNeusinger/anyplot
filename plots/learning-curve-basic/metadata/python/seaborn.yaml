@@ -12,32 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 76
 review:
   strengths:
-  - Excellent theme adaptation with proper contrast in both light and dark renders
-  - Perfect specification compliance with clean, immediately readable visualization
-  - Proper Okabe-Ito palette usage with distinct markers (circles vs squares) for
-    accessibility
-  - Well-structured, maintainable code using idiomatic seaborn patterns
-  - Realistic and properly scaled synthetic data demonstrating typical learning curve
-    patterns with clear bias-variance tradeoff
-  weaknesses: []
+  - 'Theme-adaptive chrome in both renders: warm backgrounds, INK and INK_SOFT text,
+    subtle y grid and an elevated legend box, with identical data colors across themes'
+  - 'Training and validation differ by Imprint color (#009E73, #C475FD) and by marker
+    shape (circle and square)'
+  - Both ±1 SD bands are clearly visible and translucent enough that the curves stay
+    readable where they approach each other
+  - 'Axis titles carry units or range: ''Training Set Size (samples)'', ''Accuracy
+    Score (0-1)'''
+  weaknesses:
+  - 'VQ-05 (both): Canvas dimensions drifted from required target. Actual: 4678x2582.
+    Closest valid target: 3200x1800 (±16 px tolerance). Signed delta: +1478 × +782
+    — far too large → figsize=(8, 4.5) at dpi=400 with the default bbox. Likely cause:
+    figsize=(16, 9) with savefig(dpi=300, bbox_inches="tight").'
+  - 'SC-04 (both): the title reads ''learning-curve-basic · seaborn · anyplot.ai''
+    without the language segment → ''learning-curve-basic · python · seaborn · anyplot.ai''.
+    Likely cause: the ax.set_title string.'
+  - 'DQ-02 (both): the scenario names no task or model; the y axis is a bare ''Accuracy
+    Score (0-1)'' and the legend ''Training Score'' / ''Validation Score'' → name
+    what is being learned (for example a classifier''s accuracy on a named task).
+    Likely cause: the generic labels and data comments.'
+  - 'Suggestion: sns.lineplot on long-form fold data with errorbar="sd" would compute
+    the means and bands that lines 49–52 and the two fill_between calls write out.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly matches anyplot.ai light surface standard.
-      Chrome: Title and axis labels display in dark text (#1A1A17); tick labels in secondary dark (#4A4A44). All text is clearly readable against the light background with excellent contrast.
-      Data: Training curve (green #009E73) with circle markers shows high accuracy (~0.98) decreasing slightly with training set size. Validation curve (orange #D55E00) with square markers starts at ~0.68 and increases to ~0.89. Both curves have subtle confidence bands (alpha=0.2) showing ±1 standard deviation. Different marker shapes enhance accessibility beyond color alone.
-      Legibility verdict: PASS — All text elements are clearly visible, no contrast failures, all data markers and lines are distinguishable from background.
+      Background: warm off-white #FAF8F1, not pure white; the saved canvas is 4678×2582 px.
+      Chrome: title 'learning-curve-basic · seaborn · anyplot.ai' in dark ink near the top edge; x-axis title 'Training Set Size (samples)', y-axis title 'Accuracy Score (0-1)', ticks 0–2000 (step 250) and 0.5–1.0 in INK_SOFT; subtle horizontal grid; top and right spines removed; legend 'Training Score' / 'Validation Score' in an elevated box at the lower right. All text clearly readable.
+      Data: training accuracy in #009E73 with circle markers, easing from about 0.98 to 0.94 with a clearly visible green ±1 SD band; validation accuracy in #C475FD with square markers, rising from about 0.67 at 50 samples to about 0.89 at 2000 with a translucent lavender band widening at 2000.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly matches anyplot.ai dark surface standard, NOT pure black.
-      Chrome: All text adapts to light theme — title and labels in light (#F0EFE8), ticks in secondary light (#B8B7B0). Every text element is clearly visible against the dark background with no dark-on-dark failures.
-      Data: Training and validation curves are IDENTICAL in color to light render (green #009E73 and orange #D55E00), confirming correct implementation of theme-independent data colors. Confidence bands and markers match the light render exactly. The data visualization pattern is unchanged across themes, showing proper chrome-only theme adaptation.
-      Legibility verdict: PASS — No dark-on-dark failures detected. All text clearly readable. Brand green (#009E73) remains visible and maintains good contrast on dark surface.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis titles in light ink, tick labels in light grey, dim grid, legend box on #242420 with light text. No dark-on-dark text.
+      Data: colors identical to the light render (#009E73, #C475FD), same markers; both bands visible as translucent dark-green and dark-purple bands. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -45,77 +59,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt) and
-          clearly readable in both themes
+        comment: Font sizes explicitly set (title 24, axis titles 20, ticks and legend
+          16 pt at a 16×9 in figure); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend well-placed in lower right corner with
-          adequate spacing
+        comment: No text collisions; legend in the empty lower right
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (markersize=10), lines (linewidth=3), and confidence bands
-          (alpha=0.2) all clearly visible
+        comment: 10 markers per series at markersize 10, 3 pt lines, both bands clearly
+          visible; legend glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors with high contrast; different marker shapes (circles
-          vs squares) for colorblind safety
+        comment: Green against lavender plus circle against square markers
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 16x9 aspect (4800x2700 at 300dpi); well-proportioned, nothing cut
-          off, generous margins
+        passed: false
+        comment: Canvas 4678×2582 instead of 3200×1800 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title, x-label with units (samples), y-label with metric and range
-          (0-1)
+        comment: '''Training Set Size (samples)'' and ''Accuracy Score (0-1)'' are
+          descriptive with units or range'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Training #009E73, Validation #D55E00 (Okabe-Ito 1-2); backgrounds
-          #FAF8F1/#1A1A17; both renders theme-correct'
+        comment: 'Imprint positions 1–2 (#009E73, #C475FD); backgrounds #FAF8F1 and
+          #1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional seaborn styling; intentional palette and theme handling;
-          publication-ready. Standard seaborn idioms (not highly innovative).
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Top/right spines removed; subtle grid (alpha=0.15, linewidth=0.8);
-          generous whitespace; well-styled legend.
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Clear narrative (training overfits, validation improves with data);
-          visual hierarchy via color and marker shapes; confidence bands show uncertainty.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -123,28 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct learning curve: two lines with confidence bands'
+        comment: 'Learning curve: two lines with ±1 SD bands; no extra layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Training scores, validation scores, confidence bands, clear legend
+        comment: Bands, metric on y, legend, sample sizes on x, distinct colors; C1–C5
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: 50-2000 training set sizes; Y: 0.5-1.0 accuracy; all data visible'
+        comment: Size on x, accuracy on y, straight segments through fold means; all
+          data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title: ''learning-curve-basic · seaborn · anyplot.ai''; legend labels
-          match curves'
+        passed: false
+        comment: Title lacks the language segment (defect line); legend labels correct
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -152,22 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows training and validation curves, confidence bands, bias-variance
-          tradeoff, distinctive markers
+        comment: Gap between curves, falling training and rising validation score,
+          visible bands on both curves
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Realistic learning curve: training high/decreasing, validation low/increasing,
-          convergence pattern typical. Seed=42 ensures reproducibility.'
+        passed: false
+        comment: 'Plausible but generic: no task or model named (defect line)'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0.5-1.0 shows meaningful variation; X-axis 50-2000 samples
-          is realistic for learning curves
+        comment: 'No check values in the spec. Checked: accuracies within 0–1, training
+          above validation at every size, gap narrowing as the comment states'
     code_quality:
       score: 10
       max: 10
@@ -177,53 +185,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; direct array operations; clear
-          seaborn calls
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set; deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib.pyplot, numpy, seaborn'
+        comment: os, matplotlib, numpy, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; theme handling via os.getenv
-          is elegant
+        comment: Hand-computed means and SDs with fill_between are a few lines (suggestion
+          only)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png via plt.savefig with dpi=300
+        comment: Saves plot-{THEME}.png; current API (the canvas consequence of bbox_inches
+          is scored in VQ-05)
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Idiomatic seaborn: sns.set_theme() for comprehensive theme setup,
-          sns.lineplot() high-level API, sns.set_context() for scaling, ax.fill_between()
-          for confidence bands'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of sns.set_theme() and theme-aware design; confidence bands
-          show statistical thinking. Standard rather than innovative patterns.
+        comment: Correct sns.lineplot usage on pre-aggregated arrays with matplotlib
+          fill_between bands
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
 impl_tags:
   dependencies: []
   techniques: []
