@@ -361,6 +361,15 @@ UNREAD = {
     "en-US locale string": ([f"3/{day}/2026, 10:00:00 AM" for day in range(1, 5)], 4, DATE_FORMS),
     "de-DE locale string": ([f"{day}.3.2026, 10:00:00" for day in range(1, 5)], 4, DATE_FORMS),
     "en-GB locale string": ([f"0{day}/03/2026, 10:00" for day in range(1, 5)], 4, DATE_FORMS),
+    # A month and a year joined by a slash, in either order.
+    "month and year": ([f"0{month}/2026" for month in range(3, 7)], 4, DATE_FORMS),
+    "year and month": ([f"2026/0{month}" for month in range(3, 7)], 4, DATE_FORMS),
+    # A version, a record or a score whose numbers read as a day too stays a question: the cell reads both ways, and
+    # a calendar version is a date.
+    "versions that read as days": (["1.2.10", "1.2.11", "1.2.12", "1.3.10"], 4, DATE_FORMS),
+    "records that read as days": (["10-10-10", "11-11-11", "12-12-12", "10-11-12"], 4, DATE_FORMS),
+    "scores that read as days": (["12-10-24", "13-10-24", "14-10-24", "15-10-24"], 4, DATE_FORMS),
+    "calendar versions": (["2024.1.1", "2024.1.2", "2024.2.1", "2024.3.1"], 4, DATE_FORMS),
 }
 CERTAIN_ROW_NUMBERS = {
     # Never read, and no date look the rule takes either: these keep their row numbers unasked.
@@ -404,6 +413,19 @@ CERTAIN_ROW_NUMBERS = {
     ),
     "versions": (day_column(["1.2.3", "1.2.4", "1.2.5", "1.3.0"], "label"), LINE, ()),
     "four numbers with dots": (day_column(["12.10.24.3", "12.10.24.4", "12.10.24.5", "12.10.24.6"], "label"), LINE, ()),
+    # Numbers in a date's shape that no day and month can be: past 31, or neither of the two 12 or below.
+    "pairs past 31": (day_column(["44-55-66", "45-56-67", "46-57-68", "47-58-69"], "label"), LINE, ()),
+    "body sizes": (day_column(["90-60-90", "92-62-92", "88-58-88", "94-64-94"], "size"), LINE, ()),
+    "no month among the two": (day_column(["21-19-15", "22-18-16", "23-17-14", "24-16-13"], "label"), LINE, ()),
+    "a month past 12 after the year": (
+        day_column(["2024.13.40", "2024.14.41", "2024.15.42", "2024.16.43"], "label"),
+        LINE,
+        (),
+    ),
+    # Fractions, and a month past 12 beside a year.
+    "fractions": (day_column(["1/2", "3/4", "1/4", "2/3"], "label"), LINE, ()),
+    "a month past 12 before a year": (day_column(["13/2026", "14/2026", "15/2026", "16/2026"], "label"), LINE, ()),
+    "a month past 12 after a year": (day_column(["2026/13", "2026/14", "2026/15", "2026/16"], "label"), LINE, ()),
 }
 
 

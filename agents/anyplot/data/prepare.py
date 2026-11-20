@@ -2063,16 +2063,25 @@ class UnreadDates:
     """The non-empty cells, with their repeats."""
 
 
-_YEAR_FIRST = re.compile(r"[0-9]{4}([/.-])[0-9]{1,2}\1[0-9]{1,2}(?![0-9])")
+_YEAR_FIRST = re.compile(r"[0-9]{4}([/.-])([0-9]{1,2})\1([0-9]{1,2})(?![0-9])")
 """A date with its year first at the start of a cell: four digits, then two numbers of one or two digits, joined by one
 and the same separator, and no further digit (`2026/03/01`). Whatever follows is allowed: a time in a form the list
-does not read (`2026-03-01 10:00:00 UTC`) or an hour label (`2026-03-01-00`)."""
-_YEAR_LAST = re.compile(r"[0-9]{1,2}([/.-])[0-9]{1,2}\1(?:[0-9]{4}|[0-9]{2})(?=\Z|[ T,])")
+does not read (`2026-03-01 10:00:00 UTC`) or an hour label (`2026-03-01-00`). `_numbered_date` checks the month (1 to
+12) and the day (1 to 31): `2024.13.40` is none, while a calendar version such as `2024.1.1` is a date."""
+_YEAR_LAST = re.compile(r"([0-9]{1,2})([/.-])([0-9]{1,2})\2(?:[0-9]{4}|[0-9]{2})(?=\Z|[ T,])")
 """A date with its year last at the start of a cell: two numbers of one or two digits, then a year of two or four
 digits, joined by one and the same separator, and after it the end of the cell, a space, `T` or a comma (`01.03.26`,
 `3/13/26`, `3/1/2026 10:00:00 AM`, and JavaScript's `toLocaleString()`: `3/1/2026, 10:00:00 AM`, `1.3.2026, 10:00:00`).
 The end keeps out what has more numbers or fewer digits: a version (`1.2.3`), an address (`10.0.0.1`, `12.10.24.3`),
-a formation (`4-4-2`), a record (`2-1-0`) or an id (`123-45-6789`)."""
+a formation (`4-4-2`), a record (`2-1-0`) or an id (`123-45-6789`). `_numbered_date` checks the two numbers before the
+year, each 1 to 31 and one of them 1 to 12 (a day and a month): `44-55-66`, sizes such as `90-60-90` and `21-19-15` are
+none. A version or a record whose numbers read as a day too (`1.2.10`, `10-10-10`, `12-10-24`) stays a date: the cell
+reads both ways, and the doubt costs one question."""
+_MONTH_YEAR = re.compile(r"(?:([0-9]{1,2})/([0-9]{4})|([0-9]{4})/([0-9]{1,2}))(?=\Z|[ T,])")
+"""A month and a four-digit year joined by a slash, in either order (`03/2026`, `2026/03`), then the end of the cell, a
+space, `T` or a comma; `_numbered_date` checks the month (1 to 12), so `13/2026` and a fraction (`1/2`) are none. Only
+the slash: with a dash it is the parser's own month (`YEAR_MONTH`) or a span of years, and with a dot the paste types
+a number."""
 _LETTERS = re.compile(r"[^\W\d_]+")
 """A run of letters, as the date list takes a month written as a word (`parse._MONTH_WORD`): a month written with its
 number and a marker (`3月`) is no such word, so `2026年3月1日` holds no month name, as the list reads no day in it."""
@@ -2090,42 +2099,62 @@ def unread_dates(frame: pd.DataFrame, column: str) -> UnreadDates | None:
     not take, with why; else None.
 
     A cell looks like a date when the date list (`parse.read_dates`) reads it, or leaves it unread as a day that does
-    not exist or as a slash date of no single order, or, in no form of the list, when it starts with a date of the
-    year first (`_YEAR_FIRST`) or the year last (`_YEAR_LAST`), or holds a year and a month name the list knows
-    (`_YEAR`, `months.month_number`: `1st March 2026`). The column does when more than `DATE_LIKE_SHARE` of its
-    non-empty cells do, and when the conversion would not take it: the list leaves a cell unread (`_unread_words` says
-    why), or the cells read hold times with and without a UTC offset, which `set_type` refuses as a whole
-    (`_naive_and_zoned` says why). A column of `YYYY-NN` cells alone is none, as
-    for `dry_run`: the parser reads months of that shape itself, so one it kept text is a span of years (`2012-13`
-    beside `2009-10`) or holds ids. Cells are counted with their repeats, as the refusal counts them.
+    not exist or as a slash date of no single order, or, in no form of the list, when it starts with a date of numbers
+    (`_numbered_date`) or holds a year and a month name the list knows (`_YEAR`, `months.month_number`:
+    `1st March 2026`). The column does when more than `DATE_LIKE_SHARE` of its non-empty cells do, and when the
+    conversion would not take it: the list leaves a cell unread (`_unread_words` says why), or the cells read hold
+    times with and without a UTC offset, which `set_type` refuses as a whole (`_naive_and_zoned` says why). A column of
+    `YYYY-NN` cells alone is none, as for `dry_run`: the parser reads months of that shape itself, so one it kept text
+    is a span of years (`2012-13` beside `2009-10`) or holds ids. Each distinct cell is judged once and weighted by its
+    count, so a long column of few distinct cells costs few checks; the counts are per cell with repeats, as the
+    refusal counts them.
     """
     series = frame[column]
     if _kind(series) != "text":
         return None
-    cells = [cell.strip() for cell in series if isinstance(cell, str) and cell.strip()]
-    if all(YEAR_MONTH.fullmatch(cell) for cell in cells):
+    counts = Counter(cell.strip() for cell in series if isinstance(cell, str) and cell.strip())
+    if all(YEAR_MONTH.fullmatch(cell) for cell in counts):
         return None
-    listed = read_dates(cells)
-    moments = [listed.moments[cell] for cell in cells if cell in listed.moments]
-    zoned = sum(moment.tzinfo is not None for moment in moments)
-    unread = [listed.unread[cell] for cell in cells if cell in listed.unread]
-    if zoned and zoned < len(moments):
-        found = UnreadDates(column, _naive_and_zoned(column, zoned, len(moments) - zoned).message, None, len(cells))
+    listed = read_dates(counts)
+    read = Counter({cell: count for cell, count in counts.items() if cell in listed.moments})
+    zoned = sum(count for cell, count in read.items() if listed.moments[cell].tzinfo is not None)
+    unread: Counter[UnreadReason] = Counter()
+    for cell, count in counts.items():
+        if cell in listed.unread:
+            unread[listed.unread[cell]] += count
+    present = counts.total()
+    if zoned and zoned < read.total():
+        found = UnreadDates(column, _naive_and_zoned(column, zoned, read.total() - zoned).message, None, present)
     elif unread:
-        found = UnreadDates(column, _unread_words(Counter(unread)), len(unread), len(cells))
+        found = UnreadDates(column, _unread_words(unread), unread.total(), present)
     else:
         return None
-    like = sum(_date_like(cell, listed) for cell in cells)
-    return found if like > DATE_LIKE_SHARE * len(cells) else None
+    like = sum(count for cell, count in counts.items() if _date_like(cell, listed))
+    return found if like > DATE_LIKE_SHARE * present else None
 
 
 def _date_like(cell: str, listed: DateCells) -> bool:
     """Whether a cell of a column the date list read (`unread_dates`) looks like a date."""
     if listed.unread.get(cell) != "no_form":
         return True  # read, a day that does not exist, or a slash date of no single order
-    if _YEAR_FIRST.match(cell) or _YEAR_LAST.match(cell):
+    if _numbered_date(cell):
         return True
     return _YEAR.search(cell) is not None and any(month_number(word) is not None for word in _LETTERS.findall(cell))
+
+
+def _numbered_date(cell: str) -> bool:
+    """Whether a cell starts with a date of numbers in a shape the list may not read (`_YEAR_FIRST`, `_YEAR_LAST`,
+    `_MONTH_YEAR`) whose numbers a day and a month can be."""
+    first = _YEAR_FIRST.match(cell)
+    if first is not None and 1 <= int(first.group(2)) <= 12 and 1 <= int(first.group(3)) <= 31:
+        return True
+    last = _YEAR_LAST.match(cell)
+    if last is not None:
+        parts = (int(last.group(1)), int(last.group(3)))
+        if all(1 <= part <= 31 for part in parts) and any(part <= 12 for part in parts):
+            return True
+    month = _MONTH_YEAR.match(cell)
+    return month is not None and 1 <= int(month.group(1) or month.group(4)) <= 12
 
 
 def _numbers_of(cells: list[str], decimal: str) -> Conversion | None:
