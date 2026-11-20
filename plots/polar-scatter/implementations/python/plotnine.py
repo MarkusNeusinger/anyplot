@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-scatter: Polar Scatter Plot
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-09
+Quality: 74/100 | Updated: 2026-05-09
 """
 
 import os
