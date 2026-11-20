@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-09
@@ -6,6 +6,8 @@ Quality: 93/100 | Updated: 2026-05-09
 
 import os
 
+import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -15,149 +17,153 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Browser market share evolution 2015-2024
-# Shows how different browsers have gained/lost market share over time
-time_points = ["2015", "2018", "2021", "2024"]
-categories = ["Chrome", "Firefox", "Safari", "Edge"]
+# Columns: set these to your table's column names
+YEAR = "Year"  # role: time_point
+BROWSER = "Browser"  # role: category
+SHARE = "Market share (%)"  # role: value
+NEXT_YEAR = "Next year"  # role: extra
+NEXT_BROWSER = "Browser in next period"  # role: extra
+FLOW = "Users moving (%)"  # role: flow
 
-# Node labels and colors
-node_labels = categories * 4
-category_colors = {cat: IMPRINT[i] for i, cat in enumerate(categories)}
-node_colors = [category_colors[cat] for cat in node_labels]
-
-# X positions: 4 time points evenly spaced
-x_positions = []
-for t in range(4):
-    x_positions.extend([0.01 + (t / 3) * 0.98] * 4)
-
-# Y positions: 4 categories evenly spaced vertically
-y_positions = [0.15, 0.42, 0.68, 0.92] * 4
-
-# Define flows: realistic browser market share transitions
-flows_data = [
+# Data: replace this block with your own table, for example df = pd.read_csv("flows.csv")
+# One row per band: the browser at a year, the browser the same users use at the next year, and the flow size.
+flows = [
     # 2015 -> 2018: Chrome growth, Firefox decline
-    (0, 0, 1, 0, 420),  # Chrome stays Chrome
-    (0, 0, 1, 2, 30),  # Chrome to Safari
-    (0, 1, 1, 1, 140),  # Firefox stays Firefox
-    (0, 1, 1, 0, 45),  # Firefox to Chrome
-    (0, 1, 1, 2, 15),  # Firefox to Safari
-    (0, 2, 1, 2, 180),  # Safari stays Safari
-    (0, 2, 1, 0, 50),  # Safari to Chrome
-    (0, 3, 1, 3, 85),  # Edge stays Edge
-    (0, 3, 1, 0, 35),  # Edge to Chrome
+    ("2015", "Chrome", "Chrome", 420),
+    ("2015", "Chrome", "Safari", 30),
+    ("2015", "Firefox", "Firefox", 140),
+    ("2015", "Firefox", "Chrome", 45),
+    ("2015", "Firefox", "Safari", 15),
+    ("2015", "Safari", "Safari", 180),
+    ("2015", "Safari", "Chrome", 50),
+    ("2015", "Edge", "Edge", 85),
+    ("2015", "Edge", "Chrome", 35),
     # 2018 -> 2021: Chrome dominance, Firefox further decline
-    (1, 0, 2, 0, 460),  # Chrome stays Chrome
-    (1, 0, 2, 2, 25),  # Chrome to Safari
-    (1, 0, 2, 3, 15),  # Chrome to Edge
-    (1, 1, 2, 1, 105),  # Firefox stays Firefox
-    (1, 1, 2, 0, 40),  # Firefox to Chrome
-    (1, 1, 2, 2, 15),  # Firefox to Safari
-    (1, 2, 2, 2, 200),  # Safari stays Safari
-    (1, 2, 2, 0, 45),  # Safari to Chrome
-    (1, 3, 2, 3, 95),  # Edge stays Edge
-    (1, 3, 2, 0, 30),  # Edge to Chrome
+    ("2018", "Chrome", "Chrome", 460),
+    ("2018", "Chrome", "Safari", 25),
+    ("2018", "Chrome", "Edge", 15),
+    ("2018", "Firefox", "Firefox", 105),
+    ("2018", "Firefox", "Chrome", 40),
+    ("2018", "Firefox", "Safari", 15),
+    ("2018", "Safari", "Safari", 200),
+    ("2018", "Safari", "Chrome", 45),
+    ("2018", "Edge", "Edge", 95),
+    ("2018", "Edge", "Chrome", 30),
     # 2021 -> 2024: Consolidation, Chrome dominance continues
-    (2, 0, 3, 0, 480),  # Chrome stays Chrome
-    (2, 0, 3, 3, 20),  # Chrome to Edge
-    (2, 1, 3, 1, 95),  # Firefox stays Firefox
-    (2, 1, 3, 0, 20),  # Firefox to Chrome
-    (2, 2, 3, 2, 215),  # Safari stays Safari
-    (2, 2, 3, 0, 50),  # Safari to Chrome
-    (2, 3, 3, 3, 110),  # Edge stays Edge
-    (2, 3, 3, 0, 25),  # Edge to Chrome
+    ("2021", "Chrome", "Chrome", 480),
+    ("2021", "Chrome", "Edge", 20),
+    ("2021", "Firefox", "Firefox", 95),
+    ("2021", "Firefox", "Chrome", 20),
+    ("2021", "Safari", "Safari", 215),
+    ("2021", "Safari", "Chrome", 50),
+    ("2021", "Edge", "Edge", 110),
+    ("2021", "Edge", "Chrome", 25),
 ]
+df = pd.DataFrame(flows, columns=[YEAR, BROWSER, NEXT_BROWSER, FLOW])
+df[NEXT_YEAR] = df[YEAR].map(dict(zip(["2015", "2018", "2021"], ["2018", "2021", "2024"], strict=True)))
+df[SHARE] = df.groupby([YEAR, BROWSER], sort=False)[FLOW].transform("sum")
 
-# Convert to source/target indices
-sources = []
-targets = []
-values = []
+# Plot: reads only df and the constants above
+years = list(dict.fromkeys(list(df[YEAR]) + list(df[NEXT_YEAR])))
+browsers = list(dict.fromkeys(list(df[BROWSER]) + list(df[NEXT_BROWSER])))
+n_years, n_browsers = len(years), len(browsers)
+color_of = {b: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, b in enumerate(browsers)}
+
+# Node i of column t is browser b: index = t * n_browsers + b
+node_labels = browsers * n_years
+node_colors = [color_of[b] for b in node_labels]
+x_positions = np.repeat(0.01 + np.arange(n_years) / (n_years - 1) * 0.98, n_browsers)
+y_positions = np.tile(np.linspace(0.15, 0.92, n_browsers), n_years)
+
+year_index = {y: t for t, y in enumerate(years)}
+sources = [year_index[y] * n_browsers + browsers.index(b) for y, b in zip(df[YEAR], df[BROWSER], strict=True)]
+targets = [
+    (year_index[y] + 1) * n_browsers + browsers.index(b) for y, b in zip(df[YEAR], df[NEXT_BROWSER], strict=True)
+]
 link_colors = []
+for b in df[BROWSER]:
+    hex_color = color_of[b]
+    r, g, bl = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+    link_colors.append(f"rgba({r},{g},{bl},0.3)")
 
-for src_time, src_cat, tgt_time, tgt_cat, value in flows_data:
-    src_idx = src_time * 4 + src_cat
-    tgt_idx = tgt_time * 4 + tgt_cat
-    sources.append(src_idx)
-    targets.append(tgt_idx)
-    values.append(value)
-    # Use source category color with transparency
-    base_color = IMPRINT[src_cat]
-    r = int(base_color[1:3], 16)
-    g = int(base_color[3:5], 16)
-    b = int(base_color[5:7], 16)
-    link_colors.append(f"rgba({r},{g},{b},0.3)")
-
-# Create Sankey diagram
 fig = go.Figure(
     data=[
         go.Sankey(
             arrangement="snap",
             node=dict(
-                pad=35,
-                thickness=40,
-                line=dict(color=INK_SOFT, width=1),
+                pad=18,
+                thickness=20,
+                line=dict(color=INK_SOFT, width=0.5),
                 label=node_labels,
                 color=node_colors,
                 x=x_positions,
                 y=y_positions,
-                hovertemplate="<b>%{label}</b><br>Market Share: %{value:,}%<extra></extra>",
+                hovertemplate="<b>%{label}</b><extra></extra>",
             ),
             link=dict(
                 source=sources,
                 target=targets,
-                value=values,
+                value=list(df[FLOW]),
                 color=link_colors,
-                hovertemplate="<b>%{source.label}</b> (%{source.customdata})<br>"
-                + "→ <b>%{target.label}</b><br>"
-                + "Share: <b>%{value}%</b><extra></extra>",
+                hovertemplate="<b>%{source.label}</b> → <b>%{target.label}</b><br>"
+                + f"{FLOW}: <b>%{{value}}</b><extra></extra>",
             ),
         )
     ]
 )
 
-# Add time point labels
-for i, year in enumerate(time_points):
+# Column headers
+for t, year in enumerate(years):
     fig.add_annotation(
-        x=i / 3, y=1.12, text=f"<b>{year}</b>", showarrow=False, font=dict(size=26, color=INK), xanchor="center"
+        x=t / (n_years - 1),
+        y=1.02,
+        yanchor="bottom",
+        xref="paper",
+        yref="paper",
+        text=f"<b>{year}</b>",
+        showarrow=False,
+        font=dict(size=13, color=INK),
+        xanchor="center",
     )
 
-# Add legend
-for cat, color in category_colors.items():
+# Legend: one square marker per browser
+for b in browsers:
     fig.add_trace(
         go.Scatter(
             x=[None],
             y=[None],
             mode="markers",
-            marker=dict(size=18, color=color, symbol="square"),
-            name=cat,
+            marker=dict(size=10, color=color_of[b], symbol="square"),
+            name=b,
             showlegend=True,
         )
     )
 
-# Update layout with theme-adaptive colors
+# Style
 fig.update_layout(
+    autosize=False,
     title=dict(
-        text="Browser Market Share · alluvial-basic · plotly · anyplot.ai",
-        font=dict(size=32, color=INK),
+        text="Browser Market Share · alluvial-basic · python · plotly · anyplot.ai",
+        font=dict(size=16, color=INK),
         x=0.5,
         xanchor="center",
-        y=0.98,
+        y=0.97,
     ),
-    font=dict(size=20, color=INK),
+    font=dict(size=11, color=INK),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin=dict(l=60, r=60, t=140, b=80),
+    margin=dict(l=40, r=40, t=100, b=80),
     legend=dict(
         orientation="h",
         yanchor="bottom",
-        y=-0.08,
+        y=-0.12,
         xanchor="center",
         x=0.5,
-        font=dict(size=20, color=INK_SOFT),
+        font=dict(size=11, color=INK_SOFT),
         bgcolor=ELEVATED_BG,
         bordercolor=INK_SOFT,
         borderwidth=1,
@@ -166,6 +172,5 @@ fig.update_layout(
     yaxis=dict(visible=False),
 )
 
-# Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
