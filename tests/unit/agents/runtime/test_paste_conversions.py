@@ -170,7 +170,7 @@ class TestMakeConversions:
         ("cells", "why"),
         [
             (
-                ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04"],
+                ["2026.03.01", "2026.03.02", "2026.03.03", "2026.03.04"],
                 f"column 'day' looks like dates, but 4 of 4 cells would not read: {DATE_FORMS}",
             ),
             (
@@ -178,7 +178,7 @@ class TestMakeConversions:
                 f"column 'day' looks like dates, but 4 of 4 cells would not read: {DATE_FORMS}",
             ),
             (
-                ["2026-03-01 10:00:00 UTC", "2026-03-02 10:00:00 UTC", "2026-03-03 10:00:00 UTC"],
+                ["2026-03-01 10:00:00 CET", "2026-03-02 10:00:00 CET", "2026-03-03 10:00:00 CET"],
                 f"column 'day' looks like dates, but 3 of 3 cells would not read: {DATE_FORMS}",
             ),
             (
@@ -207,6 +207,23 @@ class TestMakeConversions:
         )
         assert isinstance(line, RowNumbers) and not line.certain
         assert why in line.line()
+
+    @pytest.mark.parametrize(
+        "cells",
+        [
+            ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04"],
+            ["2026-03-01 10:00:00 UTC", "2026-03-02 10:00:00 UTC", "2026-03-03 10:00:00 UTC"],
+            ["2026-03-01 10:00:00 +0100", "2026-03-02 10:00:00 +0100", "2026-03-03 10:00:00 +0100"],
+            ["3/1/2026 10:00:00 AM", "3/2/2026 10:00:00 AM", "3/3/2026 10:00:00 AM"],
+        ],
+    )
+    def test_dates_in_a_form_tools_write_take_the_axis_at_the_paste_and_nothing_is_made(self, cells: list[str]) -> None:
+        """The paste types these itself now: `x` takes the column, and no row numbers wait for a yes."""
+        text = "day,orders\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
+        store, view = pasted(text, "line-basic")
+
+        assert make_conversions(store, SID, view, view.snapshot) is None
+        assert {binding.role: binding.column for binding in view.bindings} == {"x": "day", "y": "orders"}
 
     def test_a_column_of_ranges_fills_both_bounds(self) -> None:
         store, view = pasted(RANGES, "range-interval")

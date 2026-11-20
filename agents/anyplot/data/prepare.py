@@ -41,10 +41,12 @@ The operations:
   crash). Without `date_format` the cells are read in the forms of the date list, with the
   parser's own reader (`parse.read_dates`), so a cell converts when it is in a form the paste
   types: `2026-03-01`, also with a time after `T` (or `t`) or a space, seconds, a fraction and
-  a UTC offset of −12:00 to +14:00 (`Z` or `z` for UTC); `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
+  a UTC offset of −12:00 to +14:00 (`Z` or `z` for UTC, also ` UTC`, and an offset after one space,
+  ` +0100` or ` +01:00`); `2026/03/01` and `2026/3/1`, with a time as `2026-03-01` takes it;
+  `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
   and a day with a month name and a four-digit year (`8 Nov 2026`, `1. März 2026`,
-  `March 1, 2026`), each also with a time; a month, `2026-03` or a month name with a four-digit
-  year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are those of `months.py`,
+  `March 1, 2026`), each also with a time, also on a 12-hour clock (`10:00:00 AM`); a month,
+  `2026-03` or a month name with a four-digit year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are those of `months.py`,
   in a day only a name written as one word: a month written with its number and a marker
   (`3月`, `tháng 3`) reads as a month of a year (`2026年3月`), not as part of a day. Each
   cell reads in its own form, and the change line names each form read; the slash dates have one order of day and month, decided as at the paste (day first by guess,
@@ -59,7 +61,7 @@ The operations:
   named for ids or seasons as text, while a request reads their `YYYY-MM` cells as months; it keeps
   days with a UTC offset as text, while a request reads their days; and it keeps times with and
   without an offset as text, while a request is refused with the reason. A form outside the list reads only with a `date_format` that names it
-  (`YYYYMMDD`, `MM/YYYY`, `YYYY`); one that no format names (`1st March 2026`, `2026/03/01`,
+  (`YYYYMMDD`, `MM/YYYY`, `YYYY`); one that no format names (`1st March 2026`, `2026.03.01`,
   `01.03.26`) reads in no conversion. A fraction of a second and a UTC offset are
   kept (`_cell_text`), different offsets in one column are read in UTC with the offsets
   named in the change line (owner decision of 2026-10-15, as the parser writes such a
@@ -1861,7 +1863,7 @@ def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
     elif listed is not None and listed.shape in ("dot", "slash"):
         reading = f"read as dates (format inferred, {_shape_words(listed.shape, listed.day_first)})"
     else:
-        reading = "read as dates (format inferred, year first)"  # `2026-03-01` and `2026-03`: the year leads
+        reading = "read as dates (format inferred, year first)"  # `2026-03-01`, `2026/03/01`, `2026-03`: the year leads
     unread: Counter[UnreadReason] = Counter()
     if listed is not None and dates.failed:
         # A cell that read but a nanosecond column cannot hold (before 1677) has no reason of the list's: no form.
@@ -1888,6 +1890,7 @@ def _shape_words(shape: DateShape, day_first: bool) -> str:
         return "day before month" if day_first else "month before day"
     return {
         "iso": "year first",
+        "year_slash": "year first",
         "dot": "day before month",
         "day_month": "a day, a month name and a year",
         "month": "months as their first day",
@@ -2065,13 +2068,13 @@ class UnreadDates:
 
 _YEAR_FIRST = re.compile(r"[0-9]{4}([/.-])([0-9]{1,2})\1([0-9]{1,2})(?![0-9])")
 """A date with its year first at the start of a cell: four digits, then two numbers of one or two digits, joined by one
-and the same separator, and no further digit (`2026/03/01`). Whatever follows is allowed: a time in a form the list
-does not read (`2026-03-01 10:00:00 UTC`) or an hour label (`2026-03-01-00`). `_numbered_date` checks the month (1 to
+and the same separator, and no further digit (`2026.03.01`). Whatever follows is allowed: a time in a form the list
+does not read (`2026-03-01 10:00:00 CET`) or an hour label (`2026-03-01-00`). `_numbered_date` checks the month (1 to
 12) and the day (1 to 31): `2024.13.40` is none, while a calendar version such as `2024.1.1` is a date."""
 _YEAR_LAST = re.compile(r"([0-9]{1,2})([/.-])([0-9]{1,2})\2(?:[0-9]{4}|[0-9]{2})(?=\Z|[ T,])")
 """A date with its year last at the start of a cell: two numbers of one or two digits, then a year of two or four
 digits, joined by one and the same separator, and after it the end of the cell, a space, `T` or a comma (`01.03.26`,
-`3/13/26`, `3/1/2026 10:00:00 AM`, and JavaScript's `toLocaleString()`: `3/1/2026, 10:00:00 AM`, `1.3.2026, 10:00:00`).
+`3/13/26`, `1-3-2026 10:00`, and JavaScript's `toLocaleString()`: `3/1/2026, 10:00:00 AM`, `1.3.2026, 10:00:00`).
 The end keeps out what has more numbers or fewer digits: a version (`1.2.3`), an address (`10.0.0.1`, `12.10.24.3`),
 a formation (`4-4-2`), a record (`2-1-0`) or an id (`123-45-6789`). `_numbered_date` checks the two numbers before the
 year, each 1 to 31 and one of them 1 to 12 (a day and a month): `44-55-66`, sizes such as `90-60-90` and `21-19-15` are
