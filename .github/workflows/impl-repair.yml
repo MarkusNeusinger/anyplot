@@ -116,11 +116,87 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout PR branch
+      # The pipeline acts only on its own pull requests: same repository,
+      # head branch implementation/<spec-id>/<library> with a registered
+      # library. The guard (automation/scripts/pr_guard.py) and the library
+      # list it checks against come from GUARD_REF, the workflow's own commit,
+      # never from a pull request's tree, and are staged before any step reads
+      # a pull request. The same step, word for word, stands in every job that
+      # takes a pull request (tests/unit/workflows/test_pr_guard_steps.py);
+      # docs/workflows/overview.md#pull-requests-the-pipeline-acts-on.
+      - name: Stage the pull request guard
+        env:
+          GUARD_REF: ${{ github.sha }}
+        run: |
+          G="$RUNNER_TEMP/pr-guard"
+          mkdir -p "$G/core"
+          if ! git show "${GUARD_REF}:automation/scripts/pr_guard.py" > "$G/pr_guard.py" \
+             || ! git show "${GUARD_REF}:core/constants.py" > "$G/core/constants.py" \
+             || ! (cd "$G" && python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))") > "$G/libraries" \
+             || ! [ -s "$G/libraries" ]; then
+            rm -f "$G/pr_guard.py" "$G/libraries"
+            echo "::error::guard_failed: the pull request guard could not be staged from ${GUARD_REF}; no pull request is acted on"
+            echo "- Pull request guard: \`guard_failed\`, not staged from ${GUARD_REF}; no pull request was acted on" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "Pull request guard staged from ${GUARD_REF}; libraries: $(cat "$G/libraries")"
+
+      # The repair's first use of the pull request. The spec id and library it
+      # was dispatched with must be the ones its branch names. A refusal
+      # fetches nothing, and "Handle repair failure" stays off the pull
+      # request (it runs only once `allowed` is set).
+      - name: Check the pull request is the pipeline's own
+        id: guard
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          SPEC_ID_INPUT: ${{ inputs.specification_id }}
+          LIBRARY_INPUT: ${{ inputs.library }}
         run: |
-          BRANCH=$(gh pr view ${{ inputs.pr_number }} --json headRefName -q '.headRefName')
+          G="$RUNNER_TEMP/pr-guard"
+          PR_SHOWN="${PR_NUMBER//[^0-9]/}"
+          PR_SHOWN="${PR_SHOWN:0:10}"
+          refuse() {
+            echo "::error::PR #${PR_SHOWN} refused (${1}): not one of the pipeline's own pull requests; nothing of it was fetched, labelled or commented on"
+            echo "- PR #${PR_SHOWN} refused: \`${1}\`, not one of the pipeline's own pull requests" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+          # gh pr view also takes a URL or a branch name for its argument.
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]{0,9}$ ]] || refuse bad_number
+          READ_OK=0
+          for attempt in 1 2 3; do
+            if gh pr view "$PR_NUMBER" --repo "$REPOSITORY" \
+                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner \
+                 > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
+              READ_OK=1
+              break
+            fi
+            echo "::warning::gh pr view failed (attempt ${attempt}/3): $(head -c 500 "$RUNNER_TEMP/pr.err" | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+          [ "$READ_OK" -eq 1 ] || refuse pr_unreadable
+          GUARD_RC=0
+          GUARD_OUT=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
+            --number "$PR_NUMBER" --spec-id "$SPEC_ID_INPUT" --library "$LIBRARY_INPUT" < "$RUNNER_TEMP/pr.json") || GUARD_RC=$?
+          if [ "$GUARD_RC" -ne 0 ]; then
+            REASON=guard_failed
+            if [ "$GUARD_RC" -eq 1 ] && [[ "$GUARD_OUT" =~ ^reason=([a-z_]{1,40})$ ]]; then
+              REASON="${BASH_REMATCH[1]}"
+            fi
+            refuse "$REASON"
+          fi
+          BRANCH=$(sed -n 's/^branch=//p' <<< "$GUARD_OUT")
+          [ -n "$BRANCH" ] || refuse guard_failed
+          {
+            echo "allowed=true"
+            echo "branch=$BRANCH"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout PR branch
+        env:
+          BRANCH: ${{ steps.guard.outputs.branch }}
+        run: |
           echo "branch=$BRANCH" >> $GITHUB_ENV
           git fetch origin "$BRANCH"
           git checkout "$BRANCH"
@@ -263,14 +339,22 @@ jobs:
         if: steps.lang.outputs.language == 'javascript'
         uses: ./.github/actions/setup-node
 
+      # The review's own comment only: the last "AI Review" comment the
+      # reviewing app posted, as "Validate review output" in impl-review.yml
+      # selects it. Anyone can comment on a pull request, and this text is
+      # the repair session's brief. REST names the app `claude[bot]`, a login
+      # no account can register; GraphQL would drop the suffix.
       - name: Extract AI feedback from PR
         id: feedback
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUM: ${{ inputs.pr_number }}
         run: |
-          FEEDBACK=$(gh pr view ${{ inputs.pr_number }} --json comments -q '
-            [.comments[] | select(.body | contains("AI Review"))] | last | .body
-          ' 2>/dev/null || echo "")
+          FEEDBACK=$(gh api --paginate "repos/${REPOSITORY}/issues/${PR_NUM}/comments?per_page=100" 2>/dev/null \
+            | jq -s -r 'add // []
+                | [.[] | select(.user.login == "claude[bot]") | select((.body // "") | contains("AI Review"))]
+                | last | .body // ""' 2>/dev/null || echo "")
 
           if [ -z "$FEEDBACK" ]; then
             FEEDBACK="No specific feedback available. Review the implementation against the spec."
@@ -780,8 +864,11 @@ jobs:
       # Code Action transient failure), restore the ai-rejected label and
       # auto-retry once. After one auto-retry, fall back to manual.
       # ========================================================================
+      # Only for a pull request the guard passed: a refused one (or a run that
+      # failed before the check) gets no label, comment or retry from here;
+      # the watchdog's repair cases pick up the pipeline's own.
       - name: Handle repair failure
-        if: failure()
+        if: failure() && steps.guard.outputs.allowed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ inputs.pr_number }}

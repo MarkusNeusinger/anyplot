@@ -697,11 +697,14 @@ jobs:
           CLAUDE_APP_LOGIN: app/claude
         run: |
           # Claude opened the PR in its own step (prompt step 9). Retried: a
-          # missed read must not look like a missing PR.
+          # missed read must not look like a missing PR. `--head` matches a
+          # branch of that name in any repository; only this repository's
+          # counts.
           PR_JSON=""
           for attempt in 1 2 3; do
             PR_JSON=$(gh pr list --repo "$REPOSITORY" --head "specification/${SPEC_ID}" --base main \
-              --state open --json number,url,author --jq '.[0] // empty' 2>/dev/null || true)
+              --state open --json number,url,author,isCrossRepository \
+              --jq '[.[] | select(.isCrossRepository == false)] | .[0] // empty' 2>/dev/null || true)
             if [ -n "$PR_JSON" ]; then
               break
             fi

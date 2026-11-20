@@ -501,11 +501,13 @@ jobs:
         run: |
           # If any PR is open that touches plots/{spec}/, skip the polish step
           # to avoid racing against human edits or stacking auto-polish PRs.
-          # Similarity audit still runs — it's read-only.
+          # Similarity audit still runs — it's read-only. Only pull requests
+          # from this repository count: one from elsewhere is nothing the
+          # polish could race, and must not hold a spec back.
           OPEN=$(gh pr list \
             --repo "${{ github.repository }}" \
             --search "plots/${SPEC_ID}/ in:files is:open" \
-            --json number --jq 'length' 2>/dev/null || echo 0)
+            --json number,isCrossRepository --jq '[.[] | select(.isCrossRepository == false)] | length' 2>/dev/null || echo 0)
           if [ "${OPEN:-0}" -gt 0 ]; then
             echo "::notice::Open PR(s) touch plots/${SPEC_ID}/ — skipping spec polish"
             echo "skip_polish=1" >> "$GITHUB_OUTPUT"

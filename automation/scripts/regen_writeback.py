@@ -412,7 +412,8 @@ def writeback_pr_identity(data: Mapping[str, Any]) -> str:
         return f"no {LABEL} label"
     if author != BOT_AUTHOR:
         return f"author {author!r} is not {BOT_AUTHOR}"
-    if data.get("isCrossRepository"):
+    # Exactly false: a missing or null field is no evidence of this repository.
+    if data.get("isCrossRepository") is not False:
         return "the head is in another repository"
     return ""
 

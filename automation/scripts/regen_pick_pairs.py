@@ -68,6 +68,11 @@ so this file carries no copy that could drift. Writes ``resume_json``,
 pairs) to ``$GITHUB_OUTPUT`` and a table of both to ``$GITHUB_STEP_SUMMARY``.
 PyYAML plus ``regen_gate`` (stdlib only), imported from this file's own
 directory when it runs as a script, for the gate-record grammar.
+
+Every PR listing goes through ``pr_guard`` (imported the same way), with the
+same library list: a PR from another repository, or on a branch outside
+``implementation/<spec-id>/<library>``, is skipped with a log line. It is
+never resumed, never blocks its pair and never counts as an attempt.
 """
 
 from __future__ import annotations
@@ -90,9 +95,10 @@ import yaml
 
 # TYPE_CHECKING shows the type checker one import; at runtime it is False.
 if TYPE_CHECKING or __package__:  # imported as automation.scripts.regen_pick_pairs (tests, local tools)
-    from automation.scripts import regen_gate
-else:  # run as a script: the regen_gate.py next to this file
+    from automation.scripts import pr_guard, regen_gate
+else:  # run as a script: the regen_gate.py and pr_guard.py next to this file
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import pr_guard
     import regen_gate
 
 
@@ -467,12 +473,34 @@ def _gh_json(args: list[str], what: str) -> list[dict[str, Any]] | None:
     return data if isinstance(data, list) else None
 
 
-def read_records(repo: str) -> Records:
+def own_pulls(pulls: list[Any] | None, repo: str, libraries: Iterable[str]) -> list[Any] | None:
+    """The pipeline's own PRs of a listing (``pr_guard``); the rest are skipped with a log line.
+
+    ``head:`` and ``--label`` match a PR from any repository, and one from
+    elsewhere is never resumed, never blocks its pair and never counts as an
+    attempt. None stays None: a listing that failed stays failed.
+    """
+    if pulls is None:
+        return None
+    kept, skipped = pr_guard.own_pull_requests(pulls, repo=repo, libraries=libraries)
+    for verdict in skipped:
+        number = verdict.number if verdict.number is not None else "?"
+        print(f"PR #{number}: skipped ({verdict.reason}), not one of the pipeline's own pull requests")
+    return kept
+
+
+def read_records(repo: str, libraries: Iterable[str]) -> Records:
     records = Records(attempts={}, open_pairs=set(), issue_activity={})
-    fields = "number,headRefName,state,updatedAt,closedAt,labels"
+    libraries = frozenset(libraries)
+    guard_fields = ",".join(pr_guard.REQUIRED_FIELDS)
+    fields = f"{guard_fields},state,updatedAt,closedAt,labels"
     pr_list = ["pr", "list", "--repo", repo, "--limit", LIMIT, "--json", fields]
-    pulls = _gh_json(
-        [*pr_list, "--state", "all", "--search", "head:implementation/ sort:updated-desc"], "implementation PRs"
+    pulls = own_pulls(
+        _gh_json(
+            [*pr_list, "--state", "all", "--search", "head:implementation/ sort:updated-desc"], "implementation PRs"
+        ),
+        repo,
+        libraries,
     )
     if pulls is None:
         # The loop guard: without it a kept, closed or paused pair would be
@@ -481,13 +509,17 @@ def read_records(repo: str) -> Records:
     # Kept regenerations again on their own: they are the attempts that leave
     # `updated` alone, and this listing reaches much further back.
     kept_filter = ["--state", "closed", "--label", KEPT_LABEL, "--search", "sort:updated-desc"]
-    kept = _gh_json([*pr_list, *kept_filter], "kept regenerations")
+    kept = own_pulls(_gh_json([*pr_list, *kept_filter], "kept regenerations"), repo, libraries)
     # Their gate records, in a listing of their own so that a failure here
     # loses only the returns, never the kept attempts: without the records
     # every keep ages its pair.
-    gates = _gh_json(
-        ["pr", "list", "--repo", repo, "--limit", LIMIT, "--json", "number,headRefName,state,comments", *kept_filter],
-        "kept regenerations' gate records",
+    gates = own_pulls(
+        _gh_json(
+            ["pr", "list", "--repo", repo, "--limit", LIMIT, "--json", f"{guard_fields},state,comments", *kept_filter],
+            "kept regenerations' gate records",
+        ),
+        repo,
+        libraries,
     )
     returning = returning_keeps(gates or [])
     fold_pulls(pulls, records, returning)
@@ -561,7 +593,7 @@ def main(argv: list[str] | None = None) -> int:
 
     candidates, spec_issues = load_candidates(Path(args.plots), libraries)
     try:
-        records = read_records(args.repo)
+        records = read_records(args.repo, libraries)
     except ListingError as exc:
         print(f"::error::Pair mode stops: {exc}, so the pick would lose its record of last nights' attempts")
         return 1

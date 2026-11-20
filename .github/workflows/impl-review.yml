@@ -122,16 +122,59 @@ jobs:
         with:
           python-version-file: '.python-version'
 
+      # The pipeline acts only on its own pull requests: same repository,
+      # head branch implementation/<spec-id>/<library> with a registered
+      # library. The guard (automation/scripts/pr_guard.py) and the library
+      # list it checks against come from GUARD_REF, the workflow's own commit,
+      # never from a pull request's tree, and are staged before any step reads
+      # a pull request. The same step, word for word, stands in every job that
+      # takes a pull request (tests/unit/workflows/test_pr_guard_steps.py);
+      # docs/workflows/overview.md#pull-requests-the-pipeline-acts-on.
+      - name: Stage the pull request guard
+        env:
+          GUARD_REF: ${{ github.sha }}
+        run: |
+          G="$RUNNER_TEMP/pr-guard"
+          mkdir -p "$G/core"
+          if ! git show "${GUARD_REF}:automation/scripts/pr_guard.py" > "$G/pr_guard.py" \
+             || ! git show "${GUARD_REF}:core/constants.py" > "$G/core/constants.py" \
+             || ! (cd "$G" && python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))") > "$G/libraries" \
+             || ! [ -s "$G/libraries" ]; then
+            rm -f "$G/pr_guard.py" "$G/libraries"
+            echo "::error::guard_failed: the pull request guard could not be staged from ${GUARD_REF}; no pull request is acted on"
+            echo "- Pull request guard: \`guard_failed\`, not staged from ${GUARD_REF}; no pull request was acted on" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "Pull request guard staged from ${GUARD_REF}; libraries: $(cat "$G/libraries")"
+
       - name: Extract PR info
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ inputs.pr_number || github.event.client_payload.pr_number }}
           MODEL_INPUT: ${{ inputs.model }}
           MODEL_PAYLOAD: ${{ github.event.client_payload.model }}
           REVIEW_MODEL_INPUT: ${{ inputs.review_model }}
           REVIEW_MODEL_PAYLOAD: ${{ github.event.client_payload.review_model }}
         run: |
+          # Only one of the pipeline's own pull requests goes past this point
+          # ("Stage the pull request guard"). Until the guard has passed it,
+          # nothing the pull request carries (its branch name, its body)
+          # reaches a command, a path, a pattern or $GITHUB_OUTPUT; a refusal
+          # fetches nothing of it and writes nothing to it, and leaves one
+          # error line and one summary line with a fixed reason code.
+          G="$RUNNER_TEMP/pr-guard"
+          PR_SHOWN="${PR_NUMBER//[^0-9]/}"
+          PR_SHOWN="${PR_SHOWN:0:10}"
+          refuse() {
+            echo "::error::PR #${PR_SHOWN} refused (${1}): not one of the pipeline's own pull requests; nothing of it was fetched, labelled or commented on"
+            echo "- PR #${PR_SHOWN} refused: \`${1}\`, not one of the pipeline's own pull requests" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+          # gh pr view also takes a URL or a branch name for its argument.
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]{0,9}$ ]] || refuse bad_number
+
           # Retry gh pr view — transient API blips were the dominant impl-review
           # failure mode (5x in 24h on 2026-05-06). Three attempts with linear
           # backoff (5s, 10s); keep stderr separate from stdout so warnings
@@ -139,10 +182,12 @@ jobs:
           # Under $RUNNER_TEMP, away from the files the reviewer reads under
           # /tmp: a regeneration's PR body records the stored score
           # ("previous quality N").
-          PR_DATA=""
+          READ_OK=0
           for attempt in 1 2 3; do
-            if gh pr view "$PR_NUMBER" --json headRefName,headRefOid,body > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
-              PR_DATA=$(cat "$RUNNER_TEMP/pr.json")
+            if gh pr view "$PR_NUMBER" --repo "$REPOSITORY" \
+                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,body \
+                 > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
+              READ_OK=1
               break
             fi
             PERR=$(head -c 500 "$RUNNER_TEMP/pr.err" | tr '\n' ' ')
@@ -151,17 +196,30 @@ jobs:
               sleep $((attempt * 5))
             fi
           done
-          if [ -z "$PR_DATA" ]; then
-            echo "::error::gh pr view failed after 3 attempts for PR #${PR_NUMBER}"
-            exit 1
-          fi
-          HEAD_REF=$(echo "$PR_DATA" | jq -r '.headRefName')
-          HEAD_SHA=$(echo "$PR_DATA" | jq -r '.headRefOid')
-          BODY=$(echo "$PR_DATA" | jq -r '.body')
+          [ "$READ_OK" -eq 1 ] || refuse pr_unreadable
 
-          # Extract spec-id and library from branch: implementation/{spec-id}/{library}
-          SPEC_ID=$(echo "$HEAD_REF" | cut -d'/' -f2)
-          LIBRARY=$(echo "$HEAD_REF" | cut -d'/' -f3)
+          # Exit 1 prints one `reason=<code>` line; any other non-zero status
+          # is a guard that did not answer, and refuses as well.
+          GUARD_RC=0
+          GUARD_OUT=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
+            --number "$PR_NUMBER" < "$RUNNER_TEMP/pr.json") || GUARD_RC=$?
+          if [ "$GUARD_RC" -ne 0 ]; then
+            REASON=guard_failed
+            if [ "$GUARD_RC" -eq 1 ] && [[ "$GUARD_OUT" =~ ^reason=([a-z_]{1,40})$ ]]; then
+              REASON="${BASH_REMATCH[1]}"
+            fi
+            refuse "$REASON"
+          fi
+          guard_value() { sed -n "s/^$1=//p" <<< "$GUARD_OUT"; }
+          HEAD_REF=$(guard_value branch)
+          HEAD_SHA=$(guard_value head_sha)
+          # implementation/{spec-id}/{library}, as the guard read it from the branch
+          SPEC_ID=$(guard_value spec_id)
+          LIBRARY=$(guard_value library)
+          if [ -z "$HEAD_REF" ] || [ -z "$HEAD_SHA" ] || [ -z "$SPEC_ID" ] || [ -z "$LIBRARY" ]; then
+            refuse guard_failed
+          fi
+          BODY=$(jq -r '.body // ""' "$RUNNER_TEMP/pr.json")
 
           # Extract issue number from PR body
           ISSUE_NUMBER=$(echo "$BODY" | grep -oP '\*\*Parent Issue:\*\* #\K\d+' | head -1 || echo "")
@@ -195,8 +253,8 @@ jobs:
               # LANGUAGE/EXT are only derived in the next step, so match the
               # library's file in any language directory. SPEC_ID and LIBRARY
               # come from the implementation/{spec-id}/{library} branch name,
-              # whose contract ([a-z0-9-] ids, alphanumeric library names)
-              # keeps them free of regex metacharacters.
+              # whose contract ([a-z0-9-] ids, registered library names; the
+              # guard checked it above) keeps them free of regex metacharacters.
               ON_MAIN=$(git ls-tree -r --name-only origin/main -- "plots/${SPEC_ID}/implementations/" 2>/dev/null || true)
               if grep -qE "^plots/${SPEC_ID}/implementations/[a-z]+/${LIBRARY}\.[A-Za-z]+$" <<< "$ON_MAIN"; then
                 MODEL="sonnet"
@@ -1569,7 +1627,8 @@ jobs:
       # and the metadata file comes back from $RUNNER_TEMP; if that move
       # fails, git restores the branch's copy, which is the same file.
       - name: Restore the stored review
-        if: always()
+        # Nothing was hidden when the guard refused the pull request.
+        if: always() && steps.pr.outputs.specification_id != ''
         continue-on-error: true
         env:
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -2912,12 +2971,14 @@ jobs:
           fi
 
           # 4. A newer re-score supersedes an open write-back of this pair, and a
-          # rescue re-run of this kept PR reuses the branch name.
+          # rescue re-run of this kept PR reuses the branch name. Only this
+          # repository's pull requests: a branch of that name elsewhere is none
+          # of the pipeline's to close.
           OPEN=""
           LISTED=0
           for attempt in 1 2 3; do
-            if OPEN=$(gh pr list --state open --label review-writeback --limit 100 --json number,headRefName \
-                        --jq ".[] | select(.headRefName | startswith(\"review-writeback/${SPEC_ID}/${LIBRARY}/\")) | .number" \
+            if OPEN=$(gh pr list --state open --label review-writeback --limit 100 --json number,headRefName,isCrossRepository \
+                        --jq ".[] | select(.isCrossRepository == false) | select(.headRefName | startswith(\"review-writeback/${SPEC_ID}/${LIBRARY}/\")) | .number" \
                         2> /tmp/anyplot-writeback-gh.err); then
               LISTED=1
               break
@@ -2988,8 +3049,10 @@ jobs:
               WB_PR=$(grep -oE '[0-9]+$' /tmp/anyplot-writeback-pr.txt | tail -1 || true)
               [ -n "$WB_PR" ] && break
             fi
-            # A create that succeeded but lost its response.
-            WB_PR=$(gh pr list --state open --head "$WB_BRANCH" --json number --jq '.[0].number // empty' 2>/dev/null || true)
+            # A create that succeeded but lost its response: this repository's
+            # pull request from the branch (`--head` matches the name anywhere).
+            WB_PR=$(gh pr list --state open --head "$WB_BRANCH" --json number,isCrossRepository \
+              --jq '[.[] | select(.isCrossRepository == false)][0].number // empty' 2>/dev/null || true)
             [ -n "$WB_PR" ] && break
             echo "::warning::gh pr create failed (attempt ${attempt}/3): $(head -c 300 /tmp/anyplot-writeback-gh.err | tr '\n' ' ')"
             [ "$attempt" -lt 3 ] && sleep $((attempt * 5))

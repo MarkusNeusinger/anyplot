@@ -36,6 +36,7 @@ import pytest
 import yaml
 
 from automation.scripts import regen_gate, regen_pick_pairs, render_hash
+from tests.unit.workflows.pr_guard_support import own_pr, stage_guard
 from tests.unit.workflows.test_pipeline_retry_gaps import (
     BASH_E,
     FAKE_GH_WATCHDOG,
@@ -689,13 +690,14 @@ class TestWiring:
     # A PR as the watchdog's scan lists it, last touched long before the stale window.
     def _scan(self, tmp_path: Path, labels: str):
         prs = [
-            {
-                "number": 7,
-                "labels": [{"name": name} for name in labels.split()],
-                "headRefName": "implementation/spec-a/plotly",
-                "updatedAt": "2026-01-01T00:00:00Z",
-            }
+            own_pr(
+                7,
+                "implementation/spec-a/plotly",
+                labels=[{"name": name} for name in labels.split()],
+                updatedAt="2026-01-01T00:00:00Z",
+            )
         ]
+        stage_guard(tmp_path / "runner")
         return _run(
             _step("watchdog-stuck-jobs.yml", "Scan and dispatch")["run"],
             tmp_path,

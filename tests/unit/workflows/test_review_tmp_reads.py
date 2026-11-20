@@ -210,7 +210,7 @@ def test_the_files_that_carry_the_stored_score_stay_out_of_tmp():
     assert "--omit-scores" in context
     info = str(_step("impl-review.yml", "Extract PR info")["run"])
     assert '> "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"' in info
-    assert 'PR_DATA=$(cat "$RUNNER_TEMP/pr.json")' in info
+    assert '< "$RUNNER_TEMP/pr.json"' in info and 'BODY=$(jq -r \'.body // ""\' "$RUNNER_TEMP/pr.json")' in info
     assert "anyplot-prev-metadata" not in PROMPT.read_text(encoding="utf-8")
 
 

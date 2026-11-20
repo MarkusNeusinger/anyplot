@@ -29,6 +29,7 @@ import pytest
 import yaml
 
 from automation.scripts import review_retest
+from tests.unit.workflows.pr_guard_support import own_pr, stage_guard
 
 
 REPO_ROOT = Path(__file__).parent.parent.parent.parent
@@ -412,9 +413,10 @@ def _run_review(
     review_input: str = "",
     review_payload: str = "",
 ) -> subprocess.CompletedProcess[str]:
-    """Run impl-review's "Extract PR info" step against a fake `gh`."""
-    pr = {"headRefName": f"implementation/spec-a/{library}", "headRefOid": "0" * 40, "body": body}
+    """Run impl-review's "Extract PR info" step against a fake `gh`, behind the staged guard."""
+    pr = own_pr(7, f"implementation/spec-a/{library}", body=body)
     path = _fake_gh(tmp_path, f"cat <<'EOF'\n{json.dumps(pr)}\nEOF\n")
+    stage_guard(tmp_path)
     # The step parks gh's output under $RUNNER_TEMP, never under /tmp, where the reviewer reads.
     script = _step("impl-review.yml", "Extract PR info")["run"]
     assert not any("/tmp/" in line for line in script.splitlines() if not line.lstrip().startswith("#"))
@@ -425,6 +427,7 @@ def _run_review(
         PATH=path,
         RUNNER_TEMP=str(tmp_path),
         GH_TOKEN="unused",
+        REPOSITORY="owner/repo",
         PR_NUMBER="7",
         MODEL_INPUT=model_input,
         MODEL_PAYLOAD=payload,
@@ -472,9 +475,13 @@ class TestImplReviewModel:
         assert outputs["model"] == expected
 
     def test_library_match_is_exact(self, repo, tmp_path):
-        # "d3" is on main; a library whose name only starts the same is not.
+        # "d3" is on main. A name that only starts the same is no registered
+        # library, so the guard refuses it before the routing could mistake it.
         assert _review_model(repo, tmp_path, library="d3") == "sonnet"
-        assert _review_model(repo, tmp_path, library="d") == "opus"
+        result = _run_review(repo, tmp_path, library="d")
+        assert result.returncode == 1
+        assert "::error::PR #7 refused (unknown_library)" in result.stdout
+        assert _outputs(tmp_path / "github_output") == {}
 
     @pytest.mark.parametrize(("library", "pinned"), [("plotly", "haiku"), ("matplotlib", "opus")])
     def test_body_marker_beats_routing(self, repo, tmp_path, library, pinned):

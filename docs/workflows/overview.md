@@ -389,6 +389,30 @@ On a failure, the step "Report a failed promotion" comments the command on the m
 
 No label marks the pair for the watchdog. Its generation rescues scan open spec issues only, a regeneration's spec issue is usually closed, and the rescue they dispatch is a gated regeneration, which can keep the live code with its stale renders.
 
+### Pull requests the pipeline acts on
+
+The pipeline's workflows act only on pull requests from this repository's own `implementation/<spec-id>/<library>` branches. Their jobs hold a write token, Google Cloud credentials, and a Claude credential, so a pull request that is not one of the pipeline's own is never checked out, run, labelled, commented on, merged, or dispatched. The pipeline opens its pull requests from branches in this repository, so they always qualify.
+
+A pull request is the pipeline's own when all of the following hold:
+
+- Its head branch is in this repository: `isCrossRepository` is exactly `false`, and the head repository's owner and name are this repository's. A missing or `null` field counts as another repository.
+- Its head branch is `implementation/<spec-id>/<library>`. The spec ID has the catalogue's shape (lowercase letters and digits in groups joined by single hyphens), and the library is one of `core.constants.SUPPORTED_LIBRARIES`.
+- Its head commit is a full commit SHA, and its number is the one the workflow was asked about. In `impl-repair.yml`, the spec ID and library it was dispatched with must also match the branch.
+
+`automation/scripts/pr_guard.py` decides this, and every workflow uses the same checker:
+
+1. **Stage.** The step "Stage the pull request guard" copies the checker and `core/constants.py` from the workflow's own commit into `$RUNNER_TEMP/pr-guard`, never from a pull request's tree, and reads the library list from them. On a pull-request event the workflow's own commit is the pull request's merge commit, so `impl-merge.yml` and `impl-review-retry.yml` stage from `main` instead.
+2. **Check.** Before a job fetches, checks out, or writes to a pull request, it reads the pull request by number and checks it: "Extract PR info" in `impl-review.yml`, and "Check the pull request is the pipeline's own" in `impl-repair.yml` and `impl-merge.yml`. `impl-review-retry.yml` checks in its only step, and on the label event `impl-merge.yml` also stops a pull request from another repository before its checkout.
+3. **Filter listings.** Every listing that picks pull requests by branch name asks for `isCrossRepository` and skips anything that is not the pipeline's own: the watchdog's scan and its check for an open pull request of a pair, the existing-pull-request lookup in `impl-generate.yml`, and the pick of `daily-regen.yml`'s pair mode (`regen_pick_pairs.py`).
+
+A refused pull request gets nothing from the pipeline: no label, comment, fetch, or dispatch. The run log has one `::error::` line with the sanitized pull request number and a fixed reason code, such as `cross_repository`, `branch_shape`, or `unknown_library` (the full list is `REASONS` in the checker), and the job summary has one line. The job then stops, and the failure handlers stay off the pull request. If `gh` fails, a field is missing, or the checker doesn't answer, the pull request is refused.
+
+A listing logs a skipped pull request as a plain line and the watchdog adds one notice per scan with the count, not a warning. A pull request that isn't the pipeline's own is never dispatched, so it can't come back as a rescue or a warning on every scan.
+
+`impl-merge.yml` merges only the head commit that the guard checked and "Validate PR completeness before merge" read. Before each merge attempt, it reads the pull request again and checks it, and it accepts only that commit or GitHub's merge of `main` into it (from `gh pr update-branch`). Then it merges with `--match-head-commit`.
+
+Write-back pull requests (`review-writeback/<spec-id>/<library>/<pr>`) follow a contract of their own: `regen_writeback.py check-pr` in the `writeback` job of `impl-merge.yml` requires the bot's authorship, the `review-writeback` label, and an `isCrossRepository` of exactly `false`. Specification pull requests are checked by the `merge` job of `spec-create.yml`. `tests/unit/workflows/test_pr_guard_steps.py` scans every workflow, so a new job that takes a pull request number, or a new listing, fails the tests until it runs the guard.
+
 ### Dependency pins and library versions
 
 Each language's plotting stack is pinned in the repository:
@@ -1304,8 +1328,11 @@ Each credential reaches only the Claude steps, and nothing else:
 `tests/unit/workflows/test_claude_auth.py` checks that the API key appears only
 in the action input and in the resolve step's `!= ''` test, and that no job
 gained `id-token: write`. None of the eight workflows runs on `pull_request`
-or `pull_request_target`, so a pull request from a fork never gets a
-credential. `util-claude.yml` runs only for comments by owners, members, and
+or `pull_request_target`, so a fork's own run never gets a credential. The
+pipeline's workflows that take a pull request by number act only on the
+pipeline's own, from this repository
+([Pull requests the pipeline acts on](#pull-requests-the-pipeline-acts-on)).
+`util-claude.yml` runs only for comments by owners, members, and
 collaborators. `spec-create.yml` and `report-validate.yml` run on a label,
 which only maintainers can add, but they read issue text that anyone can
 write.

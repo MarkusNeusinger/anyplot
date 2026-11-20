@@ -762,6 +762,9 @@ class TestCheckPr:
             ({"labels": []}, "no review-writeback label"),
             ({"author": {"login": "someone"}}, "author 'someone'"),
             ({"isCrossRepository": True}, "another repository"),
+            # Fail closed: only an explicit false is this repository.
+            ({"isCrossRepository": None}, "another repository"),
+            ({"isCrossRepository": "false"}, "another repository"),
         ],
     )
     def test_not_a_writeback_pr_is_a_noop(self, wb_pr, why):

@@ -344,6 +344,24 @@ python3 automation/scripts/regen_pick_pairs.py --count 5 --min-age-hours 20 \
 # writes resume_json, resume_count, pairs_json, specs, specs_json and count to $GITHUB_OUTPUT
 ```
 
+### `pr_guard.py`
+Fail-closed check that a pull request is one of the pipeline's own: from this
+repository (`isCrossRepository` exactly `false`, head owner and name this
+repository's), on an `implementation/<spec-id>/<library>` branch with a
+registered library, with a full head SHA and the number that was asked about.
+`check` takes one `gh pr view --json` object and prints the checked values or
+one `reason=<code>`; `filter` takes a `gh pr list --json` array and prints the
+pipeline's own. Standard library only and Python 3.12 syntax: the workflows
+stage it from their own commit ("Stage the pull request guard") and run it with
+the runner's `python3`. The library list comes from the caller. See
+`docs/workflows/overview.md#pull-requests-the-pipeline-acts-on`.
+
+```bash
+python3 pr_guard.py check --repo OWNER/NAME --libraries "altair bokeh ..." --number 123 < pr.json
+# exit 0 = allowed (number=, spec_id=, library=, branch=, head_sha=), 1 = refused (reason=<code>), 2 = could not run
+python3 pr_guard.py filter --repo OWNER/NAME --libraries "altair bokeh ..." < prs.json > own.json
+```
+
 ### `spec_pr_guard.py`
 Fail-closed file allowlist for the spec PR that the merge job in `spec-create.yml`
 merges: the diff of the PR head against its merge base with `main` may only add or
