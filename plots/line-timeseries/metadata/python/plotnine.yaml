@@ -2,43 +2,52 @@ library: plotnine
 language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:30:32Z'
-updated: '2026-05-09T03:32:56Z'
-generated_by: claude-haiku
-workflow_run: 25590428403
+updated: '2026-11-20T00:50:49Z'
+generated_by: claude-sonnet
+workflow_run: 44648279466
 issue: 2006
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 78
 review:
   strengths:
-  - Excellent theme adaptation with proper INK/INK_SOFT token usage throughout; fully
-    readable in both light and dark modes
-  - Intelligent date formatting using mizani breaks and labels adapts naturally to
-    monthly scale
-  - Realistic Bitcoin price data with clear trend + volatility modeling; compelling
-    temporal narrative
-  - Clean, idiomatic plotnine code with appropriate element sizing and styling choices
+  - 'True datetime axis via scale_x_datetime(date_breaks=''1 month'', date_labels=''%b''):
+    twelve regular monthly ticks that fit without rotation'
+  - Theme tokens threaded through every chrome element; text and grid read cleanly
+    in both the light and dark render
+  - Y axis spans the data range instead of being forced to zero, so the trend and
+    the short-term noise stay visible
+  - Adaptable layout with DATE/PRICE column constants above the Data block; plotnine
+    titles the y axis from the column name
   weaknesses:
-  - 'Design could be more distinctive: uses standard theme_minimal() defaults without
-    additional visual polish'
-  - No annotations or emphasis of key temporal features (peak, trough); could enhance
-    storytelling with targeted annotations
+  - 'DE-02 (both): panel_border draws all four sides of the panel, a closed box the
+    line chart does not need → keep only the left and bottom axis lines (or none).
+    Likely cause: panel_border=element_rect(color=INK_SOFT, fill=None).'
+  - 'DQ-02 (both): the data is labelled as Bitcoin prices in 2023 but follows an invented
+    sine-shaped path (peak ~36k in April, ~6k in October) that contradicts the real
+    asset''s history → a scenario whose values need not match a real record (e.g.
+    a fictional token or a sensor/traffic series), or values that follow the named
+    asset. Likely cause: the ''Bitcoin price (USD)'' label with dates starting 2023-01-01
+    on a synthetic trend + noise generator.'
+  - 'Suggestion: mark the year on the January ticks (e.g. ''Jan\n2023'', ''Jan\n2024'')
+    so the two ''Jan'' labels are told apart.'
+  - 'Suggestion: thousands separators on the y tick labels (30,000) would read faster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct per spec
-      Chrome: Title, axis labels, tick labels all dark (INK #1A1A17); grid lines subtle with low opacity
-      Data: Line in Okabe-Ito brand green (#009E73) with overlaid point markers; clear bitcoin price progression
-      Legibility verdict: PASS - All text readable, date labels rotated to prevent overlap
+      Background: warm off-white #FAF8F1 on canvas and panel, 3200x1800.
+      Chrome: title 'line-timeseries · python · plotnine · anyplot.ai' in dark ink centered at top; axis titles 'Date' and 'Bitcoin price (USD)' dark; month tick labels Jan..Dec, Jan and y ticks 10000/20000/30000 in INK_SOFT; subtle major and minor grid on both axes; a full four-sided dark-grey panel border.
+      Data: one #009E73 line over 365 daily points with small translucent points, rising from ~19k in January to ~36k in April, falling to ~6k in October and recovering to ~22k by December.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct per spec
-      Chrome: Title, axis labels, tick labels now light (INK #F0EFE8); secondary text in INK_SOFT (#B8B7B0); grid subtle and visible
-      Data: Same line color (#009E73), clearly distinguishable against dark background; point markers visible
-      Legibility verdict: PASS - No dark-on-dark failures, all elements readable; theme adaptation proper
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light grey INK_SOFT, grid faint but visible, panel border light grey; no dark-on-dark text.
+      Data: identical #009E73 line and points, same shape as the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,66 +58,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly sized; readable in both themes; 45° rotation
-          appropriate
+        comment: Explicit sizes at the style-guide values (title 12, axis titles 10,
+          ticks 8 pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Rotated date labels prevent collision; clean spacing
+        comment: No text collisions; twelve monthly tick labels fit horizontally without
+          rotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line (1.5) and markers (0.8, alpha=0.5) clearly distinguishable
+        comment: 365-point line at size 1.0 clearly visible on both surfaces; small
+          translucent points are subordinate to the line
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 is CVD-safe with strong contrast'
+        comment: 'Single #009E73 series with strong contrast on both backgrounds;
+          no color-only signal'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16x9 @ 300dpi = 4800x2700px; well-proportioned margins
+        comment: 3200x1800 canvas; title about 48% of width; balanced axis titles
+          and margins; no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Spec format title; Y-axis includes units (USD)
+        comment: '''Date'' and ''Bitcoin price (USD)'' with unit; mandated title'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct backgrounds and chrome colors; both themes correct
+        comment: '#009E73 single series, #FAF8F1 / #1A1A17 backgrounds, chrome flips
+          correctly in both renders'
     design_excellence:
-      score: 13
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Theme tokens properly applied; thoughtful but somewhat standard
+        comment: Style-guide baseline typography and tokens; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: Subtle grid, panel border, practical date rotation
+        passed: false
+        comment: All four panel borders drawn where the plot type needs none (defect
+          line); short of the style-guide spine baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear temporal pattern (rise→peak→dip→recovery) tells realistic story
+        passed: false
+        comment: Data displayed; no focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +133,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series line plot
+        comment: Correct time series line plot on a datetime axis; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 365 points, line+points, grid, intelligent date formatting
+        comment: C1 true date axis, C2 regular monthly ticks with %b labels unrotated,
+          C3 major+minor grid on both axes, C4 n/a (no gaps), C5 y axis spans data
+          without zero; Notes on date locators met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Datetime parsing correct, numeric range appropriate
+        comment: Date on x, price on y; every point at its own timestamp; full range
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct spec format and axis labels
+        comment: Title exactly 'line-timeseries · python · plotnine · anyplot.ai';
+          legend N/A for single series
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -146,19 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 365 daily points with trend and volatility
+        comment: 365 daily observations with trend, turning points and short-term
+          noise; gap handling not applicable to this data
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Bitcoin 2023 plausible; seed=42; neutral subject
+        passed: false
+        comment: Names a real asset and year (Bitcoin, 2023) with invented values
+          that do not match its real history (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic Bitcoin range and balanced tick spacing
+        comment: 'Checked: 365 daily points 2023-01-01..2023-12-31, values about 6k-36k
+          USD read off the axis, consistent with the generator; the real-history mismatch
+          is scored in DQ-02'
     code_quality:
       score: 10
       max: 10
@@ -168,51 +191,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single script, no functions/classes
+        comment: Flat script with column constants above the Data block; no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; clear token naming
+        comment: Appropriate complexity; the loop is a recursive process that depends
+          on the previous value; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png format, 300dpi
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5); current
+          API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Proper ggplot + geom + scale + theme pattern
+        comment: Standard ggplot + geom + scale_x_datetime(date_breaks, date_labels)
+          + theme; the date idiom is what the Notes ask for
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Effective mizani use for date formatting
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-20T00:46:44Z'
 impl_tags:
-  dependencies:
-  - mizani
+  dependencies: []
   techniques:
   - layer-composition
   patterns:
@@ -220,4 +249,5 @@ impl_tags:
   dataprep:
   - time-series
   styling:
+  - alpha-blending
   - grid-styling
