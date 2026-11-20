@@ -2,44 +2,52 @@ library: bokeh
 language: python
 specification_id: residual-plot
 created: '2025-12-26T19:36:43Z'
-updated: '2026-05-10T08:58:43Z'
-generated_by: claude-haiku
-workflow_run: 25624529762
+updated: '2026-11-20T17:18:12Z'
+generated_by: claude-sonnet
+workflow_run: 44780787767
 issue: 2332
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/bokeh/plot-dark.html
-quality_score: 98
+quality_score: 84
 review:
   strengths:
-  - Excellent Okabe-Ito color usage with proper brand green (#009E73) for residuals
-    and orange (#D55E00) for outliers
-  - Perfect theme adaptation with both light and dark renders fully readable and identical
-    data colors
-  - Sophisticated ±2 SD band visualization with dashed boundaries for reference context
-  - Professional use of alpha transparency to handle 150 overlapping data points without
-    clutter
-  - Clean bokeh-idiomatic code with proper scaling for 4800x2700 canvas
-  - All specification requirements implemented correctly with clear visual hierarchy
-  weaknesses: []
+  - 'Full theme adaptation: title, axis labels, ticks, legend and SD labels use INK/INK_SOFT
+    tokens and read cleanly on both #FAF8F1 and #1A1A17'
+  - ±2 SD band built with bokeh's native Band annotation plus dashed Span bounds,
+    computed from the plotted residuals
+  - 'Outliers beyond 2 SD stand out in Imprint purple with larger, ringed markers;
+    the bulk uses #009E73 at alpha 0.7'
+  - 'Adaptable structure: column constants, a single Data block and ColumnDataSource
+    built from the DataFrame; HTML output keeps bokeh''s interactivity'
+  weaknesses:
+  - 'VQ-03 (both): the legend glyphs render as dots of about 5 px next to 18–22 px
+    plotted markers, so the outlier ring and fill barely show → glyphs at the plotted
+    marker size. Likely cause: bokeh''s default legend glyph_width/glyph_height (20
+    px) on a 3200 px canvas; set p.legend.glyph_width and glyph_height to about 40.'
+  - 'VQ-07 (both): the zero reference line is drawn in the series green #009E73, the
+    same hue as the residual markers → the neutral anchor (INK: #1A1A17 light / #F0EFE8
+    dark). Likely cause: Span(line_color=IMPRINT_PALETTE[0]).'
+  - 'Suggestion: an optional LOWESS line through the residuals would show the absence
+    of curvature explicitly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 with subtle tone
-      Chrome: Title 'residual-plot · bokeh · anyplot.ai' in dark INK (#1A1A17); axis labels 'Fitted Values (Predicted Price in $1000s)' and 'Residuals (Observed - Predicted)' clearly visible; tick labels readable in INK_SOFT (#4A4A44); legend 'Residuals' and 'Outliers (>2 SD)' with themed background
-      Data: 150 green (#009E73) scatter points at alpha=0.7 clustered around zero; 5 orange (#D55E00) outlier points at alpha=0.9 with green stroke edges; green solid reference line at y=0; dashed lines at ±2 SD; gray shaded band between bounds; '+2 SD' and '-2 SD' labels on left side
-      Legibility verdict: PASS — all text readable, no dark-on-light failures
+      Background: warm off-white #FAF8F1, 3200x1800, no toolbar
+      Chrome: bold title 'residual-plot · python · bokeh · anyplot.ai' (~47% width) in dark ink; italic axis labels 'Fitted values (predicted price in $1000s)' and 'Residuals (observed − predicted)'; ticks 150–500 and −60…80 in soft dark gray; subtle grid; legend top right on elevated panel; italic '+2 SD' / '−2 SD' labels at the left of the band bounds
+      Data: 145 #009E73 points at alpha 0.7, 8 larger purple #C475FD outliers ringed in green; solid green zero line across the full width; gray ±2 SD band with dashed bounds at about ±55
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 with subtle tone
-      Chrome: Title in light cream INK (#F0EFE8); axis labels and tick labels in soft light gray INK_SOFT (#B8B7B0); legend properly themed with dark background #242420; all text clearly visible
-      Data: IDENTICAL colors to light render — same green residuals (#009E73), same orange outliers (#D55E00); reference lines and band maintain visibility; '+2 SD' and '-2 SD' labels visible
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, brand green visible and distinct
+      Background: warm near-black #1A1A17
+      Chrome: title and axis labels in light cream, ticks and legend text in light gray, legend on #242420 panel; no dark-on-dark text
+      Data: identical colors to the light render; band reads as a slightly lighter gray, dashed bounds light gray, zero line visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -47,74 +55,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, legend all explicitly sized for
-          4800x2700 and readable in both themes
+        comment: Title 50pt, axis labels 42pt, ticks and legend 34pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend, labels, and title well-positioned with
-          clear spacing
+        comment: No text collisions; legend sits in empty top-right corner, SD labels
+          clear of points
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Alpha transparency (0.7, 0.9) handles 150 overlapping points; all
-          elements visible
+        comment: 150 markers at size 18 with alpha 0.7 are well sized, but the legend
+          glyphs are tiny dots far smaller than the plotted markers (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette safe for CVD; orange outliers distinct by color
-          and size
+        comment: Green vs purple outliers differ in hue, lightness and marker size;
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 landscape format with excellent proportions and generous
-          margins
+        comment: 3200x1800, balanced margins, title ~47% width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title and axis labels descriptive with units (price in $1000s, residuals)
+        comment: '''Fitted values (predicted price in $1000s)'' and ''Residuals (observed
+          − predicted)'' are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Brand green for residuals, Okabe-Ito pos 2 for outliers, correct
-          backgrounds #FAF8F1/#1A1A17, both renders theme-compliant'
+        passed: false
+        comment: 'Imprint #009E73 residuals, #C475FD outliers, correct backgrounds;
+          but the zero reference line is drawn in the series green instead of the
+          neutral anchor (defect line)'
     design_excellence:
-      score: 18
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: Professional polish with custom theme tokens; themed legend background;
-          sophisticated ±2 SD band; outlier emphasis through color and size
+        passed: false
+        comment: Style-guide baseline with theme tokens and Imprint palette; nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid (alpha=0.10); generous whitespace; alpha blending for
-          overlapping points; well-styled legend
+        passed: false
+        comment: ±SD labels placed on their boundary lines at the left edge, data-derived
+          padding on both ranges, elevated legend panel
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Clear visual hierarchy with prominent zero line; band provides context;
-          outliers visually emphasized; guides viewer to identify concerning residuals
+        passed: false
+        comment: 'Outliers emphasised beyond the required color: larger markers with
+          a contrasting ring make them the focal points'
     spec_compliance:
       score: 15
       max: 15
@@ -124,29 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct residual plot with residuals on y-axis, fitted values on
-          x-axis
+        comment: Correct residual-vs-fitted scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal y=0 reference line, ±2 SD bands, outlier identification
-          and visual distinction
+        comment: Zero line, alpha, ±2 SD band and colored outliers all present (C1–C5
+          met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; 150 observations in realistic range; axes show
-          all data
+        comment: Residuals computed as y_true − y_pred, plotted at their values; ranges
+          cover all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format 'residual-plot · bokeh · anyplot.ai'; clear
-          legend labels
+        comment: Title 'residual-plot · python · bokeh · anyplot.ai'; legend labels
+          'Residuals' / 'Outliers (>2 SD)'
     data_quality:
       score: 15
       max: 15
@@ -156,22 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates core residual plot features including scatter, bands,
-          outlier ID, and reference line
+        comment: Shows the random cloud, reference line, SD bounds and both-sided
+          outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Linear regression housing price prediction; realistic domain; heteroscedasticity
-          pattern is educational
+        comment: House-price regression residuals; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Fitted values 150-450K sensible for house prices; residuals ±80 appropriate;
-          axes well-scaled
+        comment: Fitted prices $120k–$490k, residuals within ±75k; ±2 SD ≈ ±55 follows
+          from std(ddof=0) of the plotted residuals (no Check values in the spec)
     code_quality:
       score: 10
       max: 10
@@ -181,55 +188,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct script with no functions or classes
+        comment: Flat script with Data/Plot zones and column constants
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity; proper theme token usage
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; toolbar_location=None
+          and CDP viewport pin
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic bokeh: figure() with proper params, ColumnDataSource for
-          data, Band/Span/Label glyphs, proper styling, Selenium screenshot'
+        comment: ColumnDataSource built from the DataFrame, Range1d from data, Band/Span/Label
+          annotation models
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Band for confidence region, Span for reference lines, Label for annotations,
-          theme-adaptive environment variables, well-styled legend
+        passed: false
+        comment: Bokeh's Band annotation model for the SD region
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-20T17:14:33Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
+  - layer-composition
   - html-export
   patterns:
   - data-generation
@@ -237,4 +248,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
