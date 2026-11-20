@@ -139,8 +139,21 @@ python -m core.smoke_run selfcheck plots/{SPEC_ID}/implementations/python/{LIBRA
 
 It prints one `CQ-01 (code): …` line per failing rule class, then one line per perturbation (renamed columns, more and fewer categories, more and fewer rows, scaled values, a missing value), and exits 0 when both checks are clean.
 
+In the same attempt, run the readiness check: the validator of the site's agent chat, which adapts a catalogue file to a visitor's data only when it accepts the file. It reads the file and never runs it:
+
+```bash
+cd "$GITHUB_WORKSPACE"
+.venv/bin/python -I -B /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \
+    plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}
+```
+
+It prints one line per refusal in the validator's own words, with the line of your file and, where the validator has one, a hint after `→`, then a verdict line (`readiness: accepted`, `refused (<keys>)`, `excluded (…)` or `not run (…)`). It exits 0 when there is nothing to fix, 1 when there is, and 2 when the check itself cannot run (its copy is missing or broken, or the path names no file). When the chat's own tools fail on your file, or cannot read it, that is a refusal of the file like any other (exit 1). Run it, and don't read the validator's code. Its output is the whole rule, with one exception below (the built-in datasets).
+
 - Fix every line and every failed perturbation that is not tagged `(advisory)`, then re-render both themes (Step 5) and run this step again. Lines tagged `(advisory)` never fail the check.
-- At most three attempts in total, the first run included. The self-check never blocks the repair: if it still fails after the third attempt, keep the version that best fixes the review's defects and renders correctly in both themes, and go on to Step 6. Never trade a defect in the render for a clean check.
+- Remove every refusal of the readiness check that you can remove without making the plot worse; the same picture almost always has a plainer way to be written. Such a fix is a named code-quality item, like a line of the self-check: keep the render the same.
+- Never remove an element the spec asks for to get rid of a refusal: when the spec needs the construct (a 3D trace in plotly draws with WebGL, which the chat's renderer lacks), leave the refusal and say so in the commit body. A refusal line that names `sns.load_dataset` or a `sklearn.datasets` name stays as well, because the prompts allow those built-in example datasets: name it in the commit body, and never "fix" it by swapping the data scenario or writing the dataset out inline. This covers only those lines; every other refusal, also one with the same hint (a file read, another import), is removed as above. A map spec is excluded (`readiness: excluded`): there is nothing to fix.
+- At most three attempts in total, the first run included, each running both commands. The self-check never blocks the repair, and neither does readiness: if a check still fails after the third attempt, keep the version that best fixes the review's defects and renders correctly in both themes, and go on to Step 6. Never trade a defect in the render for a clean check.
+- If a command cannot run (exit 2), say so in the commit body and don't run it again. One check that cannot run doesn't end the other: keep fixing what the other reports within the three attempts.
 
 ## Step 6: Visual self-check
 
@@ -176,7 +189,7 @@ git push origin {BRANCH}
 
 Commit only the implementation file, and use only the packages the runner already has: never run `Pkg.add`, `uv add`, `pip install` or `npm install`. `impl-merge.yml` refuses to merge a PR that changes `Manifest.toml`, `Project.toml`, `uv.lock`, `pyproject.toml`, `package.json`, `package-lock.json` or `.python-version`.
 
-For Python (`LANGUAGE=python`), add the result of the last Step 5b run to the commit body, in the form Step 3c of `impl-generate-claude.md` uses: `Adaptability self-check: pass, attempt 1`, or `fail` with the remaining rule classes and failed perturbations, such as `Adaptability self-check: fail (palette, more_categories), attempt 3`.
+For Python (`LANGUAGE=python`), add the result of the last Step 5b run to the commit body, in the form Step 3c of `impl-generate-claude.md` uses: `Adaptability self-check: pass, attempt 1`, or `fail` with the remaining rule classes and failed perturbations, such as `Adaptability self-check: fail (palette, more_categories), attempt 3`. Right below it goes the readiness verdict: `Readiness self-check: accepted`, `excluded`, `refused` with the keys of its verdict line and why each one you left stays (such as `Readiness self-check: refused (webgl), kept: the spec's 3D surface needs a WebGL trace`), or `not run` with the reason.
 
 If you declined any weakness in Step 1, add a `Declined:` list to the commit body, one line per weakness with its reason, for example:
 

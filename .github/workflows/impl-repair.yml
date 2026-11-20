@@ -388,6 +388,31 @@ jobs:
           gh pr edit "$PR_NUM" --remove-label "ai-rejected" 2>/dev/null || true
           gh pr edit "$PR_NUM" --remove-label "ai-repair-paused" 2>/dev/null || true
 
+      # The session's own readiness check (Python only), as impl-generate
+      # prepares it: Step 5b of impl-repair-claude.md runs
+      # `readiness_scan.py check` on the repaired file from this bare copy of
+      # the agent chat's validator, taken from this workflow's ref. "Readiness
+      # scan (record-only)" never reads it: it makes its own copy after the
+      # session.
+      - name: Prepare the readiness self-check
+        if: steps.lang.outputs.language == 'python'
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          TOOLS: /tmp/anyplot-readiness
+        run: |
+          rm -rf "$TOOLS"; mkdir -p "$TOOLS"
+          if ! git archive "$GITHUB_SHA" agents/anyplot/code agents/anyplot/schemas.py agents/anyplot/language.py \
+                 core automation/scripts/readiness_scan.py automation/scripts/readiness_record.py \
+                 | tar -x -C "$TOOLS" \
+             || [ ! -f "$TOOLS/automation/scripts/readiness_scan.py" ]; then
+            echo "::warning::the readiness self-check could not copy the validator from ${GITHUB_SHA}; the session reports the check as not run"
+            rm -rf "$TOOLS"
+            exit 0
+          fi
+          : > "$TOOLS/agents/__init__.py"; : > "$TOOLS/agents/anyplot/__init__.py"
+          echo "::notice::readiness self-check: the validator from ${GITHUB_SHA} is at ${TOOLS}"
+
       - name: Run Claude Code to repair implementation
         id: claude
         continue-on-error: true

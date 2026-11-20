@@ -123,7 +123,8 @@ Issue + [generate:{library}] label  OR  workflow_dispatch
        v
 impl-generate.yml
   |-- Creates branch: implementation/{spec-id}/{library}
-  |-- AI generates code (Python: adaptability self-check, Step 3c)
+  |-- Python: copies the agent chat's validator for the session's readiness self-check
+  |-- AI generates code (Python: adaptability and readiness self-check, Step 3c)
   |     or, with source_ref, takes the file from that ref and renders it (adopt mode)
   |-- Fails if the pushed branch doesn't carry the workspace's implementation file, or the commit changes a dependency file
   |-- Creates metadata/{language}/{library}.yaml (initial)
@@ -153,7 +154,7 @@ impl-review.yml
        |
        |-- Below Threshold --> [ai-rejected] --> impl-repair.yml (max 4 attempts)
        |                                       |-- Reads AI feedback
-       |                                       |-- Fixes implementation
+       |                                       |-- Fixes implementation (Python: the same self-checks, Step 5b)
        |                                       |-- Fails without a pushed code change or without both renders
        |                                       |-- Python: reruns the adaptability smoke run (record-only)
        |                                       |-- Python: readiness scan against the predecessor (record-only)
@@ -203,6 +204,18 @@ The step prints one `readiness_scan` line, a warning for a regression and a noti
 The scan covers Python only. The profiles of R, Julia, and JavaScript need tree-sitter grammars that these jobs don't carry.
 
 On the six regenerations of 2026-11-11 the scan finds two regressions. `surface-basic` in altair went from accepted to refused (`security:banned-attribute`), and `surface-basic` in pygal traded `security:banned-import` for `security:banned-attribute` and `security:banned-keyword`. The other four added nothing, and two of those moved from coupled to clean.
+
+#### Readiness self-check
+
+The scan runs after the session, so the session can't react to what it finds. For Python, the generating session therefore checks its own file with the same validator before it commits (Step 3c of `impl-generate-claude.md`), and the repairing session does the same in Step 5b of `impl-repair-claude.md`:
+
+1. Right before the session, "Prepare the readiness self-check" copies the same bare tree from the workflow's ref to `/tmp/anyplot-readiness`, with the same empty `agents/__init__.py` files. Adopt mode starts no session and skips the step.
+2. The session runs `readiness_scan.py check` on its file from that copy. The command prints every refusal in the validator's own words: with its hint (`→ …`) where the validator gives one, and with the line of the file as the session wrote it, although the validator reads the normalised text. A last line gives the verdict: `readiness: accepted`, `refused (<keys>)`, `excluded` for a map spec, or `not run` with the reason. It exits 0 when there's nothing to fix, 1 on a refusal, and 2 when the check itself can't run (its copy is missing or broken, or the path names no file), and it writes nothing. A normaliser or validator that fails on the file is a refusal (exit 1), because the scan records it as a refusal key too, and so is a file that isn't UTF-8 text, which the chat can't read.
+3. The session removes every refusal it can remove without making the plot worse, within the three attempts of the adaptability self-check, and writes a `Readiness self-check:` line into the commit body. A refusal the spec needs stays and is named there: a 3D trace in plotly draws with WebGL, which the chat's renderer lacks. So does a refusal line that names `sns.load_dataset` or a `sklearn.datasets` name: the generation prompts allow those built-in datasets and the validator refuses them, and the session never swaps the data scenario or writes the dataset out to remove one. Every other refusal is removed, also one with the same hint.
+
+The check and the scan take one path through the validator, so the check accepts a file exactly when the scan records no refusal key for it. The check decides nothing. The session can write anywhere on the runner, its copy included, so "Readiness scan (record-only)" never reads that copy: it makes its own from the workflow's ref after the session. Tests pin that its script names no path of the session's copy and reads no variable another step could set. A missing or broken copy only makes the session report the check as not run, and the adaptability self-check goes on without it. The regen gate stays the only thing that decides.
+
+The scan's own copy still comes from the workspace's `.git` and runs with the workspace's `.venv` interpreter, both of which the session could change. That predates the self-check and is unchanged by it.
 
 #### Readiness check and the readiness regression
 

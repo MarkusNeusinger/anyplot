@@ -145,6 +145,9 @@ OUTSIDE_THE_RULE = {
     "/tmp/ai_feedback.md": "the review a repair works from",
     "/tmp/change-requests.json": "the similarity audit's own output, which it writes",
     "/tmp/anyplot-prev-src/{LIBRARY}.py": "the predecessor's source for the generator's smoke run, read by a script",
+    "/tmp/anyplot-readiness/automation/scripts/readiness_scan.py": (
+        "the agent chat's validator copy that the generator and the repair run for their readiness check, never read"
+    ),
 }
 
 

@@ -51,6 +51,30 @@ outside its own tree, and the implementation is never executed::
     readiness_scan.py scan --new NEW --spec-id S --library B [--prev PREV] [--out RECORD.json]
 
 ``--new`` and ``--prev`` may name files that do not exist.
+
+``check`` is the generating or repairing session's own look at its file, before
+it commits (Step 3c of ``impl-generate-claude.md``, Step 5b of
+``impl-repair-claude.md``). It takes the same path through the validator as the
+scan, so it calls a file accepted exactly when the scan would record no refusal
+key, but it prints what the record leaves out: every reason in the validator's
+own words, with its hint (``→ …``) where the validator gives one, and with the
+line in the file as the session wrote it (the validator reads the normalised
+text, which drops the header and rewrites the save). The last line is the
+verdict: ``readiness: accepted``, ``refused (<keys>)``, ``excluded`` (a map
+spec), ``not checked`` (a library without a Python profile) or ``not run``.
+It writes nothing. The session runs it from a copy the workflow makes before
+the session starts; the record-only scan makes its own after the session and
+never reads that one, because the session can write anywhere on the runner::
+
+    readiness_scan.py check FILE --spec-id S --library B
+
+Exit 0 accepted, excluded or not checked; 1 refused; 2 when the check itself
+cannot run (a path that names no file, a validator from outside its tree, a
+broken copy). Python exits 2 as well when the copy is missing. A file the
+session can fix is no such case: a normaliser or validator that fails on it is
+a refusal key in the scan (``error:<type>``, ``security:validator-failed``),
+and a file that is not UTF-8 text is one the chat cannot read (``encoding``),
+so the check reports each as a refusal, exit 1.
 """
 
 from __future__ import annotations
@@ -60,7 +84,9 @@ import json
 import os
 import re
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
+from types import ModuleType
 
 
 if __package__:  # imported as automation.scripts.readiness_scan (tests, local tools)
@@ -74,6 +100,9 @@ else:  # run as a script: the readiness_record.py next to this file (the workflo
 RECORD_VERSION = 2
 TREE = Path(__file__).resolve().parents[2]
 _TOKEN = re.compile(r"^[a-z][a-z0-9-]*$")
+# How the readiness scan's own reasons name a line: `at line 12`, `at lines 12-14`, `syntax: line 12 does not parse`.
+_LINES = re.compile(r"\b(lines?) (\d+)(?:-(\d+))?\b")
+_MAX_ERROR_CHARS = 200
 
 
 def _token(value: str) -> str:
@@ -98,12 +127,26 @@ def _side(
     }
 
 
-def scan_side(code: str, *, spec_id: str, library: str) -> dict:
-    """The validator's verdict on one file: its status, its refusal keys, and whether the spec itself is refused.
+@dataclass(frozen=True)
+class _Scan:
+    """One file's side of the record, and what only the session's check prints.
 
-    ``findings`` counts how often each SECURITY rule fires. The verdict compares keys only, so a rule that fires
-    more often than before is no regression; the count is in the record for whoever reads it later.
+    ``reasons`` holds every refusal in the validator's own words, each line number one of the scanned file. A
+    normaliser or validator that fails on the file is a refusal too: the chat cannot take the file either.
     """
+
+    side: dict
+    reasons: list[str] = field(default_factory=list)
+
+
+# What a session can do about a normaliser or validator that fails on its file: the error names no line.
+_CRASH_ADVICE = (
+    "write the construct the error points at more plainly (often the one changed last) and run the check again"
+)
+
+
+def _validator() -> tuple[ModuleType, ModuleType, ModuleType, ModuleType, ModuleType]:
+    """The normaliser, the scan, the validator, the spec roles and the code utilities, all from this tree."""
     if str(TREE) not in sys.path:
         sys.path.insert(0, str(TREE))
     from agents.anyplot.code import normalise as normalise_module
@@ -113,32 +156,104 @@ def scan_side(code: str, *, spec_id: str, library: str) -> dict:
     for module in (normalise_module, readiness, validate, spec_roles, utils):
         if TREE not in Path(module.__file__ or "").resolve().parents:
             raise ImportError(f"{module.__name__} was imported from outside {TREE}: not this ref's validator")
-    SUPPORTED_LIBRARIES, normalise = normalise_module.SUPPORTED_LIBRARIES, normalise_module.normalise
-    scan, validate_security = readiness.scan, validate.validate_security
-    MAP_SPECS, strip_noqa_comments = spec_roles.MAP_SPECS, utils.strip_noqa_comments
+    return normalise_module, readiness, validate, spec_roles, utils
 
-    if library not in SUPPORTED_LIBRARIES:
-        return _side("unsupported")
-    map_spec = spec_id in MAP_SPECS  # refused whatever the code holds, also when the code cannot be read
+
+def scan_side(code: str, *, spec_id: str, library: str) -> dict:
+    """The validator's verdict on one file: its status, its refusal keys, and whether the spec itself is refused.
+
+    ``findings`` counts how often each SECURITY rule fires. The verdict compares keys only, so a rule that fires
+    more often than before is no regression; the count is in the record for whoever reads it later.
+    """
+    return _scan(code, spec_id=spec_id, library=library).side
+
+
+def _scan(code: str, *, spec_id: str, library: str) -> _Scan:
+    """``scan_side`` with the reasons the session's check prints; the record and the check share this one path."""
+    normalise_module, readiness, validate, spec_roles, utils = _validator()
+    if library not in normalise_module.SUPPORTED_LIBRARIES:
+        return _Scan(_side("unsupported"))
+    map_spec = spec_id in spec_roles.MAP_SPECS  # refused whatever the code holds, also when the code cannot be read
+    stripped = utils.strip_noqa_comments(code) or ""
     try:
-        normalised = normalise(strip_noqa_comments(code) or "", library=library)
+        normalised = normalise_module.normalise(stripped, library=library)
     except Exception as exc:  # a file the normaliser cannot take: the chat cannot open it either
-        return _side("error", refusals={f"error:{_token(type(exc).__name__.lower())}"}, spec_refused=map_spec)
-    result = scan(normalised, spec_id=spec_id, library=library, enabled_libraries=[library])
+        side = _side("error", refusals={f"error:{_token(type(exc).__name__.lower())}"}, spec_refused=map_spec)
+        reason = f"error: the chat's normaliser fails on this file ({_error(exc)}), so the chat cannot open it"
+        return _Scan(side, [f"{reason} → {_CRASH_ADVICE}"])
+    result = readiness.scan(normalised, spec_id=spec_id, library=library, enabled_libraries=[library])
     categories = {_token(reason.split(":", 1)[0].strip()) for reason in result.reasons}
     if result.status != "blocked":
-        return _side(result.status, coupled=categories)
+        return _Scan(_side(result.status, coupled=categories))
+    # The validator read the normalised text; the session edits the file as it wrote it. Two steps, because a
+    # line whose noqa comment was stripped no longer matches its original, and a run of such lines beside a
+    # removed guard would map as one replaced region.
+    to_stripped, to_code = utils.line_map(stripped, normalised), utils.line_map(code, stripped)
+    lines = {line: to_code.get(middle, middle) for line, middle in to_stripped.items()}
     keys = categories - {"map-spec", "security"}
+    reasons = [
+        _relined(reason, lines)
+        for reason in result.reasons
+        if _token(reason.split(":", 1)[0].strip()) not in ("map-spec", "security")
+    ]
     counts: dict[str, int] = {}
     if "security" in categories:
         try:
-            for finding in validate_security(normalised, library=library):
-                rule = _token(finding.rule)
-                counts[rule] = counts.get(rule, 0) + 1
-        except Exception:  # the scan fails closed on a crashing validator, and so does the key
-            counts = {}
+            # Every finding, not the scan's first five: the session needs each line, and the key needs each rule.
+            findings = validate.validate_security(normalised, library=library)
+        except Exception as exc:  # the scan fails closed on a crashing validator, and so does the key
+            findings = []
+            reason = f"security: validator-failed: the chat's validator fails on this file ({_error(exc)})"
+            reasons.append(f"{reason}, so the chat refuses it → {_CRASH_ADVICE}")
+        for finding in findings:
+            rule = _token(finding.rule)
+            counts[rule] = counts.get(rule, 0) + 1
+            where = "" if finding.line is None else f" at line {lines.get(finding.line, finding.line)}"
+            reasons.append(f"security: {finding.rule}{where}: {finding.message}")
         keys |= {f"security:{rule}" for rule in counts} or {"security:validator-failed"}
-    return _side("blocked", refusals=keys, spec_refused=map_spec, findings=counts)
+    side = _side("blocked", refusals=keys, spec_refused=map_spec, findings=counts)
+    return _Scan(side, sorted(reasons, key=_first_line))
+
+
+def _relined(reason: str, lines: dict[int, int]) -> str:
+    """``reason`` with every line number it names moved from the normalised text to the scanned file."""
+
+    def moved(match: re.Match[str]) -> str:
+        first = lines.get(int(match.group(2)), int(match.group(2)))
+        if match.group(3) is None:
+            return f"{match.group(1)} {first}"
+        last = lines.get(int(match.group(3)), int(match.group(3)))
+        return f"line {first}" if first == last else f"lines {first}-{last}"
+
+    return _LINES.sub(moved, reason)
+
+
+def _first_line(reason: str) -> int:
+    """The first line number a reason names; 0 for a reason about the whole file, which then comes first."""
+    match = _LINES.search(reason)
+    return int(match.group(2)) if match else 0
+
+
+def _error(exc: BaseException) -> str:
+    """An exception as one short line: its type and the start of its message."""
+    text = " ".join(f"{type(exc).__name__}: {exc}".split())
+    return text if len(text) <= _MAX_ERROR_CHARS else text[: _MAX_ERROR_CHARS - 1] + "…"
+
+
+def check(code: str, *, spec_id: str, library: str) -> tuple[int, list[str]]:
+    """The session's self-check of one file: its exit code and the lines it prints (module docstring)."""
+    result = _scan(code, spec_id=spec_id, library=library)
+    side = result.side
+    if side["status"] == "unsupported":
+        return 0, [f"readiness: not checked ({library} has no Python profile in the chat's validator)"]
+    if side["spec_refused"]:
+        return 0, [
+            f"readiness: excluded ({spec_id} is a map spec, which the chat refuses whatever the code holds; "
+            "nothing to fix)"
+        ]
+    if not side["refusals"]:
+        return 0, ["readiness: accepted"]
+    return 1, [*result.reasons, f"readiness: refused ({', '.join(side['refusals'])})"]
 
 
 def build_record(
@@ -247,6 +362,27 @@ def cmd_scan(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_check(args: argparse.Namespace) -> int:
+    """Print every refusal of one file and the verdict; never raises (module docstring, ``check``)."""
+    try:
+        code = Path(args.file).read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:  # the session's file, which it can fix: the chat cannot read it either
+        line = exc.object[: exc.start].count(b"\n") + 1
+        print(f"encoding: line {line} is not UTF-8 text, so the chat cannot read the file → save it as UTF-8")
+        print("readiness: refused (encoding)")
+        return 1
+    except OSError as exc:
+        print(f"readiness: not run (cannot read {args.file}: {_error(exc)})")
+        return 2
+    try:
+        status, lines = check(code, spec_id=args.spec_id, library=args.library)
+    except Exception as exc:  # a self-check that cannot run says so; it never takes the session down
+        print(f"readiness: not run ({_error(exc)})")
+        return 2
+    print("\n".join(lines))
+    return status
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -257,6 +393,11 @@ def main(argv: list[str] | None = None) -> int:
     scan_parser.add_argument("--library", required=True)
     scan_parser.add_argument("--out", help="write the record as one JSON line")
     scan_parser.set_defaults(func=cmd_scan)
+    check_parser = sub.add_parser("check", help="the session's self-check: every refusal of one file, with its line")
+    check_parser.add_argument("file", help="the implementation the session wrote")
+    check_parser.add_argument("--spec-id", required=True)
+    check_parser.add_argument("--library", required=True)
+    check_parser.set_defaults(func=cmd_check)
     args = parser.parse_args(argv)
     return args.func(args)
 

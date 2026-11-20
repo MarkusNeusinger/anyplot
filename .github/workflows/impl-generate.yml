@@ -775,6 +775,36 @@ jobs:
           git push -u origin "$BRANCH"
           echo "**Adopted:** \`${IMPL_FILE}\` from \`${SOURCE_REF}\` (${SOURCE_SHA})${AUTHOR}" >> "$GITHUB_STEP_SUMMARY"
 
+      # The session's own readiness check (Python only): Step 3c of
+      # impl-generate-claude.md runs `readiness_scan.py check` on the file it
+      # wrote, so it sees every refusal of the agent chat's validator, with
+      # its line and hint, while it can still fix them. The job has no agent
+      # runtime, so the check runs from the same bare tree as "Readiness scan
+      # (record-only)": the same paths from this workflow's ref, and empty
+      # agents/__init__.py files. The copy lives outside the workspace, at a
+      # path the prompt names. That scan never reads it: it makes its own copy
+      # after the session, so nothing the session could have changed here
+      # reaches the record or the gate. A missing copy only means the session
+      # reports the check as not run.
+      - name: Prepare the readiness self-check
+        if: steps.inputs.outputs.language == 'python' && steps.inputs.outputs.source_ref == ''
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          TOOLS: /tmp/anyplot-readiness
+        run: |
+          rm -rf "$TOOLS"; mkdir -p "$TOOLS"
+          if ! git archive "$GITHUB_SHA" agents/anyplot/code agents/anyplot/schemas.py agents/anyplot/language.py \
+                 core automation/scripts/readiness_scan.py automation/scripts/readiness_record.py \
+                 | tar -x -C "$TOOLS" \
+             || [ ! -f "$TOOLS/automation/scripts/readiness_scan.py" ]; then
+            echo "::warning::the readiness self-check could not copy the validator from ${GITHUB_SHA}; the session reports the check as not run"
+            rm -rf "$TOOLS"
+            exit 0
+          fi
+          : > "$TOOLS/agents/__init__.py"; : > "$TOOLS/agents/anyplot/__init__.py"
+          echo "::notice::readiness self-check: the validator from ${GITHUB_SHA} is at ${TOOLS}"
+
       - name: Run Claude Code to generate implementation
         id: claude
         if: steps.inputs.outputs.source_ref == ''
