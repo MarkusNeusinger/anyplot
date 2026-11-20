@@ -409,7 +409,7 @@ A refused pull request gets nothing from the pipeline: no label, comment, fetch,
 
 A listing logs a skipped pull request as a plain line and the watchdog adds one notice per scan with the count, not a warning. A pull request that isn't the pipeline's own is never dispatched, so it can't come back as a rescue or a warning on every scan.
 
-`impl-merge.yml` merges only the head commit that the guard checked and "Validate PR completeness before merge" read. Before each merge attempt, it reads the pull request again and checks it, and it accepts only that commit or GitHub's merge of `main` into it (from `gh pr update-branch`). Then it merges with `--match-head-commit`.
+`impl-merge.yml` merges only the head commit that the guard checked and "Validate PR completeness before merge" read. Before each merge attempt, it reads the pull request again and checks it. It accepts only that commit, or GitHub's merges of `main` into it from `gh pr update-branch`: at most eight merges down to it along the first parents, each with a second parent on `main` and the tree of a clean merge. Then it merges with `--match-head-commit`, and the error line names the condition that failed.
 
 Write-back pull requests (`review-writeback/<spec-id>/<library>/<pr>`) follow a contract of their own: `regen_writeback.py check-pr` in the `writeback` job of `impl-merge.yml` requires the bot's authorship, the `review-writeback` label, and an `isCrossRepository` of exactly `false`. Specification pull requests are checked by the `merge` job of `spec-create.yml`. `tests/unit/workflows/test_pr_guard_steps.py` scans every workflow, so a new job that takes a pull request number, or a new listing, fails the tests until it runs the guard.
 

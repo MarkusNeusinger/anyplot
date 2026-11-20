@@ -229,7 +229,7 @@ FOREIGN = [
     pytest.param({"headRefName": f"{BRANCH}/extra"}, "branch_shape", id="extra-segment"),
     pytest.param({"headRefName": "implementation/Spec-A/plotly"}, "branch_shape", id="uppercase"),
     pytest.param({"headRefName": "implementation/../plotly"}, "branch_shape", id="traversal"),
-    pytest.param({"headRefName": "implementation/$(touch pwned)/plotly"}, "branch_shape", id="shell"),
+    pytest.param({"headRefName": "implementation/$(x)/plotly"}, "branch_shape", id="shell"),
     pytest.param({"headRefName": "implementation/spec-a/notalib"}, "unknown_library", id="unknown-library"),
     pytest.param({"number": 8}, "number_mismatch", id="other-number"),
 ]
@@ -366,7 +366,7 @@ class TestImplReview:
         assert [c[:2] for c in run.gh] == [["pr", "view"]]
         assert run.git == []  # no fetch, no routing, nothing read from the pull request
         # Nothing the pull request carries reaches the log.
-        assert "pwned" not in run.log and "Parent Issue" not in run.log and "haiku" not in run.log
+        assert "$(x)" not in run.log and "Parent Issue" not in run.log and "haiku" not in run.log
 
     @pytest.mark.parametrize("number", ["", "0", "7 ", "#7", "7;true", "https://github.com/x/y/pull/7", "1" * 11])
     def test_a_bad_number_is_refused_before_gh_is_asked(self, tmp_path, review_repo, number):
@@ -482,7 +482,7 @@ class TestImplRepair:
 
 
 class TestImplMergeConditions:
-    def _conditions(self, tmp: Path, **env: str) -> Run:
+    def _conditions(self, tmp: Path, shell=PIPEFAIL, **env: str) -> Run:
         values = {
             "EVENT_NAME": "pull_request",
             "EVENT_ACTION": "labeled",
@@ -494,11 +494,11 @@ class TestImplMergeConditions:
             "GH_REPO": REPO,
         }
         script = _step("impl-merge.yml", "Check conditions")["run"].replace("/tmp/", f"{tmp}/")
-        return _run(script, tmp, **values | env)
+        return _run(script, tmp, shell=shell, **values | env)
 
     @SHELLS
     def test_a_label_event_from_another_repository_stops_before_the_checkout(self, tmp_path, shell):
-        run = self._conditions(tmp_path, EVENT_PR_HEAD_REPO="elsewhere/repo")
+        run = self._conditions(tmp_path, shell=shell, EVENT_PR_HEAD_REPO="elsewhere/repo")
         assert run.rc == 1 and run.outputs == {} and run.gh == []
         assert len(run.errors()) == 1 and "(cross_repository)" in run.errors()[0]
 
@@ -597,9 +597,9 @@ class MergeOrigin:
         _git(repo, self.env, "commit", "-q", "-m", message)
         return _git(repo, self.env, "rev-parse", "HEAD")
 
-    def move_main(self) -> None:
+    def move_main(self, name: str = "y") -> None:
         _git(self.work, self.env, "checkout", "-q", "main")
-        self.commit(self.work, {"core/y.py": "y = 2\n"}, "main moves")
+        self.commit(self.work, {f"core/{name}.py": f"{name} = 2\n"}, "main moves")
         _git(self.work, self.env, "push", "-q", "origin", "main")
         _git(self.work, self.env, "checkout", "-q", BRANCH)
 
@@ -650,32 +650,52 @@ class TestImplMergeHead:
         (merge,) = self._merges(run)
         assert merge[merge.index("--match-head-commit") + 1] == head
 
+    def test_two_merges_of_main_in_one_run_are_merged(self, origin):
+        """main moved twice, so `update-branch` merged twice: the retry the loop exists for."""
+        for name in ("y", "w"):
+            origin.move_main(name)
+            _git(origin.work, origin.env, "merge", "-q", "--no-ff", "--no-edit", "main")
+        head = origin.push_branch()
+        run = origin.run(head)
+        assert run.rc == 0, run.log
+        (merge,) = self._merges(run)
+        assert merge[merge.index("--match-head-commit") + 1] == head
+
+    def _refused(self, run: Run, why: str) -> None:
+        assert run.rc == 1 and self._merges(run) == []
+        assert len(run.errors()) == 1 and "not merged" in run.errors()[0] and why in run.errors()[0], run.log
+
     def test_a_commit_pushed_on_top_is_not_merged(self, origin):
         origin.commit(origin.work, {"plots/spec-a/implementations/python/plotly.py": "import os\n"}, "later")
-        run = origin.run(origin.push_branch())
-        assert run.rc == 1 and self._merges(run) == []
-        assert len(run.errors()) == 1 and "not merged" in run.errors()[0]
+        self._refused(origin.run(origin.push_branch()), "is not a merge")
 
-    def test_a_merge_that_carries_a_change_of_its_own_is_not_merged(self, origin):
-        origin.move_main()
+    def _evil_merge(self, origin: MergeOrigin, name: str) -> None:
+        origin.move_main(name)
         _git(origin.work, origin.env, "merge", "-q", "--no-ff", "--no-commit", "main")
-        (origin.work / "core" / "z.py").write_text("z = 3\n", encoding="utf-8")
+        (origin.work / "core" / f"{name}-extra.py").write_text("z = 3\n", encoding="utf-8")
         _git(origin.work, origin.env, "add", "-A")
         _git(origin.work, origin.env, "commit", "-q", "-m", "merge main")
-        run = origin.run(origin.push_branch())
-        assert run.rc == 1 and self._merges(run) == []
+
+    def test_a_merge_that_carries_a_change_of_its_own_is_not_merged(self, origin):
+        self._evil_merge(origin, "y")
+        self._refused(origin.run(origin.push_branch()), "is not the clean merge of its parents")
+
+    def test_a_chain_with_one_altered_merge_is_not_merged(self, origin):
+        self._evil_merge(origin, "y")
+        origin.move_main("w")
+        _git(origin.work, origin.env, "merge", "-q", "--no-ff", "--no-edit", "main")
+        self._refused(origin.run(origin.push_branch()), "is not the clean merge of its parents")
 
     def test_a_merge_of_something_not_on_main_is_not_merged(self, origin):
         _git(origin.work, origin.env, "checkout", "-q", "-b", "side", "main")
         origin.commit(origin.work, {"core/side.py": "s = 1\n"}, "side")
         _git(origin.work, origin.env, "checkout", "-q", BRANCH)
         _git(origin.work, origin.env, "merge", "-q", "--no-ff", "--no-edit", "side")
-        run = origin.run(origin.push_branch())
-        assert run.rc == 1 and self._merges(run) == []
+        self._refused(origin.run(origin.push_branch()), "merges a commit that is not on main")
 
     def test_a_pull_request_that_no_longer_passes_the_guard_is_not_merged(self, origin):
         run = origin.run(origin.validated, isCrossRepository=True)
-        assert run.rc == 1 and self._merges(run) == []
+        self._refused(run, "no longer passes the guard (reason=cross_repository)")
 
 
 # --- impl-review-retry -------------------------------------------------------------------------
@@ -849,7 +869,7 @@ class TestImplGenerateLookup:
 
 # --- every workflow that takes a pull request ---------------------------------------------------
 
-# Reads a pull request by number (the scan the brief names), or picks them from a list.
+# Reads a pull request by number, or picks pull requests from a list.
 READS_A_PULL_REQUEST = re.compile(r"gh pr view|pr_number|gh pr list")
 # A job takes a pull request by number from its trigger.
 NUMBER_FROM_TRIGGER = re.compile(r"inputs\.pr_number|client_payload\.pr_number|github\.event\.pull_request\.number")

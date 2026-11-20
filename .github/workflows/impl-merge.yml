@@ -424,23 +424,28 @@ jobs:
 
           # Merge only what was checked: the guard passed this pull request
           # at VALIDATED_SHA, and "Validate PR completeness" read that commit.
-          # `update-branch` below may put GitHub's merge of main on top, so
-          # before every attempt the pull request is read and checked again,
-          # and its head is taken only when it is that commit, or a merge
-          # whose first parent is that commit, whose second parent is on
-          # main, and whose tree is the clean merge of the two. The merge
-          # names that head (--match-head-commit), so a commit pushed in
-          # between is never merged.
-          # Prints the head to merge and returns 0; 1 = refused; 2 = could not
-          # read it this time.
+          # `update-branch` below puts GitHub's merge of main on top, once per
+          # attempt when main moves in between, so before every attempt the
+          # pull request is read and checked again, and its head is taken only
+          # when it is that commit, or a chain of at most MAX_UPDATES merges
+          # down to it along the first parents, each with exactly two parents,
+          # its second parent on main, and the tree of the clean merge of the
+          # two. The merge names that head (--match-head-commit), so a commit
+          # pushed in between is never merged.
+          # Prints the head to merge and returns 0; 1 = refused (why in
+          # head.why); 2 = could not read it this time.
           G="$RUNNER_TEMP/pr-guard"
+          MAX_UPDATES=8
           merge_target() {
-            local view out head
+            local view out head commit hops=0
             view=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" \
               --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner \
               2> "$RUNNER_TEMP/head.err") || return 2
-            out=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
-              --number "$PR_NUM" --spec-id "$SPEC_ID" --library "$LIBRARY" <<< "$view") || return 1
+            if ! out=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
+                 --number "$PR_NUM" --spec-id "$SPEC_ID" --library "$LIBRARY" <<< "$view"); then
+              echo "the pull request no longer passes the guard (${out//[^a-z_=]/})" > "$RUNNER_TEMP/head.why"
+              return 1
+            fi
             head=$(sed -n 's/^head_sha=//p' <<< "$out")
             if [ "$head" = "$VALIDATED_SHA" ]; then
               echo "$head"
@@ -449,11 +454,27 @@ jobs:
             git fetch -q origin "+refs/heads/main:refs/remotes/origin/main" \
               "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}" 2> "$RUNNER_TEMP/head.err" || return 2
             git cat-file -e "${head}^{commit}" 2>/dev/null || return 2
-            [ "$(git rev-list --parents -n 1 "$head" | wc -w)" -eq 3 ] || return 1
-            [ "$(git rev-parse "${head}^1")" = "$VALIDATED_SHA" ] || return 1
-            git merge-base --is-ancestor "${head}^2" origin/main || return 1
-            [ "$(git merge-tree --write-tree "$VALIDATED_SHA" "${head}^2" 2>/dev/null)" = "$(git rev-parse "${head}^{tree}")" ] \
-              || return 1
+            commit="$head"
+            while [ "$commit" != "$VALIDATED_SHA" ]; do
+              hops=$((hops + 1))
+              if [ "$hops" -gt "$MAX_UPDATES" ]; then
+                echo "the head is not within ${MAX_UPDATES} merges of main above the checked commit" > "$RUNNER_TEMP/head.why"
+                return 1
+              fi
+              if [ "$(git rev-list --parents -n 1 "$commit" | wc -w)" -ne 3 ]; then
+                echo "${commit} above the checked commit is not a merge" > "$RUNNER_TEMP/head.why"
+                return 1
+              fi
+              if ! git merge-base --is-ancestor "${commit}^2" origin/main; then
+                echo "${commit} merges a commit that is not on main" > "$RUNNER_TEMP/head.why"
+                return 1
+              fi
+              if [ "$(git merge-tree --write-tree "${commit}^1" "${commit}^2" 2>/dev/null)" != "$(git rev-parse "${commit}^{tree}")" ]; then
+                echo "${commit} is not the clean merge of its parents" > "$RUNNER_TEMP/head.why"
+                return 1
+              fi
+              commit=$(git rev-parse "${commit}^1")
+            done
             echo "$head"
           }
 
@@ -513,7 +534,8 @@ jobs:
             TARGET_RC=0
             TARGET=$(merge_target) || TARGET_RC=$?
             if [ "$TARGET_RC" -eq 1 ]; then
-              echo "::error::PR #${PR_NUM} not merged: its head is neither the checked commit ${VALIDATED_SHA} nor GitHub's merge of main into it, or the pull request no longer passes the guard; re-dispatch impl-merge.yml to check it again"
+              WHY=$(head -c 300 "$RUNNER_TEMP/head.why" 2>/dev/null | tr '\n' ' ')
+              echo "::error::PR #${PR_NUM} not merged: its head is neither the checked commit ${VALIDATED_SHA} nor GitHub's merges of main into it (${WHY:-no reason recorded}); re-dispatch impl-merge.yml to check it again"
               exit 1
             fi
             if [ "$TARGET_RC" -ne 0 ] || [ -z "$TARGET" ]; then
