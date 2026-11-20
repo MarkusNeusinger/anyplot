@@ -626,6 +626,9 @@ UNLISTED: dict[str, tuple[list[str], str]] = {
     "offset_hours_alone_after_a_space": (["2026-03-01 10:00 +01", "2026-03-02 10:00 +01"], "text"),
     "offset_after_a_space_without_a_time": (["2026-03-01 +0100", "2026-03-02 +0100"], "text"),
     "offset_after_a_twelve_hour_time": (["2026-03-01 10:00 AM +0100", "2026-03-02 10:00 AM +0100"], "text"),
+    "utc_on_a_dot_date": (["15.03.2026 10:00:00 UTC", "16.03.2026 10:00:00 UTC"], "text"),
+    "offset_after_a_space_on_a_slash_date": (["3/15/2026 10:00:00 +0100", "3/16/2026 10:00:00 +0100"], "text"),
+    "utc_on_a_day_with_a_month_name": (["8 Nov 2026 10:00 UTC", "9 Nov 2026 10:00 UTC"], "text"),
     "utc_after_a_twelve_hour_time": (["2026-03-01 10:00:00 AM UTC", "2026-03-02 10:00:00 AM UTC"], "text"),
     "meridiem_with_dots": (["3/15/2026 10:00 a.m.", "3/16/2026 2:30 p.m."], "text"),
     "meridiem_capitalised": (["3/15/2026 10:00 Am", "3/16/2026 2:30 Pm"], "text"),
@@ -649,7 +652,8 @@ UNLISTED: dict[str, tuple[list[str], str]] = {
 }
 """Forms outside the list, with the paste's dtype for them: each read as dates through pandas' general reader before,
 or a near miss of a form the list took in later (`TOOL_FORMS`): another spelling of `UTC`, a zone name, an offset
-without a time or of hours alone after a space, `AM` and `PM` with dots, without minutes, after `T` or beside a zone,
+without a time or of hours alone after a space, a zone after a date whose time takes none (a dot, a slash or a month
+name: only the ISO time and the year-first slash date's take an offset), `AM` and `PM` with dots, without minutes, after `T` or beside a zone,
 a comma after the year, the year first with dots."""
 
 DEFECTS: dict[str, list[str]] = {
