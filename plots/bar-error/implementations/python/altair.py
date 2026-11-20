@@ -1,97 +1,98 @@
 """ anyplot.ai
 bar-error: Bar Chart with Error Bars
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-10
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-20
 """
 
 import os
-import sys
-
-
-sys.path.insert(0, "/home/runner/work/anyplot/anyplot/.venv/lib/python3.13/site-packages")
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
 
-# Data - Treatment comparison with measurement variability (±1 SD)
-treatment_order = ["Control", "Drug A", "Drug B", "Drug C", "Combination"]
-data = pd.DataFrame(
-    {"treatment": treatment_order, "response": [45.2, 62.8, 58.3, 71.5, 82.1], "error": [8.5, 12.3, 9.8, 15.2, 11.7]}
+# Imprint palette: first position is the single series
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns: set these to your table's column names
+TREATMENT = "Treatment group"  # role: category
+RESPONSE = "Response rate (%)"  # role: value
+ERROR = "Standard deviation (%)"  # role: error
+
+# Data: replace this block with your own table, for example df = pd.read_csv("treatments.csv")
+df = pd.DataFrame(
+    {
+        TREATMENT: ["Control", "Drug A", "Drug B", "Drug C", "Combination"],
+        RESPONSE: [45.2, 62.8, 58.3, 71.5, 82.1],
+        ERROR: [8.5, 12.3, 9.8, 15.2, 11.7],
+    }
 )
 
-# Calculate error bar bounds
-data["lower"] = data["response"] - data["error"]
-data["upper"] = data["response"] + data["error"]
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+LOWER = "Lower bound"
+UPPER = "Upper bound"
+df[LOWER] = df[RESPONSE] - df[ERROR]
+df[UPPER] = df[RESPONSE] + df[ERROR]
 
-# Create bars with brand color
-bars = (
-    alt.Chart(data)
-    .mark_bar(size=60, color=BRAND)
-    .encode(
-        x=alt.X(
-            "treatment:N",
-            title="Treatment Group",
-            sort=treatment_order,
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=0),
-        ),
-        y=alt.Y(
-            "response:Q",
-            title="Response Rate (%)",
-            scale=alt.Scale(domain=[0, 100]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22),
-        ),
-        tooltip=[
-            "treatment:N",
-            alt.Tooltip("response:Q", format=".1f"),
-            alt.Tooltip("error:Q", format=".1f", title="±SD"),
-        ],
-    )
+WIDTH, HEIGHT = 620, 320
+x_enc = alt.X(
+    TREATMENT.translate(ESCAPE),
+    type="nominal",
+    title=TREATMENT,
+    sort=None,
+    axis=alt.Axis(labelAngle=0, labelFontSize=12, titleFontSize=14, labelPadding=6, titlePadding=10),
+)
+y_top = max(100, df[UPPER].max() * 1.05)
+
+base = alt.Chart(df)
+
+bars = base.mark_bar(size=56, color=IMPRINT_PALETTE[0]).encode(
+    x=x_enc,
+    y=alt.Y(
+        RESPONSE.translate(ESCAPE),
+        type="quantitative",
+        title=RESPONSE,
+        scale=alt.Scale(domain=[0, y_top]),
+        axis=alt.Axis(labelFontSize=12, titleFontSize=14, titlePadding=10),
+    ),
+    tooltip=[
+        alt.Tooltip(TREATMENT.translate(ESCAPE), type="nominal", title=TREATMENT),
+        alt.Tooltip(RESPONSE.translate(ESCAPE), type="quantitative", title=RESPONSE, format=".1f"),
+        alt.Tooltip(ERROR.translate(ESCAPE), type="quantitative", title=ERROR, format=".1f"),
+    ],
 )
 
-# Create error bars with caps using rule marks
-error_bars = (
-    alt.Chart(data)
-    .mark_rule(strokeWidth=3, color=INK_SOFT)
-    .encode(x=alt.X("treatment:N", sort=treatment_order), y="lower:Q", y2="upper:Q")
+error_stem = base.mark_rule(strokeWidth=1.6, color=INK).encode(
+    x=x_enc, y=alt.Y(LOWER, type="quantitative"), y2=alt.Y2(UPPER)
 )
 
-# Error bar caps (top)
-caps_top = (
-    alt.Chart(data)
-    .mark_tick(size=30, thickness=3, color=INK_SOFT)
-    .encode(x=alt.X("treatment:N", sort=treatment_order), y="upper:Q")
+caps = (
+    base.mark_tick(size=22, thickness=1.6, color=INK)
+    .transform_fold([LOWER, UPPER], as_=["end", "bound"])
+    .encode(x=x_enc, y=alt.Y("bound:Q"))
 )
 
-# Error bar caps (bottom)
-caps_bottom = (
-    alt.Chart(data)
-    .mark_tick(size=30, thickness=3, color=INK_SOFT)
-    .encode(x=alt.X("treatment:N", sort=treatment_order), y="lower:Q")
-)
-
-# Annotation for error bar meaning
-annotation = (
+note = (
     alt.Chart(pd.DataFrame({"text": ["Error bars: ±1 SD"]}))
-    .mark_text(align="right", baseline="top", fontSize=16, color=INK_SOFT)
-    .encode(x=alt.value(1550), y=alt.value(30), text="text:N")
+    .mark_text(align="left", baseline="top", fontSize=12, color=INK_SOFT)
+    .encode(x=alt.value(10), y=alt.value(8), text="text:N")
 )
 
-# Combine all layers
 chart = (
-    alt.layer(bars, error_bars, caps_top, caps_bottom, annotation)
+    alt.layer(bars, error_stem, caps, note)
     .properties(
-        width=1600,
-        height=900,
+        width=WIDTH,
+        height=HEIGHT,
         background=PAGE_BG,
-        title=alt.Title("bar-error · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
+        title=alt.Title("bar-error · python · altair · anyplot.ai", fontSize=18, anchor="middle", color=INK),
     )
     .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
@@ -100,8 +101,14 @@ chart = (
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG (1600 × 900 × 3 = 4800 × 2700)
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
-
-# Save as HTML for interactivity
+# Save: PNG padded (never cropped) to the 3200 x 1800 target, plus interactive HTML
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+TARGET_W, TARGET_H = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_W or img.height > TARGET_H:
+    raise SystemExit(f"altair rendered {img.width}x{img.height}, exceeds {TARGET_W}x{TARGET_H}; shrink width/height")
+if img.size != (TARGET_W, TARGET_H):
+    canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+    canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
+    canvas.save(f"plot-{THEME}.png")
 chart.save(f"plot-{THEME}.html")
