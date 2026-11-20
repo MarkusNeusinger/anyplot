@@ -57,8 +57,9 @@ MAX_DONE_EVENT_CHARS = 512 * 1024
 `_MAX_DONE_EVENT_CHARS`; 64 KiB for every other event). A `done` that carries `dataset` holds
 20 preview rows and the profile of up to 50 columns with their names, top values, sample rows
 and warnings, the notes pasted with the data (2,000 characters), the bindings twice, the change
-lines, up to `MAX_DONE_ROLES` spec roles and
-the session language, every string at its schema maximum and JSON-escaped at its worst about 393,000 characters;
+lines with the turn's marks after them (a line per role of the bindings before and after the turn, `turn_marks.py`),
+up to `MAX_DONE_ROLES` spec roles and
+the session language, every string at its schema maximum and JSON-escaped at its worst about 510,000 characters;
 the bound is proven by `tests/unit/agents/runtime/test_stream.py`, so a changed dataset
 always reaches the page."""
 NO_SUGGESTION: Any = object()
