@@ -2,44 +2,41 @@ library: altair
 language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:40:35Z'
-updated: '2026-05-10T01:12:33Z'
-generated_by: claude-haiku
-workflow_run: 25616200351
+updated: '2026-11-20T15:48:58Z'
+generated_by: claude-sonnet
+workflow_run: 44765935095
 issue: 2276
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/altair/plot-dark.html
-quality_score: 96
+quality_score: 86
 review:
   strengths:
-  - Perfect theme-adaptive implementation with both renders fully readable and theme-correct
-  - Excellent visual hierarchy through viridis gradient sorted by importance values
-  - Comprehensive data representation with bars, error bars, and precise text labels
-  - Clean, idiomatic altair usage with proper layer composition and encoding
-  - Realistic, neutral data demonstrating RandomForest feature importances
-  - All 15 specified criteria met with high marks
-  weaknesses: []
+  - 'Imprint sequential ramp (#009E73 -> #4467A3) on importance, so color and length
+    tell the same ranking in both themes'
+  - Value labels placed just past each whisker in bold INK, clear of every error bar
+  - Error bars in the INK token stay visible over every gradient step, light and dark
+  - One shared base encoding layered into bars, x/x2 rules and text — idiomatic Altair
+    composition
+  - Formatted Vega-Lite tooltips (feature, importance, std) in the HTML output
+  weaknesses:
+  - 'Suggestion: sort=alt.EncodingSortField(field=..., order=''descending'') or sort=''-x''
+    would express the ranking without building a list from the DataFrame.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct per spec
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text (#1A1A17)
-      Data: Viridis gradient from dark purple (low importance ~0.005) to bright yellow-green (high importance ~0.182)
-      Features: 15 feature names on Y-axis all readable without overlap
-      Bars: Error bars visible, text labels (0.005, 0.009, etc.) positioned at bar ends in dark text
-      Grid: Subtle horizontal grid at 10% opacity, not competing with data
-      Legibility verdict: PASS - all elements fully readable against light background
+      Background: warm off-white #FAF8F1, 3200x1800, chart centered with even padding
+      Chrome: left-anchored bold title 'bar-feature-importance · python · altair · anyplot.ai' in near-black; y-axis title 'Feature', x-axis title 'Importance score'; feature names and ticks 0.00-0.24 in INK_SOFT; subtle vertical grid; no y-axis ticks or domain line
+      Data: 15 horizontal bars sorted highest (customer_lifetime_value 0.182) at top to lowest (social_media_engagement 0.005) at bottom, colored by a green (#009E73, low) to blue (#4467A3, high) ramp; near-black error bars centered on bar ends; bold value labels just past each whisker
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct per spec
-      Chrome: Title, axis labels in light text (#F0EFE8), tick labels in soft light (#B8B7B0) - all readable against dark background
-      Data: Viridis colors IDENTICAL to light render - proper theme-independent color mapping
-      Features: 15 feature names on Y-axis readable in light text on dark background
-      Bars: Error bars visible, text labels in light text at bar ends - no dark-on-dark failures
-      Grid: Subtle horizontal grid at 10% opacity with light-theme opacity
-      Legibility verdict: PASS - all elements fully readable against dark background, no dark-on-dark conflicts
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light #F0EFE8, ticks and names in #B8B7B0; grid subtle; no dark-on-dark text
+      Data: bar colors identical to the light render; error bars and value labels flip to light ink and stay visible on every bar; the green weakest bars stay distinct from the page
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,72 +47,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22px, axis 22px, tick 18px, text
-          16px); all readable in both themes
+        comment: Explicit sizes (title 16, axis titles 13, ticks 11, value labels
+          11 bold at scale 4); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Feature names readable, text labels positioned clearly, no collisions
+        comment: Value labels sit past each whisker end; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with gradient, error bars visible, text labels
-          prominent
+        comment: Bars fill their bands; INK error bars visible on every gradient step;
+          the 0.005 bar is still distinct in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe
+        comment: Green-to-blue ramp redundant with bar length; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 logical size (4800×2700px at 3x), nothing cut off, generous
-          whitespace
+        comment: 3200x1800, balanced margins, title ~50% width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, axis labels descriptive
+        comment: '''Importance score'' and ''Feature'' read as text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous data, backgrounds #FAF8F1/#1A1A17
-          correct, both renders theme-correct'
+        comment: 'imprint_seq two-stop range #009E73 -> #4467A3; #FAF8F1 / #1A1A17
+          backgrounds; chrome flips correctly'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: Viridis gradient provides sophisticated color hierarchy, theme tokens
-          show design thought
+        passed: false
+        comment: Left-anchored title and bold INK value labels against INK_SOFT tick
+          labels give a clear typographic hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid (10% opacity), clean axes, generous whitespace; minimal
-          additional embellishment
+        passed: false
+        comment: Y-axis ticks and domain line removed so the name column reads clean;
+          view frame dropped; bar size chosen to nearly fill each band
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Strong hierarchy through sorting and gradient; error bars emphasize
-          uncertainty
+        passed: false
+        comment: Ranking and gradient are what the Notes ask; no further focal point
+          chosen
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +121,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal bar chart correct, sorted by importance
+        comment: Horizontal feature-importance bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: bars, sorting, gradient, error bars,
-          text annotations'
+        comment: 'C1-C5 met: zero baseline, full names, highest at top, sequential
+          gradient, value labels clear of error bars, centered error bars'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=importance, Y=feature, color=importance; all data shown
+        comment: x=importance from 0, y=feature; all bars and whiskers inside the
+          domain
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend omitted (appropriate for continuous
-          colormap)
+        comment: Title 'bar-feature-importance · python · altair · anyplot.ai'; color
+          legend omitted as redundant with length
     data_quality:
       score: 15
       max: 15
@@ -155,22 +152,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 features shown (within 10-30 recommendation); full range 0.005-0.182
-          displayed; std shown
+        comment: 15 features, long tail, std error bars
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic customer behavior features; plausible importance scores;
-          neutral context
+        comment: Churn RandomForest model with plausible customer features
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Importance values typical for tree-based models; error bars scale
-          appropriately
+        comment: Importances sum to 1.0 as for tree-based models; std 15-35% of value
     code_quality:
       score: 10
       max: 10
@@ -180,60 +174,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward code; no functions or classes
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (THEME), altair, numpy, pandas'
+        comment: All imports used (PIL for padding)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; theme tokens organized cleanly; transform_calculate for
-          error bar bounds
+        comment: Shared base encoding across layers; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; scale_factor=3.0
-          correct
+        comment: plot-{THEME}.png padded to 3200x1800 plus plot-{THEME}.html; Altair
+          6 API with type= and escaped fields
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Standard altair pattern: Chart + encode + mark + properties + configure_*'
+        passed: false
+        comment: Layered chart from one shared base encode, x/x2 rule for whiskers,
+          explicit sort list on the nominal axis
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Layer composition (bars + error_bars + text); transform_calculate;
-          viridis scale; theme-adaptive tokens
-    score_caps: []
+        passed: false
+        comment: Vega-Lite tooltips with formatted fields in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-20T15:45:29Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - custom-colormap
-  - grid-styling
+  - publication-ready
