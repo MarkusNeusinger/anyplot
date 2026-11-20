@@ -55,7 +55,7 @@ positive_ratio = y_true.mean()
 fig = go.Figure()
 
 # Iso-F1 contours first so they sit behind the curve
-for i, f1 in enumerate(F1_LEVELS):
+for f1 in F1_LEVELS:
     x_iso = np.linspace(f1 / 2 + 0.005, 1, 200)
     y_iso = f1 * x_iso / (2 * x_iso - f1)
     keep = (y_iso > 0) & (y_iso <= 1)
