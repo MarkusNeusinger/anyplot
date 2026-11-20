@@ -111,6 +111,11 @@ jobs:
           REGEN_PAIRS: ${{ vars.REGEN_PAIRS_PER_DAY }}
         run: |
           set -euo pipefail
+          # A dispatch input: digits only before it enters arithmetic.
+          if ! [[ "$STALE_HOURS" =~ ^[0-9]{1,4}$ ]]; then
+            echo "::error::bad_input: stale_hours does not have its expected shape (whole hours)"
+            exit 1
+          fi
           STALE_SEC=$(( STALE_HOURS * 3600 ))
           NOW=$(date -u +%s)
 

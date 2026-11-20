@@ -72,10 +72,20 @@ if os.environ.get("GH_FAIL") == "1":
     sys.exit(1)
 key = " ".join(args[:2])
 fields = args[args.index("--json") + 1] if "--json" in args else ""
+
+def asked(entry):
+    # As gh does: only the fields the call asked for, so a list that drops one shows.
+    wanted = fields.split(",")
+    return {k: v for k, v in entry.items() if k in wanted} if isinstance(entry, dict) else entry
+
 if key == "pr view":
-    print(os.environ.get("GH_STATE", "OPEN") if fields == "state" else os.environ.get("GH_PR_JSON", "{}"))
+    if fields == "state":
+        print(os.environ.get("GH_STATE", "OPEN"))
+    else:
+        print(json.dumps(asked(json.loads(os.environ.get("GH_PR_JSON", "{}")))))
 elif key == "pr list":
-    print(os.environ.get("GH_LIST_JSON", "[]"))
+    listed = json.loads(os.environ.get("GH_LIST_JSON", "[]"))
+    print(json.dumps([asked(entry) for entry in listed] if fields else listed))
 elif key == "issue list":
     print(os.environ.get("GH_ISSUES_JSON", "[]"))
 elif key == "issue view":
@@ -365,7 +375,7 @@ class TestStagingStep:
     @pytest.mark.parametrize(
         "constants",
         [
-            "import yaml\nSUPPORTED_LIBRARIES = frozenset(['altair'])\n",
+            "import anyplot_package_nobody_installed\nSUPPORTED_LIBRARIES = frozenset(['altair'])\n",
             "from core import palette\nSUPPORTED_LIBRARIES = frozenset(['altair'])\n",
         ],
         ids=["third-party-import", "sibling-import"],
@@ -928,7 +938,8 @@ if key == "pr view":
         print(state)
     else:
         pr = json.loads(os.environ["GH_PR_JSON"])
-        print(json.dumps({**pr, "state": state, "headRefOid": head()}))
+        entry = {**pr, "state": state, "headRefOid": head()}
+        print(json.dumps({k: v for k, v in entry.items() if k in fields.split(",")}))
 elif key == "pr update-branch":
     if st["merged"]:
         sys.exit(1)

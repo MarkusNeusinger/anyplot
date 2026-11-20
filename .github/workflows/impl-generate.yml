@@ -206,7 +206,7 @@ jobs:
           REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && (inputs.regen_gate == false || inputs.source_ref != '')) && 'false' || 'true' }}
           # Every dispatch input and event value comes in through env:, never
           # pasted into the script, and is checked for its shape before its
-          # first use. A dispatch can carry text that came from an issue.
+          # first use.
           EVENT_NAME: ${{ github.event_name }}
           SPEC_ID_INPUT: ${{ inputs.specification_id }}
           LIBRARY_INPUT: ${{ inputs.library }}
