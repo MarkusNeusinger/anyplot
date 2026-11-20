@@ -12,37 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouett
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 75
 review:
   strengths:
-  - Flawless visual quality in both light and dark themes with perfect text readability
-    and palette compliance
-  - Perfect spec adherence with all required features correctly implemented (horizontal
-    bars, cluster colors, reference line, cluster annotations)
-  - Real educational data context using iris clustering with clear visual storytelling
-    about cluster quality differences
-  - Clean, reproducible code with proper theme-adaptive styling and correct letsplot
-    idioms
-  - Excellent canvas utilization and visual hierarchy that immediately communicates
-    which clusters are well-separated
-  weaknesses: []
+  - 'All four Notes features present: sorted bars from zero, colored cluster blocks
+    with gaps, a dashed average line and per-cluster average annotations'
+  - Real iris k-means data with silhouette_samples and silhouette_score
+  - Theme tokens threaded through all chrome; both renders theme-correct with identical
+    data colors
+  weaknesses:
+  - 'VQ-05 (both): canvas is 4800x2700 instead of the canonical 3200x1800 → 3200x1800
+    (-1600 x -900). Likely cause: ggsize(1600, 900) with ggsave scale=3 instead of
+    ggsize(800, 450) with scale=4.'
+  - 'VQ-05 (both): the cluster annotations are about three times the tick-label size
+    and dominate the left third of the panel → about the size of the tick labels.
+    Likely cause: geom_text size=14 (mm), where the library prompt asks for about
+    3-5.'
+  - 'SC-04 (both): the title reads ''silhouette-basic · letsplot · anyplot.ai'' without
+    the language segment, and the legend title is the raw identifier ''cluster'' →
+    ''silhouette-basic · python · letsplot · anyplot.ai'' and a reader title such
+    as ''Cluster''. Likely cause: the labs() title string and the lowercase ''cluster''
+    column.'
+  - 'CQ-04 (code): lines 44-73 build the sorted rows with a hand-written per-cluster
+    loop → df.sort_values([cluster, silhouette]) plus pd.factorize for the gaps and
+    groupby for the averages. Likely cause: row-by-row data assembly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "silhouette-basic · letsplot · anyplot.ai" bold and readable; axis labels "Silhouette Coefficient" and "Sample Index (sorted within cluster)" descriptive and clear; tick labels and cluster annotations all readable in dark text (INK color)
-      Data: Three clusters in Okabe-Ito colors - Cluster 0 (green #009E73), Cluster 1 (orange #D55E00), Cluster 2 (blue #0072B2). Horizontal bars sorted within clusters, showing silhouette scores. Average line marked with dashed vertical line at 0.55, labeled "Avg: 0.55"
-      Legibility verdict: PASS - all text clearly readable, excellent contrast
+      Background: warm off-white #FAF8F1, panel framed by a thin dark border; canvas 4800x2700.
+      Chrome: title "silhouette-basic · letsplot · anyplot.ai" top left in dark ink; x-axis "Silhouette Coefficient" with ticks -0.3 to 1; y-axis "Sample Index (sorted within cluster)"; vertical grid every 0.05; legend titled "cluster" on the right with small entries. All text readable.
+      Data: three blocks of horizontal bars from zero, sorted within cluster: Cluster 0 green #009E73, Cluster 1 purple #C475FD, Cluster 2 blue #4467A3, separated by gaps. Dashed ink line at 0.55 with "Avg: 0.55" to its right, clear of the bars. Very large two-line cluster labels with averages (0.42 / 0.80 / 0.45) left of zero, about three times the tick-label size.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title and all labels rendered in light text (INK_SOFT #B8B7B0 and INK #F0EFE8) with perfect contrast on dark surface. Grid lines subtle and visible. Cluster annotations and average line label all clearly readable. No "dark-on-dark" text failures
-      Data: All cluster colors identical to light render (green #009E73, orange #D55E00, blue #0072B2) - only chrome adapted to dark theme, not data colors
-      Legibility verdict: PASS - all text perfectly readable on dark background, no legibility issues
-
-    Both renders pass all theme-readability checks. Theme-adaptive implementation is correct.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks, legend and annotations in light ink; grid light; legend box elevated. No dark-on-dark text.
+      Data: same green / purple / blue as the light render; dashed average line in light grey, visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -50,48 +58,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 24pt, labels 20pt, text 14-16pt),
-          perfectly readable in both themes
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, cluster annotations positioned left,
-          average label positioned clear
+        comment: Average label and cluster labels clear of the bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 bars well-sized for data density, all clearly visible and distinct
+        comment: 150 bars distinct; legend glyphs visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with three CVD-safe distinct colors, good contrast
+        comment: CVD-distinct cluster colors
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Plot fills 65-70% of canvas, balanced margins, legend properly positioned
+        passed: false
+        comment: Canvas 4800x2700 instead of 3200x1800 (hard rule); cluster annotations
+          oversized (defect lines)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context and methodology, correct title format
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
-          #FAF8F1/#1A1A17, theme-correct chrome in both renders'
+        comment: 'Imprint colors starting at #009E73; correct backgrounds in both
+          renders'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -99,25 +106,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default, professional but not exceptional
-          design
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Subtle grid and whitespace, library defaults with minimal customization
+        comment: Library-template grid and frame, nothing tuned for this chart
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through color and clustering. Immediately
-          shows Cluster 1 is excellent (0.80) vs. others problematic (0.42-0.45).
-          Average line and annotations create effective emphasis on cluster quality
-          differences
+        passed: false
+        comment: Annotations the Notes ask for, no hierarchy beyond them
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -125,29 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct silhouette plot with all subtypes (bars, cluster colors,
-          reference line, annotations)
+        comment: Silhouette plot, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: horizontal bars, cluster colors,
-          average line, cluster annotations'
+        comment: C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: silhouette coefficient correct range, Y-axis: sample index
-          sorted within cluster, all data visible'
+        comment: Bars from zero at their scores
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct (silhouette-basic · letsplot · anyplot.ai),
-          legend labels match clusters
+        passed: false
+        comment: Title misses the language segment; legend title is the raw identifier
+          'cluster' (defect line)
     data_quality:
       score: 15
       max: 15
@@ -157,24 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: score range, multiple cluster quality levels,
-          variation within clusters'
+        comment: Clusters of different quality and size
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real iris dataset, K-means clustering with k=3, scientific/educational
-          context, neutral
+        comment: Real iris data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Silhouette scores realistic (-0.1 to 1.0), 150 samples plausible,
-          k=3 matches iris species
+        comment: Average 0.55 computed by silhouette_score, matches the known value
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -182,53 +179,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data prep → plot → save, no functions/classes'
+        comment: No functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and KMeans(random_state=42) set, fully deterministic
+        comment: Seeded and random_state set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, numpy, pandas, lets_plot, sklearn'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, appropriate complexity, no over-engineering or fake
-          functionality
+        passed: false
+        comment: Hand-written row loop instead of a pandas sort (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current letsplot
-          API
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Expert ggplot2-style grammar: geom_segment for bars, geom_vline
-          for reference, geom_text for annotations, scale_color_manual, theme() with
-          element functions'
+        comment: Standard grammar-of-graphics usage
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
         passed: false
-        comment: Uses theme-adaptive styling, ggsize(), ggsave() with scale, HTML
-          export. Competent but silhouette plot logic is universal across libraries
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
 impl_tags:
   dependencies:
   - sklearn
