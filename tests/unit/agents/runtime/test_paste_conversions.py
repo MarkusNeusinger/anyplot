@@ -16,7 +16,8 @@ import pytest
 
 from agents.anyplot import paste_conversions
 from agents.anyplot.agent import session_context
-from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.conversions import RowNumbers, candidates
+from agents.anyplot.data.parse import DATE_FORMS, parse_dataset
 from agents.anyplot.data.store import DatasetStore, StoreFull
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import JudgeVerdict
@@ -165,6 +166,48 @@ class TestMakeConversions:
         assert made is not None and made.outcome == "index"
         assert {binding.role: binding.column for binding in made.version.bindings} == {"x": "index", "y": "value"}
 
+    @pytest.mark.parametrize(
+        ("cells", "why"),
+        [
+            (
+                ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04"],
+                f"column 'day' looks like dates, but 4 of 4 cells would not read: {DATE_FORMS}",
+            ),
+            (
+                ["1st March 2026", "2nd March 2026", "3rd March 2026", "4th March 2026"],
+                f"column 'day' looks like dates, but 4 of 4 cells would not read: {DATE_FORMS}",
+            ),
+            (
+                ["2026-03-01 10:00:00 UTC", "2026-03-02 10:00:00 UTC", "2026-03-03 10:00:00 UTC"],
+                f"column 'day' looks like dates, but 3 of 3 cells would not read: {DATE_FORMS}",
+            ),
+            (
+                ["2026-03-01T10:00Z", "2026-03-02T10:00", "2026-03-03T10:00Z", "2026-03-04T10:00"],
+                "would be refused: column 'day' holds 2 cells with a UTC offset and 2 cells without one",
+            ),
+        ],
+    )
+    def test_row_numbers_beside_dates_that_would_not_read_wait_for_a_yes(self, cells: list[str], why: str) -> None:
+        """The user may mean those dates for `x`: the server numbers no rows, and the line stays for the root's one
+        question, with why the dates would not read."""
+        text = "day,orders\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
+        store, view = pasted(text, "line-basic")
+
+        assert make_conversions(store, SID, view, view.snapshot) is None
+        assert len(store) == 1  # the paste alone
+        stored = store.get(view.dataset_id or "", SID)
+        assert stored is not None
+        [line] = candidates(
+            view.bindings,
+            view.snapshot.roles(),
+            stored.profile,
+            stored.as_parsed(),
+            keep_text=stored.text_columns,
+            cache=stored.dry_runs,
+        )
+        assert isinstance(line, RowNumbers) and not line.certain
+        assert why in line.line()
+
     def test_a_column_of_ranges_fills_both_bounds(self) -> None:
         store, view = pasted(RANGES, "range-interval")
 
@@ -220,16 +263,12 @@ class TestMakeConversions:
     def test_days_with_a_utc_offset_are_never_read_as_dates_unasked(self, spec: str, text: str) -> None:
         """The cells stay as written, and only a request reads their days: pandas alone reads `-05:00` as 05:00 and the
         hour labels `-00` to `-03` as one date four times, a reading that would rate the conversion certain. On
-        `line-basic` the hour labels, which no reading takes, leave `x` to the row numbers, as any text column does."""
+        `line-basic` the hour labels, which no reading takes, look like dates that would not read, so the row numbers
+        for `x` wait for a yes as well (`prepare.unread_dates`)."""
         store, view = pasted(text, spec)
 
-        made = make_conversions(store, SID, view, view.snapshot)
-
-        if made is None:
-            assert len(store) == 1  # the paste alone
-        else:
-            assert spec == "line-basic" and text.startswith("hour,")
-            assert made.record.operations == [{"op": "row_number", "name": "index"}]
+        assert make_conversions(store, SID, view, view.snapshot) is None
+        assert len(store) == 1  # the paste alone
 
     @pytest.mark.parametrize(
         "cells",
