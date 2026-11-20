@@ -309,7 +309,7 @@ A re-review of the same staging after the review's header commit, such as a manu
 
 #### Canvas gate
 
-Every render is 3200 × 1800 (landscape) or 2400 × 2400 (square), within 16 px. `impl-review.yml` checks that in "Canvas dimension gate", before the review, on both theme renders: `plot-light.png` and `plot-dark.png` must each sit on a canonical canvas, and both on the same one. The JavaScript libraries get the same check: their render harness owns the pixels, so only the repair hint differs.
+Every render must be 3200 × 1800 (landscape) or 2400 × 2400 (square), within 16 px. `impl-review.yml` checks that in "Canvas dimension gate", before the review, on both theme renders: `plot-light.png` and `plot-dark.png` must each sit on a canonical canvas, and both on the same one. The JavaScript libraries get the same check: their render harness owns the pixels, so only the repair hint differs.
 
 When a render misses, the step writes one defect line per render that missed to `/tmp/anyplot-canvas-gate.txt`. Each line names the actual size, the target, the signed delta, and the likely cause. The render tag says which render failed:
 
