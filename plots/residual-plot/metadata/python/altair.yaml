@@ -2,49 +2,60 @@ library: altair
 language: python
 specification_id: residual-plot
 created: '2025-12-26T19:35:59Z'
-updated: '2026-05-10T09:01:38Z'
-generated_by: claude-haiku
-workflow_run: 25624569771
+updated: '2026-11-20T17:20:13Z'
+generated_by: claude-sonnet
+workflow_run: 44781294736
 issue: 2332
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 85
 review:
   strengths:
-  - Perfect visual quality across both light and dark themes with no legibility issues
-  - Comprehensive residual plot with diagnostic elements (reference line, confidence
-    bands, trend curve, outlier highlighting)
-  - Excellent use of Altair's distinctive features (transform_loess, layer composition,
-    declarative theming)
-  - Clean, reproducible code with proper structure and no unnecessary complexity
-  - Realistic, neutral data scenario that demonstrates all plot capabilities
-  - Proper theme adaptation with identical data colors across renders and correct
-    chrome adaptation
+  - 'Every element the spec''s Notes ask for is drawn from the plotted data: dashed
+    zero line across the full fitted range, ±2σ rules computed from the residuals''
+    standard deviation (±29.7k, symmetric), a Vega-Lite transform_loess trend, and
+    >2σ residuals recolored to Imprint red #AE3030 against the Imprint green #009E73
+    bulk'
+  - Filled markers at opacity 0.7 make pile-ups in the dense middle read darker in
+    both themes, and the 150 points stay clearly separable
+  - The zero line (1.2 px, long dash) is visually heavier than the ±2σ rules (0.8
+    px, short dash, 0.8 opacity), so the reference and the thresholds read at different
+    weights
+  - x scale with zero=False frames the fitted range (200k–550k) instead of padding
+    the axis from 0
+  - Theme tokens reach every chrome element (title, axes, grid, legend panel); both
+    renders are fully legible and data colors are identical across themes
+  - 'Idiomatic Altair: escaped column constants with explicit type= and title=, alt.layer
+    composition, and formatted tooltips ('',.0f'') for the HTML view'
   weaknesses:
-  - 'Aesthetic sophistication is functional rather than exceptional (DE-01: 4/8) —
-    could benefit from more distinctive visual treatment or custom styling beyond
-    default configuration'
-  - 'Visual storytelling emphasis could be stronger (DE-03: 4/6) — consider adding
-    subtle emphasis techniques to highlight the diagnostic insight more prominently'
+  - 'VQ-05 (both): the nice x scale runs to about 550,000 while the last fitted value
+    is about 515,000, leaving roughly the right 10 % of the plot area empty with an
+    unlabeled 540,000 tick → end the domain near the data (about −35,000 on the domain
+    max). Likely cause: alt.Scale(nice=True, zero=False) on the x encoding rounding
+    up to the next 50k step; use nice=False or an explicit domain from df[Y_PRED].min()/max().'
+  - 'Suggestion: a short direct label on the LOESS curve ("LOESS trend") would tell
+    first-time readers what the black/white line is without the legend.'
+  - 'Suggestion: the grid at 20k/10k steps is fairly dense; fewer y ticks (tickCount)
+    would quiet the background behind the cloud.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 - correct for light theme
-      Chrome: Title "residual-plot · altair · anyplot.ai" in dark text (INK token), axis labels "Fitted Values ($)" and "Residuals ($)" clearly visible, tick labels in INK_SOFT (#4A4A44) providing good contrast. Legend titled "Point Type" positioned on right with readable labels.
-      Data: Green markers (#009E73) represent normal residuals, orange markers (#D55E00) highlight outliers. LOWESS smoothing curve in dark color traces trend. Zero-reference line and ±2σ bands rendered with INK_SOFT color and dashed style. All markers visible with appropriate opacity (0.7).
-      Legibility verdict: PASS - All text is clearly readable against light background with excellent contrast
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas (padded evenly around the vl-convert output).
+      Chrome: centered bold title "residual-plot · python · altair · anyplot.ai" in dark ink; axis titles "Fitted price ($)" and "Residual ($)" in dark ink, tick labels (200,000–520,000 every 40k; −40,000–50,000 every 10k) in dark-grey INK_SOFT; subtle grid; legend panel at top right on an elevated #FFFDF6 box titled "Point type" with "Normal" and "Outlier (>2σ)". All text readable.
+      Data: 150 filled circles at opacity 0.7 — 142 in Imprint green #009E73, 8 outliers in Imprint red #AE3030 beyond the ±2σ dashed rules at about ±29.7k; long-dashed zero line across the whole x range; solid black LOESS curve dipping to about −14k near 400k and rising at both ends (the convex misfit). x domain extends to ~550k, leaving a narrow empty strip right of the last points.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17 - correct for dark theme
-      Chrome: Title in light text (INK token #F0EFE8), axis labels clearly visible, tick labels in INK_SOFT (#B8B7B0) with strong contrast against dark background. No dark-on-dark failures detected. Legend maintains clarity and positioning.
-      Data: Green markers (#009E73) are identical to light render (same #009E73 color), orange markers (#D55E00) are identical. LOWESS curve and reference bands render in neutral light gray tones, clearly distinguishable from dark background. All data elements are identical in color to light render, confirming proper theme adaptation.
-      Legibility verdict: PASS - All text is clearly readable against dark background with no dark-on-dark failures. Data colors are identical to light render, proving proper theme-only chrome adaptation.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink #F0EFE8, tick labels in light-grey INK_SOFT, grid subtle but visible, legend panel #242420 with light text and light border. No dark-on-dark text.
+      Data: identical green #009E73 and red #AE3030 points (red reads somewhat dimmer at 0.7 opacity on dark but stays distinct); zero line and ±2σ rules light grey; LOESS curve in near-white. Same layout as light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,52 +63,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
-          perfectly readable in both light and dark themes
+        comment: Font sizes set at the library prompt's reference (title 16, axis
+          titles 12, ticks/legend 10 at scale 4); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements properly positioned with no overlapping collisions
+        comment: No text collisions; legend outside the plot; point overlap in the
+          dense middle is permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and lines optimally sized for 150-point data density with
-          alpha=0.7 transparency
+        comment: Filled size-50 markers at 0.7 opacity suit 150 points; legend glyphs
+          match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides CVD-safe contrast, sufficient hue distinction
-          between categories
+        comment: Green vs red outliers also separated by position beyond the ±2σ rules,
+          so color is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Perfect 4800×2700px landscape format with 60-70% canvas utilization
-          and balanced margins
+        comment: Canonical 3200x1800 canvas and balanced proportions; x domain overshoots
+          the data to ~550k leaving ~10% empty (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Fitted Values ($)'' and ''Residuals
-          ($)'''
+        comment: '''Fitted price ($)'' and ''Residual ($)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect compliance: first series #009E73, second series #D55E00,
-          backgrounds #FAF8F1 (light)/#1A1A17 (dark), chrome properly themed in both
-          renders, data colors identical across themes'
+        comment: 'First series Imprint #009E73, outliers Imprint red #AE3030; backgrounds
+          #FAF8F1/#1A1A17; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -105,23 +115,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured Okabe-Ito palette and clean typography, but lacks
-          exceptional custom design or distinctive visual treatment beyond default
-          requirements
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good refinement: LOWESS line adds visual interest, ±2σ bands provide
-          diagnostic value, subtle grid (opacity 0.10), thoughtful alpha blending'
+        comment: 'Chosen line hierarchy: zero line heavier/long-dashed vs lighter
+          short-dashed ±2σ rules at 0.8 opacity; view stroke removed'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear visual hierarchy: LOWESS trend guides the eye, color-coded
-          outliers emphasize diagnosis, realistic housing scenario supports interpretation'
+        passed: false
+        comment: LOESS curve and outlier coloring are the spec's Notes; no further
+          focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct residual plot with all required variants: scatter, reference
-          line, bands, smoothing curve, outlier highlighting'
+        comment: Residuals vs fitted scatter; all layers are ones the Notes ask for
+          or allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features implemented: zero reference line, ±2σ bands, LOWESS
-          curve, color-coded outliers (>2σ), alpha transparency'
+        comment: Zero line across full range (C2), alpha on points (C3), outliers
+          recolored (C4), LOESS and symmetric ±2σ bands from the plotted residuals
+          (C5), one point per observation (C1)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, axes show all data without clipping or distortion
+        comment: Residual on y vs fitted on x; all points at computed values; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'residual-plot · altair · anyplot.ai' correct, legend
-          title and labels match data
+        comment: Title 'residual-plot · python · altair · anyplot.ai'; legend 'Point
+          type' with Normal / Outlier (>2σ)
     data_quality:
       score: 15
       max: 15
@@ -162,22 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: normal residuals, outliers, non-linearity pattern,
-          heteroscedasticity indication through curved LOWESS'
+        comment: Shows non-linear misfit (curved LOESS), a bulk around zero and 8
+          outliers beyond 2σ
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price regression scenario is realistic (house size 1000-3000
-          sq ft), neutral, and comprehensible with plausible values
+        comment: House-price linear model on square footage; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematically correct residual calculations, standard 2σ outlier
-          threshold, realistic residual proportions relative to fitted values
+        comment: Prices 200k–515k, residual noise sd 15k; checked in code that bands
+          = 2·std(residuals) and are symmetric (±29.7k on the axis). No Check values
+          in the Notes
     code_quality:
       score: 10
       max: 10
@@ -187,63 +197,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → constants → data generation → plot creation
-          → save, no unnecessary functions or classes'
+        comment: Linear zones, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set with np.random.seed(42) ensuring deterministic output
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, altair, numpy, pandas - no unused dependencies'
+        comment: os, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with appropriate complexity, no over-engineering
-          or fake functionality
+        comment: LOESS via native transform_loess; outlier flag via np.where; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png with scale_factor=3.0 and plot-{THEME}.html
-          for interactivity'
+        comment: plot-{THEME}.png (padded to 3200x1800) and plot-{THEME}.html; Altair
+          6 API
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert-level Altair patterns: alt.layer() for composition, theme-adaptive
-          configure methods, declarative encoding'
+        comment: alt.layer composition, typed encodings with escaped fields, formatted
+          alt.Tooltip entries, configure_* theming
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Uses Altair-specific features: transform_loess() for trend calculation,
-          layer composition for complex multi-element plots, environment-variable
-          theming pattern'
+        comment: Vega-Lite transform_loess computes the smoother in-spec; tooltips
+          in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-20T17:16:20Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - grid-styling
