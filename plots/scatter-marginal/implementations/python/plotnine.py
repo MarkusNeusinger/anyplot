@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-marginal: Scatter Plot with Marginal Distributions
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-09
 """
 
 import os
@@ -33,22 +32,27 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-SCATTER_COLOR = "#009E73"  # Brand green (position 1)
-MARGINAL_COLOR = "#C475FD"  # Vermillion (position 2)
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+SCATTER_COLOR = IMPRINT_PALETTE[0]
+MARGINAL_COLOR = IMPRINT_PALETTE[1]
 
-# Data - Bivariate data with correlation
-np.random.seed(42)
+# Columns
+STUDY_HOURS = "Study Hours per Week"  # role: x
+EXAM_SCORE = "Exam Score (%)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+rng = np.random.default_rng(42)
 n = 200
-study_hours = np.random.normal(25, 8, n)
-study_hours = np.clip(study_hours, 5, 45)
-exam_score = 35 + 1.5 * study_hours + np.random.normal(0, 8, n)
-exam_score = np.clip(exam_score, 30, 100)
-df = pd.DataFrame({"study_hours": study_hours, "exam_score": exam_score})
+hours = np.clip(rng.normal(25, 8, n), 5, 45)
+score = np.clip(35 + 1.5 * hours + rng.normal(0, 8, n), 30, 100)
+df = pd.DataFrame({STUDY_HOURS: hours, EXAM_SCORE: score})
 
-# Layout dimensions for 4800x2700 output
-main_w, main_h = 12, 6.5
-marg_w, marg_h = 4, 2.5
+# Plot
+# Shared axis limits so the marginals align with the scatter
+x_lim = (0, df[STUDY_HOURS].max() * 1.12)
+y_lim = (df[EXAM_SCORE].min() - 5, df[EXAM_SCORE].max() * 1.05)
+title = "scatter-marginal · python · plotnine · anyplot.ai"
 
 # Shared theme - L-shaped spine (left + bottom only)
 base_theme = theme_minimal() + theme(
@@ -66,13 +70,12 @@ base_theme = theme_minimal() + theme(
 
 # Top histogram (x distribution)
 top_hist = (
-    ggplot(df, aes(x="study_hours"))
+    ggplot(df, aes(x=STUDY_HOURS))
     + geom_histogram(bins=15, fill=MARGINAL_COLOR, color=INK_SOFT, alpha=0.7, size=0.3)
-    + scale_x_continuous(limits=(0, 50))
-    + labs(x="", y="", title="scatter-marginal · plotnine · anyplot.ai")
+    + scale_x_continuous(limits=x_lim)
+    + labs(x="", y="", title=title)
     + base_theme
     + theme(
-        figure_size=(main_w, marg_h),
         axis_text_x=element_blank(),
         axis_ticks_major_x=element_blank(),
         axis_ticks_minor_x=element_blank(),
@@ -88,14 +91,13 @@ top_hist = (
 
 # Right histogram (y distribution)
 right_hist = (
-    ggplot(df, aes(x="exam_score"))
+    ggplot(df, aes(x=EXAM_SCORE))
     + geom_histogram(bins=15, fill=MARGINAL_COLOR, color=INK_SOFT, alpha=0.7, size=0.3)
     + coord_flip()
-    + scale_x_continuous(limits=(30, 105))
+    + scale_x_continuous(limits=y_lim)
     + labs(x="", y="")
     + base_theme
     + theme(
-        figure_size=(marg_w, main_h),
         axis_text_y=element_blank(),
         axis_ticks_major_y=element_blank(),
         axis_ticks_minor_y=element_blank(),
@@ -111,22 +113,20 @@ right_hist = (
 
 # Main scatter plot
 scatter_plot = (
-    ggplot(df, aes(x="study_hours", y="exam_score"))
+    ggplot(df, aes(x=STUDY_HOURS, y=EXAM_SCORE))
     + geom_point(size=3.5, alpha=0.6, color=SCATTER_COLOR)
-    + scale_x_continuous(limits=(0, 50))
-    + scale_y_continuous(limits=(30, 105))
-    + labs(x="Study Hours per Week", y="Exam Score (%)")
+    + scale_x_continuous(limits=x_lim)
+    + scale_y_continuous(limits=y_lim)
+    + labs(x=STUDY_HOURS, y=EXAM_SCORE)
     + base_theme
-    + theme(figure_size=(main_w, main_h))
 )
 
 # Spacer
-spacer = plot_spacer() + theme(figure_size=(marg_w, marg_h))
+spacer = plot_spacer() + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
-# Compose layout
-composed = (top_hist | spacer) / (scatter_plot | right_hist)
+# Compose layout: 16 x 9 in at 200 dpi = 3200 x 1800 px, panels aligned on shared axes
+composed = ((top_hist | spacer) / (scatter_plot | right_hist)) & theme(figure_size=(16, 9))
 
 # Save
 fig = composed.draw()
-fig.set_size_inches(16, 9)
-fig.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.savefig(f"plot-{THEME}.png", dpi=200, facecolor=PAGE_BG)
