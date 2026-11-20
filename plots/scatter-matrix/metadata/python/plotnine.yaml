@@ -12,35 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 67
 review:
   strengths:
-  - Perfect spec compliance with all required scatter matrix features present
-  - Excellent visual quality with readable text in both light and dark themes
-  - Proper theme-adaptive styling with all chrome elements correctly colored
-  - Clean, idiomatic plotnine code using appropriate high-level APIs
-  - Good data quality with realistic iris-like dataset and plausible distributions
-  - Proper transparency and point sizing for effective multivariate visualization
+  - facet_grid('var_y ~ var_x', scales='free') gives each column one x range and each
+    row one y range
+  - Native geom_density per species on the diagonal layered via data=
+  - 'Imprint palette with #009E73 first and theme-correct chrome in both renders'
   weaknesses:
-  - Design excellence is professional but not exceptional—faceted layout follows standard
-    patterns without unique visual refinement
-  - Limited custom visual hierarchy beyond default color encoding by species
-  - Typography and styling could be more deliberately refined to elevate visual storytelling
+  - 'VQ-05 (both): the canvas is 4200x4200 instead of 2400x2400, rows are separated
+    by gaps about as tall as the cells and the legend floats isolated at the far right
+    → 2400x2400 with the legend next to the grid (-1800 px each side). Likely cause:
+    figure_size=(14, 14) and save(dpi=300, width=14, height=14).'
+  - 'VQ-02, SC-02 (both): the Sepal Width column''s x tick labels run together into
+    ''2.02.53.03.54.04.5'' → 2-3 ticks per cell. Likely cause: default breaks at axis_text
+    size 16 in narrow cells.'
+  - 'VQ-03, SC-02 (both): 150 points per cell drawn at size 3.5, alpha 0.7 merge into
+    opaque blobs, and the diagonal densities are slivers at the bottom of their cells
+    → points about size 1 at alpha 0.5-0.6 and densities scaled to the cell. Likely
+    cause: geom_point(size=3.5, alpha=0.7) and geom_density on the row''s shared y
+    scale.'
+  - 'SC-03, SC-02 (both): the diagonal densities share the row''s variable axis, stretching
+    rows 1-2 down to 0 so the scatter clouds occupy only the upper half of their cells
+    and density is read on a cm axis → draw the diagonal curves rescaled into the
+    variable''s own range. Likely cause: geom_density on facet_grid with the row''s
+    y scale.'
+  - 'SC-02 (both): variable names appear on the top and right strips instead of along
+    the left and bottom edges as the Notes ask → strips at left and bottom. Likely
+    cause: facet_grid without switch=''both''.'
+  - 'SC-04 (both): the title ''scatter-matrix · plotnine · anyplot.ai'' lacks the
+    language segment → ''scatter-matrix · python · plotnine · anyplot.ai''. Likely
+    cause: labs(title=...) string.'
+  - 'CQ-04 (code): lines 63-77 build the long frame row by row in a triple Python
+    loop over every observation, and the palette comment says ''Okabe-Ito'' above
+    Imprint values → one comprehension of pd.DataFrame blocks passed to pd.concat,
+    and a correct comment. Likely cause: scalar iloc loop.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme background
-      Chrome: Title, axis labels, tick labels all in dark INK (#1A1A17) - excellent readability against light background
-      Data: Three species color-encoded with Okabe-Ito palette (green #009E73, orange #D55E00, blue #0072B2). Scatter points use alpha=0.7 for transparency. Diagonal KDE distributions clearly visible.
-      Legibility verdict: PASS - All text elements are readable, no light-on-light failures
+      Background: warm off-white #FAF8F1; the canvas is 4200x4200.
+      Chrome: bold title 'scatter-matrix · plotnine · anyplot.ai'; column strips (Sepal Length/Width, Petal Length/Width (cm)) on top, row strips on the right; large tick labels in INK_SOFT; panel borders and faint grid; legend 'Species' boxed at the far right, vertically centred. Text dark and readable, but the Sepal Width column's x tick labels run together ('2.02.53.03.54.04.5').
+      Data: 4x4 grid of tall narrow cells with wide gaps between rows; scatter points large (size 3.5, alpha 0.7) in setosa #009E73, versicolor #C475FD, virginica #4467A3, merging into blobs; diagonal densities drawn on the row's y axis, so the top-left density is a sliver at the bottom of a 0-8 axis and the row's scatter clouds sit in the upper half.
+      Legibility verdict: PASS (overlapping ticks noted under VQ-02)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme background
-      Chrome: Title, axis labels, tick labels all in light INK (#F0EFE8) - clear readability on dark surface, no dark-on-dark failures
-      Data: Identical colors to light render (only chrome flipped). Scatter points and KDE curves clearly visible and distinguishable from dark background.
-      Legibility verdict: PASS - All text elements readable, proper contrast throughout, no theme-adaptation failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, strips and ticks in light ink; legend box on #242420 with light text; no dark-on-dark text.
+      Data: same green / lilac / blue as the light render.
+      Legibility verdict: PASS (same tick overlap as light)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 20
       max: 30
       items:
       - id: VQ-01
@@ -48,68 +69,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: All sizes set explicitly; text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Clean grid layout with no overlapping elements
+        passed: false
+        comment: Sepal Width column's x tick labels overlap into an unreadable string
+          (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Data points visible with appropriate alpha, distributions clear
+        passed: false
+        comment: Markers too large for 150 points per cell; diagonal densities squashed
+          to slivers (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with good contrast
+        comment: Hues differ in lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 14×14 figure size appropriate for 4×4 grid, proper spacing
+        passed: false
+        comment: Canvas 4200x4200 instead of 2400x2400; wide row gaps; legend isolated
+          at the far right (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, clear title
+        comment: Variable names with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct Okabe-Ito order, theme-correct backgrounds'
+        comment: 'First series #009E73, Imprint order, theme-correct chrome'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional polish with intentional hierarchy, good use of transparency
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Styled panel borders, subtle grids, generous whitespace
+        comment: Baseline grid and borders, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy with diagonal vs off-diagonal, color guides
-          viewer
+        comment: Data displayed, no chosen hierarchy
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -117,25 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot matrix structure
+        comment: Scatter matrix with density diagonal
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Diagonal distributions + off-diagonal scatter + color by category
+        passed: false
+        comment: 'C3 missed: names on top/right, crowded ticks; C4: large points and
+          squashed diagonal hide cloud shapes (defect lines)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X/Y correct, symmetric matrix, all variables shown
+        passed: false
+        comment: Diagonal density values share the row's variable axis, stretching
+          it to 0 (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Format correct, legend labels match
+        passed: false
+        comment: Title lacks the language segment (defect line); legend correct
     data_quality:
       score: 15
       max: 15
@@ -145,21 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four variables with full pairwise coverage
+        comment: Separated and overlapping groups, differing distributions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris-like data, plausible distributions, neutral
+        comment: 'Iris flower measurements: real, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values, appropriate point count per species
+        comment: 'Checked axis ranges: sepal length 4-8 cm, petal length 1-7 cm, petal
+          width 0-2.7 cm match iris'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -167,48 +193,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No extraneous functions or classes
+        comment: No functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (42), deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI
+        passed: false
+        comment: Row-by-row triple loop builds the long frame (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, current API
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Proper grammar of graphics, facet_grid correctly applied
+        comment: facet_grid and geom_density used correctly
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
         passed: true
-        comment: Good use of faceting and geom_density, somewhat standard approach
+        comment: Generic faceting
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies: []
   techniques:
