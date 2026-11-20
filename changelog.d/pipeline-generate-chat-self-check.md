@@ -23,4 +23,4 @@
   gate stays the only thing that decides. `line_map` moves from
   `core/smoke_run.py` to `core/utils.py` and maps a line the tool only
   re-indented inside a replaced region to that line, for the smoke run's
-  error lines too.
+  error lines too. (#13279)
