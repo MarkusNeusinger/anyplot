@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-timeseries: Time Series Line Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-09
@@ -14,74 +14,73 @@ import plotly.graph_objects as go
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"  # Okabe-Ito position 1
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # Imprint palette position 1
 
-# Data - Stock prices with uptrend
-np.random.seed(42)
+# Columns
+DATE = "Date"  # role: date
+PRICE = "Stock Price ($)"  # role: value
+
+# Data - daily stock prices with uptrend
+rng = np.random.default_rng(42)
 dates = pd.date_range(start="2024-01-01", end="2024-12-31", freq="D")
 days = np.arange(len(dates))
-trend = 100 + 0.15 * days
-volatility = 5 * np.sin(2 * np.pi * days / 60)
-noise = np.random.randn(len(dates)) * 2
-prices = trend + volatility + noise
+prices = 100 + 0.15 * days + 5 * np.sin(2 * np.pi * days / 60) + rng.normal(0, 2, len(dates))
+df = pd.DataFrame({DATE: dates, PRICE: prices})
 
-df = pd.DataFrame({"date": dates, "price": prices})
-
-# Create plot
+# Plot
 fig = go.Figure()
-
 fig.add_trace(
     go.Scatter(
-        x=df["date"],
-        y=df["price"],
+        x=df[DATE],
+        y=df[PRICE],
         mode="lines",
-        line={"color": BRAND, "width": 3},
-        name="Stock Price",
+        line={"color": BRAND, "width": 2.5},
         hovertemplate="Date: %{x|%b %d, %Y}<br>Price: $%{y:.2f}<extra></extra>",
     )
 )
 
-# Layout for 4800x2700 px
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
     title={
-        "text": "line-timeseries · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "line-timeseries · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Date", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": DATE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickformat": "%b %Y",
         "dtick": "M1",
+        "showgrid": True,
         "gridcolor": GRID,
         "gridwidth": 1,
-        "showgrid": True,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
-        "rangeslider": {"visible": True, "thickness": 0.05},
+        "rangeslider": {"visible": True, "thickness": 0.06},
     },
     yaxis={
-        "title": {"text": "Stock Price ($)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": PRICE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "showgrid": True,
         "gridcolor": GRID,
         "gridwidth": 1,
-        "showgrid": True,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"l": 100, "r": 80, "t": 120, "b": 100},
+    margin={"l": 70, "r": 40, "t": 60, "b": 50},
     showlegend=False,
     hovermode="x unified",
 )
 
-# Save as PNG (4800x2700 px) and HTML
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
