@@ -269,6 +269,51 @@ class TestRepairPushGate:
         assert result.returncode == 1
         assert repo.read("output").startswith(f"gate={IMPL} in the workspace is not the pushed file")
 
+    @staticmethod
+    def _push_elsewhere(repo: Repo, files: dict[str, str], base: str = "") -> None:
+        """Another run or a person pushes to the branch (from `base`, force, when given)."""
+        other = repo.tmp / "other"
+        env = _git_env(repo.tmp)
+        subprocess.run(["git", "clone", "-q", "-b", BRANCH, str(repo.origin), str(other)], check=True, env=env)
+
+        def git(*args: str) -> None:
+            subprocess.run(
+                ["git", "-C", str(other), "-c", "user.name=o", "-c", "user.email=o@o", *args], check=True, env=env
+            )
+
+        if base:
+            git("reset", "-q", "--hard", base)
+        for path, text in files.items():
+            (other / path).parent.mkdir(parents=True, exist_ok=True)
+            (other / path).write_text(text, encoding="utf-8")
+        git("add", "-A")
+        git("commit", "-q", "-m", "pushed meanwhile")
+        git("push", "-q", *(["-f"] if base else []), "origin", f"HEAD:refs/heads/{BRANCH}")
+
+    def test_a_push_refused_because_the_branch_moved_fails(self, tmp_path, shell):
+        """Even when the commit that landed meanwhile holds the very same file."""
+        repo = Repo(tmp_path)
+        repaired = CODE.format(score="72/100", x=2)
+        repo.commit({IMPL: repaired}, "fix: repair")
+        self._push_elsewhere(repo, {IMPL: repaired})
+        result = self._gate(repo, shell)
+        assert result.returncode == 1
+        assert repo.read("output").startswith(f"gate={BRANCH} is at ")
+        assert "the repair's push did not land" in repo.read("output")
+
+    def test_a_branch_rewritten_under_the_repair_fails(self, tmp_path, shell):
+        repo = Repo(tmp_path)
+        repaired = CODE.format(score="72/100", x=2)
+        repo.commit({IMPL: repaired}, "fix: repair")
+        self._push_elsewhere(repo, {IMPL: repaired}, base=repo.workflow_sha)
+        repo.git("fetch", "-q", "origin")
+        repo.git("reset", "-q", "--hard", f"origin/{BRANCH}")
+        result = self._gate(repo, shell)
+        assert result.returncode == 1
+        assert repo.read("output") == (
+            f"gate={BRANCH} no longer descends from {repo.start_sha[:7]}, the commit the repair started from\n"
+        )
+
     def test_an_unknown_start_fails_closed(self, tmp_path, shell):
         repo = Repo(tmp_path)
         repo.commit({IMPL: CODE.format(score="72/100", x=2)}, "fix: repair")
@@ -354,6 +399,7 @@ def test_repair_records_render_freshness_without_failing(tmp_path, shell, ages, 
 )
 def test_a_failed_gate_is_named_in_the_crash_comment(tmp_path, markers, expected):
     env = {"PR_NUM": "7", "SPEC_ID": "spec-a", "LIBRARY": "plotly", "ATTEMPT": "2", "MODEL": "sonnet"}
+    env["GUARD_ALLOWED"] = "true"  # the guard step passed the pull request
     script = str(_step("impl-repair.yml", "Handle repair failure")["run"])
     result, calls = _run(script, tmp_path, tmp_path, REPOSITORY="o/r", RUN_ID="1", GH_MARKERS=markers, GATE="G1", **env)
     assert result.returncode == 0, result.stdout + result.stderr
@@ -376,6 +422,7 @@ def test_a_failed_gate_is_named_in_the_crash_comment(tmp_path, markers, expected
 def test_a_failed_hash_write_is_named_in_the_crash_comment(tmp_path, env, named):
     """ "Stage the render hash" failed after every gate passed: the comment says so instead of blaming Claude."""
     base = {"PR_NUM": "7", "SPEC_ID": "spec-a", "LIBRARY": "plotly", "ATTEMPT": "2", "MODEL": "sonnet", "GATE": ""}
+    base["GUARD_ALLOWED"] = "true"  # the guard step passed the pull request
     script = str(_step("impl-repair.yml", "Handle repair failure")["run"])
     result, calls = _run(script, tmp_path, tmp_path, REPOSITORY="o/r", RUN_ID="1", GH_MARKERS="0", **{**base, **env})
     assert result.returncode == 0, result.stdout + result.stderr

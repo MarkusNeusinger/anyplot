@@ -567,8 +567,10 @@ class TestReviewFreeWiring:
     def test_a_review_free_failure_before_the_verdict_is_re_dispatched(self):
         """Without it, a failed carried label or early verdict left the PR with no verdict and no retry."""
         step = _step("impl-review.yml", RESCUE)
+        # Also after a refused write-back on a branch that moved (head_moved).
         assert step["if"] == (
-            "failure() && steps.early_verdict.conclusion != 'success' && "
+            "failure() && (steps.metadata.outputs.head_moved == 'true' || "
+            "steps.early_verdict.conclusion != 'success') && "
             "((steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') "
             f"|| {REVIEW_FREE})"
         )

@@ -501,7 +501,10 @@ jobs:
         run: |
           # If any PR is open that touches plots/{spec}/, skip the polish step
           # to avoid racing against human edits or stacking auto-polish PRs.
-          # Similarity audit still runs — it's read-only.
+          # Similarity audit still runs — it's read-only. Every open pull
+          # request counts, one from a fork included: this listing only holds
+          # the polish back and never acts on a pull request, and an outside
+          # contributor's open edit is one the polish could race.
           OPEN=$(gh pr list \
             --repo "${{ github.repository }}" \
             --search "plots/${SPEC_ID}/ in:files is:open" \
@@ -670,6 +673,8 @@ jobs:
 
       - name: Collect change_requests
         id: collect
+        env:
+          SPEC_ID: ${{ matrix.spec_id }}
         run: |
           # Default to empty object if the audit never wrote a file (e.g.
           # fewer than 2 metadata files exist).
@@ -687,7 +692,7 @@ jobs:
           CR_COMPACT=$(echo "$CR" | jq -c '.')
           echo "change_requests=${CR_COMPACT}" >> "$GITHUB_OUTPUT"
           flagged=$(echo "$CR_COMPACT" | jq 'length')
-          echo "::notice::change_requests for ${{ matrix.spec_id }}: ${flagged} lib(s) flagged — ${CR_COMPACT}"
+          echo "::notice::change_requests for ${SPEC_ID//[^a-z0-9-]/}: ${flagged} lib(s) flagged — ${CR_COMPACT}"
 
       # Claude stopped a pre-flight session (a spend or usage limit, or
       # refused credentials): every generation dispatched now would be
@@ -698,8 +703,11 @@ jobs:
       # and its pairs stay in the queue for a later night.
       - name: Stop when Claude stopped the session
         if: ${{ steps.polish_cost.outputs.stopped == 'true' || steps.similarity_cost.outputs.stopped == 'true' }}
+        env:
+          STOP_REASON: ${{ steps.polish_cost.outputs.stop_reason || steps.similarity_cost.outputs.stop_reason }}
+          SPEC_ID: ${{ matrix.spec_id }}
         run: |
-          echo "::error::Claude stopped the pre-flight (${{ steps.polish_cost.outputs.stop_reason || steps.similarity_cost.outputs.stop_reason }}); nothing dispatched for ${{ matrix.spec_id }}"
+          echo "::error::Claude stopped the pre-flight (${STOP_REASON//[^a-z_]/}); nothing dispatched for ${SPEC_ID//[^a-z0-9-]/}"
           exit 1
 
       - name: Dispatch bulk-generate with change_requests

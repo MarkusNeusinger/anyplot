@@ -29,6 +29,7 @@ import pytest
 import yaml
 
 from automation.scripts import review_retest
+from tests.unit.workflows.pr_guard_support import own_pr, stage_guard
 
 
 REPO_ROOT = Path(__file__).parent.parent.parent.parent
@@ -190,20 +191,20 @@ def _extract_inputs_script(
     *, library: str, model: str, label_trigger: bool, spec: str, regen_gate: str = "true"
 ) -> tuple[str, dict[str, str]]:
     dispatch = not label_trigger
-    context = {
-        "github.event_name": "workflow_dispatch" if dispatch else "issues",
-        "inputs.specification_id": spec if dispatch else "",
-        "inputs.library": library if dispatch else "",
-        "inputs.issue_number": "",
-        "inputs.model": model if dispatch else "",
-        "github.event.issue.number": "" if dispatch else "42",
-    }
+    # Every input and event value reaches the step through env:.
     env = {
+        "EVENT_NAME": "workflow_dispatch" if dispatch else "issues",
+        "SPEC_ID_INPUT": spec if dispatch else "",
+        "LIBRARY_INPUT": library if dispatch else "",
+        "ISSUE_INPUT": "",
+        "MODEL_INPUT": model if dispatch else "",
+        "REGEN_GATE_INPUT": regen_gate if dispatch else "",
+        "EVENT_ISSUE_NUMBER": "" if dispatch else "42",
         "LABEL_NAME": "" if dispatch else f"generate:{library}",
         "ISSUE_TITLE": "" if dispatch else f"[{spec}] Some plot",
         "REGEN_GATE": regen_gate,
     }
-    return _render(_step("impl-generate.yml", "Extract inputs")["run"], context), env
+    return _render(_step("impl-generate.yml", "Extract inputs")["run"], {}), env
 
 
 def _run_extract_inputs(
@@ -220,7 +221,8 @@ def _run_extract_inputs(
     script, env = _extract_inputs_script(
         library=library, model=model, label_trigger=label_trigger, spec=spec, regen_gate=regen_gate
     )
-    return _run_script(script, repo, tmp_path, **env)
+    stage_guard(tmp_path)
+    return _run_script(script, repo, tmp_path, RUNNER_TEMP=str(tmp_path), **env)
 
 
 def _create_pr_body(tmp_path: Path, *, model: str, **extra: str) -> str:
@@ -341,7 +343,8 @@ class TestImplGenerateRouting:
 
     def test_routing_fails_without_origin_main(self, repo_without_main, tmp_path):
         script, env = _extract_inputs_script(library="plotly", model="auto", label_trigger=False, spec="spec-a")
-        result = _exec(script, repo_without_main, tmp_path, **env)
+        stage_guard(tmp_path)
+        result = _exec(script, repo_without_main, tmp_path, RUNNER_TEMP=str(tmp_path), **env)
         assert result.returncode != 0
         assert "::error::origin/main unavailable — cannot route the model" in result.stdout
         assert "model" not in _outputs(tmp_path / "github_output")
@@ -412,9 +415,10 @@ def _run_review(
     review_input: str = "",
     review_payload: str = "",
 ) -> subprocess.CompletedProcess[str]:
-    """Run impl-review's "Extract PR info" step against a fake `gh`."""
-    pr = {"headRefName": f"implementation/spec-a/{library}", "headRefOid": "0" * 40, "body": body}
+    """Run impl-review's "Extract PR info" step against a fake `gh`, behind the staged guard."""
+    pr = own_pr(7, f"implementation/spec-a/{library}", body=body)
     path = _fake_gh(tmp_path, f"cat <<'EOF'\n{json.dumps(pr)}\nEOF\n")
+    stage_guard(tmp_path)
     # The step parks gh's output under $RUNNER_TEMP, never under /tmp, where the reviewer reads.
     script = _step("impl-review.yml", "Extract PR info")["run"]
     assert not any("/tmp/" in line for line in script.splitlines() if not line.lstrip().startswith("#"))
@@ -425,6 +429,7 @@ def _run_review(
         PATH=path,
         RUNNER_TEMP=str(tmp_path),
         GH_TOKEN="unused",
+        REPOSITORY="owner/repo",
         PR_NUMBER="7",
         MODEL_INPUT=model_input,
         MODEL_PAYLOAD=payload,
@@ -472,9 +477,13 @@ class TestImplReviewModel:
         assert outputs["model"] == expected
 
     def test_library_match_is_exact(self, repo, tmp_path):
-        # "d3" is on main; a library whose name only starts the same is not.
+        # "d3" is on main. A name that only starts the same is no registered
+        # library, so the guard refuses it before the routing could mistake it.
         assert _review_model(repo, tmp_path, library="d3") == "sonnet"
-        assert _review_model(repo, tmp_path, library="d") == "opus"
+        result = _run_review(repo, tmp_path, library="d")
+        assert result.returncode == 1
+        assert "::error::PR #7 refused (unknown_library)" in result.stdout
+        assert _outputs(tmp_path / "github_output") == {}
 
     @pytest.mark.parametrize(("library", "pinned"), [("plotly", "haiku"), ("matplotlib", "opus")])
     def test_body_marker_beats_routing(self, repo, tmp_path, library, pinned):

@@ -402,6 +402,37 @@ On a failure, the step "Report a failed promotion" comments the command on the m
 
 No label marks the pair for the watchdog. Its generation rescues scan open spec issues only, a regeneration's spec issue is usually closed, and the rescue they dispatch is a gated regeneration, which can keep the live code with its stale renders.
 
+### Pull requests the pipeline acts on
+
+The pipeline's workflows act only on the pull requests the pipeline opened itself: from this repository's own `implementation/<spec-id>/<library>` branches, targeting `main`. Their jobs hold a write token, Google Cloud credentials, and a Claude credential, so a pull request that is not one of the pipeline's own is never run, labelled, commented on, merged, or dispatched. Its code is never checked out, with one exception named under **Check** below.
+
+A pull request is the pipeline's own when all of the following hold:
+
+- Its head branch is in this repository: `isCrossRepository` is exactly `false`, and the head repository's owner and name are this repository's. A missing or `null` field counts as another repository.
+- The pipeline opened it: its author is `app/github-actions` (the GitHub Actions app, as `gh` names it), and it targets `main`.
+- Its head branch is `implementation/<spec-id>/<library>`. The spec ID has the catalogue's shape (lowercase letters and digits in groups joined by single hyphens), and the library is one of `core.constants.SUPPORTED_LIBRARIES`.
+- Its head commit is a full commit SHA, and its number is the one the workflow was asked about. In `impl-repair.yml`, the spec ID and library it was dispatched with must also match the branch.
+
+`automation/scripts/pr_guard.py` decides this, and the implementation pipeline uses the same checker everywhere:
+
+1. **Stage.** The step "Stage the pull request guard" copies the checker and `core/constants.py` into `$RUNNER_TEMP/pr-guard`, never from a pull request's tree, and reads the library list from them. It takes them from the workflow's own commit, except on a pull-request event, where that commit is the pull request's merge commit: there `impl-merge.yml` and `impl-review-retry.yml` take them from `main`.
+2. **Check.** Before a job checks out or writes to a pull request, it reads the pull request by number and checks it: "Extract PR info" in `impl-review.yml`, "Check the pull request is the pipeline's own" in `impl-repair.yml` and `impl-merge.yml`, and "Re-dispatch review" in `impl-review-retry.yml`, after that job stages the guard. The exception is `impl-merge.yml` on the label event, whose checkout is the pull request's merge commit: a pull request from another repository is refused before that checkout, and one from this repository that fails the rest of the check is refused after it, before any step reads or runs the checked-out code.
+3. **Filter listings.** Every listing that picks pull requests to act on asks for the fields the checker reads and skips anything that is not the pipeline's own: the watchdog's scan and its check for an open pull request of a pair, the existing-pull-request lookup in `impl-generate.yml`, and the pick of `daily-regen.yml`'s pair mode (`regen_pick_pairs.py`). A listing that only holds work back, such as `daily-regen.yml`'s check for open pull requests that touch a spec before its polish, counts every pull request.
+
+A refused pull request gets nothing from the pipeline: no label, comment, merge, or dispatch. The run log has one `::error::` line with the sanitized pull request number and a fixed reason code, such as `cross_repository`, `author_mismatch`, or `branch_shape` (the full list is `REASONS` in the checker), and the job summary has one line. The job then stops. If `gh` fails, a field is missing, or the checker doesn't answer, the pull request is refused. In `impl-repair.yml`, "Handle repair failure" stays off a refused pull request. When the run failed before the check passed (the credentials, the checkout, the staging, or three failed reads), the handler checks the pull request itself and retries only one of the pipeline's own.
+
+A result is written only onto the commit that was checked. `impl-review.yml` writes the score and the review into the pull request only when the branch is still at the commit it reviewed, with a plain push. If the branch moved during the review, nothing is written, the verdict labels the run set come off, and "Re-dispatch review after a post-score failure" asks once for a review of the new head (after that, `ai-review-failed` and watchdog Case 1). `impl-repair.yml` starts only from the commit the guard checked, and its push gate fails the attempt unless the branch holds the repair's own commit on top of that commit.
+
+A listing logs a skipped pull request as a plain line and the watchdog adds one notice per scan with the count, not a warning. A pull request that isn't the pipeline's own is never dispatched, so it can't come back as a rescue or a warning on every scan.
+
+`impl-merge.yml` merges the head commit that the guard checked and "Validate PR completeness before merge" read, or GitHub's merges of `main` into it. Before each merge attempt, it reads the pull request again and checks it. It accepts that commit, or at most eight merges from `gh pr update-branch` down to it along the first parents, each with a second parent on `main` and the tree of a clean merge. Then it merges with `--match-head-commit`, and the error line names the condition that failed. An attempt that cannot read the pull request's head sends no merge call, unless an earlier attempt of the same run already sent one whose answer may be lost. A pull request found merged, whether this run, an earlier run, or a person merged it, counts as merged only when its merged head passes the same test, read from `refs/pull/<number>/head` because the branch is gone. A merged head that fails it stops the job before the post-merge steps, and one that can't be read yet makes the attempt fail and the loop retry.
+
+In the pipeline's workflows, no dispatch input, event text, or step output derived from one reaches a run script as `${{ }}` text: each goes through `env:` and is checked for its shape before its first use. Only values that cannot carry outside text, such as `github.sha`, an event's issue or pull request number, `secrets.*`, and `vars.*`, may stand in a script; `TestNoOutsideTextInRunScripts` in `tests/unit/workflows/test_pr_guard_steps.py` holds the list. The watchdog takes a spec ID from an issue title only in the catalogue's shape, with the checker's `spec-id` mode, and a library from a label only when it is registered.
+
+Write-back pull requests (`review-writeback/<spec-id>/<library>/<pr>`) follow a contract of their own and do not use this checker: `regen_writeback.py check-pr`, in the `writeback` job of `impl-merge.yml`, requires the bot's authorship, the `review-writeback` label, the base `main`, and an `isCrossRepository` of exactly `false`. The write-back step of `impl-review.yml` closes a superseded write-back only when it passes the same identity (`regen_writeback.py own-open`). Specification pull requests are checked by the `merge` job of `spec-create.yml`.
+
+`tests/unit/workflows/test_pr_guard_steps.py` scans the workflows. It finds a workflow that reads a pull request by `gh pr view`, `gh pr list`, `gh pr checkout`, `pr_number`, a `/pulls/` call, `refs/pull/`, or `head_ref`. Within those, it finds a job that takes a pull request number from `inputs.pr_number`, `client_payload.pr_number`, `github.event.pull_request.number`, or a `needs.<job>.outputs.pr_number`. A number under another name, or a read through another API call, is not found.
+
 ### Dependency pins and library versions
 
 Each language's plotting stack is pinned in the repository:
@@ -1317,8 +1348,11 @@ Each credential reaches only the Claude steps, and nothing else:
 `tests/unit/workflows/test_claude_auth.py` checks that the API key appears only
 in the action input and in the resolve step's `!= ''` test, and that no job
 gained `id-token: write`. None of the eight workflows runs on `pull_request`
-or `pull_request_target`, so a pull request from a fork never gets a
-credential. `util-claude.yml` runs only for comments by owners, members, and
+or `pull_request_target`, so a fork's own run never gets a credential. The
+pipeline's workflows that take a pull request by number act only on the
+pipeline's own, from this repository
+([Pull requests the pipeline acts on](#pull-requests-the-pipeline-acts-on)).
+`util-claude.yml` runs only for comments by owners, members, and
 collaborators. `spec-create.yml` and `report-validate.yml` run on a label,
 which only maintainers can add, but they read issue text that anyone can
 write.

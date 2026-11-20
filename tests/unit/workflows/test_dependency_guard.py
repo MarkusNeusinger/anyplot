@@ -157,6 +157,8 @@ class Origin:
             "LIBRARY": LIB,
             "EXT": ".jl",
             "BRANCH": BRANCH,
+            # The head the guard checked: what was pushed last.
+            "HEAD_SHA": self.git(self.ws, "rev-parse", "HEAD"),
             "PR_NUM": "9398",
             "REPOSITORY": "o/r",
         }

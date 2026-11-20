@@ -12,6 +12,7 @@ on:
     types: [labeled]
 
 permissions:
+  contents: read  # the guard and the library list, from main
   pull-requests: write
   issues: write
   actions: write
@@ -25,20 +26,85 @@ jobs:
     if: github.event.label.name == 'ai-review-failed'
     runs-on: ubuntu-latest
     steps:
+      # main, never the pull request: on this event the workflow's own
+      # commit is the pull request's merge commit.
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            automation/scripts/pr_guard.py
+            core/constants.py
+          sparse-checkout-cone-mode: false
+
+      # The pipeline acts only on its own pull requests: same repository,
+      # head branch implementation/<spec-id>/<library> with a registered
+      # library. The guard (automation/scripts/pr_guard.py) and the library
+      # list it checks against come from GUARD_REF, the workflow's own commit,
+      # never from a pull request's tree, and are staged before any step reads
+      # a pull request. The same step, word for word, stands in every job that
+      # takes a pull request (tests/unit/workflows/test_pr_guard_steps.py);
+      # docs/workflows/overview.md#pull-requests-the-pipeline-acts-on.
+      # On this event the guard comes from main, as checked out above.
+      - name: Stage the pull request guard
+        env:
+          GUARD_REF: origin/${{ github.event.repository.default_branch }}
+        run: |
+          G="$RUNNER_TEMP/pr-guard"
+          mkdir -p "$G/core"
+          if ! git show "${GUARD_REF}:automation/scripts/pr_guard.py" > "$G/pr_guard.py" \
+             || ! git show "${GUARD_REF}:core/constants.py" > "$G/core/constants.py" \
+             || ! (cd "$G" && python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))") > "$G/libraries" \
+             || ! [ -s "$G/libraries" ]; then
+            rm -f "$G/pr_guard.py" "$G/libraries"
+            echo "::error::guard_failed: the pull request guard could not be staged from ${GUARD_REF}; no pull request is acted on"
+            echo "- Pull request guard: \`guard_failed\`, not staged from ${GUARD_REF}; no pull request was acted on" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "Pull request guard staged from ${GUARD_REF}; libraries: $(cat "$G/libraries")"
+
       - name: Re-dispatch review
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
           PR_NUM: ${{ github.event.pull_request.number }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
           set -euo pipefail
 
           if [[ ! "$BRANCH" =~ ^implementation/ ]]; then
-            echo "::notice::Non-implementation branch ($BRANCH); skipping"
+            echo "::notice::Non-implementation branch; skipping"
             exit 0
           fi
 
-          LABELS=$(gh pr view "$PR_NUM" --json labels --jq '[.labels[].name] | join(" ")')
+          # Only one of the pipeline's own pull requests is labelled or
+          # re-dispatched here; a refusal writes nothing to the pull request.
+          G="$RUNNER_TEMP/pr-guard"
+          refuse() {
+            echo "::error::PR #${PR_NUM//[^0-9]/} refused (${1}): not one of the pipeline's own pull requests; nothing of it was labelled or re-dispatched"
+            echo "- PR #${PR_NUM//[^0-9]/} refused: \`${1}\`, not one of the pipeline's own pull requests" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+          [[ "$PR_NUM" =~ ^[1-9][0-9]{0,9}$ ]] || refuse bad_number
+          [ -n "$HEAD_REPO" ] && [ "${HEAD_REPO,,}" = "${REPOSITORY,,}" ] || refuse cross_repository
+          gh pr view "$PR_NUM" --repo "$REPOSITORY" \
+            --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName,labels \
+            > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err" || refuse pr_unreadable
+          GUARD_RC=0
+          GUARD_OUT=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
+            --number "$PR_NUM" < "$RUNNER_TEMP/pr.json") || GUARD_RC=$?
+          if [ "$GUARD_RC" -ne 0 ]; then
+            REASON=guard_failed
+            if [ "$GUARD_RC" -eq 1 ] && [[ "$GUARD_OUT" =~ ^reason=([a-z_]{1,40})$ ]]; then
+              REASON="${BASH_REMATCH[1]}"
+            fi
+            refuse "$REASON"
+          fi
+
+          LABELS=$(jq -r '[.labels[].name] | join(" ")' "$RUNNER_TEMP/pr.json")
           if echo " $LABELS " | grep -q " ai-review-rescued "; then
             echo "::notice::PR #$PR_NUM already rescued once; watchdog will handle further escalation"
             exit 0

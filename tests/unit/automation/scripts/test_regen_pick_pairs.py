@@ -35,6 +35,16 @@ MIN_AGE = timedelta(hours=20)
 WINDOW = timedelta(days=30)
 LIBS = ["altair", "matplotlib", "plotly"]
 SCRIPT = Path(rp.__file__)
+# What pr_guard reads besides the number and the branch: a PR of the pipeline's
+# own in the repository the tests pass as --repo (o/r).
+OWN = {
+    "isCrossRepository": False,
+    "headRepository": {"name": "r"},
+    "headRepositoryOwner": {"login": "o"},
+    "headRefOid": "0" * 40,
+    "author": {"login": "app/github-actions", "is_bot": True},
+    "baseRefName": "main",
+}
 
 
 def ts(days: float, now: datetime = NOW) -> str:
@@ -84,7 +94,14 @@ def gate_comment(
 def kept_pr(number: int, spec: str, lib: str, *comments: dict, days: float = 1) -> dict:
     """A kept regeneration as the gate-record listing returns it."""
     head = f"implementation/{spec}/{lib}"
-    return {"number": number, "headRefName": head, "state": "CLOSED", "closedAt": ts(days), "comments": list(comments)}
+    return {
+        "number": number,
+        "headRefName": head,
+        "state": "CLOSED",
+        "closedAt": ts(days),
+        "comments": list(comments),
+        **OWN,
+    }
 
 
 def run_pick(cands, recs=None, issues=None, count=5, window=WINDOW, failures=None, max_reads=100):
@@ -542,13 +559,23 @@ class TestMain:
 
     def test_writes_pairs_specs_and_summary(self, tmp_path):
         self._plots(tmp_path)
-        prs = [{"headRefName": "implementation/b-spec/matplotlib", "state": "OPEN", "updatedAt": ts(0.1, self.now)}]
+        prs = [
+            {
+                "number": 41,
+                "headRefName": "implementation/b-spec/matplotlib",
+                "state": "OPEN",
+                "updatedAt": ts(0.1, self.now),
+                **OWN,
+            }
+        ]
         kept = [
             {
+                "number": 42,
                 "headRefName": "implementation/a-spec/altair",
                 "state": "CLOSED",
                 "closedAt": ts(40, self.now),
                 "labels": [{"name": "regen:kept"}],
+                **OWN,
             }
         ]
         comments = [
@@ -589,6 +616,7 @@ class TestMain:
                 "state": "CLOSED",
                 "closedAt": ts(40, self.now),
                 "labels": [{"name": "regen:kept"}],
+                **OWN,
             }
         ]
         gates = [kept_pr(31, "a-spec", "altair", gate_comment(31, "a-spec", "altair"))]
@@ -610,7 +638,15 @@ class TestMain:
 
     def test_the_window_comes_from_the_argument(self, tmp_path):
         self._plots(tmp_path)
-        kept = [{"headRefName": "implementation/a-spec/altair", "state": "CLOSED", "closedAt": ts(40, self.now)}]
+        kept = [
+            {
+                "number": 43,
+                "headRefName": "implementation/a-spec/altair",
+                "state": "CLOSED",
+                "closedAt": ts(40, self.now),
+                **OWN,
+            }
+        ]
         data = {"prs.json": "[]", "kept.json": json.dumps(kept), "issues.json": "[]"}
         data |= {"comments-11.jsonl": "", "comments-12.jsonl": ""}
         _, outputs, _ = run_main(tmp_path, data, 5, "--attempt-window-days", "60")
@@ -626,6 +662,7 @@ class TestMain:
                 "state": "OPEN",
                 "updatedAt": ts(2, self.now),
                 "labels": [{"name": "ai-review-paused"}],
+                **OWN,
             },
             {
                 "number": 22,
@@ -633,6 +670,7 @@ class TestMain:
                 "state": "OPEN",
                 "updatedAt": ts(3, self.now),
                 "labels": [{"name": "ai-rejected"}, {"name": "ai-attempt-2"}, {"name": "ai-repair-paused"}],
+                **OWN,
             },
         ]
         data = {"prs.json": json.dumps(prs), "kept.json": "[]", "issues.json": "[]"}
@@ -748,7 +786,14 @@ def runner(monkeypatch):
 
 
 def pr(branch: str, state: str, number: int = 1, labels: tuple[str, ...] = (), **times: str) -> dict:
-    return {"number": number, "headRefName": branch, "state": state, "labels": [{"name": n} for n in labels], **times}
+    return {
+        "number": number,
+        "headRefName": branch,
+        "state": state,
+        "labels": [{"name": n} for n in labels],
+        **OWN,
+        **times,
+    }
 
 
 class TestLoadCandidatesEdges:
@@ -850,7 +895,7 @@ class TestReadRecords:
                 "issues": json.dumps([{"number": 11, "updatedAt": ts(2)}]),
             }
         )
-        recs = rp.read_records("o/r")
+        recs = rp.read_records("o/r", LIBS)
         assert set(recs.attempts) == {("a", "altair"), ("b", "altair")}
         assert recs.attempts[("b", "altair")][1] == "kept PR"
         assert recs.held == {("b", "plotly"): held((9, 20, "regression"))}
@@ -861,10 +906,12 @@ class TestReadRecords:
             "activity for 1 issue(s)" in capsys.readouterr().out
         )
         prs_call, kept_call, gates_call, issues_call = fake.calls
-        assert prs_call[prs_call.index("--json") + 1] == "number,headRefName,state,updatedAt,closedAt,labels"
+        guard = "number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName"
+        assert prs_call[prs_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels"
         assert prs_call[prs_call.index("--state") + 1] == "all" and "--repo" in prs_call and "o/r" in prs_call
+        assert kept_call[kept_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels"
         assert kept_call[kept_call.index("--state") + 1] == "closed"
-        assert gates_call[gates_call.index("--json") + 1] == "number,headRefName,state,comments"
+        assert gates_call[gates_call.index("--json") + 1] == f"{guard},state,comments"
         assert gates_call[gates_call.index("--state") + 1] == "closed"
         assert gates_call[gates_call.index("--label") + 1] == "regen:kept" and "o/r" in gates_call
         assert issues_call[issues_call.index("--json") + 1] == "number,updatedAt"
@@ -873,12 +920,12 @@ class TestReadRecords:
     def test_no_implementation_prs_is_an_error(self, runner, prs):
         fake = runner({"kept": "[]", "issues": "[]"} | ({} if prs is None else {"prs": prs}))
         with pytest.raises(rp.ListingError, match="implementation PRs could not be listed"):
-            rp.read_records("o/r")
+            rp.read_records("o/r", LIBS)
         assert len(fake.calls) == 1  # nothing else is read
 
     def test_the_other_listings_are_best_effort(self, runner, capsys):
         runner({"prs": json.dumps([pr("implementation/a/altair", "CLOSED", closedAt=ts(5))])})
-        recs = rp.read_records("o/r")
+        recs = rp.read_records("o/r", LIBS)
         assert recs.attempts == {("a", "altair"): (at(5), "closed PR")} and recs.issue_activity == {}
         assert recs.held == {}
         out = capsys.readouterr().out
@@ -889,8 +936,59 @@ class TestReadRecords:
         """A lost gate-record listing loses only the returns, never the kept attempt."""
         kept = json.dumps([pr("implementation/b/plotly", "CLOSED", 9, ("regen:kept",), closedAt=ts(20))])
         runner({"prs": "[]", "kept": kept, "issues": "[]"})
-        recs = rp.read_records("o/r")
+        recs = rp.read_records("o/r", LIBS)
         assert recs.attempts == {("b", "plotly"): (at(20), "kept PR")} and recs.held == {}
+
+    # A PR that is not the pipeline's own: from another repository, or on a
+    # branch outside the contract. Same pair as an own PR would be.
+    FOREIGN = [
+        {"isCrossRepository": True, "headRepositoryOwner": {"login": "elsewhere"}},
+        {"isCrossRepository": None},
+        {"author": {"login": "someone"}},
+        {"baseRefName": "other"},
+        {"headRefName": "implementation/a/notalib"},
+    ]
+
+    @pytest.mark.parametrize("change", FOREIGN)
+    def test_a_pr_that_is_not_the_pipelines_own_counts_for_nothing(self, runner, capsys, change):
+        """Not resumed, not blocking its pair, not an attempt, not a returning keep: skipped with a log line."""
+        paused = {**pr("implementation/a/plotly", "OPEN", 7, ("ai-review-paused",), updatedAt=ts(1)), **change}
+        merged = {**pr("implementation/a/altair", "MERGED", 8, closedAt=ts(9)), **change}
+        kept = {**pr("implementation/b/plotly", "CLOSED", 9, ("regen:kept",), closedAt=ts(20)), **change}
+        gate = {**kept_pr(9, "b", "plotly", gate_comment(9, "b", "plotly")), **change}
+        runner(
+            {
+                "prs": json.dumps([paused, merged]),
+                "kept": json.dumps([kept]),
+                "gates": json.dumps([gate]),
+                "issues": "[]",
+            }
+        )
+        recs = rp.read_records("o/r", LIBS)
+        assert recs.paused == [] and recs.open_pairs == set()
+        assert recs.attempts == {} and recs.held == {}
+        out = capsys.readouterr().out
+        for number in (7, 8, 9):
+            assert f"PR #{number}: skipped (" in out
+        assert "::warning::" not in out
+
+    def test_the_same_prs_as_the_pipelines_own_count(self, runner):
+        """The control for the test above: these are PRs the pick acts on."""
+        runner(
+            {
+                "prs": json.dumps(
+                    [
+                        pr("implementation/a/plotly", "OPEN", 7, ("ai-review-paused",), updatedAt=ts(1)),
+                        pr("implementation/a/altair", "MERGED", 8, closedAt=ts(9)),
+                    ]
+                ),
+                "kept": "[]",
+                "issues": "[]",
+            }
+        )
+        recs = rp.read_records("o/r", LIBS)
+        assert [r.pr for r in recs.paused] == [7] and recs.open_pairs == {("a", "plotly")}
+        assert set(recs.attempts) == {("a", "altair")}
 
 
 class TestIssueFailures:

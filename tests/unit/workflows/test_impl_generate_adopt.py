@@ -29,6 +29,7 @@ import pytest
 import yaml
 
 from automation.scripts import review_retest
+from tests.unit.workflows.pr_guard_support import stage_guard
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -477,23 +478,25 @@ def _extract_inputs(
     library: str = "matplotlib",
     model: str = "auto",
 ) -> subprocess.CompletedProcess[str]:
-    context = {
-        "github.event_name": "workflow_dispatch",
-        "inputs.specification_id": SPEC,
-        "inputs.library": library,
-        "inputs.issue_number": "",
-        "inputs.model": model,
-        "github.event.issue.number": "",
-    }
-    script = _render(str(_step("impl-generate.yml", "Extract inputs")["run"]), context)
+    script = _render(str(_step("impl-generate.yml", "Extract inputs")["run"]), {})
     for name in ("github_output", "step_summary"):
         (tmp_path / name).unlink(missing_ok=True)
+    stage_guard(tmp_path / "runner")
     return subprocess.run(
         ["bash", "-eo", "pipefail", "-c", script],
         cwd=_routing_repo(tmp_path) if not (tmp_path / "repo").exists() else tmp_path / "repo",
         env=_env(
             GITHUB_OUTPUT=str(tmp_path / "github_output"),
             GITHUB_STEP_SUMMARY=str(tmp_path / "step_summary"),
+            RUNNER_TEMP=str(tmp_path / "runner"),
+            # Every input and event value reaches the step through env:.
+            EVENT_NAME="workflow_dispatch",
+            SPEC_ID_INPUT=SPEC,
+            LIBRARY_INPUT=library,
+            ISSUE_INPUT="",
+            MODEL_INPUT=model,
+            REGEN_GATE_INPUT=regen_gate,
+            EVENT_ISSUE_NUMBER="",
             LABEL_NAME="",
             ISSUE_TITLE="",
             REGEN_GATE=regen_gate,
