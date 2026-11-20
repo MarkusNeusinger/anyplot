@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-09
@@ -7,292 +7,181 @@ Quality: 83/100 | Updated: 2026-05-09
 import os
 
 import cairosvg
-import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-np.random.seed(42)
+# Columns: set these to your table's column names
+FROM_TIME = "From election"  # role: extra
+TO_TIME = "To election"  # role: time_point
+SOURCE = "Party before"  # role: extra
+TARGET = "Party after"  # role: category
+FLOW = "Voters (millions)"  # role: flow
 
-# Data: Voter migration between political parties across 4 election cycles
-years = ["2012", "2016", "2020", "2024"]
-parties = ["Democratic", "Republican", "Independent", "Other"]
-
-# Map parties to Okabe-Ito colors
-party_colors = {
-    "Democratic": IMPRINT[0],  # #009E73 (brand green)
-    "Republican": IMPRINT[1],  # #C475FD (vermillion)
-    "Independent": IMPRINT[2],  # #4467A3 (blue)
-    "Other": IMPRINT[3],  # #BD8233 (reddish purple)
+# Data: replace this block with your own edge list, for example df = pd.read_csv("flows.csv")
+# Voter migration between parties across four US elections: one row per band
+_flows = {
+    ("2012", "2016"): {
+        "Democratic": [58.0, 4.5, 2.5, 0.9],
+        "Republican": [3.0, 55.0, 1.5, 1.4],
+        "Independent": [3.2, 2.8, 2.0, 0.5],
+        "Other": [1.6, 0.7, 0.3, 0.4],
+    },
+    ("2016", "2020"): {
+        "Democratic": [60.0, 2.5, 2.0, 1.3],
+        "Republican": [3.5, 58.0, 1.0, 0.5],
+        "Independent": [5.5, 1.5, 0.5, 0.3],
+        "Other": [2.0, 1.5, 0.5, 0.5],
+    },
+    ("2020", "2024"): {
+        "Democratic": [65.0, 10.0, 4.5, 1.8],
+        "Republican": [5.5, 62.0, 1.2, 0.5],
+        "Independent": [1.0, 3.0, 0.7, 0.5],
+        "Other": [0.5, 2.0, 0.1, 0.7],
+    },
 }
-
-# Voter counts (millions) at each time point
-voter_counts = np.array(
+_targets = ["Democratic", "Republican", "Independent", "Other"]
+df = pd.DataFrame(
     [
-        [65.9, 65.8, 81.3, 72.0],  # Democratic
-        [60.9, 63.0, 74.2, 77.0],  # Republican
-        [8.5, 7.8, 5.2, 6.5],  # Independent
-        [3.0, 4.5, 2.8, 3.5],  # Other
+        {FROM_TIME: t0, TO_TIME: t1, SOURCE: src, TARGET: tgt, FLOW: value}
+        for (t0, t1), by_source in _flows.items()
+        for src, values in by_source.items()
+        for tgt, value in zip(_targets, values, strict=True)
     ]
 )
 
-# Flow matrix between consecutive years (transitions between parties)
-flows = [
-    # 2012 -> 2016
-    {
-        ("Democratic", "Democratic"): 58.0,
-        ("Democratic", "Republican"): 4.5,
-        ("Democratic", "Independent"): 2.5,
-        ("Democratic", "Other"): 0.9,
-        ("Republican", "Republican"): 55.0,
-        ("Republican", "Democratic"): 3.0,
-        ("Republican", "Independent"): 1.5,
-        ("Republican", "Other"): 1.4,
-        ("Independent", "Democratic"): 3.2,
-        ("Independent", "Republican"): 2.8,
-        ("Independent", "Independent"): 2.0,
-        ("Independent", "Other"): 0.5,
-        ("Other", "Democratic"): 1.6,
-        ("Other", "Republican"): 0.7,
-        ("Other", "Independent"): 0.3,
-        ("Other", "Other"): 0.4,
-    },
-    # 2016 -> 2020
-    {
-        ("Democratic", "Democratic"): 60.0,
-        ("Democratic", "Republican"): 2.5,
-        ("Democratic", "Independent"): 2.0,
-        ("Democratic", "Other"): 1.3,
-        ("Republican", "Republican"): 58.0,
-        ("Republican", "Democratic"): 3.5,
-        ("Republican", "Independent"): 1.0,
-        ("Republican", "Other"): 0.5,
-        ("Independent", "Democratic"): 5.5,
-        ("Independent", "Republican"): 1.5,
-        ("Independent", "Independent"): 0.5,
-        ("Independent", "Other"): 0.3,
-        ("Other", "Democratic"): 2.0,
-        ("Other", "Republican"): 1.5,
-        ("Other", "Independent"): 0.5,
-        ("Other", "Other"): 0.5,
-    },
-    # 2020 -> 2024
-    {
-        ("Democratic", "Democratic"): 65.0,
-        ("Democratic", "Republican"): 10.0,
-        ("Democratic", "Independent"): 4.5,
-        ("Democratic", "Other"): 1.8,
-        ("Republican", "Republican"): 62.0,
-        ("Republican", "Democratic"): 5.5,
-        ("Republican", "Independent"): 1.2,
-        ("Republican", "Other"): 0.5,
-        ("Independent", "Democratic"): 1.0,
-        ("Independent", "Republican"): 3.0,
-        ("Independent", "Independent"): 0.7,
-        ("Independent", "Other"): 0.5,
-        ("Other", "Democratic"): 0.5,
-        ("Other", "Republican"): 2.0,
-        ("Other", "Independent"): 0.1,
-        ("Other", "Other"): 0.7,
-    },
-]
+# Plot: reads only df and the constants above
+times = list(dict.fromkeys(list(df[FROM_TIME]) + list(df[TO_TIME])))
+parties = list(dict.fromkeys(list(df[SOURCE]) + list(df[TARGET])))
+party_color = {party: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, party in enumerate(parties)}
+edges = df[df[FLOW] > 0]
 
-# Custom style for text elements
+# Canvas and layout in SVG pixels
+WIDTH, HEIGHT = 3200, 1800
+margin_x, top, bottom = 480, 330, 200
+bar_w = 90
+gap = 22
+col_x = [margin_x + i * (WIDTH - 2 * margin_x) / (len(times) - 1) for i in range(len(times))]
+
+# Block size per party and time point: the larger of what leaves and what arrives
+size = {}
+for i, t in enumerate(times):
+    out_sum = edges[edges[FROM_TIME] == t].groupby(SOURCE)[FLOW].sum()
+    in_sum = edges[edges[TO_TIME] == t].groupby(TARGET)[FLOW].sum()
+    for party in parties:
+        size[(i, party)] = max(out_sum.get(party, 0.0), in_sum.get(party, 0.0))
+
+# One scale for the whole diagram, so a band's width carries its flow everywhere
+avail = HEIGHT - top - bottom
+scale = min((avail - gap * (len(parties) - 1)) / sum(size[(i, p)] for p in parties) for i in range(len(times)))
+
+block = {}
+for i in range(len(times)):
+    y = top
+    for party in parties:
+        h = size[(i, party)] * scale
+        block[(i, party)] = (y, h)
+        y += h + gap
+
+# pygal draws the canvas, background and title; the diagram is added as SVG on top
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
+    colors=tuple(IMPRINT_PALETTE),
+    title_font_size=66,
 )
-
-# Create minimal chart just for title rendering
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=WIDTH,
+    height=HEIGHT,
     style=custom_style,
-    title="alluvial-basic·pygal·anyplot.ai",
+    title="alluvial-basic · python · pygal · anyplot.ai",
     show_legend=False,
-    show_x_guides=False,
-    show_y_guides=False,
     show_x_labels=False,
     show_y_labels=False,
+    show_x_guides=False,
+    show_y_guides=False,
     dots_size=0,
     stroke=False,
-    range=(0, 100),
-    xrange=(0, 100),
+    margin=0,
 )
-
-# Add empty data to avoid "No data" message
-chart.add("", [(50, 50)])
-
-# Render base SVG
+chart.add(parties[0], [(0, 0)])
 base_svg = chart.render().decode("utf-8")
 
-# SVG coordinate mapping
-margin_left = 600
-margin_right = 600
-margin_top = 400
-margin_bottom = 350
-chart_width = 4800 - margin_left - margin_right
-chart_height = 2700 - margin_top - margin_bottom
+parts = ['<g id="alluvial-diagram" font-family="sans-serif">']
 
-# Calculate positions for each time point
-n_years = len(years)
-x_positions = [margin_left + i * chart_width / (n_years - 1) for i in range(n_years)]
-bar_width = 150
-total_height = chart_height
-
-# Track node positions
-node_positions = {}
-
-# Build SVG elements for nodes and flows
-alluvial_svg = '<g id="alluvial-diagram">'
-
-# Calculate node positions and draw bars
-for year_idx, year in enumerate(years):
-    x = x_positions[year_idx]
-    year_total = voter_counts[:, year_idx].sum()
-
-    y_top = margin_top
-    for party_idx, party in enumerate(parties):
-        height = (voter_counts[party_idx, year_idx] / year_total) * total_height
-        y_bottom = y_top + height
-
-        # Store position for flow drawing
-        node_positions[(year_idx, party)] = (y_top, y_bottom)
-
-        # Draw rectangle for this party at this year
-        alluvial_svg += f'''
-    <rect x="{x - bar_width / 2:.0f}" y="{y_top:.0f}" width="{bar_width:.0f}" height="{height:.0f}"
-          fill="{party_colors[party]}" stroke="{PAGE_BG}" stroke-width="3"/>'''
-
-        y_top = y_bottom
-
-    # Add year label at bottom
-    alluvial_svg += f'''
-    <text x="{x:.0f}" y="{margin_top + total_height + 80:.0f}" text-anchor="middle"
-          font-size="52" font-weight="bold" font-family="sans-serif"
-          fill="{INK}">{year}</text>'''
-
-# Add party labels on left side
-for party in parties:
-    y_top, y_bottom = node_positions[(0, party)]
-    y_center = (y_top + y_bottom) / 2
-    alluvial_svg += f'''
-    <text x="{x_positions[0] - bar_width / 2 - 30:.0f}" y="{y_center:.0f}" text-anchor="end"
-          font-size="44" font-weight="bold" font-family="sans-serif"
-          fill="{party_colors[party]}" dominant-baseline="middle">{party}</text>'''
-
-# Add party labels on right side
-for party in parties:
-    y_top, y_bottom = node_positions[(n_years - 1, party)]
-    y_center = (y_top + y_bottom) / 2
-    alluvial_svg += f'''
-    <text x="{x_positions[-1] + bar_width / 2 + 30:.0f}" y="{y_center:.0f}" text-anchor="start"
-          font-size="44" font-weight="bold" font-family="sans-serif"
-          fill="{party_colors[party]}" dominant-baseline="middle">{party}</text>'''
-
-# Draw flows between consecutive time points
-for flow_idx, flow_dict in enumerate(flows):
-    x0 = x_positions[flow_idx]
-    x1 = x_positions[flow_idx + 1]
-
-    # Calculate totals for normalization
-    year0_total = voter_counts[:, flow_idx].sum()
-    year1_total = voter_counts[:, flow_idx + 1].sum()
-
-    # Track cumulative offsets for each source and target
-    source_offsets = {party: node_positions[(flow_idx, party)][0] for party in parties}
-    target_offsets = {party: node_positions[(flow_idx + 1, party)][0] for party in parties}
-
-    # Draw each flow
-    for (source_party, target_party), flow_value in flow_dict.items():
-        if flow_value <= 0:
-            continue
-
-        # Calculate normalized heights
-        source_height = (flow_value / year0_total) * total_height
-        target_height = (flow_value / year1_total) * total_height
-
-        # Get current positions
-        y0_top = source_offsets[source_party]
-        y0_bottom = y0_top + source_height
-        y1_top = target_offsets[target_party]
-        y1_bottom = y1_top + target_height
-
-        # Bezier curve control points
-        band_x0 = x0 + bar_width / 2
-        band_x1 = x1 - bar_width / 2
-        cx0 = band_x0 + 0.4 * (band_x1 - band_x0)
-        cx1 = band_x0 + 0.6 * (band_x1 - band_x0)
-
-        # Create path for the curved band
-        path_d = (
-            f"M {band_x0:.0f},{y0_top:.0f} "
-            f"C {cx0:.0f},{y0_top:.0f} {cx1:.0f},{y1_top:.0f} {band_x1:.0f},{y1_top:.0f} "
-            f"L {band_x1:.0f},{y1_bottom:.0f} "
-            f"C {cx1:.0f},{y1_bottom:.0f} {cx0:.0f},{y0_bottom:.0f} {band_x0:.0f},{y0_bottom:.0f} "
-            f"Z"
+# Bands: stacked from the top of the source block and the target block
+for i, t in enumerate(times[:-1]):
+    out_pos = {p: block[(i, p)][0] for p in parties}
+    in_pos = {p: block[(i + 1, p)][0] for p in parties}
+    seg = edges[edges[FROM_TIME] == t]
+    seg = seg.assign(_s=seg[SOURCE].map(parties.index), _t=seg[TARGET].map(parties.index)).sort_values(["_s", "_t"])
+    xa, xb = col_x[i] + bar_w / 2, col_x[i + 1] - bar_w / 2
+    c0, c1 = xa + 0.4 * (xb - xa), xa + 0.6 * (xb - xa)
+    for _, row in seg.iterrows():
+        h = row[FLOW] * scale
+        ya, yb = out_pos[row[SOURCE]], in_pos[row[TARGET]]
+        out_pos[row[SOURCE]] += h
+        in_pos[row[TARGET]] += h
+        path = (
+            f"M {xa:.1f},{ya:.1f} C {c0:.1f},{ya:.1f} {c1:.1f},{yb:.1f} {xb:.1f},{yb:.1f} "
+            f"L {xb:.1f},{yb + h:.1f} C {c1:.1f},{yb + h:.1f} {c0:.1f},{ya + h:.1f} {xa:.1f},{ya + h:.1f} Z"
+        )
+        parts.append(
+            f'<path d="{path}" fill="{party_color[row[SOURCE]]}" fill-opacity="0.38" stroke="none">'
+            f"<title>{t} {row[SOURCE]} → {times[i + 1]} {row[TARGET]}: {row[FLOW]:g} million</title></path>"
         )
 
-        alluvial_svg += f'''
-    <path d="{path_d}" fill="{party_colors[source_party]}" fill-opacity="0.35" stroke="none"/>'''
+# Blocks, party labels at every column, column headers
+for i, t in enumerate(times):
+    x = col_x[i]
+    parts.append(
+        f'<text x="{x:.1f}" y="{top - 60}" text-anchor="middle" font-size="58" font-weight="bold" fill="{INK}">{t}</text>'
+    )
+    for party in parties:
+        y, h = block[(i, party)]
+        parts.append(
+            f'<rect x="{x - bar_w / 2:.1f}" y="{y:.1f}" width="{bar_w}" height="{h:.1f}" fill="{party_color[party]}">'
+            f"<title>{t} {party}: {size[(i, party)]:.1f} million</title></rect>"
+        )
+        if i == 0:
+            lx, anchor = x - bar_w / 2 - 24, "end"
+        else:
+            lx, anchor = x + bar_w / 2 + 24, "start"
+        parts.append(
+            f'<text x="{lx:.1f}" y="{y + h / 2:.1f}" text-anchor="{anchor}" dominant-baseline="middle" font-size="40" '
+            f'font-weight="bold" fill="{INK}" stroke="{PAGE_BG}" stroke-width="10" stroke-linejoin="round" '
+            f'paint-order="stroke">{party}</text>'
+        )
 
-        # Update offsets
-        source_offsets[source_party] = y0_bottom
-        target_offsets[target_party] = y1_bottom
+parts.append(
+    f'<text x="{WIDTH / 2:.0f}" y="{HEIGHT - 70}" text-anchor="middle" font-size="40" font-style="italic" '
+    f'fill="{INK_SOFT}">Band width shows voters moving between parties ({FLOW.lower()})</text>'
+)
+parts.append("</g>")
 
-# Add subtitle explaining the visualization
-subtitle_y = margin_top + total_height + 150
-alluvial_svg += f'''
-    <text x="2400" y="{subtitle_y:.0f}" text-anchor="middle"
-          font-size="42" font-style="italic" font-family="sans-serif"
-          fill="{INK_SOFT}">Voter Migration Between Political Parties (Millions of Voters)</text>'''
+svg = base_svg.replace("</svg>", "".join(parts) + "</svg>")
 
-alluvial_svg += "\n</g>"
-
-# Insert alluvial elements before closing </svg> tag
-svg_with_alluvial = base_svg.replace("</svg>", f"{alluvial_svg}\n</svg>")
-
-# Save outputs
-cairosvg.svg2png(bytestring=svg_with_alluvial.encode("utf-8"), write_to=f"plot-{THEME}.png")
-
-with open(f"plot-{THEME}.html", "w") as f:
+# Save
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
+with open(f"plot-{THEME}.svg", "w", encoding="utf-8") as f:
+    f.write(svg)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(
-        """<!DOCTYPE html>
-<html>
-<head>
-    <title>alluvial-basic·pygal·anyplot.ai</title>
-    <style>
-        body { margin: 0; padding: 20px; background: """
-        + ("#f5f5f5" if THEME == "light" else "#2a2a2a")
-        + """; font-family: sans-serif; }
-        .container { max-width: 100%; margin: 0 auto; }
-        object { width: 100%; height: auto; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <object type="image/svg+xml" data="plot-"""
-        + THEME
-        + """.svg">
-            Alluvial diagram not supported
-        </object>
-    </div>
-</body>
-</html>"""
+        f'<!DOCTYPE html><html><head><meta charset="utf-8"><title>alluvial-basic · python · pygal · anyplot.ai</title>'
+        f"<style>body{{margin:0;background:{PAGE_BG}}}svg{{width:100%;height:auto;display:block}}</style></head>"
+        f"<body>{svg}</body></html>"
     )
