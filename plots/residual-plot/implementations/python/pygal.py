@@ -1,12 +1,13 @@
 """ anyplot.ai
 residual-plot: Residual Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-10
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-20
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -17,100 +18,99 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Linear regression example with heteroscedasticity
-np.random.seed(42)
-n_points = 100
+# Constants
+SIGMA_LIMIT = 2  # residuals beyond this many standard deviations count as outliers
 
-# Generate fitted values (x-axis) - house price predictions in $1000s
-fitted_values = np.linspace(150, 500, n_points)
+# Columns: set these to your table's column names
+Y_PRED = "Predicted delivery time (min)"  # role: y_pred
+Y_TRUE = "Observed delivery time (min)"  # role: y_true
 
-# Generate residuals with heteroscedasticity and outliers
-base_residuals = np.random.normal(0, 20, n_points)
-heteroscedasticity = (fitted_values / 500) * np.random.normal(0, 15, n_points)
-residuals = base_residuals + heteroscedasticity
+# Data: replace this block with your own table, for example df = pd.read_csv("deliveries.csv")
+# Delivery-time regression: the model misses more on long routes (heteroscedastic), plus three bad days
+rng = np.random.default_rng(7)
+n_orders = 140
+predicted = np.sort(rng.uniform(12, 75, n_orders))
+noise = rng.normal(0, 2.2, n_orders) + (predicted / 75) * rng.normal(0, 4.0, n_orders)
+observed = predicted + noise
+observed[[22, 71, 118]] += [19.0, -16.0, 21.0]
+df = pd.DataFrame({Y_PRED: predicted, Y_TRUE: observed})
 
-# Add outliers
-outlier_indices = [15, 45, 78]
-residuals[outlier_indices] = [85, -75, 90]
+# Plot: reads only df and the constants above
+residuals = df[Y_TRUE] - df[Y_PRED]
+limit = SIGMA_LIMIT * residuals.std()
+is_outlier = residuals.abs() > limit
+x_min, x_max = df[Y_PRED].min(), df[Y_PRED].max()
+x_pad = (x_max - x_min) * 0.03
+y_top = max(residuals.abs().max(), limit) * 1.15
+x_ticks = np.linspace(x_min, x_max, 8).round().astype(int).tolist()
+span = [float(x_min), float(x_max)]
 
-# Calculate standard deviation for reference bands
-std_residuals = np.std(residuals)
-upper_band = 2 * std_residuals
-lower_band = -2 * std_residuals
-
-# Identify outliers (beyond 2 standard deviations)
-outlier_mask = np.abs(residuals) > 2 * std_residuals
-
-# Custom style for 4800x2700 canvas with theme-adaptive tokens
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=20,
-    legend_font_size=18,
-    value_font_size=14,
+    colors=(IMPRINT_PALETTE[0], IMPRINT_PALETTE[4], INK, INK_MUTED, INK_MUTED),
+    opacity=0.55,
+    opacity_hover=0.9,
+    title_font_size=64,
+    label_font_size=48,
+    major_label_font_size=40,
+    legend_font_size=36,
+    value_font_size=32,
     stroke_width=3,
     guide_stroke_color=INK_MUTED,
-    guide_stroke_dasharray="3, 3",
+    guide_stroke_dasharray="3, 6",
+    major_guide_stroke_color=INK_MUTED,
+    major_guide_stroke_dasharray="3, 6",
 )
 
-# Create XY scatter chart for residual plot
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="residual-plot · pygal · anyplot.ai",
-    x_title="Fitted Values - Predicted Price ($1000s)",
-    y_title="Residuals - Actual minus Predicted ($1000s)",
+    title="residual-plot · python · pygal · anyplot.ai",
+    x_title=Y_PRED,
+    y_title="Residual: observed minus predicted (min)",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
+    spacing=30,
+    margin_bottom=40,
     show_x_guides=True,
     show_y_guides=True,
     stroke=False,
-    dots_size=12,
+    dots_size=11,
     truncate_legend=-1,
     x_label_rotation=0,
-    xrange=(140, 510),
-    range=(-100, 110),
+    xrange=(float(x_min - x_pad), float(x_max + x_pad)),
+    range=(-float(y_top), float(y_top)),
+    x_labels=x_ticks,
 )
 
-# Set explicit x-axis labels
-chart.x_labels = [150, 200, 250, 300, 350, 400, 450, 500]
-
-# Prepare data points - separate normal and outlier points
-normal_points = [(float(fitted_values[i]), float(residuals[i])) for i in range(n_points) if not outlier_mask[i]]
-outlier_points = [(float(fitted_values[i]), float(residuals[i])) for i in range(n_points) if outlier_mask[i]]
-
-# Add data series
-chart.add("Residuals", normal_points)
-chart.add("Outliers (>2σ)", outlier_points)
-
-# Add zero reference line
-zero_line_points = [(float(x), 0.0) for x in np.linspace(150, 500, 50)]
-chart.add("Zero Reference (Perfect Fit)", zero_line_points, stroke=True, show_dots=False, stroke_style={"width": 5})
-
-# Add +2σ reference band line
-upper_band_points = [(float(x), float(upper_band)) for x in np.linspace(150, 500, 50)]
+points = list(zip(df[Y_PRED].astype(float), residuals.astype(float), strict=True))
+chart.add("Residuals", [p for p, out in zip(points, is_outlier, strict=True) if not out])
+chart.add(f"Outliers (>{SIGMA_LIMIT}σ)", [p for p, out in zip(points, is_outlier, strict=True) if out])
+chart.add("Zero line", [(x, 0.0) for x in span], stroke=True, show_dots=False, stroke_style={"width": 5})
 chart.add(
-    "+2σ Threshold", upper_band_points, stroke=True, show_dots=False, stroke_style={"width": 3, "dasharray": "10, 8"}
+    f"+{SIGMA_LIMIT}σ",
+    [(x, float(limit)) for x in span],
+    stroke=True,
+    show_dots=False,
+    stroke_style={"width": 3, "dasharray": "14, 10"},
 )
-
-# Add -2σ reference band line
-lower_band_points = [(float(x), float(lower_band)) for x in np.linspace(150, 500, 50)]
 chart.add(
-    "-2σ Threshold", lower_band_points, stroke=True, show_dots=False, stroke_style={"width": 3, "dasharray": "10, 8"}
+    f"−{SIGMA_LIMIT}σ",
+    [(x, float(-limit)) for x in span],
+    stroke=True,
+    show_dots=False,
+    stroke_style={"width": 3, "dasharray": "14, 10"},
 )
 
-# Save as PNG and HTML
 chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
