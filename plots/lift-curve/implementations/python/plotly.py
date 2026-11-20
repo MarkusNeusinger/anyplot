@@ -60,8 +60,8 @@ fig.add_trace(
         y=lift[picks],
         mode="lines+markers",
         name="Model Lift",
-        line=dict(color=IMPRINT_PALETTE[0], width=2.5),
-        marker=dict(size=5, color=IMPRINT_PALETTE[0]),
+        line={"color": IMPRINT_PALETTE[0], "width": 2.5},
+        marker={"size": 5, "color": IMPRINT_PALETTE[0]},
         hovertemplate="Top %{x:.0f}%<br>Lift: %{y:.2f}x<extra></extra>",
     )
 )
@@ -71,7 +71,7 @@ fig.add_trace(
         y=[BASELINE_LIFT, BASELINE_LIFT],
         mode="lines",
         name="Random Selection",
-        line=dict(color=IMPRINT_PALETTE[1], width=2, dash="dash"),
+        line={"color": IMPRINT_PALETTE[1], "width": 2, "dash": "dash"},
         hovertemplate="Random baseline<br>Lift: 1.0x<extra></extra>",
     )
 )
@@ -87,7 +87,7 @@ fig.add_annotation(
     arrowcolor=IMPRINT_PALETTE[0],
     ax=45,
     ay=-30,
-    font=dict(size=10, color=INK),
+    font={"size": 10, "color": INK},
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
     borderwidth=1,
@@ -97,44 +97,47 @@ fig.add_annotation(
 # Style
 fig.update_layout(
     autosize=False,
-    title=dict(
-        text="lift-curve · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"
-    ),
-    font=dict(color=INK),
-    xaxis=dict(
-        title=dict(text="Percentage of Population Targeted (%)", font=dict(size=12, color=INK)),
-        tickfont=dict(size=10, color=INK_SOFT),
-        range=[0, 100],
-        showgrid=True,
-        gridcolor=GRID,
-        gridwidth=1,
-        dtick=10,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-    ),
-    yaxis=dict(
-        title=dict(text="Cumulative Lift Ratio", font=dict(size=12, color=INK)),
-        tickfont=dict(size=10, color=INK_SOFT),
-        range=[0, max(lift[picks].max(), BASELINE_LIFT) * 1.1],
-        showgrid=True,
-        gridcolor=GRID,
-        gridwidth=1,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-    ),
+    title={
+        "text": "lift-curve · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    font={"color": INK},
+    xaxis={
+        "title": {"text": "Percentage of Population Targeted (%)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "range": [0, 100],
+        "showgrid": True,
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "dtick": 10,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": "Cumulative Lift Ratio", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "range": [0, max(lift[picks].max(), BASELINE_LIFT) * 1.1],
+        "showgrid": True,
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    legend=dict(
-        font=dict(size=10, color=INK_SOFT),
-        x=0.98,
-        y=0.98,
-        xanchor="right",
-        yanchor="top",
-        bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
-    ),
-    margin=dict(l=70, r=30, t=60, b=55),
+    legend={
+        "font": {"size": 10, "color": INK_SOFT},
+        "x": 0.98,
+        "y": 0.98,
+        "xanchor": "right",
+        "yanchor": "top",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
+    margin={"l": 70, "r": 30, "t": 60, "b": 55},
 )
 
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
