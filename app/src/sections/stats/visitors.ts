@@ -18,7 +18,7 @@ export interface VisitorPoint {
 }
 
 export interface VisitorsAnswer {
-  /** The window's UTC days, oldest first. */
+  /** The window's days, oldest first: the Plausible site's days (Europe/Zurich), not UTC days. */
   points: VisitorPoint[];
   /** The first day that has engaged visitors; `null` when the answer names none. */
   engagedSince: string | null;

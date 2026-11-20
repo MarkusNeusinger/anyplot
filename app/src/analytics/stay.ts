@@ -13,6 +13,11 @@
  * - It counts by timestamps, not by ticks: a browser throttles or freezes a hidden page's
  *   timers, so every change of state books the time since the last one, and the timeout only
  *   wakes the clock when the rest of the ten seconds is due.
+ * - When it wakes, it asks the page again before the moment comes: a page can lose focus or be
+ *   hidden without an event that says so. If the page is not active, the stretch is booked and
+ *   the clock stops until the next change of activity. Since nothing says when the page left,
+ *   the booked time can already reach ten seconds, and the moment then comes as soon as the page
+ *   is active again, never while it is not.
  * - It notes whether the visitor did anything with a pointer, a finger or a key. Scrolling is
  *   not asked: a page that scrolls itself says nothing.
  * - The caller is told at most twice per stay. At the moment, with whether input came before
@@ -59,6 +64,12 @@ export function pageActive(): boolean {
 function wake(): void {
   if (!stay || stay.runningSince === null) return;
   const now = Date.now();
+  if (!pageActive()) {
+    // The page stopped being active without an event that said so: book the stretch and wait for
+    // the next change of activity, so the moment never comes while nobody has the page in front.
+    setStayActive(false, now);
+    return;
+  }
   const active = stay.banked + (now - stay.runningSince);
   if (active < STAY_MS) {
     // A throttled timer can also fire early against a clock that was set back: wait out the rest.

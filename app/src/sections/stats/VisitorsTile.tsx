@@ -1,6 +1,7 @@
 /**
- * The stats page's "visitors" tile: per UTC day of the last 28, the unique visitors who stayed
- * ten seconds and did something, from Plausible (`GET /insights/visitors`, `visitors.ts`).
+ * The stats page's "visitors" tile: per day of the last 28, the unique visitors who stayed ten
+ * seconds and did something, from Plausible (`GET /insights/visitors`, `visitors.ts`). The days
+ * are the Plausible site's (Europe/Zurich), not UTC days.
  *
  * - Bars: one per day, the day's engaged visitors, drawn like the two tiles below it
  *   (`DayStrip`). Those had the site in front of them for ten seconds of a visit and used a

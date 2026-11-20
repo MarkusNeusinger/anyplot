@@ -99,6 +99,47 @@ describe('the ten seconds of a visit', () => {
     expect(stayed).toHaveBeenCalledTimes(1);
   });
 
+  it('does not come while the page is not active, though no event said it left', () => {
+    const stayed = vi.fn();
+    beginStay(Date.now(), stayed);
+
+    vi.advanceTimersByTime(4_000);
+    page(true, false); // focus gone, and no blur told the clock
+    vi.advanceTimersByTime(6_000);
+    expect(stayed).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(5 * 60_000);
+    expect(stayed).not.toHaveBeenCalled();
+
+    // Nothing said when the page left, so the stretch up to the check was booked: ten seconds,
+    // and the moment comes as soon as the page is active again.
+    page(true, true);
+    setStayActive(true, Date.now());
+    vi.advanceTimersByTime(0);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  it('books the stretch up to the check and waits out the rest once the page is back', () => {
+    const start = Date.now();
+    const stayed = vi.fn();
+    beginStay(start, stayed);
+
+    // The timer fires early against a clock that shows six seconds, on a page that is hidden.
+    vi.advanceTimersByTime(STAY_MS - 1);
+    vi.setSystemTime(start + 6_000);
+    page(false, true);
+    vi.advanceTimersByTime(1);
+    vi.advanceTimersByTime(60_000);
+    expect(stayed).not.toHaveBeenCalled();
+
+    // 6,001 ms were booked at the check; the rest of the ten seconds is still to come.
+    page(true, true);
+    setStayActive(true, Date.now());
+    vi.advanceTimersByTime(3_998);
+    expect(stayed).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(stayed).toHaveBeenCalledTimes(1);
+  });
+
   it('says whether the visitor used a pointer, a finger or a key before the moment came', () => {
     const stayed = vi.fn();
     beginStay(Date.now(), stayed);

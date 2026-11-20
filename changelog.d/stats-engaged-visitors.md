@@ -14,4 +14,12 @@
   crawler-farm pattern stayed ten seconds in 14 of 679 visits, all without
   input; Google visitors stayed in 181 of 256, 176 of them with input. The
   line under the strip shows all unique visitors, and Plausible's bounce rate
-  stays as it was.
+  stays as it was. A click or a mousedown counts as input, for screen
+  readers and voice control that send no pointer events, and a pointer move
+  only once the pointer has travelled 4 px. The clock checks that the page is
+  still in front of the visitor before the ten seconds count, and an input
+  brings it up to date. The query filters by the event's name instead of
+  its goal, so renaming the goal can't break the tile, and its days are the
+  Plausible site's (Europe/Zurich) instead of UTC days, so the last bar is
+  today also just after midnight. `docs/reference/plausible.md` names the
+  early warnings with their baselines and the readers the rule misses.

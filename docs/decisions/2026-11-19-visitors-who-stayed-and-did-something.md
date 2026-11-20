@@ -12,5 +12,9 @@
   and leaving does not count. The tile counts unique visitors per day, from 2026-11-15, the first
   full day of the event, so it switches on 2026-12-12 instead of 2026-12-07; he accepted that the
   days before the deploy know no action after the ten seconds. Plausible's own bounce rule stays as
-  it is.
+  it is. On 2026-11-20, after a second opinion by Gemini 4 Carbon and Claude Fable, he approved the
+  details: a click counts, a pointer move only once the pointer has travelled 4 px, the clock checks
+  that the page is in front of the visitor before the moment comes, the tile filters by the event's
+  name and counts the Plausible site's days (Europe/Zurich), and the docs name the early warnings
+  and the readers the rule misses.
 - Where: `docs/reference/plausible.md`

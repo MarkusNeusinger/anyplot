@@ -343,7 +343,7 @@ Returns related specs sorted by Jaccard similarity with preview thumbnails and s
 
 **Purpose**: Visitors per day for the visitors tile on the stats page
 
-Queries the Plausible Stats API for today and the 27 days before it, oldest first, zero-filled:
+Queries the Plausible Stats API for today and the 27 days before it, oldest first, zero-filled. The days are the Plausible site's, in its reporting time zone Europe/Zurich, not UTC days: Plausible buckets `time:day` and reads `date_range` in that zone, so the API takes today there (`PLAUSIBLE_TIMEZONE` in `api/routers/insights.py`, which must match the site's setting).
 
 ```json
 {
@@ -357,8 +357,8 @@ Queries the Plausible Stats API for today and the 27 days before it, oldest firs
 ```
 
 - `visitors` is the day's unique visitors, and `visits` its visits, as Plausible counts them.
-- `engaged` is the day's unique visitors who had the site in front of them for ten seconds of a visit and used a pointer, a finger, or a key in it, before the ten seconds or after them. Those are the visitors with a `stayed_10s` event whose `input` is `yes` ([Ten seconds on the site](plausible.md#ten-seconds-on-the-site-stayed_10s)), counted by a second query with the filters `[["is", "event:goal", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]]`. It is never more than the day's `visitors`. A crawler farm that runs the page's scripts raises `visitors` and `visits` and seldom stays ten seconds, and does nothing when it does, so it leaves `engaged` alone.
-- `engaged` is `null` for a day before `engaged_since`, the first full UTC day of the `stayed_10s` event. It is `null` for every day when the second query fails, and the page then draws the unique visitors.
+- `engaged` is the day's unique visitors who had the site in front of them for ten seconds of a visit and used a pointer, a finger, or a key in it, before the ten seconds or after them. Those are the visitors with a `stayed_10s` event whose `input` is `yes` ([Ten seconds on the site](plausible.md#ten-seconds-on-the-site-stayed_10s)), counted by a second query with the filters `[["is", "event:name", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]]`. The filter names the event, not its goal, because a goal filter matches the goal's display name and would break if the goal were renamed in the dashboard. `engaged` is never more than the day's `visitors`. A crawler farm that runs the page's scripts raises `visitors` and `visits` and seldom stays ten seconds, and does nothing when it does, so it leaves `engaged` alone.
+- `engaged` is `null` for a day before `engaged_since`, the first full day of the `stayed_10s` event. It is `null` for every day when the second query fails, and the page then draws the unique visitors.
 
 `points` is empty when `PLAUSIBLE_API_KEY` is unset or the first query fails, so the page shows its placeholder instead of an all-zero strip. The two queries run together. Cached with stale-while-revalidate (1h refresh); an empty answer is cached too, and so is one without `engaged`.
 

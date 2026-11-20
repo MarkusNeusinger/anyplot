@@ -18,6 +18,7 @@ import random
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import httpx
 from fastapi import APIRouter, Depends, Query
@@ -116,13 +117,19 @@ class DailyImplPoint(BaseModel):
     count: int
 
 
-# The first full UTC day of the `stayed_10s` event: the tracker began sending it during
-# 2026-11-14, so that day holds only the visits after the deploy and would count too few.
+# The Plausible site's reporting time zone, read through the Sites API on 2026-11-20. Plausible's
+# `time:day` buckets and `date_range` dates are days of that zone, so the visitors tile takes its
+# today there. It must match the site's setting in Plausible.
+PLAUSIBLE_TIMEZONE = "Europe/Zurich"
+
+# The first full day of the `stayed_10s` event, in the site's time zone: the tracker began sending
+# it in the evening of 2026-11-14, so that day holds only the visits after the deploy and would
+# count too few.
 ENGAGED_SINCE = date(2026, 11, 15)
 
 
 class VisitorPoint(BaseModel):
-    """One UTC day of the site's visitors, sourced from Plausible.
+    """One day of the site's visitors, sourced from Plausible: a day of `PLAUSIBLE_TIMEZONE`, not a UTC day.
 
     `engaged` is the day's unique visitors who had the site in front of them for ten seconds of a
     visit and used a pointer, a finger or a key in it, before the ten seconds or after them: the
@@ -745,8 +752,10 @@ async def get_related_specs(
 
 # The visitors the stats page draws: a `stayed_10s` event with `input=yes`. The tracker sends
 # that once per visit at most, at ten seconds when the visitor did something before them, or at
-# the first input after them (`app/src/analytics/stay.ts`).
-STAYED_WITH_INPUT = [["is", "event:goal", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]]
+# the first input after them (`app/src/analytics/stay.ts`). The filter names the event, not its
+# goal: a goal filter matches the goal's display name in the dashboard, so renaming the goal there
+# would break the count. Both gave the same per-day counts on the live API on 2026-11-20.
+STAYED_WITH_INPUT = [["is", "event:name", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]]
 
 # A Plausible day's metrics as numbers, by ISO date.
 _PlausibleDays = dict[str, list[float | None]]
@@ -806,7 +815,8 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
 
     The 28-day window ends on today (inclusive) so the rightmost bar reflects
     current-day traffic as a partial day, matching how Plausible's dashboard
-    "Last 28 days" view renders.
+    "Last 28 days" view renders. Its days are the Plausible site's (`PLAUSIBLE_TIMEZONE`),
+    so today is taken there: just after midnight in that zone, the UTC date is still yesterday's.
 
     Note: we deliberately do NOT use Plausible's `"28d"` preset because it
     maps to `[today-28, today-1]` (the source uses `last = today - 1 day`,
@@ -824,7 +834,7 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
     if not settings.plausible_api_key:
         return VisitorsResponse(points=[])
 
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(ZoneInfo(PLAUSIBLE_TIMEZONE)).date()
     start = today - timedelta(days=27)
     window: dict[str, object] = {
         "site_id": settings.plausible_site_id,

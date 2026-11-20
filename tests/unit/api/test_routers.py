@@ -2964,12 +2964,9 @@ class TestInsightsRouter:
         Time is frozen via a patched `datetime` in the module under test so the
         "today" the endpoint computes for zero-filling matches the "today" the
         fake Plausible response references, regardless of when the test runs
-        (UTC midnight was the flakiness risk).
+        (midnight was the flakiness risk).
         """
-        from datetime import datetime as _dt
-        from datetime import timezone as _tz
-
-        frozen_now = _dt(2026, 5, 13, 12, 0, 0, tzinfo=_tz.utc)
+        frozen_now = datetime(2026, 5, 13, 12, 0, 0, tzinfo=timezone.utc)
         today_iso = frozen_now.date().isoformat()
 
         class _MockResp:
@@ -2991,16 +2988,11 @@ class TestInsightsRouter:
             async def post(self, *_args, **_kwargs):
                 return _MockResp()
 
-        class _FrozenDatetime(_dt):
-            @classmethod
-            def now(cls, tz=None):  # type: ignore[override]
-                return frozen_now if tz is _tz.utc else frozen_now.replace(tzinfo=None)
-
         with (
             patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
             patch("api.routers.insights.settings") as mock_settings,
             patch("api.routers.insights.httpx.AsyncClient", return_value=_MockClient()),
-            patch("api.routers.insights.datetime", _FrozenDatetime),
+            patch("api.routers.insights.datetime", self._frozen(frozen_now)),
         ):
             mock_settings.plausible_api_key = "test-key"
             mock_settings.plausible_site_id = "anyplot.ai"
@@ -3034,6 +3026,42 @@ class TestInsightsRouter:
         # Both queries, the visitors and the engaged ones, cover the same days.
         assert len(plausible.queries) == 2
         assert [query["date_range"] for query in plausible.queries] == [[expected_start_iso, today_iso]] * 2
+
+    @pytest.mark.parametrize(
+        ("now", "last_day"),
+        [
+            # 00:30 in Zurich (CET, UTC+1) and still 2026-11-19 in UTC.
+            (datetime(2026, 11, 19, 23, 30, tzinfo=timezone.utc), "2026-11-20"),
+            # 00:30 in Zurich (CEST, UTC+2): an offset fixed at one hour would still say 2026-07-14.
+            (datetime(2026, 7, 14, 22, 30, tzinfo=timezone.utc), "2026-07-15"),
+            # 23:59 in Zurich: still the day before, as in UTC.
+            (datetime(2026, 11, 19, 22, 59, tzinfo=timezone.utc), "2026-11-19"),
+        ],
+    )
+    def test_visitors_days_are_the_plausible_sites_days(self, client: TestClient, now: datetime, last_day: str) -> None:
+        """Plausible's `time:day` buckets and `date_range` are days of the site's time zone (Europe/Zurich), so the
+        window ends on today there: just after midnight in Zurich, the UTC date is still yesterday's."""
+        from datetime import date, timedelta
+
+        plausible = self._PlausibleClient(
+            totals={"results": [{"dimensions": [last_day], "metrics": [7, 8]}]}, engaged={"results": []}
+        )
+        body = self._get_visitors(client, plausible, now).json()
+
+        first_day = (date.fromisoformat(last_day) - timedelta(days=27)).isoformat()
+        assert [query["date_range"] for query in plausible.queries] == [[first_day, last_day]] * 2
+        assert [point["date"] for point in body["points"]][-1] == last_day
+        assert body["points"][-1]["visitors"] == 7
+
+    def test_visitors_time_zone_is_the_plausible_sites(self) -> None:
+        """The zone must match the Plausible site's reporting time zone, and resolve where the tests run."""
+        from datetime import timedelta
+        from zoneinfo import ZoneInfo
+
+        from api.routers.insights import PLAUSIBLE_TIMEZONE
+
+        assert PLAUSIBLE_TIMEZONE == "Europe/Zurich"
+        assert ZoneInfo(PLAUSIBLE_TIMEZONE).utcoffset(datetime(2026, 11, 20)) == timedelta(hours=1)
 
     class _PlausibleClient:
         """A Plausible Stats API that records each query and answers it by what it asks, not by its order.
@@ -3113,7 +3141,8 @@ class TestInsightsRouter:
             {
                 **window,
                 "metrics": ["visitors"],
-                "filters": [["is", "event:goal", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]],
+                # The event's name, not its goal: renaming the goal in the dashboard must not break the count.
+                "filters": [["is", "event:name", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]],
             },
         ]
         assert body["engaged_since"] == "2026-11-15"
@@ -3142,7 +3171,7 @@ class TestInsightsRouter:
         """
         refused = httpx.Response(
             400,
-            json={"error": "The goal `stayed_10s` is not configured for this site."},
+            json={"error": "Invalid filters in this query."},
             request=httpx.Request("POST", "https://plausible.io/api/v2/query"),
         )
         plausible = self._PlausibleClient(totals=self._TOTALS, engaged=refused)
@@ -3156,7 +3185,7 @@ class TestInsightsRouter:
         assert {point["date"]: point["visitors"] for point in points}["2026-11-16"] == 606
         [warning] = [record for record in caplog.records if "engaged visitors" in record.getMessage()]
         assert "HTTP 400" in warning.getMessage()
-        assert "is not configured for this site" in warning.getMessage()
+        assert "Invalid filters in this query." in warning.getMessage()
 
     def test_visitors_empty_when_the_visitors_query_fails(self, client: TestClient) -> None:
         """Without the day's visitors there is nothing to draw, whatever the engaged query answered."""
@@ -3184,12 +3213,13 @@ class TestInsightsRouter:
 
     @staticmethod
     def _frozen(now):
+        """A `datetime` whose `now()` is the instant *now*, read in the time zone it is asked for."""
         from datetime import datetime as _dt
 
         class _FrozenDatetime(_dt):
             @classmethod
             def now(cls, tz=None):  # type: ignore[override]
-                return now if tz is not None else now.replace(tzinfo=None)
+                return now.astimezone(tz) if tz is not None else now.replace(tzinfo=None)
 
         return _FrozenDatetime
 

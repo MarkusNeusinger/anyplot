@@ -565,6 +565,13 @@ keeps the clock and reports it.
   [Google tag settings](https://support.google.com/analytics/answer/12131703)),
   and how Plausible counts time on page. A tab opened in the background, a
   window behind another, and a page in the back-forward cache add nothing.
+  A page can also lose focus or be hidden without an event that says so, so
+  the clock asks again before the moment comes: if the page isn't active, it
+  books the time so far and waits until the page is active again. Since
+  nothing says when the page left, that time can already reach ten seconds,
+  and the moment then comes as soon as the page is back, never while it
+  isn't. An input brings the clock up to date first, for a page that reports
+  focus only after the first touch, such as an iOS in-app webview.
 - **Over the whole visit.** The clock starts with the pageview that begins a
   visit and runs through everything after it. A click after five seconds or a
   second page neither stops it nor starts it again, and time away only pauses
@@ -578,10 +585,19 @@ keeps the clock and reports it.
   nothing: the event would open a visit of its own there, one without a page.
   The next pageview then begins a new visit and a new clock.
 - **`input`.** `yes` when the visitor used a pointer, a finger, or a key
-  (`pointerdown`, `pointermove`, `touchstart`, `keydown`, `wheel`, and only
-  events the browser marks as the user's own) before the ten seconds, or in
-  the late event after them; `no` at ten seconds without any. Scrolling
-  isn't asked: a page that scrolls itself says nothing. The late `yes` exists
+  (`pointerdown`, `mousedown`, `click`, `touchstart`, `keydown`, `wheel`,
+  `pointermove`, and only events the browser marks as the user's own) before
+  the ten seconds, or in the late event after them; `no` at ten seconds
+  without any. Scrolling isn't asked: a page that scrolls itself says
+  nothing. `click` and `mousedown` are there for what arrives without
+  pointer events: a screen reader activating from its virtual cursor,
+  VoiceOver's double tap, voice control. A script's `element.click()` isn't
+  the user's own, so automation gains nothing from them. A pointer move
+  counts only once the pointer has travelled 4 CSS pixels from the first
+  position seen on the page; the first move only records it. A script that
+  sets the mouse once, and a cursor that stands still while the layout
+  shifts under it, give a single move; a person's mouse always travels
+  further. Every other input counts at once. The late `yes` exists
   since the deploy that followed the decision: on the days before it, a
   visitor who did something only after the ten seconds sent a `no` and
   nothing more, and isn't counted. The owner accepted that.
@@ -615,6 +631,43 @@ A second opinion of 2026-11-14 (Gemini 4 Argon and Claude Fable) is behind
 this order: measure first, count focused time, and keep the event inside the
 visit. The tracker script the site serves already sends nothing when
 `navigator.webdriver` is true, so that check adds nothing against the farm.
+
+A second opinion of 2026-11-20 (Gemini 4 Carbon and Claude Fable) led to
+the rule's details that the owner approved that day: `click` and `mousedown`
+count, a pointer move only after it travels, the clock checks that the page
+is active before the moment comes, the tile filters by the event's name, and
+its days are the site's (see
+[Reading stats](#reading-stats--backend--plausible-stats-api)).
+
+#### Early warnings
+
+No rule in the browser can keep out automation that waits ten seconds and
+sends input that looks human. What shows it is the data the site already
+collects. Read these from time to time; each has its baseline from
+2026-11-15 to 2026-11-19:
+
+- **Visitors with `input` `yes` in the farm pattern** (source Direct, desktop
+  Chrome, about one page per visit, see
+  [The Windows 10 Chrome farm](#the-windows-10-chrome-farm-2026-11-09)):
+  0. A rise means automation that dwells and sends input.
+- **The share of `yes` among the Google visits that stayed**: 176 of 181. A
+  drop means a regression in a browser or in the tracker's listeners.
+- **The stay rate on mobile**: 30 of 59 visits stayed ten seconds. A drop
+  means trouble with focus or touch.
+- **The bounce rate among visits with `input` `yes`**: 42 %.
+
+#### Known gaps
+
+These visitors aren't counted, although they read:
+
+- **A phone that lands on a plot's interactive view and touches only the
+  plot.** The events inside the plot's cross-origin frame don't reach the
+  page. A message from the frame at its first input would close this gap,
+  if it ever matters.
+- **A reader on a second monitor whose window never has focus.** The clock
+  needs focus, as Google Analytics 4's does. This is kept on purpose.
+- **A screen reader user who only reads in browse mode**, without an input
+  the page sees.
 
 ### Events that ended
 
@@ -987,7 +1040,7 @@ page's scripts. A crawler farm seldom stays ten seconds and does nothing
 when it does, so it raises all visitors and leaves the bars alone
 ([The Windows 10 Chrome farm](#the-windows-10-chrome-farm-2026-11-09)).
 
-The count starts on 2026-11-15, the first full UTC day of `stayed_10s`. A
+The count starts on 2026-11-15, the first full day of `stayed_10s`. A
 strip that is empty for the days before would say less than the one it
 replaces, so the tile switches by itself: until every day of the 28-day
 window is counted, which is on 2026-12-12, it draws the unique visitors per
@@ -1002,16 +1055,22 @@ window without a number draws the floor and is named "not counted".
   `{"site_id": "anyplot.ai", "metrics": ["visitors", "visits"], "date_range": ["<today - 27 days>", "<today>"], "dimensions": ["time:day"]}`.
   The second counts the engaged visitors: the same body with
   `"metrics": ["visitors"]` and
-  `"filters": [["is", "event:goal", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]]`.
-  The explicit range ends on today; Plausible's `28d` preset ends on
-  yesterday.
+  `"filters": [["is", "event:name", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]]`.
+  The filter names the event, not its goal: a goal filter matches the
+  goal's display name, so renaming the goal in the dashboard would break
+  the count. Both gave the same per-day counts on the live API on
+  2026-11-20. The explicit range ends on today; Plausible's `28d` preset
+  ends on yesterday.
+- **Days**: the site's days, not UTC days. Plausible buckets `time:day` and
+  reads the dates of `date_range` in the site's reporting time zone,
+  Europe/Zurich (read through the Sites API on 2026-11-20), so the endpoint
+  takes today there: `PLAUSIBLE_TIMEZONE` in `api/routers/insights.py`.
+  Change it together with the site's setting.
 - **Engaged visitors**: the second query's count per day from
   `ENGAGED_SINCE` on, 0 for a day it has no row for, and never more than the
-  day's unique visitors. Set up the goal `stayed_10s` and the property
-  `input` in the dashboard before the switch on 2026-12-12, and run the
-  second query once with the real key (see
-  [Dashboard checklist](#dashboard-checklist)): while it fails, the tile
-  draws the unique visitors and nothing on the page says why.
+  day's unique visitors. While the query fails, the tile draws the unique
+  visitors, nothing on the page says why, and the API's log names the
+  status and the start of Plausible's answer.
 - **Auth**: `Authorization: Bearer ${PLAUSIBLE_API_KEY}` (Stats API key
   created in Plausible → Account Settings → API Keys, then mirrored to
   GCP Secret Manager as `PLAUSIBLE_API_KEY` for Cloud Run)
