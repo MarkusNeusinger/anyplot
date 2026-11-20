@@ -40,7 +40,7 @@ What reaches a dry run as text is a column with cells outside the list (`uncerta
 candidate when more than a tenth fail), days with a UTC offset, or a column the parser keeps
 text by its own rule (the keys of `json_pairs`, a `json_stat` dimension). Dates in another form
 are no candidate: a `set_type` with a `date_format` reads the forms a format names (`YYYYMMDD`,
-`MM/YYYY`, `YYYY`) on request, and no conversion reads the others (`1st March 2026`, `2026/03/01`).
+`MM/YYYY`, `YYYY`) on request, and no conversion reads the others (`1st March 2026`, `2026.03.01`).
 Beside such a column, the row numbers take an axis that takes dates only on a yes (below).
 
 Converted dates that run newest first stay in the order of the rows: a plot run draws a
@@ -67,8 +67,8 @@ Last comes the row number, when no column and no conversion can fill the open ro
 line plot). On a required axis it counts as `certain`: the column `index` holds 1 to n, the axis
 takes it, and a number column that sat there moves to the open measure, with one line in
 the reply. On an axis that takes dates, a free text column that looks like dates no conversion
-takes in more than half of its cells (`prepare.unread_dates`: `2026/03/01`, `1st March 2026`,
-`2026-03-01 10:00:00 UTC`, a day that does not exist, slash dates of no single order, times with
+takes in more than half of its cells (`prepare.unread_dates`: `2026.03.01`, `1st March 2026`,
+`3/1/2026, 10:00:00 AM`, a day that does not exist, slash dates of no single order, times with
 and without a UTC offset in one column) makes it `uncertain` instead: the user may mean those
 dates, so the root asks, and the line names the column, counts the cells that would not read and
 says why in the words of the refused conversion, the forms the chat reads among them. On a role

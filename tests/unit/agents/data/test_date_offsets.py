@@ -284,6 +284,11 @@ class TestConversion:
             "2026-03-02t10:00+01:00",
             "02.03.2026 10:00",  # a time in another form of the list, which a conversion reads cell by cell
             "01.03.2026 00:00",  # a midnight written out is a time too
+            # The forms tools write are times of the list as well, no longer cells it leaves unread.
+            "2026-03-02 10:00:00 UTC",
+            "2026-03-02 10:00 +0100",
+            "2026-03-02 10:00 AM",
+            "2026/03/02 10:00",
         ],
     )
     def test_beside_times_the_column_stays_as_it_is(self, timed: str) -> None:

@@ -28,7 +28,8 @@ The operations:
   same wherever it occurs. Whole numbers are read exactly (`Int64`, never through a
   float64), and the change line counts the cells a float64 holds only rounded (more
   than 15 to 17 significant digits). To datetime: with `date_format` the cells are read in
-  exactly that format, with an optional time (`HH:MM[:SS]`) after it (a format without
+  exactly that format, with an optional time (`HH:MM[:SS]`, or on a 12-hour clock as the
+  date list reads it, `10:00:00 AM`) after it (a format without
   a day, such as `YYYY-MM` or `YYYY`, reads the first day of the month or the year;
   `YYYY` on a number column says "read as years", since a measure of 1450 to 2100 reads
   the same way; the compact `YYYYMMDD`, `YYYYMM` and `YYYY` take exactly their 8, 6 or
@@ -41,15 +42,19 @@ The operations:
   crash). Without `date_format` the cells are read in the forms of the date list, with the
   parser's own reader (`parse.read_dates`), so a cell converts when it is in a form the paste
   types: `2026-03-01`, also with a time after `T` (or `t`) or a space, seconds, a fraction and
-  a UTC offset of −12:00 to +14:00 (`Z` or `z` for UTC); `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
+  a UTC offset of −12:00 to +14:00 (`Z` or `z` for UTC, also ` UTC`, and an offset after one space,
+  ` +0100` or ` +01:00`); `2026/03/01` and `2026/3/1`, with a time as `2026-03-01` takes it or with a
+  one-digit hour as `01.03.2026` takes it (`2026/3/1 9:05`);
+  `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
   and a day with a month name and a four-digit year (`8 Nov 2026`, `1. März 2026`,
-  `March 1, 2026`), each also with a time; a month, `2026-03` or a month name with a four-digit
-  year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are those of `months.py`,
+  `March 1, 2026`), each also with a time, also on a 12-hour clock (`10:00:00 AM`); a month,
+  `2026-03` or a month name with a four-digit year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are those of `months.py`,
   in a day only a name written as one word: a month written with its number and a marker
   (`3月`, `tháng 3`) reads as a month of a year (`2026年3月`), not as part of a day. Each
   cell reads in its own form, and the change line names each form read; the slash dates have one order of day and month, decided as at the paste (day first by guess,
-  which the reading names, when no slash cell settles it in a column of slash dates; beside
-  other forms only an order the slash dates settle); any other cell is unreadable. The
+  which the reading names, when no slash cell settles it in a column of slash dates without a
+  12-hour time; beside other forms, or with such a time, only an order the slash dates
+  settle); any other cell is unreadable. The
   refusal says why, by the reason of each cell left unread (`parse.UnreadReason`,
   `_unread_words`): a day that does not exist, slash dates that settle no single order,
   or no form of the list, for which it names the forms the chat reads (`parse.DATE_FORMS`); the
@@ -59,7 +64,7 @@ The operations:
   named for ids or seasons as text, while a request reads their `YYYY-MM` cells as months; it keeps
   days with a UTC offset as text, while a request reads their days; and it keeps times with and
   without an offset as text, while a request is refused with the reason. A form outside the list reads only with a `date_format` that names it
-  (`YYYYMMDD`, `MM/YYYY`, `YYYY`); one that no format names (`1st March 2026`, `2026/03/01`,
+  (`YYYYMMDD`, `MM/YYYY`, `YYYY`); one that no format names (`1st March 2026`, `2026.03.01`,
   `01.03.26`) reads in no conversion. A fraction of a second and a UTC offset are
   kept (`_cell_text`), different offsets in one column are read in UTC with the offsets
   named in the change line (owner decision of 2026-10-15, as the parser writes such a
@@ -420,6 +425,7 @@ from .parse import (
     ascii_minus,
     canonical_names,
     date_offset,
+    hour_of_day,
     keeps_value,
     minus_note,
     offset_in_use,
@@ -427,6 +433,7 @@ from .parse import (
     parse_dataset,
     read_dates,
     rounded_note,
+    twelve_hour_time,
     utc_offset,
     value_like,
 )
@@ -1827,8 +1834,8 @@ def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
     """The cells of a column that is no date column yet as dates (`_to_dates`), with the words of the change line.
 
     Without a format the cells read as the paste reads them (`parse.read_dates`), and so does the order of day and
-    month: the column's, a guess only for a slash column that no cell settles, which the reading names (`order`,
-    `guess`); a dot date is day first, as at the paste. With a format the order is a guess when every day is at
+    month: the column's, a guess only for a slash column without a 12-hour time that no cell settles, which the
+    reading names (`order`, `guess`); a dot date is day first, as at the paste. With a format the order is a guess when every day is at
     most 12 (`_order_open`), since the cells read the other way too.
     """
     dates = _to_dates(series, date_format)
@@ -1861,7 +1868,7 @@ def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
     elif listed is not None and listed.shape in ("dot", "slash"):
         reading = f"read as dates (format inferred, {_shape_words(listed.shape, listed.day_first)})"
     else:
-        reading = "read as dates (format inferred, year first)"  # `2026-03-01` and `2026-03`: the year leads
+        reading = "read as dates (format inferred, year first)"  # `2026-03-01`, `2026/03/01`, `2026-03`: the year leads
     unread: Counter[UnreadReason] = Counter()
     if listed is not None and dates.failed:
         # A cell that read but a nanosecond column cannot hold (before 1677) has no reason of the list's: no form.
@@ -1888,6 +1895,7 @@ def _shape_words(shape: DateShape, day_first: bool) -> str:
         return "day before month" if day_first else "month before day"
     return {
         "iso": "year first",
+        "year_slash": "year first",
         "dot": "day before month",
         "day_month": "a day, a month name and a year",
         "month": "months as their first day",
@@ -2065,13 +2073,13 @@ class UnreadDates:
 
 _YEAR_FIRST = re.compile(r"[0-9]{4}([/.-])([0-9]{1,2})\1([0-9]{1,2})(?![0-9])")
 """A date with its year first at the start of a cell: four digits, then two numbers of one or two digits, joined by one
-and the same separator, and no further digit (`2026/03/01`). Whatever follows is allowed: a time in a form the list
-does not read (`2026-03-01 10:00:00 UTC`) or an hour label (`2026-03-01-00`). `_numbered_date` checks the month (1 to
+and the same separator, and no further digit (`2026.03.01`). Whatever follows is allowed: a time in a form the list
+does not read (`2026-03-01 10:00:00 CET`) or an hour label (`2026-03-01-00`). `_numbered_date` checks the month (1 to
 12) and the day (1 to 31): `2024.13.40` is none, while a calendar version such as `2024.1.1` is a date."""
 _YEAR_LAST = re.compile(r"([0-9]{1,2})([/.-])([0-9]{1,2})\2(?:[0-9]{4}|[0-9]{2})(?=\Z|[ T,])")
 """A date with its year last at the start of a cell: two numbers of one or two digits, then a year of two or four
 digits, joined by one and the same separator, and after it the end of the cell, a space, `T` or a comma (`01.03.26`,
-`3/13/26`, `3/1/2026 10:00:00 AM`, and JavaScript's `toLocaleString()`: `3/1/2026, 10:00:00 AM`, `1.3.2026, 10:00:00`).
+`3/13/26`, `1-3-2026 10:00`, and JavaScript's `toLocaleString()`: `3/1/2026, 10:00:00 AM`, `1.3.2026, 10:00:00`).
 The end keeps out what has more numbers or fewer digits: a version (`1.2.3`), an address (`10.0.0.1`, `12.10.24.3`),
 a formation (`4-4-2`), a record (`2-1-0`) or an id (`123-45-6789`). `_numbered_date` checks the two numbers before the
 year, each 1 to 31 and one of them 1 to 12 (a day and a month): `44-55-66`, sizes such as `90-60-90` and `21-19-15` are
@@ -4813,11 +4821,23 @@ def _read_date(text: str, date_format: str) -> datetime | None:
 
     A compact format takes exactly its digits (`YYYYMMDD` 8, `YYYYMM` 6, `YYYY` 4) and no
     time: `2024115` is no `YYYYMMDD` date, never guessed as 5 November (review of 2026-10-15).
+    Every other format takes a time on a 24-hour clock (`_TIME_SUFFIXES`) or on a 12-hour one
+    after a space, as the date list reads it (`parse.twelve_hour_time`, `parse.hour_of_day`):
+    `3/1/2026 10:00:00 AM` with `MM/DD/YYYY` is 1 March at 10:00, and an hour of 0 or past 12
+    names no time, so such a cell is not read.
     """
     text = text.strip()
     digits = COMPACT_DIGITS.get(date_format)
     if digits is not None and not (text.isascii() and text.isdigit() and len(text) == digits):
         return None
+    twelve = twelve_hour_time(text) if digits is None else None
+    if twelve is not None:
+        hour = hour_of_day(twelve.hour, twelve.meridiem)
+        try:
+            day = datetime.strptime(twelve.day, STRPTIME[date_format])
+            return None if hour is None else day.replace(hour=hour, minute=twelve.minute, second=twelve.second)
+        except ValueError:
+            return None
     for suffix in ("",) if digits is not None else _TIME_SUFFIXES:
         try:
             return datetime.strptime(text, STRPTIME[date_format] + suffix)

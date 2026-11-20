@@ -335,7 +335,8 @@ def day_column(cells: list[str], name: str = "day") -> str:
     return f"{name},orders\n" + "".join(f'"{cell}",{14 + index * 3}\n' for index, cell in enumerate(cells))
 
 
-SLASHES = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04"]
+YEAR_DOTS = ["2026.03.01", "2026.03.02", "2026.03.03", "2026.03.04"]
+"""Dates with the year first and dots: no form of the list, and a date by their shape (`prepare._YEAR_FIRST`)."""
 NO_SUCH_DAY = "1 cell names a day that does not exist, such as 31 November"
 MIXED_ZONES = ["2026-03-01T10:00Z", "2026-03-02T10:00", "2026-03-03T10:00Z", "2026-03-04T10:00"]
 NAIVE_AND_ZONED = (
@@ -345,14 +346,34 @@ NAIVE_AND_ZONED = (
 UNREAD = {
     # The row numbers took the date axis unasked beside these: a form outside the date list, or dates the list leaves
     # unread for a reason of its own. Each with the cells that would not read, of four.
-    "a slashes year first": (SLASHES, 4, DATE_FORMS),
+    "a dots year first": (YEAR_DOTS, 4, DATE_FORMS),
     "b ordinal day": (["1st March 2026", "2nd March 2026", "3rd March 2026", "4th March 2026"], 4, DATE_FORMS),
     "c one 31.02. in four": (["28.02.2026", "31.02.2026", "01.03.2026", "02.03.2026"], 1, NO_SUCH_DAY),
     "f slashes in both orders": (["15/03/2026", "03/15/2026", "04/05/2026", "06/07/2026"], 4, SLASH_ORDER),
     "g a slash date beside ISO": (["2026-03-01", "03/04/2026", "2026-03-05", "2026-03-07"], 1, SLASH_ORDER),
-    "h UTC as a word": ([f"2026-03-0{day} 10:00:00 UTC" for day in range(1, 5)], 4, DATE_FORMS),
-    "i a space before the offset": ([f"2026-03-0{day} 10:00:00 +0100" for day in range(1, 5)], 4, DATE_FORMS),
-    "j AM and PM": ([f"3/{day}/2026 10:00:00 AM" for day in range(1, 5)], 4, DATE_FORMS),
+    # A 12-hour clock settles no order of day and month, and the column is read by no guess: the user is asked.
+    "j a 12-hour time on slash dates no cell settles": (
+        [f"3/{day}/2026 10:00:00 AM" for day in (1, 2, 4, 5)],
+        4,
+        SLASH_ORDER,
+    ),
+    "h a zone name after the time": ([f"2026-03-0{day} 10:00:00 CET" for day in range(1, 5)], 4, DATE_FORMS),
+    "i an offset of hours alone after a space": (
+        [f"2026-03-0{day} 10:00:00 +01" for day in range(1, 5)],
+        4,
+        DATE_FORMS,
+    ),
+    "j a 12-hour time without minutes": ([f"3/{day}/2026 10 AM" for day in range(1, 5)], 4, DATE_FORMS),
+    "a 12-hour hour the clock does not have": (
+        [f"3/1{day}/2026 13:00 PM" for day in range(3, 7)],
+        4,
+        "4 cells name a day that does not exist, such as 31 November",
+    ),
+    "an offset past those in use after a space": (
+        [f"2026-03-0{day} 10:00:00 +1500" for day in range(1, 5)],
+        4,
+        DATE_FORMS,
+    ),
     "k a range of times after the date": ([f"2026-03-0{day} 08:00-16:30" for day in range(1, 5)], 4, DATE_FORMS),
     "l two-digit year with dots": ([f"0{day}.03.26" for day in range(1, 5)], 4, DATE_FORMS),
     "m two-digit year with slashes": ([f"3/{day}/26" for day in range(13, 17)], 4, DATE_FORMS),
@@ -382,14 +403,14 @@ CERTAIN_ROW_NUMBERS = {
     "t weekdays": (day_column(["Mon", "Tue", "Wed", "Thu"], "weekday"), LINE, ()),
     "v ids": (day_column(["A-12", "A-13", "A-14", "A-15"], "id"), LINE, ()),
     "w month names without a year": (day_column(["Jan", "Feb", "Mar", "Apr"], "month"), LINE, ()),
-    "x kept text on request": (day_column(SLASHES), LINE, ("day",)),
-    "y an axis that takes numbers only": (day_column(SLASHES), SCATTER, ()),
+    "x kept text on request": (day_column(YEAR_DOTS), LINE, ("day",)),
+    "y an axis that takes numbers only": (day_column(YEAR_DOTS), SCATTER, ()),
     "z street addresses with a year": (
         day_column(["12 Main St 2026", "14 Main St 2026", "16 Main St 2026", "18 Main St 2026"], "address"),
         LINE,
         (),
     ),
-    "a name that says ids": (day_column(SLASHES, "Order ID"), LINE, ()),
+    "a name that says ids": (day_column(YEAR_DOTS, "Order ID"), LINE, ()),
     "spans of years": (day_column(["2009-10", "2010-11", "2011-12", "2012-13"], "period"), LINE, ()),
     # A word that is also a month abbreviation, or a month without a year: no year beside the name.
     "sets": (day_column(["Set 1", "Set 2", "Set 3", "Set 4"], "label"), LINE, ()),
@@ -446,13 +467,14 @@ class TestRowNumbersBesideUnreadDates:
         assert candidate.operations() == [{"op": "row_number", "name": "index"}]
 
     def test_the_line_keeps_its_parts_and_names_the_forms(self) -> None:
-        [candidate] = found(day_column(SLASHES), roles=parse_roles(LINE))
+        [candidate] = found(day_column(YEAR_DOTS), roles=parse_roles(LINE))
 
         assert candidate.line() == (
             "y: no column or conversion fills it; a new column 'index' with the row numbers 1 to 4 takes x, and y "
             "takes 'orders', which x holds now; uncertain: x takes dates, and column 'day' looks like dates, but 4 of "
-            "4 cells would not read: the chat reads 2026-03-01, 01.03.2026, 03/15/2026, 8 Nov 2026, each also with a "
-            'time, and months such as 2026-03 or Mar 2026; operations: [{"op": "row_number", "name": "index"}]'
+            "4 cells would not read: the chat reads 2026-03-01, 2026/03/01, 01.03.2026, 03/15/2026, 8 Nov 2026, each "
+            'also with a time, and months such as 2026-03 or Mar 2026; operations: [{"op": "row_number", "name": '
+            '"index"}]'
         )
 
     def test_times_with_and_without_an_offset_say_what_the_refused_conversion_says(self) -> None:
@@ -500,6 +522,27 @@ class TestRowNumbersBesideUnreadDates:
 
         assert found(text, roles=parse_roles(LINE)) == []
 
+    @pytest.mark.parametrize(
+        "cells",
+        [
+            ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04"],
+            [f"2026-03-0{day} 10:00:00 UTC" for day in range(1, 5)],
+            [f"2026-03-0{day} 10:00:00 +0100" for day in range(1, 5)],
+            [f"3/{day}/2026 10:00:00 AM" for day in range(13, 17)],
+        ],
+        ids=["a slashes year first", "h UTC as a word", "i a space before the offset", "j AM and PM, a day past 12"],
+    )
+    def test_a_form_the_list_took_in_takes_the_axis_and_no_row_numbers_are_listed(self, cells: list[str]) -> None:
+        """These were row numbers as a question while the list left them unread: the paste types them as dates now,
+        and the default bindings put them on the axis."""
+        text = day_column(cells)
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes["day"] == "datetime"
+        bindings = default_bindings(parse_roles(LINE), parsed.profile)
+        assert {binding.role: binding.column for binding in bindings} == {"x": "day", "y": "orders"}
+        assert found(text, roles=parse_roles(LINE)) == []
+
     def test_a_column_that_is_mostly_dates_is_a_question(self) -> None:
         """Two notes in twelve cells are past the tenth a conversion may drop, so no conversion is listed; the ten
         dates still make the row numbers a question."""
@@ -513,7 +556,7 @@ class TestRowNumbersBesideUnreadDates:
 
     def test_the_count_takes_each_cell_with_its_repeats(self) -> None:
         """As the refusal of a conversion counts the cells: two distinct cells in four rows are four cells."""
-        text = day_column(["2026/03/01", "2026/03/01", "2026/03/02", "2026/03/02"])
+        text = day_column(["2026.03.01", "2026.03.01", "2026.03.02", "2026.03.02"])
 
         [candidate] = found(text, roles=parse_roles(LINE))
 
@@ -531,7 +574,7 @@ class TestRowNumbersBesideUnreadDates:
 
     def test_the_first_free_column_that_looks_like_dates_is_named(self) -> None:
         cities = ["Bern", "Basel", "Genf", "Chur"]
-        text = "city,day,orders\n" + "".join(f"{city},2026/03/0{day},{day}\n" for day, city in enumerate(cities, 1))
+        text = "city,day,orders\n" + "".join(f"{city},2026.03.0{day},{day}\n" for day, city in enumerate(cities, 1))
 
         [candidate] = found(text, roles=parse_roles(LINE))
 
@@ -540,9 +583,9 @@ class TestRowNumbersBesideUnreadDates:
     def test_the_verdict_is_made_once_per_version(self) -> None:
         cache: dict[tuple[str, str], DryRun | RangeRun | UnreadDates | None] = {}
 
-        first = found(day_column(SLASHES), roles=parse_roles(LINE), cache=cache)
+        first = found(day_column(YEAR_DOTS), roles=parse_roles(LINE), cache=cache)
         cache[("day", "unread")] = None  # a stored verdict is taken as it is
-        second = found(day_column(SLASHES), roles=parse_roles(LINE), cache=cache)
+        second = found(day_column(YEAR_DOTS), roles=parse_roles(LINE), cache=cache)
 
         assert not first[0].certain and second[0].certain
 
