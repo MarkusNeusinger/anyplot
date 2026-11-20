@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked: Stacked Bar Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-09
@@ -6,6 +6,7 @@ Quality: 93/100 | Updated: 2026-05-09
 
 import os
 
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -15,124 +16,106 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.08)" if THEME == "light" else "rgba(240,239,232,0.08)"
-GRID_SUBTLE = "rgba(26,26,23,0.04)" if THEME == "light" else "rgba(240,239,232,0.04)"
+GRID = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 
-# Okabe-Ito palette (first series always #009E73)
-COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per component in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Quarterly revenue by product category
-quarters = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024"]
-categories = ["Software", "Hardware", "Services", "Support"]
+# Columns: set these to your table's column names
+DEPARTMENT = "Department"  # role: category
+EXPENSE = "Expense type"  # role: component
+BUDGET = "Budget (thousand USD)"  # role: value
 
-# Revenue in thousands USD for each product category
-software = [120, 145, 160, 180]
-hardware = [80, 75, 90, 95]
-services = [45, 55, 65, 75]
-support = [25, 30, 35, 40]
+# Data: replace this block with your own table, for example df = pd.read_csv("budget.csv")
+departments = ["Engineering", "Marketing", "Sales", "Operations", "HR"]
+expense_types = ["Salaries", "Equipment", "Travel", "Training"]
+amounts = {
+    "Salaries": [820, 410, 560, 480, 290],
+    "Equipment": [240, 60, 90, 310, 35],
+    "Travel": [55, 120, 210, 85, 25],
+    "Training": [70, 30, 45, 40, 60],
+}
+df = pd.DataFrame(
+    {
+        DEPARTMENT: [d for _ in expense_types for d in departments],
+        EXPENSE: [e for e in expense_types for _ in departments],
+        BUDGET: [v for e in expense_types for v in amounts[e]],
+    }
+)
 
-all_data = [software, hardware, services, support]
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=DEPARTMENT, columns=EXPENSE, values=BUDGET, sort=False)
+totals = table.sum(axis=1)
 
-# Calculate totals and per-component percentages for storytelling
-totals = [s + h + sv + sp for s, h, sv, sp in zip(software, hardware, services, support, strict=True)]
-
-# Create figure with enhanced styling
 fig = go.Figure()
-
-# Add stacked bars with custom hover templates for better storytelling
-for category, data, color in zip(categories, all_data, COLORS, strict=True):
-    percentages = [f"{v / total * 100:.0f}%" for v, total in zip(data, totals, strict=True)]
-
-    custom_hover = [
-        f"<b>{category}</b><br>" + f"Quarter: {q}<br>" + f"Revenue: ${v}K<br>" + f"% of Total: {pct}<extra></extra>"
-        for q, v, pct in zip(quarters, data, percentages, strict=True)
-    ]
-
+for i, expense in enumerate(table.columns):
+    share = (table[expense] / totals * 100).map("{:.0f}%".format)
     fig.add_trace(
         go.Bar(
-            name=category,
-            x=quarters,
-            y=data,
-            marker=dict(color=color, line=dict(color=ELEVATED_BG, width=0.5)),
-            text=data,
+            name=str(expense),
+            x=table.index,
+            y=table[expense],
+            marker={"color": IMPRINT_PALETTE[i], "line": {"color": PAGE_BG, "width": 1}},
+            text=table[expense],
             textposition="inside",
-            textfont={"size": 18, "color": "white"},
-            customdata=custom_hover,
-            hovertemplate="%{customdata}",
+            textfont={"size": 11, "color": "white"},
+            customdata=share,
+            hovertemplate=f"<b>{expense}</b><br>%{{x}}<br>{BUDGET}: %{{y}}<br>Share of department: %{{customdata}}<extra></extra>",
         )
     )
 
-# Enhanced total annotations with visual emphasis
-for idx, (quarter, total) in enumerate(zip(quarters, totals, strict=True)):
-    growth_rate = ""
-    if idx > 0:
-        growth = ((total - totals[idx - 1]) / totals[idx - 1]) * 100
-        growth_rate = f"<br><span style='font-size:14px;'>+{growth:.1f}% QoQ</span>"
-
-    fig.add_annotation(
-        x=quarter,
-        y=total + 12,
-        text=f"<b>${total}K</b>{growth_rate}",
-        showarrow=False,
-        font={"size": 20, "color": INK},
-        bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
+# Total labels above each complete stack
+fig.add_trace(
+    go.Scatter(
+        x=table.index,
+        y=totals,
+        mode="text",
+        text=[f"<b>{t:,.0f}</b>" for t in totals],
+        textposition="top center",
+        textfont={"size": 13, "color": INK},
+        showlegend=False,
+        hoverinfo="skip",
     )
-
-# Update layout with sophisticated design refinements
-fig.update_layout(
-    title={
-        "text": "bar-stacked · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-        "y": 0.98,
-        "yanchor": "top",
-    },
-    xaxis=dict(
-        title={"text": "Quarter", "font": {"size": 22, "color": INK}},
-        tickfont={"size": 18, "color": INK_SOFT},
-        showgrid=False,
-        showline=True,
-        linewidth=1.5,
-        linecolor=INK_SOFT,
-        mirror=False,
-    ),
-    yaxis=dict(
-        title={"text": "Revenue (Thousands USD)", "font": {"size": 22, "color": INK}},
-        tickfont={"size": 18, "color": INK_SOFT},
-        gridcolor=GRID_SUBTLE,
-        gridwidth=0.5,
-        showline=True,
-        linewidth=1.5,
-        linecolor=INK_SOFT,
-        mirror=False,
-    ),
-    barmode="stack",
-    bargap=0.35,
-    bargroupgap=0.1,
-    paper_bgcolor=PAGE_BG,
-    plot_bgcolor=PAGE_BG,
-    font={"color": INK, "family": "system-ui, -apple-system, sans-serif"},
-    legend=dict(
-        orientation="v",
-        yanchor="top",
-        y=0.99,
-        xanchor="right",
-        x=0.99,
-        font={"size": 18, "color": INK},
-        bgcolor="rgba(255,253,246,0.95)" if THEME == "light" else "rgba(36,36,32,0.95)",
-        bordercolor=INK_SOFT,
-        borderwidth=1.5,
-    ),
-    margin={"l": 110, "r": 70, "t": 120, "b": 90},
-    width=1600,
-    height=900,
 )
 
-# Save as PNG (4800 x 2700 px)
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Style
+fig.update_layout(
+    autosize=False,
+    title={"text": "bar-stacked · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}, "x": 0.5},
+    xaxis={
+        "title": {"text": DEPARTMENT, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "showgrid": False,
+        "linecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": BUDGET, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "gridwidth": 0.5,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+        "range": [0, totals.max() * 1.12],
+    },
+    barmode="stack",
+    bargap=0.3,
+    uniformtext={"minsize": 11, "mode": "hide"},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    legend={
+        "title": {"text": EXPENSE, "font": {"size": 11, "color": INK}},
+        "font": {"size": 11, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "x": 0.99,
+        "xanchor": "right",
+        "y": 0.99,
+        "yanchor": "top",
+    },
+    margin={"l": 80, "r": 40, "t": 60, "b": 60},
+)
 
-# Save as HTML for interactivity
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
