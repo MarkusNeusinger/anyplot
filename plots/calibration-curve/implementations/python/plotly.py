@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 calibration-curve: Calibration Curve
-Library: plotly 7.1.0 | Python 3.14.9
-Quality: pending | Updated: 2026-11-20
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-20
 """
 
 import os
