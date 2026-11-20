@@ -16,5 +16,6 @@
   details: a click counts, a pointer move only once the pointer has travelled 4 px, the clock checks
   that the page is in front of the visitor before the moment comes, the tile filters by the event's
   name and counts the Plausible site's days (Europe/Zurich), and the docs name the early warnings
-  and the readers the rule misses.
+  and the readers the rule misses. The same day he added that a `yes` names every kind of input
+  seen (the property `actions`), so a kind that starts to fire by itself can be seen and left out.
 - Where: `docs/reference/plausible.md`

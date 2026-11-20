@@ -755,6 +755,12 @@ async def get_related_specs(
 # the first input after them (`app/src/analytics/stay.ts`). The filter names the event, not its
 # goal: a goal filter matches the goal's display name in the dashboard, so renaming the goal there
 # would break the count. Both gave the same per-day counts on the live API on 2026-11-20.
+#
+# A `yes` also carries `actions`, the kinds of input that made it count, joined with `+` in a fixed
+# order (`move+press+wheel`; `STAY_ACTIONS` in `app/src/analytics/stay.ts`). Should one kind start
+# to fire by itself, `["is_not", "event:props:actions", ["<kind>"]]` added here leaves out the
+# visitors whose only kind it is, and `["contains", "event:props:actions", ["<kind>"]]` finds every
+# visit with it. Events sent before `actions` was deployed have none and stay counted.
 STAYED_WITH_INPUT = [["is", "event:name", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]]
 
 # A Plausible day's metrics as numbers, by ISO date.

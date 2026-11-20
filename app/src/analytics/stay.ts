@@ -18,11 +18,13 @@
  *   the clock stops until the next change of activity. Since nothing says when the page left,
  *   the booked time can already reach ten seconds, and the moment then comes as soon as the page
  *   is active again, never while it is not.
- * - It notes whether the visitor did anything with a pointer, a finger or a key. Scrolling is
+ * - It notes whether the visitor did anything with a pointer, a finger or a key, and which kinds
+ *   of input (`STAY_ACTIONS`), so a kind that one day fires by itself can be seen. Scrolling is
  *   not asked: a page that scrolls itself says nothing.
- * - The caller is told at most twice per stay. At the moment, with whether input came before
- *   it; if none had, once more at the first input after it. Someone who opens a page, fetches a
- *   coffee and then clicks around stayed and did something, only in the other order.
+ * - The caller is told at most twice per stay. At the moment, with every kind of input that came
+ *   before it, or none; if none had, once more at the first input after it, with that input's
+ *   kind. Someone who opens a page, fetches a coffee and then clicks around stayed and did
+ *   something, only in the other order.
  * - It knows nothing of Plausible and of what a visit is: the caller begins a stay when a
  *   visit begins and decides what the moment is worth.
  */
@@ -30,18 +32,30 @@
 /** The active time a visit needs: Google Analytics 4's threshold for an engaged session. */
 export const STAY_MS = 10_000;
 
+/**
+ * The kinds of input, in the order they are told: `move` a pointer that travelled, `press` a
+ * pointer or mouse button pressed, `click` a click, `touch` a finger, `key` a key, `wheel` the
+ * wheel. A closed list, so a kind that starts to fire by itself can be named and left out.
+ */
+export const STAY_ACTIONS = ['move', 'press', 'click', 'touch', 'key', 'wheel'] as const;
+
+export type StayAction = (typeof STAY_ACTIONS)[number];
+
+/**
+ * Told the kinds of input, each once and in the order of `STAY_ACTIONS`: when the active time
+ * reaches `STAY_MS`, every kind that came before it, or none; once more after a moment that came
+ * with none, the one kind of the first input after it.
+ */
+export type OnStayed = (actions: readonly StayAction[]) => void;
+
 interface Stay {
   /** Active time before the stretch that is running now. */
   banked: number;
   /** When the running stretch began; `null` while the page is not active. */
   runningSince: number | null;
-  /** Whether a trusted pointer, touch or key event came during the stay. */
-  input: boolean;
-  /**
-   * Told with `input` when the active time reaches `STAY_MS`; told `true` once more at the
-   * first input after a moment that came without one.
-   */
-  onStayed: (input: boolean) => void;
+  /** The kinds of trusted input that came during the stay; empty while none did. */
+  actions: Set<StayAction>;
+  onStayed: OnStayed;
   timer: ReturnType<typeof setTimeout> | undefined;
 }
 
@@ -52,7 +66,7 @@ let stay: Stay | null = null;
  * After a moment that came without input: the stay's `onStayed`, waiting for the first input.
  * The clock is done by then, so nothing but an input, a new stay or `endStay` changes it.
  */
-let awaitingInput: ((input: boolean) => void) | null = null;
+let awaitingInput: OnStayed | null = null;
 
 /** Whether the page is in front of the visitor now: visible, and its window in focus. */
 export function pageActive(): boolean {
@@ -76,19 +90,19 @@ function wake(): void {
     stay.timer = setTimeout(wake, STAY_MS - active);
     return;
   }
-  const { onStayed, input } = stay;
+  const { onStayed, actions } = stay;
   stay = null;
-  if (!input) awaitingInput = onStayed;
-  onStayed(input);
+  if (actions.size === 0) awaitingInput = onStayed;
+  onStayed(STAY_ACTIONS.filter(action => actions.has(action)));
 }
 
 /**
  * A visit begins at `now`: forget the stay before it and start counting for this one, at
  * once if the page is active.
  */
-export function beginStay(now: number, onStayed: (input: boolean) => void): void {
+export function beginStay(now: number, onStayed: OnStayed): void {
   endStay();
-  stay = { banked: 0, runningSince: null, input: false, onStayed, timer: undefined };
+  stay = { banked: 0, runningSince: null, actions: new Set(), onStayed, timer: undefined };
   setStayActive(pageActive(), now);
 }
 
@@ -110,18 +124,19 @@ export function setStayActive(active: boolean, now: number): void {
 }
 
 /**
- * The visitor used a pointer, a finger or a key. Before the moment it is noted for the moment;
- * after a moment that came without one it is told at once, and the stay is over.
+ * The visitor used a pointer, a finger or a key, of the kind `action`. Before the moment it is
+ * noted for the moment; after a moment that came without one it is told at once, with its kind
+ * alone, and the stay is over.
  */
-export function noteStayInput(): void {
+export function noteStayInput(action: StayAction): void {
   if (stay) {
-    stay.input = true;
+    stay.actions.add(action);
     return;
   }
   if (awaitingInput) {
     const onStayed = awaitingInput;
     awaitingInput = null;
-    onStayed(true);
+    onStayed([action]);
   }
 }
 

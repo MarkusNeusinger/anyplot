@@ -289,20 +289,41 @@ describe('useAnalytics', () => {
       expect(stayed()).toHaveLength(1);
     });
 
-    it('says when the visitor used a pointer, a finger or a key in those seconds', () => {
+    it('says when the visitor used a pointer, a finger or a key in those seconds, and which', () => {
       at('/scatter-basic');
       const { result } = renderHook(() => useAnalytics());
       result.current.trackPageview();
       vi.advanceTimersByTime(2_000);
-      noteStayInput();
+      noteStayInput('key');
       vi.advanceTimersByTime(8_000);
 
-      expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'yes' }, interactive: false }]]);
+      expect(stayed()).toEqual([
+        [STAYED_EVENT, { props: { input: 'yes', actions: 'key' }, interactive: false }],
+      ]);
 
       // That is the visit's one event: more input sends nothing more.
-      noteStayInput();
+      noteStayInput('key');
       vi.advanceTimersByTime(60_000);
       expect(stayed()).toHaveLength(1);
+    });
+
+    it('names every kind of input in those seconds once, in the fixed order, joined with +', () => {
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      noteStayInput('wheel');
+      noteStayInput('press');
+      noteStayInput('move');
+      noteStayInput('wheel');
+      noteStayInput('press');
+      vi.advanceTimersByTime(STAY_MS);
+
+      expect(stayed()).toEqual([
+        [
+          STAYED_EVENT,
+          { props: { input: 'yes', actions: 'move+press+wheel' }, interactive: false },
+        ],
+      ]);
     });
 
     it('is sent once more, with yes, at the first input after ten seconds without one', () => {
@@ -315,16 +336,17 @@ describe('useAnalytics', () => {
       // On a second page of the same visit.
       at('/plots');
       result.current.trackPageview();
-      noteStayInput();
+      noteStayInput('press');
 
+      // The `no` names no kind; the late `yes` names the one kind of the input that sent it.
       expect(stayed()).toEqual([
         [STAYED_EVENT, { props: { input: 'no' }, interactive: false }],
-        [STAYED_EVENT, { props: { input: 'yes' }, interactive: false }],
+        [STAYED_EVENT, { props: { input: 'yes', actions: 'press' }, interactive: false }],
       ]);
 
-      noteStayInput();
+      noteStayInput('click');
       vi.advanceTimersByTime(60_000);
-      noteStayInput();
+      noteStayInput('key');
       expect(stayed()).toHaveLength(2);
     });
 
@@ -335,7 +357,7 @@ describe('useAnalytics', () => {
       vi.advanceTimersByTime(STAY_MS);
       // More than 30 minutes after the `no`, the last thing sent.
       vi.advanceTimersByTime(31 * 60_000);
-      noteStayInput();
+      noteStayInput('key');
 
       expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'no' }, interactive: false }]]);
     });
@@ -350,14 +372,14 @@ describe('useAnalytics', () => {
       at('/heatmap-basic');
       result.current.trackPageview();
       vi.advanceTimersByTime(2_000);
-      noteStayInput();
+      noteStayInput('touch');
       // Two seconds into the new visit: no late `yes` for the one before.
       expect(stayed()).toHaveLength(1);
 
       vi.advanceTimersByTime(8_000);
       expect(stayed()).toEqual([
         [STAYED_EVENT, { props: { input: 'no' }, interactive: false }],
-        [STAYED_EVENT, { props: { input: 'yes' }, interactive: false }],
+        [STAYED_EVENT, { props: { input: 'yes', actions: 'touch' }, interactive: false }],
       ]);
     });
 
@@ -372,8 +394,10 @@ describe('useAnalytics', () => {
       setAnalyticsMuted(false);
       expect(stayed()).toEqual([]);
 
-      noteStayInput();
-      expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'yes' }, interactive: false }]]);
+      noteStayInput('click');
+      expect(stayed()).toEqual([
+        [STAYED_EVENT, { props: { input: 'yes', actions: 'click' }, interactive: false }],
+      ]);
     });
 
     it('uses up an input that comes while the mute is on, and sends nothing for it', () => {
@@ -382,9 +406,9 @@ describe('useAnalytics', () => {
       result.current.trackPageview();
       vi.advanceTimersByTime(STAY_MS);
       setAnalyticsMuted(true);
-      noteStayInput();
+      noteStayInput('key');
       setAnalyticsMuted(false);
-      noteStayInput();
+      noteStayInput('key');
 
       expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'no' }, interactive: false }]]);
     });

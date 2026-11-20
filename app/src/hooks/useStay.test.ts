@@ -137,13 +137,13 @@ describe('useStay', () => {
     beginStay(Date.now(), scripted);
     listeners.get('pointerdown')?.({ isTrusted: false } as Event);
     vi.advanceTimersByTime(STAY_MS);
-    expect(scripted).toHaveBeenCalledExactlyOnceWith(false);
+    expect(scripted).toHaveBeenCalledExactlyOnceWith([]);
 
     const own = vi.fn();
     beginStay(Date.now(), own);
     listeners.get('keydown')?.({ isTrusted: true } as Event);
     vi.advanceTimersByTime(STAY_MS);
-    expect(own).toHaveBeenCalledExactlyOnceWith(true);
+    expect(own).toHaveBeenCalledExactlyOnceWith(['key']);
   });
 
   it('after ten seconds without input, waits for the visitor’s own input, not a scripted one', () => {
@@ -152,31 +152,76 @@ describe('useStay', () => {
     const stayed = vi.fn();
     beginStay(Date.now(), stayed);
     vi.advanceTimersByTime(STAY_MS);
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith([]);
 
     listeners.get('pointerdown')?.({ isTrusted: false } as Event);
     listeners.get('click')?.({ isTrusted: false } as Event);
     listeners.get('wheel')?.({ isTrusted: false } as Event);
     expect(stayed).toHaveBeenCalledTimes(1);
 
+    // The late input is a pointer that travelled: its kind alone.
     listeners.get('pointermove')?.(moveTo(100, 100));
     listeners.get('pointermove')?.(moveTo(100, 100 + POINTER_TRAVEL_PX));
     listeners.get('pointermove')?.(moveTo(100, 120));
-    expect(stayed.mock.calls).toEqual([[false], [true]]);
+    listeners.get('keydown')?.({ isTrusted: true } as Event);
+    expect(stayed.mock.calls).toEqual([[[]], [['move']]]);
   });
 
-  it.each(['pointerdown', 'mousedown', 'click', 'touchstart', 'keydown', 'wheel'])(
-    'takes a %s of the visitor’s own as input at once',
-    type => {
-      const listeners = mountListeners();
-      const stayed = vi.fn();
-      beginStay(Date.now(), stayed);
+  it.each([
+    ['pointerdown', 'press'],
+    ['mousedown', 'press'],
+    ['click', 'click'],
+    ['touchstart', 'touch'],
+    ['keydown', 'key'],
+    ['wheel', 'wheel'],
+  ])('takes a %s of the visitor’s own as input at once, of the kind %s', (type, action) => {
+    const listeners = mountListeners();
+    const stayed = vi.fn();
+    beginStay(Date.now(), stayed);
 
+    listeners.get(type)?.({ isTrusted: true } as Event);
+    vi.advanceTimersByTime(STAY_MS);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith([action]);
+  });
+
+  it('tells the kinds of a mouse click and a tap, each once', () => {
+    const listeners = mountListeners();
+    const stayed = vi.fn();
+    beginStay(Date.now(), stayed);
+
+    // A mouse click is pointerdown, mousedown and click; a tap brings pointerdown, touchstart, click.
+    for (const type of [
+      'pointerdown',
+      'mousedown',
+      'click',
+      'pointerdown',
+      'touchstart',
+      'click',
+    ]) {
       listeners.get(type)?.({ isTrusted: true } as Event);
-      vi.advanceTimersByTime(STAY_MS);
-      expect(stayed).toHaveBeenCalledExactlyOnceWith(true);
     }
-  );
+    vi.advanceTimersByTime(STAY_MS);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(['press', 'click', 'touch']);
+  });
+
+  it(`tells a move only once the pointer has travelled ${POINTER_TRAVEL_PX} px`, () => {
+    const listeners = mountListeners();
+    const short = vi.fn();
+    beginStay(Date.now(), short);
+    listeners.get('pointermove')?.(moveTo(640, 360));
+    listeners.get('pointermove')?.(moveTo(642, 361));
+    listeners.get('wheel')?.({ isTrusted: true } as Event);
+    vi.advanceTimersByTime(STAY_MS);
+    expect(short).toHaveBeenCalledExactlyOnceWith(['wheel']);
+
+    // The same page: the pointer's first position stays where it was seen first.
+    const far = vi.fn();
+    beginStay(Date.now(), far);
+    listeners.get('wheel')?.({ isTrusted: true } as Event);
+    listeners.get('pointermove')?.(moveTo(640, 360 + POINTER_TRAVEL_PX));
+    vi.advanceTimersByTime(STAY_MS);
+    expect(far).toHaveBeenCalledExactlyOnceWith(['move', 'wheel']);
+  });
 
   it('does not take a single pointer move as input, nor moves on one spot', () => {
     const listeners = mountListeners();
@@ -188,7 +233,7 @@ describe('useStay', () => {
     listeners.get('pointermove')?.(moveTo(640, 360));
     listeners.get('pointermove')?.(moveTo(641, 362));
     vi.advanceTimersByTime(STAY_MS);
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith([]);
   });
 
   it(`takes a pointer that travelled ${POINTER_TRAVEL_PX} px as input`, () => {
@@ -199,7 +244,7 @@ describe('useStay', () => {
     listeners.get('pointermove')?.(moveTo(640, 360));
     listeners.get('pointermove')?.(moveTo(640 + POINTER_TRAVEL_PX, 360));
     vi.advanceTimersByTime(STAY_MS);
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(true);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(['move']);
   });
 
   it('measures a pointer’s travel from its first move of the visitor’s own, not a scripted one', () => {
@@ -211,7 +256,7 @@ describe('useStay', () => {
     listeners.get('pointermove')?.(moveTo(640, 360));
     listeners.get('pointermove')?.(moveTo(640, 362));
     vi.advanceTimersByTime(STAY_MS);
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith([]);
   });
 
   it('brings the page’s activity up to date at an input, for a page that said nothing of it', () => {
@@ -228,7 +273,7 @@ describe('useStay', () => {
     vi.advanceTimersByTime(STAY_MS - 1);
     expect(stayed).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(true);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(['touch']);
   });
 
   it('stops the clock at an input on a page that lost its focus without a blur', () => {
@@ -248,7 +293,7 @@ describe('useStay', () => {
     vi.advanceTimersByTime(5_999);
     expect(stayed).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(true);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(['wheel']);
   });
 
   it('takes its listeners away when the layout unmounts', () => {

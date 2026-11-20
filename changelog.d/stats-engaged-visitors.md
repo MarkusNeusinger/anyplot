@@ -21,5 +21,9 @@
   brings it up to date. The query filters by the event's name instead of
   its goal, so renaming the goal can't break the tile, and its days are the
   Plausible site's (Europe/Zurich) instead of UTC days, so the last bar is
-  today also just after midnight. `docs/reference/plausible.md` names the
-  early warnings with their baselines and the readers the rule misses.
+  today also just after midnight. A `yes` now carries the property
+  `actions`, the kinds of input that made it count (`move`, `press`,
+  `click`, `touch`, `key`, `wheel`, each once, joined with `+`), so a kind
+  that starts to fire by itself can be seen and left out of the count.
+  `docs/reference/plausible.md` names the early warnings with their
+  baselines and the readers the rule misses.

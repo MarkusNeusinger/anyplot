@@ -1,23 +1,24 @@
 import { useEffect } from 'react';
 
-import { noteStayInput, pageActive, setStayActive } from 'src/analytics/stay';
+import { noteStayInput, pageActive, setStayActive, type StayAction } from 'src/analytics/stay';
 
 /**
- * What counts as the visitor doing something, at once: a pointer, a finger or a key. Not
- * `scroll`, which a script can cause, and only events the browser marks as the user's own.
- * `click` and `mousedown` are here for what arrives without pointer events: a screen reader
- * activating from its virtual cursor, VoiceOver's double-tap, voice control. A script's
- * `element.click()` is not the user's own, so automation gains nothing from them. A pointer move
- * counts too, but only once the pointer has travelled (`pointerTravel`).
+ * What counts as the visitor doing something, at once, and the kind of input each is: a pointer,
+ * a finger or a key. Not `scroll`, which a script can cause, and only events the browser marks
+ * as the user's own. `click` and `mousedown` are here for what arrives without pointer events: a
+ * screen reader activating from its virtual cursor, VoiceOver's double-tap, voice control. A
+ * script's `element.click()` is not the user's own, so automation gains nothing from them. A
+ * pointer move counts too, as `move`, but only once the pointer has travelled (`pointerTravel`).
+ * One gesture can bring several kinds: a mouse click is `press` and `click`.
  */
-const STAY_INPUTS = [
-  'pointerdown',
-  'mousedown',
-  'click',
-  'touchstart',
-  'keydown',
-  'wheel',
-] as const;
+const STAY_INPUTS = {
+  pointerdown: 'press',
+  mousedown: 'press',
+  click: 'click',
+  touchstart: 'touch',
+  keydown: 'key',
+  wheel: 'wheel',
+} as const satisfies Record<string, StayAction>;
 
 /** How far a pointer travels, in CSS pixels, before a move of it counts as input. */
 export const POINTER_TRAVEL_PX = 4;
@@ -57,16 +58,20 @@ export function useStay(): void {
   useEffect(() => {
     const sync = () => setStayActive(pageActive(), Date.now());
     const leave = () => setStayActive(false, Date.now());
-    const input = (event: Event) => {
+    const input = (event: Event, action: StayAction) => {
       if (!event.isTrusted) return;
       // The page's activity first: a page can gain or lose focus without an event that says so,
       // and an iOS in-app webview reports focus only after the first touch.
       sync();
-      noteStayInput();
+      noteStayInput(action);
     };
+    // One listener per event type, which knows the kind of input it reports.
+    const inputs = Object.entries(STAY_INPUTS).map(
+      ([type, action]) => [type, (event: Event) => input(event, action)] as const
+    );
     const travelled = pointerTravel();
     const move = (event: PointerEvent) => {
-      if (event.isTrusted && travelled(event.clientX, event.clientY)) input(event);
+      if (event.isTrusted && travelled(event.clientX, event.clientY)) input(event, 'move');
     };
 
     document.addEventListener('visibilitychange', sync);
@@ -74,8 +79,8 @@ export function useStay(): void {
     window.addEventListener('blur', sync);
     window.addEventListener('pageshow', sync);
     window.addEventListener('pagehide', leave);
-    for (const type of STAY_INPUTS) {
-      window.addEventListener(type, input, { capture: true, passive: true });
+    for (const [type, listener] of inputs) {
+      window.addEventListener(type, listener, { capture: true, passive: true });
     }
     window.addEventListener('pointermove', move, { capture: true, passive: true });
     return () => {
@@ -84,8 +89,8 @@ export function useStay(): void {
       window.removeEventListener('blur', sync);
       window.removeEventListener('pageshow', sync);
       window.removeEventListener('pagehide', leave);
-      for (const type of STAY_INPUTS) {
-        window.removeEventListener(type, input, { capture: true });
+      for (const [type, listener] of inputs) {
+        window.removeEventListener(type, listener, { capture: true });
       }
       window.removeEventListener('pointermove', move, { capture: true });
     };

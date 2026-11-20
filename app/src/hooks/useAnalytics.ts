@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 import { analyticsMuted } from 'src/analytics/mute';
-import { beginStay, endStay } from 'src/analytics/stay';
+import { beginStay, endStay, type StayAction } from 'src/analytics/stay';
 import { isPlotsPath, paths, RESERVED_TOP_LEVEL } from 'src/routes/paths';
 
 /**
@@ -27,8 +27,10 @@ export type AnalyticsEvent =
  * The event the tracker sends by itself when the page has been in front of the visitor for ten
  * seconds of a visit (`src/analytics/stay.ts`), with `input` `yes` or `no`. After a `no` it is
  * sent once more, with `yes`, at the visitor's first input later in the visit, so a visit
- * sends one `yes`, one `no`, or a `no` and then a `yes`. The stats page counts the visitors
- * with a `yes` (`ENGAGED_SINCE` in `api/routers/insights.py`). No component sends it:
+ * sends one `yes`, one `no`, or a `no` and then a `yes`. A `yes` also carries `actions`, the
+ * kinds of input that made it count (`STAY_ACTIONS`, joined with `+` in their order), so a kind
+ * that starts to fire by itself can be seen and left out of the count. The stats page counts the
+ * visitors with a `yes` (`ENGAGED_SINCE` in `api/routers/insights.py`). No component sends it:
  * `TrackEvent` leaves it out.
  */
 export const STAYED_EVENT = 'stayed_10s';
@@ -123,8 +125,9 @@ function noteSent(now: number): void {
 
 /**
  * Sends `stayed_10s`: the page has been in front of the visitor for ten seconds of this visit.
- * `input` says whether a pointer, a finger or a key was used in that time; a second call, with
- * `true`, comes at the first input after a moment that came without one.
+ * `actions` are the kinds of input used in that time, in their fixed order: none sends `input`
+ * `no`; any sends `input` `yes` and `actions` with the kinds joined by `+`. A second call, with
+ * the one kind of that input, comes at the first input after a moment that came without one.
  *
  * Nothing is sent once the visit is over for Plausible, which is 30 minutes after the last
  * thing sent: ten seconds collected across a long pause, or an input after it, would open a
@@ -134,12 +137,17 @@ function noteSent(now: number): void {
  * once the mute is off still sends its `yes`, since the visit stayed ten seconds and the visitor
  * did something. An input while the mute is on is used up and sends nothing.
  */
-function sendStayed(input: boolean): void {
+function sendStayed(actions: readonly StayAction[]): void {
   const now = Date.now();
   if (!inProduction() || analyticsMuted() || now - lastSentAt > VISIT_GAP_MS) return;
   lastSentAt = now;
+  const input = actions.length > 0;
   window.plausible?.(STAYED_EVENT, {
-    props: { ...ambientProps, input: input ? 'yes' : 'no' },
+    props: {
+      ...ambientProps,
+      input: input ? 'yes' : 'no',
+      ...(input ? { actions: actions.join('+') } : {}),
+    },
     ...(STAYED_INTERACTIVE ? {} : { interactive: false }),
   });
 }

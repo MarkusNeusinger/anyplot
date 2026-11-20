@@ -242,7 +242,7 @@ were counted and shown nowhere.
 | `plots_scrolled` | `share`, `results`, `filtered` | `usePlotsScrolled.ts` | How far a visitor got through the gallery |
 | `ui_feature` | `feature` | Thirteen places, see [Feature use](#feature-use-ui_feature) | A visitor uses a feature of the interface, once per feature and visit |
 | `nav_click` | `source`, `target`, `spec`, `library` | The landing page, see [Landing page clicks](#landing-page-clicks-nav_click) | A visitor goes on from an element of the landing page |
-| `stayed_10s` | `input` | The tracker itself (`useAnalytics.ts`, `analytics/stay.ts`) | The site was in front of the visitor for ten seconds of a visit. At most twice per visit: at ten seconds, and once more with `input` `yes` at the first input after ten seconds without one |
+| `stayed_10s` | `input`, `actions` | The tracker itself (`useAnalytics.ts`, `analytics/stay.ts`) | The site was in front of the visitor for ten seconds of a visit. At most twice per visit: at ten seconds, and once more with `input` `yes` at the first input after ten seconds without one. A `yes` names its kinds of input in `actions` |
 
 Every event property holds a value from a closed list or a catalogue id, so no
 event property carries anything a visitor typed. Until 2026-11-18 one did:
@@ -601,6 +601,22 @@ keeps the clock and reports it.
   since the deploy that followed the decision: on the days before it, a
   visitor who did something only after the ten seconds sent a `no` and
   nothing more, and isn't counted. The owner accepted that.
+- **`actions`.** Only on a `yes`: the kinds of input that made it count,
+  from a closed list (`STAY_ACTIONS` in `analytics/stay.ts`), so a kind that
+  starts to fire by itself one day can be seen and left out of the count:
+  - `move`: a pointer move, once the pointer has travelled 4 CSS pixels
+  - `press`: a pointer or mouse button pressed (`pointerdown`, `mousedown`)
+  - `click`: a click (`click`)
+  - `touch`: a finger on the screen (`touchstart`)
+  - `key`: a key (`keydown`)
+  - `wheel`: the wheel (`wheel`)
+
+  At ten seconds the value holds every kind seen in the stay up to then,
+  each once, in that order, joined with `+`: `move+press+wheel`, `move`,
+  `touch`. The late `yes` holds the one kind of the input that sent it. A
+  `no` carries no `actions`, and neither does any event sent before the
+  property was deployed. One gesture can bring several kinds: a mouse click
+  is `press` and `click`, and a tap `press`, `touch`, and `click`.
 - **Each send is checked when it comes.** Nothing is sent outside the live
   site or while the admin's own use is muted. When the `no` wasn't sent
   because of the mute, an input that comes once the mute is off still sends
@@ -655,6 +671,11 @@ collects. Read these from time to time; each has its baseline from
 - **The stay rate on mobile**: 30 of 59 visits stayed ten seconds. A drop
   means trouble with focus or touch.
 - **The bounce rate among visits with `input` `yes`**: 42 %.
+- **The mix of `actions` values.** A value that is a single kind and jumps,
+  or a kind that appears alone where it used to come with others, points at
+  an input that fires by itself. Such a kind can be left out of the count
+  (see [Reading stats](#reading-stats--backend--plausible-stats-api)). The
+  property is new, so this warning has no baseline yet.
 
 #### Known gaps
 
@@ -1003,6 +1024,7 @@ Enterprise plan, so you change them in the dashboard.
 | `filtered` | `true`, `false` | `plots_scrolled` |
 | `feature` | The thirteen of [Feature use](#feature-use-ui_feature) | `ui_feature` |
 | `input` | `yes`, `no`: whether a pointer, a finger, or a key was used in the ten seconds; after a `no`, `yes` at the first input later in the visit | `stayed_10s` |
+| `actions` | Only with `input` `yes`: the kinds of input, each once, in the order `move`, `press`, `click`, `touch`, `key`, `wheel`, joined with `+` (such as `move+press+wheel`); on the late `yes` the one kind that sent it (see [Ten seconds on the site](#ten-seconds-on-the-site-stayed_10s)) | `stayed_10s` |
 | `theme` | `dark`, `light`: the theme in effect, resolved from the three-state mode | Every pageview and event |
 
 ### Funnels and breakdowns
@@ -1184,6 +1206,11 @@ event.
   hides it and keeps the texts at Plausible. The privacy page's clause
   (`app/src/pages/LegalPage.tsx`) and its crawler copy (`api/routers/seo.py`)
   say so in the same change: "still stored by Plausible, no longer shown"
+- [ ] After the deploy that sends `actions` with `stayed_10s`: add the
+  property `actions` in Site settings → Custom properties (an owner step).
+  It is not the property `action` deleted in phase 5. The `/stats` tile
+  doesn't need it; reading the mix in the dashboard does (see
+  [Early warnings](#early-warnings))
 
 ---
 

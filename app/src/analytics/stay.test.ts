@@ -6,6 +6,7 @@ import {
   noteStayInput,
   pageActive,
   setStayActive,
+  STAY_ACTIONS,
   STAY_MS,
 } from 'src/analytics/stay';
 
@@ -47,10 +48,14 @@ describe('the ten seconds of a visit', () => {
     vi.advanceTimersByTime(STAY_MS - 1);
     expect(stayed).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith([]);
 
     vi.advanceTimersByTime(60_000);
     expect(stayed).toHaveBeenCalledTimes(1);
+  });
+
+  it('knows a closed list of kinds of input, in a fixed order', () => {
+    expect(STAY_ACTIONS).toEqual(['move', 'press', 'click', 'touch', 'key', 'wheel']);
   });
 
   it('does not count a tab opened in the background until it is looked at', () => {
@@ -115,7 +120,7 @@ describe('the ten seconds of a visit', () => {
     page(true, true);
     setStayActive(true, Date.now());
     vi.advanceTimersByTime(0);
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith([]);
   });
 
   it('books the stretch up to the check and waits out the rest once the page is back', () => {
@@ -140,37 +145,62 @@ describe('the ten seconds of a visit', () => {
     expect(stayed).toHaveBeenCalledTimes(1);
   });
 
-  it('says whether the visitor used a pointer, a finger or a key before the moment came', () => {
+  it('says which kind of input the visitor used before the moment came', () => {
     const stayed = vi.fn();
     beginStay(Date.now(), stayed);
     vi.advanceTimersByTime(3_000);
-    noteStayInput();
+    noteStayInput('key');
     vi.advanceTimersByTime(7_000);
 
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(true);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(['key']);
 
     // The stay is over: more input says nothing more.
-    noteStayInput();
+    noteStayInput('key');
     vi.advanceTimersByTime(60_000);
-    noteStayInput();
+    noteStayInput('wheel');
     expect(stayed).toHaveBeenCalledTimes(1);
   });
 
-  it('tells the first input after a moment that came without one, and nothing after it', () => {
+  it('tells every kind that came before the moment, each once, in the fixed order', () => {
+    const stayed = vi.fn();
+    beginStay(Date.now(), stayed);
+    // In the order they came, with repeats: a wheel, a mouse click (press, click), more moves.
+    noteStayInput('wheel');
+    noteStayInput('move');
+    noteStayInput('press');
+    noteStayInput('click');
+    noteStayInput('move');
+    noteStayInput('wheel');
+    vi.advanceTimersByTime(STAY_MS);
+
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(['move', 'press', 'click', 'wheel']);
+  });
+
+  it('tells all six kinds in the order of the list, whatever the order they came in', () => {
+    const stayed = vi.fn();
+    beginStay(Date.now(), stayed);
+    for (const action of [...STAY_ACTIONS].reverse()) noteStayInput(action);
+    vi.advanceTimersByTime(STAY_MS);
+
+    expect(stayed).toHaveBeenCalledExactlyOnceWith([...STAY_ACTIONS]);
+  });
+
+  it('tells the first input after a moment that came without one, with its kind alone', () => {
     // Someone opens the page, fetches a coffee, then clicks around.
     const stayed = vi.fn();
     beginStay(Date.now(), stayed);
     vi.advanceTimersByTime(STAY_MS);
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith([]);
 
     vi.advanceTimersByTime(5 * 60_000);
     expect(stayed).toHaveBeenCalledTimes(1);
-    noteStayInput();
-    expect(stayed.mock.calls).toEqual([[false], [true]]);
+    noteStayInput('touch');
+    expect(stayed.mock.calls).toEqual([[[]], [['touch']]]);
 
-    noteStayInput();
+    // Nothing after it, and the kinds that follow are not added to it.
+    noteStayInput('press');
     vi.advanceTimersByTime(60_000);
-    noteStayInput();
+    noteStayInput('click');
     expect(stayed).toHaveBeenCalledTimes(2);
   });
 
@@ -183,18 +213,18 @@ describe('the ten seconds of a visit', () => {
     vi.advanceTimersByTime(60_000);
     setStayActive(true, Date.now());
     vi.advanceTimersByTime(60_000);
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith([]);
 
     // Still waiting: the input is told all the same.
-    noteStayInput();
-    expect(stayed.mock.calls).toEqual([[false], [true]]);
+    noteStayInput('move');
+    expect(stayed.mock.calls).toEqual([[[]], [['move']]]);
   });
 
   it('starts over with a new visit, and forgets the input of the one before', () => {
     const first = vi.fn();
     const second = vi.fn();
     beginStay(Date.now(), first);
-    noteStayInput();
+    noteStayInput('key');
     vi.advanceTimersByTime(9_000);
 
     beginStay(Date.now(), second);
@@ -203,7 +233,7 @@ describe('the ten seconds of a visit', () => {
     vi.advanceTimersByTime(1);
 
     expect(first).not.toHaveBeenCalled();
-    expect(second).toHaveBeenCalledExactlyOnceWith(false);
+    expect(second).toHaveBeenCalledExactlyOnceWith([]);
   });
 
   it('starts over with a new visit, and forgets that the one before waited for an input', () => {
@@ -211,17 +241,17 @@ describe('the ten seconds of a visit', () => {
     const second = vi.fn();
     beginStay(Date.now(), first);
     vi.advanceTimersByTime(STAY_MS);
-    expect(first).toHaveBeenCalledExactlyOnceWith(false);
+    expect(first).toHaveBeenCalledExactlyOnceWith([]);
 
     beginStay(Date.now(), second);
     vi.advanceTimersByTime(2_000);
-    noteStayInput();
+    noteStayInput('press');
     // The input belongs to the new stay, which has not stayed yet.
     expect(first).toHaveBeenCalledTimes(1);
     expect(second).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(8_000);
-    expect(second).toHaveBeenCalledExactlyOnceWith(true);
+    expect(second).toHaveBeenCalledExactlyOnceWith(['press']);
     expect(first).toHaveBeenCalledTimes(1);
   });
 
@@ -232,7 +262,7 @@ describe('the ten seconds of a visit', () => {
     endStay();
 
     setStayActive(true, Date.now());
-    noteStayInput();
+    noteStayInput('key');
     vi.advanceTimersByTime(60_000);
     expect(stayed).not.toHaveBeenCalled();
   });
@@ -243,7 +273,7 @@ describe('the ten seconds of a visit', () => {
     vi.advanceTimersByTime(STAY_MS);
     endStay();
 
-    noteStayInput();
-    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+    noteStayInput('key');
+    expect(stayed).toHaveBeenCalledExactlyOnceWith([]);
   });
 });
