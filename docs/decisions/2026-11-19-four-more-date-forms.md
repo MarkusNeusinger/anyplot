@@ -9,7 +9,6 @@
   form: a date with the year first and slashes (`2026/03/01`). The reason is the card's, which he
   accepted: tools his audience uses every day write these forms, and none of them needs a guess.
   For the 12-hour clock that holds for the time alone, which was found while the forms were built:
-  the slash date in front of it keeps the list's older rule, by which a column whose days are all
-  12 or less is read day first, with a note that says it is a guess. Whether the chat should ask
-  there instead is his to decide separately.
+  the slash date in front of it has the list's older question of day and month. On 2026-11-20 he
+  decided that such a column is not read by a guess, and that the chat asks.
 - Where: #13278

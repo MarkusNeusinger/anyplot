@@ -28,7 +28,8 @@ The operations:
   same wherever it occurs. Whole numbers are read exactly (`Int64`, never through a
   float64), and the change line counts the cells a float64 holds only rounded (more
   than 15 to 17 significant digits). To datetime: with `date_format` the cells are read in
-  exactly that format, with an optional time (`HH:MM[:SS]`) after it (a format without
+  exactly that format, with an optional time (`HH:MM[:SS]`, or on a 12-hour clock as the
+  date list reads it, `10:00:00 AM`) after it (a format without
   a day, such as `YYYY-MM` or `YYYY`, reads the first day of the month or the year;
   `YYYY` on a number column says "read as years", since a measure of 1450 to 2100 reads
   the same way; the compact `YYYYMMDD`, `YYYYMM` and `YYYY` take exactly their 8, 6 or
@@ -51,8 +52,9 @@ The operations:
   in a day only a name written as one word: a month written with its number and a marker
   (`3月`, `tháng 3`) reads as a month of a year (`2026年3月`), not as part of a day. Each
   cell reads in its own form, and the change line names each form read; the slash dates have one order of day and month, decided as at the paste (day first by guess,
-  which the reading names, when no slash cell settles it in a column of slash dates; beside
-  other forms only an order the slash dates settle); any other cell is unreadable. The
+  which the reading names, when no slash cell settles it in a column of slash dates without a
+  12-hour time; beside other forms, or with such a time, only an order the slash dates
+  settle); any other cell is unreadable. The
   refusal says why, by the reason of each cell left unread (`parse.UnreadReason`,
   `_unread_words`): a day that does not exist, slash dates that settle no single order,
   or no form of the list, for which it names the forms the chat reads (`parse.DATE_FORMS`); the
@@ -423,6 +425,7 @@ from .parse import (
     ascii_minus,
     canonical_names,
     date_offset,
+    hour_of_day,
     keeps_value,
     minus_note,
     offset_in_use,
@@ -430,6 +433,7 @@ from .parse import (
     parse_dataset,
     read_dates,
     rounded_note,
+    twelve_hour_time,
     utc_offset,
     value_like,
 )
@@ -1830,8 +1834,8 @@ def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
     """The cells of a column that is no date column yet as dates (`_to_dates`), with the words of the change line.
 
     Without a format the cells read as the paste reads them (`parse.read_dates`), and so does the order of day and
-    month: the column's, a guess only for a slash column that no cell settles, which the reading names (`order`,
-    `guess`); a dot date is day first, as at the paste. With a format the order is a guess when every day is at
+    month: the column's, a guess only for a slash column without a 12-hour time that no cell settles, which the
+    reading names (`order`, `guess`); a dot date is day first, as at the paste. With a format the order is a guess when every day is at
     most 12 (`_order_open`), since the cells read the other way too.
     """
     dates = _to_dates(series, date_format)
@@ -4817,11 +4821,23 @@ def _read_date(text: str, date_format: str) -> datetime | None:
 
     A compact format takes exactly its digits (`YYYYMMDD` 8, `YYYYMM` 6, `YYYY` 4) and no
     time: `2024115` is no `YYYYMMDD` date, never guessed as 5 November (review of 2026-10-15).
+    Every other format takes a time on a 24-hour clock (`_TIME_SUFFIXES`) or on a 12-hour one
+    after a space, as the date list reads it (`parse.twelve_hour_time`, `parse.hour_of_day`):
+    `3/1/2026 10:00:00 AM` with `MM/DD/YYYY` is 1 March at 10:00, and an hour of 0 or past 12
+    names no time, so such a cell is not read.
     """
     text = text.strip()
     digits = COMPACT_DIGITS.get(date_format)
     if digits is not None and not (text.isascii() and text.isdigit() and len(text) == digits):
         return None
+    twelve = twelve_hour_time(text) if digits is None else None
+    if twelve is not None:
+        hour = hour_of_day(twelve.hour, twelve.meridiem)
+        try:
+            day = datetime.strptime(twelve.day, STRPTIME[date_format])
+            return None if hour is None else day.replace(hour=hour, minute=twelve.minute, second=twelve.second)
+        except ValueError:
+            return None
     for suffix in ("",) if digits is not None else _TIME_SUFFIXES:
         try:
             return datetime.strptime(text, STRPTIME[date_format] + suffix)

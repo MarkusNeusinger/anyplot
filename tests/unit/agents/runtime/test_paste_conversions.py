@@ -18,6 +18,7 @@ from agents.anyplot import paste_conversions
 from agents.anyplot.agent import session_context
 from agents.anyplot.data.conversions import RowNumbers, candidates
 from agents.anyplot.data.parse import DATE_FORMS, parse_dataset
+from agents.anyplot.data.prepare import SLASH_ORDER
 from agents.anyplot.data.store import DatasetStore, StoreFull
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import JudgeVerdict
@@ -185,6 +186,10 @@ class TestMakeConversions:
                 ["2026-03-01T10:00Z", "2026-03-02T10:00", "2026-03-03T10:00Z", "2026-03-04T10:00"],
                 "would be refused: column 'day' holds 2 cells with a UTC offset and 2 cells without one",
             ),
+            (
+                ["3/1/2026 10:00:00 AM", "3/2/2026 10:00:00 AM", "3/4/2026 10:00:00 AM", "3/5/2026 10:00:00 AM"],
+                f"column 'day' looks like dates, but 4 of 4 cells would not read: {SLASH_ORDER}",
+            ),
         ],
     )
     def test_row_numbers_beside_dates_that_would_not_read_wait_for_a_yes(self, cells: list[str], why: str) -> None:
@@ -214,7 +219,7 @@ class TestMakeConversions:
             ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04"],
             ["2026-03-01 10:00:00 UTC", "2026-03-02 10:00:00 UTC", "2026-03-03 10:00:00 UTC"],
             ["2026-03-01 10:00:00 +0100", "2026-03-02 10:00:00 +0100", "2026-03-03 10:00:00 +0100"],
-            ["3/1/2026 10:00:00 AM", "3/2/2026 10:00:00 AM", "3/3/2026 10:00:00 AM"],
+            ["3/13/2026 10:00:00 AM", "3/14/2026 10:00:00 AM", "3/15/2026 10:00:00 AM"],
         ],
     )
     def test_dates_in_a_form_tools_write_take_the_axis_at_the_paste_and_nothing_is_made(self, cells: list[str]) -> None:

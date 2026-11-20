@@ -476,7 +476,8 @@ _TWELVE_HOUR = re.compile(r"(.+) ([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))? ?(AM|PM
 """A date followed by a time on a 12-hour clock (`3/1/2026 10:00:00 AM`, `2026-03-01 9:05pm`): after one space, an hour
 of one or two digits, minutes, optional seconds, and `AM` or `PM` in upper or lower case after one space or none. The
 date is a day of the list without a time of its own (`_date_shape`); the time takes no fraction and no offset, and only
-an hour from 1 to 12 names one (`_calendar`)."""
+an hour from 1 to 12 names one (`hour_of_day`). A conversion by an explicit format reads the same time after its date
+(`twelve_hour_time`)."""
 UTC_OFFSETS = (-12 * 60, 14 * 60)
 """The UTC offsets in use, in minutes east of UTC: from −12:00 to +14:00. A sign and digits past them after a time end a
 range of times (`08:00-16:30`), never an offset (`utc_offset`)."""
@@ -3320,7 +3321,8 @@ def _type_column(column: _Column) -> None:
        two-digit day and month; every day also with a 12-hour time (` 10:00:00 AM`,
        `_TWELVE_HOUR`); a column that mixes forms stays text. A slash column is day-first when a first part exceeds 12, month-first
        when a second part does, not a date when both happen, and day-first with a
-       warning when neither does. Written as `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM:SS`
+       warning when neither does, unless a slash cell has a 12-hour time: then it is not a
+       date when neither does either (the order is asked, never guessed). Written as `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM:SS`
        for the whole column when any cell has a time. Months, `YYYY-MM` or a month name
        with a four-digit year (`Nov 2026`, `Okt. 2026`), are the first day of each month,
        with a note (`_as_periods`). A column whose every cell is a date followed directly
@@ -3776,7 +3778,8 @@ class DateCells:
     """The order of the column's slash dates: month first only when a cell reads that way alone (`03/15/2026`)."""
     guessed: bool = False
     """Slash dates read day first although no cell settles the order and some cell reads otherwise month first: only
-    in a column of slash dates alone, as beside cells of another form such a slash date is unread (`slash_order`)."""
+    in a column of slash dates alone without a 12-hour time, as beside cells of another form or in a column whose slash
+    dates carry one such a slash date is unread (`slash_order`)."""
 
     @property
     def shape(self) -> DateShape | None:
@@ -3806,9 +3809,10 @@ def read_dates(cells: Iterable[str]) -> DateCells:
     when a cell reads in that order alone (`03/15/2026`), else day first, by guess (`guessed`) when no cell settles it
     and some cell reads otherwise the other way. A slash date that reads differently in the two orders is unread
     (`slash_order`) when no single order fits: its column's slash dates settle both (`15/03/2026` beside `03/15/2026`),
-    or none in a column that mixes forms, where a guess could not be taken back; one that names no day in either order
-    keeps its own reason (`31/31/2026`, `no_such_date`). A time on a 12-hour clock settles no order: `3/1/2026 10:00 AM`
-    is a slash date like any other. A date with the year first and slashes (`2026/03/01`) has no such question.
+    or none in a column that mixes forms, where a guess could not be taken back, or none in a column whose slash dates
+    carry a time on a 12-hour clock (`3/1/2026 10:00 AM`), which such a guess would turn; one that names no day in
+    either order keeps its own reason (`31/31/2026`, `no_such_date`). A date with the year first and slashes
+    (`2026/03/01`) has no such question.
     """
     found = {cell: _date_shape(cell.translate(_SPACE_FOLD)) for cell in dict.fromkeys(cells)}
     orders = {
@@ -3825,9 +3829,19 @@ def read_dates(cells: Iterable[str]) -> DateCells:
         shaped is not None and shaped.shape != "slash" and _READERS[shaped.shape](shaped) is not None
         for shaped in found.values()
     )
-    unsettled = day_only == month_only and (day_only or mixed)
+    # US spreadsheets write slash dates with a 12-hour clock month first, others (Australian, Indian) day first: the
+    # clock settles no order, and it makes the day-first guess the list takes for plain slash dates unsafe, so such a
+    # column reads only in an order its own cells settle, and the chat asks for the rest. One slash cell with AM or PM
+    # is enough, since the order is the column's: its cells without a time come from the same table, and a guess on
+    # them alone would be the same guess.
+    twelve_hour = any(shaped is not None and shaped.shape == "slash" and shaped.meridiem for shaped in found.values())
+    unsettled = day_only == month_only and (day_only or mixed or twelve_hour)
     guessed = (
-        not mixed and not day_only and not month_only and any(first != second for first, second in orders.values())
+        not mixed
+        and not twelve_hour
+        and not day_only
+        and not month_only
+        and any(first != second for first, second in orders.values())
     )
     moments: dict[str, datetime] = {}
     unread: dict[str, UnreadReason] = {}
@@ -3899,16 +3913,15 @@ def _date_shape(cell: str) -> _Shaped | None:
             if offset is not None:
                 offset = "Z" if offset == " UTC" else offset.lstrip(" ")
             return _Shaped(shape, numbers, stamp.group(7) or "", offset)
-    twelve = _TWELVE_HOUR.fullmatch(cell)
+    twelve = twelve_hour_time(cell)
     if twelve is not None:
         # A day of the list followed by a 12-hour time: the day reads in its own shape, and a month (no day) or a day
         # that already has a time takes none.
-        text, hour, minute, second, meridiem = twelve.groups()
-        dated = None if ":" in text else _date_shape(text)
+        dated = None if ":" in twelve.day else _date_shape(twelve.day)
         if dated is None or dated.shape in ("month", "month_name"):
             return None
-        time = (int(hour), int(minute), int(second or 0))
-        return replace(dated, numbers=(*dated.numbers[:3], *time), meridiem=meridiem.upper())
+        time = (twelve.hour, twelve.minute, twelve.second)
+        return replace(dated, numbers=(*dated.numbers[:3], *time), meridiem=twelve.meridiem)
     for shape, pattern in _NUMBERED_SHAPES.items():
         found = pattern.fullmatch(cell)
         if found is not None:
@@ -3980,16 +3993,46 @@ def _calendar(
     meridiem: str = "",
 ) -> datetime | None:
     """The moment of a date and a time, None when the calendar or the clock has none (`2026-02-30`, `25:00`). With a
-    `meridiem` the hour is on a 12-hour clock: `12 AM` is midnight, `12 PM` noon, and an hour of 0 or past 12 names no
-    time there."""
+    `meridiem` the hour is on a 12-hour clock (`hour_of_day`)."""
     if meridiem:
-        if not 1 <= hour <= 12:
+        clock = hour_of_day(hour, meridiem)
+        if clock is None:
             return None
-        hour = hour % 12 + (12 if meridiem == "PM" else 0)
+        hour = clock
     try:
         return datetime(year, month, day, hour, minute, second, microsecond, tzinfo=zone)
     except ValueError:
         return None
+
+
+@dataclass(frozen=True)
+class TwelveHourTime:
+    """A cell that ends in a time on a 12-hour clock (`twelve_hour_time`): the text before the time, the hour as
+    written, the minutes, the seconds (0 when the cell has none) and `AM` or `PM`."""
+
+    day: str
+    hour: int
+    minute: int
+    second: int
+    meridiem: Literal["AM", "PM"]
+
+
+def twelve_hour_time(cell: str) -> TwelveHourTime | None:
+    """The time on a 12-hour clock a cell ends in, in the spellings the date list reads (`_TWELVE_HOUR`), else None: the
+    one reading of such a time for the list and for a conversion by an explicit format (`prepare._read_date`)."""
+    found = _TWELVE_HOUR.fullmatch(cell)
+    if found is None:
+        return None
+    day, hour, minute, second, meridiem = found.groups()
+    return TwelveHourTime(day, int(hour), int(minute), int(second or 0), "PM" if meridiem in ("PM", "pm") else "AM")
+
+
+def hour_of_day(hour: int, meridiem: str) -> int | None:
+    """The hour on a 24-hour clock of `hour` on a 12-hour one with `meridiem` (`AM` or `PM`): `12 AM` is midnight, `12
+    PM` noon; None for an hour of 0 or past 12, which that clock does not have."""
+    if not 1 <= hour <= 12:
+        return None
+    return hour % 12 + (12 if meridiem == "PM" else 0)
 
 
 def _offset_minutes(moment: datetime) -> int | None:

@@ -22,6 +22,7 @@ rows here, for the paste and the conversion at once.
 import csv
 import io
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any
 
 import dateutil.parser
@@ -36,6 +37,7 @@ from agents.anyplot.data.prepare import (
     PrepareError,
     _cell_text,
     _date_conversion,
+    _read_date,
     apply_operations,
     dry_run,
     read_frame,
@@ -44,6 +46,7 @@ from core.spec_roles import parse_roles
 
 
 OPERATIONS = TypeAdapter(list[Operation])
+TO_DATES = {"op": "set_type", "column": "d", "type": "datetime"}
 FORMS = (
     "the chat reads 2026-03-01, 2026/03/01, 01.03.2026, 03/15/2026, 8 Nov 2026, each also with a time, "
     "and months such as 2026-03 or Mar 2026"
@@ -461,26 +464,57 @@ class TestTheFormsToolsWrite:
     dates, an offset only within those in use and only after a time, no zone given by guess, one form per pasted
     column."""
 
-    def test_a_twelve_hour_time_settles_no_order_of_day_and_month(self) -> None:
-        """US Excel writes the month first, but the clock says nothing about the date: a column whose days are all 12
-        or less is read day first by guess, named as one, as the same dates without a time are."""
-        cells = [f"3/{day}/2026 10:00:00 AM" for day in range(1, 5)]
+    def test_slash_dates_with_a_twelve_hour_time_whose_order_no_cell_settles_are_not_read_by_a_guess(self) -> None:
+        """US spreadsheets write the month first, others the day: the clock settles no order, so a column whose days
+        are all 12 or less keeps its cells as written, with no note, and a conversion says why instead of guessing. A
+        cell whose day and month are equal reads in both orders and is read."""
+        cells = ["3/1/2026 10:00:00 AM", "3/2/2026 10:00:00 AM", "3/3/2026 10:00:00 AM", "3/4/2026 10:00:00 AM"]
+        listed = read_dates(cells)
+        text = "d,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
 
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parse_dataset(text), OPERATIONS.validate_python([TO_DATES]))
+
+        assert listed.unread == dict.fromkeys([cells[0], cells[1], cells[3]], "slash_order")
+        assert list(listed.moments) == ["3/3/2026 10:00:00 AM"] and not listed.guessed
+        assert pasted(cells) == ("text", cells, [])
+        assert caught.value.message == f"column 'd': 3 of 4 cells cannot be read as dates; {SLASH_ORDER}"
+        assert caught.value.unread == {"slash_order": 3}
+
+    def test_one_slash_cell_with_a_twelve_hour_time_is_enough(self) -> None:
+        """The order is the column's: its cells without a time are not guessed either."""
+        cells = ["3/1/2026", "3/2/2026 10:00 AM", "3/3/2026"]
+
+        assert read_dates(cells).unread == {"3/1/2026": "slash_order", "3/2/2026 10:00 AM": "slash_order"}
+        assert converted(cells)["values"] == [None, None, "2026-03-03"]  # the one cell read has no time
+        assert pasted(cells) == ("text", cells, [])
+
+    def test_plain_slash_dates_keep_the_named_guess(self) -> None:
+        """Without a 12-hour time the older rule holds: day first, and the paste and the reading say it is a guess."""
+        cells = ["3/1/2026 10:00", "3/2/2026 10:00"]
+
+        assert converted(cells)["guess"] == "the day and month order"
+        assert pasted(cells)[2] == ["column 'd': day and month order is ambiguous; read as DD/MM/YYYY"]
+
+    @pytest.mark.parametrize(
+        ("cells", "values"),
+        [
+            (
+                ["3/15/2026 10:00:00 AM", "3/1/2026 2:00:00 PM", "3/2/2026 9:00:00 AM"],
+                ["2026-03-15T10:00:00", "2026-03-01T14:00:00", "2026-03-02T09:00:00"],
+            ),
+            (
+                ["13/3/2026 10:00:00 AM", "1/3/2026 2:00:00 PM", "2/3/2026 9:00:00 AM"],
+                ["2026-03-13T10:00:00", "2026-03-01T14:00:00", "2026-03-02T09:00:00"],
+            ),
+        ],
+        ids=["a 15th reads month first", "a 13th first reads day first"],
+    )
+    def test_a_day_past_12_settles_the_order_for_twelve_hour_times(self, cells: list[str], values: list[str]) -> None:
         reading = converted(cells)
 
-        assert reading["values"] == [f"2026-0{month}-03T10:00:00" for month in range(1, 5)]
-        assert reading["guess"] == "the day and month order"
-        assert pasted(cells) == (
-            "datetime",
-            [f"2026-0{month}-03T10:00:00" for month in range(1, 5)],
-            ["column 'd': day and month order is ambiguous; read as DD/MM/YYYY"],
-        )
-
-    def test_a_day_past_12_settles_the_order_for_twelve_hour_times_too(self) -> None:
-        cells = ["3/15/2026 10:00:00 AM", "3/1/2026 2:00:00 PM"]
-
-        assert converted(cells)["values"] == ["2026-03-15T10:00:00", "2026-03-01T14:00:00"]
-        assert pasted(cells)[1] == ["2026-03-15T10:00:00", "2026-03-01T14:00:00"]
+        assert reading["values"] == values and reading["guess"] is None
+        assert pasted(cells) == ("datetime", values, [])
 
     @pytest.mark.parametrize("time", ["0:30 AM", "00:30 AM", "13:00 PM", "13:00 AM", "12:60 PM"])
     def test_a_time_a_twelve_hour_clock_does_not_have_is_no_such_date(self, time: str) -> None:
@@ -546,6 +580,77 @@ class TestTheFormsToolsWrite:
             "column 'd' holds 1 cell with a UTC offset and 1 cell without one; no cell is given a zone by guess, so the "
             "column stays as it is"
         )
+
+
+class TestTwelveHourTimesByAFormat:
+    """A conversion by an explicit format reads a 12-hour time after its date as the list reads it, so the question
+    about slash dates whose order no cell settles has its answer: `MM/DD/YYYY` or `DD/MM/YYYY`."""
+
+    CELLS = [f"3/{day}/2026 10:00:00 AM" for day in range(1, 5)]
+
+    @pytest.mark.parametrize(
+        ("date_format", "values"),
+        [
+            ("MM/DD/YYYY", [f"2026-03-0{day}T10:00:00" for day in range(1, 5)]),
+            ("DD/MM/YYYY", [f"2026-0{month}-03T10:00:00" for month in range(1, 5)]),
+        ],
+    )
+    def test_the_format_the_question_offers_reads_the_column(self, date_format: str, values: list[str]) -> None:
+        text = "d,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(self.CELLS))
+        operation = {**TO_DATES, "date_format": date_format}
+
+        prepared = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+
+        assert [row.split(",")[0] for row in prepared.csv.splitlines()[1:]] == values
+        assert prepared.changes == [f"d: 4 cells read as dates ({date_format})"]
+
+    def test_an_hour_the_clock_does_not_have_is_counted_as_unread(self) -> None:
+        cells = [f"3/{day}/2026 10:00 AM" for day in range(1, 11)] + ["3/11/2026 13:00 PM"]
+        text = "d,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
+        operation = {**TO_DATES, "date_format": "MM/DD/YYYY"}
+
+        prepared = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+
+        assert prepared.csv.splitlines()[-1] == ",10"
+        assert prepared.changes == [
+            "d: 10 cells read as dates (MM/DD/YYYY), 1 cell could not be read and is now missing"
+        ]
+
+    @pytest.mark.parametrize(
+        ("date_format", "cell", "moment"),
+        [
+            ("DD.MM.YYYY", "01.03.2026 10:00 PM", datetime(2026, 3, 1, 22)),
+            ("MM/DD/YYYY", "3/1/2026 12:00 AM", datetime(2026, 3, 1, 0)),
+            ("DD/MM/YYYY", "1/3/2026 12:30:15 pm", datetime(2026, 3, 1, 12, 30, 15)),
+            ("YYYY-MM-DD", "2026-03-01 9:05am", datetime(2026, 3, 1, 9, 5)),
+            ("YYYY-MM", "2026-03 10:00 PM", datetime(2026, 3, 1, 22)),
+            ("MM/YYYY", "03/2026 10:00 PM", datetime(2026, 3, 1, 22)),
+            ("MM.YYYY", "03.2026 10:00 PM", datetime(2026, 3, 1, 22)),
+        ],
+    )
+    def test_every_format_that_takes_a_time_takes_it_on_a_12_hour_clock(
+        self, date_format: str, cell: str, moment: datetime
+    ) -> None:
+        """The seven formats that are no compact digits take a time today, so they take this one as well."""
+        assert _read_date(cell, date_format) == moment
+
+    @pytest.mark.parametrize(
+        ("date_format", "cell"),
+        [
+            ("YYYYMMDD", "20260301 10:00 AM"),  # a compact format takes its digits and no time
+            ("MM/DD/YYYY", "3/1/2026 0:30 AM"),
+            ("MM/DD/YYYY", "3/1/2026 13:00 PM"),
+            ("MM/DD/YYYY", "3/1/2026 10:60 AM"),
+            ("MM/DD/YYYY", "3/1/2026 10:00 a.m."),
+            ("MM/DD/YYYY", "3/1/2026 10:00 Am"),
+            ("MM/DD/YYYY", "3/1/2026 10 AM"),
+            ("MM/DD/YYYY", "3/1/2026T10:00 AM"),
+            ("MM/DD/YYYY", "3/1/2026, 10:00:00 AM"),
+            ("MM/DD/YYYY", "3/1/2026 10:00 11:00 AM"),
+        ],
+    )
+    def test_no_other_spelling_or_hour_is_read(self, date_format: str, cell: str) -> None:
+        assert _read_date(cell, date_format) is None
 
 
 NUMBERED_MONTH_DAYS: dict[str, list[str]] = {

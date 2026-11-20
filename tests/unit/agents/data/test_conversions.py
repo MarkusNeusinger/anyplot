@@ -351,6 +351,12 @@ UNREAD = {
     "c one 31.02. in four": (["28.02.2026", "31.02.2026", "01.03.2026", "02.03.2026"], 1, NO_SUCH_DAY),
     "f slashes in both orders": (["15/03/2026", "03/15/2026", "04/05/2026", "06/07/2026"], 4, SLASH_ORDER),
     "g a slash date beside ISO": (["2026-03-01", "03/04/2026", "2026-03-05", "2026-03-07"], 1, SLASH_ORDER),
+    # A 12-hour clock settles no order of day and month, and the column is read by no guess: the user is asked.
+    "j a 12-hour time on slash dates no cell settles": (
+        [f"3/{day}/2026 10:00:00 AM" for day in (1, 2, 4, 5)],
+        4,
+        SLASH_ORDER,
+    ),
     "h a zone name after the time": ([f"2026-03-0{day} 10:00:00 CET" for day in range(1, 5)], 4, DATE_FORMS),
     "i an offset of hours alone after a space": (
         [f"2026-03-0{day} 10:00:00 +01" for day in range(1, 5)],
@@ -522,9 +528,9 @@ class TestRowNumbersBesideUnreadDates:
             ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04"],
             [f"2026-03-0{day} 10:00:00 UTC" for day in range(1, 5)],
             [f"2026-03-0{day} 10:00:00 +0100" for day in range(1, 5)],
-            [f"3/{day}/2026 10:00:00 AM" for day in range(1, 5)],
+            [f"3/{day}/2026 10:00:00 AM" for day in range(13, 17)],
         ],
-        ids=["a slashes year first", "h UTC as a word", "i a space before the offset", "j AM and PM"],
+        ids=["a slashes year first", "h UTC as a word", "i a space before the offset", "j AM and PM, a day past 12"],
     )
     def test_a_form_the_list_took_in_takes_the_axis_and_no_row_numbers_are_listed(self, cells: list[str]) -> None:
         """These were row numbers as a question while the list left them unread: the paste types them as dates now,
