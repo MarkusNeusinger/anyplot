@@ -147,7 +147,7 @@ cd "$GITHUB_WORKSPACE"
     plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}
 ```
 
-It prints one line per refusal in the validator's own words, with the line of your file and, where the validator has one, a hint after `→`, then a verdict line (`readiness: accepted`, `refused (<keys>)`, `excluded (…)` or `not checked (…)`). It exits 0 when there is nothing to fix, 1 when there is, and 2 when it cannot run. Run it, and don't read the validator's code. Its output is the whole rule.
+It prints one line per refusal in the validator's own words, with the line of your file and, where the validator has one, a hint after `→`, then a verdict line (`readiness: accepted`, `refused (<keys>)`, `excluded (…)` or `not run (…)`). It exits 0 when there is nothing to fix, 1 when there is, and 2 when it cannot run. Run it, and don't read the validator's code. Its output is the whole rule.
 
 - Fix every line and every failed perturbation that is not tagged `(advisory)`, then re-render both themes (Step 5) and run this step again. Lines tagged `(advisory)` never fail the check.
 - Remove every refusal of the readiness check that you can remove without making the plot worse; the same picture almost always has a plainer way to be written. Never remove an element the spec asks for to get rid of one: when the spec needs the construct (a 3D trace in plotly draws with WebGL, which the chat's renderer lacks), leave the refusal and say so in the commit body. A map spec is excluded (`readiness: excluded`): there is nothing to fix.

@@ -88,7 +88,7 @@ When regenerating an existing implementation, you MUST read these BEFORE writing
 - **Canvas size: the Step 0 contract is non-negotiable on regen.** The previous file's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are **historical**, never current — overwrite them to the canonical pair from `prompts/library/{LIBRARY}.md` as your *first* edit, before touching anything else. The post-render gate checks this and re-triggers repair on drift; do not let that fire.
 - **Base style wins on everything else.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This includes **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (Imprint palette positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), **chrome** (spines, gridlines, legend frame), and the **title format** (`{spec-id} · {language} · {library} · anyplot.ai` per `prompts/plot-generator.md`, with its optional `{Descriptive Title} · ` prefix; keep a prefix the previous title had, but re-derive the mandated part from the rule instead of copying it, because the previous title may predate the `{language}` segment, and re-apply the title fontsize formula to the result). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align. Also normalise any stale "anyplot palette" wording in the previous code's comments to "Imprint palette".
 - Do NOT discard working structure / data generation / layout choices that the previous review did not flag. For Python (`LANGUAGE=python`): the data generation keeps its values, not its form — the same numbers, names and order move into the one `# Data` block and end in `df`.
-- No defect listed and nothing in Step 0 or the base style to align → a small edit, and a kept regeneration, is the expected outcome. Do not invent changes to have something to show. For Python (`LANGUAGE=python`): a previous file that fails the adaptability check has a listed defect, so convert it even when nothing else needs to change; a refusal of the readiness check in Step 3c is a listed defect as well.
+- No defect listed and nothing in Step 0 or the base style to align → a small edit, and a kept regeneration, is the expected outcome. Do not invent changes to have something to show. For Python (`LANGUAGE=python`): a previous file that fails the adaptability check has a listed defect, so convert it even when nothing else needs to change.
 - Your deliverable is a refined version of the previous file, not a fresh rewrite from the spec.
 - **Converting a Python file (`LANGUAGE=python`).** Before you edit, run the static check on the previous file to see what it lacks: `python -m core.adaptability check plots/{SPEC_ID}/implementations/python/{LIBRARY}.py`, from the repository root with `.venv` activated. It prints the record and the `CQ-01 (code)` lines and, unlike Step 3c, writes no log entry. Convert toward an identical picture: keep every value, label, order, color assignment and size, and replace each literal tied to the sample with an expression over `df` that reproduces it for the sample as closely as you can — `0.75 / len(table.columns)` for a bar width of 0.25 with three groups, a factor on the data's maximum for a typed axis limit (`df[SALES].max() * 1.13` where the old file typed 480 over a maximum of 425). A pure conversion merges when the new render differs from the previous one in at most 0.5 % of its pixels per theme at the same canvas size; a conversion that moves things is an ordinary regeneration and merges only with a visible improvement. When you also fix a defect, that fix is the only visible change. The optional `pair` command in Step 3c measures the difference.
 - **R, Julia and JavaScript (`LANGUAGE` other than `python`):** the Data block convention applies to new files. On a regeneration it is no reason to rewrite working data code; the mindset above applies unchanged.
@@ -258,7 +258,7 @@ cd "$GITHUB_WORKSPACE"
     plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}
 ```
 
-It prints one line per refusal in the validator's own words, with the line of your file and, where the validator has one, a hint after `→`. Its last line is the verdict: `readiness: accepted`, `readiness: refused (<keys>)`, `readiness: excluded (…)` or `readiness: not checked (…)`. It exits 0 when there is nothing to fix, 1 when there is, and 2 when it cannot run. Run it, and don't read the validator's code. Its output is the whole rule: this prompt lists no constructs of its own, so don't guess at others.
+It prints one line per refusal in the validator's own words, with the line of your file and, where the validator has one, a hint after `→`. Its last line is the verdict: `readiness: accepted`, `readiness: refused (<keys>)`, `readiness: excluded (…)` or `readiness: not run (…)`. It exits 0 when there is nothing to fix, 1 when there is, and 2 when it cannot run. Run it, and don't read the validator's code. Its output is the whole rule: this prompt lists no constructs of its own, so don't guess at others.
 
 - **Fix every line and every failed perturbation that is not tagged `(advisory)`,** then re-render both themes (Step 3), re-run Step 3b, and run this step again. A `CQ-01 (code)` line names the line of your file, what it found, the target and the likely cause; a failed perturbation names the error and the line where it was raised. Typical fixes: a literal tied to the sample becomes an expression over `df`, a palette sized to the sample becomes the full eight-entry list, a typed label becomes a column constant, a zero fill becomes a NaN-aware reduction.
 - **Lines and perturbations tagged `(advisory)` never fail the check.** Fix one when the fix is small and leaves the render unchanged; otherwise leave it.
@@ -334,23 +334,17 @@ git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 
 Commit only the implementation file, and use only the packages the runner already has: never run `Pkg.add`, `uv add`, `pip install` or `npm install`. The workflow fails the run when your commit changes `Manifest.toml`, `Project.toml`, `uv.lock`, `pyproject.toml`, `package.json`, `package-lock.json` or `.python-version`, because a re-resolved lock file moves the library version for every implementation of the language.
 
-For Python (`LANGUAGE=python`), the commit body always carries the result of the last Step 3c run, first generations included: `pass`, or `fail` with the rule classes of the remaining non-advisory lines and the names of the remaining failed perturbations, and the attempt number:
-
-```bash
-git commit -m "feat({LIBRARY}): implement {SPEC_ID}" -m "Adaptability self-check: pass, attempt 1"
-# or, after three attempts:  -m "Adaptability self-check: fail (palette, more_categories), attempt 3"
-```
-
-Right below that line goes a `Readiness self-check:` line with the verdict of the last readiness check: `accepted`, `excluded`, `refused` with the keys of its verdict line and, for each key you left, why it stays, or `not run` with the reason. Pass both lines in one `-m`:
+For Python (`LANGUAGE=python`), the commit body always carries the result of the last Step 3c run, first generations included, in two lines. The `Adaptability self-check:` line says `pass`, or `fail` with the rule classes of the remaining non-advisory lines and the names of the remaining failed perturbations, and the attempt number. The `Readiness self-check:` line right below it gives the verdict of the last readiness check: `accepted`, `excluded`, `refused` with the keys of its verdict line and, for each key you left, why it stays, or `not run` with the reason. Pass both lines in one `-m`:
 
 ```bash
 git commit -m "feat({LIBRARY}): implement {SPEC_ID}" -m "Adaptability self-check: pass, attempt 1
 Readiness self-check: accepted"
 ```
 
-Other forms of the second line:
+Other forms of the two lines, such as after three attempts:
 
 ```
+Adaptability self-check: fail (palette, more_categories), attempt 3
 Readiness self-check: refused (webgl), kept: the spec's 3D surface needs a WebGL trace
 Readiness self-check: excluded
 Readiness self-check: not run (exit 2, the validator copy is missing)
