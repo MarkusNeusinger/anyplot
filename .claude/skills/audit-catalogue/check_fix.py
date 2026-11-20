@@ -21,7 +21,8 @@ Every file is read from `--ref` in `--repo`'s git store, never from a working tr
 - `render` (`--render`): Python and JavaScript render both themes the way adopt mode does, from a temporary copy
   (Python: `MPLBACKEND=Agg python -P` in the project venv with the library's extra; JavaScript:
   `automation/js-render/render.mjs`, which needs `node_modules` in `--repo` and Playwright's Chromium), then the
-  canvas gate and the blank check of `core.canvas`. The PNGs go to `--out/<spec>/<library>/`. The render gets a
+  canvas gate and the blank check of `core.canvas`, and, as impl-review's gate does, that both themes sit on one
+  canvas. The PNGs go to `--out/<spec>/<library>/`. The render gets a
   scrubbed environment (`RENDER_ENV`), so no token or database URL of the shell reaches the code it runs. Set
   `UV_PROJECT_ENVIRONMENT` to one shared venv (SKILL.md, step 6), or `uv` builds a full venv in every fix worktree.
   R and Julia are not rendered: adopt mode has no R or Julia render, so their fix goes through a `regen_gate=false`
@@ -158,8 +159,21 @@ def validator_problems(
     return problems, warnings
 
 
+def same_canvas_problem(targets: dict[str, tuple[int, int]]) -> str | None:
+    """impl-review's canvas gate also wants both themes nearest one canvas: a size set inside a theme branch can put
+    each render on a canonical canvas of its own, which passes each theme's check and fails the gate."""
+    light, dark = targets.get("light"), targets.get("dark")
+    if light is None or dark is None or light == dark:
+        return None
+    return (
+        f"dark: on the {dark[0]}x{dark[1]} canvas while light is on {light[0]}x{light[1]}; "
+        "the canvas gate wants both renders on one canvas"
+    )
+
+
 def render_pair(pair: Pair, code: str, *, repo: Path, out: Path) -> tuple[dict[str, str], list[str], list[str]]:
-    """Render both themes from a temporary copy, then the canvas gate and the blank checks: a canvas that is all
+    """Render both themes from a temporary copy, then the canvas gate (each theme on target, both on one canvas) and
+    the blank checks: a canvas that is all
     background by the agents' own cutoff fails, one above the rubric's 95 % only warns (a tree of thin lines is
     97 % background and fine). Returns `(per theme, problems, warnings)`."""
     from agents.anyplot.render.png import MAX_BACKGROUND_RATIO
@@ -170,6 +184,7 @@ def render_pair(pair: Pair, code: str, *, repo: Path, out: Path) -> tuple[dict[s
     summary: dict[str, str] = {}
     problems: list[str] = []
     warnings: list[str] = []
+    targets: dict[str, tuple[int, int]] = {}
     target = out / pair.spec / pair.library
     target.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="audit-render-") as scratch:
@@ -206,6 +221,7 @@ def render_pair(pair: Pair, code: str, *, repo: Path, out: Path) -> tuple[dict[s
                 problems.append(f"{theme}: the render is not a PNG")
                 continue
             summary[theme] = f"{verdict.width}x{verdict.height} (target {verdict.target[0]}x{verdict.target[1]})"
+            targets[theme] = verdict.target
             if not verdict.ok:
                 problems.append(f"{theme}: off the canvas target, {summary[theme]}")
             empty, rubric = check_blank(kept, max_blank_ratio=MAX_BACKGROUND_RATIO), check_blank(kept)
@@ -213,6 +229,9 @@ def render_pair(pair: Pair, code: str, *, repo: Path, out: Path) -> tuple[dict[s
                 problems.append(f"{theme}: {empty.message}")
             elif not rubric.passed:
                 warnings.append(f"{theme}: {rubric.message}; thin marks do that, look at the PNG")
+    mismatch = same_canvas_problem(targets)
+    if mismatch:
+        problems.append(mismatch)
     return summary, problems, warnings
 
 

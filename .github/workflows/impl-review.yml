@@ -845,8 +845,9 @@ jobs:
       # Both saved PNGs must be exactly 3200×1800 (landscape) or 2400×2400
       # (square) within ±16 px (≤0.5 %), and both on the same one of the two.
       # On a miss, write /tmp/anyplot-canvas-gate.txt with a synthetic weakness
-      # per render that missed (named actual+target+signed delta + likely
-      # cause), tagged (both) when the two renders drifted alike.
+      # per render that missed, tagged (both) when the two renders drifted
+      # alike: for a drift the actual size, target, signed delta and likely
+      # cause; for a dark render that does not open, that and its error.
       # ai-quality-review.md reads that file and treats canvas_gate=fail as a
       # MUST-flag weakness that forces VQ-05 to 0, which drags the quality_score
       # below the repair threshold — re-routing a fresh generation into
@@ -854,15 +855,18 @@ jobs:
       # there is no repair: the regen gate reads the same file and keeps the
       # live implementation. Never raw `exit 1` here: impl-repair.yml is
       # dispatched by the verdict step only, so a hard step failure would leave
-      # a dead PR with no retry path. A dark render that is missing or does not
-      # open is therefore a gate failure, not a crash: impl-generate never
-      # stages a pair without both renders, so it is a defect of the run.
-      # plot-light.png is opened unguarded: a light render that does not open
-      # stops the step, and "Verify both theme renders exist" has already
-      # stopped the job on a missing one.
+      # a dead PR with no retry path. A dark render that does not open is
+      # therefore a gate failure, not a crash: impl-generate never stages a
+      # pair without both renders, so it is a defect of the run. A missing
+      # render of either theme never gets here: "Verify both theme renders
+      # exist" has already stopped the job (the gate still names a missing dark
+      # render rather than crash). plot-light.png is opened unguarded: a light
+      # render that does not open stops the step.
       # The notice line keeps its fields up to `attempt=` (canvas_gate_report.py
-      # reads them; `actual`/`target`/`delta` stay the light render's) and adds
-      # the dark render's after it; `status` is the verdict on both.
+      # reads them; `actual`/`target`/`delta` stay the light render's
+      # measurement) and adds after it `light=` (the light render's own
+      # verdict), `dark=` and the dark render's size fields; `status` is the
+      # verdict on both.
       - name: Canvas dimension gate
         if: steps.render_stop.outputs.stopped != 'true'
         env:
@@ -978,25 +982,30 @@ jobs:
           cause = causes.get(LIBRARY, f"Review `prompts/library/{LIBRARY}.md` 'Canvas — hard rule' section.")
 
 
-          def drift_line(width, height, render, note=""):
+          def drift_line(width, height, render, note="", canvas=None):
               """The synthetic weakness for one size: actual, target, signed delta,
               direction, possible aspect mismatch and the library's likely cause.
+
+              The target is the closest one, or `canvas`, the canonical canvas the
+              other render sits on, which both renders must share.
 
               A defect line (regen_gate.DEFECT_RE): the review copies it verbatim,
               and impl-repair sees it in metadata.review.weaknesses.
               """
-              ttw, tth = nearest(width, height)
+              ttw, tth = canvas or nearest(width, height)
+              target_name = "the canvas of plot-dark.png" if canvas else "the closest target"
               ddw, ddh = width - ttw, height - tth
               aspect_note = ""
-              # Aspect-mismatch hint: actual is landscape-ish but closest target is square (or vice versa)
+              # Aspect-mismatch hint: actual is landscape-ish but the target is square (or vice versa)
               actual_aspect = width / height if height else 1
               if (ttw, tth) == (2400, 2400) and actual_aspect > 1.2:
-                  aspect_note = " — the implementation rendered a landscape canvas but the closest target is square; reconsider orientation."
+                  aspect_note = f" — the implementation rendered a landscape canvas but {target_name} is square; reconsider orientation."
               elif (ttw, tth) == (3200, 1800) and actual_aspect < 0.85:
-                  aspect_note = " — the implementation rendered a portrait/square canvas but the closest target is landscape; reconsider orientation."
+                  aspect_note = f" — the implementation rendered a portrait/square canvas but {target_name} is landscape; reconsider orientation."
+              label = "Target, the canvas of plot-dark.png" if canvas else "Closest valid target"
               line = (
                   f"VQ-05 (both): Canvas dimensions drifted from required target. "
-                  f"Actual: {width}×{height}. Closest valid target: {ttw}×{tth} (±{TOLERANCE} px tolerance). "
+                  f"Actual: {width}×{height}. {label}: {ttw}×{tth} (±{TOLERANCE} px tolerance). "
                   f"Signed delta: {ddw:+d} × {ddh:+d} — {direction_of(ddw, ddh)}.{aspect_note} "
                   f"{cause} "
                   f"{note}"
@@ -1007,11 +1016,17 @@ jobs:
 
           # One defect line per render that missed, light first. Two renders that
           # drifted to the same size share one (both) line, the line core.canvas writes.
+          # A dark render on a canonical canvas beside a light render that drifted
+          # fixes the target both share: the light line aims at it, and the dark
+          # render gets no line. A light render far off its canvas (half scale, say)
+          # can be nearer the other target, which would steer the repair away.
           lines = []
-          dark_on_target = dark == "pass" and same_target
-          if not ok:
-              note = f"plot-dark.png is {dark_w}×{dark_h}, on target, {THEME_CAUSE} " if dark_on_target else ""
-              lines.append(drift_line(w, h, "both" if dark_size == (w, h) else "light", note))
+          dark_sets_target = not ok and dark == "pass"
+          if dark_sets_target:
+              note = f"plot-dark.png is {dark_w}×{dark_h}, on target, {THEME_CAUSE} "
+              lines.append(drift_line(w, h, "light", note, canvas=(dark_tw, dark_th)))
+          elif not ok:
+              lines.append(drift_line(w, h, "both" if dark_size == (w, h) else "light"))
           if dark in ("missing", "unreadable"):
               what = "is missing" if dark == "missing" else f"does not open as an image ({dark_problem})"
               lines.append(
@@ -1020,9 +1035,10 @@ jobs:
                   f"Likely cause: the dark-theme run (`ANYPLOT_THEME=dark`) failed, saved under another name or wrote a broken file. "
                   f"Render both themes at exactly {tw}×{th}; the post-render gate enforces this."
               )
-          elif dark_size != (w, h) and not same_target:
-              # Nearer the other canonical canvas: the target both renders
-              # share is the light render's, so the delta is measured from it.
+          elif not same_target and not dark_sets_target:
+              # Nearer the other canonical canvas than the light render: with the
+              # light render on target (or both off), the target both renders share
+              # is the light render's, so the delta is measured from it.
               xdw, xdh = dark_w - tw, dark_h - th
               lines.append(
                   f"VQ-05 (dark): plot-dark.png is not on the canvas of plot-light.png. "
@@ -1033,7 +1049,7 @@ jobs:
                   f"Likely cause: the two theme runs draw different canvases, {THEME_CAUSE} "
                   f"Re-render both themes at the same target; the post-render gate enforces this."
               )
-          elif dark_size != (w, h) and dark == "fail":
+          elif dark == "fail" and dark_size != (w, h):
               note = f"plot-light.png is {w}×{h}, " + (f"on target, {THEME_CAUSE} " if ok else "and both renders must share one canvas. ")
               lines.append(drift_line(dark_w, dark_h, "dark", note))
 

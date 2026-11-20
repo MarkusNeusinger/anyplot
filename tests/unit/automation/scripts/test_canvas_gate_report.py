@@ -165,6 +165,22 @@ class TestRenderTable:
         ggplot_line = [line for line in table.splitlines() if line.startswith("ggplot2")][0]
         assert "prompt still leaking" not in ggplot_line
 
+    def test_failures_without_a_drifted_render_show_no_delta(self):
+        head = "::notice::canvas_gate library={} status=fail actual=3200x1800 target=3200x1800 delta=+0x+0 attempt=1 "
+        lines = [
+            head.format("d3") + "light=pass dark=missing",
+            head.format("echarts") + "light=pass dark=unreadable",
+            head.format("letsplot")
+            + "light=pass dark=pass dark_actual=2400x2400 dark_target=2400x2400 dark_delta=+0x+0 same_target=no",
+            head.format("plotly")
+            + "light=pass dark=fail dark_actual=3000x1800 dark_target=3200x1800 dark_delta=-200x+0 same_target=yes",
+        ]
+        rows = {line.split()[0]: line.split() for line in render_table(aggregate(parse_lines(lines))).splitlines()[2:]}
+        for library in ("d3", "echarts", "letsplot"):
+            assert rows[library][3] == "1", library  # counted as a failure
+            assert rows[library][5] == "—", library
+        assert rows["plotly"][5] == "-200×+0"
+
 
 class TestLibStatsProperties:
     def test_fail_rate_with_zero_runs(self):

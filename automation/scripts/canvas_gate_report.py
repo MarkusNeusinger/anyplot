@@ -194,7 +194,9 @@ def render_table(stats: dict[str, LibStats]) -> str:
     for lib in sorted(stats):
         s = stats[lib]
         adw, adh = s.avg_delta
-        delta_col = "—" if s.first_fail == 0 else f"{adw:+.0f}×{adh:+.0f}"
+        # A failure with no drifted render (a dark render missing, unreadable or
+        # on the other canvas) has no delta: "+0×+0" would read as no drift.
+        delta_col = "—" if not s.deltas else f"{adw:+.0f}×{adh:+.0f}"
         flag = "  ← prompt still leaking" if s.fail_rate > 0.20 else ""
         rows.append((lib, s.runs, s.first_pass, s.first_fail, f"{s.fail_rate * 100:5.1f}%", delta_col, flag))
 

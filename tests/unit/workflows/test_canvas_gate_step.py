@@ -1,17 +1,20 @@
-"""The canvas gate in impl-review.yml on both theme renders (review plan step P7).
+"""The canvas gate in impl-review.yml: no theme render reaches the review off the canvas.
 
 "Canvas dimension gate" measures plot-light.png and plot-dark.png against the
 two canonical canvases (3200x1800, 2400x2400, ±16 px) and requires both on the
 same one. On a miss it writes one VQ-05 defect line per render that missed to
 /tmp/anyplot-canvas-gate.txt, which the review copies into its weaknesses and
-the regen gate reads as `canvas_failed`. The step never fails the job for a
-render it measured: impl-repair is dispatched by the verdict step only.
+the regen gate reads as `canvas_failed`. Each line must point the repair at the
+canvas both renders share. The step never fails the job for a render it
+measured: impl-repair is dispatched by the verdict step only.
 
 A light render that does not open stops the step, and with a dark render of
 the light's size the light verdict and its defect line are those of core.canvas
-for one render; "Verify both theme renders exist" stops the job on a missing
-file before the gate runs. A missing or unreadable dark render is a gate
-failure, because impl-generate never stages a pair without both renders.
+for one render. A dark render that does not open is a gate failure, because
+impl-generate never stages a pair without both renders. In the job a missing
+file of either theme never reaches the gate: "Verify both theme renders exist"
+stops the job first; the gate's own line for a missing dark render is pinned
+here all the same.
 
 The whole step script runs here under `bash -e` (what Actions runs it with)
 and `bash -eo pipefail`, on small generated PNGs, with a stub `pip` and the
@@ -70,12 +73,12 @@ class Gate:
         _png(self.images / "plot-dark.png", size)
         return self
 
-    def run(self, library: str = "matplotlib", attempt: str = "1") -> subprocess.CompletedProcess[str]:
+    def run(self, library: str = "matplotlib", attempt: str = "1", **extra: str) -> subprocess.CompletedProcess[str]:
         script = str(_step("impl-review.yml", STEP)["run"])
         assert "${{" not in script
         assert GATE_FILE in script
         script = script.replace(GATE_FILE, str(self.gate))
-        env = {**os.environ, "PATH": self.path, "LIBRARY": library, "ATTEMPT": attempt}
+        env = {**os.environ, "PATH": self.path, "LIBRARY": library, "ATTEMPT": attempt, **extra}
         return subprocess.run(
             [*self.shell, script], cwd=self.images.parent, env=env, capture_output=True, text=True, check=False
         )
@@ -210,8 +213,31 @@ class TestDarkFails:
         [line] = gate.weaknesses()
         assert _render(line) == "dark"
         assert line.startswith("VQ-05 (dark): plot-dark.png does not open as an image (")
-        assert "\n" not in line
         assert "Render both themes at exactly 2400×2400" in line
+
+    def test_an_error_text_on_several_lines_stays_one_capped_line(self, gate, tmp_path):
+        """The gate file holds one defect line per text line, so the error text is folded and capped at 160."""
+        hook = tmp_path / "hook"
+        hook.mkdir()
+        # Loaded by the step's python3 at start-up: Image.open of the dark render
+        # raises an error whose text runs over several lines.
+        (hook / "sitecustomize.py").write_text(
+            "import PIL.Image\n"
+            "_open = PIL.Image.open\n"
+            "def _fail_dark(fp, *args, **kwargs):\n"
+            "    if str(fp).endswith('plot-dark.png'):\n"
+            "        raise OSError('broken chunk\\n  at byte 33\\n' + 'x' * 300)\n"
+            "    return _open(fp, *args, **kwargs)\n"
+            "PIL.Image.open = _fail_dark\n",
+            encoding="utf-8",
+        )
+        result = gate.light(LANDSCAPE).dark(LANDSCAPE).run(PYTHONPATH=str(hook))
+        assert result.returncode == 0, result.stderr
+        assert gate.notices(result)[0].endswith("light=pass dark=unreadable")
+        [line] = gate.weaknesses()
+        problem = line.split("does not open as an image (", 1)[1].split("); plot-light.png is", 1)[0]
+        assert problem == ("OSError: broken chunk at byte 33 " + "x" * 300)[:160]
+        assert len(problem) == 160
 
     def test_dark_that_is_a_directory_is_unreadable(self, gate):
         gate.light(LANDSCAPE)
@@ -258,11 +284,73 @@ class TestLightAsBefore:
             "-200x+0",
         )
         [line] = gate.weaknesses()
-        assert _render(line) == "light"
-        assert line.replace("VQ-05 (light):", "VQ-05 (both):", 1).startswith(
-            check_canvas(3000, 1800, "bokeh").defect_line.split(" Re-render at exactly", 1)[0]
+        assert line == (
+            "VQ-05 (light): Canvas dimensions drifted from required target. Actual: 3000×1800. "
+            "Target, the canvas of plot-dark.png: 3200×1800 (±16 px tolerance). "
+            "Signed delta: -200 × +0 — width is 200 px short. "
+            f"{likely_cause('bokeh')} "
+            "plot-dark.png is 3200×1800, on target, so a size or save option probably depends on the theme: "
+            "set it once, outside any `ANYPLOT_THEME` branch. "
+            "Re-render at exactly 3200×1800; the post-render gate enforces this."
         )
-        assert "plot-dark.png is 3200×1800, on target, so a size or save option probably depends on the theme" in line
+
+    @pytest.mark.parametrize(
+        ("library", "light", "dark"),
+        [
+            # Half scale: nearer the square target than the landscape one the dark render is on.
+            ("chartjs", (1600, 900), LANDSCAPE),
+            # Nearer the landscape target than the square one the dark render is on.
+            ("ggplot2", (3600, 3600), SQUARE),
+        ],
+        ids=["half-scale-light", "oversized-square-light"],
+    )
+    def test_a_dark_render_on_a_canvas_sets_the_target_of_a_far_drifted_light(self, gate, library, light, dark):
+        result = gate.light(light).dark(dark).run(library=library)
+        assert result.returncode == 0, result.stderr
+        fields = _fields(gate.notices(result)[0])
+        # The notice keeps the light render's own nearest target; only the line aims at the shared one.
+        assert fields["target"] != f"{dark[0]}x{dark[1]}"
+        assert (fields["status"], fields["light"], fields["dark"], fields["same_target"]) == (
+            "fail",
+            "fail",
+            "pass",
+            "no",
+        )
+        [line] = gate.weaknesses()
+        assert _render(line) == "light"
+        dw, dh = light[0] - dark[0], light[1] - dark[1]
+        assert f"Target, the canvas of plot-dark.png: {dark[0]}×{dark[1]} (±16 px tolerance)." in line
+        assert f"Signed delta: {dw:+d} × {dh:+d} — " in line
+        assert "reconsider orientation" not in line
+        assert f"plot-dark.png is {dark[0]}×{dark[1]}, on target" in line
+        assert line.endswith(f"Re-render at exactly {dark[0]}×{dark[1]}; the post-render gate enforces this.")
+
+    def test_a_drifted_light_beside_a_dark_on_the_other_canvas_aims_at_the_dark_canvas(self, gate):
+        result = gate.light((3000, 1800)).dark(SQUARE).run(library="plotnine")
+        assert result.returncode == 0, result.stderr
+        [line] = gate.weaknesses()
+        assert _render(line) == "light"
+        assert "Target, the canvas of plot-dark.png: 2400×2400" in line
+        assert "Signed delta: +600 × -600 — width is 600 px over; height is 600 px short." in line
+        assert "rendered a landscape canvas but the canvas of plot-dark.png is square; reconsider orientation." in line
+
+    @pytest.mark.parametrize("dark", ["missing", "unreadable"])
+    def test_a_drifted_light_beside_a_dark_that_does_not_open_gets_both_lines(self, gate, dark):
+        gate.light((3000, 1800))
+        if dark == "unreadable":
+            (gate.images / "plot-dark.png").write_bytes(b"not a png")
+        result = gate.run(library="seaborn")
+        assert result.returncode == 0, result.stderr
+        assert gate.notices(result)[0].endswith(f"attempt=1 light=fail dark={dark}")
+        light, dark_line = gate.weaknesses()
+        assert light == check_canvas(3000, 1800, "seaborn").defect_line.replace("VQ-05 (both):", "VQ-05 (light):", 1)
+        assert _render(dark_line) == "dark"
+        assert dark_line.startswith(
+            "VQ-05 (dark): plot-dark.png is missing;"
+            if dark == "missing"
+            else "VQ-05 (dark): plot-dark.png does not open as an image ("
+        )
+        assert result.stdout.count("::warning::Canvas gate FAILED") == 2
 
     def test_both_drift_differently_one_line_each(self, gate):
         result = gate.light((3000, 1800)).dark((3100, 1800)).run(library="pygal")

@@ -595,6 +595,21 @@ def test_a_render_inherits_no_secret_of_the_shell(mods, monkeypatch) -> None:
     assert "MPLBACKEND" not in mods["check_fix"].render_env("light", "javascript")
 
 
+def test_both_themes_must_share_one_canvas(mods) -> None:
+    """impl-review's canvas gate fails a pair whose themes sit on different canonical canvases, each on target."""
+    from core.canvas import LANDSCAPE, SQUARE, check_canvas
+
+    problem = mods["check_fix"].same_canvas_problem
+    assert problem({"light": LANDSCAPE, "dark": LANDSCAPE}) is None
+    assert problem({"light": SQUARE}) is None  # the dark render failed and has its own problem
+    mismatch = problem({"light": LANDSCAPE, "dark": SQUARE})
+    assert mismatch and mismatch.startswith("dark: on the 2400x2400 canvas while light is on 3200x1800")
+    # The targets compared are core.canvas's nearest targets, as the gate's same_target is.
+    assert (
+        problem({"light": check_canvas(3210, 1795, "x").target, "dark": check_canvas(3190, 1810, "x").target}) is None
+    )
+
+
 def test_a_fix_is_read_against_where_it_was_cut(mods, repo: Path) -> None:
     """A fix passes against its own start; once main changes the same file, adopting it would revert that."""
     cf, catalogue = mods["check_fix"], mods["catalogue"]
