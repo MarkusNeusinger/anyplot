@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked: Stacked Bar Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-09
@@ -7,7 +7,6 @@ Quality: 84/100 | Updated: 2026-05-09
 import os
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
 
@@ -19,59 +18,31 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette (first series always #009E73)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Monthly sales by product category
-np.random.seed(42)
-categories = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
-products = ["Electronics", "Clothing", "Home & Garden", "Sports"]
+# Columns: set these to your table's column names
+WEEKDAY = "Weekday"  # role: category
+CHANNEL = "Traffic channel"  # role: component
+SESSIONS = "Sessions (thousands)"  # role: value
 
-data = {
-    "Month": categories * len(products),
-    "Product": [p for p in products for _ in categories],
-    "Sales": [
-        # Electronics - highest, growing trend
-        120,
-        135,
-        145,
-        160,
-        175,
-        190,
-        # Clothing - seasonal variation
-        85,
-        70,
-        95,
-        110,
-        90,
-        75,
-        # Home & Garden - spring/summer peak
-        45,
-        55,
-        80,
-        95,
-        85,
-        60,
-        # Sports - summer peak
-        35,
-        40,
-        55,
-        70,
-        85,
-        65,
-    ],
+# Data: replace this block with your own table, for example df = pd.read_csv("traffic.csv")
+days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+sessions = {
+    "Organic search": [48, 52, 55, 53, 47, 36, 33],
+    "Direct": [30, 32, 31, 33, 29, 24, 22],
+    "Social": [14, 15, 17, 18, 22, 27, 29],
+    "Email": [18, 21, 16, 12, 9, 5, 7],
 }
+df = pd.DataFrame(
+    {
+        WEEKDAY: days * len(sessions),
+        CHANNEL: [channel for channel in sessions for _ in days],
+        SESSIONS: [value for values in sessions.values() for value in values],
+    }
+)
 
-df = pd.DataFrame(data)
-
-# Preserve category order
-df["Month"] = pd.Categorical(df["Month"], categories=categories, ordered=True)
-# Order products by total sales (largest at bottom of stack)
-product_totals = df.groupby("Product")["Sales"].sum().sort_values(ascending=False)
-ordered_products = product_totals.index.tolist()
-df["Product"] = pd.Categorical(df["Product"], categories=ordered_products, ordered=True)
-
-# Set theme and styling
+# Plot: reads only df and the constants above
 sns.set_theme(
     style="ticks",
     rc={
@@ -88,65 +59,76 @@ sns.set_theme(
         "legend.edgecolor": INK_SOFT,
     },
 )
-sns.set_context("talk", font_scale=1.2)
 
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Components in the data's order, largest overall at the bottom of every stack
+channel_order = df.groupby(CHANNEL, sort=False)[SESSIONS].sum().sort_values(ascending=False).index.tolist()
+day_order = list(dict.fromkeys(df[WEEKDAY]))
+plot_df = df.assign(
+    **{
+        WEEKDAY: pd.Categorical(df[WEEKDAY], categories=day_order, ordered=True),
+        CHANNEL: pd.Categorical(df[CHANNEL], categories=channel_order, ordered=True),
+    }
+)
 
-# Create color map for products
-product_colors = {p: IMPRINT[i] for i, p in enumerate(ordered_products)}
-colors = [product_colors[p] for p in ordered_products]
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Plot stacked bar chart using histplot
 sns.histplot(
-    data=df,
-    x="Month",
-    weights="Sales",
-    hue="Product",
+    data=plot_df,
+    x=WEEKDAY,
+    weights=SESSIONS,
+    hue=CHANNEL,
+    hue_order=channel_order,
     multiple="stack",
-    palette=colors,
+    palette=IMPRINT_PALETTE[: len(channel_order)],
     shrink=0.7,
     edgecolor=PAGE_BG,
-    linewidth=1.5,
+    linewidth=0.8,
+    alpha=1,
     ax=ax,
 )
 
-# Calculate totals for labels on top of stacks
-totals = df.groupby("Month", observed=True)["Sales"].sum()
-for i, (_month, total) in enumerate(totals.items()):
-    ax.text(i, total + 8, f"${int(total)}K", ha="center", va="bottom", fontsize=16, fontweight="bold", color=INK)
+# Total labels above each complete stack
+totals = df.groupby(WEEKDAY, sort=False)[SESSIONS].sum().reindex(day_order)
+for i, total in enumerate(totals):
+    ax.text(
+        i,
+        total + totals.max() * 0.015,
+        f"{total:g}",
+        ha="center",
+        va="bottom",
+        fontsize=9,
+        fontweight="bold",
+        color=INK,
+    )
 
-# Styling
-ax.set_xlabel("Month", fontsize=20, color=INK)
-ax.set_ylabel("Sales (Thousands $)", fontsize=20, color=INK)
-ax.set_title("bar-stacked · seaborn · anyplot.ai", fontsize=24, fontweight="bold", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Style
+ax.set_title(
+    "Website sessions by channel · bar-stacked · python · seaborn · anyplot.ai",
+    fontsize=12,
+    fontweight="bold",
+    color=INK,
+    loc="left",
+)
+ax.set_xlabel(WEEKDAY, fontsize=10, color=INK)
+ax.set_ylabel(SESSIONS, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.set_ylim(0, totals.max() * 1.12)
+ax.yaxis.grid(True, linewidth=0.6)
+ax.xaxis.grid(False)
+ax.set_axisbelow(True)
+sns.despine(ax=ax)
 
-# Legend
 legend = ax.get_legend()
-legend.set_title("Product Category")
-legend.get_title().set_fontsize(18)
+legend.set_title(CHANNEL)
+legend.get_title().set_fontsize(9)
 legend.get_title().set_color(INK)
 for text in legend.get_texts():
-    text.set_fontsize(16)
+    text.set_fontsize(8)
     text.set_color(INK)
 legend.set_bbox_to_anchor((1.02, 1))
 legend.set_loc("upper left")
 legend.get_frame().set_facecolor(ELEVATED_BG)
 legend.get_frame().set_edgecolor(INK_SOFT)
 
-# Grid styling
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8)
-ax.xaxis.grid(False)
-ax.set_axisbelow(True)
-
-# Spine styling
-for spine in ["top", "right"]:
-    ax.spines[spine].set_visible(False)
-for spine in ["left", "bottom"]:
-    ax.spines[spine].set_color(INK_SOFT)
-
-# Adjust y-axis to accommodate total labels
-ax.set_ylim(0, totals.max() * 1.15)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.78, top=0.92, bottom=0.11)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
