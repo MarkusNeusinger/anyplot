@@ -2,47 +2,45 @@ library: plotly
 language: python
 specification_id: lift-curve
 created: '2025-12-27T19:20:40Z'
-updated: '2026-05-10T16:37:28Z'
-generated_by: claude-haiku
-workflow_run: 25633917363
+updated: '2026-11-20T18:28:13Z'
+generated_by: claude-sonnet
+workflow_run: 44791930966
 issue: 2379
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 84
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and theme compliance in both
-    renders
-  - 'Correct Okabe-Ito palette usage (#009E73 primary, #D55E00 secondary) with identical
-    data colors across light/dark themes'
-  - 'Idiomatic Plotly with distinctive features: custom annotations with styling,
-    hover templates, interactive HTML export'
-  - Clean, reproducible, Pythonic code with proper seed setting and minimal imports
-  - Complete spec compliance with all required features present and realistic data
-  - Strong theme-adaptive design with zero legibility issues in both light and dark
-    renders
+  - Lift computed directly from ranked cumulative responses, drawn unsmoothed with
+    markers at 1 % steps that sit on their computed values
+  - Dashed Imprint-purple random-selection line at lift 1 spans the full population
+    axis and is clearly told apart from the green model curve in both themes
+  - Value callout at the 10 % percentile is computed from the curve and its arrow
+    lands on the curve point
+  - Formatted plotly hovertemplates ('Top x %, Lift y.yyx') give exact values in the
+    interactive HTML
+  - Theme tokens threaded through title, ticks, axis lines, legend and callout box;
+    both renders read cleanly
   weaknesses:
-  - Design Excellence could reach 90+ tier by adding custom palette or FiveThirtyEight-level
-    visual sophistication
-  - 'Visual refinement (DE-02: 4/6) is good but limited to standard library styling
-    customization'
-  - 'Data storytelling (DE-03: 4/6) relies on single annotation - could enhance visual
-    hierarchy through additional emphasis techniques'
+  - 'Suggestion: drop the vertical grid (xaxis showgrid=False) so only the lift axis
+    carries guide lines, as the style guide prefers for line charts.'
+  - 'Suggestion: draw the random-selection reference in the theme-adaptive neutral
+    anchor the style guide names for reference lines, keeping the dash.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title (28px dark), axis labels (22px dark), tick labels (18px soft gray) — all clearly readable
-      Data: Model Lift in brand green (#009E73), Random Selection in orange (#D55E00), legend properly placed
+      Background: warm off-white #FAF8F1, 3200x1800 landscape
+      Chrome: centered title 'lift-curve · python · plotly · anyplot.ai' in dark ink; axis titles 'Percentage of Population Targeted (%)' and 'Cumulative Lift Ratio' dark; ticks 0-100 by 10 and 0-2 by 0.5 in soft gray; subtle grid on both axes; legend box top-right on elevated off-white; all readable
+      Data: green #009E73 curve with small markers at 1 % steps, first point at ~0 then a spike to ~1.83, ~1.55 at 10 %, wiggly descent meeting the purple #C475FD dashed y=1 line at 100 %; callout 'Top 10%: 1.6x lift' with green arrow onto the 10 % point
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title (light cream), axis labels (light), tick labels (light gray) — all clearly readable, no dark-on-dark failures
-      Data: Model Lift identical #009E73 to light render, Random Selection identical #D55E00 to light render
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles light cream; ticks light gray; legend and callout box on #242420 with light text and light border; no dark-on-dark text
+      Data: identical green curve and purple dashed reference as the light render; only chrome flips
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,71 +52,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28/22/18px), perfectly readable in
-          both themes
+        comment: Title 16, axis titles 12, ticks/legend/callout 10 (plotly prompt
+          sizes); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, legend and annotation well-positioned
+        comment: No text collides with text or data; callout box sits clear of the
+          curve, legend in empty top-right
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and lines perfectly adapted to data density (1000 samples,
-          100 plotted)
+        comment: Curve at 2.5 px with 5 px markers at 1 % steps, dashed reference
+          line clearly visible in both themes; legend glyphs match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors with high contrast, CVD-safe
+        comment: 'Green solid curve vs purple dashed reference: distinguished by hue
+          and dash, CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance with balanced margins and well-placed legend
+        comment: 3200x1800 canvas, balanced margins, title ~32 % width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, title correct format
+        comment: '''Percentage of Population Targeted (%)'' and ''Cumulative Lift
+          Ratio'' are descriptive reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series #D55E00, backgrounds #FAF8F1/#1A1A17,
-          text theme-adaptive'
+        comment: 'Model curve #009E73, reference line Imprint #C475FD, backgrounds
+          #FAF8F1/#1A1A17, chrome theme-adaptive; data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Strong design with thoughtful colors and explicit sizing, but lacks
-          custom palette or exceptional polish
+        passed: false
+        comment: The style-guide baseline (theme tokens, Imprint, explicit sizes),
+          nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good refinement with styled annotations and subtle grid, could enhance
-          further
+        passed: false
+        comment: 'Subtle grid, L-shaped axis lines: the baseline, nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good visual hierarchy through color contrast and annotation, guides
-          viewer to insight
+        passed: false
+        comment: The single 'Top 10 %' value callout is what the Notes offer; no hierarchy
+          chosen beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +128,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lift curve with line plot and reference baseline
+        comment: 'Correct lift curve: cumulative lift vs population share with random
+          baseline'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Model lift, random baseline, percentage scale, cumulative lift ratio
-          all present
+        comment: x in %, cumulative lift on y, y=1 reference across 0-100, curve descends
+          to meet it at 100 %, markers at 1 % steps and a value at the 10 % percentile
+          on the curve (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible and properly ranged
+        comment: Lift computed from ranked cumulative hits; markers at their computed
+          values, not smoothed; axis 0-2 holds peak and baseline
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels clear and descriptive
+        comment: Title 'lift-curve · python · plotly · anyplot.ai'; legend 'Model
+          Lift' / 'Random Selection'
     data_quality:
       score: 15
       max: 15
@@ -157,21 +161,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: high initial lift, gradual decline, asymptotic
-          approach'
+        comment: 'High early lift, wiggly descent, convergence to 1 at 100 %: every
+          aspect shown'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic marketing/customer response scenario, specific and neutral
+        comment: 'Customer response campaign with model scores and 0/1 responses:
+          plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000 samples within recommendation, 1.6x top-10% lift is realistic,
-          values plausible
+        comment: 'Checked: base rate ~18 %, peak ~1.8x, 1.55 at 10 % (callout ''1.6x''
+          matches lift[99]), lift exactly 1.0 at 100 % by construction; plausible
+          for a weak model'
     code_quality:
       score: 10
       max: 10
@@ -181,49 +187,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions/classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, fully deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly imported and used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, theme tokens properly implemented
+        comment: Straight computation (sort, cumsum, ratio); no written-out algorithm
+          an available call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and plot-{THEME}.html output
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Expert use of Graph Objects API, idiomatic patterns throughout
+        passed: false
+        comment: go.Figure with go.Scatter traces, add_annotation with arrow, nested
+          layout dicts; one point above default for formatted hovertemplates per trace
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Custom annotation styling, hover templates, interactive HTML export
-          showcase Plotly-specific strengths
+        passed: false
+        comment: 'Formatted hovertemplate (''Top x %, Lift y.yyx'') with <extra></extra>
+          in the HTML output: one point above default'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-20T18:24:42Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -234,4 +246,5 @@ impl_tags:
   - data-generation
   dataprep:
   - cumulative-sum
-  styling: []
+  styling:
+  - grid-styling

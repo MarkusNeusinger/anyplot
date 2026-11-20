@@ -2,47 +2,41 @@ library: bokeh
 language: python
 specification_id: lift-curve
 created: '2025-12-27T19:22:28Z'
-updated: '2026-05-10T16:46:02Z'
-generated_by: claude-haiku
-workflow_run: 25633961112
+updated: '2026-11-20T18:31:47Z'
+generated_by: claude-sonnet
+workflow_run: 44792405107
 issue: 2379
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - Perfect theme adaptation with both light and dark renders readable and color-correct
-  - Proper Okabe-Ito palette usage (green line, orange markers, gray baseline)
-  - All required spec features present and working (curve, baseline, markers, tooltips)
-  - Excellent text legibility with explicitly-sized fonts across both themes
-  - Clean, deterministic data generation demonstrating realistic model discrimination
-  - Effective use of bokeh-specific features (HoverTool, Span, ColumnDataSource)
-  - Well-balanced layout with generous whitespace and no overlapping elements
+  - Theme tokens threaded through every chrome element; both renders read cleanly
+    with identical data colors
+  - Vectorised lift computation (cumsum indexed at the percentile cut-offs) ending
+    exactly at lift 1.0 at 100% population
+  - Decile markers sit on the curve, and the y range holds both the reference line
+    and the peak lift
+  - HoverTool with formatted lift ratio and customer counts makes the HTML view inspectable
   weaknesses:
-  - Design excellence is competent but not exceptional—well-configured defaults rather
-    than distinctive aesthetic choices
-  - Could enhance data storytelling with additional visual emphasis or annotations
-    (e.g., peak lift annotation)
-  - Could explore more advanced bokeh features like selection tools or custom hover
-    formatting
+  - 'Suggestion: the decile legend glyph renders noticeably smaller than the 30 px
+    markers on the curve; a larger legend glyph would match them more closely.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - PASS
-      Chrome: Title "lift-curve · bokeh · anyplot.ai" (28pt, dark text #1A1A17), axis labels "Population Targeted (%)" and "Cumulative Lift Ratio (Model / Random)" (22pt), tick labels (18pt), all clearly readable against light background
-      Data: Primary lift curve in brand green (#009E73) with 5px line width, orange decile markers (#D55E00) size 20, gray baseline reference line (dashed, INK_SOFT color), subtle grid (10% alpha)
-      Legend: Top right with "Model Lift" and "Decile Markers" labels (18pt, #4A4A44 text on #FFFDF6 background)
-      Legibility verdict: PASS - excellent contrast, all text readable, no overlapping elements
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: bold title 'lift-curve · python · bokeh · anyplot.ai' top-left; italic axis titles 'Population targeted (%)' and 'Cumulative lift (model / random)'; ticks 0-100 and 0-6 in soft ink; subtle grid; legend top-right on elevated box. All readable.
+      Data: #009E73 lift curve rising from 5.2 to a peak ~5.7 at 3%, decaying to 1.0 at 100%; 10 purple (#C475FD) decile markers with green outline on the curve; dark dashed reference line at lift 1 across the full axis.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - PASS
-      Chrome: Title and labels now in light text (#F0EFE8) for optimal contrast against dark background, all clearly readable
-      Data: Identical lift curve (#009E73), identical markers (#D55E00), identical baseline reference - no color shifts between renders
-      Legend: Same labels with #B8B7B0 text on #242420 background, light and readable
-      Legibility verdict: PASS - no dark-on-dark failures, perfect readability, data colors identical to light render (only chrome changed)
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink; grid subtle; legend box on #242420 with light text. No dark-on-dark text.
+      Data: curve and marker colors identical to the light render; reference line now light dashed and clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,47 +47,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt;
-          perfectly readable in both themes'
+        comment: Title 50pt, axis titles 42pt, ticks and legend 34pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements; all well-spaced
+        comment: No text collisions; legend top-right sits clear of the curve
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 5px and markers size 20 optimal for resolution and data
-          density
+        comment: 8 px curve and 30 px decile markers prominent for 100 points; legend
+          glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides excellent contrast; CVD-safe
+        comment: Green curve, purple markers and neutral dashed reference line are
+          CVD-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot uses 60-70% of canvas with balanced margins; nothing cut off
+        comment: 3200x1800 canvas, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; title follows spec format
+        comment: '''Population targeted (%)'' and ''Cumulative lift (model / random)''
+          are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Perfect Okabe-Ito compliance; theme-correct chrome in both renders
+        comment: 'First series #009E73, markers Imprint position 2, backgrounds #FAF8F1
+          / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -101,20 +98,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults, professional but not publication-exceptional
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid, generous whitespace, legend styling; above-default refinement
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Natural visual hierarchy through declining curve; markers and baseline
-          provide context
+        comment: Data displayed with the decile markers the Notes suggest; no further
+          hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -124,25 +121,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lift curve type
+        comment: Cumulative lift curve with no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: curve, baseline, markers, tooltips'
+        comment: x in % targeted, y cumulative lift, y=1 reference line across the
+          axis, curve meets 1 at 100% (C1-C5 all shown)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all data visible
+        comment: Curve drawn through computed points, no smoothing; decile markers
+          sit on the curve
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels accurate
+        comment: Title 'lift-curve · python · bokeh · anyplot.ai'; legend 'Model lift'
+          / 'Deciles' readable
     data_quality:
       score: 15
       max: 15
@@ -152,19 +152,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full lift curve from 5.5x to baseline
+        comment: High early lift (~5.6) decaying to 1 at 100%, with an erratic first
+          stretch
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer response data; marketing scenario realistic and neutral
+        comment: Marketing campaign response with 15% baseline; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values factually sound; proportions correct
+        comment: No Check values in the spec; checked that lift falls out of cumsum
+          / n / baseline and ends at exactly 1.0 at 100%
     code_quality:
       score: 10
       max: 10
@@ -174,57 +176,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no functions or classes
+        comment: Constants, Data block, Plot block, save; no functions; static adaptability
+          check passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: RandomState(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Straightforward, Pythonic, no over-engineering
+        comment: Vectorised cumsum indexing instead of a loop
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output files and current API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh 3 API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses figure(), ColumnDataSource, line(), scatter(), HoverTool, Span
-          idiomatically
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses bokeh-specific features (HoverTool, Span, ColumnDataSource)
+        passed: false
+        comment: ColumnDataSource from DataFrame, figure/line/scatter; standard usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HoverTool with Bokeh number formatters (@lift{0.00}, @n_selected{,})
+          for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-20T18:27:58Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - columndatasource
-  dataprep: []
-  styling: []
+  dataprep:
+  - cumulative-sum
+  styling:
+  - edge-highlighting
+  - grid-styling

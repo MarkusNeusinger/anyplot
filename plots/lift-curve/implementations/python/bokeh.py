@@ -1,7 +1,7 @@
 """ anyplot.ai
 lift-curve: Model Lift Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-10
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-20
 """
 
 import os
@@ -9,8 +9,9 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Span
+from bokeh.models import ColumnDataSource, HoverTool, Range1d, Span
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -23,126 +24,115 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-BRAND = "#009E73"  # Okabe-Ito position 1
-SECONDARY = "#C475FD"  # Okabe-Ito position 2 (for baseline)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulated customer response data for marketing campaign
-np.random.seed(42)
+# Columns: set these to your table's column names
+Y_TRUE = "Responded (0/1)"  # role: y_true
+Y_SCORE = "Model score"  # role: y_score
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+# Simulated customer response data for a marketing campaign
+rng = np.random.RandomState(42)
 n_samples = 1000
+responded = rng.binomial(1, 0.15, n_samples)  # 15% baseline response rate
+noise = rng.normal(0, 0.3, n_samples)
+# Scores correlate with the true outcome but imperfectly
+score = np.clip(0.3 + 0.5 * responded + noise, 0, 1)
+df = pd.DataFrame({Y_TRUE: responded, Y_SCORE: score})
 
-# Create realistic model predictions with reasonable discrimination
-y_true = np.random.binomial(1, 0.15, n_samples)  # 15% baseline response rate
+# Plot: reads only df and the constants above
+ranked = df.sort_values(Y_SCORE, ascending=False, kind="stable")
+n_total = len(ranked)
+baseline_rate = ranked[Y_TRUE].mean()
+percentile = np.arange(1, 101)
+n_selected = np.maximum(n_total * percentile // 100, 1)
+hits = ranked[Y_TRUE].to_numpy().cumsum()[n_selected - 1]
+lift = (hits / n_selected) / baseline_rate
 
-# Generate scores that correlate with true outcomes but imperfectly
-noise = np.random.normal(0, 0.3, n_samples)
-y_score = 0.3 + 0.5 * y_true + noise
-y_score = np.clip(y_score, 0, 1)  # Keep scores in valid range
+curve = pd.DataFrame({"percentile": percentile, "lift": lift, "n_selected": n_selected})
+deciles = curve[curve["percentile"] % 10 == 0]
 
-# Calculate lift curve data
-sorted_indices = np.argsort(y_score)[::-1]
-y_true_sorted = y_true[sorted_indices]
+source = ColumnDataSource(curve)
+decile_source = ColumnDataSource(deciles)
 
-n_positives = y_true.sum()
-baseline_rate = n_positives / n_samples
-
-percentiles = np.arange(1, 101)
-cumulative_lift = []
-n_selected_list = []
-
-for pct in percentiles:
-    n_selected = int(n_samples * pct / 100)
-    n_positives_selected = y_true_sorted[:n_selected].sum()
-    response_rate = n_positives_selected / n_selected if n_selected > 0 else 0
-    lift = response_rate / baseline_rate if baseline_rate > 0 else 0
-    cumulative_lift.append(lift)
-    n_selected_list.append(n_selected)
-
-# Create data source with hover tooltips
-source = ColumnDataSource(data={"percentile": percentiles, "lift": cumulative_lift, "n_selected": n_selected_list})
-
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="lift-curve · bokeh · anyplot.ai",
-    x_axis_label="Population Targeted (%)",
-    y_axis_label="Cumulative Lift Ratio (Model / Random)",
-    x_range=(0, 105),
-    y_range=(0, max(cumulative_lift) * 1.15),
+    width=3200,
+    height=1800,
+    title="lift-curve · python · bokeh · anyplot.ai",
+    x_axis_label="Population targeted (%)",
+    y_axis_label="Cumulative lift (model / random)",
+    x_range=Range1d(0, 100 * 1.05),
+    y_range=Range1d(0, curve["lift"].max() * 1.15),
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Add hover tool for interactivity
-hover = HoverTool(
-    tooltips=[("Population %", "@percentile%"), ("Lift Ratio", "@lift{0.00}"), ("Customers", "@n_selected{,}")]
-)
-p.add_tools(hover)
-
-# Add horizontal reference line at y=1 (random selection baseline)
-baseline = Span(location=1, dimension="width", line_color=INK_SOFT, line_width=3, line_dash="dashed")
-p.add_layout(baseline)
-
-# Plot the lift curve
-p.line(x="percentile", y="lift", source=source, line_width=5, line_color=BRAND, legend_label="Model Lift")
-
-# Add scatter points at deciles for emphasis
-decile_indices = [9, 19, 29, 39, 49, 59, 69, 79, 89, 99]  # 10%, 20%, ... 100%
-decile_source = ColumnDataSource(
-    data={"percentile": [percentiles[i] for i in decile_indices], "lift": [cumulative_lift[i] for i in decile_indices]}
+# Hover tool (active in the interactive HTML)
+p.add_tools(
+    HoverTool(
+        tooltips=[("Population %", "@percentile%"), ("Lift ratio", "@lift{0.00}"), ("Customers", "@n_selected{,}")]
+    )
 )
 
+# Horizontal reference line at a lift of 1 (random selection)
+p.add_layout(Span(location=1, dimension="width", line_color=INK_SOFT, line_width=5, line_dash="dashed"))
+
+# Lift curve
+p.line(x="percentile", y="lift", source=source, line_width=8, line_color=IMPRINT_PALETTE[0], legend_label="Model lift")
+
+# Decile markers sit on the curve at their percentiles
 p.scatter(
     x="percentile",
     y="lift",
     source=decile_source,
-    size=20,
-    fill_color=SECONDARY,
-    line_color=BRAND,
-    line_width=3,
-    legend_label="Decile Markers",
+    size=30,
+    fill_color=IMPRINT_PALETTE[1],
+    line_color=IMPRINT_PALETTE[0],
+    line_width=4,
+    legend_label="Deciles",
 )
 
-# Styling for large canvas
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-
-# Spine and axis colors
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-
-# Grid styling
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.10
-p.ygrid.grid_line_alpha = 0.10
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
 
-# Legend styling
 p.legend.location = "top_right"
-p.legend.label_text_font_size = "18pt"
+p.legend.label_text_font_size = "34pt"
 p.legend.label_text_color = INK_SOFT
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
+p.legend.glyph_height = 40
+p.legend.glyph_width = 40
 
-# Background
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
-# Save HTML
+# Save HTML and screenshot it with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with Selenium for PNG
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -156,6 +146,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
