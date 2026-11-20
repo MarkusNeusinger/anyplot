@@ -2,44 +2,45 @@ library: plotnine
 language: python
 specification_id: lift-curve
 created: '2025-12-27T19:20:56Z'
-updated: '2026-05-10T16:48:52Z'
-generated_by: claude-haiku
-workflow_run: 25634050982
+updated: '2026-11-20T18:36:02Z'
+generated_by: claude-sonnet
+workflow_run: 44793363077
 issue: 2379
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 82
 review:
   strengths:
-  - Theme-adaptive colors work flawlessly in both light and dark renders
-  - 'Perfect palette compliance with Okabe-Ito #009E73 and theme-correct chrome'
-  - Clear visual storytelling with reference line showing no-lift baseline and decile
-    markers for emphasis
-  - 'Excellent readability: all text sizes explicitly set and legible at full resolution'
-  - Clean, reproducible code with proper KISS structure and no dependencies
+  - Lift computed vectorized from the ranked cumulative hits at each percentile, so
+    the right end lands exactly on the lift-1 reference line
+  - Dashed INK_SOFT reference line at lift 1 spans the whole population axis and reads
+    clearly in both themes
+  - Decile markers sit on the curve at their percentiles, matching the computed values
+  - Theme tokens threaded through every chrome element; text readable in both renders
+  - Column constants and a clean Data block make the code adaptable to a real scores
+    table
   weaknesses:
-  - Panel border on all four sides rather than L-shaped (left/bottom only) per style
-    guide
-  - Design is straightforward with minimal aesthetic sophistication beyond competent
-    defaults
-  - Could enhance visual hierarchy further with additional annotations or emphasis
-    techniques
+  - 'Suggestion: lift breaks every 0.5 (derived from the data range) would let the
+    decile values between 1 and 2 read more precisely than the integer ticks 0, 1,
+    2.'
+  - 'Suggestion: a y-axis grid only (no vertical grid lines), as the style guide prefers
+    for line charts, would quiet the panel.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "lift-curve · plotnine · anyplot.ai" in dark text (#1A1A17), axis labels and tick labels all readable in darker gray (#4A4A44), panel border visible in soft gray
-      Data: Bold green line (#009E73) with 10 decile points marked, dashed reference line at y=1 in soft gray, subtle grid lines visible
-      Legibility verdict: PASS - all elements clearly readable against light background
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'lift-curve · python · plotnine · anyplot.ai' in dark ink, axis titles 'Population targeted (%)' and 'Cumulative lift', tick labels 0-100 by 10 and 0/1/2 in soft gray; L-shaped axis lines, subtle major grid. All readable.
+      Data: thick #009E73 cumulative lift curve from about 2.6 at 1-2 % descending with small wiggles to 1.0 at 100 %; ten filled green decile markers on the curve; dashed dark-gray reference line at lift 1 across the axis.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title in light color (#F0EFE8), axis labels and tick labels readable in lighter gray (#B8B7B0), panel border visible
-      Data: Green line (#009E73) is identical to light render and stands out clearly, decile points visible, reference line visible, grid subtle
-      Legibility verdict: PASS - all elements readable, no dark-on-dark failures, data colors match light render perfectly
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light gray, axis lines and grid subtle but visible; no dark-on-dark text.
+      Data: identical #009E73 curve and markers; reference line now light gray dashed and clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,74 +51,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks),
-          perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt (style-guide sizes); all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, excellent spacing throughout
+        comment: No text collisions; decile markers sit on the line without hiding
+          it
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 2.5 and point size 5 optimal for the data density, all
-          elements clearly visible
+        comment: Line size 1.2 and 2.5 decile markers clearly visible against both
+          backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 is CVD-safe and provides excellent contrast
-          on both backgrounds'
+        comment: Single brand-green series; dashed neutral reference line is told
+          apart by linestyle, not hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape format at 4800×2700px, perfect proportions and generous
-          whitespace
+        comment: 3200x1800 canvas, title about 42 % of width, balanced axis labels,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct (spec-id · library · anyplot.ai), axis labels
-          include units
+        comment: '''Population targeted (%)'' with unit and ''Cumulative lift'' are
+          descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds #FAF8F1/#1A1A17 correct, theme-adaptive
-          text colors, both renders theme-correct'
+        comment: 'Curve #009E73, backgrounds #FAF8F1 / #1A1A17, chrome from INK /
+          INK_SOFT tokens in both renders'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Well-configured library default with professional appearance, but
-          no exceptional custom design or FiveThirtyEight-level polish
+        passed: false
+        comment: The style-guide baseline (sizes, tokens, palette), nothing beyond
+          it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good refinement: subtle grid with alpha values and generous whitespace,
-          though panel border on all sides rather than L-shaped'
+        passed: false
+        comment: 'L-shaped axis lines, no minor grid: the spine and grid rules met,
+          nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good visual hierarchy with reference line, decile markers, and color
-          contrast guiding the reader to understand model lift behavior
+        passed: false
+        comment: Data displayed with the reference line and decile markers the Notes
+          ask for; no hierarchy chosen beyond them
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lift curve showing cumulative lift vs population percentage
+        comment: Correct cumulative lift curve, no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: axes 0-100%, reference line at y=1, decile
-          markers'
+        comment: x 0-100 %, y cumulative lift, dashed reference at 1 across the whole
+          axis (C2), decile markers on the curve (C5), curve starts high and meets
+          1 at 100 % (C3), axis holds 0 to the peak (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly mapped, axes show all data with appropriate scale
+        comment: Curve drawn through the 100 computed percentile values with geom_line
+          (no smoothing); markers at their deciles
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed for single series
+        comment: Title 'lift-curve · python · plotnine · anyplot.ai' matches the format;
+          single series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -156,22 +161,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows complete lift curve behavior: high lift early, smooth decay
-          to 1.0, deciles show key points'
+        comment: Shows the steep early lift, the gradual descent and convergence to
+          1 at 100 %
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real marketing scenario with customer response data, 15% baseline
-          response rate, realistic model scores
+        comment: Customer response targeting with a model score, a plausible neutral
+          marketing scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'X: 0-100% population (correct), Y: 0-3.5 with 0.5 breaks (appropriate),
-          proportions realistic'
+        comment: 'Checked: lift at 100 % falls out of the cumsum as exactly 1.0 (on
+          the reference line in the render); peak about 2.6 at the top 1-2 %, plausible
+          for a ~25 % base rate'
     code_quality:
       score: 10
       max: 10
@@ -181,57 +187,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean straightforward structure: imports → data generation → plot
-          → save, no unnecessary functions'
+        comment: Imports, constants, column constants, Data block, Plot, Save; no
+          functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports, specific plotnine imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity, no fake functionality
+        comment: Vectorized cumsum lookup at the percentile cut points; concise
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png with current API
+        comment: Saves plot-{THEME}.png at dpi=400, 8x4.5 in; current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ggplot() + geom layers, proper aes() mapping, appropriate
-          theme() customization
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Basic plotnine features without leveraging distinctive grammar of
-          graphics capabilities
+        comment: 'Standard ggplot grammar: per-layer data, geom_hline/geom_line/geom_point,
+          theme_minimal + theme(); the library prompt''s pattern, nothing beyond'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-20T18:32:28Z'
 impl_tags:
   dependencies: []
   techniques:
-  - reference-line
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
-  - theme-adaptive
+  - grid-styling
