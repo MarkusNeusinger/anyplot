@@ -2,47 +2,49 @@ library: matplotlib
 language: python
 specification_id: scatter-marginal
 created: '2025-12-26T14:58:58Z'
-updated: '2026-05-09T05:24:41Z'
-generated_by: claude-haiku
-workflow_run: 25592616567
+updated: '2026-11-20T00:57:14Z'
+generated_by: claude-sonnet
+workflow_run: 44649187594
 issue: 2005
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 80
 review:
   strengths:
-  - 'Excellent theme adaptation: data colors (#009E73) identical in both renders;
-    chrome properly flips with no legibility issues'
-  - Strong visual hierarchy through GridSpec multi-panel layout with properly aligned
-    marginals
-  - 'High code quality: clean KISS structure, all imports used, idiomatic matplotlib
-    patterns'
-  - 'Perfect specification compliance: all required features present and correctly
-    implemented'
-  - 'Refined visual polish: subtle grid, removed spines, generous whitespace, edge
-    highlighting'
+  - 'GridSpec layout with sharex/sharey: both marginals share the scatter''s axes
+    natively, so the two x-clusters at ~30 and ~60 sit directly under the top histogram''s
+    two humps'
+  - 'Theme tokens threaded through every text element, spine and grid; brand #009E73
+    identical in both renders and all text readable on #FAF8F1 and #1A1A17'
+  - Marginals at alpha 0.5 read quieter than the alpha-0.65 points, keeping the scatter
+    the main panel as the Notes ask
+  - Canvas exactly 3200x1800 with savefig at dpi=400 and no bbox_inches trimming;
+    sizes follow the library references
   weaknesses:
-  - Axis labels lack units (Feature A/B should specify measured quantities)
-  - 'Design Excellence: well-executed but appears as refined defaults rather than
-    distinctive design; could benefit from custom color harmony'
-  - 'Data storytelling: bimodal structure visible but lacks visual emphasis or annotations
-    to highlight key insights'
+  - 'VQ-06, DQ-02 (both): the axis titles read ''Feature A'' and ''Feature B'', abstract
+    names with no measured quantity or unit → name a plausible pair of measurements
+    with units, e.g. ''Body mass (kg)'' / ''Daily intake (MJ)''. Likely cause: FEATURE_A
+    / FEATURE_B column constants.'
+  - 'Suggestion: draw the right marginal''s grid behind the bars (ax_right.set_axisbelow(True));
+    the vertical grid lines currently cross the bars in both renders.'
+  - 'Suggestion: hide the top marginal''s ''0'' tick label so it does not sit directly
+    above the scatter''s ''80'' tick.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "scatter-marginal · matplotlib · anyplot.ai" in dark ink; axis labels (Feature A / Feature B) and tick labels all clearly readable in dark text against light background
-      Data: Scatter points and histogram bars in brand green (#009E73); 200 points show clear positive correlation with bimodal structure (clusters at Feature A ~30 and ~60); top marginal histogram shows bimodal distribution; right marginal histogram shows Feature B distribution; all elements well-spaced, no overlap
-      Legibility verdict: PASS - All text readable; no light-on-light issues; excellent contrast
+      Background: warm off-white #FAF8F1 across canvas and all three panels; canvas 3200x1800.
+      Chrome: title 'scatter-marginal · python · matplotlib · anyplot.ai' centred in near-black ink (~52% of width); axis titles 'Feature A' / 'Feature B' and marginal 'Count' labels in dark ink; ticks in #4A4A44; top/right spines removed; subtle horizontal grid on scatter and top marginal, vertical grid on right marginal (drawn over the bars).
+      Data: 200 brand-green (#009E73) points at alpha 0.65 with page-colored outlines, two clusters around (30,30) and (60,50) along a positive trend; top histogram (25 bins, alpha 0.5) is bimodal; right histogram drawn sideways from a zero baseline at the scatter's right edge. Small gaps between panels; empty top-right corner.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title and all axis/tick labels rendered in light ink tones (#F0EFE8 primary, #B8B7B0 secondary); all text clearly readable against dark background
-      Data: Scatter points and histogram bars remain brand green (#009E73) - identical to light render, confirming proper theme independence for data colors; bimodal structure and positive correlation equally clear
-      Legibility verdict: PASS - No dark-on-dark failures; tick labels and axis labels are light and visible; excellent theme contrast
+      Background: warm near-black #1A1A17 throughout.
+      Chrome: title, axis titles and Count labels in light ink #F0EFE8, ticks in #B8B7B0, spines light grey; no dark-on-dark text.
+      Data: same #009E73 points and marginal bars as the light render (bars read as a deeper green from alpha 0.5 over the dark page); identical layout and data.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -53,70 +55,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt); readable
-          in both themes
+        comment: All sizes explicit (title 12, axis labels 10, marginal labels 9,
+          ticks 8 pt, the library's references); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, no overlapping elements
+        comment: No text collisions; the top marginal's 0 tick sits close above the
+          scatter's 80 tick but both read cleanly; 200 translucent points stay distinguishable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter points optimally adapted (s=100, α=0.65 for 200 points);
-          histograms clear
+        comment: 200 points at s=45, alpha 0.65 with a page-colored outline; marginal
+          bars clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green is colorblind-safe; good contrast on both surfaces
+        comment: Single hue, color is not the signal; good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, balanced margins, nothing cut off
+        comment: 3200x1800 canvas, scatter dominates, title ~52% of width, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: Generic labels (Feature A/B) lack units
+        comment: Axis titles 'Feature A' / 'Feature B' name no quantity and no unit
+          (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds correct; both renders theme-correct'
+        comment: 'Brand #009E73 for points and marginals; #FAF8F1 / #1A1A17 backgrounds;
+          data color identical across themes'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Thoughtful layout and color harmony, but resembles well-configured
-          defaults
+        comment: 'Style-guide baseline: explicit size hierarchy, theme tokens, nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Subtle grid, spines removed, generous whitespace, edge highlighting;
-          nearly perfect
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Bimodal structure and correlation clear; could emphasize insights
-          more
+        comment: Spine and grid rules met; tight 0.05 panel gaps are what C4 asks;
+          grid drawn over the right marginal's bars
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed; bimodal x and correlation readable, no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,25 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with marginal distributions
+        comment: Scatter with histogram marginals on top and right
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: scatter, top marginal, right marginal, alignment'
+        comment: 'C1-C4 all met: scatter lower-left and largest, shared axes, sideways
+          right marginal from a zero baseline, quieter alpha-0.5 marginals, translucent
+          points, small gaps'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; marginals aligned with axes
+        comment: Marks at their values; sharex/sharey keep marginals aligned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed
+        comment: Title 'scatter-marginal · python · matplotlib · anyplot.ai'; single
+          series, no legend needed (N/A)
     data_quality:
       score: 13
       max: 15
@@ -154,19 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: bimodal univariate + positive bivariate correlation'
+        comment: Bimodal x marginal, unimodal-ish y marginal, positive correlation
+          - shows joint and marginal structure
       - id: DQ-02
         name: Realistic Context
         score: 3
         max: 5
         passed: false
-        comment: Plausible but generic labels; no real-world scenario
+        comment: 'Neutral but abstract: variables named Feature A / Feature B with
+          no real-world quantity (defect line)'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportional relationships realistic
+        comment: Values 0-90 consistent with a 0.7 slope plus noise; no Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -176,57 +188,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures determinism
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no fake UI
+        comment: Shared chrome loop, no dead code, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of matplotlib (Axes methods, GridSpec, spine/grid manipulation)
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses GridSpec for multi-panel layout (distinctive to matplotlib)
+        comment: GridSpec with sharex/sharey so marginals track the scatter's limits
+          natively, hist(orientation='horizontal'), Axes methods throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-20T00:53:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
+  - minimal-chrome
+  - edge-highlighting
   - grid-styling
