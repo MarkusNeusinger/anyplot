@@ -74,7 +74,6 @@ from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from difflib import SequenceMatcher
 from pathlib import Path
 
 import pandas as pd
@@ -95,6 +94,7 @@ from core.canvas import TOLERANCE, NotAPngError, check_png, png_size
 from core.constants import LIBRARY_LANGUAGES
 from core.perturbation import Perturbation, perturbations, smoke_source
 from core.render_identity import compare
+from core.utils import line_map
 
 
 RECORD_VERSION = 1
@@ -295,31 +295,6 @@ def traceback_error(stderr: str, script: Path) -> tuple[str | None, int | None]:
     if message is not None and len(message) > _MAX_ERROR_CHARS:
         message = message[: _MAX_ERROR_CHARS - 1] + "…"
     return message, line
-
-
-def line_map(original: str, executed: str) -> dict[int, int]:
-    """Each 1-based line of `executed` mapped to a line of `original`.
-
-    The executed source is the original with its block replaced and its column constants
-    rewritten (a constant spread over several lines becomes one), so the lines below the
-    block shift by the difference in block length. A line that has no counterpart maps to
-    the first original line of the region it replaced.
-    """
-    executed_lines, original_lines = executed.splitlines(), original.splitlines()
-    mapping: dict[int, int] = {}
-    if not original_lines:
-        return mapping
-    matcher = SequenceMatcher(None, executed_lines, original_lines, autojunk=False)
-    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        for i in range(i1, i2):
-            if tag == "equal":
-                j = j1 + (i - i1)
-            elif j2 > j1:
-                j = j1 + min(i - i1, j2 - j1 - 1)
-            else:
-                j = min(j1, len(original_lines) - 1)
-            mapping[i + 1] = j + 1
-    return mapping
 
 
 def source_line(source: str, line: int | None) -> str | None:

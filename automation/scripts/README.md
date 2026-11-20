@@ -257,6 +257,17 @@ every verdict; it stops only when a validator module comes from outside its
 own tree. See
 [Readiness scan](../../docs/workflows/overview.md#readiness-scan-record-only).
 
+`check FILE --spec-id S --library B` is the session's own look at its file
+before it commits (Step 3c of the generate prompt, Step 5b of the repair
+prompt), run from a copy that "Prepare the readiness self-check" makes at
+`/tmp/anyplot-readiness` before the session. It takes the same path through
+the validator as `scan` and prints every refusal in the validator's words,
+with its hint and with the line of the file as the session wrote it, then a
+verdict line (`readiness: accepted`, `refused (<keys>)`, `excluded`, or
+`not checked`). It writes nothing and exits 0 when there's nothing to fix, 1
+on a refusal, and 2 when it can't run. See
+[Readiness self-check](../../docs/workflows/overview.md#readiness-self-check).
+
 ### `readiness_record.py`
 Reads the staged `adapt/readiness.json` against the code under review
 (`impl-review.yml`, "Readiness check"). The record must be the scanner's and

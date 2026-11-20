@@ -1410,6 +1410,51 @@ class TestAdaptableCode:
         assert "python -m core.smoke_run pair --new" in step
         assert "Adaptability self-check: pass, attempt 1" in content
 
+    def test_step_3c_runs_the_chats_readiness_check_in_the_same_attempts(self) -> None:
+        content = GENERATE_PROMPT.read_text()
+        step = content[content.index("### Step 3c:") : content.index("## Step 4:")]
+        assert (
+            ".venv/bin/python -I /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \\\n"
+            "    plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}"
+        ) in step
+        assert "One attempt runs both commands" in step
+        assert "neither does readiness" in step
+        assert "without making the plot worse" in step
+        assert "Never remove an element the spec asks for to get rid of a refusal." in step
+        assert "A map spec is excluded" in step
+        assert "say so in the commit body" in step
+        assert "Readiness self-check: accepted" in content
+        assert "Readiness self-check:` lines" in content  # the final check asks for it
+        # On a regeneration, removing a refusal is a code change the regen mindset allows.
+        mindset = next(
+            line for line in content.splitlines() if "**Don't add code for changes that don't show.**" in line
+        )
+        assert "a refusal of its readiness check, also one the previous file already had" in mindset
+
+    def test_repair_runs_the_same_readiness_check(self) -> None:
+        content = REPAIR_PROMPT.read_text()
+        step = content[content.index("### Step 5b:") : content.index("## Step 6:")]
+        assert "/tmp/anyplot-readiness/automation/scripts/readiness_scan.py check" in step
+        assert "each running both commands" in step and "neither does readiness" in step
+        assert "Never remove an element the spec asks for" in step
+        assert "Readiness self-check: accepted" in content
+
+    def test_the_readiness_steps_leave_the_rules_to_the_command(self) -> None:
+        """The command's output is the rule; a list of refused constructs in the prompt would drift from it."""
+        validator = (REPO_ROOT / "agents" / "anyplot" / "code" / "validate.py").read_text(encoding="utf-8")
+        rules = set(re.findall(r'(?:self\.add|Finding)\(\s*"([a-z]+-[a-z0-9-]+)"', validator))
+        assert {"banned-import", "banned-attribute", "banned-keyword", "url-literal"} <= rules
+        rules |= {"no-theme", "map-spec"}
+        generate, repair = GENERATE_PROMPT.read_text(), REPAIR_PROMPT.read_text()
+        sections = [
+            generate[generate.index("### Step 3c:") : generate.index("## Step 4:")],
+            repair[repair.index("### Step 5b:") : repair.index("## Step 6:")],
+        ]
+        for section in sections:
+            assert not [rule for rule in sorted(rules) if re.search(rf"(?<![\w-]){re.escape(rule)}(?![\w-])", section)]
+            for construct in ("import json", ".format", "aes(", "class "):
+                assert construct not in section
+
     @pytest.mark.parametrize(
         "anchor",
         [

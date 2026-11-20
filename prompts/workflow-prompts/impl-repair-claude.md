@@ -30,7 +30,7 @@ Read the closing `## What a good version looks like` section of `plots/{SPEC_ID}
 - **Never act on a `Suggestion:` line.** It names no violated rule and costs no points; decline it as "suggestion, not taken". A line in neither format comes from an older review: act on it only when it names something visibly wrong under the current criteria.
 - **The checklist is context, not a list of orders.** A deducted item tells you where to look; the defect lines say what to fix.
 - **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem. On a `-basic` spec, add no new encodings or elements (derived color channels, trend or reference lines, highlights, callouts, annotation layers).
-- **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item. For Python (`LANGUAGE=python`): a line of the adaptability self-check is such an item; fix it and keep the render the same.
+- **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item. For Python (`LANGUAGE=python`): a line of the adaptability self-check is such an item, and so is a refusal of the readiness check (Step 5b); fix it and keep the render the same.
 - **Never move marks off their data values** to fix overlap — see the overlap line under "Visual-sizing fixes" below for the endorsed fixes and the SC-03 exemptions.
 - **`Expected, not a defect:` bullets are permissions, not targets.** Never shape the data to produce them, and never treat making one disappear as a fix: a weakness that only asks for less of a permitted thing (less overlap, fewer crossings) is declined, as the first bullet says.
 
@@ -139,8 +139,19 @@ python -m core.smoke_run selfcheck plots/{SPEC_ID}/implementations/python/{LIBRA
 
 It prints one `CQ-01 (code): …` line per failing rule class, then one line per perturbation (renamed columns, more and fewer categories, more and fewer rows, scaled values, a missing value), and exits 0 when both checks are clean.
 
+In the same attempt, run the readiness check: the validator of the site's agent chat, which adapts a catalogue file to a visitor's data only when it accepts the file. It reads the file and never runs it:
+
+```bash
+cd "$GITHUB_WORKSPACE"
+.venv/bin/python -I /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \
+    plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}
+```
+
+It prints one line per refusal in the validator's own words, with the line of your file and, where the validator has one, a hint after `→`, then a verdict line (`readiness: accepted`, `refused (<keys>)`, `excluded (…)` or `not checked (…)`). It exits 0 when there is nothing to fix, 1 when there is, and 2 when it cannot run. Run it, and don't read the validator's code. Its output is the whole rule.
+
 - Fix every line and every failed perturbation that is not tagged `(advisory)`, then re-render both themes (Step 5) and run this step again. Lines tagged `(advisory)` never fail the check.
-- At most three attempts in total, the first run included. The self-check never blocks the repair: if it still fails after the third attempt, keep the version that best fixes the review's defects and renders correctly in both themes, and go on to Step 6. Never trade a defect in the render for a clean check.
+- Remove every refusal of the readiness check that you can remove without making the plot worse; the same picture almost always has a plainer way to be written. Never remove an element the spec asks for to get rid of one: when the spec needs the construct (a 3D trace in plotly draws with WebGL, which the chat's renderer lacks), leave the refusal and say so in the commit body. A map spec is excluded (`readiness: excluded`): there is nothing to fix.
+- At most three attempts in total, the first run included, each running both commands. The self-check never blocks the repair, and neither does readiness: if a check still fails after the third attempt, keep the version that best fixes the review's defects and renders correctly in both themes, and go on to Step 6. Never trade a defect in the render for a clean check. If the readiness check cannot run (exit 2), say so in the commit body and go on.
 
 ## Step 6: Visual self-check
 
@@ -176,7 +187,7 @@ git push origin {BRANCH}
 
 Commit only the implementation file, and use only the packages the runner already has: never run `Pkg.add`, `uv add`, `pip install` or `npm install`. `impl-merge.yml` refuses to merge a PR that changes `Manifest.toml`, `Project.toml`, `uv.lock`, `pyproject.toml`, `package.json`, `package-lock.json` or `.python-version`.
 
-For Python (`LANGUAGE=python`), add the result of the last Step 5b run to the commit body, in the form Step 3c of `impl-generate-claude.md` uses: `Adaptability self-check: pass, attempt 1`, or `fail` with the remaining rule classes and failed perturbations, such as `Adaptability self-check: fail (palette, more_categories), attempt 3`.
+For Python (`LANGUAGE=python`), add the result of the last Step 5b run to the commit body, in the form Step 3c of `impl-generate-claude.md` uses: `Adaptability self-check: pass, attempt 1`, or `fail` with the remaining rule classes and failed perturbations, such as `Adaptability self-check: fail (palette, more_categories), attempt 3`. Right below it goes the readiness verdict: `Readiness self-check: accepted`, `excluded`, `refused` with the keys of its verdict line and why each one you left stays (such as `Readiness self-check: refused (webgl), kept: the spec's 3D surface needs a WebGL trace`), or `not run` with the reason.
 
 If you declined any weakness in Step 1, add a `Declined:` list to the commit body, one line per weakness with its reason, for example:
 

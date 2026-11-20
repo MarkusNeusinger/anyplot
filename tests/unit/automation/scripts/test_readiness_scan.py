@@ -18,7 +18,7 @@ import yaml
 
 from automation.scripts import readiness_scan
 from automation.scripts.readiness_record import code_sha256
-from automation.scripts.readiness_scan import build_record, log_line, scan_side, summary_line
+from automation.scripts.readiness_scan import build_record, check, log_line, scan_side, summary_line
 
 
 SCRIPT = Path(readiness_scan.__file__)
@@ -458,3 +458,249 @@ def test_a_validator_that_crashes_is_a_key_of_its_own(monkeypatch):
 def test_a_name_that_is_no_identifier_never_reaches_the_record():
     assert readiness_scan._token("banned-import") == "banned-import"
     assert readiness_scan._token("Not an identifier: x = 1") == "other"
+
+
+# --- the session's check -----------------------------------------------------------------------------
+
+# A plotly file with the catalogue header: the normaliser drops the header and rewrites the save, so every line
+# the validator names in its own text sits six lines above the line of this file.
+SURFACE = '''""" anyplot.ai
+surface-basic: Basic 3D Surface Plot
+Library: plotly 6.8.0 | Python 3.14.9
+Quality: pending | Created: 2026-11-20
+"""
+
+import json
+import os
+
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Data
+x = np.linspace(-3, 3, 30)
+df = pd.DataFrame({"x": x, "y": x})
+X = "x"  # role: x
+Y = "y"  # role: y
+
+# Plot
+z = np.sin(df[X].to_numpy()[:, None]) * np.cos(df[Y].to_numpy()[None, :])
+fig = go.Figure(go.Surface(x=df[X], y=df[Y], z=z, colorscale=[[0, "#009E73"], [1, "#4467A3"]]))
+fig.update_layout(title="surface-basic · python · plotly · anyplot.ai")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=2)
+fig.write_html(f"plot-{THEME}.html")
+'''
+
+
+def _line_of(code: str, text: str) -> int:
+    """The 1-based line of ``code`` that holds ``text``, read from the fixture itself."""
+    (line,) = [number for number, content in enumerate(code.splitlines(), start=1) if text in content]
+    return line
+
+
+def test_check_accepts_a_file_the_chat_accepts():
+    assert check(CLEAN, spec_id=SPEC, library=LIB) == (0, ["readiness: accepted"])
+
+
+def test_check_names_each_refusal_with_the_line_of_the_file_and_the_validators_hint():
+    status, lines = check(BANNED_IMPORT, spec_id=SPEC, library=LIB)
+    assert status == 1
+    line = _line_of(BANNED_IMPORT, "import json")
+    assert lines[0].startswith(f"security: banned-import at line {line}: import of 'json' ")
+    assert " → " in lines[0]  # the validator's own hint, in full
+    assert lines[-1] == "readiness: refused (security:banned-import)"
+
+
+def test_lines_are_those_of_the_file_the_session_wrote_not_of_the_normalised_text():
+    """The header and the rewritten save shift the normalised text; the session edits its own file."""
+    status, lines = check(SURFACE, spec_id="surface-basic", library="plotly")
+    assert status == 1
+    assert lines == [
+        f"security: banned-import at line {_line_of(SURFACE, 'import json')}: import of 'json' is not allowed "
+        "with plotly → the data comes only from df = load_user_data(), and the plot reads and writes no files",
+        f"webgl: Surface at line {_line_of(SURFACE, 'go.Surface(')} draws with WebGL, which the renderer's browser "
+        "does not have",
+        "readiness: refused (security:banned-import, webgl)",
+    ]
+
+
+def test_a_line_that_lost_its_noqa_comment_still_maps_to_itself():
+    """Stripped `# noqa` comments beside a removed guard must not merge into one replaced region."""
+    guarded = CLEAN.replace(
+        "import os\n\nimport matplotlib.pyplot as plt\nimport pandas as pd\n",
+        "import os\nimport sys\n\n\nscript_dir = os.path.dirname(os.path.abspath(__file__))\n"
+        "if script_dir in sys.path:\n    sys.path.remove(script_dir)\n\n"
+        "import json  # noqa: E402\nimport matplotlib.pyplot as plt  # noqa: E402\nimport pandas as pd  # noqa: E402\n",
+    )
+    status, lines = check(guarded, spec_id=SPEC, library=LIB)
+    assert status == 1
+    assert lines[0].startswith(f"security: banned-import at line {_line_of(guarded, 'import json')}: ")
+
+
+def test_check_prints_every_finding_not_only_the_scans_first_five():
+    from agents.anyplot.code import normalise as normalise_module
+    from agents.anyplot.code.validate import validate_security
+
+    findings = validate_security(normalise_module.normalise(MANY, library=LIB), library=LIB)
+    assert len(findings) > 5
+    status, lines = check(MANY, spec_id=SPEC, library=LIB)
+    assert status == 1
+    assert len([line for line in lines if line.startswith("security: ")]) == len(findings)
+    assert not [line for line in lines if "more findings" in line]
+    numbers = [int(match.group(1)) for line in lines if (match := re.search(r" at line (\d+)", line))]
+    assert numbers == sorted(numbers)  # in the order of the file
+
+
+@pytest.mark.parametrize(
+    ("code", "reason"),
+    [
+        (NO_THEME, 'no-theme: no module-level THEME = os.getenv("ANYPLOT_THEME", ...)'),
+        (BROKEN, f"syntax: line {len(BROKEN.splitlines())} does not parse"),
+        (
+            FIXED_SAVE,
+            f"savefig-target: single-theme savefig target 'plot-light.png' at line {_line_of(FIXED_SAVE, 'savefig')}",
+        ),
+    ],
+    ids=["no-theme", "syntax", "fixed-save"],
+)
+def test_the_scans_other_reasons_come_in_its_own_words(code, reason):
+    status, lines = check(code, spec_id=SPEC, library=LIB)
+    assert status == 1 and reason in lines
+    # A reason about the whole file comes before the ones about a line.
+    numbered = [index for index, line in enumerate(lines) if re.search(r"\bline \d", line)]
+    whole = [index for index, line in enumerate(lines[:-1]) if not re.search(r"\blines? \d", line)]
+    assert not numbered or not whole or max(whole) < min(numbered)
+
+
+@pytest.mark.parametrize(
+    "code",
+    [CLEAN, BANNED_IMPORT, BANNED_NAME, FIXED_SAVE, NO_THEME, BROKEN, MANY],
+    ids=["clean", "banned-import", "banned-name", "fixed-save", "no-theme", "syntax", "many"],
+)
+def test_check_and_the_record_agree(code):
+    """One path through the validator: the check accepts exactly the files the record holds no key for."""
+    status, lines = check(code, spec_id=SPEC, library=LIB)
+    keys = scan_side(code, spec_id=SPEC, library=LIB)["refusals"]
+    assert (status == 0) is (keys == [])
+    if keys:
+        assert lines[-1] == f"readiness: refused ({', '.join(keys)})"
+
+
+def test_a_map_spec_has_nothing_to_fix_whatever_the_code_holds():
+    status, lines = check(BANNED_IMPORT, spec_id="choropleth-basic", library=LIB)
+    assert status == 0
+    assert lines == [
+        "readiness: excluded (choropleth-basic is a map spec, which the chat refuses whatever the code holds; "
+        "nothing to fix)"
+    ]
+
+
+def test_a_webgl_trace_the_spec_needs_is_reported_like_any_refusal():
+    """Whether a refusal can go is the session's call against the spec; the check only reports it."""
+    plain = SURFACE.replace("import json\n", "")
+    status, lines = check(plain, spec_id="surface-basic", library="plotly")
+    assert status == 1
+    assert lines == [
+        f"webgl: Surface at line {_line_of(plain, 'go.Surface(')} draws with WebGL, which the renderer's browser "
+        "does not have",
+        "readiness: refused (webgl)",
+    ]
+
+
+def test_a_library_without_a_python_profile_is_not_checked():
+    assert check(CLEAN, spec_id=SPEC, library="ggplot2") == (
+        0,
+        ["readiness: not checked (ggplot2 has no Python profile in the chat's validator)"],
+    )
+
+
+def test_a_normaliser_that_crashes_is_a_check_that_could_not_run(monkeypatch):
+    from agents.anyplot.code import normalise as normalise_module
+
+    def boom(code: str, *, library: str) -> str:
+        raise ValueError("cannot normalise")
+
+    monkeypatch.setattr(normalise_module, "normalise", boom)
+    assert check(CLEAN, spec_id=SPEC, library=LIB) == (
+        2,
+        ["readiness: not run (the chat's normaliser failed on this file: ValueError: cannot normalise)"],
+    )
+
+
+def test_a_validator_that_crashes_is_a_check_that_could_not_run(monkeypatch):
+    from agents.anyplot.code import validate
+
+    def boom(code: str, *, library: str) -> list:
+        raise RuntimeError("validator down")
+
+    monkeypatch.setattr(validate, "validate_security", boom)
+    assert check(BANNED_IMPORT, spec_id=SPEC, library=LIB) == (
+        2,
+        ["readiness: not run (the chat's validator failed on this file: RuntimeError: validator down)"],
+    )
+
+
+def test_a_validator_from_outside_the_scripts_tree_is_a_check_that_could_not_run(tmp_path, monkeypatch, capsys):
+    (tmp_path / "new.py").write_text(CLEAN, encoding="utf-8")
+    monkeypatch.setattr(readiness_scan, "TREE", tmp_path / "elsewhere")
+    monkeypatch.setattr(sys, "path", list(sys.path))
+    code = readiness_scan.main(["check", str(tmp_path / "new.py"), "--spec-id", SPEC, "--library", LIB])
+    assert code == 2
+    out = capsys.readouterr().out
+    assert out.startswith("readiness: not run (ImportError: ") and "was imported from outside" in out
+    assert out.count("\n") == 1
+
+
+@pytest.mark.parametrize("content", [None, b"\xff\xfe not utf-8"], ids=["missing", "not-utf-8"])
+def test_a_file_the_check_cannot_read_is_a_check_that_could_not_run(tmp_path, capsys, content):
+    if content is not None:
+        (tmp_path / "new.py").write_bytes(content)
+    code = readiness_scan.main(["check", str(tmp_path / "new.py"), "--spec-id", SPEC, "--library", LIB])
+    assert code == 2
+    assert capsys.readouterr().out.startswith(f"readiness: not run (cannot read {tmp_path / 'new.py'}: ")
+
+
+def test_the_check_writes_nothing(tmp_path, monkeypatch, capsys):
+    """No summary line, no record, no entry in the self-check log, whose lines count the attempts."""
+    (tmp_path / "new.py").write_text(BANNED_NAME, encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary"))
+    code = readiness_scan.main(["check", "new.py", "--spec-id", SPEC, "--library", LIB])
+    assert code == 1
+    assert capsys.readouterr().out.endswith("readiness: refused (security:banned-name)\n")
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["new.py"]
+
+
+def test_the_bare_copy_checks_the_sessions_file_without_the_agent_runtime(tmp_path):
+    """The command as the prompts give it: `-I`, the copy the workflow makes before the session, a hostile workspace."""
+    tree = _bare_tree(tmp_path)
+    workspace = tmp_path / "ws"
+    for package in ("core", "agents"):
+        (workspace / package).mkdir(parents=True)
+        (workspace / package / "__init__.py").write_text('raise SystemExit("the workspace was imported")\n')
+    (workspace / "plotly.py").write_text(SURFACE, encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, "-I", str(tree / "automation" / "scripts" / "readiness_scan.py"), "check", "plotly.py"]
+        + ["--spec-id", "surface-basic", "--library", "plotly"],
+        capture_output=True,
+        text=True,
+        cwd=workspace,
+        env={"PATH": "/usr/bin:/bin"},
+    )
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.splitlines()[-1] == "readiness: refused (security:banned-import, webgl)"
+    assert sorted(path.name for path in workspace.iterdir()) == ["agents", "core", "plotly.py"]
+
+
+def test_without_the_copy_python_itself_exits_2(tmp_path):
+    """The prompts read exit 2 as "could not run"; a copy the workflow failed to make reads the same way."""
+    result = subprocess.run(
+        [sys.executable, "-I", str(tmp_path / "missing" / "readiness_scan.py"), "check", "x.py"],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+    )
+    assert result.returncode == 2 and result.stdout == ""
