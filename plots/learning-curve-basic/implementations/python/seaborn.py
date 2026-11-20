@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 learning-curve-basic: Model Learning Curve
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-10
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -18,40 +19,36 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always #009E73)
-TRAIN_COLOR = "#009E73"
-VAL_COLOR = "#C475FD"
+# Imprint palette: all eight positions, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulating a learning curve with typical patterns
-np.random.seed(42)
+# Columns: set these to your table's column names
+TRAIN_SIZE = "Training set size (samples)"  # role: train_sizes
+TRAIN_SCORE = "Training"  # role: train_scores
+VALIDATION_SCORE = "Validation"  # role: validation_scores
+FOLD = "CV fold"  # role: extra
+SPLIT = "Score type"
+SCORE = "RMSE (thousand USD)"
 
-# Training set sizes
-train_sizes = np.array([50, 100, 200, 400, 600, 800, 1000, 1200, 1500, 2000])
-n_sizes = len(train_sizes)
+# Data: replace this block with your own table, for example df = pd.read_csv("learning_curve.csv")
+# A house-price regressor evaluated with 5-fold cross-validation. The error is an RMSE, so lower is better:
+# the validation error is still falling at the largest size, the training error creeps up as data grows.
+rng = np.random.default_rng(7)
+sizes = np.array([100, 200, 300, 500, 700, 1000, 1400, 1800, 2400, 3000])
 n_folds = 5
+train_rmse = 14 + 16 * (1 - np.exp(-sizes / 900))
+val_rmse = 30 + 105 * (sizes / 100) ** -0.38
+df = pd.DataFrame(
+    {
+        TRAIN_SIZE: np.tile(sizes, n_folds),
+        FOLD: np.repeat(np.arange(1, n_folds + 1), len(sizes)),
+        TRAIN_SCORE: (train_rmse * (1 + rng.normal(0, 0.04, (n_folds, len(sizes))))).ravel(),
+        VALIDATION_SCORE: (val_rmse * (1 + rng.normal(0, 0.06, (n_folds, len(sizes))))).ravel(),
+    }
+)
 
-# Generate realistic learning curve pattern:
-# - Training score starts high and slightly decreases (model fits less perfectly with more data)
-# - Validation score starts low and increases (model generalizes better with more data)
-# - Gap narrows as training size increases
-
-# Training scores - high and slightly decreasing
-train_base = 0.98 - 0.03 * (train_sizes / train_sizes.max())
-train_scores = np.array([train_base + np.random.normal(0, 0.01, n_sizes) for _ in range(n_folds)])
-train_scores = np.clip(train_scores, 0.85, 1.0)
-
-# Validation scores - starts lower, increases with more data
-val_base = 0.65 + 0.25 * (1 - np.exp(-train_sizes / 500))
-validation_scores = np.array([val_base + np.random.normal(0, 0.02, n_sizes) for _ in range(n_folds)])
-validation_scores = np.clip(validation_scores, 0.55, 0.95)
-
-# Calculate means and standard deviations
-train_mean = train_scores.mean(axis=0)
-train_std = train_scores.std(axis=0)
-val_mean = validation_scores.mean(axis=0)
-val_std = validation_scores.std(axis=0)
-
-# Configure seaborn theme with adaptive colors
+# Plot: reads only df and the constants above
+long = df.melt(id_vars=[TRAIN_SIZE, FOLD], value_vars=[TRAIN_SCORE, VALIDATION_SCORE], var_name=SPLIT, value_name=SCORE)
 sns.set_theme(
     style="ticks",
     rc={
@@ -63,55 +60,41 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
-sns.set_context("talk", font_scale=1.1)
 
-# Plot setup
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+n_splits = long[SPLIT].nunique()
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Plot training curve with confidence band
-ax.fill_between(train_sizes, train_mean - train_std, train_mean + train_std, alpha=0.2, color=TRAIN_COLOR)
+# Mean across folds at every size, band = ±1 standard deviation across folds
 sns.lineplot(
-    x=train_sizes,
-    y=train_mean,
+    data=long,
+    x=TRAIN_SIZE,
+    y=SCORE,
+    hue=SPLIT,
+    style=SPLIT,
+    markers=True,
+    dashes=False,
+    estimator="mean",
+    errorbar="sd",
+    err_kws={"alpha": 0.2, "linewidth": 0},
+    palette=IMPRINT_PALETTE[:n_splits],
+    linewidth=2.2,
+    markersize=7,
     ax=ax,
-    color=TRAIN_COLOR,
-    linewidth=3,
-    marker="o",
-    markersize=10,
-    label="Training Score",
 )
 
-# Plot validation curve with confidence band
-ax.fill_between(train_sizes, val_mean - val_std, val_mean + val_std, alpha=0.2, color=VAL_COLOR)
-sns.lineplot(
-    x=train_sizes, y=val_mean, ax=ax, color=VAL_COLOR, linewidth=3, marker="s", markersize=10, label="Validation Score"
-)
+# Style
+ax.set_title("learning-curve-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(TRAIN_SIZE, fontsize=10, color=INK)
+ax.set_ylabel(SCORE, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.set_ylim(0, long[SCORE].max() * 1.08)
+ax.yaxis.grid(True, linewidth=0.8)
+ax.legend(title=SPLIT, fontsize=8, title_fontsize=8, loc="upper right", framealpha=0.95)
+sns.despine(ax=ax)
 
-# Labels and styling
-ax.set_xlabel("Training Set Size (samples)", fontsize=20, color=INK)
-ax.set_ylabel("Accuracy Score (0-1)", fontsize=20, color=INK)
-ax.set_title("learning-curve-basic · seaborn · anyplot.ai", fontsize=24, color=INK, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Set y-axis limits for better visualization
-ax.set_ylim(0.5, 1.02)
-
-# Configure legend
-ax.legend(fontsize=16, loc="lower right", framealpha=0.95)
-
-# Subtle grid (y-axis only)
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
-
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
