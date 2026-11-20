@@ -2,52 +2,54 @@ library: pygal
 language: python
 specification_id: elbow-curve
 created: '2025-12-26T19:57:22Z'
-updated: '2026-05-10T07:30:25Z'
-generated_by: claude-haiku
-workflow_run: 25622741212
+updated: '2026-11-20T17:04:30Z'
+generated_by: claude-sonnet
+workflow_run: 44778631373
 issue: 2333
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/python/pygal/plot-dark.html
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - Perfect Visual Quality with theme-adaptive tokens correctly applied to all chrome
-    elements
-  - Excellent data storytelling through elbow highlight (larger marker + accent color)
-    that creates clear visual hierarchy
-  - 'Flawless palette compliance: Okabe-Ito colors identical across light and dark
-    renders, backgrounds correct (#FAF8F1 and #1A1A17)'
-  - All font sizes explicitly set and optimized for 4800×2700 canvas (title 28px,
-    labels 22px, ticks 18px)
-  - Realistic, neutral data context (document clustering scenario) with proper scale
-    and clear elbow point demonstration
-  - Clean, idiomatic pygal code with custom Style object showcasing library mastery
+  - Elbow k is computed from the data (largest distance to the chord between the first
+    and last points), so the highlight follows the data
+  - Per-point value dict with a 'label' gives the elbow a named tooltip in the interactive
+    HTML output
+  - Theme tokens go through pygal's Style object, so chrome flips correctly between
+    light and dark while the data colors stay identical
+  - Marker and line weights suit the 10 sparse points; the elbow marker is clearly
+    emphasised
   weaknesses:
-  - 'Design Excellence below publication-perfect level: DE-01 (4/8) is a well-configured
-    default without exceptional aesthetic sophistication'
-  - 'Visual Refinement (DE-02: 4/6) could be enhanced: consider removing chart border
-    for cleaner look or experimenting with subtle gradient on data series'
-  - 'Library Mastery in distinctive features (LM-02: 3/5) could leverage more pygal-specific
-    capabilities beyond basic theming'
+  - 'VQ-05 (both): the y-axis title ''Inertia (Within-cluster Sum of Squares)'' wraps
+    onto two lines, and the 0 and 5000 y ticks render at 44 px next to 56 px for 1000-4000
+    → one-line y title and one tick size on the axis. Likely cause: the long INERTIA
+    column name at label_font_size=56, and pygal drawing major ticks with major_label_font_size=44
+    while the others use label_font_size=56.'
+  - 'VQ-07 (dark): the horizontal y grid lines are almost invisible on #1A1A17 → subtle
+    but visible grid (an INK_MUTED-toned guide). Likely cause: pygal''s guide-line
+    stroke is not threaded from a theme token visible on the dark surface; set it
+    through Style (for example guide_stroke_color=INK_MUTED).'
+  - 'Suggestion: a value label next to the elbow marker (for example ''k = 4'') would
+    name the optimal k in the static PNG, not only in the HTML tooltip.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines
-      Chrome: Title "elbow-curve · pygal · anyplot.ai" in dark text; X-axis labeled "Number of Clusters (k)" and Y-axis "Inertia (Within-cluster Sum of Squares)" both in dark text; tick labels (1-10 on x-axis, 0-5000+ on y-axis) clearly readable
-      Data: Primary series rendered in brand green (#009E73) as a continuous curve with circular markers (8px); elbow point (k=4) highlighted with larger marker (16px) in orange (#D55E00); all elements clearly distinguishable from background
-      Legibility verdict: PASS - All text is fully readable, excellent contrast, no overlapping elements
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'elbow-curve · python · pygal · anyplot.ai' centred in dark ink; x title 'Number of Clusters (k)', y title 'Inertia (Within-cluster Sum of Squares)' wrapped onto two lines; x ticks 1-10, y ticks 0-5000 (0 and 5000 smaller than the rest); dotted y grid visible but subtle.
+      Data: #009E73 line with dots at k = 1..10 falling from 5200 to 350, soft bend at k=4; elbow at k=4 marked by a larger #C475FD dot.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with same subtle grid pattern
-      Chrome: Title in light cream text (#F0EFE8); axis labels and tick labels all in light text, perfectly readable against dark background; no dark-on-dark failures detected
-      Data: Primary series in identical brand green (#009E73) as light render; elbow highlight in same orange (#D55E00); color consistency between renders confirms correct theme adaptation
-      Legibility verdict: PASS - All text is fully readable, good contrast, no dark-on-dark issues; data colors identical to light render confirming proper theme separation
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, all readable; no dark-on-dark text; y grid lines barely visible.
+      Data: same #009E73 line and #C475FD elbow marker as the light render; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,49 +57,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly set (title 28px, labels 22px, ticks 18px), perfectly
-          readable in both themes
+        comment: Title 66, axis titles 56, ticks 44-56 px on the 3200x1800 canvas;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, excellent spacing
+        comment: No text collisions; the elbow marker sits on the line without hiding
+          any other mark
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers optimal for 10 data points; elbow highlight larger (16px)
-          creates emphasis
+        comment: 10 sparse points with 14 px dots and a 6 px line; the elbow marker
+          at 26 px stands out
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe; good contrast in both themes
+        comment: Green line and purple highlight differ in hue and size; good contrast
+          on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Perfect proportions with 80px margins, ~70% canvas utilization
+        passed: false
+        comment: Y-axis title wraps onto two lines, and the 0 and 5000 ticks render
+          smaller than the other y ticks (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: ''Number of Clusters (k)'' and
-          ''Inertia (Within-cluster Sum of Squares)'''
+        comment: '''Number of Clusters (k)'' and ''Inertia (Within-cluster Sum of
+          Squares)'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Perfect: first series #009E73, highlight #D55E00, backgrounds correct,
-          theme-adaptive chrome, identical data colors across renders'
+        passed: false
+        comment: 'First series #009E73, highlight #C475FD, backgrounds correct; the
+          dark render''s y grid lines are almost invisible (defect line)'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -105,22 +110,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults with custom colors, but lacks exceptional
-          polish or unusual design choices
+        comment: 'Style-guide baseline: Imprint palette, theme tokens, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Good refinement: custom margins, grid styling, stroke customization;
-          could remove chart border for cleaner look'
+        comment: Spines and grid follow the style guide; no further refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Good visual hierarchy: elbow point emphasized through color (orange)
-          and size (16px markers); guides viewer to k=4 as optimal'
+        comment: Elbow highlight follows the spec's Notes; no hierarchy beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: XY scatter with line connecting 10 points'
+        comment: Correct XY line chart with markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: k-values, inertia curve, elbow highlight,
-          markers at each point'
+        comment: Markers at every k, a line in k order, optimal k highlighted at its
+          own point (C1-C4 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=k (1-10), Y=inertia (5200→350), all points visible
+        comment: x = k 1-10, y = inertia 5200 down to 350; all points at their values,
+          straight segments
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct 'elbow-curve · pygal · anyplot.ai'; legend appropriately
-          hidden (single main series)
+        comment: Title 'elbow-curve · python · pygal · anyplot.ai' correct; legend
+          N/A (single curve plus highlight)
     data_quality:
       score: 15
       max: 15
@@ -160,22 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete elbow curve from k=1 to k=10 with clear diminishing
-          returns at k=4
+        comment: 'Steep fall, soft bend at k=4, slow tail: every aspect of an elbow
+          curve'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world scenario: document clustering with topic grouping analysis;
-          neutral and comprehensible'
+        comment: Document clustering on a text corpus is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic K-means scaling: k=1-10 standard, inertia proportions
-          plausible for clustering task'
+        comment: Inertia from 5200 down to 350 over k = 1-10 is sensible; the elbow
+          k=4 comes from the max-distance-to-chord computation, not a hard-coded index
     code_quality:
       score: 10
       max: 10
@@ -185,56 +188,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: imports → data → style → chart → save, no functions/classes'
+        comment: 'Flat script: tokens, data, style, chart, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data, fully reproducible
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; importlib/pathlib workaround necessary for pygal
-          namespace
+        comment: os, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, helpful comments on elbow calculation
-          logic
+        comment: Compact; the elbow is computed in two vectorised lines
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: plot-{THEME}.png and plot-{THEME}.html, current API'
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert: pygal.XY() selection, Style object with theme tokens (INK,
-          INK_SOFT, INK_MUTED), proper parameter use'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Style theming and interactive HTML output; two-series approach
-          for elbow is creative but could explore more pygal-specific capabilities
+        comment: 'pygal.XY with a Style object and per-series options: standard usage'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Per-point value dict with a 'label' gives the elbow a named tooltip
+          in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-20T17:00:41Z'
 impl_tags:
   dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns: []
+  dataprep:
+  - normalization
+  styling:
+  - grid-styling
