@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 elbow-curve: Elbow Curve for K-Means Clustering
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 97/100 | Updated: 2026-05-10
@@ -7,7 +7,10 @@ Quality: 97/100 | Updated: 2026-05-10
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs
 
 
 # Theme tokens
@@ -17,115 +20,114 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"
-ACCENT = "#C475FD"
 
-# Data - simulate K-means inertia values for k=1 to k=12
-np.random.seed(42)
-k_values = np.arange(1, 13)
+# Imprint palette: position 1 for the curve, position 2 for the highlighted elbow
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Generate realistic inertia values that decrease with k
-base_inertia = 5000
-inertia = base_inertia * np.exp(-0.25 * (k_values - 1)) + np.random.normal(0, 30, len(k_values))
-inertia = np.maximum(inertia, 100)
-inertia = np.sort(inertia)[::-1]
+# Columns: set these to your table's column names
+K = "Number of clusters (k)"  # role: k_values
+INERTIA = "Within-cluster sum of squares (inertia)"  # role: inertia
 
-# Optimal k (elbow point) is around k=4
-optimal_k = 4
-optimal_inertia = inertia[optimal_k - 1]
+# Data: replace this block with your own table, for example df = pd.read_csv("inertia.csv")
+# Simulation: customer segments (spend vs. visits) in 6 groups, K-means fitted for k = 1..12
+points, _ = make_blobs(n_samples=900, centers=6, cluster_std=1.3, center_box=(-12, 12), random_state=7)
+ks = list(range(1, 13))
+df = pd.DataFrame({K: ks, INERTIA: [KMeans(n_clusters=k, n_init=10, random_state=7).fit(points).inertia_ for k in ks]})
 
-# Create figure
+# Plot: reads only df and the constants above
+# Elbow = point farthest from the straight line joining the first and last point (both axes scaled to 0-1)
+x_norm = (df[K] - df[K].min()) / (df[K].max() - df[K].min())
+y_norm = (df[INERTIA] - df[INERTIA].min()) / (df[INERTIA].max() - df[INERTIA].min())
+elbow_row = df.iloc[int(np.argmax(np.abs(x_norm + y_norm - 1)))]
+elbow_k = int(elbow_row[K])
+elbow_inertia = float(elbow_row[INERTIA])
+
 fig = go.Figure()
 
-# Main curve with markers
 fig.add_trace(
     go.Scatter(
-        x=k_values,
-        y=inertia,
+        x=df[K],
+        y=df[INERTIA],
         mode="lines+markers",
         name="Inertia",
-        line={"color": BRAND, "width": 4},
-        marker={"size": 16, "color": BRAND, "line": {"color": PAGE_BG, "width": 2}},
-        hovertemplate="k=%{x}<br>Inertia=%{y:.0f}<extra></extra>",
+        line={"color": IMPRINT_PALETTE[0], "width": 3},
+        marker={"size": 11, "color": IMPRINT_PALETTE[0], "line": {"color": PAGE_BG, "width": 1.5}},
+        hovertemplate="k=%{x}<br>Inertia=%{y:,.0f}<extra></extra>",
     )
 )
 
-# Highlight the elbow point
 fig.add_trace(
     go.Scatter(
-        x=[optimal_k],
-        y=[optimal_inertia],
+        x=[elbow_k],
+        y=[elbow_inertia],
         mode="markers",
-        name=f"Elbow (k={optimal_k})",
-        marker={"size": 24, "color": ACCENT, "symbol": "circle", "line": {"color": INK, "width": 3}},
-        hovertemplate=f"Optimal k={optimal_k}<br>Inertia={optimal_inertia:.0f}<extra></extra>",
+        name=f"Elbow (k={elbow_k})",
+        marker={"size": 18, "color": IMPRINT_PALETTE[1], "line": {"color": INK, "width": 2}},
+        hovertemplate=f"Elbow k={elbow_k}<br>Inertia={elbow_inertia:,.0f}<extra></extra>",
     )
 )
 
-# Add annotation for the elbow point
 fig.add_annotation(
-    x=optimal_k,
-    y=optimal_inertia,
-    text=f"Elbow Point<br>k = {optimal_k}",
+    x=elbow_k,
+    y=elbow_inertia,
+    text=f"Elbow at k = {elbow_k}",
     showarrow=True,
     arrowhead=2,
-    arrowsize=1.5,
-    arrowwidth=2,
+    arrowwidth=1.5,
     arrowcolor=INK,
-    ax=80,
-    ay=-80,
-    font={"size": 20, "color": INK},
+    ax=60,
+    ay=-50,
+    font={"size": 13, "color": INK},
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
-    borderwidth=2,
-    borderpad=8,
+    borderwidth=1,
+    borderpad=5,
 )
 
-# Update layout
+# Style
 fig.update_layout(
-    title={"text": "elbow-curve · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
+    autosize=False,
+    title={
+        "text": "elbow-curve · python · plotly · anyplot.ai",
+        "font": {"size": 18, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Number of Clusters (k)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": K, "font": {"size": 14, "color": INK}},
+        "tickfont": {"size": 12, "color": INK_SOFT},
         "tickmode": "linear",
         "tick0": 1,
         "dtick": 1,
         "showgrid": True,
         "gridcolor": GRID,
-        "gridwidth": 1,
         "zeroline": False,
         "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Within-Cluster Sum of Squares (Inertia)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": INERTIA, "font": {"size": 14, "color": INK}},
+        "tickfont": {"size": 12, "color": INK_SOFT},
         "showgrid": True,
         "gridcolor": GRID,
-        "gridwidth": 1,
         "zeroline": False,
         "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
+        "range": [0, df[INERTIA].max() * 1.05],
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    showlegend=True,
+    font={"color": INK},
     legend={
-        "x": 0.95,
-        "y": 0.95,
+        "x": 0.97,
+        "y": 0.97,
         "xanchor": "right",
         "yanchor": "top",
-        "font": {"size": 16, "color": INK_SOFT},
+        "font": {"size": 12, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 120, "r": 80, "t": 100, "b": 100},
+    margin={"l": 90, "r": 40, "t": 70, "b": 65},
 )
 
-# Save as PNG (4800x2700 via scale=3)
-output_dir = os.path.dirname(os.path.abspath(__file__))
-fig.write_image(os.path.join(output_dir, f"plot-{THEME}.png"), width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html(os.path.join(output_dir, f"plot-{THEME}.html"), include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
