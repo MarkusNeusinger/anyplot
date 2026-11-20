@@ -425,41 +425,23 @@ jobs:
           # Merge only what was checked: the guard passed this pull request
           # at VALIDATED_SHA, and "Validate PR completeness" read that commit.
           # `update-branch` below puts GitHub's merge of main on top, once per
-          # attempt when main moves in between, so before every attempt the
-          # pull request is read and checked again, and its head is taken only
-          # when it is that commit, or a chain of at most MAX_UPDATES merges
-          # down to it along the first parents, each with exactly two parents,
-          # its second parent on main, and the tree of the clean merge of the
-          # two. The merge names that head (--match-head-commit), so a commit
-          # pushed in between is never merged.
-          # Prints the head to merge and returns 0; 1 = refused (why in
-          # head.why); 2 = could not read it this time; 3 = already merged
-          # (an earlier attempt merged and its answer was lost; the branch is
-          # then gone, so the head can no longer be fetched).
+          # attempt when main moves in between. A head is accepted only when
+          # it is that commit, or a chain of at most MAX_UPDATES merges down to
+          # it along the first parents, each with exactly two parents, its
+          # second parent on main, and the tree of the clean merge of the two.
+          # Before every attempt the pull request is read and checked again,
+          # and the merge names the accepted head (--match-head-commit), so a
+          # commit pushed in between is never merged. A pull request found
+          # merged counts as merged only when its merged head passes the same
+          # test, so the steps after this one never run for code this run did
+          # not check. (A re-dispatch for a pull request an earlier run merged
+          # checked the merged head itself.)
           G="$RUNNER_TEMP/pr-guard"
           MAX_UPDATES=8
-          merge_target() {
-            local view out head commit hops=0
-            view=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" \
-              --json number,state,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName \
-              2> "$RUNNER_TEMP/head.err") || return 2
-            if [ "$(jq -r '.state // ""' <<< "$view" 2>/dev/null)" = "MERGED" ]; then
-              return 3
-            fi
-            if ! out=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
-                 --number "$PR_NUM" --spec-id "$SPEC_ID" --library "$LIBRARY" <<< "$view"); then
-              echo "the pull request no longer passes the guard (${out//[^a-z_=]/})" > "$RUNNER_TEMP/head.why"
-              return 1
-            fi
-            head=$(sed -n 's/^head_sha=//p' <<< "$out")
-            if [ "$head" = "$VALIDATED_SHA" ]; then
-              echo "$head"
-              return 0
-            fi
-            git fetch -q origin "+refs/heads/main:refs/remotes/origin/main" \
-              "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}" 2> "$RUNNER_TEMP/head.err" || return 2
-            git cat-file -e "${head}^{commit}" 2>/dev/null || return 2
-            commit="$head"
+          # 0 when $1 (fetched) is the checked commit or an accepted chain
+          # above it; 1 otherwise, with why in head.why.
+          accepted_head() {
+            local commit="$1" hops=0
             while [ "$commit" != "$VALIDATED_SHA" ]; do
               hops=$((hops + 1))
               if [ "$hops" -gt "$MAX_UPDATES" ]; then
@@ -480,10 +462,60 @@ jobs:
               fi
               commit=$(git rev-parse "${commit}^1")
             done
+            return 0
+          }
+          # Prints the head to merge and returns 0; 1 = refused (why in
+          # head.why); 2 = could not read or fetch it this time; 3 = merged at
+          # an accepted head; 4 = merged, but not at an accepted head.
+          merge_target() {
+            local view out head state
+            view=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" \
+              --json number,state,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName \
+              2> "$RUNNER_TEMP/head.err") || return 2
+            state=$(jq -r '.state // ""' <<< "$view" 2> "$RUNNER_TEMP/head.err") || return 2
+            if ! out=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
+                 --number "$PR_NUM" --spec-id "$SPEC_ID" --library "$LIBRARY" <<< "$view"); then
+              echo "the pull request no longer passes the guard (${out//[^a-z_=]/})" > "$RUNNER_TEMP/head.why"
+              [ "$state" = "MERGED" ] && return 4
+              return 1
+            fi
+            head=$(sed -n 's/^head_sha=//p' <<< "$out")
+            if [ "$state" = "MERGED" ]; then
+              [ "$head" = "$VALIDATED_SHA" ] && return 3
+              # The branch is deleted with the merge; GitHub keeps the head
+              # under refs/pull/<number>/head.
+              git fetch -q origin "+refs/heads/main:refs/remotes/origin/main" \
+                "+refs/pull/${PR_NUM}/head:refs/remotes/origin/pr-${PR_NUM}-head" 2> "$RUNNER_TEMP/head.err" || return 2
+              git cat-file -e "${head}^{commit}" 2>/dev/null || return 2
+              accepted_head "$head" && return 3
+              return 4
+            fi
+            if [ "$head" = "$VALIDATED_SHA" ]; then
+              echo "$head"
+              return 0
+            fi
+            git fetch -q origin "+refs/heads/main:refs/remotes/origin/main" \
+              "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}" 2> "$RUNNER_TEMP/head.err" || return 2
+            git cat-file -e "${head}^{commit}" 2>/dev/null || return 2
+            accepted_head "$head" || return 1
             echo "$head"
+          }
+          # Ends the step once merge_target found the pull request merged:
+          # 3 goes on to the post-merge steps, 4 stops before them.
+          merged_end() {
+            if [ "$1" -eq 3 ]; then
+              echo "::notice::PR #${PR_NUM} is merged at the checked commit or GitHub's merges of main into it — continuing to post-merge steps"
+              exit 0
+            fi
+            WHY=$(head -c 300 "$RUNNER_TEMP/head.why" 2>/dev/null | tr '\n' ' ')
+            echo "::error::PR #${PR_NUM} is merged, but not at the checked commit ${VALIDATED_SHA} or GitHub's merges of main into it (${WHY:-no reason recorded}); no post-merge step runs for it"
+            exit 1
           }
 
           MAX_ATTEMPTS=5
+          # Whether an attempt of this run has sent a merge call, whose answer
+          # may have been lost.
+          MERGE_SENT=0
 
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
             echo "::notice::Merge attempt $attempt/$MAX_ATTEMPTS"
@@ -516,14 +548,13 @@ jobs:
             if [ -z "$STATE" ]; then
               echo "::warning::Could not read state for PR #${PR_NUM} — proceeding to merge attempt $attempt"
             fi
-            if [ "$STATE" = "MERGED" ]; then
-              echo "::notice::PR #${PR_NUM} is already merged — continuing to post-merge steps"
-              exit 0
+            # Update branch before merge attempt. A merged pull request goes
+            # straight to merge_target, which decides whether its merged head
+            # is one this run checked.
+            if [ "$STATE" != "MERGED" ]; then
+              gh pr update-branch "$PR_NUM" --repo "$REPOSITORY" 2>/dev/null || true
+              sleep 2
             fi
-
-            # Update branch before merge attempt
-            gh pr update-branch "$PR_NUM" --repo "$REPOSITORY" 2>/dev/null || true
-            sleep 2
 
             # --admin bypasses the branch ruleset's required-status-check
             # gate. Required because impl PRs never get those checks (Run
@@ -538,43 +569,55 @@ jobs:
             # only `write`, so a repo-admin PAT is required (ADMIN_TOKEN).
             TARGET_RC=0
             TARGET=$(merge_target) || TARGET_RC=$?
-            if [ "$TARGET_RC" -eq 3 ]; then
-              echo "::notice::PR #${PR_NUM} is already merged — continuing to post-merge steps"
-              exit 0
-            fi
+            case "$TARGET_RC" in
+              3|4) merged_end "$TARGET_RC" ;;
+            esac
             if [ "$TARGET_RC" -eq 1 ]; then
               WHY=$(head -c 300 "$RUNNER_TEMP/head.why" 2>/dev/null | tr '\n' ' ')
               echo "::error::PR #${PR_NUM} not merged: its head is neither the checked commit ${VALIDATED_SHA} nor GitHub's merges of main into it (${WHY:-no reason recorded}); re-dispatch impl-merge.yml to check it again"
               exit 1
             fi
+            MERR=""
             if [ "$TARGET_RC" -ne 0 ] || [ -z "$TARGET" ]; then
-              # The head could not be read this time. The checked commit
-              # itself is always safe to name (GitHub merges only when the
-              # head is that commit), and the merge call then also answers
-              # "already merged" for a merge whose answer an earlier attempt
-              # lost, which the check below takes as success.
-              echo "::warning::Could not read the head of PR #${PR_NUM} ($(head -c 300 "$RUNNER_TEMP/head.err" 2>/dev/null | tr '\n' ' ')); naming the checked commit ${VALIDATED_SHA}"
-              TARGET="$VALIDATED_SHA"
+              READ_ERR=$(head -c 300 "$RUNNER_TEMP/head.err" 2>/dev/null | tr '\n' ' ')
+              if [ "$MERGE_SENT" -eq 1 ]; then
+                # An earlier attempt of this run sent a merge call whose
+                # answer may be lost. Naming the checked commit is safe
+                # (GitHub merges only when the head is that commit), and the
+                # call then answers "already merged", which is checked below.
+                echo "::warning::Could not read the head of PR #${PR_NUM} (${READ_ERR}); asking again with the checked commit ${VALIDATED_SHA}"
+                TARGET="$VALIDATED_SHA"
+              else
+                # Nothing is merged on a pull request this attempt could not
+                # check again.
+                TARGET=""
+                MERR="could not read the head of PR #${PR_NUM}: ${READ_ERR}"
+              fi
             fi
-            if gh pr merge "$PR_NUM" \
-              --repo "$REPOSITORY" \
-              --squash \
-              --admin \
-              --delete-branch \
-              --match-head-commit "$TARGET" 2> /tmp/merge.err; then
-              echo "::notice::Merge successful on attempt $attempt (head ${TARGET})"
-              exit 0
-            fi
-
-            # Second line of defence for the same lost-response case: if the
-            # state probe above is ALSO failing (same brown-out), the merge can
-            # already be done while every retry here reports "already merged"
-            # until the loop exits 1 and the post-merge bookkeeping is skipped.
-            # gh saying the PR is already merged IS the success signal.
-            MERR=$(head -c 500 /tmp/merge.err | tr '\n' ' ')
-            if grep -qiE 'already merged|pull request is (already )?(merged|closed)' /tmp/merge.err; then
-              echo "::notice::PR #${PR_NUM} reported as already merged — continuing to post-merge steps"
-              exit 0
+            if [ -n "$TARGET" ]; then
+              MERGE_SENT=1
+              MERGE_RC=0
+              gh pr merge "$PR_NUM" \
+                --repo "$REPOSITORY" \
+                --squash \
+                --admin \
+                --delete-branch \
+                --match-head-commit "$TARGET" 2> /tmp/merge.err || MERGE_RC=$?
+              MERR=$(head -c 500 /tmp/merge.err | tr '\n' ' ')
+              # "Already merged" (with exit 0 or 1, by gh version) is no
+              # success by itself: whoever merged it, the merged head is
+              # checked first, and one that cannot be read yet is retried.
+              if grep -qiE 'already merged|pull request is (already )?merged' /tmp/merge.err; then
+                CONFIRM_RC=0
+                merge_target > /dev/null || CONFIRM_RC=$?
+                case "$CONFIRM_RC" in
+                  3|4) merged_end "$CONFIRM_RC" ;;
+                esac
+                MERR="reported as already merged, but its merged head could not be read yet"
+              elif [ "$MERGE_RC" -eq 0 ]; then
+                echo "::notice::Merge successful on attempt $attempt (head ${TARGET})"
+                exit 0
+              fi
             fi
 
             if [ $attempt -lt $MAX_ATTEMPTS ]; then

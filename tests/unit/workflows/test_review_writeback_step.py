@@ -30,6 +30,33 @@ STEP = "Write back the re-score (regen keep)"
 SPEC, LIB, KEPT = "count-basic", "ggplot2", "11955"
 META, IMPL = "plots/count-basic/metadata/r/ggplot2.yaml", "plots/count-basic/implementations/r/ggplot2.R"
 BRANCH = f"review-writeback/{SPEC}/{LIB}/{KEPT}"
+
+
+# Write-back PRs the pipeline does not own: the same branch shape and label,
+# but another repository, author or base, no label, or not open.
+NOT_THE_PIPELINES = [
+    pytest.param({"isCrossRepository": True}, id="other-repository"),
+    pytest.param({"isCrossRepository": None}, id="null-cross-repository"),
+    pytest.param({"author": {"login": "someone"}}, id="other-author"),
+    pytest.param({"baseRefName": "release"}, id="other-base"),
+    pytest.param({"labels": []}, id="no-label"),
+]
+
+
+def writeback_pr(number: int, branch: str = BRANCH, **change: Any) -> dict[str, Any]:
+    """An open write-back PR the bot opened, as `gh pr list --json` lists it, with `change` applied."""
+    return {
+        "number": number,
+        "state": "OPEN",
+        "headRefName": branch,
+        "labels": [{"name": "review-writeback"}],
+        "author": {"login": "app/github-actions", "is_bot": True},
+        "isCrossRepository": False,
+        "baseRefName": "main",
+        **change,
+    }
+
+
 PREV_CHECKLIST = {**CRITERIA, "VQ-02": 4, "DE-01": 5, "LM-02": 3}
 CATEGORY_KEYS = {
     "VQ": "visual_quality",
@@ -83,8 +110,8 @@ printf '%s\\n' "$*" >> "$FAKE_GH_LOG"
 case "$1 $2" in
   "pr list")
     case "$*" in
-      *--head*) printf '%s' "${FAKE_GH_EXISTING:-}" ;;
-      *) printf '%s' "${FAKE_GH_OPEN:-}" ;;
+      *--head*) printf '%s' "${FAKE_GH_EXISTING:-[]}" ;;
+      *) printf '%s' "${FAKE_GH_OPEN:-[]}" ;;
     esac
     exit "${FAKE_GH_LIST_RC:-0}" ;;
   "pr create")
@@ -386,9 +413,17 @@ class TestWritebackStep:
         assert not any(c.startswith("workflow run") for c in setup.gh_calls())
 
     def test_a_create_that_lost_its_response_is_found(self, setup):
-        assert setup.run(FAKE_GH_CREATE_RC="1", FAKE_GH_EXISTING="12002").returncode == 0
+        existing = json.dumps([writeback_pr(12002)])
+        assert setup.run(FAKE_GH_CREATE_RC="1", FAKE_GH_EXISTING=existing).returncode == 0
         assert setup.status() == "opened"
         assert "workflow run impl-merge.yml --ref main -f pr_number=12002" in setup.gh_calls()
+
+    @pytest.mark.parametrize("change", NOT_THE_PIPELINES)
+    def test_a_lost_create_never_takes_a_pull_request_that_is_not_the_pipelines(self, setup, change):
+        existing = json.dumps([writeback_pr(12002, **change)])
+        assert setup.run(FAKE_GH_CREATE_RC="1", FAKE_GH_EXISTING=existing).returncode == 0
+        assert setup.status() == "failed"
+        assert not any("pr_number=12002" in c or c.startswith("pr close 12002") for c in setup.gh_calls())
 
     def test_a_leftover_branch_is_deleted_before_the_push(self, setup):
         """A rescue re-run of the same kept PR reuses the branch name; a push onto it would be refused."""
@@ -405,13 +440,30 @@ class TestWritebackStep:
         )
 
     def test_an_open_write_back_of_the_pair_is_superseded(self, setup):
-        result = setup.run(FAKE_GH_OPEN="11990\n")
+        stale = writeback_pr(11990, f"review-writeback/{SPEC}/{LIB}/11900")
+        other_pair = writeback_pr(11991, f"review-writeback/{SPEC}/altair/11901")
+        result = setup.run(FAKE_GH_OPEN=json.dumps([stale, other_pair]))
         assert result.returncode == 0, result.stderr
         assert setup.status() == "opened"
-        close = [c for c in setup.gh_calls() if c.startswith("pr close 11990")]
-        assert len(close) == 1 and "--delete-branch" in close[0]
+        close = [c for c in setup.gh_calls() if c.startswith("pr close")]
+        assert len(close) == 1 and close[0].startswith("pr close 11990") and "--delete-branch" in close[0]
         listing = next(c for c in setup.gh_calls() if c.startswith("pr list --state open --label review-writeback"))
-        assert f'startswith("review-writeback/{SPEC}/{LIB}/")' in listing
+        for field in ("state", "labels", "author", "isCrossRepository", "baseRefName"):
+            assert field in listing, field
+
+    @pytest.mark.parametrize("change", NOT_THE_PIPELINES)
+    def test_a_write_back_branch_the_pipeline_does_not_own_is_left_alone(self, setup, change):
+        """Neither closed nor its branch deleted: only the pipeline's own write-backs are superseded."""
+        foreign = writeback_pr(11990, f"review-writeback/{SPEC}/{LIB}/11900", **change)
+        result = setup.run(FAKE_GH_OPEN=json.dumps([foreign]))
+        assert result.returncode == 0, result.stderr
+        assert setup.status() == "opened"
+        assert not any(c.startswith("pr close") for c in setup.gh_calls())
+
+    def test_a_listing_that_is_not_json_is_failed(self, setup):
+        assert setup.run(FAKE_GH_OPEN="11990\n").returncode == 0
+        assert setup.status() == "failed"
+        assert not any(c.startswith("pr close") for c in setup.gh_calls())
 
     def test_a_failed_listing_is_failed(self, setup):
         assert setup.run(FAKE_GH_LIST_RC="1").returncode == 0

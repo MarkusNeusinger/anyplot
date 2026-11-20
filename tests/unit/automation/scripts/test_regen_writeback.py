@@ -9,6 +9,7 @@ record) and `check-fresh` (main still holds the files the re-score judged).
 
 from __future__ import annotations
 
+import io
 import json
 import os
 import subprocess
@@ -934,6 +935,59 @@ class TestCheckFresh:
         code, out, fetches = self._cli(monkeypatch, capsys, tmp_path, "release/v1")
         assert (code, fetches) == (2, [])
         assert "its base 'release/v1' is not main" in out
+
+
+def _open_writeback(number: int, branch: str, **change: Any) -> dict[str, Any]:
+    return {
+        "number": number,
+        "state": "OPEN",
+        "headRefName": branch,
+        "labels": [{"name": "review-writeback"}],
+        "author": {"login": "app/github-actions"},
+        "isCrossRepository": False,
+        "baseRefName": "main",
+        **change,
+    }
+
+
+class TestOwnOpen:
+    """The cleanup in impl-review closes only what `check-pr` would accept as the bot's write-back."""
+
+    PAIR = "review-writeback/scatter-basic/altair"
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            {"isCrossRepository": True},
+            {"isCrossRepository": None},
+            {"author": {"login": "someone"}},
+            {"baseRefName": "release"},
+            {"labels": []},
+            {"state": "CLOSED"},
+            {"headRefName": "review-writeback/scatter-basic/altair/x1"},
+            {"number": True},
+        ],
+    )
+    def test_anything_but_the_bots_open_write_back_against_main_is_left_out(self, change):
+        pulls = [{**_open_writeback(5, f"{self.PAIR}/1"), **change}]
+        assert wb.own_open_writebacks(pulls, spec="scatter-basic", library="altair") == []
+
+    def test_the_pair_or_the_exact_branch_narrows_it(self):
+        pulls = [
+            _open_writeback(5, f"{self.PAIR}/1"),
+            _open_writeback(6, "review-writeback/scatter-basic/plotly/2"),
+            _open_writeback(7, f"{self.PAIR}/3"),
+            "junk",
+        ]
+        assert wb.own_open_writebacks(pulls, spec="scatter-basic", library="altair") == [5, 7]
+        assert wb.own_open_writebacks(pulls, branch=f"{self.PAIR}/3") == [7]
+
+    def test_the_cli_prints_one_number_per_line_and_refuses_what_is_no_listing(self, capsys, monkeypatch):
+        monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps([_open_writeback(5, f"{self.PAIR}/1")])))
+        assert wb.main(["own-open", "--spec", "scatter-basic", "--library", "altair"]) == 0
+        assert capsys.readouterr().out == "5\n"
+        monkeypatch.setattr("sys.stdin", io.StringIO("11990\n"))
+        assert wb.main(["own-open", "--branch", f"{self.PAIR}/1"]) == 2
 
 
 class TestLibraries:

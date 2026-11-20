@@ -2974,15 +2974,18 @@ jobs:
           fi
 
           # 4. A newer re-score supersedes an open write-back of this pair, and a
-          # rescue re-run of this kept PR reuses the branch name. Only this
-          # repository's pull requests: a branch of that name elsewhere is none
-          # of the pipeline's to close.
+          # rescue re-run of this kept PR reuses the branch name. Only the
+          # pipeline's own write-backs are closed: the identity `check-pr`
+          # asks of the PR it merges (this repository, the bot's authorship,
+          # base main, the label, the branch shape), via `own-open`.
+          WB_FIELDS="number,state,headRefName,labels,author,isCrossRepository,baseRefName"
           OPEN=""
           LISTED=0
           for attempt in 1 2 3; do
-            if OPEN=$(gh pr list --state open --label review-writeback --limit 100 --json number,headRefName,isCrossRepository \
-                        --jq ".[] | select(.isCrossRepository == false) | select(.headRefName | startswith(\"review-writeback/${SPEC_ID}/${LIBRARY}/\")) | .number" \
-                        2> /tmp/anyplot-writeback-gh.err); then
+            if LISTED_JSON=$(gh pr list --state open --label review-writeback --limit 100 --json "$WB_FIELDS" \
+                        2> /tmp/anyplot-writeback-gh.err) \
+               && OPEN=$(python3 "$TOOL" own-open --spec "$SPEC_ID" --library "$LIBRARY" <<< "$LISTED_JSON" \
+                        2>> /tmp/anyplot-writeback-gh.err); then
               LISTED=1
               break
             fi
@@ -3052,10 +3055,12 @@ jobs:
               WB_PR=$(grep -oE '[0-9]+$' /tmp/anyplot-writeback-pr.txt | tail -1 || true)
               [ -n "$WB_PR" ] && break
             fi
-            # A create that succeeded but lost its response: this repository's
-            # pull request from the branch (`--head` matches the name anywhere).
-            WB_PR=$(gh pr list --state open --head "$WB_BRANCH" --json number,isCrossRepository \
-              --jq '[.[] | select(.isCrossRepository == false)][0].number // empty' 2>/dev/null || true)
+            # A create that succeeded but lost its response: the pipeline's own
+            # write-back from the branch (`--head` matches the name anywhere).
+            WB_PR=""
+            if LISTED_JSON=$(gh pr list --state open --head "$WB_BRANCH" --json "$WB_FIELDS" 2>/dev/null); then
+              WB_PR=$(python3 "$TOOL" own-open --branch "$WB_BRANCH" <<< "$LISTED_JSON" 2>/dev/null | head -n 1) || WB_PR=""
+            fi
             [ -n "$WB_PR" ] && break
             echo "::warning::gh pr create failed (attempt ${attempt}/3): $(head -c 300 /tmp/anyplot-writeback-gh.err | tr '\n' ' ')"
             [ "$attempt" -lt 3 ] && sleep $((attempt * 5))

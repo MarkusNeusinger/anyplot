@@ -426,6 +426,40 @@ def base_problem(data: Mapping[str, Any]) -> str:
     return ""
 
 
+def own_open_writebacks(
+    pulls: Any, *, spec: str | None = None, library: str | None = None, branch: str | None = None
+) -> list[int]:
+    """The numbers of the open write-back PRs the bot opened against main, in a `gh pr list --json` array.
+
+    The same identity `check-pr` asks of the PR it merges (`writeback_pr_identity`,
+    `base_problem`), narrowed to one pair (`spec`, `library`) or one exact `branch`.
+    """
+    if not isinstance(pulls, list):
+        raise WritebackError("the pull request listing is not a JSON array")
+    numbers: list[int] = []
+    for pull in pulls:
+        if not isinstance(pull, Mapping) or writeback_pr_identity(pull) or base_problem(pull):
+            continue
+        head = str(pull.get("headRefName"))
+        match = BRANCH_RE.match(head)
+        if match is None or (spec is not None and (match["spec"], match["library"]) != (spec, library)):
+            continue
+        if branch is not None and head != branch:
+            continue
+        number = pull.get("number")
+        if isinstance(number, int) and not isinstance(number, bool) and number > 0:
+            numbers.append(number)
+    return numbers
+
+
+def cmd_own_open(args: argparse.Namespace) -> int:
+    for number in own_open_writebacks(
+        json.loads(sys.stdin.read()), spec=args.spec, library=args.library, branch=args.branch
+    ):
+        print(number)
+    return 0
+
+
 def _json_lines(text: str) -> list[Any]:
     return [json.loads(line) for line in text.splitlines() if line.strip()]
 
@@ -794,6 +828,12 @@ def build_parser() -> argparse.ArgumentParser:
     cfr.add_argument("--head", default="", help="the head sha check-pr and verify-diff saw")
     cfr.add_argument("--repo", default=".")
     cfr.set_defaults(func=cmd_check_fresh)
+
+    own = sub.add_parser("own-open", help="Numbers of the bot's open write-back PRs in a gh pr list array on stdin")
+    own.add_argument("--spec", default=None, help="only this pair's (with --library)")
+    own.add_argument("--library", default=None)
+    own.add_argument("--branch", default=None, help="only this exact head branch")
+    own.set_defaults(func=cmd_own_open)
     return parser
 
 

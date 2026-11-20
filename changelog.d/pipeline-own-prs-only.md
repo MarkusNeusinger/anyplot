@@ -10,8 +10,10 @@
   any other pull request in their listings. A refused pull request gets no
   label, comment or dispatch, only a fixed reason code in the run log, and
   anything the checker cannot read is refused. impl-merge merges only the head
-  commit it checked or GitHub's own merges of `main` into it; repair takes its
-  review feedback from the reviewer's own comment only, and the automatic
+  commit it checked or GitHub's own merges of `main` into it, and treats a pull
+  request found merged as merged only at such a head; the review's write-back
+  cleanup closes only the pipeline's own write-back pull requests; repair takes
+  its review feedback from the reviewer's own comment only, and the automatic
   retries count only the workflows' own comments. (#13280)
 - **Workflow inputs reach no run script as text.** In the pipeline's workflows,
   dispatch inputs and event values go through `env:` and are checked for their

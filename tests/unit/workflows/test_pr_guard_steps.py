@@ -897,12 +897,14 @@ class TestImplMergeHead:
 
 
 # A `gh` that keeps the pull request's state in $MERGE_STATE and its head on
-# the origin's branch. `pr update-branch` merges main into the branch the way
-# GitHub does (parents: the head, then main) once main moved; the first
-# `pr merge` merges, deletes the branch and loses its answer (a 502). After
-# that, MERGED_VIEWS=fail makes every `pr view` fail, MERGED_VIEWS=state only
-# the state probe; a second `pr merge` answers "already merged" with exit
-# $ALREADY_MERGED_RC.
+# the origin's branch, mirrored to refs/pull/7/head as GitHub keeps it.
+# `pr update-branch` merges main into the branch the way GitHub does (parents:
+# the head, then main) once main moved; the first `pr merge` merges, deletes
+# the branch and loses its answer (a 502). After a merge, MERGED_VIEWS=fail
+# makes every `pr view` fail and MERGED_VIEWS=state only the state probe;
+# `view_failures` in the state fails that many `pr view` calls of any kind,
+# and FULL_VIEW_FAILS=1 every read of the whole pull request. A second
+# `pr merge` answers "already merged" with exit $ALREADY_MERGED_RC.
 FAKE_GH_MERGE = """#!/usr/bin/env python3
 import json, os, subprocess, sys
 args = sys.argv[1:]
@@ -931,7 +933,13 @@ key = " ".join(args[:2])
 fields = args[args.index("--json") + 1] if "--json" in args else ""
 views = os.environ.get("MERGED_VIEWS", "")
 if key == "pr view":
+    if st.get("view_failures", 0) > 0:
+        st["view_failures"] -= 1
+        save()
+        bad_gateway()
     if st["merged"] and (views == "fail" or (views == "state" and fields == "state")):
+        bad_gateway()
+    if fields != "state" and os.environ.get("FULL_VIEW_FAILS") == "1":
         bad_gateway()
     state = "MERGED" if st["merged"] else "OPEN"
     if fields == "state":
@@ -948,6 +956,7 @@ elif key == "pr update-branch":
         git("checkout", "-q", "-B", "update", "origin/" + branch, cwd=work)
         git("merge", "-q", "--no-ff", "-m", "Merge branch 'main'", "origin/main", cwd=work)
         git("push", "-q", "origin", "update:refs/heads/" + branch, cwd=work)
+        git("update-ref", "refs/pull/7/head", head())
         st["updated"] = True
         save()
 elif key == "pr merge":
@@ -959,10 +968,167 @@ elif key == "pr merge":
         print("GraphQL: Head branch was modified. Review and try the merge again.", file=sys.stderr)
         sys.exit(1)
     st.update(merged=True, last_head=head(), merges=st.get("merges", 0) + 1)
+    st["view_failures"] = int(os.environ.get("VIEW_FAILS_AFTER_MERGE", "0"))
     save()
+    git("update-ref", "refs/pull/7/head", head())
     git("update-ref", "-d", "refs/heads/" + branch)
     bad_gateway()
 """
+
+
+def _merge_run(
+    origin: MergeOrigin,
+    *,
+    shell=PIPEFAIL,
+    update: bool = False,
+    views: str = "",
+    already_rc: str = "1",
+    merged_at: str | None = None,
+    pull_ref: bool = True,
+    validated: str | None = None,
+    view_failures: int = 0,
+    view_fails_after_merge: int = 0,
+    full_view_fails: bool = False,
+) -> tuple[Run, dict]:
+    """Run the merge step against a stateful `gh` (FAKE_GH_MERGE).
+
+    `merged_at`: the pull request is already merged at that head when the run
+    starts (by a person or an earlier run), its branch gone, and refs/pull/7/head
+    there unless `pull_ref` is false. `validated`: the commit this run's guard
+    checked (the branch's head by default).
+    """
+    tmp = origin.tmp
+    if update:
+        origin.move_main("y")
+    state = {"merged": False, "last_head": "", "view_failures": view_failures}
+    if merged_at is not None:
+        state.update(merged=True, last_head=merged_at)
+        if pull_ref:
+            _git(origin.origin, origin.env, "update-ref", "refs/pull/7/head", merged_at)
+        _git(origin.origin, origin.env, "update-ref", "-d", f"refs/heads/{BRANCH}")
+    state_file = tmp / "merge-state.json"
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+    update_clone = tmp / "update-clone"
+    subprocess.run([REAL_GIT, "clone", "-q", str(origin.origin), str(update_clone)], env=origin.env, check=True)
+    script = _step("impl-merge.yml", "Merge PR to main (with retry)", "merge")["run"].replace("/tmp/", f"{tmp}/")
+    run = _run(
+        script,
+        tmp,
+        cwd=origin.ws,
+        shell=shell,
+        PR_NUM="7",
+        REPOSITORY=REPO,
+        HAS_ADMIN_TOKEN="true",
+        BRANCH=BRANCH,
+        VALIDATED_SHA=validated or origin.validated,
+        SPEC_ID="spec-a",
+        LIBRARY="plotly",
+        GH_PR_JSON=json.dumps(own_pr(7, BRANCH)),
+        MERGE_STATE=str(state_file),
+        MERGE_ORIGIN=str(origin.origin),
+        MERGE_BRANCH=BRANCH,
+        MERGE_WORK=str(update_clone),
+        MERGED_VIEWS=views,
+        UPDATE_MOVES_MAIN="1" if update else "0",
+        ALREADY_MERGED_RC=already_rc,
+        FULL_VIEW_FAILS="1" if full_view_fails else "0",
+        VIEW_FAILS_AFTER_MERGE=str(view_fails_after_merge),
+        GIT_CONFIG_GLOBAL=origin.env["GIT_CONFIG_GLOBAL"],
+        GIT_AUTHOR_NAME="t",
+        GIT_AUTHOR_EMAIL="t@example.invalid",
+        GIT_COMMITTER_NAME="t",
+        GIT_COMMITTER_EMAIL="t@example.invalid",
+        fake_gh=FAKE_GH_MERGE,
+    )
+    return run, json.loads(state_file.read_text(encoding="utf-8"))
+
+
+def _merge_calls(run: Run) -> list[list[str]]:
+    return [c for c in run.gh if c[:2] == ["pr", "merge"]]
+
+
+MERGED_NOTICE = "is merged at the checked commit or GitHub's merges of main into it"
+
+
+class TestImplMergeFoundMerged:
+    """A pull request that is merged when the step looks: post-merge steps only for a head this run checked."""
+
+    @pytest.fixture
+    def origin(self, tmp_path: Path) -> MergeOrigin:
+        return MergeOrigin(tmp_path)
+
+    @SHELLS
+    def test_merged_at_the_checked_head(self, origin, shell):
+        run, _ = _merge_run(origin, shell=shell, merged_at=origin.validated)
+        assert run.rc == 0, run.log
+        assert MERGED_NOTICE in run.log and _merge_calls(run) == []
+        assert not [c for c in run.gh if c[:2] == ["pr", "update-branch"]]
+
+    def test_merged_at_githubs_merges_of_main_on_top(self, origin):
+        heads = []
+        for name in ("y", "w"):
+            origin.move_main(name)
+            _git(origin.work, origin.env, "merge", "-q", "--no-ff", "--no-edit", "main")
+            heads.append(_git(origin.work, origin.env, "rev-parse", "HEAD"))
+        _git(origin.work, origin.env, "push", "-q", "-f", "origin", f"HEAD:refs/heads/{BRANCH}")
+        run, _ = _merge_run(origin, merged_at=heads[-1])
+        assert run.rc == 0, run.log
+        assert MERGED_NOTICE in run.log and _merge_calls(run) == []
+        assert any("refs/pull/7/head" in line for line in run.git)
+
+    @SHELLS
+    def test_merged_at_a_head_this_run_did_not_check_stops_before_the_post_merge_steps(self, origin, shell):
+        other = origin.commit(origin.work, {"plots/spec-a/implementations/python/plotly.py": "import os\n"}, "other")
+        _git(origin.work, origin.env, "push", "-q", "-f", "origin", f"HEAD:refs/heads/{BRANCH}")
+        run, _ = _merge_run(origin, shell=shell, merged_at=other)
+        assert run.rc == 1 and _merge_calls(run) == []
+        (error,) = run.errors()
+        assert error.startswith("::error::PR #7 is merged, but not at the checked commit")
+        assert "no post-merge step runs for it" in error
+
+    def test_a_merged_head_that_cannot_be_fetched_is_retried_and_never_taken(self, origin):
+        other = origin.commit(origin.work, {"plots/spec-a/implementations/python/plotly.py": "import os\n"}, "other")
+        _git(origin.work, origin.env, "push", "-q", "-f", "origin", f"HEAD:refs/heads/{BRANCH}")
+        run, _ = _merge_run(origin, merged_at=other, pull_ref=False)
+        assert run.rc == 1 and _merge_calls(run) == []
+        assert run.log.count("::notice::Merge attempt") == 5
+        assert run.errors() == ["::error::Merge failed after 5 attempts"]
+
+    def test_a_re_dispatch_after_an_earlier_run_merged_goes_on(self, origin):
+        """The re-dispatch that recovers failed post-merge steps: its guard checked the merged head itself."""
+        merged = origin.commit(origin.work, {"plots/spec-a/implementations/python/plotly.py": "import os\n"}, "fix")
+        _git(origin.work, origin.env, "push", "-q", "-f", "origin", f"HEAD:refs/heads/{BRANCH}")
+        run, _ = _merge_run(origin, merged_at=merged, validated=merged)
+        assert run.rc == 0, run.log
+        assert MERGED_NOTICE in run.log and _merge_calls(run) == []
+
+
+class TestImplMergeUnreadableHead:
+    @pytest.fixture
+    def origin(self, tmp_path: Path) -> MergeOrigin:
+        return MergeOrigin(tmp_path)
+
+    def test_an_unreadable_head_before_any_merge_call_sends_none(self, origin):
+        run, state = _merge_run(origin, full_view_fails=True)
+        assert run.rc == 1 and not state["merged"]
+        assert _merge_calls(run) == []
+        assert run.errors() == ["::error::Merge failed after 5 attempts"]
+
+    @SHELLS
+    @pytest.mark.parametrize("update", [False, True], ids=["head-unchanged", "head-an-update-merge"])
+    @pytest.mark.parametrize("already_rc", ["0", "1"], ids=["already-merged-exit-0", "already-merged-exit-1"])
+    def test_after_a_lost_answer_the_call_is_sent_again_and_already_merged_is_confirmed(
+        self, origin, shell, update, already_rc
+    ):
+        # Attempt 2: the three state probes and the head read fail. The merge call goes out
+        # again with the checked commit, answers "already merged", and the merged head is then
+        # read and checked before the post-merge steps.
+        run, state = _merge_run(origin, shell=shell, update=update, already_rc=already_rc, view_fails_after_merge=4)
+        assert run.rc == 0, run.log
+        assert state["merges"] == 1
+        first, second = _merge_calls(run)
+        assert second[second.index("--match-head-commit") + 1] == origin.validated
+        assert MERGED_NOTICE in run.log
 
 
 class TestImplMergeLostAnswer:
@@ -972,53 +1138,22 @@ class TestImplMergeLostAnswer:
     def origin(self, tmp_path: Path) -> MergeOrigin:
         return MergeOrigin(tmp_path)
 
-    def _run(self, origin: MergeOrigin, *, shell, update: bool, views: str, already_rc: str) -> tuple[Run, dict]:
-        tmp = origin.tmp
-        if update:
-            origin.move_main("y")
-        state = tmp / "merge-state.json"
-        state.write_text(json.dumps({"merged": False, "last_head": ""}), encoding="utf-8")
-        update_clone = tmp / "update-clone"
-        subprocess.run([REAL_GIT, "clone", "-q", str(origin.origin), str(update_clone)], env=origin.env, check=True)
-        script = _step("impl-merge.yml", "Merge PR to main (with retry)", "merge")["run"].replace("/tmp/", f"{tmp}/")
-        run = _run(
-            script,
-            tmp,
-            cwd=origin.ws,
-            shell=shell,
-            PR_NUM="7",
-            REPOSITORY=REPO,
-            HAS_ADMIN_TOKEN="true",
-            BRANCH=BRANCH,
-            VALIDATED_SHA=origin.validated,
-            SPEC_ID="spec-a",
-            LIBRARY="plotly",
-            GH_PR_JSON=json.dumps(own_pr(7, BRANCH)),
-            MERGE_STATE=str(state),
-            MERGE_ORIGIN=str(origin.origin),
-            MERGE_BRANCH=BRANCH,
-            MERGE_WORK=str(update_clone),
-            MERGED_VIEWS=views,
-            UPDATE_MOVES_MAIN="1" if update else "0",
-            ALREADY_MERGED_RC=already_rc,
-            GIT_CONFIG_GLOBAL=origin.env["GIT_CONFIG_GLOBAL"],
-            GIT_AUTHOR_NAME="t",
-            GIT_AUTHOR_EMAIL="t@example.invalid",
-            GIT_COMMITTER_NAME="t",
-            GIT_COMMITTER_EMAIL="t@example.invalid",
-            fake_gh=FAKE_GH_MERGE,
-        )
-        return run, json.loads(state.read_text(encoding="utf-8"))
-
     @SHELLS
     @pytest.mark.parametrize("update", [False, True], ids=["head-unchanged", "head-an-update-merge"])
-    @pytest.mark.parametrize("views", ["state", "fail"], ids=["state-probe-fails", "every-view-fails"])
     @pytest.mark.parametrize("already_rc", ["0", "1"], ids=["already-merged-exit-0", "already-merged-exit-1"])
-    def test_a_merged_pull_request_ends_as_merged(self, origin, shell, update, views, already_rc):
-        run, state = self._run(origin, shell=shell, update=update, views=views, already_rc=already_rc)
+    def test_a_merged_pull_request_whose_head_can_be_read_ends_as_merged(self, origin, shell, update, already_rc):
+        """Only the state probe fails: the next read of the whole pull request finds it merged at the head it named."""
+        run, state = _merge_run(origin, shell=shell, update=update, views="state", already_rc=already_rc)
         assert run.rc == 0, run.log
         assert state["merged"] and state["merges"] == 1
-        assert run.errors() == []
+        assert run.errors() == [] and MERGED_NOTICE in run.log
+
+    @pytest.mark.parametrize("update", [False, True], ids=["head-unchanged", "head-an-update-merge"])
+    def test_a_merge_that_can_never_be_confirmed_fails_the_step(self, origin, update):
+        """Every read fails after the merge: no post-merge step runs on a head nobody could check."""
+        run, state = _merge_run(origin, update=update, views="fail")
+        assert run.rc == 1 and state["merges"] == 1
+        assert run.errors() == ["::error::Merge failed after 5 attempts"]
 
 
 # --- impl-review-retry -------------------------------------------------------------------------
@@ -1354,6 +1489,8 @@ REPOSITORY_FILTERS = (
     "own_prs",
     "select(.isCrossRepository == false)",
     "jq -r '.isCrossRepository'",
+    # The write-back contract's own identity (regen_writeback.own_open_writebacks).
+    '"$TOOL" own-open',
 )
 # Listings that only hold work back and never pick a pull request to act on:
 # they count every pull request, a fork's included (a fork's open edit is one
@@ -1451,8 +1588,12 @@ class TestEveryPullRequestReader:
                 for listing in listings:
                     assert "--json number --jq 'length'" in listing, (filename, listing)
                 continue
+            # A field list kept in a variable of the step counts as written out.
+            variables = dict(re.findall(r'\b([A-Z_]+_FIELDS)="([^"]+)"', step["run"]))
             for listing in listings:
-                assert "isCrossRepository" in listing or "GUARD_FIELDS" in listing, (filename, job, listing)
+                for name, value in variables.items():
+                    listing = listing.replace(f"${{{name}}}", value).replace(f"${name}", value)
+                assert "isCrossRepository" in listing, (filename, job, listing)
             assert any(f in step["run"] for f in REPOSITORY_FILTERS), (filename, job, step.get("name"))
 
     def test_the_hold_back_listings_still_exist(self):
