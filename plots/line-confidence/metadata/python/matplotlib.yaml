@@ -2,44 +2,43 @@ library: matplotlib
 language: python
 specification_id: line-confidence
 created: '2025-12-26T16:13:23Z'
-updated: '2026-05-09T12:42:26Z'
-generated_by: claude-haiku
-workflow_run: 25601147815
+updated: '2026-11-20T02:18:01Z'
+generated_by: claude-sonnet
+workflow_run: 44659124388
 issue: 2007
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 82
 review:
   strengths:
-  - Perfect visual quality with excellent text readability in both light and dark
-    themes
-  - Clear visual hierarchy with intentional color design (green trend line, blue confidence
-    band)
-  - Effective use of annotation to highlight peak uncertainty - demonstrates data
-    storytelling
-  - Proper theme-adaptive styling throughout with no legibility failures in either
-    render
-  - Clean, well-structured code with proper reproducibility (seed set) and idiomatic
-    matplotlib usage
-  weaknesses: []
+  - 'Band drawn with fill_between in a 25 % alpha tone of the #009E73 line, so it
+    reads as the line''s own interval and the y-grid shows through it in both themes'
+  - Central line at linewidth 2.5 and zorder 3 stays the strongest mark, on top of
+    the band
+  - Legend names both elements and what the band is ('95% confidence interval', 'Forecast
+    mean'), with the interval level taken from a constant
+  - Theme tokens threaded through title, labels, ticks, spines, grid and legend frame;
+    both renders theme-correct
+  - Exact 3200x1800 canvas via figsize 8x4.5 at dpi 400 and subplots_adjust, no bbox_inches='tight'
+  weaknesses:
+  - 'Suggestion: a light outline of the band edges (or a slightly lower alpha in the
+    dark theme) could separate the band from the page a little more on #1A1A17.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1), consistent with style guide
-      Chrome: Title "Temperature Forecast with 95% Confidence Interval", axis labels "Days Ahead" and "Temperature (°C)", tick labels all clearly visible in dark text (#1A1A17). Y-axis grid subtle but visible. Legend in upper left with proper styling.
-      Data: Central trend line in brand green (#009E73) with marker points clearly visible. Confidence band in sky blue (#56B4E9) with 25% alpha fill, showing widening uncertainty over time. Band boundaries are clean and well-defined.
-      Annotation: "Peak Uncertainty" label with arrow pointing to the widest portion of the confidence interval around day 27-28
-      Legibility verdict: PASS - All text is fully readable with excellent contrast against light background
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'Temperature Forecast · line-confidence · python · matplotlib · anyplot.ai' in dark ink, axis titles 'Days ahead' and 'Temperature (°C)', tick labels 5–30 and 14–30 in INK_SOFT; subtle horizontal grid visible through the band; top/right spines removed; legend upper left on an elevated off-white frame. All readable.
+      Data: solid #009E73 line (forecast mean) over a translucent light-green band in the same hue that widens from about ±1.7 °C at day 1 to ±6 °C at day 30. First series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17), properly implemented without pure black
-      Chrome: Title, axis labels, and tick labels all clearly visible in light text colors (INK=#F0EFE8 for primary, INK_SOFT=#B8B7B0 for secondary). Y-axis grid subtle but visible. Legend properly styled with dark theme.
-      Data: Central trend line in identical green (#009E73) as light render. Confidence band in same sky blue (#56B4E9), appearing more saturated due to dark background but color value is unchanged. Widening pattern clearly visible.
-      Annotation: "Peak Uncertainty" label and arrow properly visible with theme-adaptive colors
-      Legibility verdict: PASS - All text is fully readable with no dark-on-dark failures. Data colors are identical to light render
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light INK_SOFT, grid lines subtle but visible, legend frame #242420 with light text. No dark-on-dark text.
+      Data: identical #009E73 line and band hue as the light render; the band reads as a dark green tone, distinct from the page and the line.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,70 +49,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable at full size in both light and dark themes, proper
-          font sizes
+        comment: All sizes set explicitly (title 12 pt scaled to length, axis titles
+          10 pt, ticks and legend 8 pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements properly spaced, legend and annotation don't overlap
-          data
+        comment: No text collisions; the legend sits in the empty upper-left area
+          above the band
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Trend line, confidence band, and marker points all clearly visible
+        comment: 2.5 px-equivalent line is prominent over the band; legend swatch
+          and line sample match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors used, good contrast, CVD-safe
+        comment: Single hue with luminance contrast between line and translucent band;
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 format appropriate for time series, nothing cut off, generous
-          whitespace
+        comment: Canvas 3200x1800 (gate passed); balanced margins, plot fills most
+          of the canvas, title about 68 % of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (°C), clear title
+        comment: '''Days ahead'' and ''Temperature (°C)'' are descriptive, with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for primary line, sky blue #56B4E9 for band,
-          proper background colors for both themes'
+        comment: 'Line and band in #009E73 (Imprint position 1), identical in both
+          renders; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Intentional color design with annotation showing thoughtful data
-          communication
+        passed: false
+        comment: Style-guide baseline (Imprint, theme tokens, explicit sizes), nothing
+          decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Top/right spines removed, subtle grid, theme-adaptive legend styling
+        passed: false
+        comment: Spines and subtle y-grid per the style guide; no refinement beyond
+          the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Annotation guides viewer to peak uncertainty, clear visual hierarchy
+        passed: false
+        comment: Data displayed; the widening forecast band is the data's own story,
+          no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -123,25 +126,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with confidence interval
+        comment: Correct line plot with confidence band
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Central line, confidence band, legend all present
+        comment: C1 line on top (zorder 3), C2 band spans lower..upper, C3 alpha 0.25
+          with grid visible through it, C4 legend names line and 95% confidence interval,
+          C5 band in a lighter tone of the line color; grid present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct, all data visible, bounds properly applied
+        comment: x = days ahead, y = temperature; xlim from the data, all values visible;
+          band and line at their data values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title descriptive, legend labels clear
+        comment: Title 'Temperature Forecast · line-confidence · python · matplotlib
+          · anyplot.ai' is the mandated format with a descriptive prefix; legend entries
+          readable
     data_quality:
       score: 15
       max: 15
@@ -151,19 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows trend, uncertainty, and realistic widening over time
+        comment: Central line with short-term noise, a band that widens with the forecast
+          horizon
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature forecast with plausible values and interval growth
+        comment: 30-day temperature forecast — real, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30-day forecast range and 14-28°C temperature range appropriate
+        comment: 'Checked: 14–30 °C range plausible; band half-width 1.65 °C at day
+          1 to 6.0 °C at day 30 matches margin = 1.5 + 0.15·day (code line for margin);
+          no spec check values'
     code_quality:
       score: 10
       max: 10
@@ -173,55 +184,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: Flat imports → data → plot → save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set for deterministic output
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported, both used
+        comment: os, sys, matplotlib.pyplot, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Straightforward, no simulated UI
+        comment: Appropriate complexity, nothing written out that a call computes
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Proper Axes methods, theme-adaptive styling with environment variables
+        passed: false
+        comment: Axes methods and fill_between with a label; idiomatic but at the
+          level the library prompt mandates
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Effective use of fill_between, theme-adaptive legend, annotations
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-20T02:14:25Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
-  - theme-adaptive
-  - publication-ready
+  - alpha-blending
+  - grid-styling

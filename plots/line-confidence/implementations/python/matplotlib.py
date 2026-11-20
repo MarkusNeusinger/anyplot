@@ -1,79 +1,87 @@
 """ anyplot.ai
 line-confidence: Line Plot with Confidence Interval
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-09
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-20
 """
 
+import os
 import sys
 
 
 sys.path.pop(0)
 
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
-# Theme-adaptive colors
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - Simulated temperature forecast with 95% confidence interval
-np.random.seed(42)
-days = np.arange(1, 31)  # 30 days forecast
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Central forecast (mean temperature with slight trend)
-base_temp = 15 + 0.3 * days + 3 * np.sin(days / 5)
-y = base_temp + np.random.randn(30) * 0.5
+# Constants
+CONFIDENCE_LEVEL = 95  # percent covered by the band
 
-# Confidence interval widens over time (typical for forecasts)
-uncertainty = 1.5 + 0.15 * days
-y_lower = y - uncertainty
-y_upper = y + uncertainty
+# Columns: set these to your table's column names
+DAYS = "Days ahead"  # role: x
+TEMP = "Temperature (°C)"  # role: y
+LOWER = "Lower bound (°C)"  # role: y_lower
+UPPER = "Upper bound (°C)"  # role: y_upper
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Data: replace this block with your own table, for example df = pd.read_csv("forecast.csv")
+rng = np.random.default_rng(42)
+n_days = 30
+day = np.arange(1, n_days + 1)
+mean_temp = 15 + 0.3 * day + 3 * np.sin(day / 5) + rng.normal(0, 0.5, n_days)
+margin = 1.5 + 0.15 * day  # forecast uncertainty grows with the horizon
+df = pd.DataFrame({DAYS: day, TEMP: mean_temp, LOWER: mean_temp - margin, UPPER: mean_temp + margin})
+
+# Plot: reads only df and the constants above
+title = "Temperature Forecast · line-confidence · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Shaded confidence band (contrasting color with semi-transparent alpha)
-# Use sky blue (#2ABCCD) for the band to contrast with green line
-ax.fill_between(days, y_lower, y_upper, alpha=0.25, color="#2ABCCD", label="95% Confidence Interval")
+# Band in a light tone of the line's color, semi-transparent so the grid shows through
+ax.fill_between(
+    df[DAYS],
+    df[LOWER],
+    df[UPPER],
+    color=IMPRINT_PALETTE[0],
+    alpha=0.25,
+    linewidth=0,
+    label=f"{CONFIDENCE_LEVEL}% confidence interval",
+)
+ax.plot(df[DAYS], df[TEMP], color=IMPRINT_PALETTE[0], linewidth=2.5, label="Forecast mean", zorder=3)
 
-# Central trend line (prominent, brand green)
-ax.plot(days, y, color="#009E73", linewidth=3, label="Forecast Mean")
+# Style
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax.set_xlabel(DAYS, fontsize=10, color=INK)
+ax.set_ylabel(TEMP, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.set_xlim(df[DAYS].min(), df[DAYS].max())
 
-# Styling
-ax.set_xlabel("Days Ahead", fontsize=20, color=INK)
-ax.set_ylabel("Temperature (°C)", fontsize=20, color=INK)
-ax.set_title("Temperature Forecast with 95% Confidence Interval", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
-
-# Spine styling
 for spine in ["top", "right"]:
     ax.spines[spine].set_visible(False)
 for spine in ["left", "bottom"]:
     ax.spines[spine].set_color(INK_SOFT)
     ax.spines[spine].set_linewidth(0.8)
 
-# Grid (subtle, y-axis only)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.2, linewidth=0.8, color=INK)
+ax.set_axisbelow(True)
 
-# Legend with theme-adaptive styling
-leg = ax.legend(fontsize=16, loc="upper left", framealpha=0.95)
-if leg:
-    leg.get_frame().set_facecolor(ELEVATED_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    leg.get_frame().set_linewidth(0.8)
-    for text in leg.get_texts():
-        text.set_color(INK_SOFT)
+leg = ax.legend(fontsize=8, loc="upper left", framealpha=0.95)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_frame().set_linewidth(0.8)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Set axis limits for clean display
-ax.set_xlim(1, 30)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.97, top=0.92, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
