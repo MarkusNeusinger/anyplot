@@ -120,10 +120,7 @@ class DailyImplPoint(BaseModel):
 # The Plausible site's reporting time zone, read through the Sites API on 2026-11-20. Plausible's
 # `time:day` buckets and `date_range` dates are days of that zone, so the visitors tile takes its
 # today there. It must match the site's setting in Plausible.
-#
-# `tzdata` is a direct dependency (pyproject.toml) for this zone: `zoneinfo` reads the system's
-# time zone database first and falls back to that package, and the API's slim base image need not
-# ship a system database. Without either, the fetch answers no days (`_fetch_plausible_visitors`).
+# The base image ships the zone data: docker-library/python `3.14/slim-trixie/Dockerfile` installs `tzdata`.
 PLAUSIBLE_TIMEZONE = "Europe/Zurich"
 
 # The first full day of the `stayed_10s` event, in the site's time zone. The deploy that began

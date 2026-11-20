@@ -1090,11 +1090,10 @@ window without a number draws the floor and is named "not counted".
   reads the dates of `date_range` in the site's reporting time zone,
   Europe/Zurich (read through the Sites API on 2026-11-20), so the endpoint
   takes today there: `PLAUSIBLE_TIMEZONE` in `api/routers/insights.py`.
-  Change it together with the site's setting. The zone needs a time zone
-  database: `zoneinfo` reads the system's, and the API's slim base image
-  need not ship one, so the `tzdata` package is a direct dependency that
-  `zoneinfo` falls back to. Should the zone still not resolve, the endpoint
-  answers no days.
+  Change it together with the site's setting. The zone data comes from the
+  API's base image, which installs the system package `tzdata`
+  (docker-library/python `3.14/slim-trixie/Dockerfile`). Should the zone
+  not resolve, the endpoint answers no days.
 - **Engaged visitors**: the second query's count per day from
   `ENGAGED_SINCE` on, 0 for a day it has no row for, and never more than the
   day's unique visitors. While the query fails, the tile draws the unique

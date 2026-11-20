@@ -3072,17 +3072,6 @@ class TestInsightsRouter:
         [warning] = [record for record in caplog.records if "visitors fetch failed" in record.getMessage()]
         assert "ZoneInfoNotFoundError" in warning.getMessage()
 
-    def test_tzdata_is_a_runtime_dependency(self) -> None:
-        """The zone resolves on an image without a system time zone database only through the `tzdata` package."""
-        import tomllib
-        from pathlib import Path
-
-        pyproject = tomllib.loads((Path(__file__).resolve().parents[3] / "pyproject.toml").read_text(encoding="utf-8"))
-        names = [
-            re.split(r"[<>=!~\[ ;]", requirement, maxsplit=1)[0] for requirement in pyproject["project"]["dependencies"]
-        ]
-        assert "tzdata" in names
-
     def test_visitors_time_zone_is_the_plausible_sites(self) -> None:
         """The zone must match the Plausible site's reporting time zone, and resolve where the tests run."""
         from datetime import timedelta

@@ -276,7 +276,6 @@ dependencies = [
     { name = "scipy" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "statsmodels" },
-    { name = "tzdata" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -564,7 +563,6 @@ requires-dist = [
     { name = "tree-sitter", marker = "extra == 'agents'", specifier = "==0.26.1" },
     { name = "tree-sitter-language-pack", marker = "extra == 'agents'", specifier = "==1.25.0" },
     { name = "types-pyyaml", marker = "extra == 'typecheck'", specifier = ">=6.0.0" },
-    { name = "tzdata", specifier = ">=2025.2" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.51.0" },
     { name = "vl-convert-python", marker = "extra == 'lib-altair'", specifier = ">=1.7.0" },
     { name = "vl-convert-python", marker = "extra == 'plotting'", specifier = ">=1.7.0" },
