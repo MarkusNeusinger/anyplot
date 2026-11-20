@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-scatter: Polar Scatter Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-09
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem
 from bokeh.plotting import figure
@@ -23,180 +24,161 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (categorical)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Wind measurements with prevailing directions
+# Constants
+RINGS = 8  # target number of radial gridlines
+COMPASS = {0: "E", 45: "NE", 90: "N", 135: "NW", 180: "W", 225: "SW", 270: "S", 315: "SE"}
+
+# Columns: set these to your table's column names
+DIRECTION = "Wind direction (°)"  # role: theta
+SPEED = "Wind speed (m/s)"  # role: radius
+PERIOD = "Time of day"  # role: category
+
+# Data: replace this block with your own table, for example df = pd.read_csv("wind.csv")
 np.random.seed(42)
+morning_angles = np.random.normal(45, 30, 50) % 360
+morning_speeds = np.random.gamma(3, 3, 50) + 5
+afternoon_angles = np.random.normal(225, 35, 45) % 360
+afternoon_speeds = np.random.gamma(2.5, 4, 45) + 3
+evening_angles = np.random.uniform(0, 360, 25)
+evening_speeds = np.random.gamma(2, 2, 25) + 2
+df = pd.DataFrame(
+    {
+        DIRECTION: np.concatenate([morning_angles, afternoon_angles, evening_angles]),
+        SPEED: np.concatenate([morning_speeds, afternoon_speeds, evening_speeds]),
+        PERIOD: ["Morning"] * 50 + ["Afternoon"] * 45 + ["Evening"] * 25,
+    }
+)
 
-n_points = 120
+# Plot: reads only df and the constants above
+# Polar to Cartesian (bokeh has no native polar axes)
+theta = np.radians(df[DIRECTION])
+df["x"] = df[SPEED] * np.cos(theta)
+df["y"] = df[SPEED] * np.sin(theta)
 
-# Create realistic wind data with prevailing directions (NE and SW)
-# Morning winds (prevailing from NE ~45°)
-n_morning = 50
-morning_angles = np.random.normal(45, 30, n_morning) % 360
-morning_speeds = np.random.gamma(3, 3, n_morning) + 5
+raw_step = df[SPEED].max() / RINGS
+magnitude = 10 ** np.floor(np.log10(raw_step))
+step = next(m * magnitude for m in (1, 2, 5, 10) if m * magnitude >= raw_step)
+rim = np.ceil(df[SPEED].max() / step) * step
+label_r = rim * 1.1
+span = rim * 1.28
 
-# Afternoon winds (prevailing from SW ~225°)
-n_afternoon = 45
-afternoon_angles = np.random.normal(225, 35, n_afternoon) % 360
-afternoon_speeds = np.random.gamma(2.5, 4, n_afternoon) + 3
-
-# Evening winds (variable)
-n_evening = 25
-evening_angles = np.random.uniform(0, 360, n_evening)
-evening_speeds = np.random.gamma(2, 2, n_evening) + 2
-
-# Combine data
-angles_deg = np.concatenate([morning_angles, afternoon_angles, evening_angles])
-speeds = np.concatenate([morning_speeds, afternoon_speeds, evening_speeds])
-categories = ["Morning"] * n_morning + ["Afternoon"] * n_afternoon + ["Evening"] * n_evening
-
-# Convert to radians for polar coordinates
-angles_rad = np.radians(angles_deg)
-
-# Convert polar to Cartesian for Bokeh (Bokeh doesn't have native polar support)
-x = speeds * np.cos(angles_rad)
-y = speeds * np.sin(angles_rad)
-
-# Calculate max radius for gridlines
-max_speed = np.ceil(np.max(speeds) / 5) * 5
-
-# Create figure
+W = H = 2400
 p = figure(
-    width=3600,
-    height=3600,
-    title="polar-scatter · bokeh · anyplot.ai",
-    x_range=(-max_speed * 1.2, max_speed * 1.2),
-    y_range=(-max_speed * 1.35, max_speed * 1.2),
+    width=W,
+    height=H,
+    title="polar-scatter · python · bokeh · anyplot.ai",
+    x_range=(-span, span),
+    y_range=(-span, span),
+    match_aspect=True,
     tools="",
     toolbar_location=None,
+    min_border_left=40,
+    min_border_right=40,
+    min_border_bottom=40,
+    min_border_top=110,
 )
 
-# Draw polar grid - radial circles
-for r in np.arange(5, max_speed + 1, 5):
-    theta_circle = np.linspace(0, 2 * np.pi, 100)
-    circle_x = r * np.cos(theta_circle)
-    circle_y = r * np.sin(theta_circle)
-    p.line(circle_x, circle_y, line_color=INK_SOFT, line_width=2, line_alpha=0.15)
-    # Add radius labels at 45 degrees
-    label_x = r * np.cos(np.radians(45)) + 0.5
-    label_y = r * np.sin(np.radians(45)) + 0.5
-    p.text([label_x], [label_y], text=[f"{int(r)}"], text_font_size="20pt", text_color=INK_SOFT, text_alpha=0.8)
+# Radial gridlines (circles) with radius labels along the sparse SE spoke
+ring = np.linspace(0, 2 * np.pi, 200)
+for r in np.arange(step, rim + step / 2, step):
+    p.line(r * np.cos(ring), r * np.sin(ring), line_color=INK_SOFT, line_width=2, line_alpha=0.2)
+    p.text(
+        [r * np.cos(-np.pi / 4) + rim * 0.01],
+        [r * np.sin(-np.pi / 4) - rim * 0.01],
+        text=[f"{r:g}"],
+        text_font_size="24pt",
+        text_color=INK_SOFT,
+        text_baseline="top",
+    )
 
-# Draw angular gridlines (spokes) at 30° intervals
+# Angular spokes every 30°
 for angle in range(0, 360, 30):
     rad = np.radians(angle)
-    p.line(
-        [0, max_speed * 1.05 * np.cos(rad)],
-        [0, max_speed * 1.05 * np.sin(rad)],
-        line_color=INK_SOFT,
-        line_width=2,
-        line_alpha=0.15,
-    )
+    p.line([0, rim * np.cos(rad)], [0, rim * np.sin(rad)], line_color=INK_SOFT, line_width=2, line_alpha=0.2)
 
-# Add cardinal direction labels
-directions = {0: "E", 90: "N", 180: "W", 270: "S"}
-for angle, label in directions.items():
+# Compass labels
+for angle, name in COMPASS.items():
     rad = np.radians(angle)
-    label_r = max_speed * 1.1
+    cardinal = angle % 90 == 0
     p.text(
         [label_r * np.cos(rad)],
         [label_r * np.sin(rad)],
-        text=[label],
-        text_font_size="24pt",
-        text_font_style="bold",
-        text_color=INK,
+        text=[name],
+        text_font_size="32pt" if cardinal else "26pt",
+        text_font_style="bold" if cardinal else "normal",
+        text_color=INK if cardinal else INK_SOFT,
         text_align="center",
         text_baseline="middle",
     )
 
-# Add intermediate direction labels
-intermediate = {45: "NE", 135: "NW", 225: "SW", 315: "SE"}
-for angle, label in intermediate.items():
-    rad = np.radians(angle)
-    label_r = max_speed * 1.1
-    p.text(
-        [label_r * np.cos(rad)],
-        [label_r * np.sin(rad)],
-        text=[label],
-        text_font_size="20pt",
-        text_color=INK_SOFT,
-        text_align="center",
-        text_baseline="middle",
-    )
-
-# Add label for radius axis
+# Radius axis title
 p.text(
     [0],
-    [-max_speed * 1.25],
-    text=["Wind Speed (m/s)"],
-    text_font_size="22pt",
+    [-span * 0.97],
+    text=[SPEED],
+    text_font_size="28pt",
     text_color=INK_SOFT,
     text_align="center",
-    text_baseline="top",
+    text_baseline="bottom",
 )
 
-# Create scatter plot for each category with hover tooltips
+# One scatter renderer per time of day, in palette order
 legend_items = []
 renderers = []
-for i, cat in enumerate(["Morning", "Afternoon", "Evening"]):
-    mask = np.array(categories) == cat
-    source = ColumnDataSource(
-        data={
-            "x": x[mask],
-            "y": y[mask],
-            "angle": angles_deg[mask],
-            "speed": speeds[mask],
-            "category": [cat] * np.sum(mask),
-        }
+for i, period in enumerate(df[PERIOD].unique()):
+    source = ColumnDataSource(df[df[PERIOD] == period])
+    r = p.scatter(
+        "x", "y", source=source, size=30, color=IMPRINT_PALETTE[i], alpha=0.7, line_color=PAGE_BG, line_width=2
     )
-
-    # Add hover tool for this renderer
-    hover = HoverTool(tooltips=[("Direction", "@angle{0.0}°"), ("Speed", "@speed{0.0} m/s"), ("Category", "@category")])
-
-    r = p.scatter("x", "y", source=source, size=24, color=IMPRINT[i], alpha=0.75, line_color=PAGE_BG, line_width=2)
-    p.add_tools(hover)
     renderers.append(r)
-    legend_items.append(LegendItem(label=cat, renderers=[r]))
+    legend_items.append(LegendItem(label=str(period), renderers=[r]))
 
-# Add legend
+p.add_tools(
+    HoverTool(
+        renderers=renderers,
+        tooltips=[(DIRECTION, f"@{{{DIRECTION}}}{{0.0}}"), (SPEED, f"@{{{SPEED}}}{{0.0}}"), (PERIOD, f"@{{{PERIOD}}}")],
+    )
+)
+
 legend = Legend(
     items=legend_items,
-    location="top_right",
-    label_text_font_size="20pt",
-    spacing=15,
-    glyph_height=28,
-    glyph_width=28,
+    title=PERIOD,
+    location="top_left",
+    label_text_font_size="26pt",
+    label_text_color=INK_SOFT,
+    title_text_font_size="26pt",
+    title_text_color=INK,
+    spacing=12,
+    glyph_height=30,
+    glyph_width=30,
     background_fill_color=ELEVATED_BG,
     background_fill_alpha=0.9,
     border_line_color=INK_SOFT,
-    padding=15,
-    margin=15,
+    padding=18,
+    margin=30,
     border_line_width=2,
 )
-p.add_layout(legend, "right")
+p.add_layout(legend, "center")
 
-# Styling
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "44pt"
 p.title.text_color = INK
 p.title.align = "center"
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
-
-# Hide axes (using polar grid instead)
+p.outline_line_color = None
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 
-# Save as HTML
+# Save HTML and screenshot with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome
-W, H = 3600, 3600
 opts = Options()
 for arg in (
     "--headless=new",
@@ -210,6 +192,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
