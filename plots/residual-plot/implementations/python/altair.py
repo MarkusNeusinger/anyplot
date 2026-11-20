@@ -1,20 +1,15 @@
 """ anyplot.ai
 residual-plot: Residual Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-10
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-20
 """
 
 import os
-import sys
 
-
-# Remove script directory from path to avoid importing local altair.py
-script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
-
-import altair as alt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
+import altair as alt
+import numpy as np
+import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -24,84 +19,94 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO_1 = "#009E73"  # Brand green for main data
-OUTLIER_COLOR = "#AE3030"  # imprint red — outliers (>2σ)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Simulate a linear regression scenario with some non-linearity
-np.random.seed(42)
-n = 150
+# Constants
+OUTLIER_SIGMAS = 2  # residuals beyond this many standard deviations count as outliers
 
-# Generate realistic housing price prediction scenario
-x = np.linspace(1000, 3000, n)  # House size in sq ft
-noise = np.random.randn(n) * 15000
-y_true = 50000 + 150 * x + 0.02 * (x - 2000) ** 2 + noise  # True prices with slight curvature
-y_pred = 50000 + 155 * x  # Linear model predictions
+# Columns: set these to your table's column names
+Y_TRUE = "Observed price ($)"  # role: y_true
+Y_PRED = "Fitted price ($)"  # role: y_pred
+RESIDUAL = "Residual ($)"  # role: extra
+GROUP = "Point type"  # role: extra
 
-residuals = y_true - y_pred
-std_residual = np.std(residuals)
-
-# Identify outliers (beyond ±2 standard deviations)
-is_outlier = np.abs(residuals) > 2 * std_residual
-
-# Create DataFrame
+# Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
+rng = np.random.default_rng(42)
+house_size = np.linspace(1000, 3000, 150)  # square feet
 df = pd.DataFrame(
     {
-        "Fitted Values ($)": y_pred,
-        "Residuals ($)": residuals,
-        "Outlier": np.where(is_outlier, "Outlier (>2σ)", "Normal"),
+        Y_TRUE: 50000 + 150 * house_size + 0.02 * (house_size - 2000) ** 2 + rng.normal(0, 15000, house_size.size),
+        Y_PRED: 50000 + 155 * house_size,  # linear model, blind to the slight curvature
     }
 )
 
-# Base scatter plot with color encoding for outliers
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+df[RESIDUAL] = df[Y_TRUE] - df[Y_PRED]
+band = OUTLIER_SIGMAS * df[RESIDUAL].std(ddof=0)
+normal_label = "Normal"
+outlier_label = f"Outlier (>{OUTLIER_SIGMAS}σ)"
+df[GROUP] = np.where(df[RESIDUAL].abs() > band, outlier_label, normal_label)
+
+x_enc = alt.X(Y_PRED.translate(ESCAPE), type="quantitative", title=Y_PRED, scale=alt.Scale(nice=True, zero=False))
+y_enc = alt.Y(RESIDUAL.translate(ESCAPE), type="quantitative", title=RESIDUAL, scale=alt.Scale(nice=True))
+
 scatter = (
     alt.Chart(df)
-    .mark_point(size=120, opacity=0.7)
+    .mark_point(size=50, opacity=0.7, filled=True)
     .encode(
-        x=alt.X("Fitted Values ($):Q", title="Fitted Values ($)", scale=alt.Scale(nice=True)),
-        y=alt.Y("Residuals ($):Q", title="Residuals ($)", scale=alt.Scale(nice=True)),
+        x=x_enc,
+        y=y_enc,
         color=alt.Color(
-            "Outlier:N",
-            scale=alt.Scale(domain=["Normal", "Outlier (>2σ)"], range=[OKABE_ITO_1, OUTLIER_COLOR]),
-            legend=alt.Legend(title="Point Type", titleFontSize=18, labelFontSize=16),
+            GROUP.translate(ESCAPE),
+            type="nominal",
+            title=GROUP,
+            sort=None,
+            scale=alt.Scale(domain=[normal_label, outlier_label], range=[IMPRINT_PALETTE[0], IMPRINT_PALETTE[4]]),
         ),
-        tooltip=["Fitted Values ($):Q", "Residuals ($):Q", "Outlier:N"],
+        tooltip=[
+            alt.Tooltip(Y_PRED.translate(ESCAPE), title=Y_PRED, format=",.0f"),
+            alt.Tooltip(RESIDUAL.translate(ESCAPE), title=RESIDUAL, format=",.0f"),
+            alt.Tooltip(GROUP.translate(ESCAPE), title=GROUP),
+        ],
     )
 )
 
-# Zero reference line
+# Zero reference line and the horizontal bands at ±OUTLIER_SIGMAS standard deviations
 zero_line = (
-    alt.Chart(pd.DataFrame({"y": [0]})).mark_rule(color=INK_SOFT, strokeWidth=2, strokeDash=[8, 4]).encode(y="y:Q")
+    alt.Chart(pd.DataFrame({RESIDUAL: [0]}))
+    .mark_rule(color=INK_SOFT, strokeWidth=1.2, strokeDash=[6, 3])
+    .encode(y=alt.Y(RESIDUAL.translate(ESCAPE), type="quantitative"))
+)
+band_lines = (
+    alt.Chart(pd.DataFrame({RESIDUAL: [band, -band]}))
+    .mark_rule(color=INK_SOFT, strokeWidth=0.8, strokeDash=[3, 3], opacity=0.8)
+    .encode(y=alt.Y(RESIDUAL.translate(ESCAPE), type="quantitative"))
 )
 
-# ±2 standard deviation bands
-bands_df = pd.DataFrame({"y": [2 * std_residual, -2 * std_residual], "label": ["+2σ", "-2σ"]})
-
-band_lines = alt.Chart(bands_df).mark_rule(color=INK_SOFT, strokeWidth=1.5, strokeDash=[4, 4]).encode(y="y:Q")
-
-# Add LOWESS-like trend using polynomial regression
-loess_df = df.copy()
-loess_df = loess_df.sort_values("Fitted Values ($)")
-
+# LOWESS trend of the residuals along the fitted values
 loess_line = (
-    alt.Chart(loess_df)
-    .transform_loess("Fitted Values ($)", "Residuals ($)", bandwidth=0.3)
-    .mark_line(color=INK_SOFT, strokeWidth=3)
-    .encode(x="Fitted Values ($):Q", y="Residuals ($):Q")
+    alt.Chart(df)
+    .transform_loess(Y_PRED.translate(ESCAPE), RESIDUAL.translate(ESCAPE), bandwidth=0.3)
+    .mark_line(color=INK, strokeWidth=2)
+    .encode(
+        x=alt.X(Y_PRED.translate(ESCAPE), type="quantitative"), y=alt.Y(RESIDUAL.translate(ESCAPE), type="quantitative")
+    )
 )
 
-# Combine all layers
 chart = (
     alt.layer(zero_line, band_lines, scatter, loess_line)
     .properties(
-        width=1600,
-        height=900,
+        width=580,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title(text="residual-plot · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        title=alt.Title("residual-plot · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_axis(
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=10,
+        titleFontSize=12,
         gridOpacity=0.10,
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -109,12 +114,29 @@ chart = (
         labelColor=INK_SOFT,
         titleColor=INK,
     )
-    .configure_title(color=INK)
     .configure_legend(
-        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, orient="right", padding=10
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+        orient="right",
+        padding=8,
     )
 )
 
-# Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the canonical landscape canvas
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TW}x{TH}; shrink width/height")
+if (w, h) != (TW, TH):
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
