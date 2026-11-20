@@ -313,6 +313,28 @@ async def test_the_observed_turn_ends_with_a_line_per_moved_role_after_its_own_c
     assert all(name not in json.dumps(turn) for name in (TIME, STATION, TEMP, HUMID, DAYS))
 
 
+async def test_a_turn_that_fails_after_its_data_step_still_shows_and_counts_its_marks(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The root's model is gone after the data step and the re-binding: the turn ends with `error`, but its `done`
+    carries the changed table, whose bindings stay in force, so the mark lines go with the step's own, and the
+    `chat_turn` line books the codes with the failure. (An empty reply would not do here: a turn that stored a change
+    carries its answer, and EmptyReply never fails it.)"""
+    caplog.set_level(logging.INFO)
+    script = default_script()
+    script["root"] = [prepare_call(DAILY_MEAN, DAY_NUMBERS), REBIND, {"raise": RuntimeError("outage")}]
+    swap_models("gemini", script)  # its scripted model raises what the script names
+    sid = await readings_session(client, runtime)
+
+    events = await say(client, sid, {"text": "the daily mean of the temperature per station"})
+
+    assert [data["code"] for name, data in events if name == "error"] == ["internal"]
+    name, done = events[-1]
+    assert name == "done" and done["dataset"]["changes"][-2:] == OBSERVED_MARKS
+    (turn,) = chat_turns(caplog)
+    assert turn["turn_marks"] == ["axis_moved", "new_column_bound"] and turn["error"] == "internal"
+
+
 async def test_a_data_turn_that_leaves_the_roles_alone_has_no_mark(
     client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
 ) -> None:

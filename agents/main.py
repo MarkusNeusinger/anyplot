@@ -2578,8 +2578,9 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
         prep_ops=sorted({op for op in [*ledger.prep_ops, *ledger.view_ops] if op in telemetry.PREP_OPS}),
         prep_calls=ledger.tools.count("prepare_data"),
         capability_gap=telemetry.closed_set(ledger.capability_gaps, telemetry.CAPABILITY_GAPS),
-        # A cancelled or failed turn books its codes too, though no `done` showed the lines: the count is of what the
-        # turn did to the axes, and the versions and bindings it stored stay in force.
+        # A cancelled turn books its codes too, although no `done` reaches the page; a failed turn's `done` still
+        # carries the changed table with its change lines and the mark lines. The count is of what the turn did to
+        # the axes, and the versions and bindings it stored stay in force either way.
         turn_marks=[code for code in mark_codes(facts.marks) if code in telemetry.TURN_MARKS],
         refusal=codes.refusal,
         error=codes.error,
