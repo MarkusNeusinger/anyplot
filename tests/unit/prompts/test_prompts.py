@@ -996,13 +996,14 @@ class TestLeanCode:
         assert "(CQ-04 includes the lean-code rule below)" in content
 
     def test_regen_prompt_keeps_a_square_plot_square(self) -> None:
-        """Three matplotlib regenerations of 2026-11-21 replaced a trimmed square figure by the landscape pair and
-        shrank a Venn diagram and two equal-axes plots to the middle of the canvas."""
+        """Three matplotlib regenerations of 2026-11-21 kept the old landscape figure of an equal-aspect plot, whose
+        empty sides the old `bbox_inches="tight"` had cut away, and shrank it to the middle of the canvas."""
         content = (WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md").read_text()
         step = content[content.index("## Step 0: Canvas dimensions") : content.index("## Step 1:")]
-        assert "The orientation is not one of the historical values" in step
-        assert '(a square figure that `bbox_inches="tight"` trimmed to an odd size counts as square)' in step
-        assert "or its plot keeps a 1:1 aspect, the canonical pair is the square one" in step
+        assert "Choose the orientation from what the plot draws, not from the old figure" in step
+        assert 'a plot that keeps a 1:1 aspect (`set_aspect("equal")`, `axis("equal")`' in step
+        assert "takes the square pair" in step
+        assert 'let `bbox_inches="tight"` cut the empty sides away' in step
         assert "Venn diagrams, circle packing, polar charts, a plot drawn with equal axes" in step
         for library in ("matplotlib.md", "seaborn.md"):
             square = next(
