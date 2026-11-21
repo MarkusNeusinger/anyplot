@@ -2,183 +2,183 @@ library: altair
 language: python
 specification_id: bar-3d-categorical
 created: '2026-05-15T08:51:41Z'
-updated: '2026-05-15T09:07:56Z'
+updated: '2026-11-21T19:57:15Z'
 generated_by: claude-sonnet
-workflow_run: 25908295059
+workflow_run: 44943079249
 issue: 5248
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/altair/plot-dark.html
-quality_score: 81
+quality_score: 77
 review:
   strengths:
-  - 'Perfect code quality: clean, reproducible, correct output API'
-  - Full theme-adaptive chrome with correct design tokens in both renders
-  - Correct Okabe-Ito palette order (#009E73 first) across all series
-  - Both light and dark renders fully legible with no dark-on-dark failures
-  - Realistic neutral survey data with meaningful cross-dimensional variation
-  - Idiomatic Altair 5+ xOffset grouped-bar encoding
+  - 'Both themes fully legible: theme tokens threaded through title, axes, grid and
+    legend'
+  - 'Imprint palette in canonical order with #009E73 first; identical data colors
+    in both renders'
+  - Canvas exactly 3200x1800 via the pad-only step; balanced layout with the legend
+    outside the plot
+  - Descriptive axis titles with the score scale, 'Satisfaction score (0–100)'
+  - Native Vega-Lite tooltips with a formatted score in the HTML output
+  - Plausible, neutral survey scenario with a clear education gradient
   weaknesses:
-  - 'Code-image mismatch: rendered images show subtitle, dashed reference line, and
-    value labels not present in current code'
-  - 'Missing y-axis scale notation: title should be Satisfaction Score (0-100) not
-    just Satisfaction Score'
-  - Height 860 produces non-standard 4800x2580px output; prefer height=900 for standard
-    4800x2700 landscape
-  - 'DE-03 storytelling absent from code: no subtitle, no reference line, no value
-    labels in implementation'
-  - Spec requires true 3D bar chart but Altair cannot render 3D projections natively
-    (library ceiling)
+  - 'SC-01, SC-02 (both): a flat 2D grouped bar chart (age group on x, education as
+    xOffset) stands in for a 3D bar chart: there is no elevated oblique view, no base-plane
+    grid with the two categorical axes, and no bar depth or faces → draw one 3D bar
+    per (age group, education level) cell on a base-plane grid, projecting each bar''s
+    top, front and side faces at about 30° elevation and 45° azimuth (for example
+    polygons via mark_geoshape with an identity projection, or computed polygon coordinates),
+    with both categorical axes labelled on the base plane and a vertical value axis
+    from 0. Likely cause: the alt.X + alt.XOffset grouped-bar encoding.'
+  - 'Suggestion: on a 20-bar grid the Notes allow value labels on top of each bar;
+    small labels would make exact scores readable.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "bar-3d-categorical · altair · anyplot.ai" in dark ink (readable); subtitle visible; x-axis "Age Group" and y-axis "Satisfaction Score (0-100)" labels clearly readable; tick labels readable; legend top-right with elevated box
-      Data: 4 grouped bars per age group in Okabe-Ito order: #009E73 (High School), #D55E00 (Bachelor's), #0072B2 (Master's), #CC79A7 (Doctorate); dashed reference line at ~y=75; value labels on bars
-      Note: Subtitle, reference line, and value labels appear in images but are NOT in current code
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas
+      Chrome: title 'bar-3d-categorical · python · altair · anyplot.ai' top-left in dark ink; y-axis 'Satisfaction score (0–100)' with ticks 0-100 by 10; x-axis 'Age group' with ticks 18–24 … 55–64; subtle grid; legend 'Education level' at the right in an elevated box. All text readable
+      Data: flat 2D grouped bars, 5 age groups x 4 education levels: High School #009E73, Bachelor's #C475FD, Master's #4467A3, Doctorate #BD8233; values about 63-84. No 3D view, no base-plane grid
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title, axis labels, and tick labels all render in light-colored text (#F0EFE8 / #B8B7B0 range) - clearly readable against dark background; no dark-on-dark failures observed; legend uses elevated dark box (#242420)
-      Data: Colors identical to light render - #009E73, #D55E00, #0072B2, #CC79A7 all unchanged between themes; only chrome flips
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels light grey, legend box #242420 with light text; no dark-on-dark text
+      Data: same four colors as the light render, same bars; only chrome flips
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, axis 22px, ticks 18px,
-          legend 16-18px); both themes readable; minor deduction for missing (0-100)
-          in y-axis title
+        comment: Title 16, axis titles 12, ticks 10, legend 10-11 at scale 4, per
+          the library prompt; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Bars well-spaced via xOffset; no overlap issues
+        comment: No text collisions; 20 bars clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars clearly visible; colors well-differentiated
+        comment: Bars and legend swatches fully visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; no red-green-only signal
+        comment: Imprint hues distinct; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas 4800x2580px (height=860x3); minor deviation from standard
-          4800x2700
+        comment: 3200x1800 canvas (gate passed); title ~49% width, balanced axis titles,
+          legend outside at right, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Satisfaction Score'' without (0-100) range notation; descriptive
-          but no units'
+        comment: '''Satisfaction score (0–100)'' and ''Age group'': readable, scale
+          stated'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; Okabe-Ito order; backgrounds #FAF8F1/#1A1A17;
-          full theme-adaptive chrome'
+        comment: 'First series #009E73, Imprint order; #FAF8F1 / #1A1A17 backgrounds;
+          theme chrome correct'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above default: corner radius on bars, Okabe-Ito, legend padding/fill.
-          Not exceptional.'
+        comment: Style-guide baseline (theme tokens, Imprint, explicit fonts); small
+          corner radius adds nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: gridOpacity=0.10 subtle; stroke=None removes frame; legend padding=10.
-          Good but not perfect.
+        passed: false
+        comment: Subtle grid and no view frame meet the spine/grid rules, nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Code shows plain grouped bar chart; subtitle and reference line visible
-          in images are absent from code
+        comment: Data displayed; no focal point or hierarchy chosen
     spec_compliance:
-      score: 12
+      score: 9
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Spec requires 3D bar chart; Altair cannot render 3D natively; grouped-bar
-          xOffset is best feasible approximation
+        passed: false
+        comment: Flat 2D grouped bar chart instead of 3D bars on a categorical base
+          grid (defect line)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 1
         max: 4
-        passed: true
-        comment: 'Both categorical dims shown; color encoding; bar spacing. Missing:
-          value labels (not in code); base-plane grid (3D concept)'
+        passed: false
+        comment: No elevated oblique view, no base-plane grid, no depth (C2, C3, Notes
+          on viewing angle and base grid); color legend present (C4), bar gaps present
+          (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Age Group, Y=Satisfaction Score, color=Education Level; all data
-          plotted correctly
+        comment: Age group on x, education as xOffset/color, score on y starting at
+          0; all 20 values at their data positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {spec-id} · altair · anyplot.ai; legend title Education
-          Level with correct labels
+        comment: Title 'bar-3d-categorical · python · altair · anyplot.ai' correct;
+          legend 'Education level' with readable entries
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Both categorical dimensions with variation (62-85 range); 20 bars
-          within spec range. Minor: no 3D depth perception.'
+        comment: Both categorical dimensions vary (62-85), 5x4 = 20 bars inside the
+          9-100 range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Survey satisfaction by age/education: real-world plausible, neutral,
-          non-controversial'
+        comment: 'Survey satisfaction by age group and education: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 62-85 on 0-100 scale; educational gradient aligns with real-world
-          patterns
+        comment: Scores 62-85 on a 0-100 scale; education gradient plausible. No Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -188,56 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data -> chart -> save; no functions or classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used (PIL for the pad step)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Altair grammar chain; no fake UI elements
+        comment: Vectorized DataFrame build; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html; scale_factor=3.0
+        comment: Saves plot-{THEME}.png and .html; current Altair 6 API; pad-only
+          to target
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper grammar of graphics; correct encoding types N/Q; configure_*
-          chain; xOffset idiomatic Altair 5+
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: xOffset grouped bars (Altair 5+-distinctive), tooltips for interactivity,
-          HTML export
+        comment: Idiomatic encodings with escaped fields, type= and sort=None as the
+          library prompt mandates; nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Native Vega-Lite tooltips with formatted score in the HTML output
+          (+1)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T19:53:41Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
