@@ -222,6 +222,8 @@ MAX_AXIS_DATE_CHARS = 32
 """One ISO 8601 date limit in `PlotShows.axes` (`2024-01-01T00:00:00.000000+00:00`)."""
 
 ColumnDtype = Literal["integer", "number", "datetime", "boolean", "text"]
+DayMonth = Literal["day_first", "month_first"]
+"""The order a date column's day and month were read in while its cells read both ways (`ColumnProfile.day_month`)."""
 SourceFormat = Literal[
     "csv",
     "tsv",
@@ -357,6 +359,20 @@ class ColumnProfile(_ServerContract):
     column is a calendar of labels as much as a time axis: the plot writes it as months,
     never as ISO dates, and it may label a bar chart past `MAX_CATEGORIES` dates. None
     otherwise, so a model's profile JSON leaves it out.
+
+    `day_month` is set for a datetime column whose every day is at most 12, and some day
+    other than its month, so its cells read as dates both ways: the order they were read
+    in, `day_first` (the paste's guess for a column of slash dates, also when `set_type`
+    reads one without a format, or a `set_type` with `DD/MM/YYYY` or `DD.MM.YYYY`) or
+    `month_first` (a `set_type` with `MM/DD/YYYY`). It is the column's order warning
+    (`parse.day_month_orders`, the one reading of it, which `prepare_data` swaps by) as a
+    field, since a model's profile JSON leaves every warning out and the ISO `min`, `max`
+    and sample cells cannot say which order the pasted cells were in. When the user says
+    the dates are in the other order, the root re-reads the column with `set_type` and
+    that order's `date_format`: day and month swap in every cell, and the new version's
+    field flips with them. A rename keeps it, and every later version carries it
+    (`prepare.with_date_notes`). None otherwise (ISO dates, a day over 12, a month name),
+    so a model's profile JSON leaves it out.
     """
 
     name: ColumnName
@@ -371,6 +387,7 @@ class ColumnProfile(_ServerContract):
     months: list[Annotated[int, Field(ge=1, le=12)]] | None = Field(default=None, max_length=12)
     order: Literal["ascending", "descending"] | None = None
     monthly: Literal[True] | None = None
+    day_month: DayMonth | None = None
 
 
 def listed_values(distinct: int) -> int:
