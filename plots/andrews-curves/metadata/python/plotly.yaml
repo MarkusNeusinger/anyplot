@@ -12,36 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 77
 review:
   strengths:
-  - Perfect visual quality with excellent legibility in both light and dark themes
-  - Flawless palette compliance and theme-adaptive chrome
-  - Comprehensive spec compliance with all required features
-  - Clean, reproducible code using real iris dataset
-  - Proper data normalization and appropriate transformation parameters
-  - Expert use of plotly's idiomatic API patterns
+  - Inline Andrews Fourier sum over z-scored variables, correct basis order
+  - Real iris data; setosa separates while versicolor and virginica overlap
+  - π-labelled ticks at multiples of π/2 suit the periodic axis
+  - legendgroup and per-species hovertemplate for the HTML version
+  - Legend placed in the empty top-right corner, clear of the curves
   weaknesses:
-  - Design is generic, following defaults without custom aesthetic choices
-  - Limited use of plotly's advanced visualization features
-  - Could enhance data storytelling through additional visual hierarchy or emphasis
+  - 'VQ-05 (both): the canvas is 4800×2700, not one of the two canonical sizes → 3200×1800
+    (−1600 × −900). Likely cause: write_image(width=1600, height=900, scale=3) instead
+    of width=800, height=450, scale=4.'
+  - 'SC-04 (both): the title ''andrews-curves · plotly · anyplot.ai'' lacks the language
+    segment → ''andrews-curves · python · plotly · anyplot.ai''. Likely cause: the
+    title string.'
+  - 'VQ-03 (dark): the legend''s line samples inherit the traces'' opacity=0.4, so
+    the setosa and virginica glyphs read dim on the #242420 legend box → full-opacity
+    glyphs in the Imprint colors. Likely cause: trace-level opacity=0.4 on the trace
+    that carries showlegend=True.'
+  - 'CQ-01 (code): line 34 ends the Data block with `t = np.linspace(-np.pi, np.pi,
+    200)`, not a statement that binds df → one block between column-0 # Data and #
+    Plot markers that ends by binding df, with no plotting, styling or theme token
+    inside and no plotting call above it. Likely cause: the block does not end in
+    one tidy DataFrame df.'
+  - 'CQ-01 (code): line 24 has no column constant for the required role `variable_`
+    → one string constant per required column role above the Data block, each with
+    a trailing # role: <role> comment naming a spec role. Likely cause: column names
+    are typed where they are used instead of once, above the block.'
+  - 'CQ-01 (code): line 41 reads `y`, which the Data block binds; 3 more at lines
+    42, 47, 62 → read only df below the Data block and derive everything else from
+    it. Likely cause: `y` is defined in the Data block instead of derived from df
+    below it.'
+  - 'CQ-01 (code): line 21 `IMPRINT` lists 3 of 8 positions → list all eight IMPRINT
+    positions in canonical order and look colors up per category. Likely cause: a
+    palette sized to the sample''s `category` values.'
+  - 'Suggestion: a legend title naming the grouping (species) would tell the reader
+    what the colors stand for.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "andrews-curves · plotly · anyplot.ai" in dark text (28px), clearly visible. X-axis label "Parameter t (radians)" and Y-axis label "f(t) (normalized units)" both in dark INK color (22px), fully readable. Tick labels in INK_SOFT color (18px), clear against light background.
-      Data: 150 curves colored by iris species - green (#009E73) for setosa, orange (#D55E00) for versicolor, blue (#0072B2) for virginica. All curves have 0.4 opacity allowing overlapping patterns to be visible. Line width 2 is adequate at render size.
-      Legend: Top-right positioned with elevated background (#FFFDF6), border in INK_SOFT, labels in INK_SOFT - all clearly readable
-      Legibility verdict: PASS - All text is clearly readable with excellent contrast against light background
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'andrews-curves · plotly · anyplot.ai' in dark ink; axis titles 'Parameter t (radians)' and 'f(t) (normalized units)'; π-labelled x ticks; subtle grid; small boxed legend top right in the empty corner above the curves. All readable. Canvas 4800×2700.
+      Data: 150 translucent curves: setosa #009E73 a separate bundle, versicolor #C475FD and virginica #4467A3 overlapping near zero.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title in light text (INK for dark theme - #F0EFE8), clearly visible. X-axis and Y-axis labels in light INK color, fully readable. Tick labels in light INK_SOFT color (#B8B7B0), clear and legible.
-      Data: Identical colors to light render - green (#009E73) for setosa, orange (#D55E00) for versicolor, blue (#0072B2) for virginica. This confirms perfect theme-adaptive implementation: data colors unchanged, only chrome flips.
-      Legend: Top-right positioned with dark elevated background (#242420), border in light INK_SOFT, labels in light INK_SOFT - all properly themed
-      Legibility verdict: PASS - All text is clearly readable with excellent contrast against dark background. NO dark-on-dark issues detected. All elements properly adapt to dark theme while maintaining data color consistency.
+      Background: warm near-black #1A1A17.
+      Chrome: light text and ticks, subtle grid, legend on #242420 with light border; no dark-on-dark text.
+      Data: same Imprint colors as light; legend line samples at opacity 0.4, the setosa and virginica glyphs dim on the dark legend box.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -49,75 +71,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks),
-          perfectly readable in both themes
+        comment: Sizes set explicitly (title 28, axis titles 22, ticks 18, legend
+          16 px at scale 3); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, legend well-positioned, clear spacing throughout
+        comment: No overlap; the legend sits in the empty top-right corner above the
+          curves
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 150 curves with 0.4 opacity optimally adapted to data density, all
-          curves visible and distinguishable
+        passed: false
+        comment: Curves at width 2, opacity 0.4 suit the density; legend glyphs inherit
+          the 0.4 opacity and the setosa/virginica samples read dim on the dark legend
+          box (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety with good contrast between
-          series
+        comment: Green/purple/blue separate by hue and luminance; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Perfect 4800×2700px render with balanced margins (l=120, r=80, t=100,
-          b=100)
+        passed: false
+        comment: Canvas 4800×2700, not one of the two canonical sizes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Parameter t (radians)'', ''f(t)
-          (normalized units)'''
+        comment: '''Parameter t (radians)'' and ''f(t) (normalized units)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, follows Okabe-Ito order, backgrounds correct
-          (#FAF8F1/#1A1A17), theme-correct chrome in both renders'
+        comment: '#009E73, #C475FD, #4467A3 in canonical order; backgrounds and chrome
+          theme-correct'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured defaults without custom palette or distinctive design
-          elements
+        passed: true
+        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes),
+          nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Subtle grid and standard styling, minimal customization beyond requirements
+        passed: true
+        comment: Ticks placed at multiples of π/2 with π labels — a grid density chosen
+          for this chart's periodic axis
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed clearly with color-based species grouping, but no
-          additional visual hierarchy
+        passed: true
+        comment: Data displayed; separation comes from the iris data itself, no hierarchy
+          chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,26 +147,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Andrews curves transformation with Fourier series implementation
+        comment: Correct Andrews curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: normalization, species coloring, proper transformation'
+        comment: Normalization, alpha 0.4, color by species with legend, t from -π
+          to π, 200 dense samples (C1–C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (parameter t) and Y-axis (f(t)) correctly assigned, all data
+        comment: t on x, f(t) on y, every curve at its computed values, full range
           visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct, legend labels match iris species
+        passed: false
+        comment: Title 'andrews-curves · plotly · anyplot.ai' lacks the language segment
+          (defect line); legend entries correct
     data_quality:
       score: 15
       max: 15
@@ -154,74 +178,77 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Uses all 4 iris features, shows 150 observations with clear species
-          separation
+        comment: Shows clustering (setosa separate), partial overlap (versicolor/virginica)
+          and stray curves
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, well-known iris dataset in appropriate scientific context
+        comment: Real iris dataset, the spec's own example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normalized data with standard parameter range (-π to π), all values
-          correct
+        comment: 'Checked: basis 1/√2, sin t, cos t, sin 2t (lines 47–53), z-scored
+          variables'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Linear flow with inline transformation, no unnecessary functions
+        passed: false
+        comment: No functions, but the Data block does not end in a tidy df, no column
+          constants, palette truncated to 3 positions (defect lines)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic iris dataset, no random generation
+        comment: Deterministic iris dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with appropriate complexity
+        comment: Inline Fourier sum is short and nothing available computes it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format (plot-{THEME}.png/html), current API usage
+        comment: plot-{THEME}.png + html, current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of go.Figure(), go.Scatter(), update_layout(), and plotly
-          patterns
+        comment: go.Scatter with legendgroup so one legend click toggles a whole species
+          in the HTML
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses hover templates and legend groups, but limited advanced plotly
-          features
+        passed: true
+        comment: Per-species hovertemplate and grouped legend toggling in the HTML
+          output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
 impl_tags:
   dependencies:
   - sklearn
