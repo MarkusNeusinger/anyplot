@@ -117,16 +117,38 @@ class TestPrepareData:
         assert all(value is None for value in day_month(after).values())
         assert agrees(after)
 
-    def test_a_set_type_without_a_format_on_text_cells_reads_day_first(self) -> None:
-        """A column the paste left text (one stray cell), read as dates by `set_type`, is open as the paste's would be."""
-        text = "d,v\n05/03/2024,1\n06/04/2024,2\nunknown,3\n07/02/2024,4\n08/01/2024,5\n09/02/2024,6\n10/03/2024,7\n"
-        text += "11/04/2024,8\n12/05/2024,9\n01/06/2024,10\n02/07/2024,11\n"
-        pasted = parse_dataset(text)
+    # A column the paste left text (one stray cell), every day at most 12.
+    TEXT_DATES = (
+        "d,v\n05/03/2024,1\n06/04/2024,2\nunknown,3\n07/02/2024,4\n08/01/2024,5\n09/02/2024,6\n10/03/2024,7\n"
+        "11/04/2024,8\n12/05/2024,9\n01/06/2024,10\n02/07/2024,11\n"
+    )
+
+    @pytest.mark.parametrize(
+        ("operation", "expected"),
+        [
+            # Without a format the paste's own reader guesses, day first.
+            ({"op": "set_type", "column": "d", "type": "datetime"}, {"d": "day_first", "v": None}),
+            # A format reads in its order, which stays open while every day is at most 12.
+            (
+                {"op": "set_type", "column": "d", "type": "datetime", "date_format": "MM/DD/YYYY"},
+                {"d": "month_first", "v": None},
+            ),
+            # Into a new column: the new one carries the order, the text column beside it has none.
+            (
+                {"op": "set_type", "column": "d", "type": "datetime", "date_format": "MM/DD/YYYY", "name": "when"},
+                {"d": None, "v": None, "when": "month_first"},
+            ),
+        ],
+    )
+    def test_a_set_type_on_text_cells_opens_the_order(
+        self, operation: dict[str, Any], expected: dict[str, str | None]
+    ) -> None:
+        pasted = parse_dataset(self.TEXT_DATES)
         assert pasted.column_dtypes["d"] == "text"
 
-        read = step(pasted, {"op": "set_type", "column": "d", "type": "datetime"})
+        read = step(pasted, operation)
 
-        assert day_month(read) == {"d": "day_first", "v": None}
+        assert day_month(read) == expected
         assert agrees(read)
 
     def test_an_iso_column_stays_without_it_through_a_set_type(self) -> None:
