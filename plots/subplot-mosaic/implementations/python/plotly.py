@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-14
@@ -15,165 +15,140 @@ from plotly.subplots import make_subplots
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette
-IMPRINT = [
-    "#009E73",  # brand — first series
-    "#C475FD",
-    "#4467A3",
-    "#BD8233",
-    "#AE3030",
-    "#2ABCCD",
-    "#954477",
-]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
-np.random.seed(42)
+# Constants
+MOSAIC = "AAB;CCD;EFG"  # one letter per panel slot; a repeated letter spans those cells, "." leaves a gap
+ROW_SHARE = [0.40, 0.33, 0.27]  # relative height of each mosaic row; the largest row holds the primary data
 
-# Time series data for the wide overview chart (A - spans top row)
-dates = pd.date_range("2024-01-01", periods=120, freq="D")
-revenue = 50000 + np.cumsum(np.random.randn(120) * 1000) + np.arange(120) * 200
+# Columns: set these to your table's column names
+PANEL = "Panel"  # role: extra
+TITLE = "Panel title"  # role: extra
+KIND = "Chart kind"  # role: extra
+SHADE = "Palette position"  # role: extra
+X = "X value"  # role: x
+Y = "Y value"  # role: y
+X_LABEL = "X axis title"  # role: extra
+Y_LABEL = "Y axis title"  # role: extra
+
+# Data: replace this block with your own table, one row per mark, for example df = pd.read_csv("panels.csv")
+rng = np.random.default_rng(42)
+n_days = 120
+dates = pd.date_range("2024-01-01", periods=n_days, freq="D")
+revenue = 50000 + np.cumsum(rng.normal(0, 1000, n_days)) + np.arange(n_days) * 200
 revenue = np.maximum(revenue, 30000)
-
-# Monthly breakdown for bar chart (B - top right)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
 monthly_sales = [42000, 48000, 51000, 46000, 58000, 62000]
-
-# Scatter data for distribution view (C - middle spanning)
-product_x = np.random.randn(100) * 15 + 50
-product_y = product_x * 0.7 + np.random.randn(100) * 10 + 20
-
-# Category comparison (D - middle right)
+product_x = rng.normal(50, 15, 100)
+product_y = product_x * 0.7 + rng.normal(20, 10, 100)
 categories = ["Electronics", "Clothing", "Food", "Books", "Sports"]
 cat_values = [35, 28, 22, 15, 18]
+n_metric = 30
+metrics = [rng.random(n_metric) * 20 + 80, rng.random(n_metric) * 15 + 60, rng.random(n_metric) * 25 + 45]
 
-# Metric panel data (E, F, G - bottom row)
-metric_1_history = np.random.rand(30) * 20 + 80
-metric_2_history = np.random.rand(30) * 15 + 60
-metric_3_history = np.random.rand(30) * 25 + 45
+# (panel, title, chart kind, palette position or -1 for one color per bar, x, y, x title, y title)
+panels = [
+    ("A", "Revenue Trend (Overview)", "area", 0, list(dates), list(revenue), "Date", "Revenue ($)"),
+    ("B", "Monthly Sales", "bar", 1, months, monthly_sales, "Month", "Sales ($)"),
+    ("C", "Product Performance", "scatter", 0, list(product_x), list(product_y), "Feature X", "Feature Y"),
+    ("D", "Category Distribution", "hbar", -1, categories, cat_values, "Units Sold", ""),
+]
+metric_info = [("E", "Efficiency", 0, "%"), ("F", "Quality Score", 1, "Score"), ("G", "Response Time", 2, "ms")]
+for (letter, title, pos, unit), values in zip(metric_info, metrics, strict=True):
+    panels.append((letter, title, "area", pos, list(range(n_metric)), list(values), "Days", unit))
 
-# Create mosaic layout: "AAB;CCD;EFG"
-# Row 1: A spans 2 cols, B takes 1 col
-# Row 2: C spans 2 cols, D takes 1 col
-# Row 3: E, F, G each take 1 col
+df = pd.concat(
+    [
+        pd.DataFrame({PANEL: p, TITLE: t, KIND: k, SHADE: s, X: xs, Y: ys, X_LABEL: xl, Y_LABEL: yl})
+        for p, t, k, s, xs, ys, xl, yl in panels
+    ],
+    ignore_index=True,
+)
+
+# Plot: reads only df and the constants above
+rows_def = MOSAIC.split(";")
+n_rows, n_cols = len(rows_def), len(rows_def[0])
+groups = list(df.groupby(PANEL, sort=False))  # panels fill the mosaic slots in table order
+specs = [[None] * n_cols for _ in range(n_rows)]
+slots = []
+for r, row in enumerate(rows_def):
+    c = 0
+    while c < n_cols:
+        ch = row[c]
+        span = 1
+        while c + span < n_cols and row[c + span] == ch:
+            span += 1
+        if ch != ".":
+            slots.append((ch, r + 1, c + 1, span))
+        c += span
+slots = slots[: len(groups)]
+for _, r, c, span in slots:
+    specs[r - 1][c - 1] = {"colspan": span}
 
 fig = make_subplots(
-    rows=3,
-    cols=3,
-    specs=[[{"colspan": 2}, None, {}], [{"colspan": 2}, None, {}], [{}, {}, {}]],
-    row_heights=[0.45, 0.35, 0.30],
-    column_widths=[0.33, 0.33, 0.34],
-    subplot_titles=[
-        "Revenue Trend (Overview)",
-        "Monthly Sales",
-        "Product Performance",
-        "Category Distribution",
-        "Efficiency",
-        "Quality Score",
-        "Response Time",
-    ],
-    vertical_spacing=0.12,
-    horizontal_spacing=0.10,
+    rows=n_rows,
+    cols=n_cols,
+    specs=specs,
+    row_heights=[h / sum(ROW_SHARE[:n_rows]) for h in ROW_SHARE[:n_rows]],
+    subplot_titles=[rows[TITLE].iloc[0] for _, rows in groups[: len(slots)]],
+    vertical_spacing=0.13,
+    horizontal_spacing=0.08,
 )
 
-# A: Revenue trend line (top spanning)
-fig.add_trace(
-    go.Scatter(
-        x=dates,
-        y=revenue,
-        mode="lines",
-        line={"color": IMPRINT[0], "width": 4},
-        fill="tozeroy",
-        fillcolor=f"rgba({int(IMPRINT[0][1:3], 16)}, {int(IMPRINT[0][3:5], 16)}, {int(IMPRINT[0][5:7], 16)}, 0.2)",
-        name="Revenue",
-    ),
-    row=1,
-    col=1,
-)
 
-# B: Monthly sales bar (top right)
-fig.add_trace(go.Bar(x=months, y=monthly_sales, marker_color=IMPRINT[1], name="Monthly"), row=1, col=3)
+def rgba(hex_color, alpha):
+    r, g, b = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+    return f"rgba({r}, {g}, {b}, {alpha})"
 
-# C: Product scatter (middle spanning) — INCREASED marker size
-fig.add_trace(
-    go.Scatter(
-        x=product_x,
-        y=product_y,
-        mode="markers",
-        marker={"size": 16, "color": IMPRINT[0], "opacity": 0.8},
-        name="Products",
-    ),
-    row=2,
-    col=1,
-)
 
-# D: Category horizontal bar (middle right)
-fig.add_trace(
-    go.Bar(
-        y=categories,
-        x=cat_values,
-        orientation="h",
-        marker_color=[IMPRINT[0], IMPRINT[1], IMPRINT[2], IMPRINT[3], IMPRINT[4]],
-        name="Categories",
-    ),
-    row=2,
-    col=3,
-)
+def area(xs, ys, color):
+    return go.Scatter(
+        x=xs, y=ys, mode="lines", line={"color": color, "width": 2.5}, fill="tozeroy", fillcolor=rgba(color, 0.22)
+    )
 
-# E: Efficiency metric (bottom left)
-fig.add_trace(
-    go.Scatter(
-        x=list(range(30)),
-        y=metric_1_history,
-        mode="lines",
-        line={"color": IMPRINT[0], "width": 3},
-        fill="tozeroy",
-        fillcolor=f"rgba({int(IMPRINT[0][1:3], 16)}, {int(IMPRINT[0][3:5], 16)}, {int(IMPRINT[0][5:7], 16)}, 0.25)",
-        name="Efficiency",
-    ),
-    row=3,
-    col=1,
-)
 
-# F: Quality score metric (bottom middle)
-fig.add_trace(
-    go.Scatter(
-        x=list(range(30)),
-        y=metric_2_history,
-        mode="lines",
-        line={"color": IMPRINT[1], "width": 3},
-        fill="tozeroy",
-        fillcolor=f"rgba({int(IMPRINT[1][1:3], 16)}, {int(IMPRINT[1][3:5], 16)}, {int(IMPRINT[1][5:7], 16)}, 0.25)",
-        name="Quality",
-    ),
-    row=3,
-    col=2,
-)
+def bar(xs, ys, color):
+    return go.Bar(x=xs, y=ys, marker_color=color)
 
-# G: Response time metric (bottom right)
-fig.add_trace(
-    go.Scatter(
-        x=list(range(30)),
-        y=metric_3_history,
-        mode="lines",
-        line={"color": IMPRINT[2], "width": 3},
-        fill="tozeroy",
-        fillcolor=f"rgba({int(IMPRINT[2][1:3], 16)}, {int(IMPRINT[2][3:5], 16)}, {int(IMPRINT[2][5:7], 16)}, 0.25)",
-        name="Response",
-    ),
-    row=3,
-    col=3,
-)
 
-# Update layout with theme-adaptive colors
+def scatter(xs, ys, color):
+    marker = {"size": 7, "color": color, "opacity": 0.75, "line": {"width": 0.8, "color": PAGE_BG}}
+    return go.Scatter(x=xs, y=ys, mode="markers", marker=marker)
+
+
+def hbar(xs, ys, color):
+    colors = [IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i in range(len(xs))]
+    return go.Bar(x=ys, y=xs, orientation="h", marker_color=colors)
+
+
+BUILDERS = {"area": area, "bar": bar, "scatter": scatter, "hbar": hbar}
+HORIZONTAL = {"hbar"}
+ZERO_BASED = {"area", "bar"}
+
+for (_, row, col, _), (_, rows) in zip(slots, groups, strict=False):
+    kind = rows[KIND].iloc[0]
+    position = int(rows[SHADE].iloc[0])
+    color = IMPRINT_PALETTE[(position if position >= 0 else len(slots)) % len(IMPRINT_PALETTE)]
+    fig.add_trace(BUILDERS.get(kind, area)(list(rows[X]), list(rows[Y]), color), row=row, col=col)
+    fig.update_xaxes(title_text=rows[X_LABEL].iloc[0], row=row, col=col)
+    fig.update_yaxes(title_text=rows[Y_LABEL].iloc[0], row=row, col=col)
+    if kind in HORIZONTAL:
+        fig.update_yaxes(autorange="reversed", row=row, col=col)
+    if kind in ZERO_BASED:
+        fig.update_yaxes(rangemode="tozero", row=row, col=col)
+
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
     title={
-        "text": "subplot-mosaic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "subplot-mosaic · python · plotly · anyplot.ai",
+        "font": {"size": 17, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
@@ -181,45 +156,20 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     showlegend=False,
-    margin={"l": 100, "r": 80, "t": 140, "b": 80},
-    hovermode="closest",
+    margin={"l": 62, "r": 22, "t": 62, "b": 42},
 )
+axis_style = {
+    "tickfont": {"size": 8, "color": INK_SOFT},
+    "title_font": {"size": 9, "color": INK},
+    "title_standoff": 3,
+    "gridcolor": GRID,
+    "linecolor": INK_SOFT,
+    "zerolinecolor": INK_SOFT,
+    "automargin": True,
+}
+fig.update_xaxes(**axis_style)
+fig.update_yaxes(**axis_style)
+fig.update_annotations(font={"size": 11, "color": INK})
 
-# Update axes with theme-adaptive colors
-fig.update_xaxes(
-    tickfont={"size": 18, "color": INK_SOFT},
-    title_font={"size": 22, "color": INK},
-    gridcolor=GRID,
-    linecolor=INK_SOFT,
-    zerolinecolor=INK_SOFT,
-)
-
-fig.update_yaxes(
-    tickfont={"size": 18, "color": INK_SOFT},
-    title_font={"size": 22, "color": INK},
-    gridcolor=GRID,
-    linecolor=INK_SOFT,
-    zerolinecolor=INK_SOFT,
-)
-
-# Axis labels
-fig.update_xaxes(title_text="Date", row=1, col=1)
-fig.update_yaxes(title_text="Revenue ($)", row=1, col=1)
-fig.update_xaxes(title_text="Month", row=1, col=3)
-fig.update_yaxes(title_text="Sales ($)", row=1, col=3)
-fig.update_xaxes(title_text="Feature X", row=2, col=1)
-fig.update_yaxes(title_text="Feature Y", row=2, col=1)
-fig.update_xaxes(title_text="Units Sold", row=2, col=3)
-fig.update_xaxes(title_text="Days", row=3, col=1)
-fig.update_yaxes(title_text="%", row=3, col=1)
-fig.update_xaxes(title_text="Days", row=3, col=2)
-fig.update_yaxes(title_text="Score", row=3, col=2)
-fig.update_xaxes(title_text="Days", row=3, col=3)
-fig.update_yaxes(title_text="ms", row=3, col=3)
-
-# Update subplot titles font size and color
-fig.update_annotations(font_size=20, font_color=INK)
-
-# Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
