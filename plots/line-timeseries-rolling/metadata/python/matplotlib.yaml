@@ -2,44 +2,41 @@ library: matplotlib
 language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:48:15Z'
-updated: '2026-05-13T13:11:43Z'
-generated_by: claude-haiku
-workflow_run: 25800546286
+updated: '2026-11-21T10:08:09Z'
+generated_by: claude-sonnet
+workflow_run: 44892460077
 issue: 2786
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 82
 review:
   strengths:
-  - Flawless theme adaptation with readable light and dark renders
-  - Excellent visual hierarchy showing rolling average as focal point
-  - Spec-compliant legend and title format
-  - Clean, publication-quality code with reproducibility
-  - Correct Okabe-Ito palette and proper theme-token usage
+  - 'Clear two-layer hierarchy: thin translucent raw line behind a 2.5 lw brand-green
+    rolling average, readable in both themes'
+  - pandas rolling(window=7, center=True).mean() leaves NaN edges, so the average
+    correctly covers a shorter span than the raw data
+  - Legend names the window size from the WINDOW constant; title, axis labels and
+    legend all follow the theme tokens
+  - Exact 3200x1800 canvas and style-guide font sizes (12/10/8 pt)
   weaknesses:
-  - Standard library usage without distinctive matplotlib features (no custom formatters
-    or advanced techniques)
-  - Could enhance storytelling with annotations on trend breakpoints or extrema
+  - 'Suggestion: a DateFormatter with month names (e.g. ''Jan'', ''Feb'') would read
+    faster than the ISO year-month ticks and remove the need to rotate them.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct page surface
-      Chrome: Title (24pt, #1A1A17), axis labels (20pt, #1A1A17), tick labels (16pt, #4A4A44) — all readable against light surface
-      Data: Orange raw data (#D55E00, linewidth=1, alpha=0.4) and green rolling average (#009E73, linewidth=3.5) are clearly visible and distinct
-      Grid: Subtle (alpha=0.1) on both axes, improves readability without competing with data
-      Legend: Upper left, light background with edge, text clearly readable
-      Legibility verdict: PASS — all text is easily readable, no contrast failures
+      Background: warm off-white #FAF8F1 across canvas and axes
+      Chrome: title 'line-timeseries-rolling · python · matplotlib · anyplot.ai' in dark ink, axis labels 'Date' and 'Temperature (°C)', grey tick labels with rotated YYYY-MM dates, subtle grid on both axes, top/right spines removed, framed legend upper left; all readable
+      Data: thin lavender (#C475FD, alpha 0.5) raw daily temperature line, bold #009E73 7-day rolling average starting a few days after the first date and ending a few days before the last
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct page surface
-      Chrome: Title (24pt, #F0EFE8), axis labels (20pt, #F0EFE8), tick labels (16pt, #B8B7B0) — all readable against dark surface, no dark-on-dark failures
-      Data: Orange (#D55E00) and green (#009E73) are identical to light render, maintaining category consistency across themes
-      Grid: Subtle and visible, same alpha=0.1 styling
-      Legend: Dark background (#242420, elevated), edges (#B8B7B0), text readable
-      Legibility verdict: PASS — both data and chrome are readable, proper theme adaptation confirmed
+      Background: warm near-black #1A1A17
+      Chrome: title and axis labels in light ink, tick labels light grey, grid subtle but visible, legend frame on #242420 with light text; no dark-on-dark text
+      Data: identical colors to the light render (#C475FD raw, #009E73 rolling); raw line still visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,71 +47,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title/labels/ticks explicitly styled with theme tokens, readable
-          in both themes
+        comment: Title 12pt, axis labels 10pt, ticks and legend 8pt from theme tokens;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text well-separated, legend clear, date labels rotated for readability
+        comment: No text collisions; rotated date ticks clear; legend in the empty
+          upper-left corner
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Raw data thin/transparent as secondary, rolling average 3.5pt prominent,
-          grid subtle
+        comment: Raw line 0.8 lw alpha 0.5 recedes but stays visible in both themes;
+          rolling line 2.5 lw dominates
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe, no red-green dependency
+        comment: Green vs lavender differ in hue and lightness; line weight also separates
+          them
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape 16:9 (4800x2700px), proper proportions, tight_layout applied
+        comment: 3200x1800 canvas (gate passed), balanced margins, title ~57% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Spec-compliant title, axes labeled with units
+        comment: Date and Temperature (°C) with unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
-          theme-correct'
+        comment: 'Rolling average #009E73, raw data #C475FD (Imprint position 2);
+          backgrounds #FAF8F1/#1A1A17'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional polish, intentional hierarchy, spines removed; could
-          add distinctive features
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, generous whitespace, legend frame styled,
-          date rotation
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy, rolling average is focal point, could add
-          annotations for extrema
+        passed: false
+        comment: Hierarchy raw-vs-average is what the Notes prescribe; no further
+          focal choice
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +121,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line time series with overlay, correct chart type
+        comment: Time series line with rolling-average overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Raw data thin/alpha, rolling average prominent, legend clear, window
-          size in legend, grid both axes
+        comment: C1 thin translucent raw line, C2 prominent contrasting average, C3
+          average starts after window fills (centered 7-day, NaN edges), C4 legend
+          with window size, C5 grid on both axes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date x-axis, Temperature y-axis, 180 points, 7-day center rolling
-          window
+        comment: Dates on x, temperatures on y, all 180 points shown at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Spec-compliant title format, legend labels match data
+        comment: Title line-timeseries-rolling · python · matplotlib · anyplot.ai;
+          legend 'Raw Data' / 'Rolling Average (7-day)'
     data_quality:
       score: 15
       max: 15
@@ -154,19 +152,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows raw data, rolling average, trend visualization
+        comment: Noisy raw series, smoothed trend, shorter rolling span all visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 6 months daily temperature with seasonal pattern, plausible and neutral
+        comment: Six months of daily temperature, winter to summer; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: -5 to 30°C range sensible, axes properly formatted
+        comment: About -5 to 27 °C over Jan-Jun, plausible for a temperate site; no
+          Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -176,51 +175,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Pure script, no functions/classes
+        comment: Flat script in the six zones
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42), deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, matplotlib, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: pandas rolling().mean() computes the average; no hand-rolled loop
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, current API
+        comment: Saves plot-{THEME}.png at dpi=400, no bbox_inches
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Axes methods, high-level API, theme-adaptive pattern
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Standard library usage, well-executed but not novel
+        comment: Axes methods and theme tokens as the library prompt mandates, nothing
+          beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T10:05:08Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
