@@ -2,47 +2,51 @@ library: seaborn
 language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:46:52Z'
-updated: '2026-05-13T07:23:57Z'
-generated_by: claude-haiku
-workflow_run: 25784430611
+updated: '2026-11-21T09:00:04Z'
+generated_by: claude-sonnet
+workflow_run: 44887043045
 issue: 2781
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 96
+quality_score: 80
 review:
   strengths:
-  - Excellent theme-aware implementation with proper token usage for both light and
-    dark modes—demonstrates deep understanding of color accessibility
-  - Perfect palette compliance with Okabe-Ito green (#009E73) and correct theme-adaptive
-    chrome across both renders
-  - Clear data communication of asymmetric error structure through proportional error
-    bar styling with visible caps
-  - Professional code quality with deterministic seed, clean imports, and idiomatic
-    seaborn usage
-  - Complete spec compliance with all required features and annotations explaining
-    the error bounds
-  - Flawless legibility in both themes with no dark-on-dark or light-on-light failures
+  - Asymmetric arms drawn with matplotlib's native yerr=[lower, upper] pair on top
+    of a seaborn scatter, with capped ends and white-edged markers that mark the central
+    value clearly in both themes
+  - 'Theme tokens threaded through sns.set_theme rc so every chrome element flips
+    correctly between #FAF8F1 and #1A1A17 while the Imprint green stays identical'
+  - 'Adaptable layout: column constants with role comments, a tidy df Data block and
+    a Plot zone that reads only df'
+  - Exact 3200x1800 canvas with the library prompt's reference text sizes
   weaknesses:
-  - Could enhance marker visibility in dark mode with explicit white edge colors (edgecolor='white')
-    for additional visual definition
-  - Design could incorporate additional emphasis on asymmetric differences through
-    color saturation variation or size modulation
+  - 'DQ-02 (both): the devices are labelled ''Model A'' … ''Model H'', which reads
+    as placeholder data → realistic product names for the battery-life scenario (for
+    example phone or laptop model names). Likely cause: the DEVICE list in the Data
+    block.'
+  - 'LM-01 (code): sns.scatterplot is called with x=np.arange(...) and y=df[BATTERY]
+    instead of data=df and the column constants, against the library prompt''s Data
+    block rule → sns.scatterplot(data=df, x=DEVICE, y=BATTERY, ...) on the categorical
+    axis. Likely cause: numeric positions kept for the matplotlib errorbar call (line
+    66).'
+  - 'Suggestion: drop the vertical grid lines, which run behind every error bar, and
+    keep a y-only grid.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly rendered, not pure white
-      Chrome: Title, axis labels (Device Model, Battery Life (hours)), and tick labels in dark text (#1A1A17) - all clearly readable against light background
-      Data: Green markers (#009E73, Okabe-Ito position 1) with asymmetric error bars featuring visible horizontal caps; thick error lines with proportional styling
-      Legibility verdict: PASS - All text elements have excellent contrast and readability; no overlap; annotation box clear and well-positioned
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: title 'errorbar-asymmetric · python · seaborn · anyplot.ai' in dark ink at about 54 % width; axis titles 'Device Model' and 'Battery Life (hours)' in dark ink; tick labels Model A–H and 6–18 in soft dark grey; subtle x and y grid; top/right spines removed; all readable
+      Data: eight #009E73 markers with white edges, each with green asymmetric error bars and caps at both ends; bounds note '10th–90th percentile' in a rounded elevated box at top left
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly rendered, not pure black
-      Chrome: Title and axis labels in light text (#F0EFE8), tick labels in light secondary text (#B8B7B0) - all clearly readable against dark background; no dark-on-dark failures
-      Data: Green error bars (#009E73) are identical to light render, confirming theme-independent data colors; subtle light edges on markers improve visibility
-      Legibility verdict: PASS - All text is light-colored and stands out clearly; grid subtly visible; annotation box maintains perfect contrast; both renders theme-correct
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title and axis titles in light ink, ticks in light grey, spines light grey, grid subtle but visible; the note box flips to a dark elevated fill with light text; no dark-on-dark text
+      Data: markers and bars in the same #009E73 as the light render, white marker edges; only chrome flips
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,71 +57,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (24pt title, 20pt labels, 16pt ticks); readable
-          in both themes
+        comment: 'Title 12 pt, axis titles 10 pt, ticks 8 pt and the 9 pt bounds note,
+          all at the style-guide reference; dark text on #FAF8F1 and light text on
+          #1A1A17, readable in both renders'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; well-spaced elements
+        comment: No text collisions; the bounds note sits in the empty top-left corner
+          clear of every bar
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (s=400) and error bars (elinewidth=3) perfectly sized; clear
-          caps
+        comment: '8 points at s=110 with a white edge, 1.6 px arms and 5 px caps:
+          prominent for sparse data in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green colorblind-safe; adequate contrast both themes
+        comment: Single Imprint green series, no color-only signal; strong contrast
+          on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions; tight_layout ensures good utilization
+        comment: 3200x1800 canvas; title about 54 % of the width; balanced axis titles
+          and ticks; nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; axes descriptive with units
+        comment: '''Battery Life (hours)'' with units and ''Device Model'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; theme-correct
-          chrome'
+        comment: 'Series is #009E73; backgrounds #FAF8F1 / #1A1A17; chrome flips,
+          data color identical in both renders'
     design_excellence:
-      score: 17
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
         passed: true
-        comment: Professional theme-aware implementation with custom color tokens;
-          intentional hierarchy
+        comment: The style-guide baseline (theme tokens, Imprint green, explicit sizes),
+          nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed; subtle grid; generous margins; annotation styled
-          thoughtfully
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy; asymmetric error visualization effective;
-          annotation explains bounds
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -127,28 +133,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct asymmetric error bar chart type
+        comment: Asymmetric error-bar plot, one marker per category with separate
+          lower and upper arms
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: separate upper/lower errors, visible caps,
-          annotation'
+        comment: Caps at both ends (C2), marker distinct from the bar (C2), bounds
+          note '10th–90th percentile' (C3), arms set by their own error values (C1)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; yerr properly assigned [error_lower, error_upper]
+        comment: yerr=[lower, upper] in the right order; y axis 5–18 spans every bar
+          (5.4–17.6); no re-centering
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; annotation explains bounds appropriately
+        comment: Title 'errorbar-asymmetric · python · seaborn · anyplot.ai'; single
+          series, legend N/A, the annotation names the bounds
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -156,19 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects; 8 points demonstrate variety in uncertainty
+        comment: Upper-heavy (A, C, E, G) and lower-heavy (B, D, F, H) intervals in
+          varying ratios
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Battery life domain realistic, comprehensible, neutral
+        passed: false
+        comment: Battery life is plausible and neutral, but the devices are labelled
+          Model A–H (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values plausible (5.4–17.6 hours); asymmetric bounds realistic
+        comment: No check values; checked that bounds run 5.4–17.6 h and the read-off
+          D interval 12.6–17.6 matches 15.8 −3.2/+1.8 (lines 54–56)
     code_quality:
       score: 10
       max: 10
@@ -178,54 +190,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow; no functions/classes
+        comment: Imports → tokens → column constants → Data block → Plot → Save, no
+          functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused dependencies
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; combines seaborn/matplotlib appropriately
+        comment: Native yerr=[lower, upper]; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct DPI
+        comment: plot-{THEME}.png at dpi=400 with default bbox; current API
     library_mastery:
-      score: 9
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Expertly uses sns.set_theme() with rc config; proper theme tokens
+        passed: false
+        comment: sns.set_theme rc and sns.despine are idiomatic, but scatterplot is
+          fed arrays instead of data=df (defect line)
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses seaborn-specific features; thoughtful theme-aware integration
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T08:56:46Z'
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
   - annotations
+  - layer-composition
   patterns:
-  - data-generation
   - explicit-figure
   dataprep: []
   styling:
