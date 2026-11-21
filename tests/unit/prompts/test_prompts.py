@@ -1453,6 +1453,19 @@ class TestAdaptableCode:
         )
         assert "a refusal of its readiness check, also one the previous file already had" in mindset
 
+    def test_regeneration_keeps_its_data_source(self) -> None:
+        """A regeneration brings in no built-in dataset its previous file did not load (#13305 was kept for it)."""
+        content = GENERATE_PROMPT.read_text()
+        scenario = next(line for line in content.splitlines() if "**Keep the data scenario and the variant.**" in line)
+        assert (
+            "Keep the data source too: a regeneration loads no built-in dataset (`sklearn.datasets`, "
+            "`sns.load_dataset`) that the previous file did not load, whatever `prompts/plot-generator.md` "
+            "prefers for new files, and a built-in dataset the previous file loads stays."
+        ) in scenario
+        # The rule is the generator's: the repair prompt, which the chat's adapter reads, does not carry it.
+        repair = (WORKFLOW_PROMPTS_DIR / "impl-repair-claude.md").read_text()
+        assert "Keep the data source too" not in repair
+
     def test_repair_runs_the_same_readiness_check(self) -> None:
         content = REPAIR_PROMPT.read_text()
         step = content[content.index("### Step 5b:") : content.index("## Step 6:")]
