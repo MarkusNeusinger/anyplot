@@ -102,6 +102,15 @@ async def test_db_with_data(test_session):
         tags={"plot_type": ["scatter"], "domain": ["statistics"], "data_type": ["numeric"], "features": ["basic"]},
         issue=42,
         suggested="contributor",
+        # As the sync stores it (core/spec_sources.py); invented values.
+        sources={
+            "data": "computed",
+            "inspired_by": [{"title": "An example plotting project", "url": "https://example.org/project"}],
+            "references": [
+                {"title": "An example paper", "url": "https://doi.org/10.1000/xyz123", "doi": "10.1000/xyz123"},
+                {"title": "An example textbook", "url": "https://example.org/book", "isbn": "978-3-16-148410-0"},
+            ],
+        },
     )
     bar_spec = Spec(
         id="bar-grouped",

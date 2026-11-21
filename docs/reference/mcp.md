@@ -140,6 +140,7 @@ Get complete specification including its implementations.
   "suggested": "contributor",
   "created": "2025-01-10T08:00:00Z",
   "updated": "2025-01-15T10:30:00Z",
+  "sources": null,
   "website_url": "https://anyplot.ai/scatter-basic",
   "implementations": [
     {
@@ -169,6 +170,8 @@ Get complete specification including its implementations.
 ```
 
 `code` has its `# noqa` comments stripped. The review checklist and image description are pipeline internals and are not returned.
+
+`sources` has the same shape as in [`GET /specs/{spec_id}`](api.md#get-specsspec_id): the works that gave the idea for the plot (`inspired_by`), the literature its values follow (`references`), and where its example data comes from (`data`). It's `null` for a spec that names no source.
 
 **Raises**: `ValueError` if spec_id doesn't exist
 

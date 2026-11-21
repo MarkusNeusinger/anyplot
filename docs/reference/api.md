@@ -61,6 +61,15 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
   "suggested": "CoolContributor",
   "created": "2025-01-10T08:00:00Z",
   "updated": "2025-01-15T10:30:00Z",
+  "sources": {
+    "data": "computed",
+    "inspired_by": [
+      {"title": "An example plotting project", "url": "https://example.org/project", "doi": null, "isbn": null}
+    ],
+    "references": [
+      {"title": "An example paper", "url": "https://doi.org/10.1000/xyz123", "doi": "10.1000/xyz123", "isbn": null}
+    ]
+  },
   "implementations": [
     {
       "library_id": "matplotlib",
@@ -96,6 +105,11 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
 - `preview_url` and `preview_html` are legacy single-theme fields that resolve to the light variant.
 - `language_version` is the runtime version of the implementation's language (Python, R, Julia, or Node.js).
   `python_version` is the older field it replaces, and `language_version` falls back to it for rows without one.
+- `sources` is the `sources` block of the spec's `specification.yaml`, or `null` when the spec names no source.
+  `inspired_by` lists the works that gave the idea for the plot, `references` the literature its values follow,
+  and `data` says whether the example data is `invented`, `computed`, or `real` (`null` when the spec doesn't say).
+  Every entry has `title` and `url`; `doi` and `isbn` are `null` when the work has none. See
+  [`specification.yaml`](repository.md#plotsspecification-idspecificationyaml) for the block's rules.
 
 ---
 
@@ -516,13 +530,16 @@ The title, description, paragraph, example pairs, line on how the chat is built,
 
 ### GET `/seo-proxy/{spec_id}`
 
-**Purpose**: Bot-optimized spec overview page with collage og:image
+**Purpose**: Bot-optimized spec overview page with collage og:image. For a spec that names sources, the page lists
+them under "Sources" and its `CollectionPage` node carries them as `isBasedOn` and `citation` (see
+[A spec's sources](seo.md#a-specs-sources)).
 
 ---
 
 ### GET `/seo-proxy/{spec_id}/{library}`
 
-**Purpose**: Bot-optimized implementation page with branded og:image
+**Purpose**: Bot-optimized implementation page with branded og:image. It lists the spec's sources the same way, on
+its `WebPage` node.
 
 ---
 

@@ -45,5 +45,77 @@ describe('SpecTab', () => {
     expect(screen.queryByText('Applications')).not.toBeInTheDocument();
     expect(screen.queryByText('Data')).not.toBeInTheDocument();
     expect(screen.queryByText('Notes')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sources')).not.toBeInTheDocument();
+  });
+
+  describe('sources', () => {
+    const sources = {
+      data: 'computed' as const,
+      inspired_by: [{ title: 'An example project', url: 'https://example.org/project' }],
+      references: [
+        {
+          title: 'A paper',
+          url: 'https://example.org/paper',
+          doi: '10.1000/xyz123',
+          isbn: null,
+        },
+        { title: 'A book', url: 'https://example.org/book', isbn: '978-3-16-148410-0' },
+      ],
+    };
+
+    it('lists both groups with every title as a link to its address', () => {
+      render(<SpecTab {...baseProps} sources={sources} />);
+      expect(screen.getByRole('heading', { name: 'Sources' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'inspired by' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'references' })).toBeInTheDocument();
+      const project = screen.getByRole('link', { name: 'An example project' });
+      expect(project).toHaveAttribute('href', 'https://example.org/project');
+      expect(project).toHaveAttribute('target', '_blank');
+      expect(project).toHaveAttribute('rel', 'noopener noreferrer');
+      expect(screen.getByRole('link', { name: 'A book' })).toHaveAttribute(
+        'href',
+        'https://example.org/book'
+      );
+    });
+
+    it('links a DOI to its resolver and shows an ISBN as text', () => {
+      render(<SpecTab {...baseProps} sources={sources} />);
+      expect(screen.getByRole('link', { name: 'doi:10.1000/xyz123' })).toHaveAttribute(
+        'href',
+        'https://doi.org/10.1000/xyz123'
+      );
+      expect(screen.getByText('ISBN 978-3-16-148410-0').tagName).toBe('SPAN');
+      expect(screen.queryByRole('link', { name: /ISBN/ })).not.toBeInTheDocument();
+    });
+
+    it('leaves out a group without entries', () => {
+      render(
+        <SpecTab {...baseProps} sources={{ inspired_by: [], references: sources.references }} />
+      );
+      expect(screen.getByRole('heading', { name: 'references' })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'inspired by' })).not.toBeInTheDocument();
+    });
+
+    it('shows a title whose address is not a web address as text, without a link', () => {
+      render(
+        <SpecTab
+          {...baseProps}
+          sources={{
+            inspired_by: [],
+            references: [{ title: 'A crafted entry', url: 'javascript:alert(1)' }],
+          }}
+        />
+      );
+      expect(screen.getByText('A crafted entry')).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'A crafted entry' })).not.toBeInTheDocument();
+    });
+
+    it('shows nothing for a spec that names no work', () => {
+      for (const none of [null, { data: 'invented' as const, inspired_by: [], references: [] }]) {
+        const { unmount } = render(<SpecTab {...baseProps} sources={none} />);
+        expect(screen.queryByText('Sources')).not.toBeInTheDocument();
+        unmount();
+      }
+    });
   });
 });

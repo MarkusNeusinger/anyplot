@@ -51,6 +51,12 @@ DOI_PATTERN = re.compile(r"10\.\d{4,9}/[-._;()/:A-Za-z0-9]+")
 ISBN_PATTERN = re.compile(r"\d{9}[\dX]|\d{13}")
 
 
+def _is_doi(value: str) -> bool:
+    """A DOI of the Crossref form without a `.` or `..` segment between its slashes: the API, the crawler pages and the
+    spec page put it into a resolver address as it stands, where such a segment would move the address off the DOI."""
+    return bool(DOI_PATTERN.fullmatch(value)) and not any(part in {".", ".."} for part in value.split("/"))
+
+
 def _is_isbn(value: str) -> bool:
     """An ISBN-10 or ISBN-13 whose check digit fits, so a mistyped digit is caught and not stored as a source."""
     digits = re.sub(r"[- ]", "", value)
@@ -89,7 +95,7 @@ def _entry_problems(where: str, entry: object) -> list[str]:
             problems.append(f"{where}.{key}: empty")
         elif key == "url" and not _is_web_address(value):
             problems.append(f"{where}.url: not an http or https address: {value!r}")
-        elif key == "doi" and not DOI_PATTERN.fullmatch(value):
+        elif key == "doi" and not _is_doi(value):
             problems.append(f"{where}.doi: not a DOI of the form 10.<prefix>/<suffix> (no resolver URL): {value!r}")
         elif key == "isbn" and not _is_isbn(value):
             problems.append(f"{where}.isbn: not an ISBN-10 or ISBN-13 with a fitting check digit: {value!r}")

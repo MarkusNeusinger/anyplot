@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.cache import cache_key, get_or_set_cache
 from api.dependencies import require_db
 from api.exceptions import raise_not_found
-from api.schemas import ImplementationResponse, SpecDetailResponse, SpecListItem, SpecMapItem
+from api.schemas import ImplementationResponse, SpecDetailResponse, SpecListItem, SpecMapItem, SpecSources
 from core.config import settings
 from core.constants import LIBRARY_LANGUAGES
 from core.database import ImplRepository, SpecRepository
@@ -114,6 +114,7 @@ async def _build_spec_detail(db: AsyncSession, spec_id: str) -> SpecDetailRespon
         suggested=spec.suggested,
         created=spec.created.isoformat() if spec.created else None,
         updated=spec.updated.isoformat() if spec.updated else None,
+        sources=SpecSources.from_stored(spec.sources),
         implementations=impls,
     )
 

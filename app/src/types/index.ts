@@ -161,6 +161,23 @@ export interface Implementation {
   impl_tags?: Record<string, string[]>;
 }
 
+// One work a spec names: its title and address, and a DOI or an ISBN where it has one.
+export interface SourceEntry {
+  title: string;
+  url: string;
+  doi?: string | null;
+  isbn?: string | null;
+}
+
+// A spec's sources (`specification.yaml`, core/spec_sources.py): the works that gave the idea
+// for the plot, and the literature its values follow. `data` says where the example data comes
+// from. The API serves null for a spec that names none.
+export interface SpecSources {
+  data?: 'invented' | 'computed' | 'real' | null;
+  inspired_by: SourceEntry[];
+  references: SourceEntry[];
+}
+
 // Plausible analytics (only in production)
 declare global {
   interface Window {

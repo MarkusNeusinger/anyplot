@@ -28,6 +28,7 @@ import {
   type TrackEventFn,
 } from 'src/sections/spec-detail/SpecTabs/utils';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import type { SpecSources } from 'src/types';
 
 interface SpecTabsProps {
   // Code tab
@@ -39,6 +40,7 @@ interface SpecTabsProps {
   applications?: string[];
   data?: string[];
   notes?: string[];
+  sources?: SpecSources | null;
   tags?: Record<string, string[]>;
   created?: string;
   // Implementation tab
@@ -72,6 +74,7 @@ export function SpecTabs({
   applications,
   data,
   notes,
+  sources,
   tags,
   created,
   updated,
@@ -301,6 +304,7 @@ export function SpecTabs({
           applications={applications}
           data={data}
           notes={notes}
+          sources={sources}
         />
       </TabPanel>
 

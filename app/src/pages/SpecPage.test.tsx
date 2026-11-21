@@ -570,6 +570,63 @@ describe('SpecPage', () => {
       ]);
     });
 
+    const sources = {
+      data: 'computed',
+      inspired_by: [{ title: 'An example project', url: 'https://example.org/project' }],
+      references: [
+        { title: 'A paper', url: 'https://example.org/paper', doi: '10.1000/xyz123', isbn: null },
+      ],
+    };
+    // Named first: an object literal with a field the fixture lacks fails the excess-property check.
+    const hubWithSources = { ...mockSpecData, sources };
+    const juliaWithSources = { ...juliaSpec, sources };
+    const hubWithoutSources = { ...mockSpecData, sources: null };
+
+    it('names the sources on the hub page node, as the bot HTML does', async () => {
+      mockParams = { specId: 'scatter-basic' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess(hubWithSources);
+      render(<SpecPage />);
+
+      await waitFor(() => expect(jsonLd().CollectionPage).toBeDefined());
+      const page = jsonLd().CollectionPage;
+      expect(page['@id']).toBe('https://anyplot.ai/scatter-basic');
+      expect(page.isBasedOn).toEqual([
+        { '@type': 'CreativeWork', name: 'An example project', url: 'https://example.org/project' },
+      ]);
+      expect(page.citation).toEqual([
+        {
+          '@type': 'CreativeWork',
+          name: 'A paper',
+          url: 'https://example.org/paper',
+          identifier: [{ '@type': 'PropertyValue', propertyID: 'DOI', value: '10.1000/xyz123' }],
+        },
+      ]);
+    });
+
+    it('names them on a detail page node and never on the code', async () => {
+      mockParams = { specId: 'scatter-basic', language: 'julia', library: 'makie' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess(juliaWithSources);
+      render(<SpecPage />);
+
+      await waitFor(() => expect(jsonLd().WebPage).toBeDefined());
+      expect(jsonLd().WebPage['@id']).toBe('https://anyplot.ai/scatter-basic/julia/makie');
+      expect(jsonLd().WebPage.citation).toHaveLength(1);
+      expect(jsonLd().SoftwareSourceCode.isBasedOn).toBe('https://anyplot.ai/scatter-basic');
+      expect(jsonLd().SoftwareSourceCode.citation).toBeUndefined();
+    });
+
+    it('adds no page node for a spec that names no work', async () => {
+      mockParams = { specId: 'scatter-basic' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess(hubWithoutSources);
+      render(<SpecPage />);
+
+      await waitFor(() => expect(jsonLd().BreadcrumbList).toBeDefined());
+      expect(jsonLd().CollectionPage).toBeUndefined();
+    });
+
     it('shares the spec card as og:image on the hub', async () => {
       mockParams = { specId: 'scatter-basic' };
       mockSearchParams.delete('language');

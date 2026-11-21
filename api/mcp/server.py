@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import NullPool
 
 from api.machine_reads import MachineReadMcpMiddleware
-from api.schemas import ImplementationResponse, SpecDetailResponse, SpecListItem
+from api.schemas import ImplementationResponse, SpecDetailResponse, SpecListItem, SpecSources
 from api.version import APP_VERSION
 from core.database import ImplRepository, LibraryRepository, SpecRepository, is_db_configured
 from core.database.models import Impl
@@ -324,6 +324,9 @@ async def get_spec_detail(spec_id: str, libraries: list[str] | None = None) -> d
         - The selected implementations with code and metadata
         - Data requirements
         - Applications and notes
+        - Sources, or null when the spec names none: `inspired_by` (works that gave
+          the idea), `references` (literature its values follow), and `data`
+          (whether the example data is invented, computed, or real)
 
     Raises:
         ValueError: If spec_id not found
@@ -363,6 +366,7 @@ async def get_spec_detail(spec_id: str, libraries: list[str] | None = None) -> d
             suggested=spec.suggested,
             created=spec.created.isoformat() if spec.created else None,
             updated=spec.updated.isoformat() if spec.updated else None,
+            sources=SpecSources.from_stored(spec.sources),
         )
         return {
             **response.model_dump(),
