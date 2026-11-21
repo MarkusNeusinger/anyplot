@@ -2,46 +2,54 @@ library: seaborn
 language: python
 specification_id: contour-density
 created: '2025-12-30T09:31:30Z'
-updated: '2026-05-16T03:24:24Z'
-generated_by: claude-haiku
-workflow_run: 25951420321
+updated: '2026-11-21T21:33:39Z'
+generated_by: claude-sonnet
+workflow_run: 44951669141
 issue: 2552
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 79
 review:
   strengths:
-  - Excellent visual quality with perfect text legibility and theme adaptation
-  - All required spec elements present with correct title format
-  - Clean, reproducible code with proper structure and seeding
-  - Theme-adaptive colors properly implemented for both light and dark—no dark-on-dark
-    failures
-  - Scatter overlay effectively adds context to the density visualization
-  - Viridis colormap is an appropriate choice for continuous density data
+  - Uses the Imprint sequential colormap imprint_seq for the filled density bands,
+    identical in both themes
+  - Seaborn's native kdeplot color bar (cbar=True, cbar_kws) relabelled to low/high
+    so it says which way density rises without meaningless raw density numbers
+  - Filled bands and contour lines share the same 10 KDE levels, so each cluster sits
+    inside its own nested rings
+  - Faint, small scatter overlay at the exact values keeps the contours the main signal
+  - Exact 3200x1800 canvas and a clean data block that reads only df and the column
+    constants
   weaknesses:
-  - Design excellence could be elevated with more distinctive visual choices or custom
-    refinements beyond defaults
-  - Library mastery could leverage additional seaborn-specific features or techniques
-    for greater sophistication
+  - 'VQ-06, DQ-02 (both): the axes are titled ''X Variable (units)'' and ''Y Variable
+    (units)'', placeholders that name no quantity and no unit, so the density story
+    has no real-world context → a concrete neutral bivariate scenario with real quantities
+    and units, e.g. ''Height (cm)'' vs ''Weight (kg)'' or ''Temperature (°C)'' vs
+    ''Pressure (hPa)'' as the spec''s Data example suggests, with the data scaled
+    to match. Likely cause: the column constants X and Y keep the template placeholder
+    names.'
+  - 'Suggestion: the two cluster cores reach almost the same blue, so the larger cluster''s
+    higher peak is hard to read; more levels near the top (e.g. levels as quantiles
+    weighted toward high density) would separate the peaks.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, correctly rendered
-      Chrome: Title "contour-density · seaborn · anyplot.ai" in dark text, axis labels "X Variable (units)" and "Y Variable (units)" clearly readable, tick labels in medium gray with good contrast
-      Data: Viridis colormap gradient (purple to yellow) showing density concentration with filled contours and overlay contour lines; semi-transparent light gray scatter points showing 450-point dataset; two clear clusters visible
-      Legibility verdict: PASS - All text elements fully readable, no legibility issues
+      Background: warm off-white #FAF8F1, 3200x1800 canvas
+      Chrome: title "contour-density · python · seaborn · anyplot.ai" in dark ink (12 pt, ~48% of width), axis titles "X Variable (units)" / "Y Variable (units)" at 10 pt, gray 8 pt ticks, subtle horizontal grid, L-shaped spines; color bar on the right titled "Relative density" with "low"/"high" end labels; all readable
+      Data: 10 filled KDE bands in imprint_seq (brand green #009E73 outer -> blue #4467A3 core) at alpha 0.85, thin dark-gray contour lines on the same levels, 450 small faint gray scatter points; two clusters (around 5,5 and 9,8), each inside its own nested rings, a few tail points outside every contour
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, correctly rendered
-      Chrome: Title and axis labels in light text, fully readable against dark background; tick labels in light gray with proper contrast; no dark-on-dark failures detected
-      Data: Viridis colors identical to light render (confirms proper theme adaptation); only chrome has flipped to dark theme
-      Legibility verdict: PASS - All text readable on dark background; perfect theme adaptation with no visibility issues
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles, ticks and color-bar labels in light ink, all readable; no dark-on-dark text
+      Data: identical green-to-blue band colors (fill darkens slightly by alpha over the dark page), contour lines in light gray, faint light-gray scatter; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -49,70 +57,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly sized; title 24pt, labels 20pt, ticks 16pt;
-          perfect readability in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and color-bar labels 8 pt,
+          all explicitly set; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements; clean spacing throughout
+        comment: No text collisions; the scatter points sit under the contour lines
+          as the overlay intends
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density contours and scatter points optimally visible; sizing appropriate
-          for data density
+        comment: 450 points drawn small (s=4) and faint (alpha 0.3) as context; thin
+          0.6 contour lines over the fill stay visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe; good alpha handling
+        comment: Green-to-blue sequential ramp with low/high labels; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas with balanced margins; excellent proportions
+        comment: 3200x1800 canvas, balanced margins, color bar next to the axes, nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Descriptive with units: X Variable (units) and Y Variable (units)'
+        passed: false
+        comment: Axis titles 'X Variable (units)' and 'Y Variable (units)' are placeholders
+          with no real quantity or unit (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous data; backgrounds #FAF8F1 (light)
-          and #1A1A17 (dark); text colors theme-correct'
+        comment: 'imprint_seq (#009E73 -> #4467A3) for the continuous density; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Theme-adaptive implementation shows thoughtfulness; relies on library
-          defaults rather than exceptional customization
+        passed: false
+        comment: Style-guide baseline typography and spacing; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Good spine removal, subtle grid styling, balanced whitespace
+        passed: false
+        comment: 'Color bar stripped to its essentials: spines hidden, tick marks
+          length 0, only low/high labels; thin contour lines layered over the bands'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Two clusters clearly visible; scatter overlay provides context; effective
-          narrative
+        passed: false
+        comment: Data displayed with no focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +133,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density contour implementation using KDE
+        comment: Correct KDE density contour plot with filled bands, contour lines
+          and an optional scatter overlay the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: filled contours, contour lines, scatter overlay'
+        comment: KDE, 10 nested levels, color bar saying density rises low->high (C2),
+          faint scatter (C4), sequential fill (C5), clusters each in their own rings
+          (C1, C3)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; axes show full data range
+        comment: x and y mapped correctly, all data inside the axes, points at their
+          exact values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend not needed
+        comment: Title 'contour-density · python · seaborn · anyplot.ai' matches the
+          format; the color bar is titled 'Relative density'
     data_quality:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: DQ-01
@@ -150,19 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all density distribution aspects: two clusters, full gradient'
+        comment: Two clusters of different size and spread, a saddle between them,
+          sparse tail points outside every contour
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Plausible bivariate normal scenario; neutral scientific context
+        passed: false
+        comment: 'Abstract labels only: ''X Variable (units)'' / ''Y Variable (units)''
+          with no real-world context (defect line)'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values and proportions; factually correct
+        comment: Values 0-12 on both axes are sensible for the synthetic mixture;
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -172,55 +191,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no unnecessary functions
+        comment: Imports -> constants -> Data block binding df -> Plot -> Save, no
+          functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42; fully reproducible
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and clean; no over-engineering
+        comment: Appropriate complexity; KDE computed by seaborn, not written out
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png naming
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Good use of sns.kdeplot() and sns.set_theme()
+        passed: false
+        comment: Axes-level sns.kdeplot with data=df and the column constants, sns.set_theme
+          rc tokens, sns.despine
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses kdeplot effectively; combined filled+contour adds clarity
+        passed: false
+        comment: Seaborn's built-in color bar via cbar=True/cbar_kws on kdeplot, filled
+          and line KDE layers sharing levels
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T21:30:17Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - colorbar
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - kde
   styling:
+  - custom-colormap
   - alpha-blending
-  - grid-styling
