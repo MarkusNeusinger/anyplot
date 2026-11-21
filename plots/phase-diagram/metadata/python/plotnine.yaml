@@ -2,49 +2,59 @@ library: plotnine
 language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:06:50Z'
-updated: '2026-05-14T15:20:18Z'
-generated_by: claude-haiku
-workflow_run: 25868108774
+updated: '2026-11-21T17:06:30Z'
+generated_by: claude-sonnet
+workflow_run: 44927680080
 issue: 3004
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 80
 review:
   strengths:
-  - Excellent theme adaptation with proper use of all theme tokens resulting in correct
-    renders for both light and dark modes
-  - Clear visualization of damped oscillator dynamics with immediately comprehensible
-    spiral convergence pattern
-  - Thoughtful design details including reference lines at fixed point and distinct
-    start/end markers
-  - Proper perceptual uniformity with viridis colormap that is CVD-safe
-  - Perfect text legibility with all sizes explicitly set and readable in both themes
-  - Clean, idiomatic plotnine code with no technical issues
+  - 'Continuous time mapped with imprint_seq (#009E73 → #4467A3) through scale_color_gradient,
+    explained by a ''Time (s)'' colorbar'
+  - geom_path keeps the trajectory in time order, giving one smooth continuous inward
+    spiral
+  - Start circle in brand green and end square make the trajectory's direction and
+    endpoint readable
+  - Exact canvas (3200x1800) and style-guide font sizes; all chrome from theme tokens,
+    correct in both themes
+  - Data computed in closed form with a correct analytical derivative
   weaknesses:
-  - Top and right spines retained when style guide recommends L-shaped frame by default
-  - Single trajectory only when multiple trajectories would better illustrate basin
-    of attraction structure
-  - No explicit direction indicators along trajectory when spec suggests considering
-    directional arrows
+  - 'DE-02 (both): panel_border draws a full four-sided frame around the panel where
+    the phase diagram needs none → L-shaped frame (left and bottom only) or no spines.
+    Likely cause: panel_border=element_rect(color=INK_SOFT, ...) in anyplot_theme.'
+  - 'VQ-06 (both): axis titles ''Position x'' and ''Velocity dx/dt'' have no units
+    while the colorbar reads ''Time (s)'' → e.g. ''Position x (m)'' and ''Velocity
+    dx/dt (m/s)''. Likely cause: the X and DX_DT column names.'
+  - 'DQ-01 (both): the spiral stops at t = 8 s with amplitude still ~0.6 (30 % of
+    the initial 2.0); the innermost loop spans x ≈ -0.65..0.7, so the trajectory does
+    not end at the equilibrium as C2 asks → final amplitude under ~5 % of the start.
+    Likely cause: gamma=0.15 with t up to 8 (raise gamma to ~0.4 or extend t to ~20
+    s).'
+  - 'Suggestion: mark the fixed point at the origin with a small marker, as the Notes
+    allow.'
+  - 'Suggestion: a few direction arrows along the outer loop would reinforce the time
+    gradient.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "phase-diagram · plotnine · anyplot.ai" in dark text (24pt), axis labels "Position x" and "Velocity dx/dt" in dark text (20pt), tick labels in secondary dark color (16pt) - all clearly readable
-      Data: Spiral trajectory using viridis colormap (purple → blue → cyan → yellow), showing time evolution. Green circular marker at start point (#009E73), gray square at end point. Dashed reference lines at x=0 and y=0. Grid lines subtle and unobtrusive.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'phase-diagram · python · plotnine · anyplot.ai' in dark ink, axis titles 'Position x' / 'Velocity dx/dt', grey tick labels, faint grid, four-sided panel frame, dashed reference lines at x=0 and dx/dt=0; colorbar 'Time (s)' 0-8 on the right. All text readable.
+      Data: one inward elliptical spiral colored by time from #009E73 (t=0) to #4467A3 (t=8), green start circle at (2, 0), dark square end marker at (~0.6, 0).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Same elements now in light text colors - title and axis labels in light (#F0EFE8), tick labels in secondary light (#B8B7B0) - all clearly readable with good contrast
-      Data: Viridis colormap colors are visually identical to light render, confirming proper theme adaptation. Reference lines and grid visible but subtle. Start/end markers present and visible.
-      Legibility verdict: PASS - no dark-on-dark conflicts detected
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, colorbar box on elevated dark fill with light labels; no dark-on-dark text.
+      Data: identical green-to-blue gradient as the light render; end square flips to light grey (theme token); brand green start marker clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,67 +62,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes properly set and readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (style-guide
+          sizes); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements properly spaced with no collisions
+        comment: No text collisions; start and end markers sit clear of all labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Trajectory path and markers clearly visible
+        comment: Path width 1.0 is clear for 800 points; start circle and end square
+          visible in both themes; colorbar visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and CVD-safe
+        comment: Green-to-blue gradient keeps contrast on both backgrounds; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Appropriate 16:9 landscape with good margins
+        comment: 3200x1800 canvas; balanced margins, title ~55% of width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive axis labels clearly indicate data
+        passed: false
+        comment: Axis titles 'Position x' and 'Velocity dx/dt' carry no units while
+          the legend states Time (s) (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Viridis for continuous data, correct backgrounds and theme colors
+        comment: 'imprint_seq (#009E73 -> #4467A3) via scale_color_gradient for time;
+          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional with thoughtful details (reference lines, markers) but
-          not innovative
+        comment: 'Style-guide baseline: Imprint gradient, theme tokens, explicit sizes;
+          nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
         passed: false
-        comment: Grid refined but top/right spines retained when style guide recommends
-          removal
+        comment: panel_border draws all four spines where the plot type does not need
+          them (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Clear focal point and time gradient effectively guides viewer
+        comment: Start circle in brand green and an end square chosen by the implementation
+          give the trajectory a clear beginning and end beyond the Notes' gradient
     spec_compliance:
       score: 15
       max: 15
@@ -122,25 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct phase diagram showing (x, dx/dt) state space
+        comment: 'Correct phase diagram: x vs dx/dt trajectory'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Fixed point marked, time evolution shown via color gradient
+        comment: C1 smooth path in time order (geom_path); C3 time gradient with colorbar,
+          motion rightward above dx/dt = 0; C4/C5 optional and not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y axes correctly map position and velocity
+        comment: x and dx/dt mapped correctly; all data within axes; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend appropriately labels colorbar
+        comment: Title 'phase-diagram · python · plotnine · anyplot.ai' correct; colorbar
+          titled Time (s)
     data_quality:
       score: 14
       max: 15
@@ -149,20 +167,22 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        passed: true
-        comment: Single trajectory is clear; multiple trajectories would be richer
+        passed: false
+        comment: Inward spiral shown, but at t = 8 s the amplitude is still ~0.6 of
+          2.0, so the trajectory stops far from the equilibrium (C2; defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Damped harmonic oscillator with realistic parameters
+        comment: Damped harmonic oscillator, neutral physics scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Time, position, and velocity ranges are sensible
+        comment: 'Checked: dx/dt = A e^(-γt)(-γ cos ωt - ω sin ωt) is the exact derivative
+          of x (line 52); peak velocity ~12 ≈ 2·2π matches the axis'
     code_quality:
       score: 10
       max: 10
@@ -172,55 +192,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Pure inline code, no unnecessary abstractions
+        comment: Flat Imports -> Data -> Plot -> Save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42), fully deterministic
+        comment: Deterministic closed-form data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extraneous ones
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no simulated interactivity
+        comment: Concise; nothing to remove
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png
+        comment: plot.save to plot-{THEME}.png at 8x4.5 in, dpi 400
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Excellent ggplot2-style patterns with proper aes(), geom_path(),
-          and theme customization
+        comment: 'Idiomatic grammar: geom_path keeps time order (not geom_line), per-layer
+          data subsets for start/end, axis titles from column names'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: true
-        comment: Good plotnine patterns but mostly standard usage
+        comment: Standard plotnine usage, nothing distinctive beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T17:03:02Z'
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - custom-colormap
+  - alpha-blending
   - grid-styling
