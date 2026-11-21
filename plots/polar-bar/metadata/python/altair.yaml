@@ -2,54 +2,54 @@ library: altair
 language: python
 specification_id: polar-bar
 created: '2025-12-30T16:29:55Z'
-updated: '2026-05-13T01:15:19Z'
-generated_by: claude-haiku
-workflow_run: 25771768944
+updated: '2026-11-21T07:55:05Z'
+generated_by: claude-sonnet
+workflow_run: 44881933115
 issue: 2693
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/altair/plot-dark.html
-quality_score: 94
+quality_score: 84
 review:
   strengths:
-  - Authentic polar-bar implementation using Altair's arc marks with theta/theta2/radius
-    encoding
-  - 'Perfect theme adaptation: identical data colors across light/dark renders, only
-    chrome flips'
-  - Professional Okabe-Ito palette with strong visual hierarchy and intentional design
-  - 'Complete spec compliance: all required features present and working correctly'
-  - 'Excellent code quality: reproducible with seed, idiomatic Altair patterns, KISS
-    structure'
-  - Realistic meteorological data demonstrating genuine prevailing westerlies pattern
-  - 'High visual quality: no text overlap, all elements readable at full resolution
-    in both themes'
-  - 'Sophisticated library usage: custom legend styling, interactive zoom/pan, proper
-    scale configuration'
+  - All polar geometry uses Altair's theta/theta2/radius/radius2 encodings on one
+    shared scale, so bars, rings and labels stay aligned
+  - Concentric rings with value labels and a subtitle naming the unit make bar lengths
+    readable
+  - 'Theme tokens threaded through title, subtitle, legend and labels: both renders
+    fully legible'
+  - 'Legend in compass order with the canonical Imprint palette, N in #009E73'
+  - Native tooltips and interactive() in the HTML output
   weaknesses:
-  - Radius axis (frequency) lacks explicit label - currently only visible in tooltip;
-    adding title to radius encoding would improve clarity
-  - Design Excellence could emphasize the prevailing wind direction more explicitly
-    through accent color or visual emphasis to strengthen data storytelling
+  - 'VQ-02 (both): the ''10'' ring value label at the 22.5° spoke touches the top
+    edge of the NE bar (value 9 sits just below the 10 ring) → keep the label clear
+    of every bar by at least a few px. Likely cause: SPOKE_SHARE places the ring labels
+    at a fixed angle without checking which bars reach the ring.'
+  - 'VQ-05 (both): the rose with its rim labels occupies only about 65 % of the canvas
+    height, leaving roughly 200 px empty above the title and 300 px below the S label
+    → a larger view so the rose fills more of the square (about +15 % SIDE, within
+    the canvas). Likely cause: SIDE=430 with the radius range at 0.38 of SIDE.'
+  - 'Suggestion: color by direction repeats what angle and rim labels already show;
+    a single color, or stacked speed bands as the Notes allow, would give color a
+    job.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), exactly as specified
-      Chrome: Title "polar-bar · altair · anyplot.ai" (28pt, dark text); direction labels N/NE/E/SE/S/SW/W/NW positioned around perimeter (20pt bold); legend on right with "Direction" title (18pt) and color swatches (16pt labels) - all clearly readable against light surface
-      Data: 8 bars radiating from center with distinct Okabe-Ito colors; W and SW show largest magnitudes (22, 18); brand green (#009E73) prominent in palette; bar strokes visible (subtle white outlines)
-      Legibility verdict: PASS - all text dark on light background with strong contrast; no light-on-light failures; all elements readable at full resolution
+      Background: warm off-white #FAF8F1 across the full 2400x2400 canvas
+      Chrome: bold title 'polar-bar · python · altair · anyplot.ai' with soft-ink subtitle 'Bar length: Frequency (days), rings every 10'; bold dark rim labels N…NW outside the 30 ring; ring value labels 10/20/30 in soft ink at the 22.5° spoke; legend 'Wind direction' on an elevated panel at the right; all text dark on light and readable
+      Data: eight wedges at the compass bearings in canonical Imprint order (N #009E73, NE purple, E blue, SE ochre, S red, SW cyan, W plum, NW olive); W longest (~24), SW and NW next; three faint concentric rings
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), exactly as specified (not pure black)
-      Chrome: Title and direction labels in light off-white (#F0EFE8), secondary text in softer gray (#B8B7B0); legend box background dark (#242420) with light border; all text light-colored and clearly visible against dark surface
-      Data: Identical bar colors to light render (brand green, full Okabe-Ito palette preserved); bar strokes now dark/subtle against dark background; magnetic pattern (W/SW dominance) matches light render exactly
-      Legibility verdict: PASS - all text light on dark background with strong contrast; no dark-on-dark failures; data colors verified identical to light render; theme adaptation perfect
-
-    Both renders confirm successful theme implementation: data colors stay constant (only positions 1-7 of Okabe-Ito, theme-independent), while all non-data chrome (background, text, legend box) correctly adapts between themes. No readability issues in either render.
+      Background: warm near-black #1A1A17
+      Chrome: title, rim labels and legend title in light ink, subtitle, ring labels and legend labels in light soft ink; legend panel on #242420; no dark-on-dark text
+      Data: wedge colors identical to the light render; rings faint but visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -57,78 +57,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, labels 20pt, legend 18/16pt);
-          readable in both light and dark themes
+        comment: All sizes explicit (title 18, rim labels 15, legend 12/13, ring labels
+          11 at scale 4); readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Direction labels positioned around perimeter, legend right-aligned;
-          no text overlaps
+        comment: The '10' ring label sits against the top edge of the NE bar (defect
+          line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 bars with distinct colors, optimally sized for circular arrangement;
-          all clearly visible
+        comment: Eight bars clearly visible with page-colored separators; legend dots
+          match the bars in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (CVD-safe); strong contrast between colors and
-          background; no red-green as sole signal
+        comment: Imprint palette; direction is also given by angle and rim label,
+          so color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: ~65% canvas utilization; balanced margins; square format (900×900px)
-          ideal for polar plot
+        comment: Rose plus rim labels fill only the middle of the 2400x2400 canvas,
+          wide empty bands above the title and below S (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title and direction labels correct; radius axis (frequency) lacks
-          explicit label (present in tooltip only)
+        passed: true
+        comment: 'Subtitle names the radial quantity with unit: ''Bar length: Frequency
+          (days), rings every 10'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette used; brand green (#009E73) present; background
-          #FAF8F1 (light) / #1A1A17 (dark); text colors theme-correct; legend boxes
-          adapted'
+        comment: 'Canonical Imprint order, N = #009E73; backgrounds #FAF8F1 / #1A1A17;
+          chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Professional design using best-practice Okabe-Ito palette; clear
-          typography hierarchy; intentional styling; above library defaults but not
-          custom-beyond-standards
+        passed: false
+        comment: Subtitle that states the ring step, bold rim labels over regular
+          legend text, styled legend panel on the elevated surface
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle bar strokes (strokeWidth=1.5); clean layout; generous whitespace;
-          polished presentation with minimal customization
+        passed: false
+        comment: Ring value labels placed in the empty gap between the N and NE bars;
+          page-colored bar strokes separate the wedges
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Data chosen to show prevailing westerlies (W=22, SW=18 dominant);
-          bar size creates visual hierarchy; viewer sees the pattern; could emphasize
-          direction more
+        passed: false
+        comment: 'Default: bars shown, no focal point chosen beyond the data'
     spec_compliance:
       score: 15
       max: 15
@@ -138,29 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar bar chart (wind rose); bars radiate from center as
-          specified
+        comment: 'Correct polar bar chart: arc wedges radiating from the centre'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: radiating bars, angular categories (directions),
-          frequency magnitude, 8 compass directions, labels, legend, title, tooltips'
+        comment: C1 zero-based radius, C2 equal widths in compass order with rim labels,
+          C3 concentric rings with value labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theta encodes direction (angular position); radius encodes frequency
-          (bar length); color encodes direction for legend; all data visible
+        comment: Theta = bearing, radius = frequency on a zero-based linear scale
+          shared by all layers
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'polar-bar · altair · anyplot.ai' correct; legend shows
-          all 8 directions with matching colors
+        comment: Title 'polar-bar · python · altair · anyplot.ai'; legend in compass
+          order
     data_quality:
       score: 15
       max: 15
@@ -170,22 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 8 compass directions shown; frequency varies (6-22) demonstrating
-          range across all aspects
+        comment: Eight directions with a clear prevailing westerly pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wind direction/frequency distribution; prevailing westerlies pattern
-          is real meteorological phenomenon; neutral, non-controversial scenario
+        comment: Plausible wind-direction day counts, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency values (6-22) plausible for wind direction counts; proportions
-          match real weather; westerlies dominance factually accurate
+        comment: Values 6-24 days per direction are sensible; no Check values in the
+          spec
     code_quality:
       score: 10
       max: 10
@@ -195,65 +188,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data generation → chart construction
-          → save; no functions or classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; all data generation deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas imported; all used; no cruft
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; appropriate complexity; no over-engineering;
-          no fake interactive features
+        comment: Appropriate complexity; ring step derived from the data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html;
-          correct filename pattern; current API
+        comment: Saves plot-{THEME}.png (padded to 2400x2400) and plot-{THEME}.html
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Proper Altair patterns: alt.Chart() data binding, mark_arc() for
-          polar bars, sophisticated theta/theta2/radius/color encodings, scale customization,
-          configure_* methods, interactive() for zoom/pan'
+        comment: Polar layout built entirely from theta/theta2/radius/radius2 encodings
+          with one shared Scale object across layers
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Arc-based polar bars distinctive to Altair; sophisticated theta/theta2/radius
-          encoding system unique to Altair; custom legend with color/orientation/font
-          control; genuine interactive features
+        passed: false
+        comment: mark_arc with radius2 for gridline rings and mark_text positioned
+          by theta/radius encodings, native tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T07:51:34Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - polar-projection
   - layer-composition
-  - custom-legend
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
+  - edge-highlighting
+  - grid-styling
