@@ -2,47 +2,54 @@ library: matplotlib
 language: python
 specification_id: candlestick-volume
 created: '2025-12-31T13:52:11Z'
-updated: '2026-05-16T05:19:08Z'
-generated_by: claude-haiku
-workflow_run: 25953603466
+updated: '2026-11-21T21:47:02Z'
+generated_by: claude-sonnet
+workflow_run: 44952793555
 issue: 3068
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 81
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present'
-  - 'Excellent visual quality: all text readable in both themes, no overlaps, proper
-    palettes'
-  - 'Realistic data: 60 trading days with genuine price/volume correlation'
-  - 'Professional dual-pane layout: price (75%) and volume (25%) well-proportioned'
-  - 'Clean theme implementation: both light and dark renders are equally readable'
-  - Proper use of Okabe-Ito palette with correct brand green (#009E73) and vermillion
-    (#D55E00)
-  - 'Strong code quality: deterministic, reproducible, properly structured'
+  - Candles drawn with one vectorized ax.vlines (wicks) and one ax.bar (bodies) call,
+    colored per period from a single is_up mask shared with the volume bars
+  - plt.subplots(sharex=True, gridspec_kw height_ratios [3, 1]) gives the 75/25 split
+    with aligned grids and one shared date axis
+  - Theme tokens thread through every chrome element; both renders are fully legible
+    and the data colors are identical
+  - mdates.AutoDateLocator + DateFormatter('%b %d') and a FuncFormatter for millions
+    keep the axes readable
   weaknesses:
-  - 'LM-02 could be higher: candlestick implementation uses standard bar/line approach
-    rather than showcasing distinctive matplotlib features like patches or advanced
-    primitives'
+  - 'VQ-05 (both): the volume y-label ''Volume (shares)'' is about 1.35x taller than
+    the volume pane and runs up beside the price pane''s lower ticks → keep it within
+    the volume pane''s height (about −30 %, e.g. a shorter label text or a two-line
+    label). Likely cause: ax_volume.set_ylabel(VOLUME, fontsize=10) on a pane only
+    25 % of the height.'
+  - 'CQ-04 (code): lines 55–59 build highs and lows as body_top + np.zeros(n_days)
+    and then overwrite every element in a per-day loop → highs = body_top + np.random.uniform(0.5,
+    2.0, n_days), lows = body_bottom - np.random.uniform(0.5, 2.0, n_days). Likely
+    cause: a loop carried over instead of a vectorized draw.'
+  - 'Suggestion: hollow up-candle bodies would add a cue beyond color for the up/down
+    distinction.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "candlestick-volume · matplotlib · anyplot.ai" in dark text (INK), axis labels "Price ($)" and "Volume (shares)" in dark text, tick labels clearly visible. Legend in upper left with light background frame and dark text. All elements have excellent contrast against the light background.
-      Data: Green candlesticks (#009E73, Okabe-Ito position 1) for up days, orange candlesticks (#D55E00, Okabe-Ito position 2) for down days. Volume bars use matching colors. Grid subtle at 15% alpha, wicks 2.5px, bodies clearly defined. Crosshair vertical line subtle at 40% alpha.
-      Legibility verdict: PASS - All text is explicitly sized (title 24pt, labels 20pt, ticks 16pt) and perfectly readable. No overlaps. Excellent contrast.
+      Background: warm off-white #FAF8F1 across canvas and both panes.
+      Chrome: title 'candlestick-volume · python · matplotlib · anyplot.ai' in dark ink centered at the top (~55% width); 'Price ($)', 'Volume (shares)' and 'Date' axis titles in dark ink; tick labels (120-160, 0.0M-10.0M, Jan 01 ... Mar 15 rotated 45°) in soft dark grey; subtle grid in both panes, aligned at the shared date ticks; framed legend lower left. The 'Volume (shares)' label is taller than the volume pane and reaches up beside the price pane's lowest tick.
+      Data: 60 candles, up in #009E73, down in #AE3030, weekend gaps; volume bars below in the same colors at alpha 0.8, each beneath its candle; a faint dashed vertical guide at mid-February through both panes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title in light text (#F0EFE8), axis labels in light text, tick labels in light/soft text (#B8B7B0). Legend frame dark (#242420) with light text. All elements clearly visible and readable against dark background.
-      Data: Candlestick colors identical to light render - green (#009E73) and orange (#D55E00) unchanged. Volume bars match. Grid and crosshair properly visible on dark background.
-      Legibility verdict: PASS - No dark-on-dark failures. All text is light-colored and clearly distinguishable. Data colors are identical to light render, confirming proper theme adaptation. Both renders are equally readable and professional.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light grey, grid subtle but visible, legend frame #242420 with light text; no dark-on-dark text.
+      Data: identical green/red candles and volume bars; brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,76 +57,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt)
-          and perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (style-guide
+          sizes); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Date labels rotated 45°, legend positioned well,
-          title has proper padding
+        comment: No collisions; legend sits lower left in empty space below the early-January
+          candles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 60 candlesticks with wicks (2.5px) and bodies perfectly visible and
-          adapted to data density
+        comment: 60 candles with 1.4 pt wicks and 0.6-day bodies, volume bars clearly
+          visible; legend swatches match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors have excellent contrast; volume alpha=0.8 provides
-          good distinction
+        comment: 'Green #009E73 vs red #AE3030 differ strongly in lightness; the up/down
+          semantic pair, legend spells out the meaning'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'Perfect proportions: price 75%, volume 25%; plot uses ~65% of canvas
-          with balanced generous margins'
+        passed: false
+        comment: 3200x1800 canvas, 3:1 pane split, title ~55% width; the 'Volume (shares)'
+          y-label is taller than its pane and runs up beside the price pane (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct. Axis labels descriptive with units: ''Price
-          ($)'' and ''Volume (shares)'''
+        comment: Price ($), Volume (shares), Date - descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green), second #D55E00 (vermillion).
-          Backgrounds correct. Text/grid theme-adaptive. Both renders identical data
-          colors only.'
+        comment: 'Up = #009E73, down = #AE3030 (Imprint positions 1 and 5 as the up/down
+          semantic pair); backgrounds #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Well-configured professional defaults with intentional hierarchy
-          and Okabe-Ito palette. Lacks exceptional custom touches.
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid (alpha=0.15), spine removal, proper legend styling with
-          custom colors. Very good polish.
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Dual-pane layout directly addresses spec intent. Color coding creates
-          narrative. Volume matching candlestick colors reinforces price-volume relationship.
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -129,29 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick with wicks/bodies. Volume bars with matching
-          colors. Dual-pane layout 75%/25%.
+        comment: Candlestick price pane over volume pane, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: OHLC data, volume bars, shared x-axis, proper date formatting, grid
-          alignment, crosshair spanning panes.
+        comment: Shared x-axis with date formatting, matching up/down colors, 75/25
+          split, subtle aligned grid, vertical guide through both panes (C1-C5 all
+          met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on x-axis, OHLC on price y-axis, volume on volume y-axis. All
-          data visible and appropriate.
+        comment: Bodies open-close, wicks low-high, volume bars from zero at each
+          date
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct. Legend labels clear: ''Up (Close ≥ Open)''
-          and ''Down (Close < Open)''.'
+        comment: Title 'candlestick-volume · python · matplotlib · anyplot.ai'; legend
+          Up/Down entries readable
     data_quality:
       score: 15
       max: 15
@@ -161,24 +164,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bullish and bearish candles, various wick lengths, varied body
-          sizes, wide volume range (3-10M).
+        comment: Up and down candles, doji-like small bodies, long wicks, a rally
+          and a sustained decline, volume varied 3.7-11M
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price $120-165 realistic, ~0.1% daily volatility realistic,
-          volume 3-10M appropriate for mid-cap.
+        comment: Plausible daily stock OHLC over 60 business days
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price/volume proportions realistic. Volume multiplier based on price
-          movement realistic. 60 trading days appropriate.
+        comment: 'Prices 122-167 $, ~2% daily volatility, volumes 4-11M shares: sensible
+          for a mid-cap; no Check values in the spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -186,62 +188,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → plot → styling → save. No functions/classes.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.dates, pyplot, numpy, pandas, patches.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean Pythonic code. OHLC generation realistic. No fake interactivity.
-          Theme tokens elegant.
+        passed: false
+        comment: highs/lows built as body_top + np.zeros then overwritten in a per-day
+          loop (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves correctly as plot-{THEME}.png with dpi=300. No deprecated functions.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches; current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses Axes methods (not pyplot). Proper subplot with gridspec_kw.
-          Date formatting via matplotlib.dates. High-level API throughout.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses dual-pane layout and custom height ratios (distinctive). However,
-          candlestick implementation is standard bar/line approach, not showcasing
-          advanced matplotlib primitives or unique features.
+        comment: Vectorized ax.vlines + ax.bar for the candles, plt.subplots(sharex=True,
+          gridspec_kw height_ratios), mdates AutoDateLocator/DateFormatter, FuncFormatter
+          for volume ticks
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T21:43:28Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - manual-ticks
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - time-series
   styling:
   - grid-styling
-  - theme-adaptive
