@@ -2,111 +2,114 @@ library: plotnine
 language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:32:18Z'
-updated: '2026-05-14T11:20:47Z'
-generated_by: claude-haiku
-workflow_run: 25856711172
+updated: '2026-11-21T15:58:25Z'
+generated_by: claude-sonnet
+workflow_run: 44921431448
 issue: 2924
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 78
 review:
   strengths:
-  - 'Perfect Visual Quality: Excellent readability in both light and dark themes with
-    proper theme-adaptive chrome; all text sizes explicitly set (title 24pt, labels
-    20pt, ticks 16pt) and perfectly clear'
-  - 'Complete Spec Implementation: All required features present (p-value threshold
-    ≈1.3, fold-change thresholds ±1, significance coloring, top gene labels, alpha
-    transparency)'
-  - 'Realistic Data: Proper RNA-seq scenario with appropriate magnitude ranges (FC:
-    -3 to +4, p-value: 0 to 4.5) and standard genomics thresholds'
-  - 'Expert plotnine Usage: Idiomatic grammar-of-graphics patterns with sophisticated
-    theme customization using element_rect, element_text, element_line controls; proper
-    use of geom_hline/geom_vline for reference lines'
-  - 'Flawless Technical Execution: Clean code structure, deterministic seeding, no
-    overlapping elements, proper current API usage, both renders generate correctly'
+  - Exact 3200x1800 canvas with the library prompt's text sizes (title 12 pt, axis
+    titles 10 pt, ticks 8 pt), readable in both themes
+  - Status computed vectorised with np.select and ordered via pd.Categorical plus
+    scale_color_manual(limits=...), so blue/gray/red map to Down/Not significant/Up
+    in legend order
+  - Threshold lines at -log10(0.05) and ±1 derived from named constants and drawn
+    in INK_SOFT, visible through the points on both backgrounds
+  - Marker size 1.8 with alpha 0.65 lets the dense gray mass read as density
   weaknesses:
-  - 'Palette Ordering: First categorical series uses #0072B2 (blue) instead of canonical
-    #009E73 (green). Follows genomics domain convention but deviates from strict Okabe-Ito
-    ordering rule. This is partial compliance (VQ-07: 1/2 instead of 2/2).'
-  - 'Design Conservatism: Aesthetic uses well-configured library defaults without
-    custom visual sophistication. Spines retained, minimal customization visible.
-    Could benefit from refined visual polish to approach publication-ready status.'
-  - 'Limited Distinctive Library Features: Theme-adaptive styling, while well-implemented,
-    is reusable across multiple libraries. Could leverage more plotnine-specific features
-    for greater distinctiveness.'
+  - 'VQ-02 (both): the Gene_469 and Gene_478 labels above the up-regulated arm collide,
+    the end of ''Gene_469'' running into ''Gene_478'' by roughly 25 px horizontally
+    at about the same height → no overlap between labels (at least 4 px clear). Likely
+    cause: geom_text with a fixed nudge_y for two top features about 0.3 log2 units
+    apart; label fewer features per side or use a smaller label size, without moving
+    the points.'
+  - 'VQ-01 (both): the gene-name labels at 6 pt read small beside the 8 pt tick labels
+    → 8 pt (+2 pt). Likely cause: geom_text(size=6).'
+  - 'VQ-07 (both): the non-significant mass uses a custom gray #8A8A82 → the style
+    guide''s theme-adaptive muted anchor (#6B6A63 light / #A8A79F dark). Likely cause:
+    MUTED = "#8A8A82".'
+  - 'DQ-02 (both): the labelled features read as generic identifiers Gene_416, Gene_443,
+    Gene_478 … → plausible gene symbols for the labelled features. Likely cause: GENE
+    column built from f"Gene_{i + 1}".'
+  - 'Suggestion: give the legend a little inner padding; the title ''Significance''
+    and the entry ''Down-regulated'' sit flush against the legend frame.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly theme-appropriate, not pure white
-      Chrome: Title "volcano-basic · plotnine · anyplot.ai" clearly visible in dark text (24pt); axis labels "Log2 Fold Change" and "-Log10(p-value)" in dark text (20pt); tick labels in soft gray (16pt) - all readable against light background
-      Data: Three distinct groups (blue #0072B2 for down-regulated, gray #888888 for not significant, orange #E69F00 for up-regulated); dashed threshold lines in gray mark significance cutoff (y≈1.3) and fold-change cutoffs (x=±1); top significant genes labeled with readable gray text; ~500 points with alpha=0.7 showing clear separation
-      Legibility verdict: PASS - Excellent contrast, no unreadable text, all elements clearly distinguishable
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title "volcano-basic · python · plotnine · anyplot.ai" in dark ink at the top centre; axis titles "Log2 fold change" and "-Log10(p-value)" dark; tick labels in soft gray; subtle grid; full panel frame in INK_SOFT; legend "Significance" on an elevated light box at the right. All readable.
+      Data: about 500 points; 400 gray non-significant points form a mound below the dashed horizontal line at about 1.3; a blue down-regulated arm at log2 FC -3.6 to -1.5 and a red up-regulated arm at 1.3 to 4.0, both at -log10 p 2.0 to 3.6. Dashed vertical lines at ±1. Six small gene labels (Gene_416, Gene_415, Gene_443 on the left; Gene_469, Gene_478, Gene_475 on the right) sit just above their points; Gene_469 and Gene_478 collide. Categorical data uses the semantic up/down exception (Imprint blue #4467A3, red #AE3030), so no #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly theme-appropriate, not pure black
-      Chrome: Title clearly visible in light text against dark background; axis labels in light text; tick labels in soft light gray - all readable with proper contrast. No "dark on dark" failures observed.
-      Data: Data colors IDENTICAL to light render - blue (#0072B2), gray (#888888), orange (#E69F00) maintain same identity. Only chrome adapted (background, text colors are now light). Threshold lines in gray remain visible and subtle. Gene labels in light gray text readable on dark surface. Visual hierarchy and emphasis identical to light version.
-      Legibility verdict: PASS - All text readable, proper theme adaptation, no contrast failures, data colors consistent with light render
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis titles in light ink, ticks in light soft gray, frame and dashed threshold lines in light gray, legend on a #242420 box with light text. No dark-on-dark text.
+      Data: identical blue, gray and red point colors and positions as the light render; only chrome flipped. Same Gene_469 / Gene_478 label collision.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, all readable
+          in both themes; the gene labels at 6 pt sit below the 8 pt tick reference
+          and read small (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements; gene labels positioned cleanly above
-          top significant features
+        comment: The Gene_469 and Gene_478 labels collide above the up-regulated arm
+          (defect line); no other text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 500 points with alpha=0.7 perfectly adapted to density; three groups
-          clearly separated and visible
+        comment: 500 points at size 1.8 with alpha 0.65 suit the medium density; legend
+          glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between groups; Okabe-Ito palette is CVD-safe; all
-          three categories distinguishable
+        comment: Blue / gray / red, no red-green pair as the sole signal; contrast
+          fine on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 16:9 canvas utilization; balanced margins; legend well-positioned;
-          no cut-off elements
+        comment: 3200x1800 canvas, title about 47% of the width, balanced axis titles,
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with scientific context ('Log2 Fold Change', '-Log10(p-value)')
+        comment: '''Log2 fold change'' and ''-Log10(p-value)'' are descriptive; both
+          quantities are unitless'
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Partial compliance: uses Okabe-Ito colors (blue #0072B2, orange
-          #E69F00) but first series uses blue instead of canonical #009E73. Background
-          colors correct (#FAF8F1 light, #1A1A17 dark); both renders theme-correct
-          chrome.'
+        comment: 'Up/down use the semantic exception correctly (Imprint red #AE3030,
+          blue #4467A3); the non-significant mass uses a custom #8A8A82 instead of
+          the theme-adaptive muted anchor (defect line); backgrounds correct'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -114,22 +117,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional, well-configured default appearance; domain-appropriate
-          colors but no exceptional custom design or publication-ready polish
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization; grid is subtle but spines
-          retained; no distinctive refinement visible
+        comment: Grid and frame as the library prompt mandates; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through color contrast; gene labels and threshold
-          lines create focal points; plot effectively communicates biological significance
+        passed: false
+        comment: Status colors and top-feature names are what the Notes ask/allow;
+          no hierarchy chosen beyond them
     spec_compliance:
       score: 15
       max: 15
@@ -139,30 +140,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct volcano plot structure with proper axes and all variants
+        comment: 'Volcano plot, basic variant: only the threshold lines, status colors
+          and a few top-feature names the Notes allow'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: p-value threshold (≈1.3), fold-change thresholds
-          (±1), significance coloring, top gene labels, alpha transparency'
+        comment: Horizontal line at 1.30, vertical lines at ±1, gray/red/blue status
+          colors, alpha transparency, top features labelled; C1-C5 all shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=log2_fold_change, Y=neg_log10_pvalue, Color=significance status;
-          axes show full data range
+        comment: x = log2 fold change, y = -log10 p; points at their values, only
+          the text labels are nudged
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct ('volcano-basic · plotnine · anyplot.ai'); legend
-          labels match significance categories
+        comment: Title 'volcano-basic · python · plotnine · anyplot.ai'; legend 'Significance'
+          with readable entries
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -170,22 +172,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: up-regulated, down-regulated, not significant
-          with full range of effect sizes and p-values'
+        comment: Both significant arms, the gray mass, and points between the fold-change
+          lines below the p threshold
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Realistic differential gene expression scenario with proper Gene_N
-          naming convention and scientific context
+        passed: false
+        comment: Differential gene expression is plausible and neutral, but the labelled
+          features are generic Gene_416 / Gene_478 identifiers (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log2 FC ranges -3 to +4, p-values 0 to 4.5 (realistic); thresholds
-          (±1 FC, p=0.05) are standard genomics practice
+        comment: 'Checked: horizontal line at -log10(0.05) = 1.30 computed in code
+          and read at about 1.3 on the axis; vertical lines at ±1.0; fold changes
+          -3.6 to 4.0, -log10 p 0 to 3.6 are sensible. No Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -195,55 +198,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: Imports → Data generation → Plot → Save; no functions/classes'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, pandas, plotnine submodules'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; appropriate complexity; no fake functionality
-          or over-engineering
+        comment: Vectorised status via np.select, nlargest for the top features; no
+          fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current plotnine API
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Expert use of plotnine: ggplot() + geom_* syntax, theme() customization,
-          geom_hline/geom_vline, element_rect/text/line fine-tuning'
+        comment: Grammar-of-graphics layering with scale_color_manual(limits=...)
+          as the library prompt shows; nothing beyond
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Theme-adaptive environment variables and token-based styling; geom_text
-          with strategic nudging; somewhat distinctive but replicable in other libraries
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T15:54:29Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
