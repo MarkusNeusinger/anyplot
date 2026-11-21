@@ -50,9 +50,9 @@ fig = go.Figure(
         pointpos=0,
         boxmean=False,
         width=0.55,
-        line=dict(color=BRAND, width=1.5),
+        line={"color": BRAND, "width": 1.5},
         fillcolor=BRAND_FILL,
-        marker=dict(size=6, color=BRAND, opacity=0.75, line=dict(color=PAGE_BG, width=0.5)),
+        marker={"size": 6, "color": BRAND, "opacity": 0.75, "line": {"color": PAGE_BG, "width": 0.5}},
         showlegend=False,
     )
 )
@@ -60,25 +60,25 @@ fig = go.Figure(
 # Style
 fig.update_layout(
     autosize=False,
-    margin=dict(l=80, r=40, t=80, b=60),
-    title=dict(text="cat-box-strip · python · plotly · anyplot.ai", font=dict(size=16, color=INK)),
-    xaxis=dict(
-        title=dict(text=METHOD, font=dict(size=12, color=INK)),
-        tickfont=dict(size=10, color=INK_SOFT),
-        linecolor=INK_SOFT,
-        showgrid=False,
-    ),
-    yaxis=dict(
-        title=dict(text=SCORE, font=dict(size=12, color=INK)),
-        tickfont=dict(size=10, color=INK_SOFT),
-        gridcolor=GRID,
-        gridwidth=1,
-        linecolor=INK_SOFT,
-        zeroline=False,
-    ),
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    title={"text": "cat-box-strip · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}},
+    xaxis={
+        "title": {"text": METHOD, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "linecolor": INK_SOFT,
+        "showgrid": False,
+    },
+    yaxis={
+        "title": {"text": SCORE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zeroline": False,
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    font=dict(color=INK),
+    font={"color": INK},
     showlegend=False,
     hovermode="closest",
 )
