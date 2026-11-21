@@ -12,132 +12,130 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnosti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 72
 review:
   strengths:
-  - All four diagnostic subplots correctly implemented with proper LOWESS smoothers,
-    Q-Q reference line, and Cook's D contours
-  - 'Theme-adaptive chrome fully correct — warm off-white #FAF8F1 light / near-black
-    #1A1A17 dark backgrounds with proper INK tokens for text'
-  - 'Perfect palette: brand green #009E73 data points, Okabe-Ito #D55E00 smoother
-    lines, #CC79A7 Cook''s D contours — identical across both renders'
-  - Intentional outliers at obs 42, 99, 130 annotated consistently across all four
-    panels, creating a clear regression diagnostic story
-  - sns.regplot with lowess=True is idiomatic seaborn usage — elegant and concise
-  - Cook's D contour lines at 0.5 and 1.0 thresholds with distinct line styles (dashed
-    vs solid) correctly distinguish severity levels
-  - 'Code quality is excellent: KISS structure, seed set, all imports used, no fake
-    functionality'
+  - sns.regplot(lowess=True, ci=None) draws both LOWESS smoothers natively
+  - Consistent green point styling with page-colored edges across all four panels,
+    identical in both themes
+  - Mirrored Cook's D contours at 0.5 and 1.0 told apart by dash style and legend
+  - Observations 42, 99 and 130 labeled in every panel
   weaknesses:
-  - Legend fontsize=14 is below the 16pt recommended minimum; Cook's D legend text
-    slightly undersized
-  - Minor annotation crowding in subplot 2 (Normal Q-Q) where obs 99 and 130 annotations
-    are close together
-  - 'Design Excellence could be elevated: the four panels feel uniform — varying subplot
-    background shading or adding a subtle panel separator would add sophistication'
-  - 'Data storytelling is implicit: the outliers tell a story but no annotation callout
-    or title annotation highlights the key finding for a non-statistician'
-  - 'DQ-02: no real-world domain context — the regression is purely abstract (unnamed
-    predictors); a brief domain framing (e.g., clinical dose-response or housing price
-    model) would improve realism'
+  - 'VQ-05 (both): the saved canvas is 4733x2655 px, not one of the canonical sizes
+    → 3200x1800 (−1533 × −855 px). Likely cause: figsize=(16, 9) with savefig(dpi=300,
+    bbox_inches=''tight'').'
+  - 'VQ-02 (both): the obs-42 label in the Scale-Location panel runs into the panel
+    title, and in the Residuals vs Fitted panel it touches the title row → keep labels
+    inside the axes, clear of titles (smaller offset or more y headroom). Likely cause:
+    annot_kw xytext=(14, 10) on the topmost point with default y limits.'
+  - 'VQ-02 (both): the leverage-panel legend box covers the Cook''s D = 0.5 and 1.0
+    contours near the upper right → a spot no contour or point crosses. Likely cause:
+    legend(loc=''upper right'').'
+  - 'SC-04 (both): the title reads ''diagnostic-regression-panel · seaborn · anyplot.ai''
+    without the language → ''diagnostic-regression-panel · python · seaborn · anyplot.ai''.
+    Likely cause: the suptitle string.'
+  - 'CQ-01 (code): the file has no column-0 # Data marker → one block between column-0
+    # Data and # Plot markers that ends by binding df. Likely cause: the data generation
+    is not marked as one block.'
+  - 'CQ-01 (code): no column constant for the roles fitted, residuals, std_residuals,
+    leverage, cooks_d → one string constant per role above the Data block with a #
+    role: comment. Likely cause: column names typed where they are used.'
+  - 'CQ-04 (code): the eight-line axis styling block (labels, title, tick_params,
+    despine, spine colors, grid) is repeated for all four axes, lines 83–90, 102–109,
+    117–124, 151–158 → one loop over axes.ravel(). Likely cause: per-subplot copy-paste.'
+  - 'CQ-05 (code): savefig uses dpi=300 and bbox_inches=''tight'', which the seaborn
+    prompt forbids → savefig(f''plot-{THEME}.png'', dpi=400) with figsize=(8, 4.5).
+    Likely cause: the save call.'
+  - 'Suggestion: use sns.residplot(lowess=True) for the residuals-vs-fitted panel.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "diagnostic-regression-panel · seaborn · anyplot.ai" at top in dark ink, clearly readable. Four subplot titles (Residuals vs Fitted, Normal Q-Q, Scale-Location, Residuals vs Leverage) in dark medium-weight text. Axis labels in dark text at appropriate size. Tick labels in muted dark ink, fully readable.
-      Data: Brand green #009E73 scatter points (s=70, alpha=0.65) across all four subplots — consistent identity. Orange (#D55E00) LOWESS smoother lines in subplots 1 and 3. Orange 45-degree reference line in Q-Q plot. Dashed gray zero-reference line in subplot 1. Pink/purple (#CC79A7) Cook's D contour curves in subplot 4 with dashed (0.5) and solid (1.0) line styles. Observation annotations (42, 99, 130) visible in muted ink.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'diagnostic-regression-panel · seaborn · anyplot.ai' in dark ink; four panel titles, axis labels (Fitted Values, Residuals, Theoretical Quantiles, √|Standardized Residuals|, Leverage) and ticks dark and readable. The obs-42 label in the Scale-Location panel runs into its title. Canvas 4733x2655.
+      Data: #009E73 points in all four panels, #C475FD LOWESS smoothers and Q-Q line, #BD8233 dashed/solid Cook's D contours mirrored around zero; obs 42, 99, 130 labeled in muted ink; legend at upper right over the contours.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and subplot titles rendered in light near-white text, clearly readable against the dark background. Axis labels and tick labels in light muted ink (#B8B7B0), fully readable — no dark-on-dark failures observed. Legend frame uses elevated background #242420.
-      Data: Data colors are identical to light render — green #009E73 points, orange LOWESS lines, pink/purple Cook's D contours. Only chrome (background, text, legend box) flipped between themes. Brand green is clearly visible on the dark surface.
-      Legibility verdict: PASS — all text readable against near-black background, no dark-on-dark issues
+      Background: warm near-black #1A1A17.
+      Chrome: title, panel titles, labels and ticks in light ink, all readable; no dark-on-dark text; legend frame on the elevated surface.
+      Data: identical colors to the light render; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt all explicitly set. Legend
-          fontsize=14 is slightly below the 16pt guideline.
+        comment: Title, axis labels, ticks, legend and annotations all explicitly
+          sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Minor annotation crowding for obs 99 and 130 in Q-Q subplot, but
-          still readable.
+        comment: Obs-42 label runs into the Scale-Location title and touches the Residuals
+          vs Fitted title; legend box covers the Cook's D = 0.5 contour (defect lines)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 points at s=70 alpha=0.65 — within the recommended 100-300 point
-          range. LOWESS lines at linewidth=2.5 clearly visible.
+        comment: 150 points at s=70, alpha 0.65 with page-colored edges; smoothers
+          and contours visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito derived colors, CVD-safe, adequate contrast between data
-          and reference elements.
+        comment: Green, purple and ochre are CVD-distinct; contour levels also split
+          by dash style
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 2x2 panel fills canvas well with tight_layout(). Balanced margins
-          and whitespace.
+        passed: false
+        comment: Saved canvas 4733x2655, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Fitted Values, Residuals, Theoretical Quantiles,
-          sqrt|Standardized Residuals|, Leverage. Mathematical notation appropriate
-          for domain.'
+        comment: Readable axis labels in every panel
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, fourth #CC79A7 — all Okabe-Ito.
-          Both backgrounds correct (#FAF8F1 light, #1A1A17 dark). Data colors identical
-          across renders.'
+        comment: 'Points #009E73, smoothers #C475FD, contours #BD8233; correct backgrounds;
+          data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Clearly above defaults: intentional color harmony (green/orange/purple),
-          warm backgrounds, custom marker edge styling. Professional but not publication-ready
-          exceptional.'
+        comment: Style-guide baseline typography and palette
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-axis grid (alpha=0.10), spine
-          colors set to INK_SOFT, PAGE_BG marker edges, styled legend. Several thoughtful
-          details.
+        comment: Page-colored marker edges separate the crowded low-leverage cluster;
+          muted index labels
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Consistent annotation of influential observations across all four
-          panels plus Cook's D visual thresholds creates clear diagnostic narrative.
-          Implicit for statisticians, not explicitly guided for general audience.
+        passed: false
+        comment: Influential labels as the Notes ask; nothing beyond
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -145,30 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: All four required diagnostic subplots correctly implemented.
+        comment: Four-plot regression diagnostic panel
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: LOWESS in subplots 1&3, Q-Q reference line, Cook's D contours at
-          0.5 and 1.0, top-3 Cook's D point labels in each subplot.
+        comment: 'All Notes features present: zero line, two LOWESS smoothers, Q-Q
+          reference line, mirrored Cook''s contours, top-3 labels in all panels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'All four mappings correct: residuals vs fitted, std_res vs theoretical
-          quantiles, sqrt|std_res| vs fitted, std_res vs leverage.'
+        comment: Correct mappings; Q-Q labels found through the sort order
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Suptitle exactly 'diagnostic-regression-panel · seaborn · anyplot.ai'.
-          Legend in subplot 4 shows Cook's D=0.5 and Cook's D=1.0.
+        comment: Title lacks the language segment (defect line); legend labels fine
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -176,80 +172,74 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Data engineered to show heteroscedasticity (obs 99), non-normality
-          outliers (42, 99), high leverage (130), and Cook's D threshold-approaching
-          influence.
+        comment: Vertical outliers and a high-leverage point exercise every panel
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible regression scenario, no controversial content. Generic
-          unnamed predictors reduce realism slightly — no domain framing (e.g., clinical,
-          financial).
+        comment: Plain OLS fit with standard diagnostic names; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n=150 in spec range, leverage up to 0.14, Cook's D values realistic,
-          outlier magnitudes appropriate.
+        comment: Leverage 0.01-0.14, contours from D = r²h/(p(1-h)) with p=4
     code_quality:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Linear flow: imports, theme tokens, data generation, model fitting,
-          plotting, save.'
+        passed: false
+        comment: 'No column-0 # Data block and no column constants (defect lines)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, matplotlib, numpy, seaborn, statsmodels,
-          scipy.stats.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Helper dicts for scatter_kws, line_kws, annot_kw reduce repetition.
-          Cook's D contour math is clean. No fake functionality.
+        comment: The eight-line axis styling block is copied four times (defect line)
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300 and facecolor=PAGE_BG.
+        passed: false
+        comment: savefig with dpi=300 and bbox_inches='tight', which the seaborn prompt
+          forbids (defect line)
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: sns.regplot with lowess=True, ci=None is idiomatic. sns.set_theme
-          with rc dict correct. sns.despine used properly. ax= parameter passed throughout.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.regplot's built-in lowess option is distinctly seaborn. sns.despine
-          is seaborn-specific. Could leverage more seaborn-specific stats (e.g., residplot).
+        comment: regplot / scatterplot with ax=, but raw arrays instead of data=df
+          and explicit label calls
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: regplot's built-in lowess smoother
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
 impl_tags:
   dependencies:
   - scipy
