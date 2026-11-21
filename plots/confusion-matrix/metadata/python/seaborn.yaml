@@ -2,46 +2,61 @@ library: seaborn
 language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:36:54Z'
-updated: '2026-05-09T16:40:30Z'
-generated_by: claude-haiku
-workflow_run: 25606005975
+updated: '2026-11-21T12:09:44Z'
+generated_by: claude-sonnet
+workflow_run: 44901966587
 issue: 2272
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and excellent readability in
-    both light and dark themes
-  - Flawless theme-adaptive styling using well-designed token system (PAGE_BG, INK,
-    INK_SOFT)
-  - All specification requirements met with clean, reproducible code
-  - Proper data mapping with realistic sentiment classification example
-  - Strong diagonal (correct predictions) naturally emphasizes model performance
+  - Uses imprint_seq for the single-polarity counts; data colors are identical in
+    both renders, with only the page and the gaps between cells switching themes
+  - A labelled DataFrame (index and columns named True Label / Predicted Label) lets
+    seaborn take its tick labels and axis titles straight from the data
+  - Realistic plant-disease scenario where the Leaf Rust/Blight mirror confusion and
+    the rare Mosaic Virus class show through the data alone
+  - Correct 2400x2400 square canvas with explicit font sizes that read well in both
+    themes
   weaknesses:
-  - No additional design sophistication beyond functional defaults (limits DE-01 to
-    4/8)
-  - Library usage is correct but straightforward without distinctive seaborn features
-    (limits LM-02 to 1/5)
+  - 'VQ-05 (both): the 77-character title spans about 92 % of the canvas width, well
+    past the heatmap and color bar it heads → under about 85 % of the canvas (about
+    -1 pt, or a shorter descriptive prefix). Likely cause: title_fontsize = round(12
+    * 67 / len(title)) still gives 10 pt for this title.'
+  - 'CQ-01 (code): lines 88-90 define a _luminance helper function → no functions;
+    delete it along with the loop that calls it (see the CQ-04 line). Likely cause:
+    a hand-written contrast pass.'
+  - 'CQ-01 (code): line 50 has no column constant for the required role `class_names`
+    → one string constant per required column role above the Data block, each with
+    a trailing # role: <role> comment naming a spec role. Likely cause: column names
+    are typed where they are used instead of once, above the block.'
+  - 'CQ-04 (code): lines 87-99 work out a light or dark text color for every cell,
+    which sns.heatmap already does from each cell''s relative luminance (and the strict
+    zip fails when a cell is NaN, because seaborn draws no text there) → remove; rely
+    on sns.heatmap''s built-in annotation contrast. Likely cause: an unneeded override
+    of the annotation colors.'
+  - 'Suggestion: an optional diagonal outline (the Notes allow one) would mark the
+    correct predictions without changing cell colors.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct light theme surface
-      Chrome: Title (24pt dark), axis labels "True Label"/"Predicted Label" (22pt dark), tick labels "Negative"/"Neutral"/"Positive"/"Mixed" (18pt dark), colorbar label "Count" (18pt dark) - all readable on light background
-      Data: 4×4 confusion matrix with Blues colormap, cells annotated with bold white counts (156, 12, 5, 8, 18, 142, 15, 10, etc.), colorbar shows scale 0-160
-      Legibility verdict: PASS - all text readable, no light-on-light contrast issues
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: title "Plant Disease Classifier · confusion-matrix · python · seaborn · anyplot.ai" in dark ink across the top; y-axis title "True Label", x-axis title "Predicted Label"; class tick labels Healthy, Leaf Rust, Blight, Mildew, Mosaic Virus (x rotated 30 degrees) in dark grey; color bar on the right titled "Count" with ticks 25-175. All readable.
+      Data: 5x5 grid of square cells separated by page-colored gaps, colored with imprint_seq (#009E73 green for low counts to #4467A3 blue for the highest); the diagonal 184/131/118/142/87 in blue tones with white bold numbers; off-diagonal cells green with near-black bold numbers; Leaf Rust/Blight confusion (21, 24) a slightly bluer green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct dark theme surface
-      Chrome: Title (24pt light #F0EFE8), axis labels (22pt light), tick labels (18pt INK_SOFT #B8B7B0), colorbar label (18pt light) - all readable on dark background; NO dark-on-dark failures
-      Data: Identical 4×4 confusion matrix with Blues colormap colors unchanged from light render - data colors perfectly match light version (only chrome adapted)
-      Legibility verdict: PASS - all text readable, no dark-on-dark issues, data colors consistent across themes
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and the "Count" color bar title in light ink; tick labels in light grey #B8B7B0; no dark-on-dark text.
+      Data: cell colors identical to the light render; the gaps between cells take the dark page color; cell numbers keep the same white/near-black choice per cell and stay readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,51 +64,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt title, 22pt labels, 18pt ticks);
-          readable at full resolution in both themes
+        comment: All sizes set explicitly (title 10 pt shrunk for the long title,
+          axis titles 11 pt, ticks 9 pt, bold 11 pt annotations); every cell number
+          switches between white and near-black ink and reads in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; adequate padding (pad=20, labelpad=15); x-axis
-          labels rotated 45° with ha=right
+        comment: No collisions; x tick labels rotated 30 degrees clear of each other;
+          title clear of the color bar
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 16 cells clearly visible; colorbar prominent; white grid lines
-          provide clear separation
+        comment: 25 large square cells separated by page-colored gaps; color bar fully
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blues colormap is perceptually uniform; good contrast; CVD-safe
+        comment: Green-to-blue ramp plus numbers in every cell; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 3600×3600 px format appropriate for symmetric matrix; balanced
-          margins; tight_layout applied
+        comment: Correct 2400x2400 canvas; the title runs about 92 % of the canvas
+          width, well past the heatmap's own width (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: True Label and Predicted Label are descriptive; title includes spec-id
-          and library
+        comment: True Label / Predicted Label as the spec asks; color bar titled Count;
+          no physical unit applies
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Blues used for continuous count data; backgrounds correct (#FAF8F1
-          light, #1A1A17 dark); both renders theme-correct'
+        comment: 'imprint_seq (#009E73 to #4467A3) for single-polarity counts; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -101,23 +117,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured with proper theme tokens and white grid definition,
-          but follows straightforward functional approach without additional design
-          flourishes
+        comment: The style-guide baseline, nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with seaborn's ticks style; white cell separators;
-          generous margins; minimal additional customization
+        comment: Baseline spacing; page-colored cell gaps are seaborn's usual linewidths
+          idiom
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Diagonal naturally stands out with darker blue (correct predictions);
-          clear focal point; data displayed without additional emphasis
+        comment: 'The data is chosen to tell a story: the Leaf Rust/Blight mirror
+          confusion (21 and 24) shows as the only mid-tone off-diagonal pair, and
+          the rare Mosaic Virus class has a lighter diagonal cell'
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct confusion matrix heatmap with proper axis arrangement
+        comment: Confusion-matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Labeled axes, cell annotations with counts, sequential Blues colormap,
-          colorbar with scale
+        comment: Axis titles as asked, every cell annotated, sequential colormap,
+          color bar; C1-C4 met; no diagonal highlight drawn (optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all classes visible; data fully mapped
+        comment: True classes on y, predicted classes on x, the same order on both
+          axes, so the diagonal holds the correct predictions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar label Count matches data semantics
+        comment: Plant Disease Classifier · confusion-matrix · python · seaborn ·
+          anyplot.ai; color bar titled Count
     data_quality:
       score: 15
       max: 15
@@ -156,83 +173,92 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: true positives (diagonal 156, 142, 168, 125),
-          false positives/negatives, per-class patterns'
+        comment: Strong diagonal, a systematic confused pair, small scattered errors
+          and an imbalanced rare class
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world sentiment analysis; plausible class imbalances; realistic
-          Neutral confusion patterns
+        comment: Plant disease classifier on leaf photos with real disease names;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Count range 3-168; 4 classes; ~500 total samples; all sensible for
-          classification dataset
+        comment: 'Checked: row totals 199/167/157/162/102 (rare class smallest, as
+          the comment states); the color bar runs from 2 to 184, matching the minimum
+          and maximum cell; the code comments agree with the matrix'
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: No functions/classes; direct imports → tokens → data → plot → save
+        passed: false
+        comment: Defines a _luminance helper function; the adaptability check finds
+          no column constant for the class_names role (defect lines)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); deterministic output
+        comment: Deterministic hard-coded matrix
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib.pyplot, numpy, seaborn'
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI; proper API usage; clean code
+        passed: false
+        comment: Lines 87-99 rebuild the per-cell text contrast that sns.heatmap already
+          applies (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct current API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses sns.heatmap() and sns.set_theme() idiomatically; correct rc
-          parameter pattern
+        passed: true
+        comment: Passes a labelled DataFrame so seaborn takes tick labels from the
+          index and columns, with the axis titles taken from the Index names; cbar_kws/annot_kws
+          instead of post-hoc artists
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic heatmap usage; could leverage clustermap or advanced features
-          (not required)
+        comment: Nothing beyond the standard sns.heatmap call
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T12:05:47Z'
 impl_tags:
   dependencies: []
   techniques:
+  - heatmap
   - colorbar
   - annotations
+  - custom-colormap
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
+  - theme-adaptive
+  - publication-ready
