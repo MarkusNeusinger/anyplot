@@ -2,49 +2,44 @@ library: matplotlib
 language: python
 specification_id: andrews-curves
 created: '2025-12-30T23:55:55Z'
-updated: '2026-05-15T12:55:58Z'
-generated_by: claude-haiku
-workflow_run: 25918654244
+updated: '2026-11-21T20:37:24Z'
+generated_by: claude-sonnet
+workflow_run: 44946714865
 issue: 2859
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - 'Perfect visual quality: all text legible in both themes, no overlaps, proper
-    typography hierarchy at 4800×2700 scale'
-  - 'Flawless spec compliance: correct Andrews curves plot type, complete multivariate
-    transformation, proper category coloring'
-  - 'Strong data storytelling: visual hierarchy through color separation, transparency
-    revealing density patterns, clear focal point at curve origin'
-  - Clean, reproducible code with deterministic iris dataset and proper data normalization
-  - 'Perfect palette compliance: Okabe-Ito colors maintain identity across light/dark
-    themes, backgrounds and chrome correctly adapt per style guide'
+  - Correct Andrews transformation computed as one matrix product of the standardized
+    data with a densely sampled Fourier basis, so all 150 curves are smooth and at
+    their computed values
+  - x axis clamped to exactly one period with π-fraction tick labels, so the curves
+    span the plot edge to edge
+  - Theme tokens threaded through title, ticks, spines, grid and legend; both renders
+    fully readable with identical Imprint data colors
+  - Variables normalized with StandardScaler and curves drawn at alpha 0.4, so species
+    bundles read as darker bands
   weaknesses:
-  - Design Excellence relies on well-configured defaults rather than distinctive custom
-    design choices - could benefit from more sophisticated aesthetic treatment
-  - Library Mastery could be enhanced with more advanced matplotlib techniques beyond
-    standard plotting (e.g., custom color normalization, advanced legend handling)
+  - 'Suggestion: a slightly heavier linewidth for the Virginica curves would lift
+    the blue bundle on the dark background, where #4467A3 at alpha 0.4 reads dimmer
+    than the other two species.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly themed
-      Chrome: Title "andrews-curves · matplotlib · anyplot.ai" clearly visible in dark text; axis labels "t (radians)" and "f(t)" readable; tick labels "-π", "-π/2", "0", "π/2", "π" fully legible in gray text (INK_SOFT)
-      Data: Three iris species color-coded - Setosa in green (#009E73) in lower region, Versicolor in orange (#D55E00) in middle region, Virginica in blue (#0072B2) in upper region. All curves visible with alpha=0.4 transparency showing density patterns
-      Legend: Right-aligned with elevated background frame, light-theme styling
-      Grid: Subtle y-axis only, alpha=0.15
-      Legibility verdict: PASS - all text and data elements clearly readable against light background
+      Background: warm off-white #FAF8F1 across canvas and axes.
+      Chrome: title 'andrews-curves · python · matplotlib · anyplot.ai' in dark ink at the top centre (about half the width); x label 't (radians)', y label 'f(t)'; ticks -π, -π/2, 0, π/2, π and -4..4 in soft grey; subtle horizontal grid; top/right spines removed; legend titled 'Species' upper right on an elevated frame. All readable.
+      Data: 150 translucent curves; Setosa #009E73 forms a low band on the left and a high hump near 3π/4; Versicolor #C475FD and Virginica #4467A3 overlap in the middle and separate around t≈0.5-1 where Virginica peaks. Smooth, no corners; curves run edge to edge from -π to π.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly themed
-      Chrome: Title clearly visible in light text (#F0EFE8); axis labels readable in light text; tick labels light gray (INK_SOFT value) on dark background - no dark-on-dark failures
-      Data: Colors identical to light render - Setosa green, Versicolor orange, Virginica blue maintain same hex values. Curves equally visible and distinguishable. Density patterns revealed through transparency
-      Legend: Dark-theme styled with light text and dark background frame, properly color-coordinated
-      Grid: Subtle grid lines visible against dark background
-      Legibility verdict: PASS - all elements readable against dark background, proper contrast throughout, no dark-on-dark text failures
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis labels in light ink, ticks, spines and legend text in light grey; legend frame dark elevated; no dark-on-dark text.
+      Data: same three Imprint colors as the light render; green stays bright, purple and blue bundles visible though blue is the dimmest.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,51 +50,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
-          Perfectly readable in both light and dark themes.'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, the style-guide
+          sizes; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; legend well-positioned; tick labels clear.
+        comment: No text collisions; the legend sits in the upper-right corner over
+          sparse curve tails only; curve overlap is permitted (C6)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 curves with alpha=0.4 optimally adapted to density; all clearly
-          distinguishable.
+        comment: 150 curves at linewidth 1.25 and alpha 0.4 suit the density; legend
+          line samples at alpha 0.8 are visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; good contrast in both themes.
+        comment: Green, purple and blue are distinguishable under CVD; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Figsize (16,9) optimal; tight_layout() and bbox_inches='tight' ensure
-          good canvas utilization; legend placement excellent.
+        comment: 3200x1800 canvas; balanced margins, title about 51% of the width,
+          x limits exactly -π to π
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title fully descriptive; axis labels include units: ''t (radians)''
-          and ''f(t)''.'
+        comment: '''t (radians)'' and ''f(t)'' are descriptive; a unitless y axis
+          is permitted (C6)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series follows Okabe-Ito order (#009E73,
-          #D55E00, #0072B2); backgrounds (#FAF8F1 light, #1A1A17 dark) correct; both
-          renders theme-correct.'
+        comment: 'Imprint positions 1-3 in canonical order (#009E73, #C475FD, #4467A3);
+          #FAF8F1 / #1A1A17 backgrounds; identical data colors in both renders'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -107,24 +103,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults with thoughtful styling (custom
-          legend frames, proper theme tokens). Solid professional execution but not
-          exceptionally distinctive or innovative.
+        comment: 'The style-guide baseline: theme tokens, Imprint palette, explicit
+          sizes; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Spines properly removed (top/right); grid subtle with alpha=0.15;
-          good whitespace. Some refinement visible but minimal additional customization.
+        comment: x limits clamped to exactly one period so the curves run edge to
+          edge with π-fraction ticks at the limits; beyond the spine/grid baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Excellent visual hierarchy: colors naturally separate species, transparency
-          reveals density patterns, focal point at origin where curves converge guides
-          viewer interpretation.'
+        passed: false
+        comment: Species separation shows by data alone; no focal point chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Andrews curves implementation with proper Fourier basis transformation.
+        comment: 'Correct Andrews curves: Fourier basis x1/√2 + x2 sin t + x3 cos
+          t + x4 sin 2t'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multivariate visualization, category coloring by species, proper
-          data normalization, all spec features present.
+        comment: Normalization (StandardScaler), alpha 0.4, color by category with
+          a legend, t from -π to π; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: t from -π to π; Y-axis: f(t) coefficients; all 150 iris
-          observations visible.'
+        comment: Every curve at its computed values, 200 samples per period, no corners
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''andrews-curves · matplotlib · anyplot.ai'' correct format;
-          legend labels (Setosa, Versicolor, Virginica) match data.'
+        comment: Title 'andrews-curves · python · matplotlib · anyplot.ai' is correct;
+          legend titled 'Species' with the three species names
     data_quality:
       score: 15
       max: 15
@@ -165,22 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three iris species, complete multivariate transformation,
-          clustering patterns and variations.
+        comment: All 150 iris observations; Setosa separates clearly, Versicolor/Virginica
+          merge in parts of the range, as the plot type shows
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic iris dataset, real scientific scenario (species comparison),
-          neutral and comprehensible context.
+        comment: Real Fisher iris dataset, the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: StandardScaler normalization applied; t range [-π, π] standard for
-          Fourier expansion; y-axis scale appropriate for multivariate coefficients.
+        comment: Standardized values give f(t) within about ±5, sensible for four
+          z-scored variables; no Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -190,61 +184,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → process → plot → save. No unnecessary
-          functions or classes.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; load_iris() is deterministic.
+        comment: load_iris is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, matplotlib, numpy, sklearn); all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear variable naming, appropriate complexity, no over-engineering,
-          no fake UI.
+        comment: Basis matrix built in a few lines and applied with one matrix product;
+          appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png; uses current matplotlib API.
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: false
-        comment: 'Proper idiomatic usage: ax.plot(), set_facecolor(), spine removal,
-          grid styling, tick_params. Could leverage more advanced matplotlib features.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses alpha transparency for density visualization, manual π-labeled
-          ticks, custom legend. Some library-specific features but room for more sophisticated
-          usage.
+        comment: Axes methods, groupby over the category with palette index, proxy
+          legend artists; standard usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T20:34:25Z'
 impl_tags:
   dependencies:
-  - sklearn
+  - scikit-learn
   techniques:
-  - manual-ticks
   - custom-legend
   patterns:
   - dataset-loading
+  - iteration-over-groups
   - matrix-construction
   dataprep:
   - normalization
