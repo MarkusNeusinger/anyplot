@@ -12,145 +12,144 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 65
 review:
   strengths:
-  - Excellent 3D visualization using pygal's native perspective rendering — achieves
-    the 3D bar chart effect without external 3D libraries
-  - 'Perfect data quality: realistic agricultural context (crop yield × fertilizer
-    treatments), correct value ranges, and plausible treatment hierarchy'
-  - Both light and dark themes fully implemented with correct backgrounds (#FAF8F1/#1A1A17),
-    adaptive text and grid colors — no dark-on-dark failures
-  - Clean, idiomatic code structure with complete KISS pattern and proper Okabe-Ito
-    palette in canonical order
+  - Imprint palette in canonical order with brand green first, theme-correct backgrounds
+    and chrome in both renders
+  - Plausible, neutral factorial-trial scenario with realistic wheat yields
+  - Native pygal HTML output with hover tooltips alongside the PNG
   weaknesses:
-  - Value labels missing on most bars — spec requires labeling all bars when grid
-    < 25 (20 bars in this chart); only the maximum bar shows a value
-  - Axis label font (18px) and tick font (16px) are below the recommended 22px/18px
-    for pixel-based libraries at 4800×2700 resolution
-  - Limited design storytelling — no visual hierarchy emphasis, no focal point beyond
-    the implicit height comparison
+  - 'VQ-05 (both): canvas is 4800x2700, not a canonical size → 3200x1800 landscape
+    (-1600 x -900 px). Likely cause: pygal.Bar(width=4800, height=2700).'
+  - 'VQ-01 (both): tick labels at 16 px, axis titles at 18 px, legend at 16 px and
+    title at 28 px read small on the canvas, far below the library prompt''s 44/56/44/66
+    → those sizes (about +28 to +38 px). Likely cause: the Style font sizes.'
+  - 'SC-04 (both): title ''bar-3d-categorical · pygal · anyplot.ai'' lacks the language
+    segment → ''… · bar-3d-categorical · python · pygal · anyplot.ai''. Likely cause:
+    the title string.'
+  - 'SC-01, SC-02 (both): the render is a flat 2D grouped bar chart with Treatment
+    as a color dodge, not 3D bars on a Variety x Treatment base-plane grid seen from
+    an elevated oblique view (C2) → draw both categories as base-plane axes with bars
+    rising from their cells. Likely cause: plain pygal.Bar().'
+  - 'CQ-04 (code): lines 7-20 remove and re-insert sys.path[0] around noqa-suppressed
+    imports, a workaround with no effect on the render → plain imports at the top.
+    Likely cause: a local name-collision workaround left in.'
+  - 'Suggestion: value labels on the 20 bar tops, which the Notes allow for small
+    grids.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "Crop Yield by Variety & Treatment · bar-3d-categorical · pygal · anyplot.ai" clearly readable in dark ink; Y-axis label "Yield (kg / hectare)" visible; X-axis "Crop Variety" visible; tick labels for varieties (Aster, Borealis, Crocus, Delphi, Ember) and treatment depth labels (Control, Nitrogen+, Phosphorus+, NPK Blend) all readable; legend in upper-left with dark text; all elements legible
-      Data: First series (Control) is #009E73 (brand green); Nitrogen+ is #D55E00 (orange); Phosphorus+ is #0072B2 (blue); NPK Blend is #CC79A7 (pink) — correct Okabe-Ito order; bars arranged in 3D perspective with depth; one value annotation "4,020" on max bar
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1, but the canvas is 4800x2700 instead of a canonical size.
+      Chrome: title 'Crop Yield by Variety & Treatment · bar-3d-categorical · pygal · anyplot.ai' small at the top (no language segment); axis titles 'Yield (kg / hectare)' and 'Crop Variety' small; tick labels (0-4000, Aster…Ember) and the top-left legend tiny for the canvas; dotted y grid visible. All text dark on light, legible only at full zoom.
+      Data: flat 2D grouped bar chart, five variety groups of four bars in Imprint order (Control #009E73, Nitrogen+ #C475FD, Phosphorus+ #4467A3, NPK Blend #BD8233); no value labels, no 3D projection.
+      Legibility verdict: PASS (text dark on light, but undersized)
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title visible in off-white text; axis labels and tick labels in light-colored text; legend labels in light text; grid lines rendered as subtle white lines; no dark-on-dark failures detected; all text elements clearly readable against dark background
-      Data: Identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7) — data colors unchanged between themes as required
-      Legibility verdict: PASS
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks and legend in light ink, same tiny sizes; grid very faint.
+      Data: same four Imprint colors as the light render, blended darker by pygal's fill opacity.
+      Legibility verdict: PASS (no dark-on-dark, but undersized)
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 3
         max: 8
-        passed: true
-        comment: Font sizes explicitly set (title=28px, labels=18px, ticks=16px) but
-          below recommended 22px/18px for pixel-based libraries
+        passed: false
+        comment: Tick labels 16 px, axis titles 18 px, legend 16 px and title 28 px
+          on a 4800x2700 canvas are far below the style-guide sizes and read small
+          (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; variety labels, treatment diagonal labels, title,
-          legend all cleanly separated
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 20 bars clearly visible with distinct Okabe-Ito colors and good
-          3D depth perception
+        comment: Bars large and clear; legend swatches match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; good contrast between all four
-          treatment colors
+        comment: Imprint positions 1-4 CVD-distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 0
         max: 4
-        passed: true
-        comment: Chart fills approximately 65-70% of canvas with balanced margins
+        passed: false
+        comment: Canvas 4800x2700, not 3200x1800 or 2400x2400 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (kg/hectare), X-axis descriptive (Crop Variety)
+        comment: Units on the y-axis, descriptive x-axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order maintained, backgrounds #FAF8F1/#1A1A17
-          correct, chrome theme-adaptive'
+        comment: Imprint palette in canonical order, backgrounds and chrome theme-correct
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Well-configured library default; 3D perspective adds visual interest
-          but overall is a good configured default
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Generous margin set, 3D grid appropriately subtle, background colors
-          theme-correct; no spine removal or explicit grid customization
+        passed: false
+        comment: Baseline grid and spacing
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Single value annotation on max bar; 3D arrangement allows comparison;
-          no explicit visual hierarchy or emphasis on key insight
+        passed: false
+        comment: Data displayed, no hierarchy chosen
     spec_compliance:
-      score: 13
+      score: 8
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Correct 3D bar chart with two categorical axes; viewing angle fixed
-          (not adjustable as spec suggests)
+        passed: false
+        comment: Flat 2D grouped bar chart, not a 3D bar chart on a two-category base
+          plane (defect line)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Bar spacing, color encoding, grid lines, legend all present; value
-          labels missing on 19/20 bars (spec requires labeling all when grid < 25)
+        passed: false
+        comment: Missed C2 (no oblique view, no base-plane grid); C4 met by the legend;
+          value labels optional
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Varieties on X-axis, treatments on depth axis, yield on vertical
-          axis — all correctly mapped
+        comment: Heights at their values from zero
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct with spec-id and library; legend shows all four
-          treatment labels
+        passed: false
+        comment: Title lacks the 'python' language segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -160,24 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all features: two categorical axes, multiple series, varied
-          heights, clear treatment effect hierarchy'
+        comment: 5x4 grid with varied heights
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Agricultural crop yield scenario (wheat varieties × fertilizer treatments)
-          — real-world, scientifically plausible, neutral
+        comment: Crop variety x fertilizer trial, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 2640-4480 kg/hectare realistic for wheat; fertilizer treatment
-          hierarchy agronomically plausible
+        comment: Plausible wheat yields; no Check values
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -185,36 +181,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → theme tokens → data → style → chart → save; no
-          functions or classes'
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data; no random numbers needed
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, pygal, pygal.style.Style — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean dict iteration; sys.path workaround documented and legitimate;
-          no fake UI
+        passed: false
+        comment: sys.path manipulation with noqa-suppressed imports (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html (HTML expected for interactive
-          pygal)
+        comment: Saves plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -222,16 +215,16 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct use of pygal.Bar(), Style object, chart.add(), chart.x_labels,
-          render_to_png() and render()
+        comment: pygal.Bar, Style, chart.add, x_labels
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Leverages pygal's built-in 3D perspective rendering and dual HTML/PNG
-          output — features distinctive to pygal
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies: []
   techniques:
