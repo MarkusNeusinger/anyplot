@@ -2,48 +2,56 @@ library: plotnine
 language: python
 specification_id: candlestick-volume
 created: '2026-05-16T05:29:51Z'
-updated: '2026-05-16T05:37:56Z'
-generated_by: claude-haiku
-workflow_run: 25953797474
+updated: '2026-11-21T22:01:35Z'
+generated_by: claude-sonnet
+workflow_run: 44954077192
 issue: 3068
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing throughout (title 24pt, labels
-    20pt, ticks 16pt)
-  - 'Accurate theme adaptation: identical data colors across light/dark, theme-correct
-    chrome throughout'
-  - 'Excellent spec compliance: all features present (dual-pane layout, proper proportions,
-    OHLC candlesticks, volume bars, color scheme)'
-  - Clean code structure with proper data generation (seed=42), deterministic, no
-    over-engineering
-  - 'Strong idiomatic plotnine usage: layered geoms (segment+rect+col), facet_grid
-    with free_y scales, proper theming with element_* functions'
+  - facet_grid('pane ~ .', scales='free_y') gives a true shared date axis so every
+    volume bar sits beneath its candle
+  - Volume bars reuse the candle up/down fill mapping, so colors always agree across
+    panes
+  - Theme tokens threaded through every chrome element; both renders read cleanly
+    with identical data colors
+  - Compact linear code with named column constants and a seeded random walk
   weaknesses:
-  - 'Design Excellence (DE-01) scores 4/8 (generic defaults): implementation is technically
-    excellent but uses standard library styling without custom aesthetic choices;
-    could add unique visual refinement'
+  - 'SC-02 (both): the price and volume panes have equal height (about 50/50) instead
+    of the ~70-75 / 25-30 split the Notes give → price pane about 2.5x the volume
+    pane. Likely cause: facet_grid without space/height ratios; use facet_grid(...,
+    space=''free_y'') with scaled data or theme(panel_spacing) plus a height ratio,
+    or compose two plots.'
+  - 'VQ-06 (both): volume ticks print raw integers (3000000, 2000000) and the price
+    axis carries no unit → readable volume units (e.g. 1M/2M/3M or ''Volume (M shares)'')
+    and ''Price ($)''. Likely cause: no scale_y labels formatter on the volume facet
+    and strip text ''Price (OHLC)''.'
+  - 'DQ-02 (both): the instrument is unnamed — ''Price (OHLC)'' around 100 with no
+    ticker reads as an abstract random walk → name a plausible fictional stock (ticker
+    in the strip or title prefix). Likely cause: strip label text and the data block.'
+  - 'Suggestion: a thicker wick (size ~0.8) would give the thin-bodied candles more
+    presence.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title in dark text (24pt, legible); axis labels "Date", "Price (OHLC)", "Trading Volume" (20pt, clear); tick labels in soft gray (#4A4A44, 16pt, readable); grid lines subtle at alpha=0.15; panel borders delicate (#4A4A44, 0.3pt)
-      Data: Candlestick wicks (segments, thin lines) show high-low ranges; candlestick bodies (rectangles) show open-close; green (#009E73) for up candles, orange (#D55E00) for down candles; volume bars below match up/down color scheme; date axis spans 2024-01-01 to 2024-03-01 (60 periods)
-      Legibility verdict: PASS — all text readable, no overlap, data elements clearly distinguishable
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'candlestick-volume · python · plotnine · anyplot.ai' in dark ink (~52% width); x-axis 'Date' with ISO date ticks; right-side strips 'Price (OHLC)' and 'Trading Volume'; soft-gray tick labels; faint horizontal grid; thin panel borders. All readable.
+      Data: 60 daily candles, up #009E73 green, down #AE3030 red, thin wicks; volume bars below in matching colors from zero; panes of equal height. Price trends from ~111 down to ~83.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title in light text (#F0EFE8, 24pt, legible); axis labels in light text (#F0EFE8, 20pt); tick labels in soft light gray (#B8B7B0, 16pt, readable); grid lines subtle; panel borders same delicate style
-      Data: Candlestick colors identical to light render — green (#009E73) for up, orange (#D55E00) for down (confirmed: Okabe-Ito positions 1-2 unchanged across themes); volume bars color-consistent; wicks and bodies clearly visible; no dark-on-dark failures (no black text on near-black background)
-      Legibility verdict: PASS — all chrome properly adapted, no readability issues, data colors confirmed identical to light render
+      Background: warm near-black #1A1A17
+      Chrome: title, strips and 'Date' in light ink, ticks light gray, grid faint but visible; no dark-on-dark text.
+      Data: candle and volume colors identical to the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,48 +59,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          all perfectly readable in both themes'
+        comment: Explicit sizes (title, axis titles, ticks, strips); all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, all elements fully readable
+        comment: No text collisions; candles and bars separate
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wicks, bodies, and volume bars optimally sized for 60-period dataset
+        comment: 60 candles, wicks and volume bars clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; green and orange have sufficient contrast
+        comment: 'Green #009E73 vs red #AE3030 differ strongly in lightness; readable
+          for CVD viewers'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16x9 landscape (4800x2700px), balanced margins, proper pane proportions
+        comment: 3200x1800 canvas, balanced margins, title ~52% width, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title format correct; Date axis descriptive; facet labels provide
-          pane context
+        passed: false
+        comment: Volume ticks unformatted (3000000) and price has no currency unit
+          (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Up=#009E73 (Okabe-Ito pos 1), Down=#D55E00 (pos 2); backgrounds
-          #FAF8F1/#1A1A17; theme-correct chrome in both renders'
+        comment: 'Up #009E73, down #AE3030 (Imprint); backgrounds #FAF8F1/#1A1A17;
+          chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -100,24 +110,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults, professional but no exceptional
-          design flourishes
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle y-axis grid (alpha=0.15), minimal spines via theme_minimal(),
-          good whitespace
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Faceted layout clearly shows price-volume relationship; visual hierarchy
-          (price 70-75%, volume 25-30%); color contrast guides reader
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,29 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with volume bars, dual-pane layout
+        comment: Candlestick with volume pane
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: OHLC candlesticks, volume bars, shared x-axis,
-          up/down colors, grid lines'
+        passed: false
+        comment: 'C4 missed: facet_grid gives both panes equal height instead of ~70/30
+          (defect line); C1, C2, C3, C5 met; no crosshair needed for static output'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Price pane Y=OHLC, Volume pane Y=volume; all data visible
+        comment: Bodies open-close, wicks low-high, bars from zero; shared date axis
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''candlestick-volume · plotnine · anyplot.ai''; legend omitted
-          appropriately (color scheme self-explanatory)'
+        comment: Title 'candlestick-volume · python · plotnine · anyplot.ai' correct;
+          legend N/A (strip labels name panes)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -155,22 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both up and down candles, realistic OHLC ranges, volume variations,
-          all aspects covered
+        comment: Up and down candles, doji-like bodies, volume spikes, trend and reversal
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Stock price data (lognormal returns), trading volume (exponential),
-          neutral business context
+        passed: false
+        comment: 'Generic unnamed instrument: ''Price (OHLC)'' with no ticker (defect
+          line)'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range ~$87-$112 (realistic), volume ~$100k-$3M (realistic),
-          proportions factually sound
+        comment: 'Prices ~83-111, volume 0-3.3M shares: plausible; no Check values
+          in Notes'
     code_quality:
       score: 10
       max: 10
@@ -180,50 +186,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plot → save; no functions/classes'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed 42 set, fully deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no bloat
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no fake functionality
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ggsave(), current API
+        comment: ggsave plot-{THEME}.png, current API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert idiomatic plotnine: ggplot() + geom_segment + geom_rect +
-          geom_col + facet_grid + theme()'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Leverages facet_grid with free_y scales (plotnine strength), layered
-          geoms composition
+        passed: false
+        comment: facet_grid('pane ~ .', scales='free_y') over two copies of the table
+          builds the shared-axis dual pane the grammar-of-graphics way; layered geom_segment/geom_rect/geom_col
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T21:58:36Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -233,6 +241,6 @@ impl_tags:
   - data-generation
   dataprep:
   - time-series
+  - cumulative-sum
   styling:
   - grid-styling
-  - publication-ready
