@@ -2,48 +2,58 @@ library: seaborn
 language: python
 specification_id: polar-bar
 created: '2026-05-13T01:04:52Z'
-updated: '2026-05-13T01:15:52Z'
-generated_by: claude-haiku
-workflow_run: 25771563639
+updated: '2026-11-21T07:57:42Z'
+generated_by: claude-sonnet
+workflow_run: 44882159699
 issue: 2693
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 78
 review:
   strengths:
-  - Perfect text legibility with all font sizes explicitly set (title 24pt, directions
-    18pt, ticks 14pt)
-  - Correct polar bar/wind rose chart type with all required features
-  - 'Ideal data choice: realistic wind direction and speed distribution showing full
-    feature coverage'
-  - 'Excellent theme-adaptive implementation: both light and dark renders properly
-    themed with correct chrome colors'
-  - Idiomatic matplotlib polar projection usage with proper theta configuration
-  - Clean, reproducible code with proper seed and minimal structure
+  - 'Correct wind rose: 16 compass directions clockwise from north, radial scale from
+    zero, equal-width bars with gaps'
+  - Theme tokens threaded through tick labels, title, grid and bar outlines; both
+    renders fully readable
+  - Exact 2400x2400 square canvas via figsize=(6, 6) at dpi 400, no bbox trimming
+  - Tidy df with column constants feeding the plot; deterministic data
   weaknesses:
-  - 'Design Excellence could be elevated: currently uses well-configured defaults
-    without exceptional aesthetic sophistication'
-  - 'Visual refinement minimal: spines colored but not removed for a cleaner look,
-    grid could be more refined'
+  - 'VQ-02 (both): the radial value labels 10-50, placed at 11.25°, run across the
+    N and NNE bars'' fills and edges ("20" and "10" sit inside the green, "30"/"40"
+    cross bar outlines), and in the dark render "10"/"20" read faint on the green
+    → place them in the empty gap between two bars or give them a page-colored halo
+    so no label sits on a bar. Likely cause: ax.set_rlabel_position(180 / n_bars)
+    puts the labels on the N/NNE bars'' angular span.'
+  - 'VQ-06 (both): nothing names the quantity of the radial axis — the rings read
+    10-50 with no unit or meaning (counts, hours, % of observations) → state it, e.g.
+    a radial label or title prefix such as ''Wind direction frequency (hours)''. Likely
+    cause: no ylabel/annotation for the frequency axis.'
+  - 'LM-01 (code): the bars are drawn with matplotlib''s ax.bar and seaborn only sets
+    the theme (sns.set_theme), so the implementation is matplotlib with seaborn styling
+    → use seaborn for the marks where possible (e.g. sns.barplot on the polar axes
+    with the df columns) or seaborn''s objects/axes-level API. Likely cause: polar
+    bar drawn by hand in matplotlib.'
+  - 'Suggestion: a prevailing-wind story (one or two dominant directions) would give
+    the rose a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines at 15% alpha
-      Chrome: Title "polar-bar · seaborn · anyplot.ai" in dark ink (#1A1A17), compass directions (N-NNW) in secondary text color (#4A4A44), radial tick labels (40, 50) clearly readable
-      Data: 16 compass-arranged bars in Okabe-Ito brand green (#009E73) with light gray edges (#B8B7B0) for definition. Wind speeds vary from 35-52, showing realistic meteorological distribution.
-      Legibility verdict: PASS - All text explicitly sized (title 24pt, directions 18pt, ticks 14pt) and perfectly readable against light surface. No overlaps. Strong contrast throughout.
+      Background: warm off-white #FAF8F1, square 2400x2400.
+      Chrome: title 'polar-bar · python · seaborn · anyplot.ai' in dark ink at the top (~55% of the width); 16 compass labels N..NNW in INK_SOFT around the rim; radial labels 10-50 in INK_SOFT along the 11.25° ray; concentric rings and spokes subtle grey. All readable; the radial labels 10-50 sit over the N/NNE bars.
+      Data: 16 brand-green #009E73 bars (alpha 0.85, dark-grey outline) radiating from the center, NE, SW, W and ESE longest (~50), E and S shortest (~35).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle grid lines
-      Chrome: Title in light text (#F0EFE8), compass directions in soft light color (#B8B7B0), radial ticks in matching light color. All fully readable against dark surface.
-      Data: Bars render in identical green (#009E73) to light render. No color shift between themes. Edges remain visible. Complete visual consistency.
-      Legibility verdict: PASS - Dark-theme adaptation flawless. No dark-on-dark failures. Text, grid, and data all perfectly readable. Theme compliance is exemplary.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, compass and radial labels in light grey #B8B7B0, rings subtle. No dark-on-dark text; the '10'/'20' labels read faint where they sit on the green bars.
+      Data: identical #009E73 bars, outline flips to light grey; only chrome changed.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -51,47 +61,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt title, 18pt directions, 14pt
-          ticks), perfectly readable in both themes
+        comment: Title 12 pt, direction labels 10 pt, radial ticks 8 pt, all set explicitly
+          and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: 16 compass directions well-spaced around circle, zero text collisions
+        passed: false
+        comment: Radial value labels 10-50 sit on the N/NNE bars' edges and fills
+          (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized for visibility, edgecolor provides excellent definition
+        comment: 16 wide bars at alpha 0.85 with a thin ink outline, clearly visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, brand green visible on both light and dark backgrounds
+        comment: Single hue, strong contrast against both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization (16:9 at 4800x2700), balanced margins
+        comment: 2400x2400 square, the rose fills most of the canvas with balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title properly formatted, direction labels clear and descriptive
+        passed: false
+        comment: Compass labels at the rim, but no text says what the radial values
+          measure (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds are #FAF8F1 (light) and #1A1A17
-          (dark), theme-adaptive chrome perfect'
+        comment: 'Bars #009E73 in both renders; backgrounds #FAF8F1 / #1A1A17; chrome
+          theme-correct'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -99,24 +113,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults without exceptional design thought. Uses
-          Okabe-Ito brand color appropriately but no custom palette or intentional
-          hierarchy beyond data.
+        comment: The style-guide baseline, nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization. Spines colored but not
-          removed, grid present but not refined for elegant look.
+        comment: The spine and grid rules met (polar spine removed, subtle grid),
+          nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Wind rose naturally tells story of directional frequency distribution.
-          Visual choice immediately conveys meteorological insight, creating visual
-          hierarchy through data representation.
+        passed: false
+        comment: Data displayed, no hierarchy or focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -126,28 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar bar chart (wind rose) implementation
+        comment: Correct polar bar / wind rose
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bars radiating from center, angles for directions,
-          heights for frequencies'
+        comment: C1 bars from center on a zero-based radial scale; C2 equal width,
+          compass order, every direction labeled at the rim; C3 concentric gridlines
+          with value labels, lighter than the bars
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angles correctly mapped to compass directions, wind speeds to bar
-          lengths, all data visible
+        comment: Angles map to directions in compass order clockwise from N, lengths
+          to frequency, all bars within the 0-57 range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct 'polar-bar · seaborn · anyplot.ai', single-series
-          so no legend needed
+        comment: Title 'polar-bar · python · seaborn · anyplot.ai' correct; single
+          series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -157,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 16 compass directions (8 major + 8 intermediate), wind speeds 35-52,
-          shows full variety of plot capabilities
+        comment: 16 directions with varying frequencies; stacking and color are optional
+          (Notes allow)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world meteorological data scenario, plausible wind patterns
+        comment: Wind direction frequency over 16 compass points, a real meteorological
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds realistic, directions properly positioned, all values
-          sensible for domain
+        comment: 'Checked: 16 unique compass labels in correct order, values 35-52
+          read off the rings match the data; no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -181,58 +193,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple structure: imports → data → plot → save, no unnecessary functions'
+        comment: Imports, constants, df, plot, save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducible output
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, sys, matplotlib, numpy)
+        comment: os, plt, np, pd, sns all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code, no fake functionality, appropriate complexity
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, proper API usage
+        comment: Saves plot-{THEME}.png at dpi 400, no bbox_inches='tight', current
+          API
     library_mastery:
-      score: 10
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Expert use of matplotlib's polar projection with proper theta configuration
-          (set_theta_zero_location, set_theta_direction)
+        passed: false
+        comment: seaborn only contributes sns.set_theme; every mark is drawn with
+          matplotlib's ax.bar (defect line)
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Leverages matplotlib's polar projection capabilities that are distinctive
-          and hard to replicate in other libraries
+        passed: false
+        comment: No seaborn-distinctive feature
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-21T07:54:02Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - manual-ticks
   patterns:
-  - data-generation
+  - explicit-figure
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
