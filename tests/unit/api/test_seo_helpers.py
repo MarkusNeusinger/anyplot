@@ -585,6 +585,98 @@ class TestBuildImplHtml:
         assert '<a href="https://anyplot.ai/scatter-basic">' in page
 
 
+# As the sync stores it; invented values, one title with markup to show the escaping.
+_SOURCES = {
+    "data": "computed",
+    "inspired_by": [{"title": "An <example> project", "url": "https://example.org/project?a=1&b=2"}],
+    "references": [
+        {"title": "A paper", "url": "https://doi.org/10.1000/xyz123", "doi": "10.1000/xyz123"},
+        {"title": "A book", "url": "https://example.org/book", "isbn": "978-3-16-148410-0"},
+    ],
+}
+
+
+class TestSources:
+    """A spec's sources: a visible section in the body and properties of the page node, on the hub and impl pages."""
+
+    def _spec(self, sources: object) -> tuple[MagicMock, MagicMock]:
+        impl = _mock_impl("matplotlib", "python")
+        spec = _mock_spec([impl, _mock_impl("ggplot2", "r")])
+        spec.sources = sources
+        return spec, impl
+
+    def _hub(self, sources: object) -> str:
+        return _build_spec_hub_html(self._spec(sources)[0], "https://api.anyplot.ai/og/scatter-basic.png")
+
+    def _impl(self, sources: object) -> str:
+        spec, impl = self._spec(sources)
+        return _build_impl_html(spec, impl, "code()", "https://api.anyplot.ai/og/card.png")
+
+    def test_the_hub_lists_the_sources_escaped_and_linked(self) -> None:
+        page = self._hub(_SOURCES)
+        assert (
+            "<h2>Sources</h2><h3>Inspired by</h3><ul>"
+            '<li><a href="https://example.org/project?a=1&amp;b=2">An &lt;example&gt; project</a></li></ul>'
+        ) in page
+        assert (
+            "<h3>References</h3><ul>"
+            '<li><a href="https://doi.org/10.1000/xyz123">A paper</a> · '
+            '<a href="https://doi.org/10.1000/xyz123">doi:10.1000/xyz123</a></li>'
+            '<li><a href="https://example.org/book">A book</a> · ISBN 978-3-16-148410-0</li></ul>'
+        ) in page
+
+    def test_the_hub_page_node_names_the_works_it_is_based_on_and_cites(self) -> None:
+        page_node = _extract_jsonld(self._hub(_SOURCES))["@graph"][2]
+        assert page_node["@type"] == "CollectionPage"
+        assert page_node["isBasedOn"] == [
+            {"@type": "CreativeWork", "name": "An <example> project", "url": "https://example.org/project?a=1&b=2"}
+        ]
+        assert page_node["citation"] == [
+            {
+                "@type": "CreativeWork",
+                "name": "A paper",
+                "url": "https://doi.org/10.1000/xyz123",
+                "identifier": [{"@type": "PropertyValue", "propertyID": "DOI", "value": "10.1000/xyz123"}],
+            },
+            {
+                "@type": "CreativeWork",
+                "name": "A book",
+                "url": "https://example.org/book",
+                "identifier": [{"@type": "PropertyValue", "propertyID": "ISBN", "value": "978-3-16-148410-0"}],
+            },
+        ]
+
+    def test_the_impl_page_carries_them_on_its_page_node_not_on_the_code(self) -> None:
+        page = self._impl(_SOURCES)
+        assert "<h2>Sources</h2><h3>Inspired by</h3>" in page
+        graph = {node["@type"]: node for node in _extract_jsonld(page)["@graph"]}
+        assert [work["name"] for work in graph["WebPage"]["isBasedOn"]] == ["An <example> project"]
+        assert [work["name"] for work in graph["WebPage"]["citation"]] == ["A paper", "A book"]
+        # The code is based on the spec alone: ideas are taken from other works, their code never.
+        assert graph["SoftwareSourceCode"]["isBasedOn"] == "https://anyplot.ai/scatter-basic"
+        assert "citation" not in graph["SoftwareSourceCode"]
+
+    def test_one_relation_alone_leaves_out_the_other(self) -> None:
+        page = self._hub({"references": _SOURCES["references"]})
+        assert "<h3>Inspired by</h3>" not in page
+        assert "<h3>References</h3>" in page
+        page_node = _extract_jsonld(page)["@graph"][2]
+        assert "isBasedOn" not in page_node
+        assert len(page_node["citation"]) == 2
+
+    def test_a_spec_without_entries_has_no_section_and_no_properties(self) -> None:
+        for sources in (None, {"data": "invented"}, {}):
+            for page in (self._hub(sources), self._impl(sources)):
+                assert "<h2>Sources</h2>" not in page
+                assert "citation" not in page
+                assert '"isBasedOn": [' not in page
+
+    def test_a_stored_block_that_fails_the_check_is_not_shown(self) -> None:
+        page = self._hub({"inspired_by": [{"title": "A", "url": "javascript:alert(1)"}]})
+        assert "<h2>Sources</h2>" not in page
+        assert "javascript:" not in page
+
+
 class TestBuildLlmsFull:
     """Tests for the llms-full.txt catalogue index."""
 

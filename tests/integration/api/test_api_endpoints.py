@@ -67,6 +67,40 @@ class TestSpecsEndpoints:
         assert "implementations" in data
         assert len(data["implementations"]) == 2
 
+    async def test_get_spec_detail_carries_the_sources(self, client):
+        """The deferred `specs.sources` column is loaded by the spec detail and served in the stored form."""
+        response = await client.get("/specs/scatter-basic")
+
+        assert response.status_code == 200
+        sources = response.json()["sources"]
+        assert sources["data"] == "computed"
+        assert [entry["title"] for entry in sources["inspired_by"]] == ["An example plotting project"]
+        assert sources["references"][0] == {
+            "title": "An example paper",
+            "url": "https://doi.org/10.1000/xyz123",
+            "doi": "10.1000/xyz123",
+            "isbn": None,
+        }
+        assert sources["references"][1]["isbn"] == "978-3-16-148410-0"
+
+    async def test_a_spec_without_sources_serves_null(self, client):
+        response = await client.get("/specs/bar-grouped")
+
+        assert response.status_code == 200
+        assert response.json()["sources"] is None
+
+    async def test_the_crawler_hub_shows_and_marks_up_the_sources(self, client):
+        """The prerendered hub loads the spec by id too; its body lists the sources and its page node names them."""
+        response = await client.get("/seo-proxy/scatter-basic")
+
+        assert response.status_code == 200
+        page = response.text
+        assert '<h2>Sources</h2><h3>Inspired by</h3><ul><li><a href="https://example.org/project">' in page
+        assert '<a href="https://doi.org/10.1000/xyz123">doi:10.1000/xyz123</a>' in page
+        assert "ISBN 978-3-16-148410-0" in page
+        assert '"isBasedOn": [{"@type": "CreativeWork", "name": "An example plotting project"' in page
+        assert '"citation": [' in page
+
     async def test_get_spec_not_found(self, client):
         """Should return 404 for non-existent spec."""
         response = await client.get("/specs/nonexistent")

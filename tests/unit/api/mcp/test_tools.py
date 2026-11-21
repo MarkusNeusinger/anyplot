@@ -256,6 +256,25 @@ async def test_get_spec_detail(mock_db_context, mock_spec):
         assert internal not in impl
     assert impl["preview_url_light"] == "https://example.com/plot-light.png"
     assert impl["review_strengths"] == ["Clean code"]
+    # A MagicMock is no stored block: the spec names no source.
+    assert result["sources"] is None
+
+
+@pytest.mark.asyncio
+async def test_get_spec_detail_carries_the_sources(mock_db_context, mock_spec):
+    """The REST spec detail and this tool build the same response, sources included."""
+    mock_spec.sources = {"references": [{"title": "A paper", "url": "https://example.org/a", "doi": "10.1000/xyz123"}]}
+    mock_repo = MagicMock()
+    mock_repo.get_by_id_with_code = AsyncMock(return_value=mock_spec)
+
+    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+        result = await get_spec_detail("scatter-basic")
+
+    assert result["sources"] == {
+        "data": None,
+        "inspired_by": [],
+        "references": [{"title": "A paper", "url": "https://example.org/a", "doi": "10.1000/xyz123", "isbn": None}],
+    }
 
 
 def _second_impl(library_id: str, language: str) -> MagicMock:

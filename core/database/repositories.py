@@ -171,13 +171,14 @@ class SpecRepository(BaseRepository[Spec]):
     async def get_by_id(self, spec_id: str) -> Spec | None:
         """Get a spec by ID with implementations and library info.
 
-        Loads review_image_description and review_criteria_checklist (needed for detail display).
-        Code and tested remain deferred — use /specs/{id}/{lib}/code for code.
+        Loads review_image_description and review_criteria_checklist (needed for detail display),
+        and the spec's sources. Code and tested remain deferred — use /specs/{id}/{lib}/code for code.
         """
         result = await self.session.execute(
             select(Spec)
             .where(Spec.id == spec_id)
             .options(
+                undefer(Spec.sources),
                 selectinload(Spec.impls).selectinload(Impl.library),
                 selectinload(Spec.impls).undefer(Impl.review_image_description).undefer(Impl.review_criteria_checklist),
             )
@@ -197,6 +198,7 @@ class SpecRepository(BaseRepository[Spec]):
             select(Spec)
             .where(Spec.id == spec_id)
             .options(
+                undefer(Spec.sources),
                 impls_loader.selectinload(Impl.library),
                 impls_loader.undefer(Impl.review_image_description)
                 .undefer(Impl.review_criteria_checklist)
