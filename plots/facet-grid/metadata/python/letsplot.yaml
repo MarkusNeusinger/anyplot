@@ -2,43 +2,43 @@ library: letsplot
 language: python
 specification_id: facet-grid
 created: '2025-12-30T16:39:14Z'
-updated: '2026-05-13T03:45:20Z'
-generated_by: claude-haiku
-workflow_run: 25776658361
+updated: '2026-11-21T08:37:16Z'
+generated_by: claude-sonnet
+workflow_run: 44884833549
 issue: 2696
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/letsplot/plot-dark.html
-quality_score: 95
+quality_score: 83
 review:
   strengths:
-  - Perfect visual quality with all text legible in both light and dark themes
-  - Correct implementation of row+column faceting with proper category and region
-    separation
-  - Excellent theme-adaptive styling with proper color token mapping for light/dark
-    modes
-  - Clean, reproducible code with np.random.seed(42) for deterministic output
-  - Proper application of Okabe-Ito palette with first series in brand green (#009E73)
-  - Comprehensive feature coverage demonstrating full facet-grid capabilities with
-    scatter + trend lines
-  weaknesses: []
+  - Native facet_grid(x=Region, y=Category) gives shared scales, column and row strips
+    and one figure-wide legend with no manual layout
+  - 'Theme tokens thread through every chrome element: strips on the elevated surface,
+    ink text, subtle 10 % grid, readable in both themes'
+  - Linear fits come from geom_smooth's built-in lm stat rather than precomputed lines
+  - Canvas follows the landscape contract exactly (ggsize(800, 450), scale=4 → 3200×1800)
+  weaknesses:
+  - 'Suggestion: color repeats the row facet (Category); mapping it to a variable
+    the facets do not already show, or dropping the legend, would make the color channel
+    carry information.'
+  - 'Suggestion: ordering the region columns North, South, East, West (or by sales
+    level) instead of alphabetically would give the columns a reading order.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface color
-      Chrome: Title "facet-grid · letsplot · anyplot.ai" in dark text; axis labels "Unit Price ($)" and "Units Sold" clearly visible in dark ink; tick labels in secondary text color; legend showing Category with all three values
-      Data: Scatter points with alpha=0.7 transparency using Okabe-Ito colors - green (#009E73) for Electronics, orange (#D55E00) for Clothing, blue (#0072B2) for Home; linear trend lines clearly visible
-      Layout: 3×4 faceted grid (3 categories as rows, 4 regions as columns) with no overlap or collision
-      Legibility verdict: PASS - All elements fully readable with excellent contrast and spacing
+      Background: warm off-white #FAF8F1 across canvas and panels
+      Chrome: title 'facet-grid · python · letsplot · anyplot.ai' top-left in dark ink (~42 % width); axis titles 'Unit Price ($)' and 'Units Sold'; grey tick labels on outer panels only; column strips East/North/South/West and rotated row strips Clothing/Electronics/Home on #FFFDF6 with ink border; legend 'Category' at right on elevated box
+      Data: 3x4 grid of scatter panels, 25 points each with linear fit; Electronics #009E73, Clothing #C475FD, Home #4467A3; shared x 25-300 and y 45-240
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct surface color
-      Chrome: Title, axis labels, and tick labels all in light colors (INK and INK_SOFT tokens) with full readability; no dark-on-dark failures; legend properly styled
-      Data: Identical data colors to light render - green, orange, blue in same positions; trend lines equally visible; only chrome has flipped to dark theme
-      Layout: Same 3×4 faceted grid structure with proper spacing and no compression
-      Legibility verdict: PASS - All elements fully readable on dark surface; proper theme-adaptive styling
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles in light ink, tick labels light grey, strips on #242420 with light border, legend box elevated dark; no dark-on-dark text
+      Data: identical colors and positions to the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,66 +49,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized (title=24, axis_title=20, axis_text=16, legend_text=16)
-          and readable in both themes
+        comment: Title 16 pt, axis titles 12 pt, ticks/strips/legend 10 pt as the
+          library prompt sets; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean faceted layout with no text collisions or element overlap
+        comment: No text collisions; strips, ticks and legend clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points (size=3, alpha=0.7) and trend lines clearly visible and well-adapted
-          to density
+        comment: 25 points per panel at size 2.5, alpha 0.7, with 1.0 fit lines; legend
+          glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with good contrast between categories
+        comment: Green/violet/blue Imprint hues, distinct under CVD; color is redundant
+          with the row facet
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3×4 grid well-proportioned; 1600×900 base size (4800×2700 at 3x scale)
-          appropriate; no elements cut off
+        comment: 3200x1800 canvas; 3x4 equal panels, balanced axis titles, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Unit Price ($)'' with unit and ''Units Sold'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (correct brand green), Okabe-Ito order maintained,
-          backgrounds #FAF8F1/#1A1A17 theme-correct, both renders properly adaptive'
+        comment: 'Electronics #009E73 first, Imprint order; #FAF8F1 / #1A1A17 backgrounds,
+          chrome flips correctly'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Theme-adaptive styling with custom color tokens; Okabe-Ito palette
-          applied intentionally; professional polish
+        comment: The style-guide baseline (tokens, sizes, elevated strip fill), nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Minimal theme applied; subtle grid (RULE at 10% opacity); generous
-          whitespace
+        comment: Subtle grid, minimal theme; the spine and grid rules met, nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear faceted comparison across dimensions; trend lines provide analytical
-          insight; systematic hierarchy
+        comment: Data displayed; no hierarchy or focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +124,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct facet-grid with scatter + trend lines
+        comment: Scatter facet grid by row (Category) and column (Region)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Row faceting (Category), column faceting (Region), scatter plot,
-          geom_smooth all present
+        comment: Shared scales (C2), strip labels on every row and column (C3), equal
+          aligned panels (C4), one legend for the figure (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Price, Y=Units Sold, Row=Category, Col=Region, Color=Category;
-          axes show full range
+        comment: x=Unit Price, y=Units Sold, marks at their data values; shared axes
+          show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; legend shows all categories with proper labels
+        comment: Title 'facet-grid · python · letsplot · anyplot.ai'; legend 'Category'
+          with readable entries
     data_quality:
       score: 15
       max: 15
@@ -148,21 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full facet-grid capabilities shown: row/column facets, scatter,
-          trend lines, color encoding'
+        comment: Both facet dimensions, 12 panels, differing price ranges per category
+          show the shared-scale comparison
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sales analysis by category and region is plausible and neutral
+        comment: Retail sales by product category and region; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price ($50-$300) and Units Sold (50-250) are sensible for product
-          categories
+        comment: Prices $25-$300 by category, 45-240 units; sensible. No Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -172,58 +179,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward data generation and plotting
+        comment: No functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports from lets_plot, numpy, pandas, os
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity; well-structured
+        comment: Compact frame-per-group loop with pd.concat; fit via geom_smooth
+          stat, nothing hand-computed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses current ggsave
-          API
+        comment: plot-{THEME}.png at ggsize(800,450) scale=4 plus plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent ggplot2 grammar with + chaining; proper aes(); correct
-          facet_grid(); idiomatic theme()
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Effective facet_grid for multi-dimensional data; geom_smooth for
-          trend lines; theme-adaptive styling
+        comment: Grammar chaining with column constants, facet_grid(x=, y=), lm fit
+          via geom_smooth's built-in stat instead of precomputed lines
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt and spec require
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T08:34:02Z'
 impl_tags:
   dependencies: []
   techniques:
   - faceting
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - regression
   styling:
   - alpha-blending
-  - grid-styling
