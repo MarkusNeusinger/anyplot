@@ -1,12 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 point-basic: Point Estimate Plot
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-11
+Quality: 89/100 | Updated: 2026-11-21
 """
 
 import os
 
-import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
@@ -18,6 +17,7 @@ from plotnine import (
     geom_vline,
     ggplot,
     labs,
+    scale_y_discrete,
     theme,
     theme_minimal,
 )
@@ -28,61 +28,61 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Data: Product satisfaction scores with 95% confidence intervals
-np.random.seed(42)
+# Imprint palette: position 1 is the single-series color
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-categories = [
-    "Customer Service",
-    "Product Quality",
-    "Delivery Speed",
-    "Website Usability",
-    "Price Value",
-    "Return Process",
-    "Product Variety",
-    "Packaging",
-]
+# Constants
+REFERENCE = 7.0  # the satisfaction level every category is compared against
 
-# Generate realistic satisfaction scores (1-10 scale) with varying uncertainty
-estimates = np.array([7.8, 8.2, 6.5, 7.1, 6.9, 7.4, 8.0, 7.6])
-# Confidence intervals vary by sample size/variance
-ci_widths = np.array([0.8, 0.5, 1.2, 0.9, 1.0, 0.7, 0.6, 0.4])
+# Columns: set these to your table's column names
+CATEGORY = "Category"  # role: category
+ESTIMATE = "Satisfaction score (1-10)"  # role: estimate
+LOWER = "Lower bound (95% CI)"  # role: lower_bound
+UPPER = "Upper bound (95% CI)"  # role: upper_bound
 
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 df = pd.DataFrame(
-    {"category": categories, "estimate": estimates, "lower": estimates - ci_widths, "upper": estimates + ci_widths}
+    {
+        CATEGORY: [
+            "Customer Service",
+            "Product Quality",
+            "Delivery Speed",
+            "Website Usability",
+            "Price Value",
+            "Return Process",
+            "Product Variety",
+            "Packaging",
+        ],
+        ESTIMATE: [7.8, 8.2, 6.5, 7.1, 6.9, 7.4, 8.0, 7.6],
+        LOWER: [7.0, 7.7, 5.3, 6.2, 5.9, 6.7, 7.4, 7.2],
+        UPPER: [8.6, 8.7, 7.7, 8.0, 7.9, 8.1, 8.6, 8.0],
+    }
 )
 
-# Sort by estimate for better visualization
-df = df.sort_values("estimate").reset_index(drop=True)
-df["category"] = pd.Categorical(df["category"], categories=df["category"], ordered=True)
-
-# Plot
-anyplot_theme = theme(
-    figure_size=(16, 9),
-    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK_SOFT, size=0.3, linewidth=0.3),
-    panel_grid_minor=element_line(linewidth=0),
-    panel_border=element_rect(color=INK_SOFT, fill=None),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
-    axis_line=element_line(color=INK_SOFT, size=0.5),
-    plot_title=element_text(color=INK, size=24, weight="bold"),
-    legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=16),
-    legend_title=element_text(color=INK, size=16),
-)
+# Plot: reads only df and the constants above
+df = df.sort_values(ESTIMATE).reset_index(drop=True)
 
 plot = (
-    ggplot(df, aes(x="estimate", y="category"))
-    + geom_vline(xintercept=7.0, linetype="dashed", color=INK_SOFT, size=0.8)
-    + geom_errorbarh(aes(xmin="lower", xmax="upper"), height=0.3, size=1.5, color=BRAND)
-    + geom_point(size=5, color=BRAND)
-    + labs(x="Satisfaction Score (1-10)", y="Category", title="point-basic · plotnine · anyplot.ai")
+    ggplot(df, aes(x=ESTIMATE, y=CATEGORY))
+    + geom_vline(xintercept=REFERENCE, linetype="dashed", color=INK_SOFT, size=0.5)
+    + geom_errorbarh(aes(xmin=LOWER, xmax=UPPER), height=0.3, size=0.8, color=IMPRINT_PALETTE[0])
+    + geom_point(size=3.5, color=IMPRINT_PALETTE[0])
+    + scale_y_discrete(limits=df[CATEGORY].tolist())
+    + labs(title="point-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
-    + anyplot_theme
+    + theme(
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
+        panel_grid_minor=element_line(linewidth=0),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        axis_title=element_text(color=INK, size=10),
+        axis_text=element_text(color=INK_SOFT, size=8),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        plot_title=element_text(color=INK, size=12, weight="bold"),
+    )
 )
 
-# Save
-plot.save(f"plot-{THEME}.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
