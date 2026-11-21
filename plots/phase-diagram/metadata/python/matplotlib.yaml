@@ -2,48 +2,58 @@ library: matplotlib
 language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:07:05Z'
-updated: '2026-05-14T15:06:57Z'
-generated_by: claude-haiku
-workflow_run: 25867446808
+updated: '2026-11-21T16:55:29Z'
+generated_by: claude-sonnet
+workflow_run: 44926596271
 issue: 3004
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - Exemplary theme implementation with identical data colors and perfect chrome adaptation
-    between light/dark renders
-  - All text explicitly sized (24pt title, 20pt labels, 16pt ticks) and perfectly
-    readable at 4800×2700 px in both themes
-  - Clear visual hierarchy with equilibrium point emphasized as focal point and direction
-    arrows guiding temporal understanding
-  - Realistic, meaningful example data (damped oscillator) with comprehensive feature
-    coverage
-  - Clean, direct code structure with linear flow and full reproducibility
+  - Square 2400x2400 canvas with equal aspect and symmetric data-driven limits keeps
+    the spiral geometry undistorted
+  - Direction arrows run with time (rightward above dx/dt = 0, leftward below) and
+    colored start markers make each trajectory traceable from its initial condition
+  - Exact analytical damped-oscillator solution with the velocity as the true derivative
+    of the position
+  - 'Fully theme-adaptive chrome: legend frame on ELEVATED_BG, INK/INK_SOFT text,
+    equilibrium marker flips from INK on light to light ink on dark and stays visible
+    on the converging curves'
+  - Imprint palette in canonical order with identical data colors in both renders
   weaknesses:
-  - Title format includes descriptive prefix ('Damped Oscillator') before spec format;
-    should be 'phase-diagram · matplotlib · anyplot.ai' per spec requirements
-  - Design Excellence is solid but not exceptional; could benefit from more distinctive
-    aesthetic choices or visual refinement to reach 93+
+  - 'VQ-03 (both): the last two of the four direction arrows per trajectory (indices
+    up to len − len//10, t ≈ 45 s) sit within ~0.3 units of the origin, where 10-sample
+    spans shrink to stubs and eight arrowheads pile up on the equilibrium marker as
+    clutter → keep every arrow on the readable outer turns, e.g. place them within
+    the first ~40 % of the samples. Likely cause: np.linspace(len(x)//20, len(x) −
+    len(x)//10, 4) arrow indices.'
+  - 'DQ-01 (both): trajectory 4 (A=2.0, phase 4.0) is trajectory 3 (A=2.5, phase 2.5)
+    shifted by Δt = 1.5/ω_d ≈ 1.52 s (2.5·e^(−0.15·1.52) ≈ 2.0), so the blue curve
+    runs under the ochre one from (−1.3, 1.7) onward and only three distinct orbits
+    are visible → pick a fourth initial condition that lies on none of the other orbits.
+    Likely cause: the starts list (2.5, 2.5) and (2.0, 4.0).'
+  - 'Suggestion: label the start markers in the legend (e.g. a ''start'' glyph) so
+    the dots read as initial conditions without inference.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "Damped Oscillator · phase-diagram · matplotlib · anyplot.ai" in dark text (fontsize=24); axis labels "Position x (arbitrary units)" and "Velocity dx/dt (arbitrary units)" in dark text (fontsize=20); tick labels in soft dark gray (fontsize=16) - all clearly readable with excellent contrast
-      Data: Four trajectories rendered in Okabe-Ito colors (teal/#009E73, orange/#D55E00, blue/#0072B2, purple/#CC79A7) spiraling toward origin; colored dots mark starting points; gray X marks equilibrium; dashed grid lines at low opacity provide subtle guidance
-      Legibility verdict: PASS - all text perfectly readable, no dark-on-light failures, strong contrast throughout
+      Background: warm off-white #FAF8F1 on a square 2400x2400 canvas
+      Chrome: title 'Damped Oscillator · phase-diagram · python · matplotlib · anyplot.ai' in dark INK; axis titles 'Position x (arbitrary units)' and 'Velocity dx/dt (arbitrary units)' in INK; ticks -4..4 on both axes in INK_SOFT; subtle grid; dashed low-alpha lines at x = 0 and dx/dt = 0; legend upper right on an elevated off-white frame - all readable
+      Data: four trajectories in #009E73, #C475FD, #4467A3, #BD8233 spiralling clockwise into the origin; filled start dots with page-colored outlines; four direction arrows per curve; black X with light outline at (0, 0) labelled 'Equilibrium (stable)'. The blue trajectory merges under the ochre one after the ochre start point; late arrows crowd around the X
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title in light text (#F0EFE8) - clearly visible; axis labels in light text; tick labels in soft gray (#B8B7B0) - all readable without dark-on-dark issues; grid lines rendered in light color at matching low opacity
-      Data: Identical Okabe-Ito colors to light render - confirms proper theme-independence of data encoding; trajectories, start points, equilibrium marker render pixel-perfect to light version; legend frame background is dark elevated surface (#242420) with light text
-      Legibility verdict: PASS - all elements properly theme-adapted, no chrome failures, brand green (#009E73) visible on first trajectory, excellent readability on dark surface
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light INK, ticks in light INK_SOFT, grid subtle and visible, legend frame dark elevated #242420 with light text - no dark-on-dark text
+      Data: the same four Imprint colors as in the light render; equilibrium X flips to light ink with a dark outline and stays visible; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,72 +61,82 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24pt, labels=20pt, ticks=16pt);
-          perfect readability in both themes
+        comment: All sizes set explicitly (title 10 pt, axis titles 10 pt, ticks 8
+          pt, legend 8 pt) at the style-guide references; mandated title fills ~80%
+          of the width without clipping; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlap; all text fully readable and well-positioned
+        comment: No text collides with text or data; legend sits in the empty upper-right
+          quadrant
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Trajectories, arrows, markers all perfectly visible and well-sized
+        passed: false
+        comment: Trajectories (2.2 px lines) and start markers are clear, but the
+          late-time direction arrows pile up around the equilibrium marker as unreadable
+          stubs (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD-safe contrast; excellent visual distinction
+        comment: Green, lilac, blue and ochre separate well in luminance and hue;
+          start markers add a second cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance; plot uses 60-70% of canvas with balanced margins
+        comment: Square 2400x2400 canvas (gate passed); equal-aspect axes fill the
+          canvas with balanced margins; legend tucked into the empty corner
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Position x (arbitrary units)'' and ''Velocity
-          dx/dt (arbitrary units)'''
+        comment: '''Position x (arbitrary units)'' and ''Velocity dx/dt (arbitrary
+          units)'': descriptive, with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors identical in light/dark; backgrounds correct (#FAF8F1/#1A1A17);
-          all chrome theme-adaptive
+        comment: 'Imprint positions 1-4 in canonical order, first series #009E73;
+          identical data colors in both renders; #FAF8F1 / #1A1A17 backgrounds; legend
+          frame on ELEVATED_BG, all chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional, well-configured design with thoughtful touches; above
-          defaults but not exceptional
+        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes);
+          page-colored outlines on start markers are a small touch but nothing decided
+          clearly beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Spines removed (L-shaped); subtle grid; generous whitespace; polished
+        passed: false
+        comment: 'Beyond the baseline: dashed low-alpha zero lines that mark the dx/dt
+          = 0 nullcline and x = 0, symmetric limits from the data with equal aspect
+          so the spiral is not distorted'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear narrative of convergence to equilibrium; visual hierarchy guides
-          eye; arrows show time direction
+        passed: false
+        comment: Data displayed; the equilibrium marker is what the Notes ask for,
+          no emphasis chosen beyond it
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -124,51 +144,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct phase diagram showing state space trajectories and fixed
-          point
+        comment: 'Correct phase diagram: x against dx/dt, trajectories in state space'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: trajectories, fixed point, direction arrows,
-          basin structure'
+        comment: Multiple initial conditions, start markers, direction arrows running
+          with time (rightward above dx/dt = 0, leftward below), stable fixed point
+          on the dx/dt = 0 axis (C1-C5 all present)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis position, Y-axis velocity; axes span all data correctly
+        comment: x on the horizontal, dx/dt on the vertical; all data within the limits;
+          marks at their computed values
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend correct; title format non-compliant - includes 'Damped Oscillator'
-          prefix before spec format
+        passed: true
+        comment: Title 'Damped Oscillator · phase-diagram · python · matplotlib ·
+          anyplot.ai' matches the format with a descriptive prefix; legend entries
+          match the curves
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Shows damped oscillation, spiral convergence, fixed-point stability,
-          multiple initial conditions, time progression
+        passed: false
+        comment: Inward spirals to a stable focus from several starts, but trajectory
+          4 lies on trajectory 3's orbit, so only three distinct orbits show (defect
+          line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic damped oscillator; real-world plausible; neutral, educational
+        comment: 'Underdamped harmonic oscillator: a classic, neutral physics scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physical parameters realistic; amplitudes and time range well-chosen
+        comment: 'Checked: equilibrium at (0, 0) for x'''' + 2γx'' + ω0²x = 0; ω_d
+          = sqrt(ω0² − γ²) matches the 2γ form; the velocity is the exact derivative
+          of the position (line 46); clockwise rotation in the x–dx/dt plane is correct;
+          amplitudes decay by e^(−γt)'
     code_quality:
       score: 10
       max: 10
@@ -178,58 +204,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no unnecessary functions or classes
+        comment: Linear imports → tokens → data → plot → save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytical solution; no randomness
+        comment: Deterministic analytical solution
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib, numpy; all used
+        comment: os, matplotlib.pyplot, numpy and pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Closed-form solution, compact arrow loop; nothing an available call
+          replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Proper Axes methods, high-level API, theme tokens; well-structured
+        passed: false
+        comment: Axes API throughout, groupby over a tidy frame, annotate with arrowprops
+          for arrows on the curve, set_aspect('equal', adjustable='box') for an undistorted
+          phase plane
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Uses annotations, spine control, grid customization; solid but not
-          unique to matplotlib
+        comment: annotate arrows are the call every matplotlib version of this spec
+          would use; nothing distinctive beyond it
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T16:51:28Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - edge-highlighting
+  - grid-styling

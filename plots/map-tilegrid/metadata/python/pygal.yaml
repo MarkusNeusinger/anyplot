@@ -2,199 +2,196 @@ library: pygal
 language: python
 specification_id: map-tilegrid
 created: '2026-05-14T14:30:31Z'
-updated: '2026-05-14T15:04:47Z'
+updated: '2026-11-21T16:51:51Z'
 generated_by: claude-sonnet
-workflow_run: 25865300740
+workflow_run: 44926242280
 issue: 5246
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/pygal/plot-dark.html
-quality_score: 74
+quality_score: 80
 review:
   strengths:
-  - Viridis palette correctly applied for sequential/continuous data via matplotlib
-    color interpolation
-  - 'Correct theme-adaptive tokens: #FAF8F1 / #1A1A17 backgrounds and INK/INK_MUTED
-    chrome tokens properly configured'
-  - Geographic tile grid layout accurately approximates US state positions
-  - Renewable energy by US state is a realistic, factually grounded, politically neutral
-    dataset with appropriate value ranges (12–88%)
-  - 'Clean KISS structure: flat script, np.random.seed(42), all imports used'
-  - Quintile legend with descriptive range labels provides good context for value-to-color
-    mapping
-  - HTML interactive output correctly generated alongside PNG renders
+  - Square tiles of identical size at each state's grid row and column, with north
+    at the top and a recognisable US outline
+  - Bold white abbreviations centred on every tile, legible on all five ramp steps
+    in both themes
+  - Five quantile steps of imprint_seq with a bottom legend of value ranges; chrome
+    flips correctly between themes
+  - Per-point dicts in a pygal StackedBar carry each tile's own color and label, with
+    pygal's inline CSS used for tile strokes and label weight
   weaknesses:
-  - Circular dots used instead of square or hexagon tiles — spec explicitly requires
-    'equally-sized tiles — squares or hexagons'; circles are dot-map markers, not
-    tiles
-  - 'Darkest viridis quintile (#440154) is nearly invisible against the #1A1A17 dark
-    background — lowest quintile states (WV, KY, WY, etc.) are barely perceptible
-    in dark mode'
-  - State abbreviation labels are very small (value_font_size=50 at 4800px) and difficult
-    to read in the rendered output — consider increasing or using the label as the
-    dot content
-  - Canvas layout has large empty space in the lower-left quadrant and corner-isolated
-    dots (AK, ME, HI, FL) create visual imbalance
-  - DE-03 data storytelling weak — the viridis gradient tells a geographic story but
-    no visual emphasis on the highest/lowest states
+  - 'VQ-03 (both): vertically stacked tiles touch with no visible gutter, so same-class
+    neighbours (WA/OR, MT/ID, VA/PA) merge into one block while columns have ~15 px
+    gaps → an equal page-colored gutter on all four sides of each tile. Likely cause:
+    the inline `.bar{stroke:…;stroke-width:10px}` rule is overridden by Style(stroke_width=0)
+    / pygal''s own stroke CSS, so no page-colored stroke is drawn.'
+  - 'VQ-04 (both): adjacent quantile steps of the two-stop ramp (e.g. ''< 25%'' vs
+    ''25–36%'', ''36–48%'' vs ''48–60%'') are hard to tell apart, against the style
+    guide''s rule that every ordered step stays distinguishable from its neighbours
+    → fewer classes or steps spaced so neighbours separate clearly. Likely cause:
+    N_BINS=5 evenly sampled on the short #009E73→#4467A3 ramp.'
+  - 'VQ-06 (both): the colored metric is never named — neither title nor legend says
+    the percentages are the renewable share of electricity → a legend heading or descriptive
+    title prefix naming VALUE. Likely cause: VALUE constant not passed to the chart.'
+  - 'DQ-02 (both): real state names carry random renewable shares (e.g. OH, IN 36–48
+    %, DE 36–48 %, NJ 25–36 %, AZ 48–60 %) that contradict their real profiles → values
+    close to the real shares for all 50 states. Likely cause: np.random.uniform(18,
+    78) for the states not in the override dict.'
+  - 'CQ-04 (code): IMPRINT_PALETTE is defined but never used → delete it. Likely cause:
+    leftover constant from the template.'
+  - 'Suggestion: a slightly larger gap between each legend swatch and its label text.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "map-tilegrid · pygal · anyplot.ai" centered at top in dark ink — clearly readable. No axis labels (appropriate for map). Legend at bottom-left with 5 quintile entries in small but readable text.
-      Data: 50 circular dots arranged in a geographic grid approximating US state positions. Colors span the viridis palette: dark purple (#440154) for lowest quintile through teal/green to bright yellow (#fde725) for highest quintile. Each dot has a small label below it showing state abbreviation and percentage (e.g., "WA: 88.2%") — these labels are small but visible at full resolution. First series color is viridis dark purple (lowest quintile), not #009E73 — appropriate because this is continuous data using viridis, not categorical Okabe-Ito.
-      Legibility verdict: PASS — title and legend are clearly readable; dot labels are small but not illegible at full 4800x2700 resolution.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title 'map-tilegrid · python · pygal · anyplot.ai' in dark ink centred at top; no axes; legend row at the bottom with five swatches '< 25%', '25–36%', '36–48%', '48–60%', '> 60%' in dark ink. All readable.
+      Data: 50 equal square tiles arranged as a US tile grid (AK top-left, ME top-right, HI and FL bottom), colored in five steps from brand green #009E73 to blue #4467A3, each with a bold white state abbreviation. Columns are separated by gutters; vertically stacked tiles touch with no visible gap.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title visible in light-colored text. Legend at bottom with light-colored text — readable. State labels below dots appear in muted light color.
-      Data: Colors are IDENTICAL to light render as required (viridis palette unchanged between themes). However, the darkest quintile dots (#440154 — deep purple) are nearly invisible against the #1A1A17 background due to very low luminance contrast. The lowest-quintile states (WV, KY, WY, TX, LA, MS and others) blend into the dark background, making them difficult to distinguish.
-      Legibility verdict: PARTIAL FAIL — title and legend text are readable, but the darkest quintile data elements (dark purple dots) have critically low contrast against the near-black background. This is a data visibility failure for the lowest quintile in dark mode, not a chrome/text issue.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and legend text in light ink, clearly readable; no dark-on-dark text.
+      Data: tile colors identical to the light render; white abbreviations readable on every step; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=32, label=22, legend=24, value=50).
-          Title and legend clearly readable. State labels small but visible at full
-          resolution.
+        comment: Title 66, bold tile labels 62, legend 48 source px; all readable
+          in both themes, white labels legible on every ramp step
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Dots well-spaced, no overlap. Some edge dots (AK, ME) at canvas boundary.
+        comment: No text collisions; every abbreviation sits centred in its tile
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 5
         max: 6
-        passed: true
-        comment: 'Most dots clearly visible. Darkest quintile (viridis ~#440154) barely
-          distinguishable against #1A1A17 dark background — significant visibility
-          failure for lowest-quintile states.'
+        passed: false
+        comment: Vertically stacked tiles of the same class merge into one block with
+          no visible gutter (defect line)
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Viridis is CVD-safe and perceptually uniform.
+        passed: false
+        comment: Adjacent quintile steps of the two-stop ramp are hard to tell apart
+          (defect line)
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Grid fills roughly 50% of canvas. Large empty area in lower-left.
-          Corner dots (AK, ME, HI, FL) create visual imbalance.
+        comment: 3200x1800 landscape, map centred with balanced side margins, legend
+          row below; no overflow
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title correct. No axis labels appropriate for geographic map.
+        passed: false
+        comment: The metric (renewable share of electricity) is never named on the
+          chart (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correctly used for sequential continuous data. Backgrounds
-          #FAF8F1/#1A1A17 correct. Data colors identical between themes. Chrome tokens
-          (INK/INK_MUTED) properly applied.'
+        comment: 'Five steps of imprint_seq (#009E73 -> #4467A3), backgrounds #FAF8F1
+          / #1A1A17, chrome flips correctly'
     design_excellence:
       score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: true
-        comment: Competent configuration with viridis palette and correct theme tokens.
-          Circular dots instead of square/hexagon tiles miss the visual identity of
-          a tile grid map. Looks like a well-configured scatter chart rather than
-          a tile map.
+        passed: false
+        comment: 'Bold centred monospace abbreviations as the only text inside the
+          map and a minimal legend row: a deliberate typographic hierarchy beyond
+          the baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: No grid, no spines — clean and appropriate for a map. Legend at bottom.
-          Whitespace around the chart. Some refinement visible.
+        passed: false
+        comment: All axes, guides and labels suppressed so the tiles carry the chart;
+          gutters between columns; margins tuned to centre the map
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Viridis gradient reveals geographic clustering (high-renewable Pacific
-          NW vs low-renewable coal states). Above default but no focal point emphasis
-          or annotation to highlight the story.
+        passed: false
+        comment: Quantile classing spreads the 50 states evenly over the five steps
+          so the Pacific NW / coal-belt contrast reads at a glance
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Geographic grid map concept correct (equal visual weight per region,
-          grid positioning). However circles are used instead of the spec-required
-          squares or hexagons — fundamentally a dot map, not a tile grid map.
+        comment: Square tile grid map, one tile per state
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Grid layout, color coding, state abbreviation labels, legend present.
-          Spec requires 'colorbar or legend' — quintile legend provided instead of
-          continuous colorbar. Acceptable approach.
+        comment: 'Equal squares at grid row/col, abbreviation on every tile, sequential
+          ramp, legend with value classes: C1-C4 all shown'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 50 states correctly placed in geographic grid positions.
+        comment: Each tile at its row/column; north at the top; classes from np.digitize
+          on quantile edges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'map-tilegrid · pygal · anyplot.ai' correct. Quintile legend
-          with descriptive range labels.
+        comment: Title 'map-tilegrid · python · pygal · anyplot.ai' correct; legend
+          entries are readable value ranges
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Full US state coverage (all 50). Good value variation from 12% to
-          88% showing meaningful geographic clustering. Quintile binning exposes distribution.
-          Minor: colorbar/continuous legend would show more nuance than quintile bins.'
+        comment: 50 states, wide value spread 12-88 %, holes and ragged edge permitted
+          by C5
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Renewable energy % by US state — real, neutral, scientifically relevant
-          topic. Key values (WA=88.2% hydro, WV=12.3% coal) are factually grounded.
+        passed: false
+        comment: Real state names carry random renewable shares (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12–88% range for renewable energy share is factually credible. State-specific
-          overrides reflect real-world energy profiles accurately.
+        comment: Shares 12-88 % are a sensible range for renewable electricity share;
+          no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -202,63 +199,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → plot → save. No functions or classes.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random data generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, matplotlib.colors, numpy, pygal, Style — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean Pythonic code. sys.path.pop(0) is a known import workaround,
-          acceptable. No over-engineering.
+        passed: false
+        comment: Unused IMPRINT_PALETTE constant (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal 3
+          API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Correct pygal.XY usage with Style object. XY chart is a workaround
-          for tile map (pygal has no native tile chart type). Proper data format with
-          value tuples and labels.
+        passed: false
+        comment: StackedBar workaround with Style object and print_labels — reasonable
+          for a library without a tile chart, default level
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Generates interactive HTML output (pygal's key distinguishing feature).
-          Uses print_labels=True for data labels. Uses Style object for full theme
-          adaptation.
+        passed: false
+        comment: Per-point dicts carrying their own color and label, plus pygal's
+          inline css injection for tile strokes and label weight
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T16:47:51Z'
 impl_tags:
   dependencies:
   - matplotlib
   techniques:
-  - html-export
+  - annotations
   - custom-legend
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
   styling:
-  - custom-colormap
+  - minimal-chrome

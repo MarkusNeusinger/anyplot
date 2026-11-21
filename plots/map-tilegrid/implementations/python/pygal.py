@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 74/100 | Created: 2026-05-14
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-21
 """
 
 import os
@@ -12,6 +12,7 @@ sys.path.pop(0)  # remove script dir so "import pygal" finds the installed packa
 
 import matplotlib.colors as mcolors
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -21,8 +22,22 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# US state tile grid positions (row, col) — geographic approximation
-STATE_GRID = {
+# Imprint palette: sequential ramp for unipolar data (brand green -> blue)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+imprint_seq = mcolors.LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Constants
+N_BINS = 5  # value classes in the colour key
+
+# Column constants
+REGION = "State"  # role: region
+VALUE = "Renewable share of electricity (%)"  # role: value
+ROW = "Grid row"  # role: row
+COL = "Grid column"  # role: col
+
+# Data: replace this block with your own table, for example df = pd.read_csv("tiles.csv")
+# US state tile grid positions (row, col), a geographic approximation
+state_grid = {
     "AK": (0, 0),
     "ME": (0, 10),
     "WA": (1, 1),
@@ -74,17 +89,16 @@ STATE_GRID = {
     "HI": (7, 1),
     "FL": (7, 9),
 }
-
-# Synthetic renewable energy % of total electricity generation
+# Synthetic renewable energy share of electricity generation, with real-world anchors
 np.random.seed(42)
-state_values = {s: round(float(np.random.uniform(18, 78)), 1) for s in STATE_GRID}
+state_values = {s: round(float(np.random.uniform(18, 78)), 1) for s in state_grid}
 state_values.update(
     {
         "WA": 88.2,  # Pacific Northwest hydropower
         "OR": 72.1,
         "ID": 81.5,
         "MT": 65.3,
-        "WY": 18.5,  # Coal-heavy states
+        "WY": 18.5,  # coal-heavy states
         "WV": 12.3,
         "KY": 15.7,
         "TX": 24.8,
@@ -92,70 +106,94 @@ state_values.update(
         "MS": 18.9,
         "CA": 52.3,
         "ND": 41.8,
-        "SD": 76.4,  # High hydro + wind
+        "SD": 76.4,  # high hydro + wind
+    }
+)
+df = pd.DataFrame(
+    {
+        REGION: list(state_grid),
+        VALUE: [state_values[s] for s in state_grid],
+        ROW: [rc[0] for rc in state_grid.values()],
+        COL: [rc[1] for rc in state_grid.values()],
     }
 )
 
-# Quintile assignment using numpy digitize
-values_array = np.array(list(state_values.values()))
-quintile_bins = np.percentile(values_array, [20, 40, 60, 80])
-quintile_assignments = {state: int(np.digitize(val, quintile_bins)) for state, val in state_values.items()}
-
-# Viridis colors for 5 quintiles (dark purple = low, bright yellow = high)
-viridis = mcolors.LinearSegmentedColormap.from_list(
-    "viridis_approx", ["#440154", "#482475", "#355f8d", "#21918c", "#44bf70", "#bddf26", "#fde725"]
+# Plot
+# Quintile classes: five steps of the sequential ramp, low to high
+edges = np.percentile(df[VALUE], np.linspace(0, 100, N_BINS + 1)[1:-1])
+df["bin"] = np.digitize(df[VALUE], edges)
+bin_hex = [mcolors.to_hex(imprint_seq(t)).upper() for t in np.linspace(0, 1, N_BINS)]
+bin_labels = (
+    [f"< {edges[0]:.0f}%"]
+    + [f"{lo:.0f}–{hi:.0f}%" for lo, hi in zip(edges[:-1], edges[1:], strict=True)]
+    + [f"> {edges[-1]:.0f}%"]
 )
-quintile_hex = tuple(mcolors.to_hex(viridis(t)) for t in (0.1, 0.3, 0.5, 0.7, 0.9))
 
-# Quintile legend labels
-b = quintile_bins
-quintile_labels = [
-    f"< {b[0]:.0f}%  (lowest fifth)",
-    f"{b[0]:.0f}–{b[1]:.0f}%",
-    f"{b[1]:.0f}–{b[2]:.0f}%",
-    f"{b[2]:.0f}–{b[3]:.0f}%",
-    f"> {b[3]:.0f}%  (highest fifth)",
-]
+# One stacked-bar series per grid row (bottom row first); every cell has height 1,
+# so each column stacks equally sized square tiles. Empty cells are page-coloured.
+n_rows = int(df[ROW].max()) + 1
+n_cols = int(df[COL].max()) + 1
+cells = {}
+for _, rec in df.iterrows():
+    cells[(int(rec[ROW]), int(rec[COL]))] = (rec[REGION], int(rec["bin"]), rec[VALUE])
 
-# Organise data by quintile — offset grid by 1 to prevent edge clipping
-quintile_data = [[] for _ in range(5)]
-for state, (row, col) in STATE_GRID.items():
-    q = quintile_assignments[state]
-    quintile_data[q].append({"value": (col + 1, -(row + 1)), "label": f"{state}: {state_values[state]:.1f}%"})
-
-# Pygal style
-custom_style = Style(
+style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=quintile_hex,
-    title_font_size=32,
-    label_font_size=22,
-    major_label_font_size=22,
-    legend_font_size=24,
-    value_font_size=50,
+    colors=tuple([PAGE_BG] * n_rows + bin_hex),
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=48,
+    value_font_size=62,
+    value_label_font_size=62,
+    value_colors=tuple(["#FFFFFF"] * n_rows),
+    opacity=1,
+    opacity_hover=1,
+    stroke_width=0,
 )
 
-# Chart
-chart = pygal.XY(
-    width=4800,
-    height=2700,
-    title="map-tilegrid · pygal · anyplot.ai",
-    stroke=False,
-    dots_size=50,
+chart = pygal.StackedBar(
+    width=3200,
+    height=1800,
+    title="map-tilegrid · python · pygal · anyplot.ai",
     print_labels=True,
     show_x_labels=False,
     show_y_labels=False,
     show_x_guides=False,
     show_y_guides=False,
     legend_at_bottom=True,
-    style=custom_style,
+    legend_at_bottom_columns=N_BINS,
+    legend_box_size=44,
+    margin=40,
+    margin_left=460,
+    margin_right=460,
+    spacing=24,
+    css=[
+        "file://style.css",
+        "file://graph.css",
+        f"inline:.bar{{stroke:{PAGE_BG};stroke-width:10px}} text.label{{text-anchor:middle;font-weight:bold}}",
+    ],
+    style=style,
 )
+chart.x_labels = list(range(n_cols))
 
-for q_data, q_label in zip(quintile_data, quintile_labels, strict=False):
-    chart.add(q_label, q_data)
+for r in range(n_rows - 1, -1, -1):
+    points = []
+    for c in range(n_cols):
+        if (r, c) in cells:
+            name, b, val = cells[(r, c)]
+            points.append({"value": 1, "color": bin_hex[b], "label": name})
+        else:
+            points.append({"value": 1, "color": PAGE_BG, "label": ""})
+    chart.add(None, points)
+
+# Colour key: the legend entries are empty series, one per value class
+for lab in bin_labels:
+    chart.add(lab, [None] * n_cols)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
