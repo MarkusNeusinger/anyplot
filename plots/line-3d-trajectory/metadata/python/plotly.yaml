@@ -2,43 +2,61 @@ library: plotly
 language: python
 specification_id: line-3d-trajectory
 created: '2026-01-07T16:30:15Z'
-updated: '2026-05-16T08:54:55Z'
-generated_by: claude-haiku
-workflow_run: 25957702281
+updated: '2026-11-21T22:37:48Z'
+generated_by: claude-sonnet
+workflow_run: 44956885430
 issue: 3182
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/plotly/plot-dark.html
-quality_score: 96
+quality_score: 80
 review:
   strengths:
-  - Excellent theme adaptation with proper light/dark color tokens
-  - Clean 3D visualization with multiple well-differentiated trajectories
-  - 'Proper Okabe-Ito palette application (first series is #009E73)'
-  - Strong font sizing and readability across both themes
-  - Idiomatic plotly usage with Scatter3d and scene configuration
-  - High-quality interactive 3D features with camera positioning
-  weaknesses: []
+  - Native Scatter3d per group via df.groupby(sort=False) with Imprint colors in canonical
+    order
+  - Theme tokens threaded through title, scene axes, grid, scene backgrounds and legend;
+    both renders fully readable
+  - aspectmode='data' keeps the helices' true proportions under an oblique camera
+    that reveals all three dimensions
+  - Per-trace hovertemplate naming the columns gives useful hover inspection in the
+    HTML output
+  weaknesses:
+  - 'VQ-05 (both): the 3D scene spans only about 41% of the canvas width (~1300 of
+    3200 px) with a wide empty band on the right and a gap between legend and scene
+    → let the scene fill roughly 55-65% of the width (about +15-20 percentage points).
+    Likely cause: camera eye at (1.5, 1.5, 1.2) zooms the scene out; a closer eye
+    such as (1.25, 1.25, 1.0) or a widened scene domain fills the canvas.'
+  - 'VQ-06 (both): axis titles ''X position'', ''Y position'', ''Z position'' carry
+    no unit → add a unit to each axis title, e.g. ''X position (m)''. Likely cause:
+    the X/Y/Z column constants.'
+  - 'DQ-02 (both): the trajectories are labelled ''Standard Helix'', ''Compressed
+    Helix'', ''Expanding Helix'' on unitless positions, which reads as an abstract
+    demo → name a concrete trajectory context (e.g. charged-particle paths in a magnetic
+    field, drone ascent routes) with matching labels. Likely cause: the TRAJECTORY
+    labels and column constants.'
+  - 'CQ-01 (code): a def axis(label) helper function builds the three scene axis dicts
+    (lines 65-74) → inline the shared styling, e.g. fig.update_scenes(xaxis_gridcolor=GRID,
+    ...) plus the three axis titles. Likely cause: the axis() helper.'
+  - 'Suggestion: a color gradient along one trajectory encoding time, with a color
+    bar, would show the Notes'' time-progression idea.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) surface with subtle gradient appearance.
-      Chrome: Title "Multiple Helical Trajectories · line-3d-trajectory · plotly · anyplot.ai" is prominent and dark. Axis labels (X Position, Y Position, Z Position) are bold and clearly readable. Tick labels (0-6 range) are visible in secondary ink color. Legend in upper left with trajectory labels and borders is well-designed.
-      Data: Three helical trajectories are color-coded: green (#009E73 - Standard Helix), orange (#D55E00 - Compressed Helix), and blue (#0072B2 - Expanding Helix). Lines are thick (width=6) and clearly distinguishable from each other and background. 3D gridlines are subtle and don't compete with data.
-      Legibility verdict: PASS - All text is readable against the light background. Data colors are vibrant and distinct.
+      Background: warm off-white #FAF8F1 paper and scene walls, not pure white.
+      Chrome: centered title 'Multiple Helical Trajectories · line-3d-trajectory · python · plotly · anyplot.ai' in dark ink; axis titles 'X position', 'Y position', 'Z position' and tick numerals (-4..4, 0..6) in dark/soft ink, all readable; subtle visible grid; legend box top-left titled 'Trajectory' on an elevated off-white with a soft border.
+      Data: three helices as width-4 lines — Standard Helix #009E73 (green, widest radius), Compressed Helix #C475FD (violet, tight coils), Expanding Helix #4467A3 (blue, radius growing with height); oblique camera shows all three axes. The scene occupies only the central ~41% of the canvas width, leaving a large empty area to the right.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) surface, not pure black. Subtle grid pattern visible.
-      Chrome: Title is rendered in light text and fully readable against the dark background. Axis labels and tick labels use light ink color (F0EFE8) and are clearly visible. Legend has dark-themed background (#242420) with proper contrast.
-      Data: The three trajectories maintain identical colors to the light render (green, orange, blue). Line colors are vibrant and well-differentiated on the dark surface. No dark-on-dark failures observed.
-      Legibility verdict: PASS - All text is readable. Data colors show excellent contrast against the dark background. Brand green (#009E73) is visible and maintains identity. Theme adaptation is seamless with no readability issues.
-
-    Both renders demonstrate proper theme-adaptive chrome with only data colors (Okabe-Ito positions 1-3) remaining constant while backgrounds and text colors appropriately flip between themes.
+      Background: warm near-black #1A1A17 paper and scene walls, not pure black.
+      Chrome: title, axis titles and tick numerals in light ink, all readable; no dark-on-dark text; grid subtle but visible; legend on #242420 with a light border.
+      Data: identical green, violet and blue lines as the light render; brand green clearly visible; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -46,71 +64,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicit (title=28px, labels=22px, ticks=18px). All readable
-          in both themes.
+        comment: Explicit sizes (title auto-scaled to ~13 px for the 83-char title,
+          axis titles 12, ticks 10, legend 10) at the library-prompt references; all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Labels well-positioned. Legend clear.
+        comment: No text collisions; legend sits clear of the scene; crossing strands
+          are permitted by C6
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines thick (width=6), clearly distinguishable. Multiple trajectories
-          well-separated by color.
+        comment: Line width 4 on 400-500 points per path reads as smooth, distinct
+          curves; legend line samples match the traces in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe. Good contrast throughout.
+        comment: Green, violet and blue are well separated for CVD; good contrast
+          on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Good proportions. 3D view unclipped. Proper aspect mode.
+        passed: false
+        comment: 3200x1800 canvas correct, nothing clipped, but the 3D scene occupies
+          only ~41% of the canvas width with a large empty band on the right and between
+          legend and scene (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title includes spec-id, library, site. Axis labels descriptive.
+        passed: false
+        comment: Axis titles 'X position', 'Y position', 'Z position' carry no unit
+          (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Okabe-Ito order. Backgrounds correct. Both
-          themes rendered properly.'
+        comment: 'Imprint positions 1-3 in canonical order, first series #009E73;
+          #FAF8F1 / #1A1A17 backgrounds; data colors identical across themes'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Clean 3D design with three distinct helical trajectories. Parametric
-          curves show thought. Uses appropriate Okabe-Ito palette.
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, elevated legend
+          box; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 3D scene well-configured. Gridlines subtle. Legend has border and
-          proper background. Generous margins.
+        passed: false
+        comment: Subtle grid, themed scene backgrounds; whitespace not tuned (scene
+          small in canvas); baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Color hierarchy creates visual distinction. Expanding helix shows
-          innovation. Clear focal point on 3D curves.
+        passed: false
+        comment: Three helices displayed side by side with no chosen focal point beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -120,28 +144,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D line plot.
+        comment: Correct 3D line plot (Scatter3d mode='lines')
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Connected lines, 3D trajectories, multiple trajectories, color-coding.
-          All present.
+        comment: Sequential smooth lines (C1), three labeled axes from an oblique
+          camera (C2), several trajectories each in its own color with a legend (C4),
+          width 4 keeps strands traceable (C5); C3 gradient not used (optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X, Y, Z properly mapped. All data shown.
+        comment: x, y, z mapped directly from the parametric data; aspectmode='data'
+          keeps true proportions; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format. Legend labels match trajectories.
+        comment: Title 'Multiple Helical Trajectories · line-3d-trajectory · python
+          · plotly · anyplot.ai' matches the format with a descriptive prefix; legend
+          titled 'Trajectory' with readable entries
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -149,81 +177,86 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple trajectory types (standard, compressed, expanding) demonstrate
-          parametric variations.
+        comment: Three helices with different pitch, frequency and an expanding radius
+          show path comparison in 3D
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Helical trajectories are mathematically sound and physically plausible.
-          Neutral context.
+        passed: false
+        comment: 'Neutral, but abstract: ''Standard/Compressed/Expanding Helix'' on
+          unitless X/Y/Z positions reads as generic (defect line)'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values. Trajectories appropriately scaled for visualization.
+        comment: Radii 2-5 and heights 0-6 sensible; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No functions/classes. Straightforward procedural code.
+        passed: false
+        comment: A def axis() helper function builds the axis dicts (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output.
+        comment: Fully deterministic parametric data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, plotly, os, sys (necessary). Clean.
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake functionality.
+        comment: Compact, no fake UI, no hand-rolled computation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Uses go.Figure() and go.Scatter3d() with proper 3D scene. High-level
-          API.
+        passed: false
+        comment: go.Figure + Scatter3d per group via df.groupby(sort=False), scene
+          dict with camera eye and aspectmode
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Interactive 3D rotation, scene configuration, camera positioning,
-          HTML export showcase library capabilities.
+        passed: false
+        comment: Per-trace hovertemplate with column names and aspectmode='data' for
+          true 3D proportions; interactive rotation in HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T22:34:03Z'
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - publication-ready
