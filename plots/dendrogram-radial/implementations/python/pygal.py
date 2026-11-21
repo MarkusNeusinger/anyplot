@@ -1,7 +1,7 @@
 """ anyplot.ai
 dendrogram-radial: Radial Dendrogram
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 81/100 | Created: 2026-05-14
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 78/100 | Updated: 2026-11-21
 """
 
 import importlib
@@ -11,6 +11,7 @@ import sys
 
 import cairosvg
 import numpy as np
+import pandas as pd
 from scipy.cluster.hierarchy import leaves_list, linkage
 from scipy.spatial.distance import pdist
 
@@ -30,7 +31,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+TITLE = "dendrogram-radial · python · pygal · anyplot.ai"
+
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 custom_style = Style(
     background=PAGE_BG,
@@ -38,78 +42,58 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=42,
-    legend_font_size=26,
-    label_font_size=28,
+    colors=IMPRINT_PALETTE,
+    title_font_size=48,
+    legend_font_size=36,
+    label_font_size=32,
 )
 
-# Data: 24 animal species clustered by ecological traits
+# Columns: set these to your table's column names
+GROUP = "Taxonomic group"  # role: clusters
+
+# Data: replace this block with your own table, for example df = pd.read_csv("traits.csv", index_col=0)
+# One row per leaf (the index holds the leaf labels), numeric trait columns, plus the cluster column.
 np.random.seed(42)
-
-species = [
-    "Dolphin",
-    "Whale",
-    "Seal",
-    "Sea Lion",
-    "Wolf",
-    "Fox",
-    "Dog",
-    "Coyote",
-    "Lion",
-    "Tiger",
-    "Leopard",
-    "Cheetah",
-    "Eagle",
-    "Hawk",
-    "Falcon",
-    "Osprey",
-    "Frog",
-    "Toad",
-    "Salamander",
-    "Newt",
-    "Salmon",
-    "Trout",
-    "Bass",
-    "Pike",
-]
-group_names = ["Marine Mammals", "Canines", "Felines", "Raptors", "Amphibians", "Fish"]
-cluster_ids = [0] * 4 + [1] * 4 + [2] * 4 + [3] * 4 + [4] * 4 + [5] * 4
-
-# Trait matrix: [body_size, aquatic_affinity, speed, sociality, carnivory]
-traits = np.array(
-    [
-        [4, 5, 3, 4, 4],
-        [5, 5, 2, 3, 4],
-        [3, 4, 2, 2, 4],
-        [3, 4, 2, 3, 4],
-        [3, 1, 4, 5, 4],
-        [2, 1, 4, 1, 4],
-        [2, 1, 3, 3, 3],
-        [2, 1, 4, 1, 4],
-        [4, 1, 4, 3, 5],
-        [4, 1, 4, 1, 5],
-        [3, 1, 4, 1, 5],
-        [3, 1, 5, 1, 5],
-        [2, 2, 5, 1, 4],
-        [2, 2, 4, 1, 4],
-        [1, 2, 5, 1, 4],
-        [2, 2, 3, 1, 4],
-        [1, 3, 2, 1, 3],
-        [1, 3, 1, 1, 3],
-        [1, 3, 1, 1, 3],
-        [1, 3, 1, 1, 3],
-        [2, 5, 4, 1, 3],
-        [2, 5, 3, 1, 3],
-        [2, 5, 2, 1, 3],
-        [2, 4, 2, 1, 4],
-    ],
-    dtype=float,
+groups_list = ["Marine Mammals", "Canines", "Felines", "Raptors", "Amphibians", "Fish"]
+traits = {
+    "Dolphin": [4, 5, 3, 4, 4],
+    "Whale": [5, 5, 2, 3, 4],
+    "Seal": [3, 4, 2, 2, 4],
+    "Sea Lion": [3, 4, 2, 3, 4],
+    "Wolf": [3, 1, 4, 5, 4],
+    "Fox": [2, 1, 4, 1, 4],
+    "Dog": [2, 1, 3, 3, 3],
+    "Coyote": [2, 1, 4, 1, 4],
+    "Lion": [4, 1, 4, 3, 5],
+    "Tiger": [4, 1, 4, 1, 5],
+    "Leopard": [3, 1, 4, 1, 5],
+    "Cheetah": [3, 1, 5, 1, 5],
+    "Eagle": [2, 2, 5, 1, 4],
+    "Hawk": [2, 2, 4, 1, 4],
+    "Falcon": [1, 2, 5, 1, 4],
+    "Osprey": [2, 2, 3, 1, 4],
+    "Frog": [1, 3, 2, 1, 3],
+    "Toad": [1, 3, 1, 1, 3],
+    "Salamander": [1, 3, 1, 1, 3],
+    "Newt": [1, 3, 1, 1, 3],
+    "Salmon": [2, 5, 4, 1, 3],
+    "Trout": [2, 5, 3, 1, 3],
+    "Bass": [2, 5, 2, 1, 3],
+    "Pike": [2, 4, 2, 1, 4],
+}
+df = pd.DataFrame.from_dict(
+    traits, orient="index", columns=["Body size", "Aquatic affinity", "Speed", "Sociality", "Carnivory"]
 )
+df[GROUP] = [groups_list[i // 4] for i in range(len(df))]
 
-# Hierarchical clustering via Ward linkage
-dist_matrix = pdist(traits, metric="euclidean")
-Z = linkage(dist_matrix, method="ward")
+# Plot: reads only df and the constants above
+species = df.index.tolist()
+group_names = list(dict.fromkeys(df[GROUP]))
+group_color = {g: IMPRINT_PALETTE[i] for i, g in enumerate(group_names)}
+leaf_group = df[GROUP].tolist()
+
+# Hierarchical clustering via Ward linkage on the numeric trait columns
+Z = linkage(pdist(df.drop(columns=GROUP).to_numpy(dtype=float), metric="euclidean"), method="ward")
 n = len(species)
 
 # Assign angles to leaves using dendrogram leaf ordering
@@ -134,18 +118,17 @@ for i, row in enumerate(Z):
     node_angles[nid] = (node_min_ang[nid] + node_max_ang[nid]) / 2
 
 # Propagate cluster labels: a node gets a color only if all its leaves share one cluster
-node_cluster = {i: cluster_ids[i] for i in range(n)}
+node_cluster = dict(enumerate(leaf_group))
 for i, row in enumerate(Z):
     left, right = int(row[0]), int(row[1])
-    nid = n + i
-    cl, cr = node_cluster.get(left, -1), node_cluster.get(right, -1)
-    node_cluster[nid] = cl if cl == cr else -1
+    cl, cr = node_cluster[left], node_cluster[right]
+    node_cluster[n + i] = cl if cl == cr else None
 
 # Canvas setup
-W, H = 4800, 2700
-cx, cy = W // 2, H // 2
-R = 900  # Dendrogram outer radius in pixels
-LABEL_R = R + 68  # Label placement radius
+W, H = 2400, 2400
+cx, cy = W // 2, H // 2 + 40
+R = 800  # Dendrogram outer radius in pixels
+LABEL_R = R + 40  # Label placement radius
 
 
 def polar_xy(r, theta):
@@ -164,9 +147,8 @@ for i, row in enumerate(Z):
     for child in (left, right):
         ch_r = node_radii[child] * R
         ch_theta = node_angles[child]
-        cl = node_cluster.get(child, -1)
-        color = IMPRINT[cl] if cl >= 0 else INK_SOFT
-        sw = 6 if child < n else 4
+        color = group_color.get(node_cluster[child], INK_SOFT)
+        sw = 5 if child < n else 4
 
         # Arc at par_r from par_theta to ch_theta
         if par_r > 1:
@@ -199,9 +181,9 @@ elems.append(f'<circle cx="{cx}" cy="{cy}" r="12" fill="{INK_SOFT}" opacity="0.5
 for i in range(n):
     theta = leaf_angles[i]
     lx, ly = polar_xy(R, theta)
-    color = IMPRINT[cluster_ids[i]]
+    color = group_color[leaf_group[i]]
 
-    elems.append(f'<circle cx="{lx:.1f}" cy="{ly:.1f}" r="15" fill="{color}" opacity="0.95"/>')
+    elems.append(f'<circle cx="{lx:.1f}" cy="{ly:.1f}" r="11" fill="{color}" opacity="0.95"/>')
 
     label_x, label_y = polar_xy(LABEL_R, theta)
     svg_angle = math.degrees(theta - math.pi / 2) % 360
@@ -214,29 +196,27 @@ for i in range(n):
         f'<text x="{label_x:.1f}" y="{label_y:.1f}" '
         f'transform="rotate({rot:.1f},{label_x:.1f},{label_y:.1f})" '
         f'text-anchor="{anchor}" dominant-baseline="middle" '
-        f'font-family="sans-serif" font-size="28" fill="{color}" font-weight="500">'
+        f'font-family="sans-serif" font-size="32" fill="{color}" font-weight="500">'
         f"{species[i]}</text>"
     )
 
 # Legend
-lx0, ly0 = 110, 230
+lx0, ly0 = 70, 170
 elems.append(
-    f'<text x="{lx0}" y="{ly0}" font-family="sans-serif" font-size="30" '
-    f'fill="{INK}" font-weight="600">Taxonomic Groups</text>'
+    f'<text x="{lx0}" y="{ly0}" font-family="sans-serif" font-size="36" fill="{INK}" font-weight="600">{GROUP}</text>'
 )
-for g in range(6):
-    gy = ly0 + 55 + g * 68
-    elems.append(f'<circle cx="{lx0 + 16}" cy="{gy}" r="15" fill="{IMPRINT[g]}"/>')
+for g, name in enumerate(group_names):
+    gy = ly0 + 55 + g * 56
+    elems.append(f'<circle cx="{lx0 + 14}" cy="{gy}" r="13" fill="{group_color[name]}"/>')
     elems.append(
-        f'<text x="{lx0 + 44}" y="{gy}" font-family="sans-serif" font-size="26" '
-        f'fill="{INK}" dominant-baseline="middle">{group_names[g]}</text>'
+        f'<text x="{lx0 + 42}" y="{gy}" font-family="sans-serif" font-size="32" '
+        f'fill="{INK}" dominant-baseline="middle">{name}</text>'
     )
 
 # Title
 elems.append(
-    f'<text x="{W // 2}" y="72" text-anchor="middle" font-family="sans-serif" '
-    f'font-size="42" fill="{INK}" font-weight="600">'
-    f"dendrogram-radial · pygal · anyplot.ai</text>"
+    f'<text x="{W // 2}" y="80" text-anchor="middle" font-family="sans-serif" '
+    f'font-size="48" fill="{INK}" font-weight="600">{TITLE}</text>'
 )
 
 svg = (
@@ -251,24 +231,18 @@ cairosvg.svg2png(bytestring=svg.encode(), write_to=f"plot-{THEME}.png")
 # Interactive HTML via pygal's XY chart — leaf nodes plotted as interactive scatter
 # with hover tooltips (species name + group); uses pygal's JS rendering pipeline
 xy_chart = pygal.XY(
-    style=custom_style,
-    width=W,
-    height=H,
-    title="dendrogram-radial · pygal · anyplot.ai",
-    show_x_labels=False,
-    show_y_labels=False,
-    dots_size=6,
+    style=custom_style, width=W, height=H, title=TITLE, show_x_labels=False, show_y_labels=False, dots_size=6
 )
 
-for g in range(6):
+for name in group_names:
     group_pts = []
     for i in range(n):
-        if cluster_ids[i] == g:
+        if leaf_group[i] == name:
             theta = leaf_angles[i]
             group_pts.append(
                 {"value": (R * math.cos(theta - math.pi / 2), R * math.sin(theta - math.pi / 2)), "label": species[i]}
             )
-    xy_chart.add(group_names[g], group_pts)
+    xy_chart.add(name, group_pts)
 
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(xy_chart.render())
