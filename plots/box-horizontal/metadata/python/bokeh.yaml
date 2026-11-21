@@ -2,46 +2,49 @@ library: bokeh
 language: python
 specification_id: box-horizontal
 created: '2025-12-30T09:32:28Z'
-updated: '2026-05-12T01:14:16Z'
-generated_by: claude-haiku
-workflow_run: 25706649744
+updated: '2026-11-21T04:06:44Z'
+generated_by: claude-sonnet
+workflow_run: 44863748657
 issue: 2548
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/bokeh/plot-dark.html
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - Perfect visual quality and legibility in both light and dark themes
-  - Flawless theme adaptation with no dark-on-dark or light-on-light text issues
-  - Strong spec compliance and data quality with realistic microservices context
-  - Clean, reproducible code with explicit typography sizing
-  - Data sorted by median creates natural visual hierarchy and narrative
-  - Proper use of bokeh's FactorRange and hbar primitives for custom box plot
+  - 'Clean ColumnDataSource-driven layout: one hbar call each draws all boxes, whiskers,
+    caps and medians from a single box-statistics frame, with the category column
+    on a FactorRange y axis'
+  - Median line drawn in the theme-adaptive INK token, so it reads as near-black on
+    the green box in light mode and near-white in dark mode
+  - Categories sorted by median, so the five services step up from Cache Layer to
+    File Storage along one shared value axis
+  - Outliers computed from the 1.5 × IQR fences and plotted at their exact values,
+    with whiskers ending at the furthest in-fence observation
+  - Text sized for the 3200 × 1800 canvas (50 pt title, 42 pt axis titles, 34 pt ticks);
+    fully legible in both themes
+  - Realistic, neutral scenario (service response times in ms) with deterministic
+    data via np.random.seed(42)
   weaknesses:
-  - 'Design Excellence is modest (12/20): implementation follows professional defaults
-    without exceptional aesthetic flourish or custom palette choices'
-  - DE-03 could be enhanced with strategic annotations or stronger visual emphasis
-    (though current sorted layout provides good storytelling)
+  - 'Suggestion: a HoverTool on the boxes showing Q1, median, Q3 and whisker ends
+    would add value to the interactive HTML view.'
+  - 'Suggestion: varying the whisker and outline weight slightly below the box edge
+    would give the boxes more visual hierarchy over the whiskers.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1), matching style guide requirement perfectly
-      Chrome: Title (28pt), axis labels (22pt), tick labels (18pt) all rendered in dark INK (#1A1A17); perfectly readable with high contrast against light background
-      Data: Green IQR boxes (#009E73 - Okabe-Ito position 1), orange median lines (#D55E00 - Okabe-Ito position 2), gray whiskers/caps (INK_SOFT), orange outlier dots (#D55E00); color hierarchy is clear and all elements distinct
-      Grid: Subtle x-axis grid at 10% alpha, no y-axis grid - appropriate for category axis
-      Legibility verdict: PASS - All text perfectly readable, zero overlaps, excellent contrast
+      Background: warm off-white #FAF8F1 across canvas and plot area; 3200x1800.
+      Chrome: title "box-horizontal · python · bokeh · anyplot.ai" in bold dark ink top-left; x-axis "Response time (ms)" with ticks 0–300, y-axis "Service type" with five horizontal category labels in dark grey; subtle vertical x-grid only; thin INK_SOFT frame. All text readable.
+      Data: five horizontal boxes in #009E73 (alpha 0.75) with dark grey outline, near-black median lines, dark grey whiskers with caps; outliers as green circles (Cache Layer 1 low, API Gateway 1 high, Authentication 4 high, Database Query 1 low + 2 high). Sorted by median from Cache Layer (bottom) to File Storage (top).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17), matching style guide requirement perfectly
-      Chrome: All text rendered in light INK (#F0EFE8); title, axis labels, and tick labels all clearly visible against dark background with no dark-on-dark failures; whiskers/borders in light INK_SOFT (#B8B7B0)
-      Data: Green IQR boxes (#009E73) - IDENTICAL to light render; orange median lines (#D55E00) - IDENTICAL; orange outlier dots - IDENTICAL; data colors do not change between themes, only chrome
-      Grid: Light-colored subtle x-axis grid lines visible at 10% alpha on dark background
-      Legibility verdict: PASS - Perfect theme adaptation, zero dark-on-dark issues, all elements equally readable as light render
-
-    Both renders are fully compliant with theme-readability requirements. The implementation correctly adapts chrome (text, borders, grid) while maintaining data color constancy.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, tick labels in light grey; grid faint but visible; no dark-on-dark text.
+      Data: same #009E73 boxes and outliers as the light render (identical hue); median lines flip to near-white and whiskers/outlines to light grey, as theme chrome should.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,50 +55,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (28pt title, 22pt labels, 18pt ticks);
-          perfectly readable in both themes
+        comment: 50/42/34 pt text explicitly set; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping elements; all category names and tick labels fully
-          readable
+        comment: No text or mark collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box height 0.6, whiskers 0.02, markers size 15; all optimally adapted
-          to data density
+        comment: Boxes, 26 px outliers and 5 px whiskers clearly visible for this
+          sparse set
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with high contrast; no red-green-only signaling
+        comment: Single green series with ink medians; high contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 50-80% of canvas with balanced margins; excellent proportions
+        comment: 3200x1800, balanced margins, title ~55% width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled with units (Response Time (ms)); Y-axis descriptive
-          (Service Type)
+        comment: '''Response time (ms)'' with units, ''Service type'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second series #D55E00; backgrounds #FAF8F1
-          (light) / #1A1A17 (dark); all theme chrome perfect'
+        comment: '#009E73 first series; correct #FAF8F1/#1A1A17 backgrounds; chrome
+          flips per theme'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -103,22 +103,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults, professional polish, but no exceptional
-          custom design choices
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Grid adjusted (10% alpha, x-axis only), whiskers clean, good whitespace;
-          modest customization
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Categories sorted by median creates visual hierarchy; color contrast
-          guides attention; clear narrative
+        comment: Median sort is the Notes' suggestion; no further hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -128,28 +125,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal box plot with all elements (box, median, whiskers,
-          caps, outliers)
+        comment: Correct horizontal box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quartile box, Median line, Whiskers, Outliers all present and working
+        comment: Median, quartile box, whiskers at 1.5 IQR, outliers, median sort
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: numeric response times; Y-axis: categorical service types;
-          All data visible'
+        comment: Categories on y, values on x; shared axis not forced to zero; outliers
+          at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct (box-horizontal · bokeh · anyplot.ai); no legend
-          needed for single-series
+        comment: Title in mandated format; single series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -159,22 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all box plot aspects: IQR, median variation, whiskers, outliers,
-          different distributions'
+        comment: Different spreads, skewed medians, low and high outliers, a box without
+          outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world microservices scenario; service names and response time
-          ranges are plausible and neutral
+        comment: Plausible neutral service response-time scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times (15-240 ms) are factually correct for system components;
-          proportions align with reality
+        comment: Millisecond values plausible for each service tier; no Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -184,60 +179,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → stats → plot → save; no functions
-          or classes'
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (np.random.seed(42))
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: numpy, bokeh, selenium (no dead code)'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no over-engineering or fake
-          UI
+        comment: Vectorised pandas quantiles and fences; no hand-rolled algorithm
+          an available call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current bokeh 3.9.0
-          API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current bokeh 3 API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses figure() with FactorRange for categorical axis; hbar() for horizontal
-          bars; proper theme tokens
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: FactorRange, Selenium headless, custom box plot with hbar, theme
-          tokens; good mastery but standard patterns
+        comment: ColumnDataSource + FactorRange + hbar/segment/scatter, as the library
+          prompt describes
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T04:03:14Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - layer-composition
   - html-export
   patterns:
   - data-generation
+  - columndatasource
+  - groupby-aggregation
   dataprep: []
   styling:
+  - alpha-blending
+  - edge-highlighting
   - grid-styling
