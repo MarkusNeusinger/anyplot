@@ -51,9 +51,9 @@ LINKED_DOCS = (README, WORKFLOW_PAGE)
 CHAT_SECTION = "Use with my data (agent chat)"
 GATE = "automation/scripts/regen_gate.py"
 
-# Pull requests merged from the owner's account, and when that was counted:
-# `gh pr list --state merged --author MarkusNeusinger --limit 5000 --json number --jq length`.
-# Updated by the release procedure (agentic/commands/release.md, step 4) together with the texts' floor.
+# Pull requests merged from the owner's account, and when that was counted, by the search API's total that
+# the release procedure names (agentic/commands/release.md, step 4; `gh pr list` stops at 1,000 results).
+# Updated by that step together with the texts' floor.
 MERGED_PRS_SNAPSHOT = (1040, "2026-11-21")
 PR_FLOOR_STEP = 50
 
