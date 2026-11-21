@@ -2,40 +2,56 @@ library: pygal
 language: python
 specification_id: circos-basic
 created: '2026-05-15T09:31:54Z'
-updated: '2026-05-15T09:48:53Z'
-generated_by: claude-haiku
-workflow_run: 25910607816
+updated: '2026-11-21T20:38:34Z'
+generated_by: claude-sonnet
+workflow_run: 44946385751
 issue: 3005
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 81
 review:
   strengths:
-  - Excellent visual quality with properly sized and readable text in both themes
-  - 'Perfect palette compliance: Okabe-Ito colors identical across light/dark, theme-correct
-    chrome'
-  - Clean, elegant circular design with effective visual hierarchy
-  - Solid code structure with proper theme token integration and reproducibility
-  - 'Comprehensive spec compliance: all required features present and correctly implemented'
+  - 'Faithful circos construction in pygal.XY: segmented outer ring with gaps, a radial
+    expression track, and ribbons whose stroke width is proportional to connection
+    value'
+  - Ribbon ends are partitioned into per-segment slots and ordered by partner position,
+    which keeps crossings down
+  - All eight Imprint positions used in canonical order, ribbons colored by source
+    segment at 0.6 alpha, identical data colors across themes
+  - Clean theme-token Style and adaptable column constants with a single tidy df
+  - Interactive HTML output alongside the PNG (pygal tooltips and legend toggling)
   weaknesses:
-  - Library mastery could explore more sophisticated pygal features beyond basic API
-    usage
+  - 'CQ-01 (code): three helper functions polar(), arc() and with_alpha() at lines
+    92-97 and 129-131 → inline the polar math in the loops and build the rgba strings
+    in one expression. Likely cause: helper functions for repeated geometry.'
+  - 'CQ-04 (code): the series tuple carries a dots field that is always 0 and unpacked
+    as _dots, RIBBON_ALPHA is documented as the arc-slot share that RIBBON_FILL actually
+    holds, and print_values=False / include_x_axis=False restate defaults → drop the
+    dead field and the default options, fix the comment. Likely cause: leftovers from
+    an earlier iteration.'
+  - 'DE-02 (both): the label series draws a visible 3 px dot at each of the eight
+    label anchors (e.g. above Chr2 and left of Chr4/Chr5), stray marks with no data
+    meaning → hide them (dots_size=0 or show_dots=False on the label series). Likely
+    cause: chart.add(None, labels, stroke=False, dots_size=1).'
+  - 'Suggestion: the left-side labels (Chr4, Chr5) sit about 5 px from their arcs
+    while the right-side labels keep about 20 px; a radial label offset instead of
+    the fixed LABEL_DX/LABEL_DY would balance them.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "circos-basic · pygal · anyplot.ai" in dark text (#1A1A17), legend showing segment names - all readable
-      Data: 10 chromosome segments as colored dots in circular arrangement, 11 curved connections between segments. First series is green (#009E73), followed by Okabe-Ito colors in order
-      Legibility verdict: PASS - all text clearly readable, no contrast issues
+      Background: warm off-white #FAF8F1, no grid or axes (square 2400x2400)
+      Chrome: title "circos-basic · python · pygal · anyplot.ai" in dark ink at top (~68 % width), segment labels Chr1-Chr7 and ChrX around the ring, x title "Ribbon width: connection strength" above a two-row bottom legend (eight segments + "Inner ring: expression level"); all text dark on light and readable
+      Data: eight thick opaque segment arcs with gaps (Chr1 #009E73, then Imprint order), a dark-grey inner track whose radius encodes expression, and 18 translucent ribbons in their source segment's colour, width proportional to connection strength, crossing in the middle; tiny 3 px stray dots at each label anchor
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title and legend in light text (#F0EFE8) - all clearly readable against dark background, no dark-on-dark issues
-      Data: Identical segment and connection colors to light render - Okabe-Ito palette preserved, only chrome flips to light colors
-      Legibility verdict: PASS - excellent readability in dark theme, proper contrast throughout
+      Background: warm near-black #1A1A17
+      Chrome: title, labels, x title and legend in light ink, all readable; no dark-on-dark text; inner track in light grey
+      Data: segment and ribbon colours identical to the light render; ribbons read more muted on the dark surface but stay distinguishable; brand green Chr1 clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -46,68 +62,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: Title 64 px, segment labels and legend 44 px on the 2400 px canvas;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text collides with text or data; segment labels clear their arcs
+          (left-side labels sit close, about 5 px, but do not touch)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All dots and curves clearly visible
+        comment: Segment arcs, inner track and ribbons all clearly visible in both
+          themes; ribbon widths scale with value
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Imprint colors on translucent ribbons; segments are also labeled,
+          so color is not the sole identifier
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 4800x2700 landscape layout with balanced margins
+        comment: Square 2400x2400 canvas, circle centered and well proportioned, title
+          about 68 % of the width, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format, no axes needed for circos
+        comment: Axis ticks hidden; x title explains the ribbon-width encoding, legend
+          names the inner ring
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito with #009E73 first series, correct backgrounds and chrome'
+        comment: 'Eight segments take the eight Imprint positions in order (Chr1 =
+          #009E73); backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional, thoughtful palette application - above defaults but
-          not FiveThirtyEight level
+        comment: 'Style-guide baseline: clean typography and theme tokens, nothing
+          decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good refinement with theme tokens and whitespace, could add more
-          polish
+        passed: false
+        comment: Ribbon ends ordered by partner position to limit crossings (+1),
+          offset by stray 3 px label-anchor dots at all eight label positions (defect
+          line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy with segments and connections creating clear
-          focal point
+        passed: false
+        comment: Data displayed with no hierarchy chosen beyond the Notes (default)
     spec_compliance:
       score: 15
       max: 15
@@ -117,25 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct circos plot
+        comment: 'Correct circos form: segmented outer ring, inner track ring, ribbons;
+          no unasked layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: segments, connections, magnitudes, colors'
+        comment: Gaps between segments, ribbon width proportional to value, distinct
+          segment colors, one inner track, legend explains it; all A good version
+          shows bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct positioning and connection mapping
+        comment: Arc lengths follow total connection strength; ribbons anchored at
+          their segments' angular slots; track level maps expression radially
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: Title circos-basic · python · pygal · anyplot.ai; legend entries
+          match the segments and the track
     data_quality:
       score: 15
       max: 15
@@ -145,36 +173,38 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: segments with variety, connections with varying
-          magnitudes'
+        comment: Segments of unequal size, ribbons spanning weak to strong values,
+          one data track with varied levels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic genomic data with standard chromosome naming
+        comment: 'Genomic scenario: chromosomes Chr1-Chr7 and ChrX with inter-chromosomal
+          links and expression levels'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic proportions for genomic analysis
+        comment: Connection strengths 20-70 and expression 2.4-9.1 are plausible;
+          no Check values in the spec
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear flow, no unnecessary abstractions
+        comment: Three helper functions polar(), arc(), with_alpha() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set, deterministic output
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -183,41 +213,50 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake UI
+        comment: Dead dots slot in the series tuple, a misplaced comment on RIBBON_ALPHA,
+          default-valued options (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG and HTML output
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct Style and XY API usage, proper sizing
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creative parametric curve approach for circos, functional but not
-          showcase-level
+        comment: pygal.XY with Style tokens is the expected approach; ribbons emulated
+          as wide strokes (default)
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Per-series stroke_style width and butt linecaps plus allow_interruptions
+          with None breaks for the segmented track ring, beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T20:33:41Z'
 impl_tags:
   dependencies: []
   techniques:
+  - bezier-curves
   - layer-composition
   - html-export
   patterns:
-  - data-generation
+  - groupby-aggregation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
