@@ -2,12 +2,12 @@ library: matplotlib
 language: python
 specification_id: bar-3d-categorical
 created: '2026-05-15T09:00:40Z'
-updated: '2026-05-15T09:17:03Z'
+updated: '2026-11-21T20:08:48Z'
 generated_by: claude-sonnet
-workflow_run: 25909112458
+workflow_run: 44944136469
 issue: 5248
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/matplotlib/plot-dark.png
 preview_html_light: null
@@ -15,94 +15,94 @@ preview_html_dark: null
 quality_score: 80
 review:
   strengths:
-  - 'Perfect spec compliance: all spec features present (spacing, viewing angle, value
-    labels, colorbar, grid, color encoding)'
-  - Realistic retail business scenario with meaningful variation across product/region
-    combinations
-  - Clean KISS structure, deterministic data, proper imports
-  - Correct viridis colormap for continuous value encoding (spec-appropriate and guideline-compliant)
-  - 'Thorough theme-adaptive chrome: pane edges, colorbar label/ticks/outline, value
-    labels, and axis labels all use theme tokens correctly in both renders'
-  - computed_zorder=False and shade=True show understanding of matplotlib 3D rendering
-    subtleties
+  - 'Value is mapped to imprint_seq (#009E73 -> #4467A3) with a ScalarMappable colorbar
+    in its own axes, and data colours are identical in both renders'
+  - computed_zorder=False with zorder=10 keeps every value label on top of its bar,
+    so all 16 values stay readable in the oblique view
+  - Data flows through one tidy DataFrame and pivot_table(sort=False); ticks, limits
+    and colour norm all come from the table
+  - Plausible wheat-yield scenario (2.4-7.2 t/ha) with a clear fertilizer effect across
+    fields
   weaknesses:
-  - 'Font sizes below guidelines: title 20pt (needs >=24), axis labels 15pt (needs
-    >=20), tick labels 13pt (needs >=16), value labels 10pt too small for 4800px canvas'
-  - Back-row value labels partially occluded by foreground bars due to 3D perspective
-    (positions 115, 87, 49)
-  - Dual height+color encoding redundantly encodes the same variable — color could
-    encode a different dimension for added analytical depth
-  - 'No visual storytelling: no focal point or emphasis on peak/trough bars (Electronics-North
-    142k, Home & Garden-West 49k)'
+  - 'VQ-01 (both): the Field and Fertilizer tick labels are at 6.5 pt and the bar
+    value labels at 7 pt, below the style guide''s 8 pt tick/annotation reference,
+    and read small beside the 9 pt axis titles → 8 pt (+1.5 pt ticks, +1 pt value
+    labels). Likely cause: set_xticks/set_yticks fontsize=6.5 and ax.text fontsize=7.'
+  - 'CQ-03 (code): `from mpl_toolkits.mplot3d import Axes3D  # noqa: F401` is unused;
+    projection="3d" needs no import since matplotlib 3.2 → delete the line and the
+    noqa. Likely cause: legacy 3D boilerplate.'
+  - 'CQ-04 (code): IMPRINT_PALETTE (line 23) is defined and never read; the plot uses
+    only imprint_seq → delete the constant. Likely cause: copied template block.'
+  - 'Suggestion: an elevation nearer the Notes'' ~30° would give the bars more visible
+    height while keeping the rear tops in sight.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — correct theme surface
-      Chrome: Title "Retail Sales by Product & Region · bar-3d-categorical · matplotlib · anyplot.ai" in dark ink, readable. Axis labels "Product Category" and "Region" in dark ink (INK=#1A1A17), z-label "$ thousands" in INK_SOFT. Tick labels (Electronics, Clothing, Home & Garden, Sports; North, South, East, West) in dark ink, readable. Colorbar label and tick values in dark ink on right side.
-      Data: Bars colored with viridis — purple/dark blue for lowest values (~49k), through teal/green to yellow for highest (~142k). All 16 bars (4 products × 4 regions) visible. Value labels (10pt, dark) on top of each bar. Electronics-North tallest at 142 (yellow-green).
-      Legibility verdict: PASS — all text readable, though font sizes are below guidelines (title 20pt vs >=24, labels 15pt vs >=20, ticks 13pt vs >=16). Some back-row value labels (115, 87, 49) partially occluded by foreground bars inherent to 3D perspective.
+      Background: warm off-white #FAF8F1, unfilled 3D panes with soft INK_SOFT edges and a faint grid.
+      Chrome: title 'Crop Yield by Field & Fertilizer · bar-3d-categorical · python · matplotlib · anyplot.ai' in dark ink; axis titles Field, Fertilizer, Wheat yield (t/ha) dark; tick labels North/River/Hill/Orchard Field and Control/Nitrogen/Phosphate/Compost in INK_SOFT, readable but small; z ticks 0-8; colorbar 'Wheat yield (t/ha)' 3-7 on the right.
+      Data: 16 bars on a 4x4 grid coloured on the imprint_seq ramp from brand green #009E73 (2.4 Hill-Control) to blue (7.2 Orchard-Nitrogen); dark value labels on every bar top, none colliding.
+      Legibility verdict: PASS (tick and value labels slightly below reference size)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — correct dark theme surface
-      Chrome: Title text appears light cream (#F0EFE8), readable against dark background. Axis labels "Product Category" and "Region" in light INK color (#F0EFE8), visible. Tick labels in light INK_SOFT (#B8B7B0), readable. Colorbar label and tick values in light colors. No dark-on-dark failures detected.
-      Data: Viridis colormap colors are identical to the light render — purple for low values, yellow for high values. Value labels on bars appear in light cream color (#F0EFE8), readable against bar surfaces. Data encoding unchanged between themes; only chrome flips.
-      Legibility verdict: PASS — all text readable in dark mode. Same font size limitations apply. Same partial occlusion of back-row value labels as in light render.
+      Background: warm near-black #1A1A17, pane edges and grid in light ink at low alpha.
+      Chrome: title, axis titles in light ink; tick labels in light INK_SOFT; colorbar ticks and label light; no dark-on-dark text.
+      Data: bar colours identical to the light render; value labels switch to light ink and stay readable on the bar tops.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'All sizes explicitly set but below guidelines: title 20pt (needs
-          >=24), labels 15pt (needs >=20), ticks 13pt (needs >=16), value labels 10pt
-          too small'
+        comment: Title, axis titles and colorbar text readable in both themes; categorical
+          tick labels at 6.5 pt and value labels at 7 pt sit below the 8 pt reference
+          (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: 'Some back-row value labels partially occluded by foreground bars
-          (inherent 3D depth: positions 115, 87, 49)'
+        comment: Value labels drawn above all bars (computed_zorder=False, zorder=10)
+          never collide with each other or with axis text
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars well-sized (width/depth 0.55), shade=True adds realism, alpha=0.88
-          appropriate
+        comment: 16 bars at 0.55 footprint with shade=True read clearly in both themes;
+          colorbar ramp visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually-uniform and CVD-safe; value labels provide
-          per-bar precision
+        comment: Green-to-blue ramp is CVD-safe and every bar also carries a numeric
+          label
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout; colorbar well-placed via add_axes; some empty foreground
-          space due to 3D perspective
+        comment: 3200x1800 canvas, chart, z-label and colorbar fit with no overflow
+          or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Product Category, Region, $ thousands, colorbar Sales ($ thousands)
-          — all descriptive with context
+        comment: Field, Fertilizer, Wheat yield (t/ha) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous sequential data; backgrounds #FAF8F1/#1A1A17;
-          all chrome theme-adaptive in both renders'
+        comment: 'imprint_seq (#009E73 -> #4467A3) for the value; #FAF8F1 / #1A1A17
+          backgrounds and theme-token chrome in both renders'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -110,22 +110,21 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-configured 3D chart with thoughtful pane styling and colorbar,
-          but doesn't exceed a polished library default
+        comment: 'Style-guide baseline: theme tokens, Imprint ramp, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Pane fill disabled, grid at alpha=0.10, deliberate colorbar placement
-          via add_axes — good 3D-appropriate refinement
+        passed: false
+        comment: Unfilled panes and a faint grid meet the baseline; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Dual encoding height+color both encode same value — no focal point,
-          no narrative, no visual hierarchy guiding viewer to insight
+        comment: Data displayed with labels on every bar; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -135,27 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D bar chart with bars rising from 2D categorical grid
+        comment: 3D bars rising from a 4x4 categorical grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bar spacing, color encoding via viridis, viewing angle 28 deg/-48
-          deg, base grid, value labels on all 16 bars, colorbar — all present
+        comment: Bar spacing, colour by value, oblique elevated view, base-plane grid,
+          value labels on a 16-bar grid, colorbar - all Notes and C1-C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Product on X, Region on Y, Sales on Z; full 4x4 = 16 bars visible
+        comment: Field on x, fertilizer on y, yield on z from 0; all 16 bars at their
+          cells
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains spec-id, library, anyplot.ai; colorbar serves as legend
-          with clear Sales ($ thousands) label
+        comment: Title 'Crop Yield by Field & Fertilizer · bar-3d-categorical · python
+          · matplotlib · anyplot.ai'; colorbar labelled with the value
     data_quality:
       score: 15
       max: 15
@@ -165,24 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 4x4 grid, meaningful value variation (49-142k), dual encoding
-          demonstrates color+height
+        comment: Full grid with clear variation across both factors (Nitrogen high,
+          Hill Field low)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Retail sales by product and region — realistic, neutral business
-          scenario
+        comment: Wheat yield by field and fertilizer treatment - plausible, neutral
+          agronomy scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 49-142k USD plausible for retail; Electronics-North highest
-          is realistic
+        comment: 2.4-7.2 t/ha is realistic for wheat; z axis 0-8.6
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -190,34 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data -> plot -> save; no functions or classes'
+        comment: Linear constants -> data -> plot -> save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded sales array; fully deterministic
+        comment: Hard-coded deterministic table
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: All imports used; Axes3D side-effect import with noqa is standard
-          3D matplotlib pattern
+        comment: Unused Axes3D import kept alive with noqa (defect line)
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean nested loop, proper norm/cmap pattern, no fake UI, no over-engineering
+        comment: IMPRINT_PALETTE defined and never used (defect line); otherwise straightforward
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; API usage current
+        comment: Saves plot-{THEME}.png at dpi=400 with default bbox; current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -225,16 +223,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of projection=3d, computed_zorder=False, ax.bar3d(),
-          ax.view_init(), fig.add_axes() for colorbar
+        comment: pivot_table(sort=False) feeding bar3d, view_init, ScalarMappable
+          colorbar in its own axes
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: computed_zorder=False (3D depth ordering control), xaxis.pane styling
-          (3D-only API), shade=True on bar3d — distinctive to matplotlib mpl_toolkits
+        passed: false
+        comment: computed_zorder=False to keep value labels above the bars, 3D pane
+          styling
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T20:04:45Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -243,11 +244,10 @@ impl_tags:
   - annotations
   - manual-ticks
   patterns:
-  - matrix-construction
-  - iteration-over-groups
+  - long-to-wide
   - explicit-figure
-  dataprep:
-  - normalization
+  - iteration-over-groups
+  dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
