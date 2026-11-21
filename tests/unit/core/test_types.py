@@ -125,6 +125,15 @@ class TestUniversalJSON:
         """Should have cache_ok = True."""
         assert UniversalJSON.cache_ok is True
 
+    def test_none_as_null_reaches_both_dialects(self):
+        """Without the flag the dialect type writes a Python None as the JSON value null, which IS NULL misses."""
+        from sqlalchemy.dialects.postgresql import JSONB
+
+        for name in ("postgresql", "sqlite"):
+            assert UniversalJSON(none_as_null=True).load_dialect_impl(MockDialect(name)).none_as_null is True
+            assert UniversalJSON().load_dialect_impl(MockDialect(name)).none_as_null is False
+        assert isinstance(UniversalJSON().load_dialect_impl(MockDialect("postgresql")), JSONB)
+
 
 class TestUniversalUUID:
     """Tests for UniversalUUID type."""

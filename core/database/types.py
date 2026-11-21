@@ -61,18 +61,22 @@ class UniversalJSON(TypeDecorator):
 
     - PostgreSQL: Uses JSONB (binary JSON, faster)
     - SQLite: Uses JSON
+
+    `UniversalJSON(none_as_null=True)` stores a Python None as SQL NULL; without it, as the JSON value
+    `null`, which `IS NULL` does not match.
     """
 
     impl = JSON
     cache_ok = True
 
     def load_dialect_impl(self, dialect):
-        """Load the appropriate type based on the dialect."""
+        """Load the appropriate type based on the dialect, keeping the impl's `none_as_null`."""
+        none_as_null = self.impl.none_as_null
         if dialect.name == "postgresql":
-            return dialect.type_descriptor(postgresql.JSONB())
+            return dialect.type_descriptor(postgresql.JSONB(none_as_null=none_as_null))
         else:
             # SQLite and others: use JSON
-            return dialect.type_descriptor(JSON)
+            return dialect.type_descriptor(JSON(none_as_null=none_as_null))
 
 
 class UniversalUUID(TypeDecorator):
