@@ -2,52 +2,58 @@ library: matplotlib
 language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:31:28Z'
-updated: '2026-05-14T11:10:07Z'
-generated_by: claude-haiku
-workflow_run: 25856286981
+updated: '2026-11-21T15:49:15Z'
+generated_by: claude-sonnet
+workflow_run: 44920634539
 issue: 2924
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 82
 review:
   strengths:
-  - Biologically accurate color scheme (blue=down, orange=up, gray=nonsig) following
-    scientific convention
-  - Perfect theme-adaptive chrome with all text colors correctly adjusting between
-    light and dark modes
-  - Professional explicit font sizing (title 24pt, labels 20pt, ticks 16pt) optimized
-    for large canvas
-  - Smart gene annotation with offset placement avoiding text overlap and highlighting
-    key results
-  - Flawless spec compliance - all required features present and correctly implemented
-  - Realistic differential expression data with proper biological relationships
-  - Clean, reproducible code with clear KISS structure
+  - 'Status colors follow the spec''s semantic triple inside the Imprint palette:
+    Imprint blue for down, Imprint matte red for up, the muted anchor for non-significant,
+    identical in both themes'
+  - Two-tier marker hierarchy (s=14 at alpha 0.5 for the gray mass, s=22 at alpha
+    0.8 for significant features) keeps 2000 points readable as density while the
+    colored arms stand out
+  - Threshold lines drawn above the cloud at reduced alpha stay visible through the
+    points in both themes
+  - 'Fully theme-adaptive chrome: ticks, spines, grid, legend frame and gene names
+    all read correctly on #FAF8F1 and #1A1A17'
+  - 'Clean adaptable-code structure: column constants, one tidy df, a group table
+    driving a single scatter loop, canonical 3200x1800 canvas'
   weaknesses:
-  - 'VQ-07: Non-significant category uses #888888 instead of canonical #009E73 (though
-    biologically appropriate for volcano plot, violates hard palette rule)'
-  - 'DE-01: Design appears as well-configured default rather than custom sophisticated
-    aesthetic'
-  - 'DE-02/DE-03: Good but not exceptional visual refinement and storytelling - could
-    add more visual hierarchy or emphasis techniques'
+  - 'VQ-02 (both): the ''Gene_668'' label sits on the Gene_262 point at about (−4.9,
+    4.6) and its baseline touches the ''Gene_1591'' label just below → every name
+    clear of other points and of the neighbouring label by a few px. Likely cause:
+    the staircase offset xytext=(dx, 3 + 9 * (k % 3)) stacks the five left-side labels
+    into the crowded upper-left arm regardless of where the neighbours are.'
+  - 'DQ-02 (both): the labelled features read Gene_1971, Gene_262, Gene_209 … — placeholder
+    identifiers that make the gene-expression scenario look generic → plausible gene
+    symbols for the features. Likely cause: the GENE column is built from f"Gene_{i}".'
+  - 'Suggestion: thin leader lines from each staggered name to its point would make
+    the name-to-point pairing unambiguous where the offset lifts a label well above
+    its point (Gene_1971, Gene_209).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct per style guide
-      Chrome: Title, axis labels, tick labels are dark (INK color #1A1A17) - all clearly visible against light background
-      Data: Blue down-regulated (#0072B2), orange up-regulated (#D55E00), gray non-significant (#888888) - all colors from Okabe-Ito; top 5 genes labeled with dark text; threshold lines in subtle gray
-      Legibility verdict: PASS - all text is perfectly readable in light theme
+      Background: warm off-white #FAF8F1, 3200x1800 landscape
+      Chrome: title 'volcano-basic · python · matplotlib · anyplot.ai' in dark ink centered on top; axis titles 'Log₂ fold change' and '-Log₁₀ (p-value)' dark; ticks -6..6 and 0..6 in soft ink; subtle horizontal grid; top/right spines removed; legend (lower right, elevated off-white frame) reads Not significant / Down-regulated / Up-regulated; ten gene names in dark ink
+      Data: ~2000 points forming a V; gray (muted) non-significant mass at the base, Imprint blue #4467A3 down-regulated arm on the left, Imprint matte red #AE3030 up-regulated arm on the right; dashed threshold lines at y=1.3 and x=±1 drawn over the points; top 5 per side named (Gene_1971, Gene_262, Gene_668, Gene_1591, Gene_1539 / Gene_1957, Gene_209, Gene_1615, Gene_179, Gene_478). 'Gene_668' sits on a blue point and touches 'Gene_1591'.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct per style guide
-      Chrome: Title, axis labels, tick labels are light (INK color #F0EFE8) - all clearly visible against dark background; no dark-on-dark failures
-      Data: Same colors as light render (blue, orange, gray) - data colors are theme-independent as required; threshold lines visible
-      Legibility verdict: PASS - all text is perfectly readable in dark theme; theme adaptation is correct
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and gene names in light ink; ticks in light soft ink; grid subtle but visible; legend frame #242420 with light text; no dark-on-dark text anywhere
+      Data: identical blue and red; the muted gray flips to its light-theme-adaptive value so the base mass reads as light gray density; threshold lines visible in light gray through the points
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,47 +61,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, gene names
+          7 pt; all readable at full size in both themes (INK / INK_SOFT tokens)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Gene annotations positioned with offsets; no text collisions
+        passed: false
+        comment: '''Gene_668'' sits on the Gene_262 point and touches the ''Gene_1591''
+          label below it (defect line)'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 2000 points handled with adaptive sizing (120-150px) and alpha; no
-          overplotting
+        comment: '2000 points at s=14 (gray, alpha 0.5) and s=22 (colored, alpha 0.8):
+          density-appropriate; legend glyphs visible in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito + gray are colorblind-safe; high contrast between categories
+        comment: Red/blue/gray status triple is CVD-distinguishable by hue and lightness,
+          and side of zero also encodes direction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 16:9 landscape; plot fills 65% with balanced margins
+        comment: 3200x1800, axes fill the canvas with balanced margins; title about
+          49% of width; legend in the empty lower-right corner
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with notation; standard title format
+        comment: Log₂ fold change / -Log₁₀ (p-value) with proper notation
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Okabe-Ito colors used but first series is #888888 (gray), not #009E73;
-          theme chrome perfect'
+        passed: true
+        comment: 'Semantic exception per spec: down #4467A3 (Imprint blue), up #AE3030
+          (Imprint matte red), non-significant the muted anchor; backgrounds #FAF8F1
+          / #1A1A17 correct; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -103,19 +114,24 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Professional well-configured default, not exceptional
+        comment: Clean style-guide baseline; typography hierarchy is the library-prompt
+          defaults, nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good refinement visible: custom grid, spine colors, legend styling'
+        comment: 'Beyond baseline: legend placed in the one empty data-free corner,
+          threshold lines drawn above the points (zorder 3) at reduced alpha so they
+          read through the cloud without dominating'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Good visual hierarchy with color, size, and annotations guiding reader
+        comment: Gray features drawn smaller and fainter than the larger, more opaque
+          significant ones, so the two colored arms come forward as the focal layer
+          — a hierarchy the Notes do not prescribe
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +141,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct volcano plot with all subtypes
+        comment: Correct volcano plot; only the Notes' threshold lines, status colors
+          and a few top-feature names — no variant creep
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: thresholds, coloring, labeling, transparency'
+        comment: 'Horizontal line at 1.3, verticals at ±1, gray/red/blue status colors,
+          alpha, top-5 names per side: all Notes and C1–C5 met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show full range
+        comment: Every point at its (log2FC, -log10 p); full range shown with symmetric
+          x limits
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels match
+        comment: Title 'volcano-basic · python · matplotlib · anyplot.ai'; legend
+          entries read 'Not significant / Down-regulated / Up-regulated'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -153,19 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all volcano plot aspects with realistic proportions
+        comment: Both arms, dense non-significant base, sparse high-significance tails,
+          threshold crossings all shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Synthetic RNA-seq data; biologically plausible relationships
+        passed: false
+        comment: Plausible RNA-seq differential-expression scenario, but the named
+          features are placeholder 'Gene_N' identifiers (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Fold changes ±6, p-values realistic, standard thresholds
+        comment: log2FC within about ±6, -log10 p up to about 6, standard 0.05 / 2-fold
+          cutoffs
     code_quality:
       score: 10
       max: 10
@@ -175,54 +198,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no functions/classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only three imports, all used
+        comment: os, matplotlib.pyplot, numpy, pandas — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Group table drives one scatter loop; nlargest picks the labelled
+          features; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png format and API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of scatter layering, annotate offsets, threshold lines
+        comment: Axes API throughout, axhline/axvline for thresholds, annotate with
+          textcoords='offset points' for labels, legend frame styled via get_frame()
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Some distinctive features but mostly standard patterns
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T15:45:22Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
