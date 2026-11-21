@@ -14,10 +14,18 @@ export function hasSourceEntries(sources: SpecSources | null | undefined): sourc
 /**
  * Whether a source's address may become a link. The API passes only blocks that
  * core/spec_sources.py accepts, http and https addresses alone; the page checks again, so a
- * `javascript:` or other address never reaches an href whatever the response holds.
+ * `javascript:` or other address never reaches an href whatever the response holds. Like the
+ * check in core: no whitespace, an http or https scheme, a host. The pattern keeps `https:///x`
+ * out, which the URL parser would read as the host `x` while Python's `urlsplit` sees none.
  */
 export function isWebAddress(url: string): boolean {
-  return /^https?:\/\/[^\s/]/i.test(url);
+  if (/\s/.test(url) || !/^https?:\/\/[^/?#]/i.test(url)) return false;
+  try {
+    const { protocol, hostname } = new URL(url);
+    return (protocol === 'http:' || protocol === 'https:') && hostname !== '';
+  } catch {
+    return false;
+  }
 }
 
 /**
