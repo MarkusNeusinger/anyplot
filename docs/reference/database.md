@@ -28,6 +28,7 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 - Full spec content (title, description, applications, data, notes)
 - Tags (JSONB with plot_type, domain, features, data_type)
 - Metadata (created, updated, issue, suggested)
+- Sources (JSONB: the works that gave the idea and the literature the values follow; NULL when the spec names none)
 
 **Implementations:**
 - Full Python source code (`impls.code`)
@@ -105,6 +106,7 @@ CREATE TABLE specs
     issue       INTEGER,                  -- GitHub issue number
     suggested   VARCHAR,                  -- GitHub username who suggested
     tags        JSONB,                    -- {plot_type, domain, features, audience, data_type}
+    sources     JSONB,                    -- {data, inspired_by, references}; NULL when none
     history     JSONB,                    -- Spec update history
     updated_at  TIMESTAMP DEFAULT NOW()
 );
@@ -287,6 +289,13 @@ CREATE TABLE search_misses (
 - `applications` - Use cases array
 - `data` - Data requirements array
 - `tags` - JSONB with structured tags (plot_type, domain, features, audience, data_type)
+- `sources` - The `sources` block of `specification.yaml` as `core/spec_sources.py` normalizes it: `data`
+  (`invented`, `computed`, or `real`), `inspired_by`, and `references`, each entry with `title`, `url`, and an
+  optional `doi` or `isbn`; empty lists are left out. SQL NULL when the spec names none, so `sources IS NULL` finds
+  those specs. The sync skips a block that fails the check, with a warning. The column is deferred in the model, so
+  a query names it only when it asks for it with `undefer`. Added by migration `21d93eb1afd4`. The block's rules are
+  in
+  [`specification.yaml`](repository.md#plotsspecification-idspecificationyaml)
 
 **Example Row**:
 ```json

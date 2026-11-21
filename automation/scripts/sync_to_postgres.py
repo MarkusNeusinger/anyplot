@@ -7,7 +7,7 @@ It ensures the database only contains data for code that is actually in main.
 
 New structure (plots/{specification_id}/):
 - specification.md: Spec description, data requirements, use cases
-- specification.yaml: Spec-level metadata (tags, created, issue, suggested, updates)
+- specification.yaml: Spec-level metadata (tags, created, issue, suggested, updates, sources)
 - metadata/{library}.yaml: Per-library metadata (preview_url, quality_score, history)
 - implementations/{library}.py: Library-specific implementation code
 
@@ -44,6 +44,7 @@ from core.constants import language_file_extensions  # noqa: E402
 from core.database import LANGUAGES_SEED, LIBRARIES_SEED, Impl, Language, Library, Spec  # noqa: E402
 from core.database.connection import close_db_sync, get_db_context_sync, init_db_sync, is_db_configured  # noqa: E402
 from core.library_versions import pinned_versions  # noqa: E402
+from core.spec_sources import normalized_sources, sources_problems  # noqa: E402
 
 
 # Configuration
@@ -135,6 +136,20 @@ def _parse_markdown_section(content: str, section_name: str, as_bullets: bool = 
     if as_bullets:
         return parse_bullet_points(section_content)
     return section_content
+
+
+def _spec_sources(spec_id: str, block: object) -> dict | None:
+    """The spec's `sources` block as the database stores it, or None when it names none.
+
+    A block that fails the check is left out with a warning instead of failing the sync: the unit test over every
+    spec file refuses it before the merge, so one that still arrives here costs that spec its sources, not the run.
+    Its links reach the site's pages, so nothing unchecked is stored.
+    """
+    problems = sources_problems(block)
+    if problems:
+        logger.warning(f"Sources of {spec_id} not synced, the block has problems: {'; '.join(problems)}")
+        return None
+    return normalized_sources(block)
 
 
 def _validate_spec_id(spec_id: str) -> bool:
@@ -279,6 +294,9 @@ def scan_plot_directory(plot_dir: Path) -> dict | None:
     spec_data["tags"] = convert_datetimes_to_strings(metadata.get("tags"))
     spec_data["issue"] = metadata.get("issue")
     spec_data["suggested"] = metadata.get("suggested")
+    # Set on every spec, None included: the batched insert needs the same keys in every row, and an upsert with
+    # None clears the sources of a spec whose block was removed.
+    spec_data["sources"] = _spec_sources(spec_id, metadata.get("sources"))
 
     # Parse created/updated timestamps (convert to naive datetime for DB)
     spec_data["created"] = parse_timestamp(metadata.get("created"))
@@ -524,6 +542,7 @@ def sync_to_database(session: Session, plots: list[dict]) -> dict:
         "issue",
         "suggested",
         "tags",
+        "sources",
     ]
     for chunk in _chunked(all_spec_values, _BATCH_CHUNK_SIZE):
         stmt = insert(Spec).values(chunk)

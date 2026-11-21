@@ -2,49 +2,56 @@ library: plotly
 language: python
 specification_id: polar-bar
 created: '2025-12-30T16:29:47Z'
-updated: '2026-05-13T01:17:58Z'
-generated_by: claude-haiku
-workflow_run: 25771631680
+updated: '2026-11-21T08:06:06Z'
+generated_by: claude-sonnet
+workflow_run: 44882600898
 issue: 2693
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 81
 review:
   strengths:
-  - 'Perfect palette compliance: First categorical series uses brand green (#009E73),
-    follows Okabe-Ito order'
-  - 'Flawless theme adaptation: Both light and dark renders show proper text colors,
-    backgrounds, and legibility'
-  - 'Idiomatic Plotly usage: Proper use of go.Barpolar, barmode stacking, and update_layout
-    for styling'
-  - 'Clean code structure: Simple, linear KISS pattern with deterministic data (seed
-    42) and explicit font sizing'
-  - 'Strong spec compliance: Correct polar bar chart type, all compass directions,
-    proper stacking for wind speed categories'
-  - 'Realistic data: Coastal wind pattern is plausible and demonstrates the visualization
-    well'
+  - 'Theme tokens threaded through every chrome element: backgrounds #FAF8F1 / #1A1A17,
+    readable ink in both renders, gridlines subtle but visible'
+  - 16-direction wind rose with clockwise compass orientation (direction='clockwise',
+    rotation=90) and a zero-based radial scale with % suffix
+  - Page-colored segment separators keep the stacked bins crisp in both themes
+  - Tidy table with column constants pivoted once and one go.Barpolar per bin; per-trace
+    hovertemplate adds detail in the HTML
   weaknesses:
-  - 'Design Excellence: Straightforward implementation without distinctive customization
-    or visual storytelling beyond standard wind rose presentation'
+  - 'VQ-02 (both): the radial tick labels 0%, 2% and 4% sit on the short SE and ESE
+    bars near the center, so the bars and the digits cover each other → labels clear
+    of the data marks. Likely cause: radialaxis angle=-11 places the tick spoke through
+    occupied ESE sectors; an angle through the empty S–SW sector avoids it.'
+  - 'VQ-05 (both): about 270 px of empty band between the title and the N label while
+    the polar disc is squeezed by the 0.82 x-domain → the disc fills the free vertical
+    space. Likely cause: polar domain x=[0.0, 0.82], y=[0.0, 0.9] with the 0.82 width
+    as the binding constraint and t=70 margin.'
+  - 'VQ-07 (both): the four wind-speed bins are ordered (0-5 < 5-12 < 12-20 < 20+)
+    but are drawn in the categorical palette (green, lilac, blue, ochre) as if unrelated
+    groups → four ordered steps of imprint_seq (#009E73 → #4467A3) in bin order. Likely
+    cause: IMPRINT_PALETTE[i] lookup for the speed bins.'
+  - 'Suggestion: the legend entries repeat ''km/h'' that the legend title already
+    states; ''0-5'', ''5-12'', … would read cleaner.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) provides excellent contrast for dark text and colored bars.
-      Chrome: Title "Wind Rose: Directional Frequency Distribution" and subtitle "coastal wind pattern analysis" are clearly visible in dark text (28px and smaller respectively). Compass direction labels (N, NE, E, SE, S, SW, W, NW) are positioned around the circle in dark text (22px). Radial frequency axis labels and tick marks are clearly readable. Legend in upper right shows wind speed categories with dark text on light elevated background.
-      Data: Stacked bars in Okabe-Ito colors - brand green (#009E73 first series), orange (#D55E00 second), and blue (#0072B2 third). All bars clearly distinguishable with subtle white borders (from PAGE_BG) providing definition. Radial axis grid is subtle but visible.
-      Legibility verdict: PASS - All elements are highly readable with excellent contrast.
+      Background: warm off-white #FAF8F1 across canvas and polar disc; 2400x2400 square.
+      Chrome: title "polar-bar · python · plotly · anyplot.ai" in dark ink at top center; 16 compass labels (N … NNW) at the rim in dark ink; radial tick labels 0%–16% in soft ink along a spoke at about -11°; subtle grey concentric gridlines and spokes; dark outer ring; legend box at right titled "Wind speed (km/h)" with 0-5, 5-12, 12-20, 20+ km/h. All readable. Radial labels 0%, 2%, 4% overlap short bars near the center. Large empty band between title and the disc.
+      Data: stacked wedges, green #009E73 (0-5), lilac #C475FD (5-12), blue #4467A3 (12-20), ochre #BD8233 (20+), separated by page-colored outlines. Dominant lobe NNE–ENE (NE about 15 %), weak secondary SW lobe, near-empty W–NW and S–SE sectors.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) provides good contrast for light text and maintains color visibility.
-      Chrome: Title and subtitle render in light text (F0EFE8) and are clearly readable against the dark background. Compass direction labels and radial axis tick labels are all in light text and clearly visible - no dark-on-dark failures detected. Legend text is light-colored on the darker elevated background box.
-      Data: Stacked bars maintain identical colors to light render (#009E73, #D55E00, #0072B2) - only chrome has flipped to dark theme. Bars are clearly visible and distinguishable. Radial grid lines (10% opacity) are subtle but visible against the dark background.
-      Legibility verdict: PASS - All text readable, data colors identical to light render, proper theme adaptation throughout.
+      Background: warm near-black #1A1A17 across canvas and polar disc.
+      Chrome: title, compass labels in light ink; radial ticks in light soft ink; gridlines light at low opacity, visible; outer ring light grey; legend box on elevated #242420 with light text. No dark-on-dark text.
+      Data: identical colors to the light render; segment outlines switch to the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -52,73 +59,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set: 28px title, 22px labels, 18px ticks -
-          all perfectly readable in both themes'
+        comment: Title 17 px, compass labels 12 px, radial ticks 11 px, legend 12
+          px at scale 4; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Compass directions well-spaced, legend clearly positioned without
-          overlap
+        passed: false
+        comment: Radial tick labels 0%, 2% and 4% sit on top of the short SE/ESE bars
+          near the center (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars clearly visible, stacked with good separation via borders,
-          opacity optimized
+        comment: All 64 segments visible with page-colored separators; legend swatches
+          match the bars in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe, good contrast between green/orange/blue
+        comment: Green, lilac, blue and ochre are well separated and contrast with
+          both backgrounds
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas appropriately, balanced margins, legend integrated
-          with plot
+        comment: 2400x2400 canonical canvas, but a band of about 270 px of empty space
+          between the title and the N label (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive with context, frequency axis clearly labeled
+        comment: Radial ticks carry the % unit, compass directions labeled, legend
+          title names the variable and unit
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73, follows Okabe-Ito order, proper theme backgrounds
-          and chrome'
+        passed: false
+        comment: Backgrounds and chrome are theme-correct, but the ordered wind-speed
+          bins use the categorical palette instead of imprint_seq steps (defect line)
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Professional presentation with correct palette application, above
-          defaults but standard wind rose approach
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid, clean legend styling with background box, good bar edge
-          definition
+        comment: Page-colored segment separators and a tuned bargap give clean wedge
+          edges; radial labels offset off the N spoke with ticksuffix %
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: true
-        comment: Data clearly displayed showing coastal wind pattern dominance, straightforward
-          presentation without exceptional emphasis
+        comment: Data displayed (NE prevailing, weaker SW), no hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -128,28 +136,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar bar chart (wind rose) with all subtypes
+        comment: Stacked polar bar (wind rose) with go.Barpolar
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: radial bars, compass directions, frequency
-          mapping, stacking for wind speeds'
+        comment: C1 zero-based radial scale, C2 16 equal-width bars in compass order
+          labeled at the rim, C3 concentric gridlines with % labels visible in both
+          themes, C4 same segment order in every bar with a legend, C5 color explained
+          by legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Direction correctly mapped to angle, frequency to bar length, all
-          data visible
+        comment: Direction to angle (clockwise, N at top), frequency to stacked radial
+          length; all bars inside the range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with polar-bar identifier, legend properly labels
-          wind speed categories
+        comment: Title 'polar-bar · python · plotly · anyplot.ai'; legend titled 'Wind
+          speed (km/h)' with the four bins
     data_quality:
       score: 15
       max: 15
@@ -159,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all 8 compass directions and 3 wind speed categories, demonstrates
-          coastal pattern variation
+        comment: 16 directions x 4 speed bins, a dominant and a secondary lobe, thin
+          segments in calm sectors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Coastal wind pattern is realistic and plausible, neutral scientific
-          context
+        comment: Mountain-valley site with NE prevailing wind and a weaker SW sea
+          breeze; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds and frequency ranges are realistic and factually correct
-          for meteorological data
+        comment: Frequencies are % of hours summing to about 100 %, largest direction
+          about 15 %; speed bins realistic. No Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -184,58 +194,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure, no unnecessary functions or classes
+        comment: Linear script with column constants and a Data/Plot split
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, plotly'
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity, no over-engineering
+        comment: pivot_table plus one Barpolar per speed bin; no hand-rolled computation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct naming plot-{THEME}.png and .html, current Plotly API
+        comment: plot-{THEME}.png at 600x600 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of go.Figure, go.Barpolar, add_trace, update_layout -
-          all idiomatic patterns
+        comment: go.Barpolar with polar barmode='stack', angularaxis direction/rotation
+          for compass orientation
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses Plotly-specific polar coordinates, barmode stacking, hover templates
-          - library-specific but not advanced
-    score_caps:
-      applied: false
-      notes: No score caps triggered
+        comment: Per-trace hovertemplate in the HTML, radialaxis angle and ticksuffix
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T08:01:59Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
+  - hover-tooltips
+  - html-export
+  - custom-legend
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  - iteration-over-groups
+  - long-to-wide
+  dataprep:
+  - normalization
+  styling:
+  - edge-highlighting
+  - grid-styling

@@ -2,49 +2,46 @@ library: letsplot
 language: python
 specification_id: polar-bar
 created: '2025-12-30T16:36:44Z'
-updated: '2026-05-13T01:30:22Z'
-generated_by: claude-haiku
-workflow_run: 25772046568
+updated: '2026-11-21T08:08:15Z'
+generated_by: claude-sonnet
+workflow_run: 44882821493
 issue: 2693
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/letsplot/plot-dark.html
-quality_score: 92
+quality_score: 82
 review:
   strengths:
-  - Proper polar coordinate system implementation showing clear directional distribution
-  - Theme-adaptive design correctly applies light (#FAF8F1 background, dark ink) and
-    dark (#1A1A17 background, light ink) tokens in both renders
-  - Excellent text legibility in both themes with no contrast issues—all compass directions,
-    title, and axis labels clearly readable
-  - Clean, idiomatic lets_plot code using coord_polar and ggplot grammar patterns
-    effectively
-  - Correct Okabe-Ito palette integration with 8 direction colors, maintains color
-    consistency across themes
-  - Wind rose format effectively communicates frequency distribution with SW dominance
-    visually apparent
-  - White bar edges provide subtle definition without clutter
+  - 'Imprint palette applied in canonical order from #009E73, data colors identical
+    across both renders, chrome threaded from PAGE_BG / INK / INK_SOFT tokens'
+  - Radial scale anchored at zero via scale_y_continuous(limits=[0, None]) so wedge
+    length stays proportional to frequency
+  - Wedge outlines drawn in the page color separate the sectors cleanly on both backgrounds
+  - Ordered pd.Categorical keeps the compass order around the circle; interactive
+    HTML export gives per-wedge tooltips
   weaknesses:
-  - 'Design Excellence could be enhanced: grid styling is functional but could use
-    more sophisticated visual refinement (e.g., asymmetric line weights or selective
-    grid emphasis)'
-  - Visual hierarchy of dominant direction (SW=35) could be strengthened through size
-    emphasis, brightness variation, or strategic color placement to guide viewer attention
+  - 'SC-03 (both): coord_polar(start=-pi/8) rotates the whole rose by -22.5 degrees,
+    so N points north-north-west and E sits at 67.5 degrees instead of 90 → N centered
+    at the top (+22.5 degrees). Likely cause: start=-np.pi / n; lets-plot already
+    centers the first category at 12 o''clock, so start should be 0.'
+  - 'Suggestion: color repeats the direction already labeled at the rim; a single
+    #009E73 fill, or fill by a wind-speed band as stacked segments, would give color
+    a job.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines, correctly theme-adapted.
-      Chrome: Title "polar-bar · letsplot · anyplot.ai" is bold and prominent (24pt, dark text #1A1A17). Y-axis label "Frequency (%)" (20pt, dark text). Compass directions (N, NE, E, SE, S, SW, W, NW) positioned around circle are all readable at 16pt. All text has strong contrast.
-      Data: Bars radiate from center with Okabe-Ito palette colors. SW bar (freq=35) is prominent blue, S (freq=28) is yellow-gold, SE (freq=12) is magenta/purple. Smaller bars (freq=3-6) use remaining palette colors. White edges on bars provide clean definition. Colors are from Okabe-Ito palette as specified.
-      Legibility verdict: PASS - All text and data elements clearly distinguishable against light background. No light-on-light failures.
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas.
+      Chrome: bold title 'polar-bar · python · letsplot · anyplot.ai' top-left in near-black; 'Frequency (%)' vertical axis title and radial ticks 0-35 on the left; compass labels N..NW at the rim in INK_SOFT; thin INK_SOFT concentric rings every 5 % and eight spokes. All readable.
+      Data: eight wedges from the center, colored N #009E73, NE #C475FD, E #4467A3, SE #BD8233, S #AE3030, SW #2ABCCD, W #954477, NW #99B314; SW (35) and S (28) dominate toward the bottom. Page-colored outlines separate wedges. The rose is rotated -22.5 degrees: N wedge centered NNW.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with visible grid lines, correctly theme-adapted.
-      Chrome: Title clearly visible in light text (#F0EFE8). Y-axis label readable in same light tone. Compass directions have excellent contrast against dark background. All chrome elements use proper dark-theme tokens.
-      Data: Bar colors are identical to light render (data colors should not change with theme—only chrome flips). White bar edges remain visible and effective. Grid lines visible at appropriate contrast level.
-      Legibility verdict: PASS - No dark-on-dark failures. All text elements have strong contrast. Data visualization quality maintained perfectly between themes. Both renders demonstrate proper theme adaptation with only chrome elements changing color.
+      Background: warm near-black #1A1A17.
+      Chrome: title in #F0EFE8, ticks, compass labels and rings in light grey #B8B7B0; no dark-on-dark text.
+      Data: identical wedge colors and geometry to the light render; outlines flip to the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,79 +52,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, and compass directions all readable in both renders
-          with proper contrast and sizing (24pt title, 20pt axis labels, 16pt ticks)
+        comment: Title 16 pt, axis title 12 pt, ticks 10 pt at the style-guide sizes;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Compass directions spaced cleanly around circle, no text collisions,
-          radial bar arrangement prevents overlap
+        comment: Compass labels clear of the rim and of each other; no text collides
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars visible from largest (SW=35) to smallest (N=3), white edges
-          provide definition, alpha=0.85 appropriate for density
+        comment: All eight wedges visible, smallest (N=3) included; page-colored outlines
+          separate the wedges
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe, good contrast between colors, no red-green-only
-          encoding
+        comment: Imprint hues, direction also labeled at the rim, so color is never
+          the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas (1200x1200) appropriate for polar chart, proportions
-          balanced, nothing cut off
+        comment: 2400x2400 square canvas, rose centered, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format, Y-axis label includes units (%), compass
-          directions descriptive, X-axis appropriately hidden
+        comment: '''Frequency (%)'' with unit; empty angular title is appropriate'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette correctly applied, backgrounds #FAF8F1 (light)
-          and #1A1A17 (dark) correct, data colors identical across themes, only chrome
-          adapts'
+        comment: 'Imprint palette in canonical order from #009E73; #FAF8F1 / #1A1A17
+          backgrounds; data colors identical in both renders'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional use of Okabe-Ito palette with theme-aware styling, grid
-          is subtle, custom sizing for clarity. Could enhance with stronger visual
-          emphasis on dominant direction.
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid, white bar edges, adequate whitespace, no spines (appropriate
-          for polar). Could refine grid styling further.
+        passed: false
+        comment: Wedge outlines drawn in the page color so sectors separate cleanly
+          in either theme; minor grid removed
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Polar wind rose format clearly shows directional frequency distribution
-          with SW dominance apparent. Could emphasize primary direction more visually.
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,28 +125,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar bar chart implementation with proper radial arrangement
+        comment: Polar bar chart / wind rose
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 8 compass directions present, frequency values correctly mapped,
-          appropriate for wind rose
+        comment: 'C1 bars from a zero center, C2 equal-width bars in compass order
+          labeled at the rim, C3 concentric rings with value labels: all present'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Direction → angle mapping correct, frequency → bar height correct,
-          all data points visible
+        passed: false
+        comment: 'The whole rose is rotated by -22.5 degrees: N points NNW and E sits
+          at 67.5 degrees (defect line)'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''polar-bar · letsplot · anyplot.ai'', legend
-          appropriately disabled'
+        comment: Mandated title exact; legend hidden because direction is labeled
+          at the rim
     data_quality:
       score: 15
       max: 15
@@ -166,22 +156,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete 8-direction wind rose with frequency distribution showing
-          all aspects of polar bar type
+        comment: Eight directions with a strongly lopsided distribution show the plot
+          type fully
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monsoon wind pattern with SW dominance is realistic meteorological
-          data, neutral and professional
+        comment: SW-dominant monsoon wind distribution; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 0-35 is sensible, Y-axis scale appropriate, no extreme
-          outliers
+        comment: Frequencies sum to 100 %, range 3-35 %; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -191,59 +179,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct ggplot chain with no unnecessary abstractions
+        comment: Flat script; column constants and a clean Data block
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data is deterministic, no random seeding needed
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports from lets_plot, numpy, pandas used appropriately
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality, idiomatic lets_plot
-          patterns
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with current API
+        comment: Saves plot-{THEME}.png and .html with ggsave
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Perfect ggplot grammar usage, coord_polar transformation, geom_bar
-          with stat='identity', scale_fill_manual, theme system integration
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Leverages coord_polar and interactive HTML export (lets_plot strengths).
-          Competent but room for more advanced feature demonstration.
+        passed: false
+        comment: 'Standard grammar: geom_bar(stat=''identity'') + coord_polar + scale_fill_manual'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T08:04:36Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
   - edge-highlighting
+  - grid-styling
   - alpha-blending
