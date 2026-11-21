@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 contour-filled: Filled Contour Plot
-Library: plotnine 0.15.9 | Python 3.14
-Quality: pending | Updated: 2026-05-11
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-21
 """
 
 import os
