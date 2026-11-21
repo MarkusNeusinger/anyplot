@@ -2,45 +2,57 @@ library: plotly
 language: python
 specification_id: icicle-basic
 created: '2026-05-13T22:40:39Z'
-updated: '2026-05-13T22:49:56Z'
-generated_by: claude-haiku
-workflow_run: 25830490662
+updated: '2026-11-21T13:19:44Z'
+generated_by: claude-sonnet
+workflow_run: 44907674448
 issue: 2497
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/plotly/plot-dark.html
-quality_score: 82
+quality_score: 75
 review:
   strengths:
-  - 'Excellent visual quality: both renders perfectly readable with proper theme adaptation'
-  - 'Spec compliance flawless: all hierarchical features correctly implemented'
-  - 'Theme-token pattern correctly applied: backgrounds, text colors, and borders
-    all theme-aware'
-  - 'Clean, maintainable code: clear structure, reasonable helper function'
-  - 'Okabe-Ito palette properly sequenced by hierarchy level: strong visual consistency'
-  - 'Proper icicle orientation and sizing: hierarchy depth and proportional sizes
-    both clear'
+  - 'Native go.Icicle with labels/parents/values and per-level Imprint colors: root
+    #009E73, level 1 #C475FD, level 2 #4467A3, applied consistently'
+  - leaf opacity set to 1 keeps every fill identical between the light and dark renders
+  - Label ink chosen per fill by contrast, so every label reads against its rectangle
+    in both themes
+  - Thin page-colored borders separate siblings without heavy lines
+  - Hover template shows node name and value in the HTML output
   weaknesses:
-  - 'Generic design excellence: color-by-level is functional but not visually refined'
-  - 'Missing distinctive Plotly features: basic Icicle without custom interactions
-    or polish'
-  - 'Limited visual hierarchy: no techniques (color contrast, emphasis, sizing variation)
-    to guide viewer attention'
+  - 'SC-03, SC-02 (both): plotly''s default branchvalues=''remainder'' adds each parent''s
+    own value to its children''s sum, so root is drawn as 285 instead of 100 and Code,
+    Documents, Photos, Archive at twice their values; their children fill only the
+    top half of each parent''s extent (C2) → parent rectangles equal to their stated
+    values with children filling them (branchvalues=''total''). Likely cause: go.Icicle
+    without branchvalues=''total'' while the data already stores totals.'
+  - 'VQ-01, SC-02 (both): Project_C and Vacation labels are auto-shrunk to about 5
+    px and barely readable, where the spec asks for no labels on small nodes (C4)
+    → hide labels that would fall below the 10 px label size. Likely cause: no layout
+    uniformtext={''minsize'': 10, ''mode'': ''hide''}.'
+  - 'CQ-01 (code): two helper functions, depth() and label_color(), where top-level
+    code suffices → inline the depth lookup and pick the label ink with a plain expression.
+    Likely cause: function definitions in the plot block.'
+  - 'DQ-02 (both): the node names ''root'' and ''Project_A'', ''Project_B'', ''Project_C''
+    read as placeholders → real folder names (for example ''Home'', ''website'', ''analytics'',
+    ''mobile-app''). Likely cause: the NAME list in the data block.'
+  - 'Suggestion: stating the unit (GB) in the hover template would make the values
+    concrete in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title centered at top in dark INK (#1A1A17) at 28px, all rectangle labels in 16px dark text, all clearly readable
-      Data: Root node green (#009E73 - BRAND), level-1 orange (#D55E00 - OI[1]), level-2 blue (#0072B2 - OI[2]), white 2px borders between rectangles
-      Legibility verdict: PASS - all text readable, no light-on-light failures
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: centered title "icicle-basic · python · plotly · anyplot.ai" in dark ink, about 35 % of the width; no axes. All text readable.
+      Data: left-to-right icicle. Root column #009E73 with dark label "root"; level-1 column #C475FD (Code, Documents, Photos, Archive, Projects) with dark labels; level-2 column #4467A3 (Project_B/A/C, Personal, Work_Docs, Family, Vacation, Backup_2024) with light labels. Thin page-colored borders. Children occupy only the top half of each parent (remainder branchvalues); level-1 stack ends about 65 % down the root. Project_C and Vacation labels are shrunk to about 5 px.
+      Legibility verdict: PASS (tiny labels on two small nodes noted)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title and all labels in light INK (#F0EFE8) at proper sizes, excellent contrast against dark background
-      Data: Colors identical to light render - root green, level-1 orange, level-2 blue, light-gray borders readable
-      Legibility verdict: PASS - all text readable, no dark-on-dark failures, brand green still visible
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink #F0EFE8, readable; no dark-on-dark text.
+      Data: fills identical to the light render (green, purple, blue at full opacity); same label inks per fill; borders in the dark page color.
+      Legibility verdict: PASS (same tiny labels on Project_C and Vacation)
   criteria_checklist:
     visual_quality:
       score: 29
@@ -48,47 +60,50 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 28px, labels 16px, both themes fully readable
+        comment: Title and labels readable in both themes; label ink picked per fill.
+          Project_C and Vacation labels are auto-shrunk to about 5 px and barely legible
+          (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Labels fit within rectangles, minor redundant duplication in arrays
+        comment: Every label sits inside its own rectangle, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All rectangles visible, proportional sizing, clear 2px borders
+        comment: All rectangles visible with thin page-colored borders in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, strong contrast
+        comment: Green, purple, blue levels are CVD-distinguishable; labels contrast
+          with fills
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced proportions, generous margins, nothing cut off
+        comment: 3200x1800 canvas, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive and centered, no axes needed for icicle
+        comment: 'N/A: icicle has no axes; title present'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito sequence correct, backgrounds theme-correct, both renders
-          proper
+        comment: 'Root #009E73, levels follow Imprint order, leaf opacity 1 keeps
+          fills identical in both themes, backgrounds #FAF8F1/#1A1A17'
     design_excellence:
       score: 8
       max: 20
@@ -98,21 +113,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Functional color-by-level, no custom refinements
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Clean minimal styling, no additional refinement
+        comment: Thin page-colored borders only; baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Clear hierarchy but no focal point or narrative guidance
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -120,27 +135,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct icicle chart via go.Icicle()
+        comment: go.Icicle, root at left, one column per level, no unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Hierarchy, values, labels, parent-child all present
+        passed: false
+        comment: C1, C3, C5 met; C2 missed (children fill only half of each parent),
+          C4 missed (Project_C, Vacation labelled at unreadable size instead of hidden)
+          (defect lines)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Idiomatic icicle orientation, all 14 nodes shown
+        passed: false
+        comment: Default branchvalues='remainder' adds each parent's value to its
+          children's sum, so every parent is drawn at about twice its value (defect
+          line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct, legend properly omitted
+        comment: Title 'icicle-basic · python · plotly · anyplot.ai'; legend N/A
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -148,41 +167,43 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4-level file system hierarchy, 14 nodes, comprehensive
+        comment: Three levels, 14 nodes, uneven branch depth and sizes
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Plausible file sizes, neutral, real-world applicable
+        comment: File-system scenario is neutral, but 'root', 'Project_A/B/C' read
+          as placeholders (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible (100 to 8), realistic distribution
+        comment: 'Values add up: root 100 = 25+20+30+15+10, Code 30 = 10+12+8, Documents
+          25 = 12+13, Photos 20 = 8+12; no Check values in spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Simple and direct, reasonable helper function
+        comment: Two helper functions depth() and label_color() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data is deterministic
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pandas, plotly - all used
+        comment: os, pandas, plotly all used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -194,24 +215,28 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct file outputs at proper resolution
+        comment: plot-{THEME}.png at 800x450 scale 4 + html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Proper go.Icicle() usage, custom hovertemplate shows awareness
+        comment: go.Icicle with labels/parents/values, per-node colors and textfont
+          colors
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Basic usage without distinctive enhancements
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T13:15:50Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -221,5 +246,4 @@ impl_tags:
   - data-generation
   - explicit-figure
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []
