@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-stacked: Stacked Histogram
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-12
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-21
 """
 
 import os
@@ -12,14 +12,16 @@ import pandas as pd
 import seaborn as sns
 
 
-# Get theme from environment
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Set theme-aware colors
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 sns.set_theme(
     style="ticks",
     rc={
@@ -31,62 +33,62 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Data - Response times (ms) from three different server regions
-np.random.seed(42)
+# Columns: set these to your table's column names
+SCORE = "Exam score (points)"  # role: values
+CLASS = "Class"  # role: group
 
-# Generate response times for three server regions with different characteristics
-region_a = np.random.normal(loc=45, scale=12, size=150)  # US East - faster
-region_b = np.random.normal(loc=60, scale=15, size=180)  # Europe - medium
-region_c = np.random.normal(loc=75, scale=18, size=120)  # Asia Pacific - slower
-
-# Combine into DataFrame
-df = pd.DataFrame(
-    {
-        "Response Time (ms)": np.concatenate([region_a, region_b, region_c]),
-        "Region": (["US East"] * len(region_a) + ["Europe"] * len(region_b) + ["Asia Pacific"] * len(region_c)),
-    }
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+rng = np.random.default_rng(7)
+class_specs = {"Class 10A": (74, 9, 140), "Class 10B": (66, 11, 170), "Class 10C": (82, 8, 110)}
+df = pd.concat(
+    [
+        pd.DataFrame({SCORE: np.clip(rng.normal(mean, sd, n), 0, 100), CLASS: name})
+        for name, (mean, sd, n) in class_specs.items()
+    ],
+    ignore_index=True,
 )
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Okabe-Ito palette for stacked histogram
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Stack order: largest group at the bottom, one order kept in every bin
+groups = df[CLASS].value_counts().index.tolist()
 
-# Stacked histogram using histplot with multiple='stack'
 sns.histplot(
     data=df,
-    x="Response Time (ms)",
-    hue="Region",
-    hue_order=["US East", "Europe", "Asia Pacific"],
+    x=SCORE,
+    hue=CLASS,
+    hue_order=groups,
     multiple="stack",
-    bins=20,
-    palette=IMPRINT,
-    edgecolor="white",
-    linewidth=0.8,
-    alpha=0.9,
+    binwidth=4,
+    binrange=(0, 100),
+    palette=IMPRINT_PALETTE[: len(groups)],
+    edgecolor=PAGE_BG,
+    linewidth=0.6,
+    alpha=1.0,
     ax=ax,
 )
 
-# Styling
-ax.set_xlabel("Response Time (ms)", fontsize=20)
-ax.set_ylabel("Frequency", fontsize=20)
-ax.set_title("histogram-stacked · seaborn · anyplot.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.1, linestyle="-", axis="y")
+# Style
+ax.set_xlabel(SCORE, fontsize=10)
+ax.set_ylabel("Number of students", fontsize=10)
+ax.set_title("histogram-stacked · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium")
+ax.tick_params(axis="both", labelsize=8)
+ax.yaxis.grid(True, linewidth=0.8)
+ax.set_axisbelow(True)
+sns.despine(ax=ax)
 
-# Adjust legend styling
 legend = ax.get_legend()
-legend.set_title("Server Region")
-legend.get_title().set_fontsize(16)
+legend.set_title(CLASS)
+legend.get_title().set_fontsize(9)
 for text in legend.get_texts():
-    text.set_fontsize(14)
+    text.set_fontsize(8)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

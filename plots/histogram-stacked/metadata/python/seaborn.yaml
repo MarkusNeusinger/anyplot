@@ -2,48 +2,49 @@ library: seaborn
 language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:38:34Z'
-updated: '2026-05-12T05:37:04Z'
-generated_by: claude-haiku
-workflow_run: 25715216931
+updated: '2026-11-21T04:48:37Z'
+generated_by: claude-sonnet
+workflow_run: 44867387054
 issue: 2601
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 85
 review:
   strengths:
-  - Perfect theme adaptation with correct text contrast in both light and dark renders
-  - Flawless palette compliance using Okabe-Ito colors with brand green (#009E73)
-    as first series
-  - 'Complete spec fulfillment: all required features (stacking, distinct colors,
-    legend, proper bins) correctly implemented'
-  - Clean, reproducible code with clear data generation and straightforward execution
-    flow
-  - Appropriate figure sizing (4800×2700px) and explicit font sizing for large canvas
-    visibility
-  - Strong idiomatic seaborn usage demonstrating good library mastery
+  - 'Stack order derived from value_counts() via hue_order: the largest class sits
+    on top, one order kept in every bin, and the legend lists the classes in the same
+    top-to-bottom order as the stack'
+  - Shared 4-point bins pinned to the 0-100 score domain with binwidth/binrange, so
+    every class uses the same boundaries
+  - Segment edges drawn in the page color separate the stacked blocks cleanly in both
+    themes
+  - 'Theme tokens threaded through set_theme rc: all chrome flips correctly while
+    the Imprint data colors stay identical'
+  - Canvas contract met (8x4.5 in at 400 dpi, no bbox_inches) with style-guide font
+    sizes
   weaknesses:
-  - 'Limited design elevation: styling relies on seaborn defaults beyond theme colors;
-    could benefit from spine removal and more intentional visual hierarchy'
-  - 'Generic aesthetic approach: while functional, lacks custom design touches that
-    would elevate from well-configured default to thoughtfully designed'
+  - 'Suggestion: the 0-28 score range carries no observations; a binrange starting
+    near the data minimum would give the populated bins more width.'
+  - 'Suggestion: the legend title ''Class'' repeats in every entry (''Class 10A''…);
+    entries ''10A'', ''10B'', ''10C'' would read more cleanly.'
+  - 'Suggestion: the code comment ''largest group at the bottom'' contradicts the
+    render, where the largest class is stacked on top.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly themed
-      Chrome: Title "histogram-stacked · seaborn · anyplot.ai", axis labels "Response Time (ms)" and "Frequency", tick labels (0-120, 0-50) all clearly visible in dark text (#1A1A17)
-      Data: US East (#009E73 brand green), Europe (#D55E00 vermillion), Asia Pacific (#0072B2 blue) in Okabe-Ito order; white bar edges provide definition; subtle y-axis grid (alpha=0.1)
-      Legend: "Server Region" label with three region categories clearly labeled
-      Legibility verdict: PASS - All text readable with proper contrast, no overlap, bars clearly distinguishable
+      Background: warm off-white #FAF8F1, 3200x1800 canvas.
+      Chrome: title 'histogram-stacked · python · seaborn · anyplot.ai' centered on top; x-axis 'Exam score (points)' with ticks 0-100; y-axis 'Number of students' with ticks 0-70; L-shaped spines in INK_SOFT; subtle horizontal grid; legend 'Class' upper right on an elevated box. All text dark and readable.
+      Data: stacked bars in 4-point bins: Class 10C (#4467A3) at the bottom, Class 10A (#C475FD) in the middle, Class 10B (#009E73, largest class) on top; segments separated by light page-colored edges; peak total 71 at 72-76; data from about 28 to 100, 0-28 empty.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly themed
-      Chrome: Title, axis labels, ticks all visible in light text (#F0EFE8 primary, #B8B7B0 secondary) with proper contrast
-      Data: Colors identical to light render (#009E73, #D55E00, #0072B2) - only chrome adapted to theme
-      Grid and legend: Subtle and visible, no interference with data
-      Legibility verdict: PASS - All text readable with proper contrast, no dark-on-dark failures, brand green visible and accessible
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, ticks and spines in soft light grey, grid subtle, legend box elevated dark with light text. No dark-on-dark text.
+      Data: identical bar colors and heights to the light render; segment edges now dark page color. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,69 +55,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt all explicitly set
-          and perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, legend 8/9 pt, all explicitly
+          set at the style-guide references; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, all text fully readable and well-spaced
+        comment: No text collides with text or bars; the legend in the upper right
+          clears the 80-88 bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars perfectly adapted to data density of 450 points across 20 bins
+        comment: 420 observations in 4-point bins; every segment, including the 1-count
+          tail bins, is visible; legend swatches match the bars in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with excellent contrast
+        comment: Green, purple and blue segments are CVD-distinguishable and separated
+          by page-colored edges
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions with balanced margins, 16:9 figsize appropriate
+        comment: 3200x1800 canvas (gate passed); plot fills the canvas with balanced
+          margins; the empty 0-28 range is the exam's natural domain and empty tail
+          bins are permitted by the spec
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units - 'Response Time (ms)' and 'Frequency'
+        comment: '''Exam score (points)'' and ''Number of students'' are descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito, backgrounds
-          correct (#FAF8F1 light/#1A1A17 dark), both renders theme-correct'
+        comment: 'Largest class 10B is #009E73, then #C475FD and #4467A3 in Imprint
+          order; backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Professional and polished with intentional brand colors, but relies
-          on configured defaults
+        passed: true
+        comment: Style-guide baseline (theme tokens, Imprint, explicit sizes, medium-weight
+          title); nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Subtle grid and white bar edges show care; could remove top/right
-          spines for cleaner look
+        passed: true
+        comment: 'Beyond the baseline: segment edges drawn in the page color so the
+          stack reads as clean blocks in both themes, and bins aligned to round 4-point
+          boundaries on 0-100'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy through stacking and color separation
+        comment: Ordering by size is what the Notes suggest; no further focal point
+          chosen
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked histogram using sns.histplot(multiple='stack')
+        comment: Correct stacked histogram via histplot(multiple='stack')
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: stacking, distinct colors, legend, same
-          bins'
+        comment: Shared bins, distinct colors, legend, total height = combined frequency,
+          segments ordered by size and kept in every bin (C1-C4 all shown)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, axes display full data range
+        comment: x = score, y = count; axis reaches past the tallest total (71); zero
+          baseline
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend properly labeled
+        comment: Title 'histogram-stacked · python · seaborn · anyplot.ai' correct;
+          legend 'Class' with class names
     data_quality:
       score: 15
       max: 15
@@ -155,20 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: group compositions, frequency variations, stacking
-          behavior'
+        comment: Three overlapping distributions with different centers and spreads
+          show composition changing across bins
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times across regions is real-world, neutral scenario
+        comment: Exam scores by school class is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times 20-120ms and 450 points are factually appropriate
+        comment: Scores clipped to 0-100 with means 66-82; class sizes 110-170 per
+          cohort are sensible
     code_quality:
       score: 10
       max: 10
@@ -178,33 +190,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports → data → plot → save'
+        comment: Flat script; column constants SCORE/CLASS with role comments; full
+          8-position palette
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output
+        comment: default_rng(7) seeds the data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no fake functionality
+        comment: Appropriate complexity; binning left to histplot
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -212,23 +225,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Strong use of sns.set_theme(), axes-level plotting, proper rc customization
+        comment: sns.set_theme rc theming, histplot hue/hue_order/multiple, sns.despine,
+          binwidth+binrange for shared bins
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Good use of sns.histplot(multiple='stack'), hue_order, sns.set_theme()
-          for theming
+        comment: hue_order derived from value_counts() to drive the stack order; binrange
+          pins the bins to the score domain
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-21T04:45:05Z'
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - binning
   styling:
-  - grid-styling
   - edge-highlighting
-  - alpha-blending
+  - grid-styling
