@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 volcano-basic: Volcano Plot for Statistical Significance
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-14
@@ -8,143 +8,109 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"  # Imprint "muted" anchor
 
-# Okabe-Ito palette for significance categories
-COLOR_DOWNREG = "#4467A3"  # Blue
-COLOR_UPREG = "#C475FD"  # Vermillion
-COLOR_NONSIG = "#888888"  # Neutral gray
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+COLOR_DOWN = IMPRINT_PALETTE[2]  # blue: down-regulated
+COLOR_UP = IMPRINT_PALETTE[4]  # matte red: up-regulated
+COLOR_NONSIG = MUTED  # gray: not significant
 
-# Data - simulated differential expression results
+# Constants
+PVALUE_THRESHOLD = 1.3  # -log10(0.05)
+FC_THRESHOLD = 1.0  # log2(2): a 2-fold change
+N_LABELS = 5  # top features named per direction
+
+# Columns: set these to your table's column names
+LOG2_FC = "Log₂ fold change"  # role: log2_fold_change
+NEG_LOG10_P = "-Log₁₀ (p-value)"  # role: neg_log10_pvalue
+GENE = "Gene"  # role: label
+
+# Data: replace this block with your own table, for example df = pd.read_csv("results.csv")
 np.random.seed(42)
 n_genes = 2000
+fold_change = np.random.normal(0, 1.5, n_genes)
+base_p = np.clip(np.random.exponential(0.3, n_genes), 1e-50, 1.0)
+# Larger fold changes are more likely to be significant
+p_values = np.clip(base_p * np.exp(-np.abs(fold_change) / 3 * 5), 1e-50, 1.0)
+df = pd.DataFrame({LOG2_FC: fold_change, NEG_LOG10_P: -np.log10(p_values), GENE: [f"Gene_{i}" for i in range(n_genes)]})
 
-# Generate log2 fold changes (centered around 0)
-log2_fc = np.random.normal(0, 1.5, n_genes)
+# Plot: reads only df and the constants above
+significant = df[NEG_LOG10_P] > PVALUE_THRESHOLD
+is_up = significant & (df[LOG2_FC] > FC_THRESHOLD)
+is_down = significant & (df[LOG2_FC] < -FC_THRESHOLD)
+groups = [
+    ("Not significant", ~is_up & ~is_down, COLOR_NONSIG, 14, 0.5),
+    ("Down-regulated", is_down, COLOR_DOWN, 22, 0.8),
+    ("Up-regulated", is_up, COLOR_UP, 22, 0.8),
+]
 
-# Generate p-values (most non-significant, some significant)
-base_pvalues = np.random.exponential(0.3, n_genes)
-base_pvalues = np.clip(base_pvalues, 1e-50, 1.0)
-
-# Make genes with large fold changes more likely to be significant
-significance_boost = np.abs(log2_fc) / 3
-pvalues = base_pvalues * np.exp(-significance_boost * 5)
-pvalues = np.clip(pvalues, 1e-50, 1.0)
-
-# Convert to -log10(p-value)
-neg_log10_pval = -np.log10(pvalues)
-
-# Significance thresholds
-pval_threshold = 1.3  # -log10(0.05)
-fc_threshold = 1.0  # log2(2) = 1
-
-# Classify points
-sig_up = (neg_log10_pval > pval_threshold) & (log2_fc > fc_threshold)
-sig_down = (neg_log10_pval > pval_threshold) & (log2_fc < -fc_threshold)
-non_sig = ~sig_up & ~sig_down
-
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot non-significant points first (gray)
-ax.scatter(
-    log2_fc[non_sig],
-    neg_log10_pval[non_sig],
-    c=COLOR_NONSIG,
-    s=120,
-    alpha=0.5,
-    label="Not significant",
-    edgecolors="none",
-)
+for name, mask, color, size, alpha in groups:
+    ax.scatter(
+        df.loc[mask, LOG2_FC],
+        df.loc[mask, NEG_LOG10_P],
+        c=color,
+        s=size,
+        alpha=alpha,
+        label=name,
+        edgecolors="none",
+        zorder=2,
+    )
 
-# Plot significant down-regulated (blue)
-ax.scatter(
-    log2_fc[sig_down],
-    neg_log10_pval[sig_down],
-    c=COLOR_DOWNREG,
-    s=150,
-    alpha=0.8,
-    label="Down-regulated",
-    edgecolors="none",
-)
+# Threshold lines
+ax.axhline(PVALUE_THRESHOLD, color=INK_SOFT, linestyle="--", linewidth=1.0, alpha=0.7, zorder=3)
+for sign in (-1, 1):
+    ax.axvline(sign * FC_THRESHOLD, color=INK_SOFT, linestyle="--", linewidth=1.0, alpha=0.7, zorder=3)
 
-# Plot significant up-regulated (vermillion)
-ax.scatter(
-    log2_fc[sig_up], neg_log10_pval[sig_up], c=COLOR_UPREG, s=150, alpha=0.8, label="Up-regulated", edgecolors="none"
-)
-
-# Add threshold lines
-ax.axhline(y=pval_threshold, color=INK_SOFT, linestyle="--", linewidth=1.5, alpha=0.4, zorder=1)
-ax.axvline(x=fc_threshold, color=INK_SOFT, linestyle="--", linewidth=1.5, alpha=0.4, zorder=1)
-ax.axvline(x=-fc_threshold, color=INK_SOFT, linestyle="--", linewidth=1.5, alpha=0.4, zorder=1)
-
-# Label top significant genes
-top_up_idx = np.where(sig_up)[0]
-if len(top_up_idx) > 0:
-    top_up_scores = neg_log10_pval[top_up_idx] + np.abs(log2_fc[top_up_idx])
-    top_up = top_up_idx[np.argsort(top_up_scores)[-5:]]
-    for idx in top_up:
+# Name the strongest features of each direction
+for mask, ha, dx in ((is_up, "left", 3), (is_down, "right", -3)):
+    hits = df[mask]
+    score = hits[NEG_LOG10_P] + hits[LOG2_FC].abs()
+    for k, (_, row) in enumerate(hits.loc[score.nlargest(N_LABELS).index].sort_values(LOG2_FC).iterrows()):
         ax.annotate(
-            f"Gene_{idx}",
-            (log2_fc[idx], neg_log10_pval[idx]),
-            fontsize=13,
-            ha="left",
+            row[GENE],
+            (row[LOG2_FC], row[NEG_LOG10_P]),
+            fontsize=7,
+            ha=ha,
             va="bottom",
-            xytext=(5, 5),
+            xytext=(dx, 3 + 9 * (k % 3)),
             textcoords="offset points",
             color=INK,
         )
 
-top_down_idx = np.where(sig_down)[0]
-if len(top_down_idx) > 0:
-    top_down_scores = neg_log10_pval[top_down_idx] + np.abs(log2_fc[top_down_idx])
-    top_down = top_down_idx[np.argsort(top_down_scores)[-5:]]
-    for idx in top_down:
-        ax.annotate(
-            f"Gene_{idx}",
-            (log2_fc[idx], neg_log10_pval[idx]),
-            fontsize=13,
-            ha="right",
-            va="bottom",
-            xytext=(-5, 5),
-            textcoords="offset points",
-            color=INK,
-        )
-
-# Styling
-ax.set_xlabel("Log₂ Fold Change", fontsize=20, color=INK)
-ax.set_ylabel("-Log₁₀ (p-value)", fontsize=20, color=INK)
-ax.set_title("volcano-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Spines and grid
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+# Style
+ax.set_xlabel(LOG2_FC, fontsize=10, color=INK)
+ax.set_ylabel(NEG_LOG10_P, fontsize=10, color=INK)
+ax.set_title("volcano-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+for s in ("top", "right"):
+    ax.spines[s].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
-
 ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color=INK)
 
-# Legend styling
-leg = ax.legend(fontsize=16, loc="upper left", framealpha=0.95)
-if leg:
-    leg.get_frame().set_facecolor(ELEVATED_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    leg.get_frame().set_linewidth(0.8)
-    for text in leg.get_texts():
-        text.set_color(INK_SOFT)
+leg = ax.legend(fontsize=8, loc="lower right", framealpha=0.95)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_frame().set_linewidth(0.8)
+for text in leg.get_texts():
+    text.set_color(INK_SOFT)
 
-# Set axis limits with padding
-x_max = max(abs(log2_fc.min()), abs(log2_fc.max())) * 1.1
+x_max = df[LOG2_FC].abs().max() * 1.25
 ax.set_xlim(-x_max, x_max)
-ax.set_ylim(0, neg_log10_pval.max() * 1.1)
+ax.set_ylim(0, df[NEG_LOG10_P].max() * 1.1)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.97, top=0.92, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
