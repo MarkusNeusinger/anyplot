@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 shap-summary: SHAP Summary Plot
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-14
 """
 
 import os
+
 import numpy as np
 import pandas as pd
 from lets_plot import *
@@ -12,7 +13,7 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
-# Theme setup
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
@@ -20,7 +21,18 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data: Simulate SHAP values for a healthcare outcome prediction model
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+TOP_K = 10  # the Notes ask for the 10-20 most important features
+
+# Columns: set these to your table's column names
+FEATURE = "Feature"  # role: feature_names
+SHAP_VALUE = "SHAP value (impact on model output)"  # role: shap_values
+FEATURE_VALUE = "Feature value"  # role: feature_values
+
+# Data: replace this block with your own long table, for example df = pd.read_csv("shap_long.csv")
 np.random.seed(42)
 n_samples = 250
 n_features = 12
@@ -107,69 +119,62 @@ shap_values[:, 10] = -hdl_norm * 0.35 + np.random.normal(0, 0.09, n_samples)
 ldl_norm = (feature_values[:, 11] - 130) / 40
 shap_values[:, 11] = ldl_norm * 0.55 + np.random.normal(0, 0.13, n_samples)
 
-# Calculate mean absolute SHAP value for feature importance
-mean_abs_shap = np.abs(shap_values).mean(axis=0)
-feature_order = np.argsort(mean_abs_shap)[::-1]
+df = pd.DataFrame(
+    {FEATURE: np.tile(feature_names, n_samples), SHAP_VALUE: shap_values.ravel(), FEATURE_VALUE: feature_values.ravel()}
+)
 
-# Select top 10 features
-top_k = 10
-top_indices = feature_order[:top_k]
+# Plot: reads only df and the constants above
+# Rank features by mean absolute SHAP value and keep the top ones
+importance = df.groupby(FEATURE)[SHAP_VALUE].agg(lambda v: v.abs().mean()).sort_values(ascending=False)
+top = importance.index[:TOP_K]
+plot_df = df[df[FEATURE].isin(top)].copy()
 
-# Create long-form DataFrame for plotting
-data_records = []
-for rank, feat_idx in enumerate(top_indices):
-    feat_name = feature_names[feat_idx]
-    feat_shap = shap_values[:, feat_idx]
-    feat_val = feature_values[:, feat_idx]
-    # Normalize feature values to 0-1 for consistent coloring
-    feat_val_norm = (feat_val - feat_val.min()) / (feat_val.max() - feat_val.min() + 1e-8)
-    # Add vertical jitter for visibility
-    jitter = np.random.uniform(-0.25, 0.25, n_samples)
+# Scale each feature's values to 0-1 so one color bar serves every row
+by_feature = plot_df.groupby(FEATURE)[FEATURE_VALUE]
+plot_df["scaled"] = (plot_df[FEATURE_VALUE] - by_feature.transform("min")) / (
+    by_feature.transform("max") - by_feature.transform("min")
+)
 
-    for i in range(n_samples):
-        data_records.append(
-            {
-                "Feature": feat_name,
-                "SHAP Value": feat_shap[i],
-                "Feature Value": feat_val_norm[i],
-                "y_position": (top_k - 1 - rank) + jitter[i],
-                "importance_rank": rank,
-            }
-        )
+# Imprint diverging scale: blue (low) - page-colored midpoint - red (high)
+MID = "#FAF8F1" if THEME == "light" else "#1A1A17"
 
-df = pd.DataFrame(data_records)
-
-# Create ordered feature list (most important at top)
-ordered_features = [feature_names[i] for i in top_indices]
-
-# Theme configuration
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major_x=element_line(color=INK_MUTED, size=0.3),
-    panel_grid_minor=element_blank(),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
-    plot_title=element_text(color=INK, size=24),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_title=element_text(color=INK, size=16),
-    legend_text=element_text(color=INK_SOFT, size=16),
     panel_grid_major_y=element_blank(),
+    panel_grid_minor=element_blank(),
+    axis_line=element_blank(),
+    axis_ticks=element_blank(),
+    axis_title=element_text(color=INK, size=13),
+    axis_text=element_text(color=INK_SOFT, size=11),
+    plot_title=element_text(color=INK, size=16),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_title=element_text(color=INK, size=12),
+    legend_text=element_text(color=INK_SOFT, size=11),
 )
 
-# Plot
 plot = (
-    ggplot(df, aes(x="SHAP Value", y="y_position", color="Feature Value"))
-    + geom_point(size=3, alpha=0.7)
-    + geom_vline(xintercept=0, color=INK_MUTED, size=0.8, linetype="dashed")
-    + scale_color_gradient(low="#4467A3", high="#C475FD", name="Feature\nValue")
-    + scale_y_continuous(breaks=list(range(top_k)), labels=ordered_features[::-1])
-    + labs(x="SHAP Value (impact on model output)", y="", title="shap-summary · letsplot · anyplot.ai")
-    + ggsize(1600, 900)
+    ggplot(plot_df, aes(x=SHAP_VALUE, y=FEATURE, fill="scaled"))
+    + geom_vline(xintercept=0, color=INK_SOFT, size=0.5, linetype="dashed")
+    + geom_point(
+        shape=21,
+        size=2.2,
+        stroke=0.25,
+        color=INK_SOFT,
+        alpha=0.8,
+        position=position_jitter(width=0, height=0.25, seed=42),
+    )
+    + scale_fill_gradient2(
+        low="#4467A3", mid=MID, high="#AE3030", midpoint=0.5, name=FEATURE_VALUE, breaks=[0, 1], labels=["Low", "High"]
+    )
+    + scale_y_discrete(limits=list(top[::-1]))
+    + labs(y="", title="shap-summary · python · letsplot · anyplot.ai")
+    + ggsize(800, 450)
     + anyplot_theme
 )
 
 # Save as PNG and HTML
 _plot_dir = os.path.dirname(os.path.abspath(__file__))
-ggsave(plot, f"{_plot_dir}/plot-{THEME}.png", scale=3)
+ggsave(plot, f"{_plot_dir}/plot-{THEME}.png", scale=4)
 ggsave(plot, f"{_plot_dir}/plot-{THEME}.html")
