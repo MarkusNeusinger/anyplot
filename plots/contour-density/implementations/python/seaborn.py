@@ -1,14 +1,16 @@
 """ anyplot.ai
 contour-density: Density Contour Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-16
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 79/100 | Updated: 2026-11-21
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 
 # Theme tokens (see prompts/default-style-guide.md)
@@ -17,27 +19,32 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 SCATTER_COLOR = "#4A4A44" if THEME == "light" else "#9A9A94"
 
-# Data - bivariate normal distributions with two clusters
+# Imprint palette: all eight positions, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint sequential colormap for continuous density (green -> blue)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", [IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]])
+
+# Constants
+LEVELS = 10  # number of density bands
+
+# Columns: set these to your table's column names
+X = "X Variable (units)"  # role: x
+Y = "Y Variable (units)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("measurements.csv")
 np.random.seed(42)
+n1, n2 = 300, 150
+df = pd.DataFrame(
+    {
+        X: np.concatenate([np.random.normal(5, 1.5, n1), np.random.normal(9, 1.0, n2)]),
+        Y: np.concatenate([np.random.normal(5, 1.5, n1), np.random.normal(8, 1.0, n2)]),
+    }
+)
 
-# Main cluster
-n1 = 300
-x1 = np.random.normal(loc=5, scale=1.5, size=n1)
-y1 = np.random.normal(loc=5, scale=1.5, size=n1)
-
-# Secondary cluster
-n2 = 150
-x2 = np.random.normal(loc=9, scale=1.0, size=n2)
-y2 = np.random.normal(loc=8, scale=1.0, size=n2)
-
-# Combine clusters
-x = np.concatenate([x1, x2])
-y = np.concatenate([y1, y2])
-
-# Configure seaborn theme with theme-adaptive colors
+# Plot: reads only df and the constants above
 sns.set_theme(
     style="ticks",
     rc={
@@ -50,37 +57,52 @@ sns.set_theme(
         "ytick.color": INK_SOFT,
         "grid.color": INK,
         "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Density contour plot using seaborn's kdeplot (filled with viridis)
-sns.kdeplot(x=x, y=y, ax=ax, levels=10, fill=True, cmap="viridis", alpha=0.8)
+# Filled density bands with a color bar showing which way density rises
+sns.kdeplot(
+    data=df,
+    x=X,
+    y=Y,
+    ax=ax,
+    levels=LEVELS,
+    fill=True,
+    cmap=imprint_seq,
+    alpha=0.85,
+    cbar=True,
+    cbar_kws={"label": "Relative density", "ticks": []},
+)
 
-# Add contour lines for clarity (using INK_SOFT for theme-adaptive color)
-sns.kdeplot(x=x, y=y, ax=ax, levels=10, color=INK_SOFT, linewidths=1.5, alpha=0.6)
+# Contour lines on the same levels
+sns.kdeplot(data=df, x=X, y=Y, ax=ax, levels=LEVELS, color=INK_SOFT, linewidths=0.6, alpha=0.7)
 
-# Scatter plot overlay for context (theme-adaptive color, semi-transparent)
-ax.scatter(x, y, s=15, color=SCATTER_COLOR, alpha=0.25, edgecolors="none")
+# Faint scatter overlay at the exact values
+ax.scatter(df[X], df[Y], s=4, color=SCATTER_COLOR, alpha=0.3, edgecolors="none")
 
-# Styling
-ax.set_xlabel("X Variable (units)", fontsize=20, color=INK)
-ax.set_ylabel("Y Variable (units)", fontsize=20, color=INK)
-ax.set_title("contour-density · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Colorbar chrome: low/high labels instead of numeric density
+cbar = fig.axes[-1]
+cbar.set_ylabel("Relative density", fontsize=10, color=INK)
+low, high = cbar.get_ylim()
+cbar.set_yticks([low, high], labels=["low", "high"])
+cbar.tick_params(labelsize=8, colors=INK_SOFT, length=0)
+for spine in cbar.spines.values():
+    spine.set_visible(False)
 
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for spine in ["left", "bottom"]:
-    ax.spines[spine].set_color(INK_SOFT)
-    ax.spines[spine].set_linewidth(0.8)
+# Style
+ax.set_title("contour-density · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(X, fontsize=10, color=INK)
+ax.set_ylabel(Y, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+sns.despine(ax=ax)
+ax.spines["left"].set_linewidth(0.8)
+ax.spines["bottom"].set_linewidth(0.8)
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.6, color=INK)
 
-# Subtle grid
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.94, top=0.92, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
