@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-categorical: Categorical Scatter Plot
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-12
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-21
 """
 
 import os
@@ -36,10 +36,15 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (canonical order)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette (canonical order)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
+# Columns: set these to your table's column names
+TEMPERATURE = "Temperature (°C)"  # role: x
+GROWTH = "Growth Rate (cm/week)"  # role: y
+SPECIES = "Plant Species"  # role: category
+
+# Data: replace this block with your own table, for example df = pd.read_csv("growth.csv")
 np.random.seed(42)
 
 # Create sample data with 3 categories showing different patterns
@@ -59,40 +64,35 @@ y_c = np.random.normal(35, 8, n_per_group)
 
 df = pd.DataFrame(
     {
-        "Temperature (°C)": np.concatenate([x_a, x_b, x_c]),
-        "Growth Rate (cm/week)": np.concatenate([y_a, y_b, y_c]),
-        "Plant Species": (["Species A"] * n_per_group + ["Species B"] * n_per_group + ["Species C"] * n_per_group),
+        TEMPERATURE: np.concatenate([x_a, x_b, x_c]),
+        GROWTH: np.concatenate([y_a, y_b, y_c]),
+        SPECIES: (["Species A"] * n_per_group + ["Species B"] * n_per_group + ["Species C"] * n_per_group),
     }
 )
 
 # Plot
 plot = (
-    ggplot(df, aes(x="Temperature (°C)", y="Growth Rate (cm/week)", color="Plant Species"))
-    + geom_point(size=4, alpha=0.7)
-    + scale_color_manual(values=IMPRINT)
-    + labs(
-        x="Temperature (°C)",
-        y="Growth Rate (cm/week)",
-        title="scatter-categorical · plotnine · anyplot.ai",
-        color="Plant Species",
-    )
+    ggplot(df, aes(x=TEMPERATURE, y=GROWTH, color=SPECIES))
+    + geom_point(size=2.5, alpha=0.7)
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=df[SPECIES].unique().tolist())
+    + labs(title="scatter-categorical · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
+        plot_title=element_text(size=12, color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
     )
 )
 
 # Save
 output_dir = pathlib.Path(__file__).parent
-plot.save(str(output_dir / f"plot-{THEME}.png"), dpi=300, verbose=False)
+plot.save(str(output_dir / f"plot-{THEME}.png"), dpi=400, verbose=False)
