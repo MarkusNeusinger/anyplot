@@ -8,4 +8,4 @@
   both sides, and two of them merged as judged worse. The orientation now
   stays square when the previous render is square or nearly so, or the plot
   keeps a 1:1 aspect; the square list names Venn diagrams, circle packing,
-  polar charts and equal-axes plots.
+  polar charts and equal-axes plots. (#13474)
