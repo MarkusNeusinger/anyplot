@@ -2,45 +2,44 @@ library: altair
 language: python
 specification_id: map-tilegrid
 created: '2026-05-14T14:13:09Z'
-updated: '2026-05-14T14:19:22Z'
+updated: '2026-11-21T16:35:04Z'
 generated_by: claude-sonnet
-workflow_run: 25864454457
+workflow_run: 44924865097
 issue: 5246
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 85
 review:
   strengths:
-  - Data-driven tile label contrast (alt.condition) works correctly across both themes
-  - Theme-adaptive chrome correctly implemented with all five token variables (PAGE_BG,
-    ELEVATED_BG, INK, INK_SOFT)
-  - Viridis colormap and canvas dimensions (4800x2700) comply with style guide
-  - 'Full spec coverage: all 51 regions, colorbar, tooltips, HTML output'
-  - alt.layer(tiles, labels) composition is clean, idiomatic, and readable
+  - Label ink flips with alt.condition on the data midpoint, keeping every abbreviation
+    legible on both ends of the ramp in both themes
+  - imprint_seq ramp via alt.Scale(range=[...]) with a framed gradient legend whose
+    title carries the unit
+  - Escaped column constants with explicit type= and readable titles follow the adaptable-code
+    contract
+  - Native Vega-Lite tooltips (state, share) in the HTML output
   weaknesses:
-  - 'Design Excellence could improve: no storytelling element or annotation to guide
-    viewer toward key geographic insight (Northeast/Northwest high, Southeast low)'
-  - No focal point annotation for standout states (VT 82%, ME 79%, SD 81%) to create
-    visual emphasis
+  - 'Suggestion: the legend frame is far wider than its 14 px gradient; a shorter
+    title or a horizontal gradient below the map would tighten it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "US Renewable Energy Share · map-tilegrid · altair · anyplot.ai" in dark #1A1A17 ink at 28px, clearly readable; no axis labels (axis=None, correct for tile map); colorbar labeled "Renewables %" with title at 18px and tick labels at 16px in #4A4A44 — all readable
-      Data: Viridis colormap from dark purple (low ~3%) to bright yellow (high ~82%); state abbreviations in bold 22px with data-driven contrast (#1A1A17 on bright tiles >50%, #F0EFE8 on dark tiles); 51 regions all visible; colorbar gradient clearly shows value range 0-80%
+      Background: warm off-white #FAF8F1, 3200x1800, chart padded and centered
+      Chrome: title 'US Renewable Energy Share · map-tilegrid · python · altair · anyplot.ai' in dark ink above the map; framed gradient legend 'Renewable share (%)' at the right with labels 3 and 82 in soft gray; no axes; all text readable
+      Data: 51 equal square tiles (50 states + DC) in a recognizable US layout, north at top, AK/HI bottom left; imprint_seq ramp from #009E73 (low) to #4467A3 (high); bold abbreviations dark on green/teal tiles, light on the blue high-share tiles (WA, OR, ID, MT, SD, IA, KS, VT, ME)
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black
-      Chrome: Title in #F0EFE8 near-white text, clearly readable against dark background; legend box uses #242420 elevated background with #B8B7B0 soft labels and #F0EFE8 title — all readable; no dark-on-dark failures observed
-      Data: Viridis tile colors identical to light render — dark purple through teal/blue to bright yellow-green; data-driven tile label contrast continues to work correctly (light text on dark tiles, dark text on bright yellow tiles) since contrast is relative to tile color not page background
+      Background: warm near-black #1A1A17
+      Chrome: title in light ink; legend on #242420 with a light-gray frame, light title and soft-gray labels; no dark-on-dark text
+      Data: tile colors identical to the light render; tile labels keep their value-driven ink, readable on every tile
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -48,70 +47,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, tile labels 22px bold, legend title 18px, labels 16px
-          — all explicitly set, readable in both renders
+        comment: Title ~15 px, tile labels 13 px bold, legend 12/11 px at scale 4;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 2-3 char state abbreviations fit cleanly in tiles; no collisions
+        comment: Two-letter abbreviations sit inside their tiles; legend clear of
+          the map
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tiles are large and clearly visible; full viridis range used
+        comment: 51 square tiles, clearly visible with thin page-colored gaps
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe; data-driven text contrast
+        comment: Green-to-blue ramp is CVD-safe; label ink flips with tile darkness
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout; inherent empty areas in US tile grid topology are unavoidable
+        comment: 3200x1800, chart padded and centered; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed (tile map); colorbar labeled; descriptive title
+        comment: No axes needed; legend title 'Renewable share (%)' carries the unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Viridis for sequential continuous data; correct backgrounds; all
-          chrome theme-adaptive
+        comment: 'imprint_seq (#009E73 -> #4467A3) for unipolar data; backgrounds
+          #FAF8F1/#1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Above well-configured defaults; intentional viridis choice; data-driven
-          label contrast; professional layout; not yet FiveThirtyEight level
+        comment: Style-guide baseline; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Axes hidden (correct), paddingInner=0.04 tile gaps, legend well-positioned;
-          limited further refinement
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Geographic pattern visible through color; no annotation or focal
-          point guiding viewer to key insight
+        comment: Thin 4% inner padding reads as page-colored tile joints, a clean
+          grid without strokes
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +119,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct tile grid map with equal-sized square tiles
+        comment: Square tile grid map
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Tiles colored by value, state abbreviations, colorbar, row/col grid
-          positions
+        comment: Equal square tiles at row/col, recognizable US outline (C1, C2),
+          abbreviations with contrast flip (C3), sequential ramp + color bar (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: col->X, row->Y, value->color; all 51 regions rendered
+        comment: col -> x, row -> y (row 0 at top), value -> color; all 51 regions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar labeled Renewables %
+        comment: '''US Renewable Energy Share · map-tilegrid · python · altair · anyplot.ai'';
+          legend title readable'
     data_quality:
       score: 15
       max: 15
@@ -150,19 +149,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 50 states + DC; full value range 3%-82%
+        comment: 50 states + DC, values 3-82 % span the ramp
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US renewable energy share — real, neutral, non-controversial
+        comment: US renewable electricity share; real and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Directionally correct: VT/ME/SD high, DC/MS/AL low'
+        comment: Percentages 3-82 directionally plausible (VT/SD/ME high, DC/MS low);
+          spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -172,58 +172,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports->data->chart->save; no functions/classes
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, altair, pandas — all used
+        comment: os, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: alt.layer(), alt.condition(), ordinal paddingInner — idiomatic Altair
+        comment: Appropriate complexity; pad block is the library prompt's mandated
+          one
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html
+        comment: plot-{THEME}.png padded to 3200x1800 and plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of layer composition, condition encoding, ordinal scale
-          padding
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: alt.layer(), alt.condition(), ordinal paddingInner, interactive HTML
-          tooltips — distinctively Altair
+        comment: Escaped field constants with explicit type=, alt.layer of rect +
+          text, alt.condition with a Vega expression for label ink
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Shared encodings across a layered chart and HTML tooltips; nothing
+          else distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T16:31:45Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
+  - colorbar
   - hover-tooltips
   - html-export
   patterns: []
   dataprep: []
   styling:
-  - custom-colormap
   - minimal-chrome
+  - custom-colormap
+  - edge-highlighting
