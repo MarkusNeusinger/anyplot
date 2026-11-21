@@ -1,16 +1,16 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 86/100 | Created: 2026-05-14
+Quality: 86/100 | Updated: 2026-11-21
 """
 
 import os
 
-import matplotlib
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import pandas as pd
 from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 
 # Theme tokens
@@ -19,7 +19,20 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# US states tile grid layout: (abbreviation, row, col, renewable_energy_pct)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+TILE = 0.82  # tile edge as a share of its grid cell, the rest is the gap between tiles
+LIGHT_LABEL, DARK_LABEL = "#F0EFE8", "#1A1A17"  # tile label colors, switched by tile darkness
+
+# Columns: set these to your table's column names
+REGION = "State"  # role: region
+SHARE = "Renewable energy share (%)"  # role: value
+ROW = "Grid row"  # role: row
+COL = "Grid column"  # role: col
+
+# Data: replace this block with your own table, for example df = pd.read_csv("regions.csv")
 states = [
     ("ME", 0, 10, 72),
     ("MT", 1, 3, 65),
@@ -73,65 +86,53 @@ states = [
     ("AK", 7, 0, 30),
     ("HI", 7, 1, 36),
 ]
+df = pd.DataFrame(states, columns=[REGION, ROW, COL, SHARE])
 
-# Color mapping — sequential viridis for unipolar renewable energy data
-values = [v for _, _, _, v in states]
-vmin, vmax = min(values), max(values)
-norm = Normalize(vmin=vmin, vmax=vmax)
-cmap = matplotlib.colormaps["viridis"]
+# Plot: reads only df and the constants above
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", [IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]])
+norm = Normalize(vmin=df[SHARE].min(), vmax=df[SHARE].max())
+pad = (1.0 - TILE) / 2.0
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-TILE = 0.82
-PAD = (1.0 - TILE) / 2.0
-
-for abbr, row, col, value in states:
-    tile_color = cmap(norm(value))
-    rect = mpatches.Rectangle(
-        (col + PAD, -(row + 1) + PAD), TILE, TILE, facecolor=tile_color, edgecolor=PAGE_BG, linewidth=2.0, zorder=2
+for region, row, col, value in df[[REGION, ROW, COL, SHARE]].itertuples(index=False):
+    tile_color = imprint_seq(norm(value))
+    ax.add_patch(
+        mpatches.Rectangle(
+            (col + pad, -(row + 1) + pad), TILE, TILE, facecolor=tile_color, edgecolor=PAGE_BG, linewidth=0.8, zorder=2
+        )
     )
-    ax.add_patch(rect)
-
-    r_c, g_c, b_c = tile_color[:3]
-    lum = 0.2126 * r_c + 0.7152 * g_c + 0.0722 * b_c
-    label_color = "#1A1A17" if lum > 0.45 else "#F0EFE8"
-
+    red, green, blue = tile_color[:3]
+    luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
     ax.text(
         col + 0.5,
         -(row + 0.5),
-        abbr,
+        region,
         ha="center",
         va="center",
-        fontsize=13,
+        fontsize=7.5,
         fontweight="bold",
-        color=label_color,
+        color=DARK_LABEL if luminance > 0.45 else LIGHT_LABEL,
         zorder=3,
     )
 
-# Axes bounds — grid spans cols 0–10 (12 units) × rows 0–7 (8.5 units)
-ax.set_xlim(-0.5, 11.5)
-ax.set_ylim(-8.5, 0.5)
+ax.set_xlim(-0.2, df[COL].max() + 1.2)
+ax.set_ylim(-(df[ROW].max() + 1) - 0.2, 0.2)
 ax.set_aspect("equal", adjustable="box")
 ax.axis("off")
 
-# Colorbar
-sm = ScalarMappable(cmap=cmap, norm=norm)
-sm.set_array([])
-cbar = plt.colorbar(sm, ax=ax, fraction=0.025, pad=0.04, shrink=0.75, aspect=25)
-cbar.set_label("Renewable Energy Share (%)", fontsize=16, color=INK_SOFT, labelpad=10)
-cbar.ax.tick_params(labelsize=13, labelcolor=INK_SOFT, colors=INK_SOFT)
+cbar = fig.colorbar(ScalarMappable(cmap=imprint_seq, norm=norm), ax=ax, fraction=0.03, pad=0.02, shrink=0.8)
+cbar.set_label(SHARE, fontsize=10, color=INK, labelpad=8)
+cbar.ax.tick_params(labelsize=8, labelcolor=INK_SOFT, colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
-# Title
+title = "US Renewable Energy Share · map-tilegrid · python · matplotlib · anyplot.ai"
 ax.set_title(
-    "US Renewable Energy Share · map-tilegrid · matplotlib · anyplot.ai",
-    fontsize=22,
+    title,
+    fontsize=max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12,
     fontweight="medium",
     color=INK,
-    pad=15,
+    pad=8,
 )
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
