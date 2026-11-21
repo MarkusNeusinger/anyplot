@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 icicle-basic: Basic Icicle Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: pending | Created: 2026-05-13
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 75/100 | Updated: 2026-11-21
 """
 
 import os
