@@ -2,46 +2,63 @@ library: altair
 language: python
 specification_id: shap-summary
 created: '2025-12-31T05:53:37Z'
-updated: '2026-05-14T13:11:31Z'
-generated_by: claude-haiku
-workflow_run: 25861255852
+updated: '2026-11-21T16:26:59Z'
+generated_by: claude-sonnet
+workflow_run: 44923980268
 issue: 2923
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/altair/plot-dark.html
-quality_score: 95
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and proper theme adaptation across
-    both light and dark renders
-  - Sophisticated multi-dimensional encoding (position, color, size, opacity) creates
-    clear visual hierarchy and data storytelling
-  - Idiomatic Altair usage demonstrating expert command of the library's high-level
-    API and distinctive features
-  - Complete specification compliance with correctly formatted title, legend, and
-    all required SHAP summary features
-  - Realistic, neutral financial ML scenario data showing full range of feature importances
-    and effects
-  - Clean, reproducible code with no external dependencies beyond core plotting libraries
-  weaknesses: []
+  - 'Uses the Imprint diverging ramp (#4467A3 -> page color -> #AE3030) with domainMid
+    0.5 and a framed color bar marking 0.0 and 1.0, theme-correct in both renders'
+  - 'All four characteristic properties met: rows sorted by mean |SHAP| from the data,
+    one dot per sample in its own row, blue-to-red coloring, dashed zero rule in INK_SOFT'
+  - 'Idiomatic Altair: layered zero rule + scatter, yOffset jitter from transform_calculate,
+    escaped field names with explicit type= and title='
+  - Native tooltips with feature, SHAP value and feature value in the HTML output
+  - PAD-only save lands exactly on 3200x1800 in both themes
+  weaknesses:
+  - 'VQ-05 (both): the jitter offsets each row from the band''s top edge, so every
+    feature label sits at the bottom edge of its dot cluster and the top row''s dots
+    rise above the y-axis domain toward the title → centre the jitter on the band
+    so labels align with their clusters. Likely cause: yOffset with a quantitative
+    scale range [-12, 12] on a band y scale (use a band-centred y, e.g. alt.Y(...,
+    scale=alt.Scale(paddingInner=...)) with yOffset range [0, bandwidth], or a point
+    scale).'
+  - 'SC-01 (both): dot size by |SHAP| and opacity by importance rank are derived channels
+    the spec does not ask for (x already shows |SHAP|, row order already shows rank)
+    → drop both and use one fixed size and opacity. Likely cause: size=alt.Size(''Abs
+    SHAP:Q'') and opacity=alt.Opacity(''Importance rank:Q'').'
+  - 'CQ-02 (both): the vertical jitter comes from Vega''s unseeded random(), so the
+    dot layout differs between the light and dark renders and between runs → compute
+    the jitter in pandas with the seeded numpy generator. Likely cause: transform_calculate(jitter=''random()
+    * 2 - 1'').'
+  - 'CQ-04 (code): IMPRINT_PALETTE is defined but never used, and the ''Abs SHAP''
+    and ''Importance rank'' helper columns exist only for the unrequested channels
+    → delete them. Likely cause: leftover constants from the template.'
+  - 'Suggestion: a slightly tighter row gap would let the top features'' spread read
+    larger.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle gradient
-      Chrome: Title "shap-summary · altair · anyplot.ai" in dark text (28px), X-axis labeled "SHAP Value (Impact on Model Output)" (22px), Y-axis shows 10 financial features ordered by importance (18px). All text is dark and clearly readable against light background. Dashed vertical reference line at x=0 in soft gray (INK_SOFT).
-      Data: Scatter points colored by brownbluegreen diverging gradient (blue for low feature values, green for high). Circles sized 30-150px by absolute SHAP magnitude. Points jittered vertically to reduce overlap. Legend on right showing "Feature Value" continuous color scale.
-      Legibility verdict: PASS - All text sizes explicitly set; no overlap; excellent contrast
+      Background: warm off-white #FAF8F1, 3200x1800, chart centred with page-color padding.
+      Chrome: title 'shap-summary · python · altair · anyplot.ai' in dark ink; x title 'SHAP Value (Impact on Model Output)'; ten feature names on the left (Account Age (months) at top ... Support Tickets at bottom); ticks -0.8..0.8; subtle vertical grid; framed 'Feature Value' color bar 0.0-1.0 on the right. All text readable.
+      Data: ~300 jittered dots per row, blue (#4467A3) for low feature values through off-white to red (#AE3030) for high, thin INK_SOFT outlines; dashed INK_SOFT zero rule. Rows narrow from +/-0.8 at the top to a tight clump at the bottom. Feature labels sit at the bottom of their clusters; top row reaches above the axis domain.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle warmth
-      Chrome: Title "shap-summary · altair · anyplot.ai" in light text (28px, #F0EFE8), X-axis labeled "SHAP Value" (22px, #F0EFE8), Y-axis feature labels (18px, #B8B7B0). All text is light and clearly readable against dark background. Dashed reference line at x=0 in soft gray (INK_SOFT).
-      Data: Scatter points show identical brownbluegreen colors to light render (blue to green gradient unchanged). Circles sized identically. Legend background elevated-dark (#242420) with light text.
-      Legibility verdict: PASS - No dark-on-dark failures; data colors identical to light render; proper theme-adaptive chrome flipping; all elements readable
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis title in light ink, tick and feature labels in light grey, legend on elevated #242420 with light text; no dark-on-dark text.
+      Data: same blue and red poles; the ramp midpoint flips to the page color as imprint_div prescribes, so mid-scale dots appear as outlined rings and stay visible; light dashed zero rule. Jitter positions differ from the light render (unseeded random()).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,99 +66,105 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 28px, labels 22px, ticks 18px); perfectly
-          readable in both themes
+        comment: Title 16, axis title 12, ticks/feature labels 10, legend 10/11 (x4
+          scale); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Feature names, axis labels, and points all clearly spaced; jittering
-          prevents overlap
+        comment: No text collisions; dense-row dot overlap is permitted by C5
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Point size (30-150) and opacity (0.3-0.7) well-adapted to 300 samples
+        comment: 300 dots per row with thin INK_SOFT outline; mid-scale dots stay
+          visible via the outline in dark; color-bar gradient visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: brownbluegreen is perceptually uniform and CVD-safe
+        comment: Blue-to-red diverging ramp, CVD-safe, no red-green
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 4800×2700px with 60-70% data utilization and balanced margins
+        passed: false
+        comment: Jitter is centred on the band's top edge, so each feature label sits
+          at the bottom of its cluster and the top row rises above the y-axis domain
+          (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis descriptive, features on Y-axis, title correct format
+        comment: Descriptive x title 'SHAP Value (Impact on Model Output)', readable
+          feature names
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: brownbluegreen correct for diverging data; backgrounds and chrome
-          properly themed; data colors identical between renders
+        comment: 'imprint_div (#4467A3 -> page -> #AE3030) with theme-adaptive midpoint;
+          correct backgrounds; chrome flips correctly'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Intentional layer composition and thoughtful brownbluegreen choice;
-          zero line adds insight
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, framed legend;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Grid at 0.10 opacity, careful stroke widths, generous whitespace,
-          legend styling
+        comment: Subtle grid and removed ticks meet the baseline; no further refinement
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Feature ordering tells importance story; color gradient shows direction;
-          size/opacity create hierarchy
+        comment: Importance ordering is what the Notes prescribe; no hierarchy chosen
+          beyond that
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct SHAP summary scatter plot
+        passed: false
+        comment: Correct SHAP beeswarm, but size by |SHAP| and opacity by importance
+          rank are derived channels the spec does not ask for (defect line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: ordering, colors, zero line, labels'
+        comment: C1 sorted rows, C2 one dot per sample with in-row jitter, C3 blue-to-red
+          with color bar 0.0-1.0, C4 dashed zero line - all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct SHAP values on X, features on Y, color by feature value
+        comment: SHAP on x, features on y, color by feature value; vertical jitter
+          is layout only (spec Notes)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend both correct format
+        comment: Title 'shap-summary · python · altair · anyplot.ai'; legend 'Feature
+          Value' reads for a reader
     data_quality:
       score: 15
       max: 15
@@ -151,21 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 features with realistic importances, full distributions shown
+        comment: 10 features from wide to tight clumps, both directions of effect
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Financial ML scenario with neutral, comprehensible feature names
+        comment: Neutral credit/account risk model features
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 samples, plausible SHAP magnitudes, normalized feature values
+        comment: Plausible SHAP magnitudes (+/-0.8) and normalised feature values;
+          no Check values in spec
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -173,60 +197,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: np.random.seed(42) set; deterministic
+        passed: false
+        comment: Data seeded, but the jitter uses Vega's unseeded random() so dot
+          positions differ between renders (defect line)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Pythonic, appropriate complexity, no fake functionality
+        passed: false
+        comment: Unused IMPRINT_PALETTE constant and two helper columns feeding the
+          unrequested size/opacity channels (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format (plot-{THEME}.png + .html)
+        comment: Saves plot-{THEME}.png (padded to 3200x1800) and .html; current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert Altair patterns: layer composition, transform_calculate,
-          .interactive()'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses Altair-specific yOffset jittering and multi-dimensional encoding
+        comment: Layered chart with yOffset jitter driven by transform_calculate,
+          escaped fields with type=/title=, configure_* theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Vega expression jitter plus native tooltips in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T16:23:09Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - hover-tooltips
+  - colorbar
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  dataprep:
+  - groupby-aggregation
+  - wide-to-long
   styling:
-  - alpha-blending
   - custom-colormap
+  - edge-highlighting
+  - alpha-blending
   - grid-styling
