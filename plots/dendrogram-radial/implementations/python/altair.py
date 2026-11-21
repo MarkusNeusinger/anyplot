@@ -1,7 +1,7 @@
 """anyplot.ai
 dendrogram-radial: Radial Dendrogram
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-11-21
+Quality: pending | Updated: 2026-11-21
 """
 
 import importlib
