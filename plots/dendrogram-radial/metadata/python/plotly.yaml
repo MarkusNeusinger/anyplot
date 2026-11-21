@@ -2,101 +2,111 @@ library: plotly
 language: python
 specification_id: dendrogram-radial
 created: '2026-05-14T09:35:18Z'
-updated: '2026-05-14T09:53:15Z'
+updated: '2026-11-21T15:39:54Z'
 generated_by: claude-sonnet
-workflow_run: 25852212108
+workflow_run: 44919769569
 issue: 5245
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/plotly/plot-dark.html
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - Branch coloring by species purity creates clear visual story about clustering
-    structure
-  - Correct Okabe-Ito first-position green for Setosa with full theme-adaptive chrome
-    in both renders
-  - Interactive hover tooltips and HTML export leverage Plotly distinctive interactivity
-  - Realistic Iris dataset with proper normalization demonstrates genuine hierarchical
-    clustering
+  - 'Purity coloring: species-pure subtrees take their Imprint color and mixed subtrees
+    fall back to neutral grey, so Setosa reads as one clean sector and Versicolor/Virginica
+    visibly interleave'
+  - 'Correct radial geometry: root at the centre, leaves at equal 10° spacing in scipy
+    leaf order, merge radii proportional to ward distance'
+  - Leaf labels tinted in their species color and anchored outward so they fan around
+    the rim without collisions
+  - Per-leaf hover tooltips in the HTML, with branch traces excluded from hover
   weaknesses:
-  - Leaf annotation font size 10 is too small for 3600x3600 canvas — increase to at
-    least 14-16px
-  - Title has extra prefix before required spec-id format — fix to dendrogram-radial
-    · plotly · anyplot.ai
-  - Leaf markers at size 10 slightly small — increase to 12-14 for better visibility
-  - Bottom cluster label crowding due to tight angular spread
+  - 'VQ-01 (both): leaf labels at 8 px and legend text at 9 px are below plotly''s
+    10 px tick reference and read small around the 2400 px circle → 10 px (+2 px labels,
+    +1 px legend). Likely cause: annotation font size=8 and legend font size=9.'
+  - 'VQ-03 (both): the 36 sparse leaf markers use plotly''s default size 6, which
+    the style guide names as too small; they read as dots barely wider than the branch
+    lines → size 9-10 (+3 to +4). Likely cause: leaf marker size=6.'
+  - 'CQ-01 (code): a helper function branch_color() wraps a two-line lookup → inline
+    it as a precomputed list of per-node colors. Likely cause: the def branch_color(node_id)
+    block.'
+  - 'Suggestion: rotating the leaf labels to follow their branches would tie each
+    label more tightly to its leaf at the lower-left, where Ve-11/Vi-11 sit close
+    together.'
+  - 'Suggestion: grouping the branch segments into one trace per color with None separators
+    would replace about 108 single-segment traces.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "Iris Species Clustering · dendrogram-radial · plotly · anyplot.ai" at 28px clearly readable in dark ink (#1A1A17); legend font at 16px readable; leaf annotation labels at font size 10 are small but readable (below recommended 18px minimum for 3600x3600 canvas)
-      Data: Setosa branches in #009E73 (brand green), Versicolor in #D55E00 (vermillion), Virginica in #0072B2 (blue); mixed-species branches in INK_SOFT (#4A4A44); leaf markers with white border edges
-      Legibility verdict: PASS (minor concern: leaf annotation font size 10 is below recommended minimum)
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas
+      Chrome: title 'Iris Species Clustering · dendrogram-radial · python · plotly · anyplot.ai' in dark ink at the top, about 68% of the width; legend card at the top left (Setosa, Versicolor, Virginica) with dark-grey text and border; no axes or grid
+      Data: radial dendrogram with the root at the centre, a long green branch to the Setosa subtree (top right) and grey arcs for the mixed Versicolor/Virginica subtrees; Setosa branches #009E73, Versicolor #C475FD, Virginica #4467A3; 36 leaf markers on the rim with species-colored labels (Se-01 … Vi-12) outside them, all horizontal and fanning out without collisions
+      Legibility verdict: PASS (leaf labels are small but readable)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title clearly visible in light text (#F0EFE8); legend box uses elevated background (#242420) with appropriate border; leaf labels in species colors are visible against dark background; no dark-on-dark failures detected; mixed-species branches render in #B8B7B0 (light gray, clearly visible on dark surface)
-      Data: Colors identical to light render — Setosa #009E73, Versicolor #D55E00, Virginica #0072B2 — confirming only chrome elements flip between themes
+      Background: warm near-black #1A1A17
+      Chrome: title in light ink; legend card on #242420 with light-grey text and border; no dark-on-dark text
+      Data: identical branch and marker colors to the light render; mixed subtrees switch to light grey #B8B7B0 and stay clearly visible; blue Virginica labels are the dimmest text but still readable
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Title 28px and legend 16px explicitly set; leaf annotations at size
-          10 too small for 3600x3600 canvas (recommended minimum 18px)
+        comment: Title 13 px, legend 9 px and leaf labels 8 px are all set explicitly
+          and readable in both themes, but the leaf labels and legend sit below plotly's
+          10 px tick reference and read small on the 2400 px canvas (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Mostly clean; minor crowding at bottom where Virginica leaves cluster
-          (Vi-04, Vi-10, Vi-12, Ve-10 labels tight)
+        comment: No text collides with other text or with branches; the 36 labels
+          fan out around the rim without touching
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Branches (width 2.5) and arcs well visible; leaf markers at size
-          10 slightly small for canvas resolution
+        comment: Branches at 1.5 px are visible; the 36 sparse leaf markers use plotly's
+          default size 6 and read small for sparse data (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; neutral color for mixed branches distinguishes
-          from pure-species
+        comment: Imprint green, lilac and blue are CVD-distinguishable; mixed subtrees
+          in neutral INK_SOFT; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 canvas appropriate for radial layout; dendrogram
-          fills most area with adequate margins
+        comment: 2400x2400 square canvas (gate passed); circle centred with balanced
+          margins; title about 68% of the width; nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title; no axis labels needed (axes correctly hidden for
-          radial layout)
+        comment: Descriptive title prefix 'Iris Species Clustering'; axes are hidden,
+          which is correct for a radial layout
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; Okabe-Ito order followed; backgrounds
-          #FAF8F1/#1A1A17 correct; theme chrome adaptive in both renders'
+        comment: 'Setosa #009E73 first, then #C475FD and #4467A3 in canonical Imprint
+          order; backgrounds #FAF8F1 / #1A1A17; chrome flips correctly in both renders'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -104,24 +114,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: intentional branch coloring by species purity, species-colored
-          leaf labels, white marker borders; not quite publication-grade'
+        comment: Leaf labels are tinted in their species color so label and branch
+          read as one unit, and the legend sits in an ELEVATED_BG card. These are
+          typographic choices beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Axes hidden, no grid, white marker edges, explicit line widths; good
-          refinement
+        comment: Leaf markers carry a page-colored outline that separates them from
+          the branch ends, and the frame is chrome-free with no axes or grid. That
+          is a little beyond the spine and grid rules
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Branch purity coloring creates visual hierarchy showing Setosa separates
-          cleanly vs Versicolor/Virginica intermixing
+        comment: 'Purity coloring: subtrees that mix species fall back to neutral
+          grey. Setosa therefore reads as a clean green sector, while Versicolor and
+          Virginica visibly interleave in the grey lower-left region. The focal point
+          goes beyond the Notes'' ''color by cluster'''
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,29 +143,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct radial dendrogram: root at center, leaves at circumference,
-          proportional branch lengths'
+        comment: 'Correct radial dendrogram: root at the centre, leaves on the circumference,
+          arcs plus radial segments'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: scipy ward linkage, labels at circumference, cluster color coding,
-          interactive hover tooltips, proportional branch lengths
+        comment: C1 equal angular spacing in scipy leaf order (met); C2 radius = 1
+          - d/max_d (met); C3 branches colored by species (met); C4 labels outside
+          the leaves and fanning out around the rim (met); C5 ring not drawn (optional);
+          hover tooltips present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct radial mapping: leaves r=1, internal nodes decreasing r
-          by normalized distance, angles from scipy dendrogram leaf order'
+        comment: Merges sit at radii set by their ward distance; the angles of internal
+          nodes are the midpoints of their children; no displacement
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has extra prefix 'Iris Species Clustering · ' before required
-          spec-id format; all required elements present but not in exact format
+        passed: true
+        comment: Title 'Iris Species Clustering · dendrogram-radial · python · plotly
+          · anyplot.ai' matches the format with an optional prefix; legend entries
+          are species names
     data_quality:
       score: 15
       max: 15
@@ -161,22 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows pure-cluster branches, mixed-species connections, 36 leaf labels,
-          hover tooltips, color-coded markers — full coverage
+        comment: 'Shows pure and mixed clusters, uneven merge radii, a long root branch
+          and 36 labelled leaves: every aspect of the plot type'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset is canonical scientific data; species clustering is
-          genuine biological use case for radial dendrograms
+        comment: 'Iris measurements: a real, neutral scientific dataset with a genuine
+          clustering use case'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 36 leaves within spec recommended 20-500 range; ward linkage distances
-          realistic
+        comment: 36 leaves (inside the 20-500 range); standardised ward distances
+          are normalised to the radius. The spec has no Check values
     code_quality:
       score: 9
       max: 10
@@ -185,70 +202,73 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: One helper function branch_color present; criterion requires no functions/classes
-          though function is minimal
+        passed: true
+        comment: One helper function branch_color() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random leaf selection
+        comment: np.random.seed(42) before sampling; scipy linkage is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, numpy, plotly.graph_objects, scipy linkage/dendrogram,
-          sklearn load_iris/StandardScaler'
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; appropriate complexity; manual Cartesian radial
-          layout well-structured
+        comment: The layout loop is appropriate for a radial dendrogram that plotly
+          has no native call for; scipy computes the linkage and the leaf order
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current Plotly
-          API
+        comment: Writes plot-{THEME}.png at 600x600 scale 4 and plot-{THEME}.html
+          with autosize=False
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Idiomatic: multiple go.Scatter traces, update_layout, write_image
-          + write_html; radial uses Cartesian not polar projection (justified for
-          dendrogram control)'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive hover tooltips per leaf and HTML export leverage Plotly's
-          distinctive interactive capabilities vs static libraries
+        comment: 'go.Scatter traces with scaleanchor for equal aspect, layout annotations
+          and write_image/write_html: standard graph_objects usage, no more'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Per-leaf hovertext (''Se-01 · Setosa'') with branch traces set to
+          hoverinfo=''skip'', so hover targets only the leaves in the HTML: a plotly-native
+          interaction beyond the mandate'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T15:35:46Z'
 impl_tags:
   dependencies:
   - scipy
   - sklearn
   techniques:
   - annotations
+  - custom-legend
   - hover-tooltips
   - html-export
-  - custom-legend
+  - layer-composition
   patterns:
   - dataset-loading
   - iteration-over-groups
   dataprep:
   - hierarchical-clustering
+  - normalization
   styling:
   - minimal-chrome
   - edge-highlighting
