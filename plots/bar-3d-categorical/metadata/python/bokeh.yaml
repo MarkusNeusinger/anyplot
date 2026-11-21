@@ -2,127 +2,146 @@ library: bokeh
 language: python
 specification_id: bar-3d-categorical
 created: '2026-05-15T08:53:32Z'
-updated: '2026-05-15T09:16:55Z'
+updated: '2026-11-21T20:10:10Z'
 generated_by: claude-sonnet
-workflow_run: 25908295058
+workflow_run: 44943850254
 issue: 5248
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 79
 review:
   strengths:
-  - Custom oblique 3D projection using Bokeh's patches glyph is technically impressive
-    and demonstrates deep library knowledge
-  - Three-face bar shading (hex_darken/hex_lighten) creates convincing depth perception
-    without any external 3D library
-  - 'Full Okabe-Ito compliance with correct color ordering; identical data colors
-    in both themes; correct background tokens (#FAF8F1 light / #1A1A17 dark)'
-  - Painter's algorithm for depth-correct bar rendering is correctly implemented
-  - Value labels on all 20 bars add practical readability without cluttering the chart
+  - Oblique projection built from a single bokeh patches glyph with a per-patch color
+    column draws all 60 bar faces in painter's order
+  - Three-tone face shading (front, darker side, lighter top) gives the bars clear
+    depth in both themes
+  - Elevated view (DY 0.52) keeps the tops and value labels of rear bars in sight
+    across the 5x4 grid
+  - Quarter labels set in their series color double as the legend; all chrome threads
+    INK / INK_SOFT tokens so both themes read cleanly
+  - Data block is a tidy DataFrame with column constants, pivoted once, so the plot
+    adapts to another table
   weaknesses:
-  - Axis label font size (17pt) and title font size (26pt) are below the 22pt/28pt
-    guidelines for pixel-based Bokeh at 4800px
-  - Character-by-character vertical axis label is inelegant — a rotated Label at angle=pi/2
-    would be cleaner
-  - Canvas whitespace is unbalanced — significant empty area in upper-right due to
-    oblique projection; x_range right bound could be tightened
-  - No HoverTool on the HTML output — missed opportunity to leverage Bokeh's most
-    distinctive interactive feature
+  - 'VQ-01 (both): tick and category labels at 30pt and value labels at 24pt sit below
+    the bokeh 34pt tick reference, and the axis titles at 36pt below 42pt → ticks
+    and categories 34pt (+4pt), value labels about 30pt (+6pt), axis titles 42pt (+6pt).
+    Likely cause: text_font_size on the tick, product and value Labels.'
+  - 'VQ-03 (both): bars drawn at alpha 0.95 let the outlines of hidden rear bars show
+    through the front faces as faint ghost rectangles (e.g. inside Electronics Q1)
+    → opaque bars (alpha 1.0). Likely cause: alpha=0.95 on the bar patches.'
+  - 'VQ-05 (both): the rotated value-axis title sits about 400 px left of its tick
+    labels, detached from the axis, and the dark render shows a 1 px grey frame line
+    20 px inside the canvas edge → move the title next to the ticks (about x_left
+    + 0.9) and hide the frame. Likely cause: Label x=x_left + 0.25 and the plot frame
+    outline at the min_border inset.'
+  - 'SC-02 (both): color re-encodes Quarter, which the depth axis already encodes,
+    so C4 (color encoding the value or a third categorical variable) is missed → color
+    by value with imprint_seq and a color bar, or a single color. Likely cause: color
+    = IMPRINT_PALETTE[j] per quarter row.'
+  - 'SC-03 (both): the value axis is drawn at depth 0 while front bar faces stand
+    at depth gap = 0.14, so every front bar reads high on the axis (Electronics Q1
+    118 reads about 121, +3) → draw the axis and ticks at depth gap. Likely cause:
+    project(0, 0, …) for the axis line and ticks.'
+  - 'CQ-01 (code): four helper functions (project, hex_darken, hex_lighten, add_patch)
+    instead of a flat script → inline the projection and shading as expressions in
+    the loop. Likely cause: helper defs at lines 66-103.'
+  - 'Suggestion: a HoverTool on the bar patches would show product, quarter and value
+    in the HTML output.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Retail Sales by Product & Quarter · bar-3d-categorical · bokeh · anyplot.ai" centered at top in dark ink (#1A1A17), readable. Product labels (Electronics, Apparel, Food & Bev, Books, Sports) in INK_SOFT at bottom, readable. Value tick labels (30/60/90/120) in INK_MUTED at left axis, readable. Quarter labels (Q1-Q4) in their respective Okabe-Ito colors on right side, readable. "Sales (K units)" spelled character-by-character vertically at left, visible but inelegant.
-      Data: Q1=green (#009E73), Q2=orange (#D55E00), Q3=blue (#0072B2), Q4=pink (#CC79A7). Three-face shading (front/side/top) with darkened and lightened variants. Value labels visible on bar tops. Base-plane grid at 12% alpha.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: centered title "Retail Sales by Product & Quarter · bar-3d-categorical · python · bokeh · anyplot.ai" in dark ink (~60% width); rotated "Sales (k units)" at far left; value axis 20-120 at the front-left corner; product labels (Electronics … Sports) under the front edge with "Product category" title; Q1-Q4 labels in their series colors along the right depth edge with "Quarter" title. All dark text, readable. Base-plane grid faint but visible.
+      Data: 5x4 grid of oblique 3D bars, Q1 #009E73 in front, Q2 #C475FD, Q3 #4467A3, Q4 #BD8233 behind, each with darker side and lighter top faces; bold value labels on every bar top on translucent page plates. Faint ghost outlines of rear bars visible through front faces.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and all text elements rendered in light ink (#F0EFE8 / #B8B7B0), clearly visible against dark background. No dark-on-dark failures detected. Quarter labels retain their Okabe-Ito series colors. Vertical axis ticks and product labels fully readable.
-      Data: Colors identical to light render — Q1 green, Q2 orange, Q3 blue, Q4 mauve. Face shading consistent. No color shift between themes.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and labels in light ink (#F0EFE8 / #B8B7B0), all readable; no dark-on-dark. A 1 px grey frame line sits 20 px inside the canvas edge.
+      Data: bar colors identical to the light render; only chrome flips. Value labels light on dark plates, readable; #009E73 reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set but title 26pt (< 28pt guideline) and axis
-          label 17pt (< 22pt guideline); readable in both themes
+        comment: All text readable in both themes; tick labels 30pt and value labels
+          24pt sit below the 34pt bokeh reference (defect line)
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collides with other text; value labels carry page-colored
+          plates over bar faces
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: No text collisions; minor natural depth-ordering occlusion inherent
-          to 3D perspective
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: All bars clearly visible with 3-face shading; spacing well calibrated
+        comment: Bars clear, but alpha 0.95 lets ghost outlines of hidden rear bars
+          show through the front faces (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; luminance contrast adequate
+        comment: Imprint positions 1-4, distinct in lightness; quarters also separated
+          by depth position
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Notable empty space in upper-right quadrant from oblique projection;
-          ~45% canvas utilization with imbalanced right margin
+        comment: 3200x1800 canvas, scene fills it well; value-axis title detached
+          from its ticks and a 1 px frame line shows in the dark render (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sales (k units) axis label, descriptive product and quarter labels
-          present
+        comment: Sales (k units), Product category and Quarter axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Q1=#009E73 first series, canonical Okabe-Ito order, correct backgrounds,
-          identical data colors across themes
+        comment: 'Q1 #009E73, canonical Imprint order, #FAF8F1 / #1A1A17 backgrounds,
+          data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom oblique 3D with face shading, colored series labels as legend
-          substitute, custom axis — clearly above defaults
+        comment: Three-tone face shading per bar and quarter labels set in their series
+          color as a built-in legend, beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Toolbar disabled, Bokeh axes hidden, subtle base-plane grid; deducted
-          for character-by-character vertical axis label
+        comment: Page-colored bar edges separate the faces; value labels on translucent
+          page-colored plates
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Bar height variation creates natural hierarchy; colored quarter labels
-          guide viewer; no explicit focal-point annotation
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -130,27 +149,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 3D bar chart with two categorical axes and height encoding
+        comment: 3D bars on a 5x4 categorical base grid with height encoding
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Bar spacing, color encoding per quarter, base-plane grid, value labels,
-          oblique viewing angle all present
+        comment: 'Spacing, oblique view, base-plane grid, value labels, rear tops
+          in sight (C1-C3, C5 met); C4 missed: color re-encodes the Quarter depth
+          axis rather than the value or a third variable (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Products on x, quarters on depth-y, sales values on z; all 20 data
-          points rendered
+        comment: Value axis sits at depth 0 while front faces stand at depth 0.14,
+          so front bars read about 3 k units high (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; colored Q1-Q4 side labels serve as legend substitute
+        comment: Descriptive prefix plus bar-3d-categorical · python · bokeh · anyplot.ai;
+          colored quarter labels name the series
     data_quality:
       score: 15
       max: 15
@@ -160,21 +181,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 5x4 grid; values span 38-134 showing meaningful variation; 3-face
-          shading demonstrates depth perception
+        comment: Full 5x4 grid, values 38-134 with tall front and rear bars showing
+          occlusion handling
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Retail sales by product category and quarter is real-world, neutral,
-          comprehensible
+        comment: Retail sales by product category and quarter, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 38-134 thousand units; plausible differences match real-world intuition
+        comment: 38-134 k units per quarter plausible; no Check values in the spec
     code_quality:
       score: 9
       max: 10
@@ -185,62 +205,67 @@ review:
         max: 3
         passed: true
         comment: Four helper functions (project, hex_darken, hex_lighten, add_patch)
-          are justified for oblique 3D math but depart from flat structure
+          (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data array is hardcoded and deterministic
+        comment: Hardcoded deterministic table
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; painter's algorithm is legitimate; no fake UI
+        comment: Painter's algorithm and projection are proportionate; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium per prescribed
-          pattern
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: ColumnDataSource, p.patches() for polygon rendering, Label models,
-          figure theming — all idiomatic Bokeh
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: p.patches() with ColumnDataSource for multi-polygon 3D bar rendering
-          is Bokeh-distinctive; HTML export pattern correct; no HoverTool used
+        comment: ColumnDataSource, patches, Label models; standard
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: One multi-polygon patches glyph with a per-patch color column draws
+          the whole 3D scene
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T20:05:05Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - annotations
+  - 3d-projection
   - patches
+  - annotations
+  - custom-legend
+  - manual-ticks
   - html-export
   patterns:
+  - long-to-wide
   - iteration-over-groups
-  - matrix-construction
+  - columndatasource
   dataprep: []
   styling:
-  - alpha-blending
+  - minimal-chrome
   - edge-highlighting
