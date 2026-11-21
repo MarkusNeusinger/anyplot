@@ -1,25 +1,16 @@
 """ anyplot.ai
 circlepacking-basic: Circle Packing Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-11
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-21
 """
 
 import os
-import sys
 
-
-# Work around the naming conflict (local file named altair.py shadows the package)
-# Temporarily remove current directory from path
-cwd = os.getcwd()
-if cwd in sys.path:
-    sys.path.remove(cwd)
-current_dir = os.path.dirname(os.path.abspath(__file__))
-if current_dir in sys.path:
-    sys.path.remove(current_dir)
-
-import altair as alt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
+import altair as alt
+import numpy as np
+import pandas as pd
+from PIL import Image
+from scipy.optimize import minimize
 
 
 # Theme tokens
@@ -29,343 +20,195 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Company budget allocation by department and team (values in $K)
-np.random.seed(42)
+# Imprint palette: all eight positions, one per department in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Leaf nodes (teams) with their budgets
-teams = [
-    # Engineering Department
-    {"id": "eng-backend", "parent": "Engineering", "label": "Backend", "value": 180},
-    {"id": "eng-frontend", "parent": "Engineering", "label": "Frontend", "value": 150},
-    {"id": "eng-devops", "parent": "Engineering", "label": "DevOps", "value": 90},
-    {"id": "eng-mobile", "parent": "Engineering", "label": "Mobile", "value": 120},
-    # Marketing Department
-    {"id": "mkt-digital", "parent": "Marketing", "label": "Digital", "value": 100},
-    {"id": "mkt-content", "parent": "Marketing", "label": "Content", "value": 80},
-    {"id": "mkt-brand", "parent": "Marketing", "label": "Brand", "value": 60},
-    # Operations Department
-    {"id": "ops-support", "parent": "Operations", "label": "Support", "value": 70},
-    {"id": "ops-hr", "parent": "Operations", "label": "HR", "value": 50},
-    {"id": "ops-admin", "parent": "Operations", "label": "Admin", "value": 40},
-    # Sales Department
-    {"id": "sales-enterprise", "parent": "Sales", "label": "Enterprise", "value": 130},
-    {"id": "sales-smb", "parent": "Sales", "label": "SMB", "value": 85},
-    {"id": "sales-partners", "parent": "Sales", "label": "Partners", "value": 55},
-]
+# Columns: set these to your table's column names
+ID = "id"  # role: id
+PARENT = "parent"  # role: parent
+VALUE = "Budget (thousand USD)"  # role: value
+LABEL = "label"  # role: label
 
-# Calculate department totals
-dept_totals = {}
-for t in teams:
-    dept_totals[t["parent"]] = dept_totals.get(t["parent"], 0) + t["value"]
-
-# Okabe-Ito palette for departments (theme-independent data colors)
-okabe_ito = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
-dept_colors = {
-    "Engineering": okabe_ito[0],  # bluish green
-    "Sales": okabe_ito[1],  # vermillion
-    "Marketing": okabe_ito[2],  # blue
-    "Operations": okabe_ito[3],  # reddish purple
-}
-
-# Scale value to radius (sqrt for area-proportional sizing)
-max_value = max(t["value"] for t in teams)
-min_radius = 25
-max_radius = 55
-
-
-def get_team_radius(value):
-    """Calculate radius from value using sqrt for area-proportional sizing."""
-    return min_radius + (max_radius - min_radius) * np.sqrt(value / max_value)
-
-
-def pack_circles_in_parent(circles, parent_center, parent_radius):
-    """
-    Pack child circles inside a parent circle using force-directed placement.
-    Returns list of (x, y) positions for each circle.
-    """
-    n = len(circles)
-    if n == 0:
-        return []
-
-    radii = [c["radius"] for c in circles]
-
-    # Start with circular arrangement
-    positions = []
-    if n == 1:
-        positions = [(parent_center[0], parent_center[1])]
-    else:
-        arrangement_r = parent_radius * 0.4
-        for i in range(n):
-            angle = 2 * np.pi * i / n - np.pi / 2
-            x = parent_center[0] + arrangement_r * np.cos(angle)
-            y = parent_center[1] + arrangement_r * np.sin(angle)
-            positions.append((x, y))
-
-    # Force-directed relaxation to remove overlaps
-    for _ in range(100):
-        forces = [(0.0, 0.0) for _ in range(n)]
-
-        # Repulsion between circles
-        for i in range(n):
-            for j in range(i + 1, n):
-                dx = positions[i][0] - positions[j][0]
-                dy = positions[i][1] - positions[j][1]
-                dist = np.sqrt(dx * dx + dy * dy)
-                min_dist = radii[i] + radii[j] + 3  # 3px gap
-
-                if dist < min_dist and dist > 0:
-                    overlap = min_dist - dist
-                    fx = (dx / dist) * overlap * 0.5
-                    fy = (dy / dist) * overlap * 0.5
-                    forces[i] = (forces[i][0] + fx, forces[i][1] + fy)
-                    forces[j] = (forces[j][0] - fx, forces[j][1] - fy)
-
-        # Keep circles inside parent
-        for i in range(n):
-            dx = positions[i][0] - parent_center[0]
-            dy = positions[i][1] - parent_center[1]
-            dist_from_center = np.sqrt(dx * dx + dy * dy)
-            max_dist = parent_radius - radii[i] - 5
-
-            if dist_from_center > max_dist and dist_from_center > 0:
-                scale = max_dist / dist_from_center
-                positions[i] = (parent_center[0] + dx * scale, parent_center[1] + dy * scale)
-
-        # Apply forces
-        positions = [(positions[i][0] + forces[i][0], positions[i][1] + forces[i][1]) for i in range(n)]
-
-    return positions
-
-
-# Build circle packing structure
-circles_data = []
-
-# Calculate department radii based on team radii
-dept_radii = {}
-for dept in dept_totals.keys():
-    dept_teams = [t for t in teams if t["parent"] == dept]
-    team_radii = [get_team_radius(t["value"]) for t in dept_teams]
-    # Department radius should contain all teams with padding
-    total_team_area = sum(r * r * np.pi for r in team_radii)
-    dept_radii[dept] = np.sqrt(total_team_area / np.pi) * 1.8 + 20
-
-# Sort departments by radius (largest first for better packing)
-sorted_depts = sorted(dept_radii.keys(), key=lambda d: dept_radii[d], reverse=True)
-
-# Calculate root circle radius
-total_dept_area = sum(r * r * np.pi for r in dept_radii.values())
-root_radius = np.sqrt(total_dept_area / np.pi) * 1.6 + 30
-
-# Position departments inside root circle
-dept_circles = [{"name": dept, "radius": dept_radii[dept]} for dept in sorted_depts]
-dept_positions = pack_circles_in_parent(dept_circles, (0, 0), root_radius)
-
-# Add root circle (Company)
-company_total = sum(t["value"] for t in teams)
-circles_data.append(
-    {
-        "x": 0,
-        "y": 0,
-        "radius": root_radius,
-        "label": "Company",
-        "value": company_total,
-        "depth": 0,
-        "color": okabe_ito[0],  # Use brand color for root
-        "department": "Company",
-    }
-)
-
-# Add departments and their teams
-for i, dept in enumerate(sorted_depts):
-    dept_x, dept_y = dept_positions[i]
-    dept_r = dept_radii[dept]
-    dept_value = dept_totals[dept]
-
-    # Add department circle
-    circles_data.append(
-        {
-            "x": dept_x,
-            "y": dept_y,
-            "radius": dept_r,
-            "label": dept,
-            "value": dept_value,
-            "depth": 1,
-            "color": dept_colors[dept],
-            "department": dept,
-        }
-    )
-
-    # Position teams inside department
-    dept_teams = [t for t in teams if t["parent"] == dept]
-    team_circles = [{"name": t["label"], "radius": get_team_radius(t["value"])} for t in dept_teams]
-    team_positions = pack_circles_in_parent(team_circles, (dept_x, dept_y), dept_r)
-
-    for j, t in enumerate(dept_teams):
-        tx, ty = team_positions[j]
-        team_r = get_team_radius(t["value"])
-        circles_data.append(
-            {
-                "x": tx,
-                "y": ty,
-                "radius": team_r,
-                "label": t["label"],
-                "value": t["value"],
-                "depth": 2,
-                "color": dept_colors[dept],
-                "department": dept,
-            }
-        )
-
-# Create DataFrame
-df = pd.DataFrame(circles_data)
-
-# Create display text
-df["display_value"] = df["value"].apply(lambda v: f"${v}K")
-df["display_text"] = df.apply(
-    lambda r: f"{r['label']}\n{r['display_value']}" if r["depth"] == 2 else r["label"], axis=1
-)
-
-# Separate by depth for layered rendering
-df_root = df[df["depth"] == 0].copy()
-df_depts = df[df["depth"] == 1].copy()
-df_teams = df[df["depth"] == 2].copy()
-
-# Calculate dynamic scales based on actual data
-x_min, x_max = df["x"].min() - df["radius"].max(), df["x"].max() + df["radius"].max()
-y_min, y_max = df["y"].min() - df["radius"].max(), df["y"].max() + df["radius"].max()
-
-# Add padding for legend on the right
-padding = 50
-x_domain = [x_min - padding, x_max + padding + 180]  # Extra space for legend
-y_domain = [y_min - padding, y_max + padding]
-
-# Size scale (radius squared for area encoding)
-size_domain = [df["radius"].min(), df["radius"].max()]
-size_range = [df["radius"].min() ** 2 * 2.5, df["radius"].max() ** 2 * 2.5]
-
-# Shared scales
-x_scale = alt.Scale(domain=list(x_domain))
-y_scale = alt.Scale(domain=list(y_domain))
-size_scale = alt.Scale(domain=size_domain, range=size_range)
-
-# Root circle layer (outermost - Company)
-root_layer = (
-    alt.Chart(df_root)
-    .mark_circle(opacity=0.15, stroke=INK_SOFT, strokeWidth=3)
-    .encode(
-        x=alt.X("x:Q", axis=None, scale=x_scale),
-        y=alt.Y("y:Q", axis=None, scale=y_scale),
-        size=alt.Size("radius:Q", scale=size_scale, legend=None),
-        color=alt.value(okabe_ito[0]),
-        tooltip=[alt.Tooltip("label:N", title="Name"), alt.Tooltip("display_value:N", title="Budget")],
-    )
-)
-
-# Root label
-root_label = (
-    alt.Chart(df_root)
-    .mark_text(color=INK, fontWeight="bold", fontSize=20, dy=-root_radius + 30)
-    .encode(
-        x=alt.X("x:Q", axis=None, scale=x_scale),
-        y=alt.Y("y:Q", axis=None, scale=y_scale),
-        text=alt.value("Company Budget"),
-    )
-)
-
-# Department circles layer
-dept_layer = (
-    alt.Chart(df_depts)
-    .mark_circle(opacity=0.4, stroke=INK_SOFT, strokeWidth=2)
-    .encode(
-        x=alt.X("x:Q", axis=None, scale=x_scale),
-        y=alt.Y("y:Q", axis=None, scale=y_scale),
-        size=alt.Size("radius:Q", scale=size_scale, legend=None),
-        color=alt.Color("color:N", scale=None),
-        tooltip=[alt.Tooltip("label:N", title="Department"), alt.Tooltip("display_value:N", title="Budget")],
-    )
-)
-
-# Team circles layer
-team_layer = (
-    alt.Chart(df_teams)
-    .mark_circle(opacity=0.85, stroke=INK_SOFT, strokeWidth=1.5)
-    .encode(
-        x=alt.X("x:Q", axis=None, scale=x_scale),
-        y=alt.Y("y:Q", axis=None, scale=y_scale),
-        size=alt.Size("radius:Q", scale=size_scale, legend=None),
-        color=alt.Color("color:N", scale=None),
-        tooltip=[
-            alt.Tooltip("label:N", title="Team"),
-            alt.Tooltip("department:N", title="Department"),
-            alt.Tooltip("display_value:N", title="Budget"),
-        ],
-    )
-)
-
-# Department labels - positioned at center-top of each department circle
-df_depts_labels = df_depts.copy()
-df_depts_labels["label_y"] = df_depts_labels["y"] + df_depts_labels["radius"] * 0.6
-
-dept_label_layer = (
-    alt.Chart(df_depts_labels)
-    .mark_text(color=INK, fontWeight="bold", fontSize=16)
-    .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("label_y:Q", axis=None, scale=y_scale), text="label:N")
-)
-
-# Team labels
-team_label_layer = (
-    alt.Chart(df_teams)
-    .mark_text(color=INK, fontWeight="bold", fontSize=11, lineBreak="\n")
-    .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale), text="display_text:N")
-)
-
-# Legend positioned inside the visible area (right side)
-legend_x = x_max + 60
-legend_y_start = 80
-legend_spacing = 45
-
-legend_df = pd.DataFrame(
+# Data: replace this block with your own table, for example df = pd.read_csv("budget.csv")
+# One row per node; the root has no parent, only leaf rows carry a value.
+df = pd.DataFrame(
     [
-        {"department": dept, "color": dept_colors[dept], "x": legend_x, "y": legend_y_start - i * legend_spacing}
-        for i, dept in enumerate(["Engineering", "Sales", "Marketing", "Operations"])
-    ]
+        ("company", None, np.nan, "Company"),
+        ("eng", "company", np.nan, "Engineering"),
+        ("mkt", "company", np.nan, "Marketing"),
+        ("ops", "company", np.nan, "Operations"),
+        ("sales", "company", np.nan, "Sales"),
+        ("eng-backend", "eng", 180, "Backend"),
+        ("eng-frontend", "eng", 150, "Frontend"),
+        ("eng-mobile", "eng", 120, "Mobile"),
+        ("eng-devops", "eng", 90, "DevOps"),
+        ("mkt-digital", "mkt", 100, "Digital"),
+        ("mkt-content", "mkt", 80, "Content"),
+        ("mkt-brand", "mkt", 60, "Brand"),
+        ("ops-support", "ops", 70, "Support"),
+        ("ops-hr", "ops", 50, "HR"),
+        ("ops-admin", "ops", 40, "Admin"),
+        ("sales-enterprise", "sales", 130, "Enterprise"),
+        ("sales-smb", "sales", 85, "SMB"),
+        ("sales-partners", "sales", 55, "Partners"),
+    ],
+    columns=[ID, PARENT, VALUE, LABEL],
 )
 
-# Legend circles
-legend_circles = (
-    alt.Chart(legend_df)
-    .mark_circle(size=350, opacity=0.85, stroke=INK_SOFT, strokeWidth=1)
+# Plot: reads only df and the constants above
+GAP = 0.04  # space between sibling circles, as a share of the largest sibling radius
+PAD = 0.06  # space between a parent's edge and its children, same unit
+VIEW = 500  # side of the square view in pixels
+MIN_LABEL_PX = 22  # leaves smaller than this radius stay unlabeled
+
+
+def pack(radii):
+    """Pack circles of the given radii; returns centers and the enclosing radius around (0, 0)."""
+    gap = GAP * max(radii)
+    centers = [(0.0, 0.0)]
+    if len(radii) > 1:
+        centers.append((radii[0] + radii[1] + gap, 0.0))
+    for k in range(2, len(radii)):
+        r = radii[k]
+        weights = np.array(radii[:k]) ** 2
+        mean = np.average(np.array(centers), axis=0, weights=weights)
+        best, best_cost = None, np.inf
+        for a in range(k):
+            for b in range(a + 1, k):
+                (ax, ay), (bx, by) = centers[a], centers[b]
+                ra, rb = radii[a] + r + gap, radii[b] + r + gap
+                d = np.hypot(bx - ax, by - ay)
+                if d > ra + rb or d < abs(ra - rb) or d == 0:
+                    continue
+                along = (ra**2 - rb**2 + d**2) / (2 * d)
+                h = np.sqrt(max(ra**2 - along**2, 0.0))
+                mx, my = ax + along * (bx - ax) / d, ay + along * (by - ay) / d
+                for sign in (1, -1):
+                    cand = (mx - sign * h * (by - ay) / d, my + sign * h * (bx - ax) / d)
+                    clear = all(
+                        np.hypot(cand[0] - cx, cand[1] - cy) >= r + radii[i] + gap - 1e-9
+                        for i, (cx, cy) in enumerate(centers)
+                    )
+                    cost = np.hypot(cand[0] - mean[0], cand[1] - mean[1])
+                    if clear and cost < best_cost:
+                        best, best_cost = cand, cost
+        centers.append(best)
+    centers = np.array(centers)
+    radii_arr = np.array(radii)
+
+    def reach_of(point):
+        return (np.hypot(*(centers - point).T) + radii_arr).max()
+
+    start = np.average(centers, axis=0, weights=radii_arr**2)
+    middle = minimize(reach_of, start, method="Nelder-Mead", options={"xatol": 1e-9, "fatol": 1e-9}).x
+    return centers - middle, float(reach_of(middle) + PAD * max(radii))
+
+
+# Groups are the parents of the valued rows; labels come from their own rows when present
+valued = df[df[VALUE].notna()]
+names = dict(zip(df[ID], df[LABEL], strict=True))
+root_rows_df = df[df[PARENT].isna()]
+root_label = root_rows_df[LABEL].iloc[0] if len(root_rows_df) else ""
+
+# Leaves: radius from the square root of the value, so area encodes value
+packed = []
+for top_id in valued[PARENT].drop_duplicates():
+    leaves = valued[valued[PARENT] == top_id]
+    offsets, enclosing = pack(np.sqrt(leaves[VALUE].to_numpy(dtype=float)).tolist())
+    packed.append((names.get(top_id, top_id), leaves, offsets, enclosing))
+
+top_offsets, root_radius = pack([enclosing for *_, enclosing in packed])
+group_names = [name for name, *_ in packed]
+
+ppu = (VIEW / 2) / (root_radius * 1.03)  # pixels per layout unit
+cols = ["x", "y", "r", "name", "group", "value"]
+root_rows = [(0.0, 0.0, root_radius, root_label, "", np.nan)]
+group_rows, leaf_rows = [], []
+for (name, leaves, offsets, enclosing), (gx, gy) in zip(packed, top_offsets, strict=True):
+    group_rows.append((gx, gy, enclosing, name, name, leaves[VALUE].sum()))
+    for (dx, dy), (_, leaf) in zip(offsets, leaves.iterrows(), strict=True):
+        leaf_rows.append((gx + dx, gy + dy, np.sqrt(leaf[VALUE]), leaf[LABEL], name, leaf[VALUE]))
+
+
+def to_frame(rows):
+    frame = pd.DataFrame(rows, columns=cols)
+    frame["size"] = 4 * (frame["r"] * ppu) ** 2  # Vega circles take the area of their bounding square in px^2
+    frame["text"] = [f"{n}\n{v:g}" for n, v in zip(frame["name"], frame["value"], strict=True)]
+    return frame
+
+
+root_nodes, group_nodes, leaf_nodes = to_frame(root_rows), to_frame(group_rows), to_frame(leaf_rows)
+
+x_enc = alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-VIEW / 2 / ppu, VIEW / 2 / ppu], nice=False))
+y_enc = alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-VIEW / 2 / ppu, VIEW / 2 / ppu], nice=False))
+size_enc = alt.Size("size:Q", scale=None, legend=None)
+group_legend = alt.Legend(title=None, orient="bottom", direction="horizontal", symbolOpacity=0.6)
+group_scale = alt.Scale(domain=group_names, range=IMPRINT_PALETTE)
+tooltip = [alt.Tooltip("name:N", title="Node"), alt.Tooltip("value:Q", title=VALUE)]
+
+root_layer = (
+    alt.Chart(root_nodes)
+    .mark_circle(color=ELEVATED_BG, stroke=INK_SOFT, strokeWidth=2.5)
+    .encode(x=x_enc, y=y_enc, size=size_enc)
+)
+group_layer = (
+    alt.Chart(group_nodes)
+    .mark_circle(fillOpacity=0.22, stroke=INK_SOFT, strokeWidth=1.5)
     .encode(
-        x=alt.X("x:Q", axis=None, scale=x_scale),
-        y=alt.Y("y:Q", axis=None, scale=y_scale),
-        color=alt.Color("color:N", scale=None),
+        x=x_enc,
+        y=y_enc,
+        size=size_enc,
+        color=alt.Color("group:N", scale=group_scale, legend=group_legend),
+        tooltip=tooltip,
     )
 )
-
-# Legend text
-legend_text = (
-    alt.Chart(legend_df)
-    .mark_text(align="left", dx=18, fontSize=14, fontWeight="bold", color=INK_SOFT)
-    .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale), text="department:N")
+leaf_layer = (
+    alt.Chart(leaf_nodes)
+    .mark_circle(fillOpacity=0.6, stroke=INK_SOFT, strokeWidth=1.2)
+    .encode(
+        x=x_enc,
+        y=y_enc,
+        size=size_enc,
+        color=alt.Color("group:N", scale=group_scale, sort=None, legend=group_legend),
+        tooltip=tooltip,
+    )
+)
+label_layer = (
+    alt.Chart(leaf_nodes[leaf_nodes["r"] * ppu >= MIN_LABEL_PX])
+    .mark_text(color=INK, fontWeight="bold", fontSize=9, lineBreak="\n")
+    .encode(x=x_enc, y=y_enc, text="text:N")
 )
 
-# Combine all layers
+# Style
+title = "circlepacking-basic · python · altair · anyplot.ai"
 chart = (
-    alt.layer(
-        root_layer, root_label, dept_layer, team_layer, dept_label_layer, team_label_layer, legend_circles, legend_text
-    )
+    alt.layer(root_layer, group_layer, leaf_layer, label_layer)
     .properties(
-        width=1200,
-        height=1200,
+        width=VIEW,
+        height=VIEW,
         background=PAGE_BG,
+        padding={"left": 8, "right": 8, "top": 8, "bottom": 8},
         title=alt.Title(
-            "circlepacking-basic · altair · anyplot.ai", fontSize=28, fontWeight="bold", anchor="middle", color=INK
+            title,
+            subtitle=f"Circle area proportional to {VALUE}",
+            fontSize=18,
+            subtitleFontSize=12,
+            anchor="middle",
+            color=INK,
+            subtitleColor=INK_SOFT,
         ),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(labelColor=INK_SOFT, labelFontSize=12, symbolSize=180)
 )
 
-# Save outputs (3600x3600 px with scale_factor=3.0)
-script_dir = os.path.dirname(os.path.abspath(__file__))
-chart.save(os.path.join(script_dir, f"plot-{THEME}.png"), scale_factor=3.0)
-chart.save(os.path.join(script_dir, f"plot-{THEME}.html"))
+# Save: pad up to the 2400 x 2400 square canvas, never crop
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+TARGET = 2400
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET or img.height > TARGET:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, exceeds {TARGET}x{TARGET}; shrink VIEW")
+canvas = Image.new("RGB", (TARGET, TARGET), PAGE_BG)
+canvas.paste(img, ((TARGET - img.width) // 2, (TARGET - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
