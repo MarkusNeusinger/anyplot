@@ -12,34 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 76
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and no overlap
-  - 'Excellent theme adaptation: colors consistent between light and dark, chrome
-    flips correctly'
-  - Thoughtful analytical design with reference line providing insight
-  - Complete spec compliance with well-executed data mapping
-  - Clean, reproducible code with proper theme token system
+  - Native geom_errorbarh caps with geom_point on top give clear markers and capped
+    95% intervals in both themes
+  - Rows ordered by estimate through an ordered Categorical
+  - Theme tokens thread through all chrome; open frame without top and right edges
   weaknesses:
-  - Design excellence limited by reliance on well-configured defaults rather than
-    custom aesthetic choices
-  - Library mastery uses standard geoms without leveraging distinctive plotnine features
+  - 'VQ-05 (both): Canvas is 4800x2700, off the 3200x1800 landscape target → 3200x1800
+    (-1600 × -900). Likely cause: figure_size=(16, 9) with plot.save(dpi=300) instead
+    of figure_size=(8, 4.5), dpi=400, width=8, height=4.5.'
+  - 'SC-04 (both): title reads ''point-basic · plotnine · anyplot.ai'' without the
+    language segment → ''point-basic · python · plotnine · anyplot.ai''. Likely cause:
+    the labs(title=...) string.'
+  - 'CQ-01 (code): no column constant for the roles category, estimate, lower_bound,
+    upper_bound, and aes() types ''estimate'', ''category'', ''lower'', ''upper''
+    below the Data block → one string constant per role above the Data block with
+    a # role: comment, used in aes(). Likely cause: column names typed where they
+    are used.'
+  - 'Suggestion: a reader-facing y-axis title such as ''Survey dimension'' would say
+    more than ''Category''.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface at #FAF8F1
-      Chrome: Title ("point-basic · plotnine · anyplot.ai") bold and clearly visible; axis labels "Satisfaction Score (1-10)" and "Category" descriptive and readable; tick labels for all 8 categories visible in dark text (#4A4A44)
-      Data: Eight product satisfaction categories sorted by estimate value; points (green at #009E73) with horizontal error bars showing 95% confidence intervals; reference line (dashed) at 7.0; grid lines subtle
-      Legibility verdict: PASS - All text is fully readable; excellent contrast between dark text and light background; no light-on-light issues
+      Background: Warm off-white #FAF8F1; the saved PNG is 4800x2700.
+      Chrome: Bold dark title "point-basic · plotnine · anyplot.ai"; x-axis title "Satisfaction Score (1-10)", y-axis title "Category"; dark-grey tick labels and eight category names; faint horizontal grid; bottom axis line only, no top or right edge. All text readable.
+      Data: Eight horizontal 95% intervals in #009E73 with end caps and a small filled green marker at each estimate, sorted from Delivery Speed (6.5) to Product Quality (8.2); dashed grey reference line at 7.0.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface at #1A1A17
-      Chrome: Title, axis labels, and tick labels all clearly visible in light text colors (#F0EFE8 for title/labels, #B8B7B0 for ticks); grid lines visible but subtle; panel border defined
-      Data: Identical to light render in all respects — same category ordering, same point colors (#009E73), same error bar styling, same reference line positioning
-      Legibility verdict: PASS - All text is fully readable; excellent contrast between light text and dark background; no dark-on-dark failures; data colors perfectly matched to light render
+      Background: Warm near-black #1A1A17; 4800x2700.
+      Chrome: Title and axis titles in light ink, tick labels light grey, faint grid; no dark-on-dark text.
+      Data: Identical #009E73 markers, intervals, caps and reference line as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -47,76 +55,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (24pt), axis labels (20pt), tick labels (16pt) all explicitly
-          set and perfectly readable in both light and dark themes
+        comment: Explicit sizes, all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Category labels have no overlap; all text fully readable and well-spaced
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points (size=5) and error bars (height=0.3, size=1.5) optimally sized
-          for 8 categories; all elements clearly visible
+        comment: Markers, intervals and caps visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (#009E73) is CVD-safe; good contrast between data
-          and backgrounds
+        comment: 'Single #009E73 series with good contrast'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Figure (16, 9) at 300 DPI fills 50-80% of canvas; balanced margins;
-          perfect proportions
+        passed: false
+        comment: Canvas 4800x2700, off the 3200x1800 target (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis descriptive with units ('Satisfaction Score (1-10)'); title
-          in correct format
+        comment: Descriptive x title with scale
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (correct); backgrounds #FAF8F1 (light) and
-          #1A1A17 (dark); chrome colors theme-correct in both renders'
+        comment: '#009E73 series, correct theme backgrounds and chrome'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults with thoughtful reference line; professional
-          but looks like configured defaults rather than exceptional design
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Grid customized with subtle styling (INK_SOFT color); panel border
-          defined; good attention to detail
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Data sorted by estimate creates visual narrative; reference line
-          at 7.0 emphasizes analytical insight; varying CI widths show uncertainty
+        comment: Data displayed sorted by estimate; no hierarchy beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -124,29 +123,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal point estimate plot with confidence intervals
-          as error bars
+        comment: Horizontal point-estimate plot with the allowed reference line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: point estimates, confidence intervals, categories;
-          reference line adds extra insight'
+        comment: Distinct markers, capped intervals, ordered rows
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X (estimate values 5.2-8.2) and Y (categories) correctly mapped;
-          all data visible
+        comment: Markers at estimates, axis spans every interval
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct (point-basic · plotnine · anyplot.ai); single-series
-          legend appropriately omitted
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -156,76 +151,72 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: point estimates and varying confidence intervals
-          (widths 0.4-1.2 showing different uncertainty levels)'
+        comment: Varying interval widths, intervals on both sides of the reference
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real product satisfaction scenario; neutral and comprehensible; concrete
-          categories
+        comment: Customer-satisfaction survey dimensions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Satisfaction scores (6.5-8.2) realistic; confidence interval widths
-          plausible for survey data
+        comment: Plausible scores on a 1-10 scale
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Clean flow: imports → theme tokens → data generation → plot creation
-          → save'
+        passed: false
+        comment: No column constants; column names typed in aes() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42; data generation deterministic
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, numpy, pandas, plotnine); all used
+        comment: Imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and clean; appropriate complexity; no fake functionality
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with environment variable; modern API
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses ggplot2 grammar correctly (aes, geoms, theme composition); high-level
-          API; expert plotnine patterns
+        comment: Standard grammar-of-graphics layering
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses standard geoms (geom_point, geom_errorbarh, geom_vline); no
-          distinctive library-specific features
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies: []
   techniques: []
