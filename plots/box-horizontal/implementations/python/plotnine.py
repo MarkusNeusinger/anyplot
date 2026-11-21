@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-horizontal: Horizontal Box Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-12
@@ -26,74 +26,58 @@ from plotnine import (
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series is always #009E73
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Response times (ms) by service type
+# Columns: set these to your table's column names
+SERVICE = "Service type"  # role: categories
+RESPONSE_TIME = "Response time (ms)"  # role: values
+
+# Data: replace this block with your own table, for example df = pd.read_csv("response_times.csv")
 np.random.seed(42)
+services = {
+    "Authentication Service": (120, 25, []),
+    "Database Query Handler": (85, 40, [220, 250, 280]),
+    "File Storage API": (200, 50, []),
+    "Email Notification": (150, 30, []),
+    "Payment Gateway": (180, 60, [350, 380]),
+}
+rows = []
+for service, (mean, spread, extremes) in services.items():
+    draws = np.append(np.random.normal(mean, spread, 80), extremes)
+    rows += [{SERVICE: service, RESPONSE_TIME: max(10, v)} for v in draws]
+df = pd.DataFrame(rows)
 
-services = [
-    "Authentication Service",
-    "Database Query Handler",
-    "File Storage API",
-    "Email Notification",
-    "Payment Gateway",
-]
+# Plot: reads only df and the constants above
+order = df.groupby(SERVICE, sort=False)[RESPONSE_TIME].median().sort_values().index.tolist()
+df[SERVICE] = pd.Categorical(df[SERVICE], categories=order, ordered=True)
 
-data = []
-for service in services:
-    if service == "Authentication Service":
-        values = np.random.normal(120, 25, 80)
-    elif service == "Database Query Handler":
-        values = np.random.normal(85, 40, 80)
-        values = np.append(values, [220, 250, 280])
-    elif service == "File Storage API":
-        values = np.random.normal(200, 50, 80)
-    elif service == "Email Notification":
-        values = np.random.normal(150, 30, 80)
-    else:
-        values = np.random.normal(180, 60, 80)
-        values = np.append(values, [350, 380])
-
-    for v in values:
-        data.append({"Service": service, "Response Time": max(10, v)})
-
-df = pd.DataFrame(data)
-
-# Sort by median response time for easier comparison
-medians = df.groupby("Service")["Response Time"].median().sort_values()
-df["Service"] = pd.Categorical(df["Service"], categories=medians.index, ordered=True)
-
-# Create horizontal box plot
 anyplot_theme = theme(
-    figure_size=(16, 9),
+    figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.10),
-    panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.04),
     panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
-    axis_title=element_text(size=20, color=INK),
-    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_title=element_text(size=10, color=INK),
+    axis_text=element_text(size=8, color=INK_SOFT),
     axis_line=element_line(color=INK_SOFT, size=0.5),
-    plot_title=element_text(size=24, color=INK),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(size=16, color=INK_SOFT),
+    plot_title=element_text(size=12, color=INK),
     legend_position="none",
 )
 
 plot = (
-    ggplot(df, aes(x="Service", y="Response Time", fill="Service"))
-    + geom_boxplot(alpha=0.8, size=0.8, outlier_size=3, outlier_alpha=0.7)
+    ggplot(df, aes(x=SERVICE, y=RESPONSE_TIME, fill=SERVICE))
+    + geom_boxplot(color=INK, alpha=0.85, size=0.5, outlier_size=1.8, outlier_alpha=0.8)
     + coord_flip()
-    + scale_fill_manual(values=IMPRINT[: len(services)])
-    + labs(title="box-horizontal · plotnine · anyplot.ai", x="Service Type", y="Response Time (ms)")
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=order)
+    + labs(title="box-horizontal · python · plotnine · anyplot.ai")
     + theme_minimal()
     + anyplot_theme
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
