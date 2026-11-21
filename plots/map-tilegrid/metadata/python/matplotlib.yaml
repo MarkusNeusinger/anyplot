@@ -12,122 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tileg
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 75
 review:
   strengths:
-  - Clean linear code structure with idiomatic use of mpatches.Rectangle, ScalarMappable,
-    and Normalize for a from-scratch tile grid map
-  - Luminance-based adaptive label coloring ensures text contrast on all tile colors
-    automatically
-  - Correct viridis colormap for sequential unipolar data; fully theme-adaptive colorbar
-    chrome (INK_SOFT tokens for label, ticks, outline)
-  - Good geographic fidelity in the tile layout; axis-off design is appropriate and
-    clean
-  - Annotation text and orange highlights on lowest-performing states add meaningful
-    data storytelling
+  - Equal-area square tiles from mpatches.Rectangle at their row/col positions form
+    a recognizable US outline with north at the top
+  - Tile labels switch dark/light by tile luminance and stay readable in both themes
+  - Outlines on the three highest and three lowest states plus a summary line give
+    the map a clear focal point
   weaknesses:
-  - Title uses non-standard format "US Renewable Energy Share · map-tilegrid · matplotlib
-    · anyplot.ai" instead of the required "{spec-id} · {library} · anyplot.ai" — descriptive
-    prefix prepended before spec-id
-  - 'Font sizes below style-guide recommendations: title 22pt (guideline ≥24pt), colorbar
-    label 16pt (guideline ≥20pt), tile labels 13pt, colorbar ticks 13pt (guideline
-    ≥16pt) — all explicitly set but undersized for a 4800×2700px canvas'
-  - 'Design Excellence room to grow: DE-01 is thoughtful but still reads as a configured
-    default; adding a subtitle, refining typography, or more distinctive visual hierarchy
-    could push to publication quality'
+  - 'VQ-07 (both): tiles and colorbar use the viridis colormap, which the style guide
+    forbids for continuous data → imprint_seq (#009E73 → #4467A3). Likely cause: matplotlib.colormaps[''viridis''].'
+  - 'VQ-05 (both): canvas is 3852x2668 px, neither 3200x1800 nor 2400x2400 → 3200x1800
+    (−652 × −868). Likely cause: figsize=(16, 9) at dpi=300 with bbox_inches=''tight''.'
+  - 'CQ-05 (code): savefig uses bbox_inches=''tight'', which the matplotlib library
+    prompt forbids → default bbox_inches with figsize=(8, 4.5), dpi=400. Likely cause:
+    plt.savefig(..., bbox_inches=''tight'').'
+  - 'SC-04 (both): title ''US Renewable Energy Share · map-tilegrid · matplotlib ·
+    anyplot.ai'' lacks the language segment → ''... · map-tilegrid · python · matplotlib
+    · anyplot.ai''. Likely cause: the title string.'
+  - 'Suggestion: centre the title over the map rather than the left canvas edge.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
-      Chrome: Title "US Renewable Energy Share · map-tilegrid · matplotlib · anyplot.ai" in dark ink, clearly readable. Colorbar label "Renewable Energy Share (%)" in muted INK_SOFT, vertical on the right. Colorbar tick labels readable. Bottom annotation text "Leaders: VT 88% WA 84% SD 81% | Lowest: DC 5% WV 6% MS 8%" visible in muted color.
-      Data: US state tiles arranged in recognizable geographic grid. Viridis colormap from dark purple (low, ~5%) to bright yellow (high, ~88%). Luminance-adaptive labels: dark text on bright tiles (WA, SD, VT, ME), light text on dark tiles (WY, WV, DC). Orange/rust highlight borders on WV, MS, DC (lowest performers). Colorbar spans full value range.
-      Legibility verdict: PASS — all text readable; no light-on-light issues; tile labels contrast correctly with tile colors.
+      Background: warm off-white #FAF8F1, correct; canvas 3852x2668.
+      Chrome: left-aligned title 'US Renewable Energy Share · map-tilegrid · matplotlib · anyplot.ai' in dark ink; vertical colorbar on the right with INK_SOFT label and ticks 10-80; bottom summary line 'Leaders: VT 88% WA 84% SD 81% | Lowest: DC 5% WV 6% MS 8%'. All readable.
+      Data: 51 square tiles in a US-shaped grid, viridis from dark purple (low) to yellow (high); yellow outlines on VT/WA/SD and orange outlines on DC/WV/MS; bold labels switch dark/light with tile luminance.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background. Colorbar label and ticks in INK_SOFT (#B8B7B0) — visible. Bottom annotation text readable in lighter muted color. No dark-on-dark failures.
-      Data: Tile colors identical to light render — viridis palette unchanged between themes. Luminance-adaptive labels still function correctly on dark background. Orange highlights on WV, MS, DC remain visible. Colorbar chrome correctly flips to light text/ticks on dark background.
-      Legibility verdict: PASS — all chrome elements correctly adapted to dark theme; data colors identical to light render; no dark-on-dark failures observed.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title in light ink, colorbar label/ticks and summary line in light grey; no dark-on-dark text.
+      Data: tile colors identical to the light render; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: 'All sizes explicitly set but below guidelines: title 22pt (vs ≥24),
-          colorbar label 16pt (vs ≥20), tile labels 13pt, ticks 13pt (vs ≥16). All
-          readable but undersized for 4800×2700 canvas.'
+        comment: Title 22 pt, tile labels 13 pt bold, colorbar 16/13 pt on a 16x9
+          in figure; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Tile grid layout prevents overlaps by design. State abbreviations
-          fit within tiles cleanly.
+        comment: No text collisions; every abbreviation sits inside its tile
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tiles clearly visible with good color differentiation across viridis
-          range. Labels readable with luminance-adaptive coloring.
+        comment: 51 equal tiles clearly visible with a page-colored gap; colorbar
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe perceptually uniform. Luminance-based text coloring
-          ensures label contrast on all tiles.
+        comment: Viridis is CVD-safe with a strong lightness ramp; labels switch by
+          tile luminance
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Tile grid fills canvas well. Colorbar appropriately positioned right.
-          Geographic gaps are inherent to the plot type.
+        passed: false
+        comment: Canvas is 3852x2668, neither canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar labeled 'Renewable Energy Share (%)' with units. Title descriptive.
+        comment: Colorbar labelled 'Renewable Energy Share (%)' with unit
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Viridis correct for sequential unipolar data. Backgrounds #FAF8F1
-          (light) / #1A1A17 (dark) correct. Colorbar chrome uses INK_SOFT tokens correctly
-          in both themes.'
+        passed: false
+        comment: Viridis colormap instead of imprint_seq (defect line); backgrounds
+          correct
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above defaults: luminance-adaptive labels are sophisticated, viridis
-          professional, orange highlight borders on lowest states, clean axis-off
-          map aesthetic. Not quite publication-ready but clearly thoughtful.'
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, bold tile labels;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Axis-off correct for tile map. Tile spacing (TILE=0.82) creates subtle
-          gaps. Styled colorbar. No unnecessary elements.
+        passed: false
+        comment: Axes off and tile gaps meet the baseline; no refinement beyond it
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Orange highlights on lowest performers (DC, WV, MS) and annotation
-          summarizing leaders/lowest create clear visual hierarchy and narrative insight.
+        passed: false
+        comment: Outlines on the three highest and lowest states plus a leaders/lowest
+          summary line give a focal point
     spec_compliance:
       score: 14
       max: 15
@@ -137,30 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct tile grid map with equal-area square tiles arranged in geographic
-          grid.
+        comment: Square tile grid map, correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Equal-area tiles, colored by value, labeled with state abbreviations,
-          colorbar included, sequential colormap for unipolar data.
+        comment: 'C1 equal tiles at row/col, C2 recognizable US outline north-up,
+          C3 abbreviation on every tile with luminance-switched color, C4 sequential
+          colormap with colorbar: all met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Row/col positions correctly map US states to geographic positions.
-          All 51 regions represented.
+        comment: Each tile at its row/col; all 51 regions shown; no displacement
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
-        passed: true
-        comment: Title has descriptive prefix 'US Renewable Energy Share · ' before
-          the required '{spec-id} · {library} · anyplot.ai' pattern — format deviation.
-          Colorbar correctly labeled with units.
+        passed: false
+        comment: Title 'US Renewable Energy Share · map-tilegrid · matplotlib · anyplot.ai'
+          lacks the language segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -170,24 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full value range 5-88% demonstrates entire viridis scale. Includes
-          all US states + DC showing high variation.
+        comment: Values 5-88% span the full viridis ramp; all 50 states + DC
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Renewable energy share by US state is a real, well-documented metric.
-          Neutral technology/energy topic.
+        comment: 'Renewable energy share by US state: real, neutral energy topic'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Values plausible: VT 88% (known high renewable), WA 84% (hydro-heavy),
-          DC 5% (limited generation), WV 6% (coal-heavy). Realistic for 2020s context.'
+        comment: 'Plausible: VT 88, WA 84, SD 81 high; DC 5, WV 6, MS 8 low. Spec
+          has no Check values'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -195,53 +182,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports → Data → Plot → Save. No functions or classes.
+        comment: Linear zones, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data. No random elements.
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib, mpatches, plt, ScalarMappable,
-          Normalize.'
+        comment: All imports used (os, matplotlib, mpatches, plt, ScalarMappable,
+          Normalize)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic. Luminance calculation is elegant. No over-engineering.
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png. Uses matplotlib.colormaps['viridis'] (current
-          3.9+ API).
+        passed: false
+        comment: savefig with bbox_inches='tight', which the library prompt forbids
+          (defect line)
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of mpatches.Rectangle, Normalize, ScalarMappable. Minor:
-          plt.colorbar slightly less idiomatic than fig.colorbar.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Building tile grid from mpatches.Rectangle + luminance-adaptive labels
-          via ScalarMappable is characteristic matplotlib low-level work. Shows library-specific
-          capability.
+        passed: false
+        comment: Rectangle patches, ScalarMappable colorbar; plt.colorbar rather than
+          fig.colorbar
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
 impl_tags:
   dependencies: []
   techniques:
