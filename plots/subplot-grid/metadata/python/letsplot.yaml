@@ -2,41 +2,53 @@ library: letsplot
 language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:52:48Z'
-updated: '2026-05-13T09:42:07Z'
-generated_by: claude-haiku
-workflow_run: 25790606715
+updated: '2026-11-21T09:34:25Z'
+generated_by: claude-sonnet
+workflow_run: 44889505663
 issue: 2782
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/letsplot/plot-dark.html
-quality_score: 94
+quality_score: 82
 review:
   strengths:
-  - Excellent visual design with professional financial dashboard concept
-  - Perfect theme adaptation across light and dark renders with all text legible
-  - Demonstrates multiple distinct plot types effectively in one composition
-  - Strong idiomatic use of letsplot's gggrid() and theme customization system
+  - gggrid() composes four independent ggplot objects (line, bar, histogram, scatter
+    with lm fit) into one regular 2x2 grid that reads as one financial dashboard
+  - One tidy DataFrame with column constants drives every panel; lets-plot titles
+    the axes from the column names, so labs() only sets the subplot titles
+  - 'Theme tokens threaded through a single theme object: both renders are theme-correct
+    with identical Imprint data colors'
+  - Interactive HTML output alongside the PNG gives hover inspection of every panel
   weaknesses:
-  - 'Title format: Should be ''subplot-grid · letsplot · anyplot.ai'' instead of ''letsplot
-    · anyplot.ai'''
+  - 'SC-02, VQ-05 (both): the plot areas do not line up along the columns — the price
+    panel''s left edge sits at about x=220 px while the histogram below starts at
+    about x=140 px (the wider ''110'' tick labels push it right), and the right column
+    is off by about 30 px → equal inner panel edges per column (0 px offset). Likely
+    cause: gggrid([...], ncol=2) composes the panels without aligning their inner
+    plot areas (gggrid''s align option).'
+  - 'Suggestion: the price and scatter panels show only 3 and 2 y-tick labels (90/100/110,
+    1.5/2); a denser break set (e.g. scale_y_continuous(breaks=...)) would make values
+    easier to read.'
+  - 'Suggestion: subplot titles at 11 pt equal the axis titles; a slightly larger
+    or bolder subplot title would separate the cells more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and matches spec
-      Chrome: Title "letsplot · anyplot.ai", axis labels "Trading Day", "Price ($)", "Volume (Millions)", "Daily Return (%)", "Frequency", "Absolute Return (%)" - all clearly readable in dark text against light background
-      Data: 2x2 grid with four subplots - (1) green line for stock price with orange dashed moving average, (2) blue bars for trading volume, (3) reddish-purple histogram with green reference line at zero, (4) orange scatter points with green trend line. All colors from Okabe-Ito palette in correct order.
-      Legibility verdict: PASS - All text, gridlines, and data elements fully readable
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas and all four panels.
+      Chrome: top-left title 'subplot-grid · python · letsplot · anyplot.ai' in dark ink; subplot titles 'Stock Price with 10-Day Moving Average', 'Daily Trading Volume', 'Distribution of Daily Returns', 'Volume vs Price Movement'; axis titles Trading Day, Price ($), Volume (Millions), Daily Return (%), Frequency, Absolute Return (%); dark-grey tick labels and thin grey grid — all readable.
+      Data: 2x2 grid — green (#009E73) price line with lilac (#C475FD) dashed 10-day moving average; blue (#4467A3) volume bars; ochre (#BD8233) histogram with thin outlines and a green dashed zero line; red (#AE3030) scatter points with a green linear fit and grey confidence band. First series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and matches spec
-      Chrome: Same titles and axis labels as light render, now in light text against dark background - all clearly readable with no dark-on-dark failures
-      Data: Identical color usage to light render (green, blue, reddish-purple, orange) - colors unchanged, only chrome (background, grid color, text color) has adapted to dark theme as expected
-      Legibility verdict: PASS - All text readable in light colors, grid visible, data colors consistent with light render
+      Background: warm near-black #1A1A17 across canvas and panels.
+      Chrome: same titles and axis labels in light ink, ticks in light grey, grid subtle but visible; no dark-on-dark text.
+      Data: identical data colors to the light render (green, lilac, blue, ochre, red); the volume bars and histogram bins get light outlines, the confidence band turns a darker grey.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -44,66 +56,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; fully readable in both themes
+        comment: Font sizes set explicitly (title 15, subplot titles 11, axis titles
+          11, ticks 9); all text reads clearly at full size in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no overlapping text or elements
+        comment: No text collisions; subplot titles, tick labels and axis titles stay
+          clear of their neighbours
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, bars visible at appropriate scales
+        comment: Lines, 60 bars, 20 histogram bins and 59 scatter points (size 2,
+          alpha 0.7) all clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Green, lilac, blue, ochre and red are told apart by panel and line
+          style, never by red-green alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Perfect 2x2 proportions, nothing cut off
+        passed: false
+        comment: Canvas 3200x1800 (gate passed), nothing cut off; but the plot areas
+          do not line up along the columns (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: 'Descriptive axis titles with units: Price ($), Volume (Millions),
+          Daily Return (%), Absolute Return (%)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Green first, backgrounds correct, both themes proper
+        comment: 'First series #009E73, Imprint colors in canonical order; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Custom theme-adaptive colors, professional dashboard concept, intentional
-          visual hierarchy
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit sizes;
+          subplot titles at the axis-title size add no hierarchy beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Minimal spines, subtle grid, generous whitespace, alpha transparency
+        comment: Spine and grid rules met (theme_minimal, thin grid), nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: 'Clear narrative: price movement → volume → returns distribution'
+        comment: Price, volume, returns and the volume-return relation follow the
+          spec's financial-dashboard example; no hierarchy chosen beyond it
     spec_compliance:
       score: 14
       max: 15
@@ -113,27 +133,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2x2 subplot grid
+        comment: A 2x2 subplot grid with four different plot types (line, bar, histogram,
+          scatter with fit)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features: different plot types, configurable grid, independent
-          axes'
+        passed: false
+        comment: Different plot types, per-subplot titles and independent axes are
+          present; the C2 property 'plot areas line up along the rows and columns'
+          is missed (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X/Y mappings for each subplot
+        comment: Every cell maps its variables correctly; marks sit at their data
+          values; axes show all data
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title should be 'subplot-grid · letsplot · anyplot.ai' instead of
-          'letsplot · anyplot.ai'
+        passed: true
+        comment: Title 'subplot-grid · python · letsplot · anyplot.ai' is correct;
+          no legend needed (each cell explained by its title)
     data_quality:
       score: 15
       max: 15
@@ -143,19 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of subplot grids with variety
+        comment: Shows several plot types in one grid with independent scales per
+          cell, the aspects the spec names
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible financial dashboard data
+        comment: Plausible, neutral stock dashboard (price around $100, 1-2.4M volume,
+          ±4 % daily returns)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible ranges for price, volume, returns
+        comment: 'Checked: price stays 82-110 from a 2 % daily-vol random walk, returns
+          are log returns of that price, volume rises with |return|; all sensible.
+          No Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -165,57 +192,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes
+        comment: Flat imports, data, plot, save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports necessary and used
+        comment: os, numpy, pandas and lets_plot are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Compact; rolling() for the moving average, geom_histogram/geom_smooth
+          compute bins and the fit
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html correctly
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html with current
+          API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper ggplot2-style grammar, excellent theme customization
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses gggrid() for composition, theme-adaptive design system
+        comment: 'Raised to 4: one tidy df with column constants, axis titles taken
+          from the column names (labs only for titles), a reusable theme object layered
+          on theme_minimal()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: 'Raised to 2: gggrid() composition of independent ggplot objects,
+          geom_smooth(method=''lm'') with its confidence band'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T09:30:30Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - layer-composition
+  - html-export
   patterns:
   - data-generation
   dataprep:
-  - rolling-average
+  - rolling-window
+  - binning
+  - cumulative-sum
+  - regression
   styling:
-  - publication-ready
-  - theme-adaptive
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
