@@ -1,7 +1,7 @@
 """anyplot.ai
 icicle-basic: Basic Icicle Chart
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-13
+Quality: pending | Updated: 2026-05-13
 """
 
 import os
