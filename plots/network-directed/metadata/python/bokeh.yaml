@@ -2,106 +2,104 @@ library: bokeh
 language: python
 specification_id: network-directed
 created: '2025-12-30T23:56:47Z'
-updated: '2026-05-14T03:39:37Z'
-generated_by: claude-haiku
-workflow_run: 25840022503
+updated: '2026-11-21T14:12:06Z'
+generated_by: claude-sonnet
+workflow_run: 44912095933
 issue: 2858
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/bokeh/plot-dark.html
-quality_score: 91
+quality_score: 84
 review:
   strengths:
-  - Perfect visual quality (30/30) — all text explicitly sized and readable in both
-    themes, no overlap, elements well-sized for visibility
-  - 'Flawless palette compliance — Okabe-Ito colors correctly applied (first series
-    #009E73), theme-adaptive chrome perfect in both light and dark renders'
-  - Spec compliance (15/15) — correct directed network graph type, all required features
-    present (nodes, edges, arrows, groups), proper title and legend
-  - Excellent data quality (15/15) — realistic software dependency scenario, complete
-    feature coverage with complex relationships, appropriate scale
-  - Clean, reproducible code (10/10) — idiomatic Bokeh usage, proper seed set, all
-    imports necessary, no fake functionality
-  - Strong Bokeh mastery (9/10) — proper use of Arrow/NormalHead for directed edges,
-    LabelSet for labels, ColumnDataSource, Selenium screenshot pattern, sophisticated
-    theme-token implementation
+  - Arrowheads computed to end exactly at each target node's border (radius incl.
+    outline), so every direction is unambiguous in both themes
+  - Groups placed as contiguous arcs of the elliptical ring, so dependencies between
+    module families read at a glance
+  - Native Bokeh legend from legend_label on per-group scatters, with theme-token
+    chrome that flips cleanly between light and dark
+  - Pinned min_border_* frame so one data unit equals one pixel, keeping node radius
+    and arrow geometry exact on the 3200x1800 canvas
   weaknesses:
-  - 'Design Excellence (12/20) — while the plot is clean and professional, it could
-    benefit from more sophisticated design choices: consider adding subtle visual
-    emphasis to highlight key dependency chains or high-impact nodes (e.g., via size
-    or opacity variation), or introducing visual hierarchy through spatial grouping
-    by module type'
+  - 'VQ-01 (both): node labels at 20pt bold and legend labels at 28pt sit below the
+    34pt reference size and read small on the 3200 px canvas → node labels about 26pt
+    (+6 pt, still inside the 170 px nodes) and legend labels 34pt (+6 pt). Likely
+    cause: LabelSet text_font_size="20pt" and p.legend.label_text_font_size="28pt".'
+  - 'Suggestion: the dark render shows a faint frame rectangle around the plot area;
+    matching it to the page colour would remove the only visible box.'
+  - 'Suggestion: dark node-label text on the lighter Infrastructure purple would lift
+    contrast above white-on-#C475FD.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white or cold-toned
-      Chrome: Title "network-directed · bokeh · anyplot.ai" (28pt, dark text) — clearly readable; node labels (22pt, bold) — all readable; legend labels (22pt) — all readable; legend frame has light background box
-      Data: Nodes colored by category using Okabe-Ito: Core Modules #009E73 (API, Auth, Database, Routes, Models, Middleware), Infrastructure #D55E00 (Cache, Logger, Config), Shared Utils #0072B2 (Validators, Utils), Development #CC79A7 (Tests); arrows rendered in dark gray (INK_SOFT) for visibility
-      Legibility verdict: PASS — all text readable, no overlap, strong contrast against light background
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, no frame, no axes or grid
+      Chrome: title 'network-directed · python · bokeh · anyplot.ai' bold dark text centred at top; legend top right on an elevated box with four group entries in INK_SOFT; all readable
+      Data: 12 circular nodes on an elliptical ring, groups contiguous: Core Modules #009E73 (API, Models, Database, Auth, Middleware, Routes), Infrastructure #C475FD (Config, Logger, Cache), Shared Utils #4467A3 (Validators, Utils), Development #BD8233 (Tests); white bold labels inside nodes; 22 grey edges with filled arrowheads ending at the target border
+      Legibility verdict: PASS (node and legend labels on the small side)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Same title and labels now in light text colors (INK/INK_SOFT) — all clearly readable; legend frame now has dark background (#242420); no dark-on-dark failures
-      Data: Node colors IDENTICAL to light render — Core Modules still #009E73, Infrastructure still #D55E00, Shared Utils still #0072B2, Development still #CC79A7 (confirming proper theme separation); arrow colors appear lighter to maintain visibility on dark surface; all data elements distinguishable
-      Legibility verdict: PASS — no dark-on-dark failures, all text visible and readable, strong contrast maintained, data colors properly preserved
+      Background: warm near-black #1A1A17; a faint lighter frame rectangle outlines the plot area
+      Chrome: title in light INK, legend on #242420 box with light-grey labels; no dark-on-dark text
+      Data: node colours identical to the light render; edges and arrowheads in light grey, node outlines light grey; all clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, all perfectly
-          readable in both themes'
+        comment: Title 50pt is right; node labels at 20pt bold and legend labels at
+          28pt sit below the 34pt reference and read small on the 3200 px canvas (defect
+          line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all labels fully readable
+        comment: No text collisions; edges stop at node borders and stay out of the
+          labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes (size 200) and arrows (width 4, alpha 0.7) perfectly adapted
-          to density
+        comment: '12 nodes at size 170, 3 px edges at alpha 0.6, 34 px filled arrowheads:
+          all clearly visible; legend glyphs match the node fills in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe, good contrast between data
-          and background
+        comment: Imprint groups distinguishable, no red-green signal; arrows contrast
+          in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect layout: plot fills ~60% of 4800×2700 canvas, balanced margins,
-          legend properly positioned'
+        comment: 3200x1800 canvas, ring fills the frame with the legend in the free
+          top-right corner, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Proper title format 'network-directed · bokeh · anyplot.ai', no traditional
-          axes needed for network graph
+        comment: 'N/A: a network has no axes; title present'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark), theme-adaptive chrome perfect in
-          both renders'
+        comment: 'Groups in Imprint order starting at #009E73; backgrounds #FAF8F1
+          / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -109,22 +107,22 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-configured defaults with intentional color grouping, clean typography,
-          professional but not exceptional
+        comment: 'Style-guide baseline: theme tokens, bold node labels, elevated legend
+          box; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good refinement: no axes/grid (appropriate), spines removed, generous
-          whitespace, subtle legend box styling'
+        comment: Arrow tips computed to touch exactly the node border (radius incl.
+          outline) and data units mapped 1:1 to pixels so the geometry is exact
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Good visual hierarchy through color grouping and circular layout,
-          shows dependency flow clearly, realistic scenario supports insights
+        comment: Nodes ordered by group so each module family forms a contiguous arc
+          of the ring, making cross-family dependency flow readable
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct directed network graph with clear arrow indicators
+        comment: Directed network graph with arrowheads
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: nodes with labels, directed edges with arrows,
-          group categories, 12 nodes, 20 edges'
+        comment: C1 arrowheads at the target border, sized to nodes; C2 one filled
+          style; C3 N/A (no bidirectional pair); C4 circular layout, no axes/grid,
+          edges thinner and lighter than nodes; C5 labels on their nodes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Nodes properly positioned, edges correctly connect source→target,
-          direction clear via arrows, all data visible
+        comment: Every edge source->target as in the edge list; layout-positioned
+          type
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format, legend identifies all 4 module categories with
-          matching colors
+        comment: Title 'network-directed · python · bokeh · anyplot.ai'; legend entries
+          are readable group names
     data_quality:
       score: 15
       max: 15
@@ -165,22 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: diverse nodes, complex edge patterns, multi-category
-          grouping, hierarchical dependencies, bidirectional relationships'
+        comment: Shows fan-in (Config, Logger, Database), fan-out (Routes, API), source-only
+          (Tests) and sink-only (Utils, Config) nodes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real scenario (software dependencies), neutral topic, realistic module
-          names and relationships, comprehensible context
+        comment: Plausible software module dependency graph, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 nodes in 10-50 range, 20 edges shows connectivity, realistic dependency
-          proportions, sensible domain values
+        comment: 12 nodes / 22 edges inside the 10-50 node range; acyclic import structure
+          is sensible for modules
     code_quality:
       score: 10
       max: 10
@@ -190,63 +188,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme → data → figure creation → styling
-          → save, no functions/classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, deterministic data generation
+        comment: Fully deterministic data and layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy (positioning), bokeh (plotting), selenium
-          (screenshot), os/pathlib/time (utility)'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity, no over-engineering, no
-          fake functionality
+        comment: Appropriate complexity; native legend via legend_label
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html, uses current Bokeh
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, current Bokeh 3 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Perfect idiomatic Bokeh: figure(), ColumnDataSource, scatter(),
-          Arrow with NormalHead, LabelSet, theme-token styling, Selenium screenshot'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses Bokeh-distinctive Arrow/NormalHead, LabelSet, sophisticated
-          theme-token implementation, HTML+PNG generation pattern
+        comment: Native legend from legend_label on per-group scatters, ColumnDataSource
+          per group feeding LabelSet, min_border_* to pin the frame so data units
+          equal pixels
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Bokeh's Arrow annotation with NormalHead for directed edges
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T14:08:24Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - annotations
   - html-export
   patterns:
-  - data-generation
+  - iteration-over-groups
   - columndatasource
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
   - alpha-blending
+  - edge-highlighting
