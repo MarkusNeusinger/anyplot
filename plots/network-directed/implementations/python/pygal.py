@@ -1,7 +1,7 @@
 """anyplot.ai
 network-directed: Directed Network Graph
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 73/100 | Updated: 2026-11-21
+Quality: pending | Updated: 2026-11-21
 """
 
 import os
