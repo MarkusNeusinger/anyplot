@@ -2,44 +2,55 @@ library: matplotlib
 language: python
 specification_id: circos-basic
 created: '2025-12-31T11:08:24Z'
-updated: '2026-05-15T09:22:08Z'
-generated_by: claude-haiku
-workflow_run: 25910100330
+updated: '2026-11-21T20:16:40Z'
+generated_by: claude-sonnet
+workflow_run: 44944756972
 issue: 3005
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 81
 review:
   strengths:
-  - Perfect spec compliance with sophisticated circos geometry (bezier-curve ribbons,
-    proportional widths, nested concentric tracks)
-  - 'Excellent theme adaptation: both renders pass legibility checks with correct
-    chrome color flipping'
-  - 'Professional palette execution: Okabe-Ito colors in canonical order, brand green
-    (#009E73) properly featured'
-  - Clean, reproducible code with proper random seed and current matplotlib API
-  - Clear visual hierarchy guides viewer through complex relational data
+  - Path with CURVE3 bezier codes and PathPatch build smooth ribbons whose width follows
+    the synteny-block count
+  - Full eight-position Imprint palette with one distinct color per chromosome, used
+    consistently for segment, track bar, ribbon and legend swatch
+  - Theme tokens threaded through title, labels, legend frame and caption; both renders
+    read cleanly
+  - Data zone with column constants and a tidy df; the plot code derives segments,
+    spans and gaps from the data
+  - Caption names what the outer ring, inner ring and ribbons encode
   weaknesses:
-  - 'Design Excellence below potential: legend styling could be more refined; inner
-    track could receive more visual emphasis to highlight secondary data dimension'
-  - Typography hierarchy could include more weight variation between title, labels,
-    and legend
+  - 'SC-02 (both): ribbon ends are anchored at r = 0.83, just inside the outer ring,
+    so every ribbon crosses the inner expression track (r 0.70-0.82) and covers its
+    bars at the anchor → anchor the ribbons inside the track ring, about r = 0.67
+    (−0.16), so track and ribbons stay visually separate (C4). Likely cause: R_RIBBON
+    = R_INNER - 0.02.'
+  - 'CQ-01 (code): the helper function ring_sector (lines 109-114) breaks the Imports
+    → Data → Plot → Save structure with no functions → draw the sectors inline. Likely
+    cause: a helper written for the two ring loops.'
+  - 'CQ-04 (code): lines 109-114 and the two ax.fill calls build annular sectors from
+    50 sampled arc points by hand → mpatches.Wedge((0, 0), r_out, ends[i], starts[i],
+    width=r_out - r_in) per segment and per track bar. Likely cause: the annulus written
+    out instead of the available patch.'
+  - 'Suggestion: anchor each ribbon on its own sub-span of the segment instead of
+    the segment midpoint, so the four chr1 ribbons do not start on top of each other.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 as required
-      Chrome: Title "circos-basic · matplotlib · anyplot.ai" in dark ink at top, clearly readable. Chromosome labels (chr1–chr8) positioned around circle perimeter in dark text, all legible. Legend on right with "Chromosomes" header, all text visible.
-      Data: 8 colored segments using Okabe-Ito palette starting with brand green #009E73 for chr1. Proportional ribbon connections with semi-transparent bezier curves showing connection magnitudes. Inner concentric track displays expression values in muted segment colors.
-      Legibility verdict: PASS - All text clearly readable, no collisions, excellent contrast against light background
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas.
+      Chrome: title 'circos-basic · python · matplotlib · anyplot.ai' in dark ink at the top; bold chr1-chr8 labels around the circle; framed 'Chromosome' legend in 4 columns below the circle and an INK_SOFT caption 'Outer ring: Size (Mb) · inner ring: Expression level · ribbons: Synteny blocks' at the bottom. All readable.
+      Data: outer ring of 8 segments with arc lengths by size (chr1 #009E73 largest down to chr8 #99B314 smallest), small gaps, a second ring of lighter bars with heights by expression, and 14 translucent bezier ribbons coloured by source segment crossing the interior. Ribbon ends sit just inside the outer ring and cross the inner track bars.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 as required
-      Chrome: Title rendered in light text (#F0EFE8), clearly readable. Chromosome labels in secondary light text (#B8B7B0), all legible. Legend frame uses elevated background #242420 with light borders, clear and readable. No dark-on-dark failures detected.
-      Data: Okabe-Ito colors identical to light render - only chrome has flipped to dark-theme colors. Brand green #009E73 prominent in chr1. All segments and ribbons clearly distinguishable from dark background.
-      Legibility verdict: PASS - All text legible, excellent theme adaptation, data colors unchanged between renders
+      Background: warm near-black #1A1A17.
+      Chrome: title, chromosome labels and legend title in light ink, legend entries and caption in light grey on an elevated #242420 frame; no dark-on-dark text.
+      Data: identical Imprint colors to the light render; the alpha 0.5 track bars and alpha 0.4 ribbons read darker against the dark page but stay distinguishable; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,76 +61,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes properly set (24pt title, 16pt labels, 14pt legend); readable
-          in both themes with clear contrast
+        comment: Title 12 pt, segment labels 10 pt bold, legend and caption 8 pt,
+          all at the style-guide sizes; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text spaced without collisions; chromosome labels, title, and
-          legend well-separated
+        comment: No text collides with other text or data; ribbon pile-up in the centre
+          is permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Transparency (alpha=0.4 ribbons, alpha=0.5 track) handles density;
-          overlapping elements remain distinguishable
+        comment: Ribbons at alpha 0.4 and track bars at alpha 0.5 stay visible on
+          both backgrounds; legend swatches match the segments
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety; no red-green as sole
-          signal
+        comment: Imprint palette, no red-green as sole signal; segments also carry
+          text labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 12x12 format ideal for circular plots; proper padding prevents
-          element cutoff
+        comment: 2400x2400 square canvas, circle centred, legend and caption below
+          without overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title format; chromosome labels serve as category identifiers
+        comment: No axes; segment labels and a caption name the three encodings with
+          units (Size (Mb))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; colors 1-7 Okabe-Ito order ✓; backgrounds
-          #FAF8F1/#1A1A17 ✓; both renders theme-correct ✓'
+        comment: 'All eight Imprint positions in canonical order, chr1 = #009E73,
+          backgrounds #FAF8F1 / #1A1A17, data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Custom bezier curves for ribbons, intentional gap sizing, proportional
-          ribbon widths show thoughtful design intent
+        comment: Style-guide baseline; the encoding caption under the legend is a
+          small step but not beyond the default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clean composition with generous spacing; legend placement outside
-          plot provides good separation
+        comment: Segments outlined in the page color so the gaps read cleanly, legend
+          centred under the circle and aligned with the caption
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Visual hierarchy: outer segments dominant, inner track secondary,
-          ribbons guide through connections; effective genomic narrative'
+        comment: Data displayed without a hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -127,28 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Perfect circos plot with outer segments, inner tracks, and ribbon
-          connections
+        comment: 'Correct circos plot: outer segment ring, one inner track, ribbons;
+          no unrequested layers'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Segments with gaps ✓; proportional ribbon widths ✓; distinct colors
-          per chromosome ✓; concentric data track ✓
+        passed: false
+        comment: 'C1, C2, C3 and C5 met; C4 missed in part: ribbon ends are anchored
+          at r=0.83 and cross the inner track ring (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 8 chromosomes and 14 connections visible; ribbon widths correctly
-          scaled to connection values
+        comment: Arc lengths follow Size (Mb), track heights follow the expression
+          value, ribbon widths follow the synteny-block count
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data categories
+        comment: Title 'circos-basic · python · matplotlib · anyplot.ai' correct;
+          legend titled 'Chromosome' with matching entries
     data_quality:
       score: 15
       max: 15
@@ -158,85 +170,95 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All circos elements present: outer ring segments, inner expression
-          track, ribbon connections'
+        comment: Segment sizes, gaps, an inner track and 14 ribbons of varying width
+          show every aspect of the plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Genomic chromosome data is realistic (chromosome-like sizes) and
-          neutral (no biased representation)
+        comment: 'Genomic synteny between chromosomes with expression values: plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Chromosome sizes normalized to degrees; connection values sensibly
-          scaled for ribbon width_factor
+        comment: Chromosome sizes 60-200 Mb and synteny block counts 7-25 are sensible;
+          the spec gives no Check values
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Clean procedural code; no unnecessary functions or classes
+        passed: false
+        comment: One helper function ring_sector (lines 109-114) breaks the no-functions
+          structure (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: matplotlib.patches, Path, and numpy all used; no extraneous imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity for bezier path construction; no fake interactivity
+        passed: false
+        comment: Annular sectors are written out point by point where mpatches.Wedge(width=...)
+          draws them (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current matplotlib API correctly
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper axes-based API; theme-aware environment variable handling;
-          Path objects with CURVE3 bezier curves are idiomatic matplotlib
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Sophisticated use of matplotlib's Path system and PathPatch for custom
-          ribbon geometry
+        comment: Axes-based API, fig.legend and fig.suptitle; standard usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Path with CURVE3 codes and PathPatch build the bezier ribbons, a
+          matplotlib-specific idiom
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T20:12:36Z'
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - patches
   - custom-legend
+  - patches
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - normalization
+  - cumulative-sum
   styling:
   - alpha-blending
-  - publication-ready
+  - edge-highlighting
+  - minimal-chrome
