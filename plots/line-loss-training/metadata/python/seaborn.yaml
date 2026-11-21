@@ -2,47 +2,47 @@ library: seaborn
 language: python
 specification_id: line-loss-training
 created: '2025-12-31T00:04:00Z'
-updated: '2026-05-14T05:47:14Z'
-generated_by: claude-haiku
-workflow_run: 25843780049
+updated: '2026-11-21T14:33:42Z'
+generated_by: claude-sonnet
+workflow_run: 44913996043
 issue: 2860
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 83
 review:
   strengths:
-  - 'Excellent visual quality: perfect legibility in both light and dark themes'
-  - 'Perfect specification compliance: all required features present and working'
-  - 'Realistic and insightful data: training/validation curves reveal overfitting
-    pattern'
-  - 'Professional annotation: optimal epoch marker clearly communicates the key insight
-    for early stopping'
-  - Clean, reproducible, idiomatic seaborn code
-  - 'Flawless theme-adaptive chrome: backgrounds, text, and legends correctly adapt;
-    data colors constant across themes'
+  - Canvas exactly 3200x1800 with dpi=400 and no bbox_inches trimming, per the library's
+    canvas contract
+  - Long-form melt fed to sns.lineplot(hue=..., errorbar=None) with the palette sliced
+    from the counted hue levels
+  - Minimum validation loss found with idxmin and marked by a marker, dashed vertical
+    line and arrow annotation at epoch 90
+  - 'Theme tokens threaded through sns.set_theme rc: both renders read cleanly, data
+    colors identical across themes'
+  - Tight x range from epoch 1 to 100 and a linear loss axis on which the late-epoch
+    gap stays readable
   weaknesses:
-  - 'Design Excellence could be raised: plot is clean and professional but relies
-    somewhat on defaults rather than custom visual refinement'
-  - 'Library Mastery: could leverage more distinctive seaborn-specific features beyond
-    basic lineplot'
+  - 'Suggestion: the data-block comment describes a long table (''one row per epoch
+    and split'') while df is built wide with one column per split; align the comment
+    with the wide table the plot block melts.'
+  - 'Suggestion: a subtle shaded gap between the curves after the optimum could make
+    the overfitting region easier to see.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "line-loss-training · seaborn · anyplot.ai" in dark INK (#1A1A17); axis labels "Epoch" and "Cross-Entropy Loss" clearly readable; tick labels in INK_SOFT (#4A4A44) visible; legend in upper right with light background (#FFFDF6); all text elements perfectly readable against light background
-      Data: Training Loss in teal (#009E73, Okabe-Ito position 1); Validation Loss in orange (#D55E00, position 2); line thickness (3pt) optimal; scatter marker for epoch 90 visible with annotation arrow; y-axis grid subtle (alpha=0.10) and non-competing
-      Legibility verdict: PASS ✓
+      Background: warm off-white #FAF8F1 across canvas and axes.
+      Chrome: title 'line-loss-training · python · seaborn · anyplot.ai' in dark ink, centered at about half the width; axis titles 'Epoch' and 'Cross-Entropy Loss' and the 8 pt ticks in dark ink-soft; subtle horizontal grid; top and right spines removed; framed legend top right on #FFFDF6; annotation 'Optimal: Epoch 90' in dark ink with an arrow to the marker. All readable.
+      Data: training loss line in #009E73 and validation loss line in #C475FD, from about 2.6 at epoch 1 down to about 0.19 and 0.34 at epoch 100; lilac marker with ink outline at the validation minimum (epoch 90, about 0.34) and a dashed grey vertical line there. x axis spans 1-100, y axis 0-2.8.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title in light INK (#F0EFE8); axis labels in light color clearly readable against dark background; tick labels in INK_SOFT (#B8B7B0) visible; legend in upper right with dark background (#242420); no dark-on-dark failures; all text is light-colored and readable
-      Data: Training Loss and Validation Loss colors IDENTICAL to light render (#009E73 and #D55E00) - confirms proper theme-adaptive implementation; annotation arrow and marker are clearly visible
-      Legibility verdict: PASS ✓
-
-    Both renders demonstrate perfect theme adaptation: data colors constant, chrome adapted, all text readable in both light and dark contexts.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and annotation in light ink, ticks in light grey, faint grid, legend on #242420 with light text and outline; no dark-on-dark text.
+      Data: same #009E73 and #C475FD lines, marker and dashed line as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,71 +53,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: Title 24pt, Labels 20pt, Ticks 16pt;
-          perfectly readable in both renders'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, annotation
+          9 pt as the library prompt sets; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable; legend positioned cleanly; annotation does
-          not overlap
+        comment: No text collides; the annotation sits in empty space above the curves
+          and its arrow ends at the marker
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line thickness (3pt) optimal; markers clearly visible; both series
-          distinguishable
+        comment: 1.8 pt lines suit 100 points per series; marker and legend line samples
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors with good contrast; CVD-safe palette
+        comment: Green against lilac differs in hue and lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect; plot fills 50-80% of canvas; balanced margins
+        comment: 3200x1800 canvas; the axes fill most of the canvas with balanced
+          margins; nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Cross-Entropy Loss'
+        comment: '''Epoch'' and ''Cross-Entropy Loss'' name the variable and the loss
+          function'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito compliant: first series #009E73, second #D55E00; backgrounds
-          theme-correct; text colors theme-adaptive'
+        comment: 'Training #009E73, validation #C475FD (Imprint order); #FAF8F1 /
+          #1A1A17 surfaces; chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful color choices; professional polish; annotation clearly
-          communicates insight
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed; subtle y-axis grid; generous whitespace
+        passed: false
+        comment: The spine and grid rules met (despine, y grid only), nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Excellent story: training/validation decay reveals overfitting;
-          optimal epoch annotation guides viewer to key insight'
+        passed: false
+        comment: The optimal-epoch marker is the optional mark the Notes offer; no
+          hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with dual curves
+        comment: Dual line plot of training and validation loss over epochs
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Training loss, validation loss, legend, optimal epoch marker all
-          present
+        comment: Distinct colors, legend, x axis from epoch 1 to 100, loss function
+          in the y title, optional minimum marker; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show full data range
+        comment: Epoch on x, loss on y; marker sits at the minimum validation loss
+          (epoch 90); all data in view
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend both correct format
+        comment: Title 'line-loss-training · python · seaborn · anyplot.ai'; legend
+          'Training Loss' / 'Validation Loss'
     data_quality:
       score: 15
       max: 15
@@ -156,20 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: training decay, validation plateau, divergence'
+        comment: Steep early drop, a widening generalization gap, a noisy validation
+          curve and a late plateau
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic neural network training scenario; classic exponential decay
-          pattern
+        comment: Plausible 100-epoch neural-network training history with cross-entropy
+          loss
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Loss values and epoch range realistic for neural network training
+        comment: 'Checked: losses from about 2.6 down to 0.19 (train) and 0.34 (validation);
+          minimum at epoch 90 computed with idxmin'
     code_quality:
       score: 10
       max: 10
@@ -179,53 +184,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow; no functions/classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity; melt to long form and idxmin instead of hand-rolled
+          loops
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png format
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Expert use of sns.lineplot with hue; sns.set_theme with rc dict
+        passed: false
+        comment: Long-form melt fed to sns.lineplot with hue and errorbar=None, sns.set_theme
+          rc dict, sns.despine
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Uses sns.set_theme effectively; integrates matplotlib overlays cleanly
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T14:30:23Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   patterns:
   - data-generation
+  - wide-to-long
+  - explicit-figure
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
+  - edge-highlighting
