@@ -2,48 +2,61 @@ library: pygal
 language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:49:00Z'
-updated: '2026-05-13T13:21:47Z'
-generated_by: claude-haiku
-workflow_run: 25801186394
+updated: '2026-11-21T10:15:43Z'
+generated_by: claude-sonnet
+workflow_run: 44892954516
 issue: 2786
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/pygal/plot-dark.html
-quality_score: 90
+quality_score: 79
 review:
   strengths:
-  - Perfect visual quality with all text sizes explicitly set and readable in both
+  - pygal.DateTimeLine with real datetimes places every observation at its date, and
+    x_value_formatter gives clean 'Jan 01' / 'Jan 15' ticks
+  - Font sizes follow the pygal sizing guide for 3200x1800; all text readable in both
     themes
-  - Complete specification compliance with clear distinction between raw data and
-    rolling average
-  - 'Flawless palette implementation: Okabe-Ito colors identical across light and
-    dark renders'
-  - Excellent theme-adaptive design with proper chrome colors in both renders
-  - 'Strong data storytelling through visual hierarchy: thin line for raw data, thick
-    line for trend'
-  - Clean, reproducible code with deterministic data generation and proper seed
+  - Rolling average computed with pandas rolling(7) and dropped NaNs, so the smoothed
+    line starts once its window is filled
+  - 'Theme tokens threaded through Style: correct backgrounds and chrome in both renders,
+    Imprint order with brand green first'
+  - Legend names the window size ('7-Day Rolling Average')
   weaknesses:
-  - Design Excellence could be elevated by removing top/right spines for more polish
-  - Could leverage more advanced pygal-specific features (e.g., custom SVG manipulation,
-    plugins)
+  - 'SC-02, VQ-03 (both): both series render at the same ~3 px stroke, so the 7-Day
+    Rolling Average is not the most prominent mark (C2) and the raw line is fully
+    opaque instead of a lighter, semi-transparent line receding behind it (C1); in
+    the light render the pale purple average reads weaker than the green raw line
+    → rolling average about 10–12 px, raw line about 2 px at stroke-opacity ~0.4–0.5.
+    Likely cause: Style(stroke_width=3) emits `.reactive{stroke-width:3;stroke-opacity:.8}`
+    on every path, which overrides the `.series.serie-N{stroke-width}` that stroke_style
+    sets on the group; stroke_style has no ''opacity'' key. Set per-series width/opacity
+    with a rule that targets the path (e.g. chart.css / custom CSS `.serie-1 .line{stroke-width:12}`)
+    or drop the global stroke_width.'
+  - 'CQ-04 (code): stroke_style={''opacity'': 0.55} is an option pygal ignores, and
+    x_labels builds the same pd.date_range(..., freq=''MS'') twice → drop the dead
+    key and build the month starts once (e.g. `starts = pd.date_range(...)`; `x_labels
+    = [*starts, *(starts + pd.Timedelta(days=14))]`). Likely cause: lines 66–67 and
+    74.'
+  - 'Suggestion: the two legend entries sit far apart (left edge and centre); legend_at_bottom_columns=2
+    with a narrower spread would read as one key.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme color
-      Chrome: Title "line-timeseries-rolling · pygal · anyplot.ai" is clear at top in dark text; X-axis label "Date" and Y-axis label "Temperature (°C)" are clearly visible; tick labels are readable at 18px; legend shows "Raw Temperature" and "7-Day Rolling Average" at bottom; grid lines are subtle and visible
-      Data: Raw Temperature series renders in bluish-green (#009E73, Okabe-Ito position 1) as thin line (stroke width 2); 7-Day Rolling Average renders in vermillion (#D55E00, Okabe-Ito position 2) as prominent thick line (stroke width 6); 120-point dataset with clear trend visible
-      Legibility verdict: PASS - all text is dark on light background, fully readable at full resolution
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'line-timeseries-rolling · python · pygal · anyplot.ai' centred at top in dark ink; y-axis title 'Temperature (°C)', x-axis title 'Date'; y ticks 0–16 every 2, x ticks Jan 01 / Jan 15 / Feb 01 ... Apr 15; dotted guides on both axes at the ticks; legend at bottom ('Raw Data' left, '7-Day Rolling Average' centre). All text dark on light and readable.
+      Data: raw daily temperature as a ~3 px #009E73 line (120 days, spiky around a rising trend); 7-day rolling average as a ~3 px #C475FD line starting Jan 07. Both strokes have the same width; the raw line is not visibly translucent and the pale purple average reads weaker than the raw line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme color
-      Chrome: Title, axis labels, and tick labels all render in light text (appears to be #F0EFE8 or similar) and are clearly visible against dark background; legend is readable; grid lines are subtle
-      Data: Raw Temperature series is identical greenish color to light render (#009E73); 7-Day Rolling Average is identical vermillion to light render (#D55E00); visual clarity is maintained
-      Legibility verdict: PASS - no dark-on-dark failures; all text is light on dark background; both data series are clearly visible and distinguishable
+      Background: warm near-black #1A1A17.
+      Chrome: same layout; title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text. Dotted guides are faint but visible.
+      Data: identical #009E73 raw line and #C475FD rolling average as in light; the purple reads somewhat stronger against the dark surface but both lines still share the same width.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,52 +64,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: Title 28px, Labels 22px, Ticks 18px;
-          perfectly readable in both themes'
+        comment: Title 66, axis titles 56, ticks and legend 44 per the pygal sizing
+          guide; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; all text fully readable; legend positioned
-          at bottom clear of data
+        comment: No text collisions; legend below the axis title, clear of data
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Line widths perfectly adapted to data density (thin=2px for raw,
-          thick=6px for trend); 120 points clearly visible
+        passed: false
+        comment: Both series render at the same 3 px stroke; the light-purple rolling
+          average at 3 px reads fainter than the green raw line on the cream background
+          (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) provides excellent contrast;
-          CVD-safe; distinguishable without relying on hue alone'
+        comment: Green vs. purple is CVD-distinguishable; good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with plot filling 50-70% of canvas; balanced margins;
-          legend positioned near plot
+        comment: 3200x1800 canvas, plot fills the frame with balanced margins; no
+          overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Temperature (°C)'', ''Date''; title
-          format correct'
+        comment: '''Date'' and ''Temperature (°C)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect palette: first series #009E73, second #D55E00 (Okabe-Ito
-          order); backgrounds #FAF8F1/#1A1A17; theme-correct chrome in both renders'
+        comment: 'Raw Data #009E73 first, rolling average #C475FD second; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct in both'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -104,26 +115,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with professional polish; uses required
-          Okabe-Ito palette and explicit styling; no custom design flourishes beyond
-          defaults
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clean, explicit styling with custom Style object; subtle grid on
-          both axes; good whitespace; could remove top/right spines for more polish
+        comment: Month/mid-month guides meet the grid rule; no further refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Strong visual hierarchy through line width (thin vs thick) and color
-          contrast emphasizes rolling average trend; effectively guides viewer to
-          understand trend vs noise
+        comment: 'No visual hierarchy actually lands: the intended thick-vs-thin contrast
+          does not render'
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -131,30 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: line chart with dual time series; matches specification
-          exactly'
+        comment: 'Correct chart type: time-series line with rolling-average overlay'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All spec requirements met: raw data with thin line, rolling average
-          with prominent line, clear legend distinction, window size in legend, grid
-          on both axes'
+        passed: false
+        comment: 'C3, C4, C5 met; C1 (raw line semi-transparent, receding) and C2
+          (rolling average the most prominent mark) missed: both lines render at 3
+          px, raw fully opaque (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly shows dates over 4-month period; Y-axis shows temperature
-          values 0-25°C; all 120 data points visible
+        comment: DateTimeLine places every point at its real date and value; rolling
+          average starts on day 7
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''line-timeseries-rolling · pygal · anyplot.ai'';
-          legend labels accurate and descriptive'
+        comment: Title 'line-timeseries-rolling · python · pygal · anyplot.ai' correct;
+          legend 'Raw Data' / '7-Day Rolling Average' names the window
     data_quality:
       score: 15
       max: 15
@@ -164,24 +170,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: raw data with natural variation, rolling average
-          revealing trend, seasonal pattern visible over 4 months'
+        comment: Noisy raw series, lagging smoothed line, shorter rolling span all
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world scenario (temperature sensor data); 4-month winter-to-spring
-          period is realistic; values (0-25°C) are plausible; neutral, non-controversial
+        comment: Daily temperature readings Jan–Apr 2024 with a warming trend; plausible,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Data proportions factually correct; seasonal increase makes logical
-          sense; 7-day rolling window is standard and appropriate
+        comment: Values about -1 to 18 °C, plausible for a winter-to-spring station;
+          7-day window from pandas rolling(7).mean()
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -189,64 +195,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data generation → style definition →
-          chart creation → save output; no unnecessary functions or classes'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: random.seed(42) set; data generation produces identical
-          output on every run'
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, random, datetime, pygal, Style; all
-          are actively used'
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic code; appropriate complexity; no over-engineering
-          or fake functionality
+        passed: false
+        comment: Dead stroke_style 'opacity' key and a date_range built twice for
+          x_labels (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html; uses current
-          pygal API'
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert idiomatic usage: pygal.Line() high-level API, Style object
-          for theme adaptation, show_x/y_guides for grid, stroke_style for line widths,
-          legend_at_bottom for placement, render_to_png/render_to_file for output'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses some pygal-specific features (Style object, stroke_style parameter)
-          but implementation is straightforward; could leverage more advanced pygal
-          capabilities (custom SVG, plugins)
-    score_caps_applied: []
+        comment: pygal.DateTimeLine with real datetime x values and x_value_formatter
+          instead of string category labels — the library's date-axis idiom
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T10:11:44Z'
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
+  - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep:
+  - time-series
   - rolling-window
-  styling: []
+  styling:
+  - grid-styling

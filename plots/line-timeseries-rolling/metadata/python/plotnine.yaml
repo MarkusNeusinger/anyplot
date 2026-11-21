@@ -2,45 +2,60 @@ library: plotnine
 language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T18:40:03Z'
-updated: '2026-05-13T13:15:01Z'
-generated_by: claude-haiku
-workflow_run: 25801082878
+updated: '2026-11-21T10:12:40Z'
+generated_by: claude-sonnet
+workflow_run: 44892709286
 issue: 2786
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - Perfect theme adaptation with identical data colors across light/dark renders
-  - 'Excellent legibility: all text sizes explicitly set and readable at full resolution'
-  - 'Strong spec compliance: all required features present and functioning correctly'
-  - Realistic, neutral temperature data demonstrating clear trend-smoothing narrative
-  - Idiomatic plotnine usage with distinctive features (scale_*_manual, mizani integration)
-  - Clean, reproducible code following KISS structure and best practices
+  - 'Clear two-layer hierarchy through the grammar: alpha and size are mapped to the
+    series and set with scale_alpha_manual / scale_size_manual, so the raw page views
+    (thin, alpha 0.6) recede behind the thick 7-day rolling average in both themes'
+  - Rolling average starts and ends only where its window is filled (rolling(...).mean()
+    followed by dropna()), so it covers a shorter span than the raw series as the
+    spec asks
+  - Realistic, neutral page-view scenario with slow audience growth and a midweek-peak
+    weekly cycle that the 7-day window smooths away cleanly
+  - Correct canonical 3200x1800 canvas, mandated title format, monthly date breaks
+    via scale_x_datetime(date_breaks='1 month') with unique labels
+  - 'Fully theme-adaptive chrome (backgrounds, text, grid, legend frame) with identical
+    Imprint data colors (#009E73, #C475FD) in both renders'
+  - 'Adaptable code layout: column constants with role comments, one tidy df at the
+    end of the Data block, the long-format reshape and category limits derived from
+    df below it'
   weaknesses:
-  - 'Design Excellence at default levels: uses library defaults without exceptional
-    polish or custom refinements'
-  - 'Visual storytelling could be stronger: rolling average emphasis could be more
-    dramatic through color pop or strategic labeling'
+  - 'VQ-03 (both): the legend''s line samples are both drawn at the default thin width
+    and full opacity, so the 7-day rolling average sample does not match its 1.5-width
+    line and the raw sample does not match its 0.6 alpha → line samples at the marks''
+    widths and alphas. Likely cause: pn.guides(alpha="none", size="none") drops those
+    scales from the color legend without guide_legend(override_aes={"size": [0.45,
+    1.5], "alpha": [0.6, 1.0]}).'
+  - 'Suggestion: give the legend frame a little more right padding; the ''7-day rolling
+    average'' label sits right against the frame''s right edge.'
+  - 'Suggestion: thousands separators on the y ticks (labels=mizani.labels.label_comma())
+    would make 12,500 / 15,000 quicker to read.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark ink (#1A1A17/#4A4A44) - perfectly readable with strong contrast
-      Data: Raw daily temperature (green #009E73, thin, alpha=0.5) + 7-day rolling average (orange #D55E00, thick, alpha=1.0); 6-month seasonal progression visible; grid subtle at 10% opacity
-      Legibility verdict: PASS - all text and data elements clearly readable, excellent contrast throughout
+      Background: warm off-white #FAF8F1 across canvas and panel; 3200x1800.
+      Chrome: title "line-timeseries-rolling · python · plotnine · anyplot.ai" in dark ink at top (~55% width); horizontal legend centered below it in a framed box; axis titles "Date" and "Page views" and tick labels (Jan 2024 … Jul 2024 monthly; 7500–15000) in dark/soft ink; subtle major/minor grid on both axes; thin panel border. All text readable.
+      Data: 180 daily page views as a thin #009E73 line at alpha 0.6, spiking weekly between ~6,300 and ~14,800 with a rising trend; thick #C475FD 7-day rolling average from ~Jan 4 to ~Jun 25 climbing from ~8,100 to ~11,800, clearly the dominant mark.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title and axis labels shift to light ink (#F0EFE8/#B8B7B0) - all readable against dark background with proper contrast; no dark-on-dark failures
-      Data: Colors identical to light render (green #009E73, orange #D55E00) - confirms theme-independent data colors and theme-adaptive chrome only
-      Legibility verdict: PASS - all elements readable, theme adaptation confirmed, no dark-on-dark text failures
+      Background: warm near-black #1A1A17 across canvas and panel.
+      Chrome: title, axis titles and tick labels flip to light ink (#F0EFE8 / #B8B7B0); legend box on #242420 with light frame; grid subtle but visible. No dark-on-dark text.
+      Data: identical colors to light — green raw line (darker-looking at alpha 0.6 over the dark page but still visible) and purple rolling average; layout identical.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -48,48 +63,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
-          perfectly readable in both themes'
+        comment: Title 12, axis titles 10, ticks/legend 8 at 8x4.5 in / 400 dpi; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text; dates rotated 30°, all labels clearly separated
+        comment: No text collisions; the two series overlap only as the spec intends
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 'Both series optimally visible: raw data (thin, 0.5 alpha) vs rolling
-          average (thick, 1.0 alpha) well-distinguished'
+        passed: false
+        comment: Both series visible in both themes; legend line samples do not match
+          the marks' widths and alpha (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors provide strong contrast and CVD safety
+        comment: Green vs purple plus width/alpha difference; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 16:9 composition, plot fills ~65% with balanced margins
+        comment: 3200x1800, balanced margins, title ~55% width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Temperature (°C), Date'
+        comment: '''Date'' and ''Page views''; unique monthly tick labels'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-2 correct, backgrounds theme-correct, chrome
-          properly adaptive
+        comment: 'Raw series #009E73, rolling #C475FD; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -97,21 +111,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults; professional but generic styling without
-          custom touches
+        comment: Style-guide baseline; top legend placement, nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good refinement: subtle grid, refined typography, adequate whitespace'
+        passed: false
+        comment: Subtle grid and panel border per baseline, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through size/alpha; rolling average emphasis
-          could be stronger
+        passed: false
+        comment: Hierarchy of raw vs rolling is what the Notes prescribe; no further
+          focal point
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series + rolling average overlay
+        comment: Time series line with rolling-average overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: raw data, rolling average, legend, dual-axis
-          grid'
+        comment: C1 raw thin semi-transparent; C2 rolling prominent contrasting; C3
+          shorter span; C4 legend with window size; C5 grid both axes — all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, 180 points span full axis range
+        comment: Date on x, views on y, marks at their data values; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels accurate
+        comment: Mandated title format; legend entries 'Daily page views' / '7-day
+          rolling average'
     data_quality:
       score: 15
       max: 15
@@ -150,19 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows seasonal progression, noise dynamics, and trend smoothing
+        comment: Noisy weekly spikes, trend, smoothing, shortened rolling span all
+          visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world temperature scenario, neutral and plausible
+        comment: Website page views with growth and midweek peak; neutral, plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Seasonal pattern and noise realistic, standard rolling window
+        comment: ~6k–15k daily views, 7-day window sensible; no Check values in spec
     code_quality:
       score: 10
       max: 10
@@ -172,48 +187,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clear flow, no unnecessary abstractions
+        comment: Imports → constants → Data → Plot → Save, no functions; adaptable-code
+          checks pass
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no bloat
+        comment: os, numpy, pandas, plotnine all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity
+        comment: pandas rolling().mean(), no hand-rolled algorithm, 84 lines
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, 8x4.5 in)
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert ggplot composition, mizani integration, theme extension
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses scale_*_manual, guides suppression, categorical ordering, mizani
+        passed: false
+        comment: Grammar-level mapping of alpha and size to the series via manual
+          scales with limits, scale_x_datetime date_breaks/date_labels
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T10:08:54Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -223,6 +243,7 @@ impl_tags:
   - wide-to-long
   dataprep:
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
   - grid-styling
