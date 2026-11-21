@@ -2,52 +2,49 @@ library: plotly
 language: python
 specification_id: facet-grid
 created: '2025-12-30T16:30:15Z'
-updated: '2026-05-13T03:35:42Z'
-generated_by: claude-haiku
-workflow_run: 25776278040
+updated: '2026-11-21T08:17:50Z'
+generated_by: claude-sonnet
+workflow_run: 44883624839
 issue: 2696
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 84
 review:
   strengths:
-  - Perfect text legibility in both light and dark themes with no readability failures
-  - 'Flawless theme-adaptive chrome: all elements (title, axes, grid, borders) correctly
-    switch between light and dark'
-  - Proper Okabe-Ito palette compliance with identical data colors across renders
-  - Excellent use of plotly's faceting API (facet_row, facet_col)
-  - Clean, reproducible code with no unused imports
-  - Well-proportioned layout with generous margins and no overlapping elements
-  - Realistic, neutral data with appropriate scales
-  - All specification requirements met exactly
+  - Uses plotly express facet_row/facet_col with category_orders, so the 3x4 grid
+    keeps the data's own order of servers and periods
+  - for_each_annotation rewrites the strips to the category only (Frankfurt, Night),
+    readable in both themes
+  - One figure-level y title replaces three repeated row titles, keeping the left
+    margin clean
+  - Shared axes across all 12 panels make the server and time-of-day offsets compare
+    directly
+  - Plausible, neutral latency scenario with real server regions and sensible ms/KB
+    scales
+  - Theme tokens thread through title, ticks, grid, lines and marker outline; data
+    color identical in both renders
+  - HTML output keeps plotly's native hover, zoom and pan per panel
   weaknesses:
-  - 'Design Excellence is moderate (13/20): styling is clean but not distinctive.
-    Consider removing top/right spines for a cleaner look, exploring subtle visual
-    hierarchy through opacity or emphasis, or adding custom grid styling.'
-  - 'Minor improvement in Library Mastery: could demonstrate more distinctive plotly
-    features (e.g., custom hover templates or advanced trace styling).'
+  - 'Suggestion: a light ELEVATED_BG strip behind the facet headers would separate
+    them from the panel area more clearly.'
+  - 'Suggestion: per-panel slope differences could be read faster with a shared y
+    range starting at the data minimum rather than near 0.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct, not pure white)
-      Chrome: Title "facet-grid · plotly · anyplot.ai" centered at 28px, axis labels at 22px, tick labels at 18px — all in dark text (#1A1A17), clearly visible against light background
-      Data: 4×4 faceted grid of scatter plots showing Marketing Spend (X, 10–50$K) vs Sales (Y, ~60–150$K) across Regions (North, South, East, West rows) and Quarters (Q1–Q4 columns). Markers are Okabe-Ito #009E73 with white edges, 80% opacity, size 16. Data is clearly distinguishable.
-      Grid: Subtle, present on both axes, does not compete with data
-      Facet labels: Clearly positioned on right side (regions) and top (quarters) in dark text
-      Legibility verdict: PASS (all text readable, no light-on-light failures)
+      Background: warm off-white #FAF8F1 across paper and all 12 panels (3200x1800).
+      Chrome: centered title 'facet-grid · python · plotly · anyplot.ai' in dark ink; column headers Night/Morning/Afternoon/Evening on top, row headers Frankfurt/Virginia/Singapore rotated on the right; one shared y title 'Response time (ms)' on the left; 'Payload size (KB)' under each column; ticks 0-800 and 100-300 in soft dark gray; subtle grid. All readable.
+      Data: 35 #009E73 points per panel with a thin page-colored outline, shared axes, latency rising with payload and offset by server and time of day.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct, not pure black)
-      Chrome: Title and all axis/tick labels now rendered in light text (#F0EFE8), clearly readable against dark background. No dark-on-dark failures.
-      Data: Identical 4×4 layout. Markers are IDENTICAL to light render (#009E73 — confirmed data colors unchanged). Grid and borders adapted with appropriate opacity for dark theme.
-      Grid: Subtle, visible with proper contrast
-      Facet labels: Same positioning as light render, now in light text, clearly visible
-      Legibility verdict: PASS (all text readable, proper contrast, no dark-on-dark failures, brand green visible)
-
-    Both renders synchronized perfectly: data colors constant, only chrome changes per theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title, headers, axis titles and ticks in light ink (#F0EFE8 / #B8B7B0); grid subtle; no dark-on-dark text.
+      Data: identical #009E73 points and positions as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,73 +55,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (28px), axis labels (22px), tick labels (18px) all explicitly
-          sized and readable in both themes
+        comment: Title 16 px, axis titles 12 px, ticks 10 px, strip labels 11 px,
+          all explicitly set and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text is distinct and non-overlapping; facet labels clearly positioned
-          on right and top
+        comment: No text collisions; the single shared y title avoids three stacked
+          row titles; points do not hide each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (size 16, opacity 0.8) are clearly visible; density is moderate
-          (15 points per facet) and well-managed
+        comment: 35 points per panel at size 6 with a thin page-colored outline, clearly
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 provides adequate contrast and is CVD-safe'
+        comment: 'Single series #009E73, good contrast on both surfaces; no color-only
+          signal'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced proportions; 80px margins on sides and bottom, 100px top;
-          nothing cut off
+        comment: 3200x1800 canvas, 12 equal panels, balanced margins, nothing cut
+          off; title width is the expected short mandated title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec format; axes labeled with units ($K)
+        comment: Payload size (KB) and Response time (ms), descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 (light) and #1A1A17 (dark);
-          data colors identical between renders'
+        comment: 'First series #009E73; backgrounds #FAF8F1 / #1A1A17; data color
+          identical in both renders'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Clean, professional styling with marker edge definition. No custom
-          color palettes or exceptional visual hierarchy.
+        comment: Style-guide baseline typography and palette; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Grid styling is subtle; margins are generous. Spines are present
-          but could be refined.
+        comment: One figure-level y title in place of three repeated row titles frees
+          left whitespace and aligns the grid (+1)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clear comparison across regions and quarters; facet structure guides
-          the eye. Visual hierarchy is functional but not exceptional.
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -134,27 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Faceted grid of scatter plots with correct structure (4 regions ×
-          4 quarters)
+        comment: Faceted grid of scatter plots, 3 rows x 4 columns
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X (Marketing Spend), Y (Sales), row facet (Region), column facet
-          (Quarter) all present
+        comment: Shared scales, facet by both, labels per facet (column headers and
+          row headers), equal aligned panels; C1-C4 met, C5 N/A (single color)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correctly mapped; all data shown; ranges are appropriate
+        comment: x/y mapped correctly, shared axes show all data, marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec format; legend correctly hidden for single series
+        comment: Title 'facet-grid · python · plotly · anyplot.ai'; strips show the
+          category only; legend N/A for one series
     data_quality:
       score: 15
       max: 15
@@ -164,21 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full grid coverage across all categorical combinations (16 facets)
+        comment: Row and column faceting, varying levels and slopes across facets
+          show the conditional pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marketing spend→sales relationship is plausible; regional/quarterly
-          variation is realistic and neutral
+        comment: Website latency by server region and time of day; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Marketing Spend (10–50$K) and Sales (~60–150$K) are sensible for
-          domain
+        comment: 'Checked: payload 50-900 KB and latency about 35-330 ms on the axes,
+          sensible for web responses; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -188,57 +184,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct code with no unnecessary functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, pandas, plotly.express'
+        comment: os, numpy, pandas, plotly.express all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: Appropriate complexity; facets come from px facet_row/facet_col
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png/html
+        comment: write_image plot-{THEME}.png 800x450 scale 4 and write_html plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of plotly.express and faceting parameters; proper theme-adaptive
-          styling throughout
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: false
-        comment: Well-executed use of facet_row, facet_col, for_each_annotation, and
-          marker edge styling. Could explore more advanced features.
+        comment: px.scatter with facet_row/facet_col, category_orders and for_each_annotation
+          to rewrite the strip text (+1)
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T08:14:33Z'
 impl_tags:
   dependencies: []
   techniques:
   - faceting
-  - html-export
+  - subplots
+  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - theme-adaptive
+  - publication-ready
+  - edge-highlighting
+  - alpha-blending

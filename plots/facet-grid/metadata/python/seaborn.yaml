@@ -2,130 +2,128 @@ library: seaborn
 language: python
 specification_id: facet-grid
 created: '2025-12-30T16:29:26Z'
-updated: '2026-05-13T03:27:16Z'
-generated_by: claude-haiku
-workflow_run: 25776214869
+updated: '2026-11-21T08:16:10Z'
+generated_by: claude-sonnet
+workflow_run: 44883141637
 issue: 2696
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - Excellent theme adaptation with consistent Okabe-Ito palette across light and
-    dark renders
-  - Strong FacetGrid + regplot integration with thoughtful styling (edge colors, alpha
-    blending, custom line styling)
-  - 'Perfect code structure: clean data generation, explicit font sizing throughout,
-    reproducible seed'
-  - Intelligent layout optimization removing redundant y-axis labels on non-leftmost
-    columns
-  - All text sizes explicitly set (title 26pt, labels 18pt, ticks 14pt) ensuring full
-    readability at canvas resolution
-  - Proper brand color usage (#009E73) as primary data color with consistent secondary
-    styling
+  - 'Idiomatic FacetGrid with map_dataframe(regplot) and margin_titles=True: month
+    headers across the top and product-line headers down the right margin'
+  - Shared axis scales across all 12 panels with tick labels only on the outer panels,
+    so positions compare directly
+  - Tick density thinned with MaxNLocator for the small panels, keeping every panel
+    uncluttered
+  - 'Theme tokens threaded through the rc dict: both renders theme-correct with identical
+    #009E73 data marks'
+  - Exact 3200x1800 canvas via figure set_size_inches(8, 4.5) at dpi=400 without bbox_inches
   weaknesses:
-  - 'Visual storytelling could be enhanced: each facet shows data relationship but
-    plot doesn''t emphasize key insights or trends across facets'
-  - 'Design sophistication is solid but standard: uses configured library defaults
-    rather than custom palette or exceptional aesthetic choices'
+  - 'VQ-01 (both): tick labels at 7 pt sit below the style guide''s 8 pt and read
+    small beside the 9 pt axis titles → 8 pt (+1 pt). Likely cause: ax.tick_params(labelsize=7).'
+  - 'DQ-03 (both): profit margins clipped at 40 % pile Food points on a flat ceiling
+    at exactly 40 % (Jan, Feb, Apr panels) → generate margins that stay inside the
+    range without clipping, e.g. a lower Food base or smaller noise. Likely cause:
+    np.clip(..., 5, 40) on base_margin 35 ± 3 noise.'
+  - 'Suggestion: a focal comparison (e.g. ordering or emphasis that makes the Food-vs-Electronics
+    margin gap the first read) would give the grid a story beyond the data.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with no visible pure whites.
-      Chrome: Title "facet-grid · seaborn · anyplot.ai" (26pt, dark text), axis labels "Production Cost ($)" and "Profit Margin (%)" (18pt, dark text), tick labels (14pt), month/product labels (18pt) all clearly readable against light background.
-      Data: Markers in brand green (#009E73) with white edges, regression lines in soft secondary color with subtle alpha. Colors are vivid and distinct.
-      Grid: Subtle horizontal/vertical lines at alpha=0.12, visible but not dominant.
-      Layout: 3 rows (Electronics, Apparel, Food) × 4 columns (Jan, Feb, Mar, Apr) faceted grid with balanced margins and generous whitespace.
-      Legibility verdict: PASS — all text is readable, data markers are clear, no contrast issues.
+      Background: warm off-white #FAF8F1 across figure and panels; 3200x1800 canvas.
+      Chrome: title 'facet-grid · python · seaborn · anyplot.ai' centered top in dark ink; column headers Jan/Feb/Mar/Apr, row margin titles Electronics/Apparel/Food (rotated, right side); 'Profit Margin (%)' on each row's left panel, 'Production Cost ($)' under each bottom panel; tick labels in soft dark ink, small but readable; faint grid.
+      Data: 3x4 grid of scatter panels, ~30 #009E73 points each with page-colored outline and a soft-ink linear fit line; shared axes (cost ~700–1500, margin ~5–42); each month occupies its own cost band; Food points cap at 40.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with no visible pure blacks.
-      Chrome: Title in light text (#F0EFE8), axis labels in light text (18pt), tick labels in soft light text, month/product labels in light text — all clearly readable against dark background.
-      Data: Markers in IDENTICAL brand green (#009E73) as light render, regression lines in soft secondary color. Data colors do not change between themes (only chrome adapts).
-      Grid: Subtle lines at alpha=0.12, visible and consistent with light render.
-      Layout: Identical structure to light render, no cut-off content, proper spacing maintained.
-      Legibility verdict: PASS — no dark-on-dark failures, all text is readable, data is clearly visible. The brand green has excellent luminance contrast against the dark background.
+      Background: warm near-black #1A1A17.
+      Chrome: title, facet headers and axis titles in light ink; tick labels and spines in soft light ink; no dark-on-dark text; grid faint but visible.
+      Data: identical #009E73 points and layout to the light render; fit lines light grey.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 26pt, labels 18pt, ticks 14pt);
-          perfectly readable in both themes
+        passed: false
+        comment: Title 12 pt, axis titles 9 pt, facet labels 9 pt, but tick labels
+          at 7 pt sit below the 8 pt reference and read small beside the axis titles
+          (defect line); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; facet layout is clean and organized
+        comment: No text collisions; facet headers, tick labels and axis titles of
+          neighboring panels stay apart
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (s=140, alpha=0.75) perfectly adapted to ~30 points per facet;
-          regression lines clearly visible
+        comment: About 30 points per panel at s=14 with a page-colored outline, clearly
+          visible in both themes; fit lines visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; Okabe-Ito palette is CVD-safe; edge colors provide
-          definition
+        comment: Single green series with soft-ink fit line; strong contrast on both
+          surfaces, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins; plot fills appropriate canvas
-          proportion
+        comment: 3200x1800 canvas; 3x4 grid of equal panels fills the canvas with
+          balanced margins; title at ~42% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Production Cost ($)'', ''Profit Margin
-          (%)'', facet labels clear'
+        comment: '''Production Cost ($)'' and ''Profit Margin (%)'' with units; facet
+          labels are plain category names'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; backgrounds #FAF8F1/#1A1A17 ✓; chrome colors
-          theme-adaptive ✓; data colors identical between themes ✓'
+        comment: 'First (only) series #009E73; backgrounds #FAF8F1 / #1A1A17; chrome
+          theme-correct; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Well-configured design with intentional color choices, theme tokens,
-          and marker styling; above default but not exceptional
+        comment: 'Style-guide baseline: theme tokens, Imprint green, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: false
-        comment: Subtle grid (alpha=0.12), generous whitespace, edge-color refinement;
-          very good but not perfect
+        comment: Tick density thinned for the small panels (MaxNLocator nbins=3 on
+          x, 4 on y) and tight panel spacing chosen for a 12-panel grid
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Clear data presentation across facets but no visual emphasis or focal
-          point to highlight key insights
+        comment: Data displayed per facet; no hierarchy or focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -135,30 +133,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct FacetGrid with scatter + regression overlay
+        comment: Faceted grid of scatter panels (scatter + per-panel linear fit as
+          the base plot), split by row and column
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Row (Product Line) and column (Month) faceting; base scatter plot;
-          regression lines
+        comment: Shared scales (C2), facet labels as column headers and row margin
+          titles (C3), equal aligned panels (C4), same base plot in every panel (C1);
+          no color encoding (C5 n/a)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Production Cost, Y: Profit Margin correctly assigned; axes show
-          all data'
+        comment: x = cost, y = margin; marks at their values; shared axes show all
+          data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'facet-grid · seaborn · anyplot.ai'; facet labels clear (Electronics/Apparel/Food,
-          Jan-Apr)
+        comment: Title 'facet-grid · python · seaborn · anyplot.ai' correct; no legend
+          needed (single series, N/A)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -166,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows variation by product line, seasonality by month, cost-margin
-          relationship, trend in each facet
+        comment: Faceting by both variables, shared scales, between-facet shifts in
+          both x (month) and y (product line) and per-panel trends
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real business scenario; neutral product types (Electronics, Apparel,
-          Food); realistic values
+        comment: 'Neutral business scenario: production cost vs. profit margin by
+          product line and month'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Production Cost 800-1400 is realistic; Profit Margin 5-40% matches
-          expected business proportions
+        passed: false
+        comment: Costs 700–1500 $ and margins 6–40 % are plausible, but np.clip at
+          40 % piles Food points on a flat ceiling at exactly 40 % (defect line)
     code_quality:
       score: 10
       max: 10
@@ -191,58 +191,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → theme → plot → save; no functions/classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, plt, numpy, pandas, seaborn'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake functionality
+        comment: Concise; data built as per-group DataFrames and concatenated
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches; current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Expert use of FacetGrid, map_dataframe, set_titles, set_axis_labels;
-          seaborn's recommended patterns
+        passed: false
+        comment: FacetGrid + map_dataframe(regplot), set_titles templates, set_axis_labels
+          for outer labels — idiomatic figure-level seaborn
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: FacetGrid + regplot overlay combo is distinctive to seaborn; map_dataframe
-          pattern is seaborn-specific and hard to replicate cleanly in other libraries
+        passed: false
+        comment: margin_titles=True for row headers on the right margin, a seaborn
+          FacetGrid-specific feature
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T08:12:51Z'
 impl_tags:
   dependencies: []
   techniques:
   - faceting
-  - annotations
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
