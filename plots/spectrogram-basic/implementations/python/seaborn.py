@@ -1,14 +1,16 @@
 """ anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-15
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-21
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 from scipy import signal
 
 
@@ -19,73 +21,75 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - chirp signal with increasing frequency
+# Imprint palette (continuous data uses the sequential cmap derived from it)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Constants
+WINDOW_SIZE = 256  # samples per analysis window
+WINDOW_OVERLAP = 200  # overlapping samples between windows (smoother time axis)
+POWER_FLOOR = 1e-10  # avoids log of zero in the dB conversion
+N_TICKS = 5
+FLOOR_PERCENTILE = 20  # color range starts here so isolated deep-noise cells don't flatten the contrast
+
+# Columns: set these to your table's column names
+SIGNAL = "Amplitude"  # role: signal
+SAMPLE_RATE = "Sample rate (Hz)"  # role: sample_rate
+
+# Data: replace this block with your own table, for example df = pd.read_csv("signal.csv")
+# Chirp sweeping 100 Hz to 800 Hz over 2 s, sampled at 4 kHz, with a little noise
 np.random.seed(42)
-sample_rate = 4000  # Hz
-duration = 2.0  # seconds
-t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
+_sample_rate = 4000  # Hz
+_duration = 2.0  # seconds
+_t = np.linspace(0, _duration, int(_sample_rate * _duration), endpoint=False)
+_chirp = signal.chirp(_t, f0=100, f1=800, t1=_duration, method="linear")
+df = pd.DataFrame({SIGNAL: _chirp + np.random.randn(len(_t)) * 0.1, SAMPLE_RATE: _sample_rate})
 
-# Create a chirp signal: frequency increases from 100 Hz to 800 Hz
-f0, f1 = 100, 800
-chirp_signal = signal.chirp(t, f0=f0, f1=f1, t1=duration, method="linear")
+# Plot: reads only df and the constants above
+sample_rate = df[SAMPLE_RATE].median()
+duration = len(df) / sample_rate
+samples = df[SIGNAL].interpolate(limit_direction="both").to_numpy()  # a gap in the signal is bridged, not zeroed
+frequencies, times, power = signal.spectrogram(samples, fs=sample_rate, nperseg=WINDOW_SIZE, noverlap=WINDOW_OVERLAP)
+power_db = 10 * np.log10(power + POWER_FLOOR)
 
-# Add some noise for realism
-chirp_signal += np.random.randn(len(chirp_signal)) * 0.1
+# Tick positions in cell units; the heatmap's y axis is inverted so low frequencies sit at the bottom
+time_ticks = np.linspace(0, power_db.shape[1], N_TICKS)
+time_labels = [f"{v:.1f}" for v in np.linspace(0, duration, N_TICKS)]
+freq_ticks = np.linspace(0, power_db.shape[0], N_TICKS)
+freq_labels = [f"{round(v)}" for v in np.linspace(frequencies[0], frequencies[-1], N_TICKS)]
 
-# Compute spectrogram using scipy
-nperseg = 256  # Window size
-noverlap = 200  # Overlap for smoother visualization
-frequencies, times, Sxx = signal.spectrogram(chirp_signal, fs=sample_rate, nperseg=nperseg, noverlap=noverlap)
-
-# Convert to dB scale for better visualization
-Sxx_dB = 10 * np.log10(Sxx + 1e-10)
-
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Flip data vertically so low frequencies are at bottom (standard convention)
-Sxx_dB_flipped = np.flipud(Sxx_dB)
-
-# Use seaborn heatmap for the spectrogram visualization
 sns.heatmap(
-    Sxx_dB_flipped,
+    power_db[::-1],
     ax=ax,
-    cmap="viridis",
+    cmap=imprint_seq,
+    vmin=np.percentile(power_db, FLOOR_PERCENTILE),
+    vmax=power_db.max(),
     cbar=True,
-    cbar_kws={"label": "Power (dB)", "shrink": 0.8},
+    cbar_kws={"label": "Power (dB)", "shrink": 0.85, "pad": 0.02},
     xticklabels=False,
     yticklabels=False,
     rasterized=True,
 )
 
-# Set proper axis labels and ticks
-# Calculate tick positions for time axis
-time_tick_positions = np.linspace(0, Sxx_dB.shape[1], 5)
-time_tick_labels = [f"{t:.1f}" for t in np.linspace(0, duration, 5)]
-ax.set_xticks(time_tick_positions)
-ax.set_xticklabels(time_tick_labels, fontsize=16, color=INK_SOFT)
-
-# Calculate tick positions for frequency axis (low to high, bottom to top)
-freq_tick_positions = np.linspace(0, Sxx_dB.shape[0], 5)
-freq_tick_labels = [f"{int(f)}" for f in np.linspace(frequencies[0], frequencies[-1], 5)]
-ax.set_yticks(freq_tick_positions)
-ax.set_yticklabels(freq_tick_labels[::-1], fontsize=16, color=INK_SOFT)
-
-# Labels and styling
-ax.set_xlabel("Time (s)", fontsize=20, color=INK)
-ax.set_ylabel("Frequency (Hz)", fontsize=20, color=INK)
-ax.set_title("spectrogram-basic · seaborn · anyplot.ai", fontsize=24, color=INK, pad=20)
-
-# Style the colorbar
-cbar = ax.collections[0].colorbar
-cbar.ax.tick_params(labelsize=14, colors=INK_SOFT)
-cbar.ax.yaxis.label.set_size(18)
-cbar.ax.yaxis.label.set_color(INK)
-
-# Set spine colors
+# Style
+title = "spectrogram-basic · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=12, color=INK, pad=10)
+ax.set_xticks(time_ticks, time_labels, rotation=0)
+ax.set_yticks(freq_ticks, freq_labels[::-1], rotation=0)
+ax.set_xlabel("Time (s)", fontsize=10, color=INK)
+ax.set_ylabel("Frequency (Hz)", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 for spine in ax.spines.values():
     spine.set_color(INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+cbar = ax.collections[0].colorbar
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.ax.yaxis.label.set_size(10)
+cbar.ax.yaxis.label.set_color(INK)
+cbar.outline.set_edgecolor(INK_SOFT)
+
+fig.subplots_adjust(left=0.09, right=0.95, top=0.92, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
