@@ -2,43 +2,45 @@ library: matplotlib
 language: python
 specification_id: line-loss-training
 created: '2025-12-31T00:07:24Z'
-updated: '2026-05-14T05:33:15Z'
-generated_by: claude-haiku
-workflow_run: 25843504254
+updated: '2026-11-21T14:20:47Z'
+generated_by: claude-sonnet
+workflow_run: 44912946885
 issue: 2860
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - 'Perfect palette compliance with correct Okabe-Ito colors (#009E73 training, #D55E00
-    validation)'
-  - Flawless theme adaptation in both renders with readable chrome while maintaining
-    identical data colors
-  - All text explicitly sized for 4800×2700px with perfect readability
-  - Strong data storytelling through annotation marking optimal stopping epoch
-  - Comprehensive spec compliance with all required features
-  - Realistic training dynamics showing authentic overfitting pattern
-  - Thoughtful visualization choices with distinct markers and appropriate line weights
+  - 'Training and validation curves in Imprint positions 1 and 2 (#009E73, #C475FD),
+    identical across themes, with all chrome threaded through INK / INK_SOFT tokens'
+  - Exact 3200x1800 canvas from figsize=(8, 4.5) at dpi=400 with style-guide font
+    sizes; no bbox_inches trimming
+  - Minimum validation loss computed with idxmin from df and marked at its exact epoch
+    and value, with an ax.annotate callout (offset points, arrow, rounded bbox) placed
+    in empty space
+  - 'Adaptable structure: column constants, one Data block ending in df, plotting
+    reads only df'
   weaknesses:
-  - Design Excellence could leverage more distinctive matplotlib features for higher
-    uniqueness scoring
+  - 'Suggestion: draw the minimum-validation marker in the validation color (#C475FD)
+    so it does not read as a point of the green training curve.'
+  - 'Suggestion: a log-scaled y axis variant could show the late-epoch gap at finer
+    resolution.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title, axis labels (fontsize 20-24), and tick labels (fontsize 16) all in appropriate dark gray (#1A1A17/#4A4A44). L-shaped frame (left/bottom spines in #4A4A44).
-      Data: Two line series - Training Loss in brand green (#009E73) with circle markers, Validation Loss in vermillion (#D55E00) with square markers. Green circular marker at epoch 67 marks minimum validation loss with annotation. Subtle y-axis grid (alpha=0.15).
-      Legibility verdict: PASS - All text clearly readable, no overlaps, excellent contrast against light background.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: title 'line-loss-training · python · matplotlib · anyplot.ai' in dark ink, centered; axis titles 'Epoch' and 'Cross-Entropy Loss'; grey tick labels 0.0-2.0 and 20-140; subtle horizontal grid; left/bottom spines only; framed legend upper right; annotation box 'Min validation loss / Epoch 67: 0.20' with a dark-grey arrow.
+      Data: Training Loss in #009E73 drops from 2.2 to ~0.12 and plateaus; Validation Loss in #C475FD falls to 0.20 at epoch 67 then climbs to ~0.68 by epoch 150; a green dot marks the validation minimum.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: All text now in light colors (#F0EFE8 for title/labels, #B8B7B0 for ticks). Spines in light gray (#B8B7B0). L-shaped frame maintained.
-      Data: Data colors identical to light render - green (#009E73) and orange (#D55E00) unchanged. Only chrome adapted to dark theme. Subtle grid now light-colored for visibility.
-      Legibility verdict: PASS - All text perfectly readable on dark background, no dark-on-dark failures, excellent theme adaptation with identical data color rendering.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, tick labels and legend text in light grey, grid faint light lines, annotation box with light text and light-grey arrow; no dark-on-dark text.
+      Data: identical green and lavender lines and green minimum marker as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,73 +51,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt) and
-          perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, annotation
+          9 pt, all set explicitly at the style-guide sizes; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no overlapping elements
+        comment: No text collides with text or data; the annotation box sits in empty
+          space above the curves and the legend sits upper right, clear of both lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines (linewidth=3), markers, and scatter point (s=250) optimally
-          adapted to data density
+        comment: 2.5 lw lines without per-point markers suit 150 epochs; legend line
+          samples match the lines in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) with good contrast and CVD
-          safety'
+        comment: Green against lavender differ strongly in hue and lightness; not
+          a red-green pair
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect layout: plot fills 60-70% of canvas, balanced margins, tight_layout()
-          applied'
+        comment: 3200x1800 canonical canvas (gate passed); balanced margins, title
+          about 52 % of the width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context (X: Epoch, Y: Cross-Entropy Loss)'
+        comment: '''Epoch'' and ''Cross-Entropy Loss'' name the loss function as the
+          Notes ask'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: Okabe-Ito colors, correct theme backgrounds (#FAF8F1 light,
-          #1A1A17 dark), all chrome properly themed'
+        comment: 'Training #009E73 (position 1), validation #C475FD (position 2);
+          backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful choices (distinct markers for series), intentional palette
-          usage, professional polish
+        passed: false
+        comment: The style-guide baseline (sizes, tokens, palette); nothing decided
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, generous whitespace, custom legend styling
-          with theme colors
+        passed: false
+        comment: Spines and y-only subtle grid per the style guide; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Excellent narrative: annotation marks optimal stopping point, overfitting
-          pattern visually apparent'
+        passed: false
+        comment: The minimum-validation marker is the optional element the Notes offer;
+          no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -125,26 +128,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with training and validation curves
+        comment: Two-line training/validation loss curve over epochs, the requested
+          type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, axes labeled with loss function, optimal
-          epoch marked
+        comment: Distinct colors, legend, x axis from epoch 1 to 150, loss name on
+          the y axis, optional min-validation marker at epoch 67 on the lowest point
+          of the validation curve (all C bullets met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Epochs correctly mapped to x-axis (0-150), loss values to y-axis
+        comment: Epoch on x, loss on y; lines drawn through every logged value in
+          order; marker sits at the data minimum
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Title 'line-loss-training · python · matplotlib · anyplot.ai' in
+          the mandated form; legend labels 'Training Loss' / 'Validation Loss'
     data_quality:
       score: 15
       max: 15
@@ -154,20 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: initial decay, plateau, overfitting, realistic
-          noise'
+        comment: Shows the steep initial drop, the train/val gap, noisy validation,
+          the overfitting turn after the minimum and the early-stopping point
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic neural network training scenario with realistic loss dynamics
+        comment: A plausible, neutral 150-epoch classifier training run
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Loss values (0.1-2.2) and overfitting progression are factually correct
+        comment: Cross-entropy starting near 2.3 (ln 10 for 10 classes) and settling
+          near 0.1 is plausible; checked the min (epoch 67, 0.20) is computed by idxmin
+          from df, not placed
     code_quality:
       score: 10
       max: 10
@@ -177,55 +186,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → theme tokens → data → plot → save, no functions/classes
+        comment: Imports, constants, column constants, one Data block ending in df,
+          plot reads only df; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (os, matplotlib, numpy)
+        comment: os, matplotlib.pyplot, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity; idxmin computes the minimum
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches; current API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Excellent use of fig/ax pattern, Axes methods, spine/grid configuration
+        passed: false
+        comment: ax.annotate with textcoords='offset points', arrowprops and a rounded
+          bbox, the idiomatic matplotlib callout; plotting from pandas columns via
+          the Axes API
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Standard matplotlib capabilities (annotations, marker distinction)
-          rather than distinctively unique features
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T14:17:26Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
