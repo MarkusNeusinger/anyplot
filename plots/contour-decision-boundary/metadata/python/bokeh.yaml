@@ -2,46 +2,56 @@ library: bokeh
 language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T06:00:00Z'
-updated: '2026-05-16T07:18:35Z'
-generated_by: claude-haiku
-workflow_run: 25955694612
+updated: '2026-11-21T22:28:13Z'
+generated_by: claude-sonnet
+workflow_run: 44956018697
 issue: 2921
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 82
 review:
   strengths:
-  - Excellent visual quality with perfect readability in both light and dark themes
-  - Perfect data quality with well-chosen synthetic example
-  - Clean, reproducible code with proper seed management
-  - Sophisticated handling of multiple data layers with separate hover tools
-  - Proper theme-aware styling with token-based colors throughout
-  - All required spec features implemented
+  - Region raster and training points share Imprint colours, so misclassified points
+    read at once as one class lying on the other's region
+  - Ink-coloured outlines (theme token) keep every point visible on both regions in
+    both themes
+  - Misclassified points carry an X overlay that is explained in the legend and is
+    a non-colour cue
+  - Native p.image with LinearColorMapper draws the 400-column prediction mesh as
+    one raster glyph
+  - HoverTool scoped to the point renderers shows true and predicted class in the
+    HTML output
   weaknesses:
-  - Title format is incorrect - should be 'contour-decision-boundary · bokeh · anyplot.ai'
-    per spec requirement SC-04
-  - Design Excellence could be stronger - styling is competent but not exceptionally
-    refined
-  - LM-02 score is modest - techniques used are solid but not particularly distinctive
+  - 'SC-02 (both): the diagonal class boundary in the lower left and along the right
+    flank shows the mesh cells as visible stair-steps (cells about 8 px wide on the
+    3200 px canvas) → a finer mesh so the curved boundary reads smooth (about double
+    MESH_POINTS, +400). Likely cause: MESH_POINTS = 400 rendered with nearest-neighbour
+    p.image.'
+  - 'DQ-02 (both): the axes and classes are labelled Feature 1, Feature 2, Class 0
+    and Class 1, which read as generic → name the features and classes for a concrete
+    scenario (e.g. two sensor readings and two part types). Likely cause: the FEATURE_1/FEATURE_2
+    constants and the f"Class {c}" labels.'
+  - 'Suggestion: the legend glyphs are smaller than the plotted points; matching their
+    size would tie legend and marks together more directly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme-adaptive surface
-      Chrome: Title, axis labels, tick labels all clearly visible with dark text
-      Data: Class 0 in green (#009E73), Class 1 in orange (#D55E00), misclassified marked with red X
-      Legibility verdict: PASS - all elements readable against light background
+      Background: warm off-white #FAF8F1 page around the plot; the plane is filled with translucent Imprint green (class 0, upper left) and translucent Imprint purple (class 1, lower right) prediction regions separated by a curved KNN boundary
+      Chrome: bold title "contour-decision-boundary · python · bokeh · anyplot.ai" top-left (~55% width), italic axis titles Feature 1 / Feature 2, tick labels in soft dark ink, subtle grid, legend in an elevated panel top-right; all readable
+      Data: 200 training points, #009E73 green and #C475FD purple with near-black outlines; 14 misclassified points carry a dark X; legend lists Class 0 (true), Class 1 (true), Misclassified
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme-adaptive surface
-      Chrome: Title, axis labels, tick labels clearly visible with light text; no dark-on-dark failures
-      Data: Colors identical to light render (#009E73 green, #D55E00 orange with cyan outlines), Cividis colormap renders appropriately
-      Legibility verdict: PASS - all elements readable against dark background; proper theme contrast throughout
+      Background: warm near-black #1A1A17 page; regions render as deep green and deep purple translucent fills
+      Chrome: title, axis titles and tick labels in light ink, clearly readable; legend panel #242420 with light labels; no dark-on-dark text
+      Data: point fills identical to the light render (#009E73, #C475FD); outlines and X markers flip to light ink and stay visible on both regions
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -49,74 +59,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title, labels, ticks, legend all readable
-          in both themes
+        comment: Title 50 pt, axis titles 42 pt, ticks 34 pt, legend 30 pt as the
+          bokeh prompt sets them; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements; clean layout
+        comment: No text collisions; the legend sits in the empty top-right corner
+          of the plane
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, regions properly visible for 4800×2700 canvas
+        comment: 200 points at size 26 with an ink outline stand out on both regions;
+          misclassified X markers clear; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe; Cividis perceptually uniform;
-          X marker provides non-color signal
+        comment: Green/purple pair is CVD-safe and misclassification is also coded
+          by the X shape, not colour alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper proportions; all elements fit; no clipping
+        comment: 3200x1800 canvas, balanced margins, title about 55% of width, nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Title should be 'contour-decision-boundary · bokeh · anyplot.ai'
-          per spec, not 'Decision Boundary Classifier Visualization'
+        passed: true
+        comment: Feature 1 / Feature 2 axis titles; synthetic features carry no unit
+          (N/A)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Cividis appropriate; backgrounds #FAF8F1/#1A1A17
-          correct; both renders theme-correct'
+        comment: 'Class regions and points in Imprint positions 1 (#009E73) and 2
+          (#C475FD); backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Good theming with token-based colors; professional styling; lacks
-          distinctive enhancements
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, elevated legend
+          panel; nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Grid appropriately subtle (10% alpha); clean styling; could be more
-          refined
+        passed: false
+        comment: Subtle grid and outline per the style guide; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy with color regions and overlaid points; misclassified
-          X markers effective
+        passed: false
+        comment: Misclassified X overlay is the Notes' own option; no further hierarchy
+          chosen
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -124,28 +136,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision boundary visualization
+        comment: 'Correct decision-boundary plot: predicted region raster plus overlaid
+          training points'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Distinct colors, overlaid points, misclassified markers, legend,
-          mesh grid all present
+        comment: 'Translucent class regions (C1), true-class points with ink outlines
+          (C2), shared region/point colours (C3), legend with classes and misclassified
+          marker (C5); C4 missed: the mesh shows stair-steps along the diagonal boundary
+          (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes show features correctly; color mapping appropriate
+        comment: Points sit at their feature values; padded ranges show every point
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title format incorrect; legend labels match
+        passed: true
+        comment: Title in the mandated format; legend labels Class 0 (true), Class
+          1 (true), Misclassified match the marks
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -153,19 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Displays boundary regions, training points, accuracy, misclassifications
+        comment: Shows regions, curved boundary, training points of both classes and
+          14 misclassified points
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: make_moons dataset is classic; n_samples=200, noise=0.25 appropriate
+        comment: make_moons is a plausible teaching scenario, but the labels Feature
+          1/2 and Class 0/1 read as generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Natural feature ranges; mesh step h=0.02 provides good resolution
+        comment: 200 points, noise 0.25, padded ranges -2.2..2.9 and -1.2..2.0 suit
+          the data; no Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -175,34 +194,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions; straightforward linear flow
+        comment: Flat script in the six adaptable-code zones with column constants
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Proper seed management ensures deterministic output
+        comment: random_state=42 for make_moons; KNN is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; HoverTools are legitimate Bokeh interactivity
+        comment: Appropriate complexity; HoverTool is real bokeh interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; proper theme token
-          usage
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium per the
+          library prompt
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -210,27 +229,35 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of figure(), ColumnDataSource, HoverTool, LinearColorMapper
+        comment: ColumnDataSource per class built from the tidy df, image glyph with
+          LinearColorMapper, HoverTool restricted to the point renderers via renderers=
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: LinearColorMapper with Cividis, multiple ColumnDataSources, layered
-          hover tools; not exceptionally distinctive
+        passed: false
+        comment: Raster image glyph for the mesh plus a scoped HoverTool showing true
+          vs predicted class in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T22:24:22Z'
 impl_tags:
   dependencies:
   - sklearn
   - selenium
   techniques:
-  - custom-legend
   - hover-tooltips
-  - layer-composition
   - html-export
+  - layer-composition
   patterns:
   - data-generation
+  - dataset-loading
+  - iteration-over-groups
+  - matrix-construction
+  - columndatasource
   dataprep: []
   styling:
-  - publication-ready
-  - theme-adaptive
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
