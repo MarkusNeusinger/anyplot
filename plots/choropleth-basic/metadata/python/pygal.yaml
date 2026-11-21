@@ -12,83 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choroplet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 64
 review:
   strengths:
-  - Correct theme adaptation with proper contrast in both light and dark renders
-  - Viridis palette is appropriate for sequential GDP data and colorblind-accessible
-  - Clean, straightforward code with reproducible seeding and deterministic data generation
-  - 'Specification fully met: correct plot type, legend, title format, and realistic
-    neutral data'
-  - High-resolution sizing (4800×2700) with all elements clearly visible
+  - Correct theme surfaces and light/dark chrome in both renders
+  - Single-layer choropleth with class legend at the bottom, using pygal_maps_world's
+    World map with native tooltips
+  - Neutral economic indicator in sensible bins
   weaknesses:
-  - 'Design Excellence is generic: uses standard viridis binning without distinctive
-    visual treatment or refinement'
-  - Limited use of pygal-specific interactive features; basic World map rendering
-    without custom interactivity patterns
+  - 'VQ-05 (both): canvas is 4800x2700, not a canonical size → 3200x1800 (−1600 ×
+    −900). Likely cause: World(width=4800, height=2700).'
+  - 'VQ-07 (both): regions use a viridis colormap (#440154 → #fde724) → steps of imprint_seq
+    #009E73 → #4467A3. Likely cause: the VIRIDIS_COLORS list.'
+  - 'VQ-01 (both): the title at about 28 px and the legend labels at about 16 px read
+    tiny on the 4800x2700 canvas → title about 66 px, legend about 44 px. Likely cause:
+    title_font_size=28, legend_font_size=16.'
+  - 'VQ-03, SC-02 (both): pygal shades each country by an inline fill-opacity within
+    its series, so the US and Canada in the same class show different yellows and
+    no fill matches its legend swatch (C2) → one flat fill per class. Likely cause:
+    pygal''s default per-value fill-opacity left in the SVG.'
+  - 'SC-02 (both): countries without data are drawn unfilled in the page color instead
+    of gray, so they read as background (C4) → a gray no-data fill. Likely cause:
+    the no_data option does not set the country fill.'
+  - 'SC-04 (both): the title ''choropleth-basic · pygal · anyplot.ai'' lacks the language
+    segment → ''choropleth-basic · python · pygal · anyplot.ai''. Likely cause: the
+    title string.'
+  - 'DQ-02 (code): real country names carry random GDP numbers from np.random.uniform
+    → real or close-to-real values per country. Likely cause: the gdp_data generation
+    loop.'
+  - 'Suggestion: a descriptive title prefix would state the mapped variable more prominently
+    than the legend alone.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "choropleth-basic · pygal · anyplot.ai" clearly visible in dark ink (#1A1A17). Legend at bottom with 4 bin labels (GDP < $10k, GDP $10k-$25k, GDP $25k-$50k, GDP > $50k) fully readable. All text has proper contrast.
-      Data: 34 countries colored in viridis palette (dark purple → blue → green → yellow) representing GDP ranges. Region boundaries visible but not overwhelming. Colors follow sequential coloring for continuous data.
-      Legibility verdict: PASS - all text and regions fully readable
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'choropleth-basic · pygal · anyplot.ai' in dark ink but very small at the top; four legend entries ('GDP < $10k' … 'GDP > $50k') in tiny dark text at the bottom.
+      Data: 34 countries shaded in viridis (purple, blue, green, yellow) with varying opacity inside each class, so countries in one class differ in shade (US pale yellow, Canada bright yellow); countries without data unfilled in page color with gray outlines.
+      Legibility verdict: PASS, though the title and legend read tiny.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title visible in light text (#F0EFE8). Legend text light-colored and fully readable against dark background. No dark-on-dark failures detected.
-      Data: Data colors identical to light render (viridis is theme-independent). Yellow (GDP > $50k) bright and visible. Purple (GDP < $10k) dark but still distinguishable from background. All regions properly visible.
-      Legibility verdict: PASS - no dark-on-dark issues; all elements readable
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title and legend in light text, readable but tiny; no dark-on-dark text.
+      Data: same viridis classes; the opacity blending against the dark page shifts shades (US olive, Colombia near-black purple); no-data countries unfilled with light outlines.
+      Legibility verdict: PASS, though the title and legend read tiny.
   verdict: APPROVED
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 17
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 3
         max: 8
-        passed: true
-        comment: Title, legend, and labels all readable in both themes
+        passed: false
+        comment: Title and legend labels at about 16–28 px on a 4800x2700 canvas read
+          tiny (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend layout is clean and well-spaced
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: All 34 regions clearly distinguishable with distinct colors; no density
-          issues
+        passed: false
+        comment: Legend swatches do not match the per-country opacity-shaded fills
+          (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis palette is colorblind-safe; adequate contrast across light
-          and dark themes
+        comment: Viridis is CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 4800×2700 proportions well-balanced; no elements cut off
+        passed: false
+        comment: Canvas 4800x2700, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format; legend entries clearly labeled with ranges
+        comment: Legend entries name the variable with units (GDP, $)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Viridis sequential palette correct for continuous data; backgrounds
-          theme-correct; both renders readable
+        passed: false
+        comment: Viridis colormap instead of imprint_seq (defect line)
     design_excellence:
       score: 8
       max: 20
@@ -98,24 +113,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Functional design with standard viridis binning; no custom palette
-          or distinctive design treatment
+        comment: Baseline, nothing beyond
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization; standard legend placement without special
-          refinement
+        comment: Nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Color gradient creates focal point for income disparities but visual
-          hierarchy is subdued
+        comment: Data displayed, no chosen hierarchy
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -123,27 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct choropleth implementation with regional coloring
+        comment: Single-layer choropleth
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Color legend, regional shading, proper data binning all present
+        passed: false
+        comment: 'C4 missed: no-data countries are unfilled page color, not gray;
+          C2 legend swatches do not show the shades on the map (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Countries correctly mapped to GDP values; all regions represented
+        comment: Countries mapped to their own values
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title follows spec format; legend entries properly labeled
+        passed: false
+        comment: Title lacks the 'python' segment (defect line)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -151,19 +164,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Diverse geographic regions demonstrate full income spectrum
+        comment: Four classes across continents
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: GDP per capita ranges realistic (1–85k); neutral and plausible
+        passed: false
+        comment: Real country names carry random GDP numbers (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Bin thresholds sensible for economic data visualization
+        comment: GDP per capita 1–85k USD in sensible bins
     code_quality:
       score: 10
       max: 10
@@ -173,49 +186,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions; straightforward data generation and rendering
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only required imports present
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no simulated interactivity
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Writes plot-{THEME}.png/html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses World class from pygal_maps_world, proper Style configuration,
-          correct render methods
+        passed: false
+        comment: World map with Style
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Leverages World map capability but implementation is straightforward;
-          limited custom interactivity
+        comment: Nothing beyond the mandated API
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies: []
   techniques:
