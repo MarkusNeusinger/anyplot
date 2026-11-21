@@ -2,47 +2,52 @@ library: altair
 language: python
 specification_id: roc-curve
 created: '2025-12-26T17:37:31Z'
-updated: '2026-05-09T22:38:46Z'
-generated_by: claude-haiku
-workflow_run: 25613469017
+updated: '2026-11-21T12:39:07Z'
+generated_by: claude-sonnet
+workflow_run: 44904312105
 issue: 2273
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/altair/plot-dark.html
-quality_score: 93
+quality_score: 84
 review:
   strengths:
-  - Perfect theme compliance in both light and dark renders with no legibility issues
-  - Excellent text sizing with explicit font specifications at large canvas scale
-  - Correct Okabe-Ito palette use with proper color ordering (positions 1 and 2)
-  - Clean, reproducible synthetic data generation with realistic AUC values
-  - Idiomatic Altair usage with proper encode/properties/configure patterns
-  - Strong visual storytelling through model comparison and diagonal reference line
-  - All required ROC curve features present and properly implemented
+  - Square 2400x2400 render with a square plot area, so the diagonal runs at 45 degrees
+    as the Notes prefer
+  - AUC sits in each legend label, and the random baseline shares the legend through
+    a strokeDash scale on the same domain as color
+  - Theme tokens threaded through title, axes, grid, legend and view in both renders
+  - Vectorised ROC sweep and trapezoid AUC computed from the data, reproducible with
+    a fixed seed
+  - Native .interactive() zoom/pan and formatted tooltips in the HTML output
   weaknesses:
-  - Design excellence is competent but not distinctive — relies on style guide defaults
-    without additional custom visual innovation
-  - Visual refinement could be enhanced (e.g., additional grid styling, spine customization,
-    typography hierarchy)
+  - 'SC-03 (both): both curves show saw-tooth spikes that drop below their operating
+    points (e.g. the green curve falls from about 0.68 to 0.58 TPR near FPR 0.02,
+    the purple one from 0.42 to 0.37 near FPR 0.15) because mark_line sorts by FPR
+    and joins the points that share an FPR out of threshold order → draw each curve
+    in threshold order so it rises monotonically. Likely cause: no alt.Order encoding
+    (e.g. an order by threshold column) on mark_line.'
+  - 'DQ-02 (both): the models are labelled only ''Strong Model'' and ''Weak Model'',
+    with no domain → name real classifier types for a stated task (e.g. ''Gradient
+    boosting'' and ''Logistic regression'' for churn prediction). Likely cause: the
+    keys of the scores dict.'
+  - 'Suggestion: sklearn.metrics.roc_curve(y_true, score) would give the exact operating
+    points instead of a 200-step grid.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color
-      Chrome: Title, axis labels, and tick labels all in dark text (#4A4A44 / #1A1A17) against light background — clearly readable
-      Data: Strong Model curve in #009E73 (Okabe-Ito position 1), Weak Model in #D55E00 (position 2), diagonal reference line in neutral gray
-      Grid: Subtle, opacity 0.10, visible but not dominant
-      Legend: Light background box, clearly readable labels with AUC values
-      Legibility verdict: PASS — all text is fully readable with excellent contrast
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas with a square plot area
+      Chrome: title 'roc-curve · python · altair · anyplot.ai' in dark ink, bold dark axis titles 'False positive rate' / 'True positive rate', INK_SOFT ticks every 0.1 from 0 to 1, subtle grid; legend bottom-right inside the plot on the elevated surface with a soft frame — all readable
+      Data: Strong Model #009E73 hugging the top-left, Weak Model #C475FD in between, dashed grey Random diagonal corner to corner; both curves show saw-tooth spikes where tied-FPR points are joined out of order
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color
-      Chrome: Title, axis labels, and tick labels all in light text (#B8B7B0 / #F0EFE8) against dark background — clearly readable, no dark-on-dark failures
-      Data: Strong Model curve in #009E73 (identical to light), Weak Model in #D55E00 (identical to light) — data colors are theme-independent as required
-      Grid: Subtle, visible but not dominant
-      Legend: Dark background box (#242420), clearly readable labels
-      Legibility verdict: PASS — all text is fully readable with excellent contrast; data colors identical to light render
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels light grey, grid subtle, legend on #242420 with light labels — no dark-on-dark text
+      Data: green and purple identical to the light render; diagonal flips to a light grey dash and stays visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,73 +58,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28px, axes=22px, ticks=18px);
-          perfectly readable in both themes
+        comment: Title 18, axis titles 14, ticks and legend 12 at scale 4; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; clean, balanced layout
+        comment: No text collisions; legend sits in the empty bottom-right corner
+          below the diagonal
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ROC curves well-sized with strokeWidth=4; clear differentiation between
-          models
+        comment: strokeWidth 4 lines for 200 points per curve; legend line samples
+          at full width and dash pattern visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; excellent contrast between curves
+        comment: Green vs purple plus a dashed neutral diagonal; style and color both
+          separate the series
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions (1400x1400 square); well-balanced margins
+        comment: 2400x2400 canvas, square plot area filling most of it, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: False Positive Rate, True Positive Rate'
+        comment: False positive rate / True positive rate (unitless rates)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito positions 1-2 correct; backgrounds #FAF8F1/#1A1A17 correct;
-          theme chrome perfect in both renders'
+        comment: 'First series #009E73, second #C475FD, diagonal INK_MUTED; backgrounds
+          #FAF8F1/#1A1A17'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Professional, polished appearance; follows style guide closely but
-          lacks distinctive custom design innovations
+        comment: Legend on the elevated surface token with a soft frame, round stroke
+          joins, sentence-case titles in a clear title > axis title > tick hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid, good whitespace, appropriate spine retention; room for
-          additional refinement
+        comment: Legend placed inside the plot in the corner the curves never reach,
+          which keeps the plot area square and wide
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear model comparison with visual contrast; diagonal reference provides
-          context; good hierarchy
+        passed: false
+        comment: Data displayed with the random baseline as the benchmark; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -127,28 +134,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ROC curve implementation
+        comment: ROC curves with diagonal reference
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: curves, AUC display, diagonal reference, multiple
-          models'
+        comment: Diagonal (C2), AUC in the legend (C3), 0-1 axes on a square area
+          (C4), two models in color and named (C5)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: X=FPR, Y=TPR, 0-1 domain; all data visible
+        comment: mark_line sorts by FPR, so points sharing an FPR are joined out of
+          threshold order and draw saw-tooth spikes downward (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows model names with AUC values
+        comment: Title roc-curve · python · altair · anyplot.ai; legend labels carry
+          model and AUC
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -156,19 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows two models with distinctly different performance levels
+        comment: Strong and weak model with distinct curves, stair-steps from a finite
+          sample
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Binary classification scenario with realistic AUC values (0.82, 0.68)
+        comment: Models labelled only Strong Model / Weak Model with no domain (defect
+          line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: AUC values factually correct and within valid range
+        comment: AUC 0.96 and 0.71 computed by the trapezoid rule from the swept rates,
+          consistent with the curves; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -178,56 +190,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save; no unnecessary abstractions'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; manual ROC calculation is appropriate
+        comment: Vectorised threshold sweep in a few lines, one loop over models
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+        comment: plot-{THEME}.png and .html, pad-only canvas step
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Canonical Altair pattern: Chart().mark_*().encode().properties().configure_*()'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses .interactive(), alt.value(), alt.Color() with domain/range;
-          strong Altair knowledge
+        comment: One chart with color and strokeDash both scaled on a shared domain,
+          so Vega-Lite merges them into a single legend; configure_* blocks
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: .interactive() zoom/pan and formatted tooltips in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T12:35:15Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - hover-tooltips
+  - legend-inside
+  - reference-line
   - html-export
-  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  - iteration-over-groups
+  dataprep:
+  - roc-computation
+  styling:
+  - theme-tokens

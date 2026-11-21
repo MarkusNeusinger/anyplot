@@ -2,115 +2,138 @@ library: pygal
 language: python
 specification_id: roc-curve
 created: '2025-12-26T17:38:43Z'
-updated: '2026-05-09T22:41:39Z'
-generated_by: claude-haiku
-workflow_run: 25613545490
+updated: '2026-11-21T12:44:17Z'
+generated_by: claude-sonnet
+workflow_run: 44904818134
 issue: 2273
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/pygal/plot-dark.html
-quality_score: 90
+quality_score: 77
 review:
   strengths:
-  - Perfect visual quality with zero legibility failures across both light and dark
-    themes
-  - 'All specification requirements met: diagonal reference line, AUC scores, multi-model
-    comparison'
-  - Reproducible code with realistic ML data generation using seed-based approach
-  - Proper theme adaptation using correct color tokens from style guide
-  - First categorical series correctly uses brand green (#009E73)
-  - Professional, clean layout with appropriate sizing and spacing for large canvas
+  - Computes the operating points with sklearn.metrics.roc_curve and the area with
+    sklearn.metrics.auc, so every curve runs through its real stair-step operating
+    points from (0,0) to (1,1), never smoothed (interpolate=None)
+  - Square 2400x2400 canvas with range=(0, 1) and xrange=(0, 1) keeps both axes on
+    the full rate range and the diagonal close to 45 degrees
+  - AUC printed in each legend label next to its model name, so it is clear which
+    curve each score belongs to; two-column bottom legend keeps the plot area free
+  - 'Theme tokens threaded through pygal Style (background, plot_background, foreground,
+    foreground_subtle) give correct chrome in both renders, and the Imprint palette
+    is passed whole so Excellent is #009E73'
+  - Tidy df built by groupby over the Model column feeds chart.add per group, and
+    pygal's native SVG tooltips carry the (FPR, TPR) values in the HTML output
+  - Example AUC values 0.99 / 0.72 / 0.56 match their Excellent / Moderate / Poor
+    labels
   weaknesses:
-  - Design excellence is standard rather than distinctive—relies on defaults without
-    custom refinements
-  - Limited exploration of pygal-specific advanced styling features beyond basic configuration
+  - 'VQ-01 (both): the y-axis major ticks 0, 0.5 and 1 render at 44 while the other
+    tick labels render at 56, so three ticks read visibly smaller than their neighbours
+    → one tick size on both axes, the style guide''s 44 for pygal (−12 on label_font_size).
+    Likely cause: label_font_size=56 with major_label_font_size=44 in Style.'
+  - 'VQ-03 (both): the three model curves draw at about 2.5 px on the 2400 px canvas,
+    close to the weight of the dotted guide lines, so the Excellent curve along the
+    top and left edges almost merges with the axis and grid → about 6-7 px (+4 px).
+    Likely cause: Style(stroke_width=2.5) overriding the intended stroke_style={''width'':
+    7}.'
+  - 'CQ-04 (code): line 90 passes stroke_dasharray=''18,12'' to chart.add, which pygal
+    ignores; the Random diagonal renders solid, so the argument has no effect → pass
+    the dash inside stroke_style={''width'': 5, ''dasharray'': ''18,12''} or delete
+    it. Likely cause: a non-existent per-series keyword.'
+  - 'DQ-02 (both): the models are named Excellent, Moderate and Poor with no domain,
+    which reads as a generic placeholder scenario → name real classifier contexts,
+    e.g. a gradient-boosted fraud model, a logistic-regression baseline and a rule-based
+    screen. Likely cause: the beta_params keys.'
+  - 'Suggestion: the legend''s reserved bottom band leaves the plot area about 7 %
+    wider than tall; a little less bottom space would make the area square and the
+    diagonal exactly 45 degrees.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title "roc-curve · pygal · anyplot.ai" is large and clear. Axis labels "False Positive Rate" (x) and "True Positive Rate" (y) are readable in dark text. Tick labels (0, 0.1, 0.2, ..., 1.0) are well-sized and fully readable. Grid lines are subtle and visible. Legend positioned at bottom-left with AUC scores, no overlap.
-      Data: Four curves clearly distinguished—green curve (Excellent) uses #009E73, orange/vermillion for Moderate/Poor models, blue for reference comparison. Dashed diagonal reference line (Random, AUC = 0.50) is clearly visible.
-      Legibility verdict: PASS — All text contrasts properly against light background.
+      Background: warm off-white #FAF8F1 on a 2400x2400 square canvas.
+      Chrome: title "roc-curve · python · pygal · anyplot.ai" in dark ink, about 65 % of the width; axis titles "False Positive Rate" / "True Positive Rate" and ticks 0-1 in steps of 0.1 in dark ink, all readable; y ticks 0, 0.5 and 1 are drawn smaller than the others (pygal major labels). Dotted guide lines on both axes, visible but somewhat busy. Two-column legend at the bottom.
+      Data: Excellent (AUC = 0.99) in #009E73 hugging the top-left corner, Moderate (0.72) in #C475FD lilac, Poor (0.56) in #4467A3 blue close to the diagonal, Random (AUC = 0.50) as a solid amber #BD8233 straight diagonal from corner to corner. Curves are stair-step and thin (~2.5 px). No overlap of text.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title, axis labels, and tick labels are rendered in light text (#F0EFE8) and are clearly readable. No "dark-on-dark" failures. Grid is visible and subtle. Legend is clear and accessible.
-      Data: Four curves maintain identical colors to light render (only chrome adapted). Green, orange, blue curves plus dashed reference line all clearly visible against dark background.
-      Legibility verdict: PASS — Perfect theme adaptation with no visibility or contrast issues in dark mode.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text in light ink #F0EFE8, all readable, no dark-on-dark; guide lines dark dotted, subtle but visible.
+      Data: same four colors as the light render (#009E73, #C475FD, #4467A3, #BD8233); brand green clearly visible; Poor blue is darker against the background but readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All titles, labels, tick marks readable in both themes
+        passed: false
+        comment: All text readable in both themes; y major ticks 0/0.5/1 smaller than
+          the other ticks (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with legend positioned without conflict
+        comment: No text collisions; curve crossings are expected
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Curves and reference line clearly distinct and visible
+        passed: false
+        comment: Curves at about 2.5 px compete with the dotted guides (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety; no red-green-only signal
+        comment: Green / lilac / blue / amber distinguishable under CVD
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 proportions appropriate; no clipping
+        comment: Square 2400x2400 canvas, no overflow, balanced axis titles
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axes with standard units; spec-format title
+        comment: False Positive Rate / True Positive Rate, rates need no unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; both renders
-          theme-correct'
+        comment: 'Imprint palette in order, first series #009E73, correct backgrounds
+          in both renders'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional palette and dashed reference line; primarily standard
-          without distinctive customizations
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clean appearance with subtle grid and appropriate stroke width
+        passed: false
+        comment: Default dotted guides on both axes; nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Multiple curves enable comparison; excellent model prominent; diagonal
-          reference provides context
+        passed: false
+        comment: Data displayed with the requested comparison; no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY chart for ROC curves
+        comment: ROC curves on an XY chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line, AUC scores in legend, multiple classifiers
+        comment: Diagonal reference, AUC in legend, distinct colors, 0-1 axes on a
+          near-square area (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: FPR (x) and TPR (y) correctly mapped to [0,1]
+        comment: FPR on x, TPR on y, marks at their computed operating points
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Spec-format title; legend with AUC values
+        comment: Title in the mandated format; legend labels name model and AUC
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -148,23 +172,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Comprehensive ROC visualization with three classifiers and reference
-          line
+        comment: Strong, moderate and weak models plus random baseline; stair steps,
+          a curve hugging the corner and one close to the diagonal
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Binary classification scenario; realistic AUC values; sound data
-          generation
+        passed: false
+        comment: Generic Excellent/Moderate/Poor model names (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: '[0,1] axes standard for ROC; 100 threshold points appropriate'
+        comment: AUC 0.99 / 0.72 / 0.56 computed by sklearn.metrics.auc from the roc_curve
+          output, consistent with the curves and their labels; Random = 0.50 is the
+          analytic value
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -172,57 +197,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Procedural, straightforward, no unnecessary abstractions
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pygal; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake interactivity; appropriate complexity
+        passed: false
+        comment: Ineffective stroke_dasharray keyword on line 90 (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html correctly
+        comment: plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper XY chart, Style configuration, render APIs
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Dashed line shows feature awareness; limited exploration of advanced
-          pygal capabilities
+        comment: 'pygal.XY with Style and chart.add per group: the library prompt''s
+          pattern'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T12:40:28Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - sklearn
   techniques:
-  - reference-line
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - threshold-computation
+  - iteration-over-groups
   dataprep: []
-  styling:
-  - theme-adaptive-colors
-  - custom-style-object
+  styling: []
