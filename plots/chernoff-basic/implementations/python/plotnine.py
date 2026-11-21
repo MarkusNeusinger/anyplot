@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-15
+Quality: pending | Updated: 2026-11-21
 """
 
 import os
@@ -31,185 +31,115 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-np.random.seed(42)
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Car performance metrics with more extreme outliers
-car_data = {
-    "observation_id": ["Compact A", "Compact B", "Sedan A", "Sedan B", "SUV A", "SUV B"],
-    "category": ["Compact", "Compact", "Sedan", "Sedan", "SUV", "SUV"],
-    "engine_power": [100, 150, 180, 220, 280, 320],
-    "fuel_efficiency": [38, 30, 26, 22, 18, 15],
-    "safety_rating": [3.9, 4.5, 4.8, 4.2, 4.6, 4.9],
-    "comfort_score": [3.0, 3.6, 4.5, 4.1, 4.0, 4.4],
-}
-sample_df = pd.DataFrame(car_data)
+# Columns: set these to your table's column names
+OBSERVATION = "Car"  # role: observation_id
+GROUP = "Category"  # role: extra
+VARIABLES = ["Engine power (HP)", "Fuel efficiency (MPG)", "Safety rating", "Comfort score"]  # role: variable_
 
-# Normalize data to 0-1 range for facial feature mapping
-normalized = sample_df[["engine_power", "fuel_efficiency", "safety_rating", "comfort_score"]].apply(
-    lambda col: (col - col.min()) / (col.max() - col.min() + 1e-10)
+# Data: replace this block with your own table, for example df = pd.read_csv("cars.csv")
+df = pd.DataFrame(
+    {
+        OBSERVATION: ["Compact A", "Compact B", "Sedan A", "Sedan B", "SUV A", "SUV B"],
+        GROUP: ["Compact", "Compact", "Sedan", "Sedan", "SUV", "SUV"],
+        VARIABLES[0]: [100, 150, 180, 220, 280, 320],
+        VARIABLES[1]: [38, 30, 26, 22, 18, 15],
+        VARIABLES[2]: [3.9, 4.5, 4.8, 4.2, 4.6, 4.9],
+        VARIABLES[3]: [3.0, 3.6, 4.5, 4.1, 4.0, 4.4],
+    }
 )
 
-face_widths = 0.6 + normalized["engine_power"] * 0.4
-face_heights = 0.8 + normalized["fuel_efficiency"] * 0.4
-eye_sizes = 0.08 + normalized["safety_rating"] * 0.1
-mouth_curvatures = -0.3 + normalized["comfort_score"] * 0.6
+# Plot: reads only df and the constants above
+# Normalize every variable to 0-1 before mapping it to a facial feature
+values = df[VARIABLES].astype(float)
+span = (values.max() - values.min()).replace(0, 1)
+normalized = ((values - values.min()) / span).fillna(0.5)
 
-# Build data for all faces
-all_data = []
+face_widths = 0.6 + normalized[VARIABLES[0]] * 0.4
+face_heights = 0.8 + normalized[VARIABLES[1]] * 0.4
+eye_sizes = 0.08 + normalized[VARIABLES[2]] * 0.1
+mouth_curvatures = -0.3 + normalized[VARIABLES[3]] * 0.6
 
-for idx in range(len(sample_df)):
-    obs_id = sample_df["observation_id"].iloc[idx]
-    category = sample_df["category"].iloc[idx]
+parts = []
 
-    fw = face_widths.iloc[idx]
-    fh = face_heights.iloc[idx]
-    es = eye_sizes.iloc[idx]
-    mc = mouth_curvatures.iloc[idx]
 
-    # Face outline
+def add(obs, group, part, x, y):
+    parts.append(pd.DataFrame({"obs": obs, "group": group, "part": part, "x": x, "y": y}))
+
+
+for idx in range(len(df)):
+    obs = str(df[OBSERVATION].iloc[idx])
+    group = str(df[GROUP].iloc[idx])
+    fw, fh = face_widths.iloc[idx], face_heights.iloc[idx]
+    es, mc = eye_sizes.iloc[idx], mouth_curvatures.iloc[idx]
+
     theta = np.linspace(0, 2 * np.pi, 50)
-    fx = fw * np.cos(theta)
-    fy = fh * np.sin(theta)
-    for i in range(len(fx)):
-        all_data.append({"observation_id": obs_id, "category": category, "part": "face", "x": fx[i], "y": fy[i]})
+    add(obs, group, "face", fw * np.cos(theta), fh * np.sin(theta))
 
-    # Left eye
     theta = np.linspace(0, 2 * np.pi, 20)
-    ex = -fw * 0.35 + es * np.cos(theta)
-    ey = fh * 0.25 + es * np.sin(theta)
-    for i in range(len(ex)):
-        all_data.append({"observation_id": obs_id, "category": category, "part": "left_eye", "x": ex[i], "y": ey[i]})
+    for side, name in ((-1, "left"), (1, "right")):
+        cx, cy = side * fw * 0.35, fh * 0.25
+        add(obs, group, f"{name}_eye", cx + es * np.cos(theta), cy + es * np.sin(theta))
+        add(obs, group, f"{name}_pupil", [cx], [cy])
+        x_brow = np.linspace(cx - es, cx + es, 10)
+        add(obs, group, f"{name}_eyebrow", x_brow, fh * 0.45 - side * 0.05 * (x_brow - cx) / es)
 
-    # Right eye
-    ex = fw * 0.35 + es * np.cos(theta)
-    ey = fh * 0.25 + es * np.sin(theta)
-    for i in range(len(ex)):
-        all_data.append({"observation_id": obs_id, "category": category, "part": "right_eye", "x": ex[i], "y": ey[i]})
-
-    # Left pupil (larger for visibility)
-    all_data.append(
-        {"observation_id": obs_id, "category": category, "part": "left_pupil", "x": -fw * 0.35, "y": fh * 0.25}
-    )
-
-    # Right pupil (larger for visibility)
-    all_data.append(
-        {"observation_id": obs_id, "category": category, "part": "right_pupil", "x": fw * 0.35, "y": fh * 0.25}
-    )
-
-    # Mouth
     x_mouth = np.linspace(-fw * 0.25, fw * 0.25, 20)
-    y_mouth = -fh * 0.35 + mc * (((x_mouth) / (fw * 0.25)) ** 2 - 1)
-    for i in range(len(x_mouth)):
-        all_data.append(
-            {"observation_id": obs_id, "category": category, "part": "mouth", "x": x_mouth[i], "y": y_mouth[i]}
-        )
+    add(obs, group, "mouth", x_mouth, -fh * 0.35 + mc * ((x_mouth / (fw * 0.25)) ** 2 - 1))
+    add(obs, group, "nose", [0, 0], [fh * 0.1, -fh * 0.1])
 
-    # Nose
-    all_data.append({"observation_id": obs_id, "category": category, "part": "nose", "x": 0, "y": fh * 0.1})
-    all_data.append({"observation_id": obs_id, "category": category, "part": "nose", "x": 0, "y": -fh * 0.1})
+plot_df = pd.concat(parts, ignore_index=True)
+plot_df["obs"] = pd.Categorical(plot_df["obs"], categories=pd.unique(plot_df["obs"].dropna()))
 
-    # Left eyebrow
-    x_brow = np.linspace(-fw * 0.35 - es, -fw * 0.35 + es, 10)
-    y_brow = fh * 0.45 + 0.05 * (x_brow + fw * 0.35) / es
-    for i in range(len(x_brow)):
-        all_data.append(
-            {"observation_id": obs_id, "category": category, "part": "left_eyebrow", "x": x_brow[i], "y": y_brow[i]}
-        )
 
-    # Right eyebrow
-    x_brow = np.linspace(fw * 0.35 - es, fw * 0.35 + es, 10)
-    y_brow = fh * 0.45 - 0.05 * (x_brow - fw * 0.35) / es
-    for i in range(len(x_brow)):
-        all_data.append(
-            {"observation_id": obs_id, "category": category, "part": "right_eyebrow", "x": x_brow[i], "y": y_brow[i]}
-        )
+def layer(name):
+    return plot_df[plot_df["part"] == name]
 
-plot_df = pd.DataFrame(all_data)
-
-# Okabe-Ito palette
-category_colors = {"Compact": "#009E73", "Sedan": "#C475FD", "SUV": "#4467A3"}
 
 anyplot_theme = theme(
-    figure_size=(16, 9),
+    figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    plot_title=element_text(size=24, weight="bold", color=INK, ha="center"),
-    plot_subtitle=element_text(size=16, color=INK_SOFT, ha="center"),
+    plot_title=element_text(size=12, weight="bold", color=INK, ha="center"),
+    plot_subtitle=element_text(size=8, color=INK_SOFT, ha="center"),
+    plot_caption=element_text(size=8, color=INK_SOFT, ha="center"),
     legend_position="bottom",
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_title=element_text(size=16, color=INK),
-    legend_text=element_text(size=14, color=INK_SOFT),
-    strip_text=element_text(size=14, color=INK, weight="bold"),
+    legend_title=element_text(size=9, color=INK),
+    legend_text=element_text(size=8, color=INK_SOFT),
+    strip_text=element_text(size=9, color=INK, weight="bold"),
 )
+
+key = f"Face width = {VARIABLES[0]}  ·  Face height = {VARIABLES[1]}  ·  Eye size = {VARIABLES[2]}  ·  Mouth curve (smile) = {VARIABLES[3]}"
 
 plot = (
     ggplot()
-    # Face outline (filled polygon)
+    + geom_polygon(data=layer("face"), mapping=aes(x="x", y="y", group="obs", fill="group"), color=INK_SOFT, size=0.8)
     + geom_polygon(
-        data=plot_df[plot_df["part"] == "face"],
-        mapping=aes(x="x", y="y", group="observation_id", fill="category"),
-        color=INK_SOFT,
-        size=1.5,
-    )
-    # Eyes (white/elevated filled)
-    + geom_polygon(
-        data=plot_df[plot_df["part"] == "left_eye"],
-        mapping=aes(x="x", y="y", group="observation_id"),
-        fill=ELEVATED_BG,
-        color=INK_SOFT,
-        size=0.8,
+        data=layer("left_eye"), mapping=aes(x="x", y="y", group="obs"), fill=ELEVATED_BG, color=INK_SOFT, size=0.4
     )
     + geom_polygon(
-        data=plot_df[plot_df["part"] == "right_eye"],
-        mapping=aes(x="x", y="y", group="observation_id"),
-        fill=ELEVATED_BG,
-        color=INK_SOFT,
-        size=0.8,
+        data=layer("right_eye"), mapping=aes(x="x", y="y", group="obs"), fill=ELEVATED_BG, color=INK_SOFT, size=0.4
     )
-    # Pupils (larger for visibility)
-    + geom_point(data=plot_df[plot_df["part"] == "left_pupil"], mapping=aes(x="x", y="y"), color=INK_SOFT, size=5)
-    + geom_point(data=plot_df[plot_df["part"] == "right_pupil"], mapping=aes(x="x", y="y"), color=INK_SOFT, size=5)
-    # Mouth
-    + geom_path(
-        data=plot_df[plot_df["part"] == "mouth"],
-        mapping=aes(x="x", y="y", group="observation_id"),
-        color=INK_SOFT,
-        size=1.2,
-    )
-    # Nose
-    + geom_path(
-        data=plot_df[plot_df["part"] == "nose"],
-        mapping=aes(x="x", y="y", group="observation_id"),
-        color=INK_SOFT,
-        size=1,
-    )
-    # Eyebrows
-    + geom_path(
-        data=plot_df[plot_df["part"] == "left_eyebrow"],
-        mapping=aes(x="x", y="y", group="observation_id"),
-        color=INK_SOFT,
-        size=1.2,
-    )
-    + geom_path(
-        data=plot_df[plot_df["part"] == "right_eyebrow"],
-        mapping=aes(x="x", y="y", group="observation_id"),
-        color=INK_SOFT,
-        size=1.2,
-    )
-    # Facet by observation
-    + facet_wrap("~observation_id", ncol=3)
-    # Colors (Okabe-Ito palette)
-    + scale_fill_manual(values=category_colors)
-    # Labels
+    + geom_point(data=layer("left_pupil"), mapping=aes(x="x", y="y"), color=INK_SOFT, size=2.5)
+    + geom_point(data=layer("right_pupil"), mapping=aes(x="x", y="y"), color=INK_SOFT, size=2.5)
+    + geom_path(data=layer("mouth"), mapping=aes(x="x", y="y", group="obs"), color=INK_SOFT, size=0.7)
+    + geom_path(data=layer("nose"), mapping=aes(x="x", y="y", group="obs"), color=INK_SOFT, size=0.6)
+    + geom_path(data=layer("left_eyebrow"), mapping=aes(x="x", y="y", group="obs"), color=INK_SOFT, size=0.7)
+    + geom_path(data=layer("right_eyebrow"), mapping=aes(x="x", y="y", group="obs"), color=INK_SOFT, size=0.7)
+    + facet_wrap("obs", ncol=3)
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=pd.unique(df[GROUP].astype(str)).tolist())
     + labs(
-        title="chernoff-basic · plotnine · anyplot.ai",
-        subtitle="Car Performance: Power/Efficiency/Safety/Comfort mapped to facial features",
-        fill="Category",
+        fill=GROUP,
+        title="chernoff-basic · python · plotnine · anyplot.ai",
+        subtitle="Car performance profiles",
+        caption=key,
     )
-    # Theme
     + theme_void()
     + anyplot_theme
     + coord_fixed(ratio=1)
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
