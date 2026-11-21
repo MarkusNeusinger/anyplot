@@ -8,4 +8,4 @@
   never saw the paste's note about that guess, only the dates as ISO dates
   (`2024-04-03`). Now the column's profile says which order its cells were
   read in, the field changes when the column is re-read, and the assistant's
-  instructions point to that field instead of the note.
+  instructions point to that field instead of the note. (#13627)
