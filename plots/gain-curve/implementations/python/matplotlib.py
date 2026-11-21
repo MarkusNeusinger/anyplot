@@ -1,7 +1,7 @@
 """anyplot.ai
 gain-curve: Cumulative Gains Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-11
+Quality: pending | Updated: 2026-05-11
 """
 
 import os
