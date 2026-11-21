@@ -995,6 +995,22 @@ class TestLeanCode:
         assert 'Installed packages are not "dependencies" to avoid' in section
         assert "(CQ-04 includes the lean-code rule below)" in content
 
+    def test_regen_prompt_keeps_a_square_plot_square(self) -> None:
+        """Three matplotlib regenerations of 2026-11-21 kept the old landscape figure of an equal-aspect plot, whose
+        empty sides the old `bbox_inches="tight"` had cut away, and shrank it to the middle of the canvas."""
+        content = (WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md").read_text()
+        step = content[content.index("## Step 0: Canvas dimensions") : content.index("## Step 1:")]
+        assert "Choose the orientation from what the plot draws, not from the old figure" in step
+        assert 'a plot that keeps a 1:1 aspect (`set_aspect("equal")`, `axis("equal")`' in step
+        assert "takes the square pair" in step
+        assert 'let `bbox_inches="tight"` cut the empty sides away' in step
+        assert "Venn diagrams, circle packing, polar charts, a plot drawn with equal axes" in step
+        for library in ("matplotlib.md", "seaborn.md"):
+            square = next(
+                line for line in (LIBRARY_PROMPTS_DIR / library).read_text().splitlines() if "# Square" in line
+            )
+            assert "only for" not in square and "Venn, polar, equal axes" in square
+
     def test_regen_prompt_applies_only_a_named_replacement(self) -> None:
         content = (WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md").read_text()
         assert "A `CQ-04` weakness names its replacement: apply exactly that replacement" in content
@@ -1452,6 +1468,19 @@ class TestAdaptableCode:
             line for line in content.splitlines() if "**Don't add code for changes that don't show.**" in line
         )
         assert "a refusal of its readiness check, also one the previous file already had" in mindset
+
+    def test_regeneration_keeps_its_data_source(self) -> None:
+        """A regeneration brings in no built-in dataset its previous file did not load (#13305 was kept for it)."""
+        content = GENERATE_PROMPT.read_text()
+        scenario = next(line for line in content.splitlines() if "**Keep the data scenario and the variant.**" in line)
+        assert (
+            "Keep the data source too: a regeneration loads no built-in dataset (`sklearn.datasets`, "
+            "`sns.load_dataset`) that the previous file did not load, whatever `prompts/plot-generator.md` "
+            "prefers for new files, and a built-in dataset the previous file loads stays."
+        ) in scenario
+        # The rule is the generator's: the repair prompt, which the chat's adapter reads, does not carry it.
+        repair = (WORKFLOW_PROMPTS_DIR / "impl-repair-claude.md").read_text()
+        assert "Keep the data source too" not in repair
 
     def test_repair_runs_the_same_readiness_check(self) -> None:
         content = REPAIR_PROMPT.read_text()
