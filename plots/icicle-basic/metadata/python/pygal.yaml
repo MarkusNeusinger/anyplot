@@ -12,109 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/pygal/plot-dark.html
-quality_score: 90
+quality_score: 63
 review:
   strengths:
-  - Flawless visual quality with perfect legibility in both light and dark themes
-  - Proper theme adaptation with color tokens correctly applied throughout
-  - Accurate hierarchical representation with proportional sizing and depth-based
-    coloring
-  - Responsive typography with adaptive font sizes that scale to available space
-  - Professional use of Okabe-Ito palette and clean SVG rendering
+  - Correct top-to-bottom icicle with value-proportional widths and children within
+    their parents
+  - Color by hierarchy level starting at brand green, identical across renders
+  - SVG <title> tooltips give each node's name and value in the HTML output
   weaknesses:
-  - 'Library Mastery moderate (4/5): hand-coded SVG necessary for icicle layout but
-    limits pygal-typical pattern demonstration'
-  - Design Excellence could benefit from additional visual refinement beyond functional
-    styling
+  - 'VQ-05 (both): canvas is 4800x2700 → 3200x1800 (-1600 x -900). Likely cause: WIDTH
+    = 4800, HEIGHT = 2700.'
+  - 'VQ-07 (both): page background renders pure white instead of #FAF8F1 / #1A1A17,
+    so the dark render is wrong-theme → paint a full-canvas rect in PAGE_BG. Likely
+    cause: svg style ''background-color'' is ignored by cairosvg.'
+  - 'VQ-01 (both): title 28 px, labels 14-22 px and level names 16 px on a 4800x2700
+    canvas, far below the pygal prompt''s 66/44 px references; in the dark render
+    the title and level names are light ink on the white background and cannot be
+    read → 66 px title, 44 px labels on a real dark background. Likely cause: hard-coded
+    font sizes and the missing background rect.'
+  - 'VQ-04 (dark): near-white node labels on #C475FD and #BD8233 fills have weak contrast
+    → pick dark or light ink per fill. Likely cause: every node label uses fill=INK.'
+  - 'SC-04 (both): title ''icicle-basic · pygal · anyplot.ai'' lacks the language
+    segment → ''icicle-basic · python · pygal · anyplot.ai''. Likely cause: the title
+    string.'
+  - 'SC-02 (both): small nodes get truncated labels ''Recrui..'' and ''Pa..'' instead
+    of none (C4) → hide labels that do not fit. Likely cause: truncation with ''..''
+    for px_width > 70.'
+  - 'CQ-04 (code): custom_style is built ''for metadata extraction'' and never used
+    → remove it or drive the SVG colors and sizes from it. Likely cause: leftover
+    Style block.'
+  - 'LM-01 (code): no pygal object reaches the output; the Style is dead code → let
+    the pygal Style carry the theme tokens and palette the SVG uses. Likely cause:
+    the same unused Style block.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) surface
-      Chrome: Title "icicle-basic · pygal · anyplot.ai" centered with dark text; right-side hierarchy labels (Company, Division, Department, Team) in soft gray; all readable
-      Data: Green/orange/blue/pink rectangles using Okabe-Ito palette, sized proportionally by hierarchy values; labels shown within rectangles where space permits (>70px width)
-      Legibility: PASS - all text readable against light background, clear visual separation via 2px white gaps
+      Background: pure white across the 4800x2700 canvas, not the #FAF8F1 page color.
+      Chrome: title 'icicle-basic · pygal · anyplot.ai' at 28 px, tiny on this canvas; level names Company/Division/Department/Team at 16 px on the right, barely legible.
+      Data: four rows by level - root #009E73, divisions #C475FD, departments #4467A3, teams #BD8233; widths proportional to headcount; white 2 px gaps. Dark node labels at 14-22 px, every leaf labeled, 'Recrui..' and 'Pa..' truncated.
+      Legibility verdict: FAIL (all text far below the size references)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) surface
-      Chrome: Title in light text; hierarchy labels in soft light gray; all readable with good contrast
-      Data: Identical Okabe-Ito colors to light render (only chrome changed); proportions and structure identical
-      Legibility: PASS - all text readable against dark background, no dark-on-dark failures, brand green visible and distinct
+      Background: still pure white - the dark page color never reaches the PNG.
+      Chrome: title and level names in light ink on the white background, light-on-light and essentially unreadable.
+      Data: fills identical to the light render; borders near-black; node labels in near-white, weak on the purple and ochre fills.
+      Legibility verdict: FAIL (title and level names light on white)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 15
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: All text readable in both themes; font sizes adaptive and appropriate
+        passed: false
+        comment: 'Dark render: title and level names light on white, unreadable; all
+          text 14-28 px on a 4800x2700 canvas'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; labels truncated and hidden when necessary
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All rectangles visible; spacing clear; distinct color separation
+        comment: All rectangles visible with clear gaps
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Okabe-Ito palette; colorblind-safe; high contrast
+        passed: false
+        comment: Near-white labels on purple and ochre in the dark render have weak
+          contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 4800x2700 landscape; good proportions; margins appropriate; nothing
-          cut off
+        passed: false
+        comment: Canvas 4800x2700, neither 3200x1800 nor 2400x2400
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; hierarchy level labels descriptive; node names
-          clear
+        comment: Level names describe the rows
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Depth 0: #009E73 (brand); subsequent depths follow Okabe-Ito order;
-          backgrounds correct for both themes; theme-adaptive chrome correct'
+        passed: false
+        comment: Pure white background in both renders; dark render wrong-theme
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Custom depth-based palette; professional appearance; intentional
-          hierarchy; thoughtful spacing
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clean 2px gaps; generous whitespace; refined margins; subtle visual
-          separation
+        passed: false
+        comment: Baseline only
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy by depth; root node guides eye; proportional
-          sizing tells data story
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -122,28 +136,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct icicle chart; horizontal orientation (top-to-bottom) as recommended
+        comment: Correct top-to-bottom icicle
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: hierarchy, value-proportional sizing, parent-child
-          relationships visible'
+        passed: false
+        comment: 'C4: small nodes get truncated labels (''Recrui..'', ''Pa..'') instead
+          of none'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct hierarchical mapping; all nodes displayed; proportional sizing
-          accurate
+        comment: Value-proportional widths, children within parents
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; right-side legend shows hierarchy levels; node
-          labels match data
+        passed: false
+        comment: Title lacks the language segment
     data_quality:
       score: 15
       max: 15
@@ -153,24 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all icicle aspects: 4-level hierarchy, size variation,
-          real-world structure'
+        comment: 4 levels, uneven branches
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Organizational hierarchy realistic; neutral company name; plausible
-          team sizes (15-70)
+        comment: Neutral fictional org chart
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible for context; good variation shows proportional sizing
-          benefits
+        comment: Headcounts 15-70
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -178,51 +187,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct script; tree building and positioning clear and concise
+        comment: No functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data; no random elements; identical output each run
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (ET, Style, cairosvg); no unused imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Manual SVG necessary for icicle layout; no fake UI; clean algorithms
+        passed: false
+        comment: custom_style built and never used
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; theme env
-          var handled
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Style object used correctly for theme tokens; cairosvg for PNG conversion
-          idiomatic; manual SVG necessary
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Functional implementation but limited distinctive pygal features;
-          manual SVG renders plot but doesn't showcase library capabilities
+        comment: No pygal object influences the output
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies:
   - cairosvg
