@@ -2,7 +2,7 @@
 
 ## Description
 
-An editorial, WIRED "Chartgeist"-style three-circle Venn diagram where pop-culture items — products, people, trends, apps — are plotted as labeled points inside each zone rather than represented as numeric counts. Three overlapping circles define witty, opinionated categories (e.g., "Overhyped", "Actually Useful", "Secretly Loved"), and each item lives in exactly one of the seven interior regions (or outside all circles). Unlike a classic proportional Venn, the "data" here is categorical set-membership plus a human label, making the plot ideal for commentary, taxonomy, and discussion rather than quantitative analysis.
+An editorial, WIRED "Chartgeist"-style three-circle Venn diagram where pop-culture items — products, apps, foods, trends — are plotted as labeled points inside each zone rather than represented as numeric counts. Three overlapping circles define witty, opinionated categories (e.g., "Overhyped", "Actually Useful", "Secretly Loved"), and each item lives in exactly one of the seven interior regions (or outside all circles). Unlike a classic proportional Venn, the "data" here is categorical set-membership plus a human label, making the plot ideal for commentary, taxonomy, and discussion rather than quantitative analysis.
 
 ## Applications
 
@@ -21,10 +21,11 @@ An editorial, WIRED "Chartgeist"-style three-circle Venn diagram where pop-cultu
   - `label` (string) - Item name rendered at the placement point (e.g., "NFTs", "Sourdough", "TikTok")
   - `zone` (string) - One of `A`, `B`, `C`, `AB`, `AC`, `BC`, `ABC`, or `outside`
 - Size: Exactly 3 circles; 10-25 items distributed across the 7 interior zones (plus optional `outside`)
-- Example: Circles "Overhyped", "Actually Useful", "Secretly Loved"; items include "NFTs" in `A`, "Google Maps" in `B`, "Dolly Parton" in `BC`, "Sourdough" in `ABC`
+- Example: Circles "Overhyped", "Actually Useful", "Secretly Loved"; items include "NFTs" in `A`, "Google Maps" in `B`, "Board games" in `BC`, "Sourdough" in `ABC`
 
 ## Notes
 
+- Items are products, apps, foods, places, or trends, never a real person or a political party
 - Use the standard symmetric three-circle Venn layout with equally sized circles and clear pairwise and triple overlaps
 - Apply semi-transparent fills so overlapping regions remain visible through each other
 - Place item labels inside their assigned zone without overlapping neighbors; use small point markers or text-only placement
