@@ -2,48 +2,49 @@ library: letsplot
 language: python
 specification_id: venn-basic
 created: '2025-12-29T22:53:27Z'
-updated: '2026-05-11T11:37:19Z'
-generated_by: claude-haiku
-workflow_run: 25667434590
+updated: '2026-11-21T02:14:33Z'
+generated_by: claude-sonnet
+workflow_run: 44853932022
 issue: 2444
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - Perfect specification compliance — all required features (3 sets, labels, intersections,
-    counts) clearly shown with proper spatial layout
-  - Theme-adaptive excellence — both light and dark renders fully readable with INK
-    tokens properly applied to all text elements
-  - Geometric precision — circles properly positioned with coord_fixed, overlapping
-    regions clearly distinguished with transparent fills
-  - Okabe-Ito palette compliance — first series correctly uses brand green (#009E73),
-    positions 2–3 use standard colorblind-safe colors
-  - Clean, reproducible code — environment-aware theme detection, proper file handling,
-    seed-based reproducibility, no extraneous dependencies
+  - 'Area-proportional layout: radii follow the inclusive set sizes and centre distances
+    are solved so each pairwise lens area matches its intersection'
+  - Region counts placed at each region's most interior point and set names pushed
+    radially outward, so no text touches an outline
+  - 'Theme tokens threaded through title, labels and outlines: both renders fully
+    readable, Imprint colors identical across themes'
+  - 'Clean lets-plot grammar: geom_polygon circles, scale_fill_manual, coord_fixed
+    with data-derived limits, theme_void'
   weaknesses:
-  - Design excellence is modest — implementation follows specification literally without
-    additional aesthetic enhancement or sophisticated visual hierarchy
-  - Library mastery demonstration limited — uses core letsplot features correctly
-    but doesn't showcase distinctive or advanced library capabilities
-  - Minor visual artifact — coordinate axis labels (X, Y) visible on canvas edges,
-    minor detritus from theme_void interaction
+  - 'CQ-01 (code): three helper functions (lens_area, distance_for_overlap, pair_size)
+    break the Imports → Data → Plot → Save structure → inline the lens-area and overlap-distance
+    solve at module level (for example scipy.optimize.brentq on an inline lens-area
+    expression) and the pair sums as a comprehension. Likely cause: geometry factored
+    into def blocks.'
+  - 'Suggestion: the 9-line bisection in distance_for_overlap could be one scipy.optimize.brentq
+    call.'
+  - 'Suggestion: geom_text sizes 7 and 8 (mm) put the set names at about 23 pt, above
+    the 18 pt title; sizes near 6 would keep the title on top of the hierarchy.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "venn-basic · letsplot · anyplot.ai" is bold, centered, dark text, fully readable. Set labels (Machine Learning, Statistics, Data Engineering) positioned outside circles in bold dark text (#1A1A17), all clearly visible. Coordinate axes minimal with dark tick labels.
-      Data: Three overlapping circles in Okabe-Ito colors: #009E73 (green, Machine Learning), #D55E00 (orange, Statistics), #0072B2 (blue, Data Engineering). Circle outlines in soft gray (#4A4A44). Seven regions labeled with intersection counts (45, 35, 30, 25, 15, 20, 10) in dark bold text. All markers and fills clearly distinguishable.
-      Legibility verdict: PASS — all text is dark on light with high contrast; no readability issues.
+      Background: warm off-white #FAF8F1 across the 2400x2400 square canvas (thin transparent export rim only).
+      Chrome: bold dark title 'venn-basic · python · letsplot · anyplot.ai' centered at top; set names Solar (upper left), Wind (upper right), Hydro (bottom) in bold dark ink outside their circles; no axes, no grid.
+      Data: three translucent circles — Solar #009E73 (largest), Wind #C475FD, Hydro #4467A3 (smallest) — with dark-gray outlines; overlaps read as blends; bold dark counts 42, 36, 24, 18, 9, 12, 6 each inside its region.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title is light/cream text, bold, centered, fully readable. Set labels in light cream (#F0EFE8), all clearly visible against dark surface. Tick labels light gray, readable. No dark-on-dark failures.
-      Data: Same three circles with identical Okabe-Ito colors (#009E73, #D55E00, #0072B2) — data colors PRESERVED between themes (only chrome flips). Intersection counts are light/white bold text, all readable. Circle outlines in light gray for definition.
-      Legibility verdict: PASS — all text is light on dark with good contrast; no dark-on-dark failures; data colors identical to light render.
+      Background: warm near-black #1A1A17.
+      Chrome: title and set names in light cream ink, fully readable; no dark-on-dark text.
+      Data: same three Imprint fills as light (only chrome flips), light-gray outlines, light counts readable on every fill including the dark blue Hydro region.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,77 +55,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes (20–28pt) explicitly set; readable at full size in both
-          themes; all text (title, labels, counts) clearly visible
+        comment: Title 18 pt, counts and set names bold and explicitly sized; all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text readable; no collisions; set labels positioned outside circles;
-          counts in interior regions; no text overlap
+        comment: No text collides with text or outlines; set names sit outside their
+          circles, counts in their regions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 7 Venn regions (3 exclusive, 3 pairwise, 1 triple) clearly distinguished;
-          transparent fills show overlaps; circle outlines define boundaries
+        comment: Seven regions clearly separated by translucent fills and 1.5 outlines
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety; no red-green as sole
-          signal; adequate contrast between overlapping regions
+        comment: Green, purple and blue are CVD-distinguishable; counts on every fill
+          have strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proportions ideal (1200×1200 square for symmetric diagram); nothing
-          cut off; circles well-positioned; generous margins (50, 30, 30, 30)
+        comment: 2400x2400 square canvas; diagram centered with balanced margins;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'venn-basic · letsplot · anyplot.ai' is descriptive and formatted
-          correctly; set names serve as descriptors
+        comment: N/A for axes (theme_void, no axes drawn); set names are reader text
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73 ✓; positions 2–3 = #D55E00, #0072B2 ✓; backgrounds
-          = #FAF8F1 light / #1A1A17 dark ✓; colors identical between renders; theme-readability
-          PASS'
+        comment: 'Imprint #009E73, #C475FD, #4467A3 in canonical order; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 12.5
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Custom Okabe-Ito colors; professional palette; theme-adaptive tokens;
-          lacks unique embellishment or sophisticated styling beyond spec
+        comment: 'Style-guide baseline: bold labels, theme tokens, Imprint palette;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 3.5
+        score: 3
         max: 6
         passed: false
-        comment: Spines removed via theme_void(); generous whitespace; clean typography;
-          minimal customization beyond specification defaults
+        comment: Count labels placed at each region's most interior point (grid search
+          for the pole of inaccessibility) and set names pushed radially away from
+          the diagram center
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy (set names > counts > diagram); focal point
-          is overlapping regions with intersection counts; guides viewer to understand
-          relationships
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: 3-set Venn diagram with overlapping circles'
+        comment: Three-set Venn diagram, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: set labels (ML, Stats, DataEng), set sizes
-          in regions, all 7 intersection values shown'
+        comment: Area-proportional circles (radii from inclusive set sizes, distances
+          solved for pairwise overlaps), exclusive counts in every region, translucent
+          distinct fills, readable text (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates properly used for circle geometry; coord_fixed maintains
-          aspect ratio; all data visible
+        comment: Inclusive set sizes summed from the exclusive region counts; counts
+          sit inside their own regions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''venn-basic · letsplot · anyplot.ai''; set
-          colors displayed on circles; no separate legend needed'
+        comment: Title 'venn-basic · python · letsplot · anyplot.ai'; legend N/A,
+          set names label the circles
     data_quality:
       score: 15
       max: 15
@@ -165,89 +164,87 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All Venn aspects: 3 sets, 3 exclusive regions, 3 pairwise overlaps,
-          1 triple overlap; counts shown for all 7 regions'
+        comment: 'All 7 regions present: 3 exclusive, 3 pairwise, 1 triple'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic scenario: research field expertise overlap (ML, Statistics,
-          Data Engineering); neutral, plausible, non-controversial'
+        comment: 'Renewable-energy sites by source (Solar, Wind, Hydro): plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 10–45; sensible ratios (exclusive > overlaps generally); appropriate
-          for counting people/papers in research context
+        comment: 'Checked: Solar 75, Wind 72, Hydro 51 inclusive totals; circle sizes
+          order Solar > Wind > Hydro in the render; region counts 6-42 sensible'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No functions, no classes; direct, linear code flow; straightforward
-          script
+        passed: false
+        comment: Three helper functions (lens_area, distance_for_overlap, pair_size)
+          break the no-functions rule (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, numpy, pandas, lets_plot; all used;
-          no extraneous dependencies'
+        comment: os, numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Straightforward circle geometry; no fake interactivity; appropriate
-          complexity; good file handling for lets-plot-images
+        comment: Geometry is appropriate for proportional circles; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; no bare plot.png;
-          uses current ggsave API with scale parameter
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent ggplot2-style usage: geom_polygon for circles, geom_text
-          for annotations, scale_fill_manual for colors, coord_fixed for aspect, theme_void
-          + custom theme'
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses core letsplot features correctly (theme system, HTML export,
-          ggsave); static plot doesn't showcase advanced/distinctive library capabilities
+        comment: 'geom_polygon, geom_text, scale_fill_manual, coord_fixed with limits,
+          theme_void + theme(): solid grammar-of-graphics use, the expected baseline'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T02:10:32Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
+  - layer-composition
+  - html-export
   patterns:
-  - data-generation
   - matrix-construction
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
