@@ -2,45 +2,45 @@ library: plotnine
 language: python
 specification_id: scatter-categorical
 created: '2025-12-30T10:37:18Z'
-updated: '2026-05-12T13:15:37Z'
-generated_by: claude-haiku
-workflow_run: 25736276224
+updated: '2026-11-21T06:43:14Z'
+generated_by: claude-sonnet
+workflow_run: 44876490432
 issue: 2597
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - 'Flawless visual quality: perfect text legibility, no overlap, ideal marker sizing'
-  - 'Correct palette implementation: Okabe-Ito in canonical order with #009E73 as
-    first series'
-  - 'Perfect theme adaptation: both renders readable, data colors invariant, chrome
-    correctly theme-adaptive'
-  - 'Excellent code quality: deterministic, clean structure, idiomatic plotnine patterns'
-  - 'Realistic scientific scenario: plant growth data is plausible and appropriately
-    scaled'
+  - 'Imprint palette in canonical order with #009E73 first, held in data order via
+    scale_color_manual limits from df'
+  - Theme tokens threaded through every chrome element; both renders readable with
+    no dark-on-dark text
+  - Exact canonical 3200x1800 canvas with style-guide font sizes (12/10/8 pt)
+  - Three groups with distinct correlation patterns and partial overlap handled with
+    alpha 0.7
+  - Adaptable column constants feed aes() directly, so plotnine titles axes and legend
+    from the column names
   weaknesses:
-  - 'Design is functional but generic: relies on library defaults with minimal aesthetic
-    customization beyond the required palette'
-  - 'Limited visual storytelling: no intentional emphasis techniques to guide viewer
-    to key patterns in the data'
-  - 'Visual refinement could be enhanced: custom spine/grid styling or deliberate
-    hierarchy would elevate beyond defaults'
+  - 'DQ-02 (both): the groups are labelled Species A, Species B, Species C, which
+    reads as generic → real plant species names (e.g. Basil, Tomato, Lettuce). Likely
+    cause: the category label list in the DataFrame.'
+  - 'Suggestion: varying marker shape by species, as the Notes allow, would add a
+    second channel for distinction.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, not pure white
-      Chrome: Title, axis labels, tick labels all dark and readable; grid subtle; legend positioned cleanly
-      Data: 120 points across three species—Species A in #009E73 (green), Species B in #D55E00 (orange), Species C in #0072B2 (blue)
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'scatter-categorical · python · plotnine · anyplot.ai' in dark ink, axis titles 'Temperature (°C)' / 'Growth Rate (cm/week)', dark-grey tick labels, subtle grid, left and bottom axis lines, boxed legend 'Plant Species' at right — all readable
+      Data: 120 points, Species A #009E73, Species B #C475FD, Species C #4467A3, alpha 0.7; overlap zone around 35-45 °C stays readable
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, not pure black
-      Chrome: Title, axis labels, tick labels all light-colored and readable; grid subtle; legend clean
-      Data: Identical colors to light render (#009E73, #D55E00, #0072B2) confirming theme-invariant palette
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks light grey, grid subtle, legend on elevated #242420 box with light text — no dark-on-dark text
+      Data: identical colors to the light render; brand green clearly visible
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,44 +52,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (style-guide
+          sizes); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements
+        comment: No text collisions; point overlap between groups is handled with
+          alpha 0.7
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 120 points with size=4, alpha=0.7 optimal for density
+        comment: 120 points at size 2.5 are clearly visible; legend glyphs match the
+          marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe, high contrast
+        comment: Imprint green/lilac/blue distinct and CVD-safe; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 format, 50-70% fill, balanced margins
+        comment: 3200x1800 canvas, balanced margins, title about 52% of width, nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units (Temperature °C, Growth Rate cm/week)
+        comment: Temperature (°C) and Growth Rate (cm/week) are descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order, correct backgrounds and theme-adaptive
-          chrome'
+        comment: 'First series #009E73, canonical Imprint order via data-order limits,
+          #FAF8F1 / #1A1A17 backgrounds, theme-correct chrome'
     design_excellence:
       score: 8
       max: 20
@@ -99,19 +103,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default, professional but not exceptional
+        comment: Style-guide baseline (theme tokens, explicit sizes); nothing beyond
+          it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization
+        comment: Spine and grid rules met (subtle grid, left/bottom axis lines); nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -121,27 +127,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct categorical scatter plot
+        comment: Correct categorical scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 3 categories, legend, distinct colors'
+        comment: Distinct colorblind-safe colors, legend, alpha transparency; C1-C3
+          all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, all data visible
+        comment: Each point at its exact (x, y); all data inside the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match
+        comment: Title 'scatter-categorical · python · plotnine · anyplot.ai' correct;
+          legend 'Plant Species' names every category
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -149,19 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three group patterns with variation
+        comment: Three groups with different correlation, spread and partial overlap
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Real scientific scenario, neutral and plausible
+        passed: false
+        comment: Plant growth vs temperature is plausible and neutral, but groups
+          labelled Species A-C read as generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct scale and values
+        comment: Temperatures 8-70 °C and growth 16-66 cm/week; plausible orders of
+          magnitude for a fictional greenhouse study; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -171,48 +181,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, no over-engineering
+        comment: Concise; labs only sets the title, column names title the axes and
+          legend
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png dpi=300
+        comment: Saves plot-{THEME}.png at dpi=400 with current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Proper ggplot2 composition and theme patterns
+        passed: false
+        comment: Grammar-of-graphics composition, data-order limits per the library
+          prompt; default level
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses element_text/rect/line, scale_color_manual
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T06:40:29Z'
 impl_tags:
   dependencies: []
   techniques: []
