@@ -75,7 +75,7 @@ df = pd.concat(frames, ignore_index=True)
 
 # Plot: reads only df and the constants above
 order = list(dict.fromkeys(df[CHROMOSOME]))
-extent = df.groupby(CHROMOSOME, sort=False)[POSITION].max().reindex(order)
+extent = df.groupby(CHROMOSOME, sort=False)[POSITION].max().reindex(order).astype(float)
 offset = extent.cumsum().shift(fill_value=0)
 centers = offset + extent / 2
 
