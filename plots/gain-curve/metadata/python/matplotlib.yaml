@@ -2,40 +2,51 @@ library: matplotlib
 language: python
 specification_id: gain-curve
 created: '2025-12-29T22:47:36Z'
-updated: '2026-05-11T09:29:08Z'
-generated_by: claude-haiku
-workflow_run: 25661632453
+updated: '2026-11-21T01:30:50Z'
+generated_by: claude-sonnet
+workflow_run: 44850083310
 issue: 2440
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 81
 review:
   strengths:
-  - Excellent theme adaptation with perfect legibility in both light and dark renders
-  - Professional annotation that adds narrative context and highlights the 20% insight
-  - Perfect color palette compliance with brand green and proper secondary color choices
-  - Clean, well-structured code with proper reproducibility
-  - Strong visual hierarchy through line styles, opacity, and strategic data emphasis
-  weaknesses: []
+  - 'Theme tokens threaded through every chrome element: title, ticks, spines, legend
+    frame and callout box flip cleanly, readable in both renders'
+  - 'All three reference lines required or allowed by the spec are present and told
+    apart by line style as well as tone: solid green model, dashed random diagonal,
+    dotted perfect model reaching 100% at the computed positive rate'
+  - Gains computed directly from the ranked frame with cumsum and drawn unsmoothed
+    from the origin to (100,100)
+  - 'Follows the adaptable-code zones: column constants, a replaceable df block, and
+    plotting that reads only df'
+  weaknesses:
+  - 'VQ-05 (both): ax.set_aspect(''equal'') on the 3200x1800 landscape canvas shrinks
+    the axes to a square about 45 % of the canvas width, leaving empty bands of about
+    27 % of the width on each side → fill the canvas: the square 2400x2400 canvas
+    (figsize=(6, 6)) for this square 0-100 by 0-100 chart, or drop the equal aspect
+    on landscape. Likely cause: figsize=(8, 4.5) combined with set_aspect(''equal'').'
+  - 'Suggestion: the callout and the shaded area between model and diagonal are not
+    asked for by the spec; a version without them keeps the chart closer to its scope.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)
-      Chrome: Title "gain-curve · matplotlib · anyplot.ai" in dark text (INK), axis labels and tick labels clearly visible
-      Data: Model curve in brand green (#009E73), random baseline in muted gray (INK_SOFT), perfect model in darker gray (INK_MUTED), light green shaded area with alpha blending
-      Legibility verdict: PASS - All text perfectly readable with excellent contrast against light surface
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: title "gain-curve · python · matplotlib · anyplot.ai" in dark ink; axis titles "Population targeted (%)" and "Positive cases captured (%)"; ticks 0-100 in soft ink; subtle grid; top/right spines removed; legend box lower right (Model, Random (baseline), Perfect model); callout box "Top 20% captures 35% of positive cases" with green arrow. Square axes (equal aspect) centred with wide empty side bands.
+      Data: brand-green #009E73 stepped model curve from (0,0) to (100,100) with light green fill to the dashed dark-grey diagonal; dotted grey perfect-model line reaching 100% at about 52% then flat.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)
-      Chrome: Title and axis labels in light text (INK), clearly visible with no dark-on-dark failures, annotation box properly styled
-      Data: Model curve remains brand green (#009E73) identical to light render, confirming proper theme-independent color handling
-      Legibility verdict: PASS - All text readable on dark background, proper theme adaptation throughout
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks and legend text in soft light grey, legend and callout boxes on #242420 with light outlines; no dark-on-dark text.
+      Data: identical #009E73 model curve and fill; diagonal and perfect lines flip to light neutrals and stay visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -43,66 +54,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24/20/16pt), perfectly readable in
-          both themes
+        comment: All sizes set to the library reference (title 12, axis titles 10,
+          ticks/legend/callout 8 pt); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, all text clearly separated
+        comment: No text collides with text or lines; callout box sits clear of the
+          curves and the legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curves and markers optimally sized and visible
+        comment: Model line 2.5 px, dashed and dotted references 1.8 px; legend samples
+          match the lines in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Excellent contrast, CVD-safe palette
+        comment: Model, random and perfect lines differ by hue and line style; not
+          hue-only
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Perfect proportions with balanced margins
+        passed: false
+        comment: set_aspect('equal') on the 3200x1800 canvas leaves wide empty bands
+          left and right of the square axes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: Population targeted (%) / Positive cases captured (%) - descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green correct, theme chrome perfect in both renders
+        comment: 'Model in #009E73; references in theme neutrals; backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful design with meaningful color choices
+        comment: 'Style-guide baseline: Imprint, theme tokens, explicit sizes; nothing
+          decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Excellent refinement with proper spine removal and whitespace
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Strong storytelling through visual hierarchy and annotation
+        passed: false
+        comment: Data displayed; the callout is an annotation the spec does not request
+          and earns no credit
     spec_compliance:
       score: 15
       max: 15
@@ -112,25 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct gain curve implementation
+        comment: Correct cumulative gains chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: Diagonal random baseline, perfect-model curve, full 0-100 axes; C1-C5
+          all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct axes and data representation
+        comment: Computed cumulative gains drawn step by step from (0,0) to (100,100),
+          unsmoothed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and clear labels
+        comment: Title gain-curve · python · matplotlib · anyplot.ai; legend names
+          Model / Random (baseline) / Perfect model
     data_quality:
       score: 15
       max: 15
@@ -140,19 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows realistic customer response scenario
+        comment: Model curve rising steeply above the diagonal and flattening, perfect
+          curve kink at the positive rate
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Professional, neutral business context
+        comment: Customer response model with probability scores - plausible, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Well-calibrated data and sensible sample size
+        comment: '1000 samples; checked: perfect curve reaches 100% at about 52% =
+          positive rate computed from the data; curve monotone, ends at (100,100)'
     code_quality:
       score: 10
       max: 10
@@ -162,56 +186,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with seed=42
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: os, matplotlib.pyplot, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, no fake functionality
+        comment: Gains computed with cumsum on the ranked frame; nothing to remove
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png at 400 dpi without bbox_inches tight
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Expert use of matplotlib axes API
+        comment: Axes API, the library default level
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Good use of fill_between and annotation styling
+        passed: false
+        comment: fill_between/annotate are standard; nothing distinctive beyond the
+          prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-21T01:27:39Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - reference-lines
+  - fill-between
   patterns:
   - data-generation
-  - explicit-figure
+  - cumulative-sum
   dataprep:
   - cumulative-sum
+  - sorting
   styling:
-  - publication-ready
+  - alpha-blending
+  - theme-adaptive
