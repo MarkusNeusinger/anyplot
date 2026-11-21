@@ -415,10 +415,14 @@ class RequestLedger:
     """The new columns this turn's `prepare_data` operations added beside the others that the current table still has,
     each with the operation's name (`emptied.added_columns`): the guard's log line names the operation, never the
     column."""
+    date_misfits: dict[str, str] = field(default_factory=dict)
+    """The spec roles a refused `set_bindings` of this turn put a date column on although they take numbers, each with
+    that column (`emptied.date_misfits`): from then on the turn makes no held column, since which numbers a date becomes
+    is the user's choice. Role names and the user's column names, kept for this turn's calls only."""
     guard_held: list[str] = field(default_factory=list)
-    """The names of the tool calls the guard on a taken role refused before they stored anything
-    (`data/emptied.py`): they count against none of the turn's caps (`calls_of`), so the root can still make the
-    change the user asked for in its two calls."""
+    """The names of the tool calls the guard on a taken role, or its trigger after a date misfit, refused before they
+    stored anything (`data/emptied.py`): they count against none of the turn's caps (`calls_of`), so the root can
+    still make the change the user asked for in its two calls."""
     capability_gaps: list[str] = field(default_factory=list)
     """The families of the `unsupported` operations the root named in this turn: a data change no operation can make
     (closed: `telemetry.CAPABILITY_GAPS`), never a word of what the user asked."""
