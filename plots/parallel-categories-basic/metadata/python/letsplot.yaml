@@ -2,47 +2,59 @@ library: letsplot
 language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T00:06:40Z'
-updated: '2026-05-13T17:21:46Z'
-generated_by: claude-haiku
-workflow_run: 25814634786
+updated: '2026-11-21T11:16:40Z'
+generated_by: claude-sonnet
+workflow_run: 44897694876
 issue: 2501
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 80
 review:
   strengths:
-  - Perfect palette compliance with correct Okabe-Ito colors and theme adaptation
-    in both renders
-  - Complex geometry beautifully executed—smooth ribbon curves with easing function
-    create polished professional appearance
-  - Excellent spec compliance—all required features for parallel categories plot present
-    and working correctly
-  - Realistic, well-chosen customer journey data that clearly demonstrates all dimensions
-    and flows
-  - Proper theme-adaptive chrome—text colors correctly switch between light/dark renders
-    while data colors remain constant
+  - 'Canonical Imprint order with Online in #009E73 and the color kept by channel
+    across every axis, with a legend naming the dimension'
+  - Segment lengths and ribbon widths computed from the count column, with totals
+    in every category label (C1, C2)
+  - Page-tinted geom_label plates keep the middle-axis labels readable where they
+    cross ribbons
+  - Theme tokens threaded through title, headers, labels, node fill and legend; both
+    renders theme-correct
+  - 'Adaptable structure: column constants and a single Data block that the smoke
+    tests pass with renamed and resized data'
   weaknesses:
-  - 'Minor: hjust variable calculated in lines 239-250 but never passed to geom_text()
-    call—dead code that could be removed'
+  - 'VQ-02 (both): the middle-axis labels ''Home (171)'', ''Clothing (314)'', ''Electronics
+    (277)'', ''Small (422)'' and ''Large (340)'' sit on top of the ribbons, and the
+    ''Electronics (277)'' plate runs about 20 px into the Size axis segment; the legend
+    title ''Acquisition channel'' touches the Online swatch → labels clear of other
+    axes and legend title separated from its keys. Likely cause: right-side label
+    offset node_width/2 + 0.02 with geom size 6 makes labels wider than the gap between
+    axes; legend title spacing default.'
+  - 'VQ-05 (both): the dimension headers at geom_text size 9 (about 25 pt) render
+    larger than the 16 pt title → about 16-18 pt (geom size 5.5-6, about −3). Likely
+    cause: header geom_text size=9.'
+  - 'Suggestion: in the dark render the Mobile ribbons (#4467A3 at alpha 0.5) read
+    as a dim navy; a slightly higher ribbon alpha would lift them.'
+  - 'Suggestion: lets-plot tooltips on the ribbons (layer_tooltips with channel and
+    count) would add path inspection to the HTML output.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct and clean
-      Chrome: Title "parallel-categories-basic · letsplot · anyplot.ai" bold and dark. Dimension headers (Channel, Product, Size, Outcome) in bold dark text, fully readable. Category labels with counts positioned alternately left/right to avoid overlap, all readable in dark text.
-      Data: Three ribbon flows in Okabe-Ito colors — green (#009E73) for Online, orange (#D55E00) for Store, blue (#0072B2) for Mobile. Ribbons have white borders for clarity and semi-transparent fill (alpha=0.5). Node rectangles in soft dark gray (#4A4A44).
-      Legibility verdict: PASS — All text clearly readable against light background, excellent contrast
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: bold title 'parallel-categories-basic · python · letsplot · anyplot.ai' top-left (~63% width); bold headers Channel, Product, Size, Outcome above four axes; category labels with counts (Mobile 254, Store 238, Online 270; Home 171, Clothing 314, Electronics 277; Small 422, Large 340; Abandoned 183, Completed 579) in dark grey; middle labels on page-tinted plates over ribbons; legend 'Acquisition channel' at the bottom. All readable.
+      Data: dark-grey node segments; translucent ribbons in #009E73 (Online), #C475FD (Store), #4467A3 (Mobile). The 'Electronics (277)' plate touches the Size axis; headers render larger than the title.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct and clean
-      Chrome: Title and headers rendered in light text (#F0EFE8), clearly visible against dark background. Category labels in soft light gray (#B8B7B0), readable with good contrast. No dark-on-dark failures.
-      Data: Ribbon colors identical to light render (green, orange, blue) — only chrome has adapted for theme. Node rectangles in light gray for visibility on dark background.
-      Legibility verdict: PASS — All text readable against dark background with proper contrast, no legibility issues
+      Background: warm near-black #1A1A17.
+      Chrome: title, headers in light ink; category labels light grey on dark plates; legend text light. No dark-on-dark text.
+      Data: same three ribbon colors as light; node segments flip to light grey; Mobile ribbons read dim navy but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -50,69 +62,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set with proper scaling for 4800×2700 resolution
+        comment: Title 16 pt, headers, category labels and legend text explicitly
+          sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Text well-positioned with alternating left/right placement for middle
-          dimensions
+        passed: false
+        comment: Middle-axis category labels sit on the ribbons, and the 'Electronics
+          (277)' plate runs into the Size axis; legend title touches the Online swatch
+          (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ribbons, nodes, and headers all clearly visible with good definition
+        comment: Ribbons, segments and legend swatches clearly visible in both themes;
+          hair-thin ribbons are permitted by the spec
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Green/purple/blue Imprint hues are CVD-distinguishable; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Perfect use of landscape format with balanced margins and spacing
+        passed: false
+        comment: 3200x1800 canvas; dimension headers at geom size 9 (~25 pt) render
+          larger than the 16 pt title (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Clear descriptive title present, axis labels appropriately omitted
-          for this chart type
+        comment: Dimension headers name every axis; legend title 'Acquisition channel'
+          is reader text; no numeric axes to label
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Perfect compliance—Okabe-Ito colors with correct backgrounds and
-          theme-adaptive chrome
+        comment: 'Online = #009E73, then #C475FD, #4467A3 in canonical Imprint order;
+          backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Custom palette, smooth easing curves for ribbons, professional above-default
-          appearance
+        comment: Style-guide baseline; nothing beyond it in typography or hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clean minimal design with white ribbon borders for clarity
+        comment: 'Raised by one: page-tinted geom_label plates (alpha 0.85, no border)
+          keep middle labels readable over ribbons, and smoothstep-eased ribbon edges'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy guides viewer through customer journey flow
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,26 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel categories plot with proportional ribbons
+        comment: Correct parallel categories plot; no unrequested encodings or layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present—4 dimensions, proportional ribbons, channel
-          coloring
+        comment: 'C1 named axes with labeled proportional segments, C2 count-proportional
+          ribbons, C3 colored by first dimension with legend, C4 data/layout order,
+          C5 nothing singled out: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct mapping across all dimensions and flows
+        comment: Segment lengths and ribbon widths computed from Count; stacking consistent
+          across axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels accurate
+        comment: Title 'parallel-categories-basic · python · letsplot · anyplot.ai'
+          correct; legend entries match channels
     data_quality:
       score: 15
       max: 15
@@ -151,21 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all 4 dimensions with multiple categories each
+        comment: Four dimensions with 2-3 categories each; ribbons split, merge and
+          cross across all axes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Professional customer journey scenario, neutral and realistic
+        comment: Plausible, neutral customer-journey scenario (channel, product, size,
+          outcome)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values are plausible observation counts
+        comment: Counts in plausible ranges (2-65 per path, 762 total); segment totals
+          in labels match the data sums (Online 270, Store 238, Mobile 254)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,56 +196,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure—data, calculation, plot, save
+        comment: Flat script, no functions or classes; Data block and column constants
+          as the adaptable-code zones require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data, no random elements
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Minor: hjust calculated but never used in geom_text()—dead code'
+        passed: true
+        comment: 'Geometry is necessary: lets-plot has no parallel-sets geom; comprehensions
+          keep it compact'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format as plot-{THEME}.png and .html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with ggsize(800,450),
+          scale=4
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Proper ggplot composition, correct theme token usage
+        comment: Grammar-of-graphics composition with geom_polygon/geom_rect/geom_label
+          and theme(); default level
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
         passed: true
-        comment: Advanced geom_polygon with custom easing function shows library mastery
+        comment: Nothing beyond what the library prompt mandates; HTML output has
+          no tooltips configured
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T11:12:48Z'
 impl_tags:
   dependencies: []
   techniques:
+  - bezier-curves
+  - annotations
   - layer-composition
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - groupby-aggregation
+  - normalization
   styling:
   - alpha-blending
-  - publication-ready
+  - minimal-chrome
