@@ -2,51 +2,46 @@ library: plotly
 language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:47:33Z'
-updated: '2026-05-13T13:07:18Z'
-generated_by: claude-haiku
-workflow_run: 25800761476
+updated: '2026-11-21T10:03:23Z'
+generated_by: claude-sonnet
+workflow_run: 44891975094
 issue: 2786
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - 'Perfect visual quality across both themes: all text legible, palette correct,
-    backgrounds proper, no theme-adaptation failures'
-  - 'Flawless spec compliance: every requirement implemented (raw + rolling overlay,
-    transparency, legend, units)'
-  - 'Clean, reproducible code: deterministic data generation, proper theme tokens,
-    no extraneous imports'
-  - 'Strong theme-adaptive design: identical data colors, properly flipped chrome,
-    readable in light and dark'
-  - 'Effective dual-layer narrative: raw data + rolling average clearly demonstrates
-    the value of noise reduction and trend identification'
+  - 'Raw series drawn as a thin 1 px #009E73 line at opacity 0.65 recedes behind the
+    3 px #C475FD rolling average yet stays visible in both themes (C1, C2)'
+  - Rolling average computed with pandas .rolling(window=WINDOW).mean(), leaving NaN
+    until the window fills, so the line starts 14 days in rather than being padded
+    to the first date (C3)
+  - Legend names the window size ('14-Day Rolling Average') and distinguishes it from
+    'Raw Data' (C4)
+  - Theme tokens threaded through title, axes, ticks, grid and legend; both renders
+    theme-correct on the canonical 3200x1800 canvas
+  - 'Adaptable structure: column constants with role comments and a clean Data block
+    that binds df before the Plot zone; HTML export keeps plotly hover/zoom'
   weaknesses:
-  - Design aesthetics are generic; could enhance with custom spines, grid refinement,
-    or data annotations
-  - Plotly interactive features underutilized; no leverage of annotations, secondary
-    axes, or custom shapes
-  - No visual emphasis techniques; straightforward composition without color gradients,
-    size variation, or focal-point techniques
+  - 'Suggestion: a slightly tighter top margin would close the gap between the title
+    and the plot area.'
+  - 'Suggestion: plotly''s hovermode=''x unified'' would let the HTML view read raw
+    value and rolling average together.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title (28px, dark #1A1A17), axis labels (22px, dark), tick labels (18px, secondary #4A4A44) — all clearly readable against light background
-      Data: Raw data as thin teal line (#009E73, opacity 0.4); rolling average as thick orange line (#D55E00, opacity 1.0) — high contrast, colors correct
-      Legend: Top-left corner with elevated background (#FFFDF6), border, light text — clearly distinguishes "Raw Data" from "14-Day Rolling Average"
-      Grid: Subtle on both axes (0.25 alpha), supports readability
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: centered title "line-timeseries-rolling · python · plotly · anyplot.ai" in dark ink; axis titles "Date" and "Temperature (°C)" dark; tick labels (Jan 2024 to Jul 2024, -10 to 40) in soft dark gray; subtle grid on both axes; a solid zero line at 0 °C; legend top-left on an elevated off-white box with a thin border.
+      Data: raw daily temperatures as a thin semi-transparent #009E73 line, noisy around a thick #C475FD 14-day rolling average that starts mid-January and climbs from about -3 °C to about 31 °C.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title (28px, light #F0EFE8), axis labels (22px, light), tick labels (18px, secondary light #B8B7B0) — all clearly readable against dark background; NO dark-on-dark failures
-      Data: Raw data teal (#009E73, opacity 0.4); rolling average orange (#D55E00, opacity 1.0) — IDENTICAL colors to light render (only chrome flipped) ✓
-      Legend: Top-left, dark elevated background (#242420), light text and border — matches theme correctly
-      Grid: Subtle (0.25 alpha), visible and supportive
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink; grid subtle light; legend box dark elevated with light text and border; no dark-on-dark text.
+      Data: identical colors to the light render (#009E73 raw, #C475FD rolling average); the raw line reads darker against the dark surface but is clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -58,72 +53,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and themed; readable at full resolution
-          in both light and dark
+        comment: Explicit sizes 16/12/10/11 px on the 800x450 base; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; raw and rolling lines visually distinct despite opacity
+        comment: Legend sits in the empty upper-left; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Raw data at 0.4 opacity visible; rolling average prominent; 200-point
-          density appropriate
+        comment: 1 px raw line at 0.65 opacity visible in both themes; 3 px rolling
+          line dominant; legend line samples match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00); high contrast; CVD-safe'
+        comment: Green vs. purple with width contrast; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proportions well-balanced; margins generous (120px L, 60px R, 100px
-          T/B); nothing cut off
+        comment: Canonical 3200x1800; title about 43% width; balanced labels; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title spec-compliant; axis labels include units
+        comment: '''Date'' and ''Temperature (°C)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second #D55E00; data colors identical across
-          themes; backgrounds correct; chrome properly themed'
+        comment: 'First series #009E73, second #C475FD (Imprint order); backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: 'Professional polish with theme tokens; deliberate legend placement;
-          Okabe-Ito usage idiomatic. Minor: straightforward without bespoke refinements'
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Grid subtle (0.25 alpha); legend elevated; margins generous. Minor:
-          spines not explicitly customized'
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear visual hierarchy: rolling average (thicker, opaque) vs raw
-          data (thinner, transparent). Seasonal trend discoverable'
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -133,26 +125,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Time series with rolling average overlay
+        comment: Raw time series with rolling-average overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Raw data lighter/transparent; rolling average prominent; legend clear;
-          window size labeled
+        comment: 'C1-C5 all shown: light raw line, prominent rolling line, delayed
+          start, legend with window, grid on both axes'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Date, Y=Temperature; axes show all data
+        comment: Dates on x, values on y; all data shown; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title spec-compliant; legend labels clear
+        comment: Mandated title format; legend labels 'Raw Data' and '14-Day Rolling
+          Average'
     data_quality:
       score: 15
       max: 15
@@ -162,21 +155,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates raw fluctuation, trend extraction, seasonal pattern
-          recognition
+        comment: Noise, trend, and the lagging, shorter rolling line all visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily temperature with 14-day moving average is real-world plausible
-          and neutral
+        comment: Daily temperature readings, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range -10°C to +40°C realistic; 200 days with 14-day window well-proportioned
+        comment: -8 to 38 °C over Jan-Jul is plausible for a continental site; 200
+          points within 50-500
     code_quality:
       score: 10
       max: 10
@@ -186,53 +178,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; direct, readable script
+        comment: Flat zones, column constants, Data block binds df
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pandas, plotly.graph_objects; all used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI or simulated interactivity
+        comment: pandas .rolling().mean() instead of a hand-rolled window
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Proper go.Figure(), add_trace(), update_layout(); theme via environment
-          variable. Solid but straightforward
+        passed: false
+        comment: Standard go.Figure/add_trace/update_layout
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: HTML export included; interactivity available. No bespoke plotly
-          customizations
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T10:00:15Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - html-export
   patterns:
   - data-generation
