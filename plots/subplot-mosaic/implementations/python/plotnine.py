@@ -1,7 +1,7 @@
 """anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 Library: plotnine 0.15.9 | Python 3.14
-Quality: 95/100 | Updated: 2026-11-21
+Quality: pending | Updated: 2026-11-21
 """
 
 import os
