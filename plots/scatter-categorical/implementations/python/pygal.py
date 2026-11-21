@@ -1,19 +1,15 @@
 """ anyplot.ai
 scatter-categorical: Categorical Scatter Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-12
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-21
 """
 
 import os
-import sys
 
-
-# Prevent importing local pygal.py file
-sys.path = [p for p in sys.path if not p.endswith("/implementations/python")]
-
-import numpy as np  # noqa: E402
-import pygal  # noqa: E402
-from pygal.style import Style  # noqa: E402
+import numpy as np
+import pandas as pd
+import pygal
+from pygal.style import Style
 
 
 # Theme tokens
@@ -22,67 +18,75 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series = #009E73)
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Iris-like flower measurements by species
+# Columns: set these to your table's column names
+CPU_SCORE = "Multi-core benchmark score"  # role: x
+BATTERY = "Battery life (hours)"  # role: y
+LAPTOP_CLASS = "Laptop class"  # role: category
+
+# Data: replace this block with your own table, for example df = pd.read_csv("laptops.csv")
 np.random.seed(42)
+classes = {
+    # name: (n, mean score, sd score, mean battery, sd battery)
+    "Ultrabook": (40, 8500, 1300, 14.5, 2.0),
+    "Gaming": (35, 17500, 2600, 5.5, 1.2),
+    "Workstation": (30, 21000, 3200, 8.5, 1.6),
+}
+df = pd.concat(
+    [
+        pd.DataFrame(
+            {
+                CPU_SCORE: np.random.normal(mx, sx, n).round(0),
+                BATTERY: np.random.normal(my, sy, n).round(1).clip(min=1.5),
+                LAPTOP_CLASS: name,
+            }
+        )
+        for name, (n, mx, sx, my, sy) in classes.items()
+    ],
+    ignore_index=True,
+)
 
-species = ["Setosa", "Versicolor", "Virginica"]
-n_per_species = 40
-
-# Setosa: small petals (low x, low y)
-setosa_x = np.random.normal(1.5, 0.25, n_per_species)
-setosa_y = np.random.normal(0.3, 0.1, n_per_species)
-
-# Versicolor: medium petals (medium x, medium y)
-versicolor_x = np.random.normal(4.2, 0.6, n_per_species)
-versicolor_y = np.random.normal(1.3, 0.25, n_per_species)
-
-# Virginica: large petals (high x, high y)
-virginica_x = np.random.normal(5.5, 0.6, n_per_species)
-virginica_y = np.random.normal(2.0, 0.3, n_per_species)
-
-# Custom style for large canvas with theme support
-custom_style = Style(
+# Plot
+style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_SOFT,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    opacity=0.75,
-    opacity_hover=0.9,
-    stroke_width=2,
-    dots_size=8,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
+    label_font_size=52,
+    major_label_font_size=42,
+    legend_font_size=46,
+    value_font_size=36,
+    opacity=0.7,
+    opacity_hover=0.95,
+    stroke_width=2.5,
 )
 
-# Create XY scatter chart
 chart = pygal.XY(
-    width=4800,
-    height=2700,
-    style=custom_style,
-    title="scatter-categorical · pygal · anyplot.ai",
-    x_title="Petal Length (cm)",
-    y_title="Petal Width (cm)",
+    width=3200,
+    height=1800,
+    style=style,
+    title="scatter-categorical · python · pygal · anyplot.ai",
+    x_title=CPU_SCORE,
+    y_title=BATTERY,
+    stroke=False,
+    dots_size=11,
     show_x_guides=True,
     show_y_guides=True,
     legend_at_bottom=True,
-    legend_box_size=16,
+    legend_box_size=30,
     truncate_legend=-1,
+    margin=40,
 )
 
-# Add data for each species as (x, y) tuples
-chart.add("Setosa", list(zip(setosa_x, setosa_y, strict=True)))
-chart.add("Versicolor", list(zip(versicolor_x, versicolor_y, strict=True)))
-chart.add("Virginica", list(zip(virginica_x, virginica_y, strict=True)))
+for name, group in df.groupby(LAPTOP_CLASS, sort=False):
+    chart.add(str(name), list(zip(group[CPU_SCORE], group[BATTERY], strict=True)))
 
-# Save as PNG and HTML
+# Save
 chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())

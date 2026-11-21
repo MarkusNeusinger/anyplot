@@ -2,97 +2,104 @@ library: pygal
 language: python
 specification_id: scatter-categorical
 created: '2025-12-30T10:38:00Z'
-updated: '2026-05-12T13:18:48Z'
-generated_by: claude-haiku
-workflow_run: 25736387052
+updated: '2026-11-21T06:46:56Z'
+generated_by: claude-sonnet
+workflow_run: 44876733231
 issue: 2597
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality across both light and dark themes with zero legibility
-    or overlap issues
-  - Complete specification compliance with all required features correctly implemented
-  - Excellent data quality with realistic, well-separated biological data (iris-like)
-    demonstrating clear categorical clustering
-  - Clean, reproducible code with proper theme-adaptive styling and deterministic
-    data generation
-  - Correct Okabe-Ito palette application with proper theme-correct chrome in both
-    renders
-  - 4800×2700 px canvas properly utilized with balanced proportions and generous margins
+  - 'Points-only XY via stroke=False with one colour per laptop class from the Imprint
+    palette, first series #009E73, identical in both themes'
+  - 'Theme tokens threaded through the pygal Style: warm off-white and near-black
+    surfaces with readable chrome in both renders'
+  - Opacity 0.7 keeps the overlapping Gaming and Workstation points visible without
+    moving any mark off its values
+  - Plausible laptop benchmark vs battery-life data with unequal group sizes and a
+    partial overlap, behind column constants and a self-contained Data block
   weaknesses:
-  - Design Excellence limited to generic styling using library defaults without custom
-    aesthetic refinement or visual hierarchy
-  - Library Mastery modest - implementation doesn't showcase pygal-specific interactive
-    features or distinctive capabilities beyond standard scatter
-  - No visual storytelling - data is clearly displayed but lacks design-driven emphasis
-    or viewer guidance; species clustering is inherent to data, not emphasized by
-    design
+  - 'VQ-01 (both): y and x tick labels render at two sizes (major labels such as ''10''
+    and ''15'' at 42 px beside minor ones at 52 px), so the tick row looks uneven
+    → one size for all tick labels (major_label_font_size = label_font_size, e.g.
+    both 44). Likely cause: Style label_font_size=52 vs major_label_font_size=42.'
+  - 'VQ-05 (both): the bottom legend wraps its three entries into two columns across
+    two rows, leaving Gaming at mid-width and Workstation alone on a second row →
+    all three entries on one row. Likely cause: legend_at_bottom without legend_at_bottom_columns=3.'
+  - 'Suggestion: a lighter guide density (y guides only, or fewer x guides) would
+    quiet the dashed grid in the light render.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "scatter-categorical · pygal · anyplot.ai" and axis labels "Petal Length (cm)" / "Petal Width (cm)" rendered in dark text, fully readable. Grid lines subtle but visible on both axes. Legend at bottom clear and legible.
-      Data: Three flower species color-coded with Okabe-Ito palette - Setosa (teal #009E73) in lower-left, Versicolor (orange #D55E00) in middle, Virginica (blue #0072B2) in upper-right. Clear spatial clustering pattern. Marker dots at appropriate size (8px).
-      Legibility verdict: PASS - All elements readable, no overlap, excellent contrast
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title 'scatter-categorical · python · pygal · anyplot.ai' at the top, x title 'Multi-core benchmark score', y title 'Battery life (hours)', tick labels 6000-28000 and 4-17, dashed guides on both axes, legend at the bottom (Ultrabook, Gaming; Workstation on a second row) - all dark text, readable. Tick labels mix two sizes (major ticks smaller).
+      Data: ~105 points; Ultrabook #009E73 cluster top-left (6k-11k, 9-17.6 h), Gaming #C475FD bottom-centre (12k-24k, 3.6-8 h), Workstation #4467A3 right (17k-30k, 6-10 h) with partial overlap with Gaming, rendered at opacity 0.7.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title and axis labels rendered in light text (#F0EFE8), fully readable against dark background. No dark-on-dark failures. Grid lines subtle and visible. Legend maintains light text and legibility.
-      Data: Data colors identical to light render (teal, orange, blue preserved), confirming theme-adaptive chrome while maintaining categorical identity. Marker visibility excellent on dark surface.
-      Legibility verdict: PASS - All elements readable on dark background, no theme-adaptation failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend in light text, all readable; no dark-on-dark text; guides subtle dark dashes.
+      Data: identical positions and colours to the light render; green, purple and blue all visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: Font sizes explicitly set; all text readable in both themes
+        passed: false
+        comment: Title 66, axis titles 52 and legend 46 read well in both themes;
+          tick labels mix two sizes (major 42 vs minor 52, e.g. y '10'/'15' smaller
+          than '11'-'14') (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text collisions; Gaming/Workstation overlap stays readable at
+          opacity 0.7
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers optimally sized; clear spatial separation of categories
+        comment: dots_size=11 suits ~105 points; legend swatches match the marks in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; adequate contrast
+        comment: Green, purple, blue from Imprint are distinct and readable on both
+          surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Perfect proportions; balanced margins; nothing cut off
+        passed: false
+        comment: 3200x1800 canvas, good plot proportions; bottom legend wraps three
+          entries into two uneven rows with Gaming at mid-width (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; clear title
+        comment: '''Multi-core benchmark score'' and ''Battery life (hours)'' are
+          descriptive, with units where they exist'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds correct;
-          theme chrome perfect'
+        comment: 'First series #009E73, Imprint order, #FAF8F1 / #1A1A17 backgrounds,
+          chrome flips correctly'
     design_excellence:
       score: 8
       max: 20
@@ -102,19 +109,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults without custom refinement
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization; library defaults
+        comment: Dashed guides on both axes at pygal default density; spine and grid
+          rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy or emphasis
+        comment: Three clusters displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,25 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with categorical coloring
+        comment: Correct categorical scatter with stroke=False, no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: C1 one point per observation coloured by class with a legend naming
+          all three; C2 colourblind-safe distinct colours; C3 opacity 0.7 where Gaming
+          and Workstation overlap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show all data
+        comment: Points at their exact (x, y) values; axes cover the full range including
+          the 29.6k outlier
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Title 'scatter-categorical · python · pygal · anyplot.ai' correct;
+          legend entries are readable class names
     data_quality:
       score: 15
       max: 15
@@ -152,19 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all scatter-categorical aspects
+        comment: Shows distinct clusters, partial overlap between Gaming and Workstation,
+          unequal group sizes and spreads
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris-like flower data; realistic and neutral
+        comment: Laptop class benchmark vs battery life is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible petal measurement ranges
+        comment: Scores 6k-30k and battery 3.6-17.6 h are sensible; spec has no Check
+          values
     code_quality:
       score: 10
       max: 10
@@ -174,31 +188,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Flat script, column constants above a Data block ending in df
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output files
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, current pygal 3 API
     library_mastery:
       score: 4
       max: 10
@@ -208,19 +222,27 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Proper pygal.XY and Style usage but doesn't leverage advanced features
+        comment: 'pygal.XY with stroke=False and a Style object: the standard pattern,
+          nothing beyond'
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic implementation; could be any library
+        comment: Nothing beyond what the library prompt mandates; native HTML tooltips
+          are the mandated output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T06:43:29Z'
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
