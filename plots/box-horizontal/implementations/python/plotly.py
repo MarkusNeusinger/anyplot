@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-horizontal: Horizontal Box Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-12
@@ -14,88 +14,72 @@ import plotly.graph_objects as go
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Response times (ms) by service type
-np.random.seed(42)
+# Columns: set these to your table's column names
+COURIER = "Courier"  # role: categories
+DELIVERY_TIME = "Delivery time (minutes)"  # role: values
 
-services = ["Database Query", "API Gateway", "Authentication", "File Storage", "Cache Lookup", "Message Queue"]
+# Data: replace this block with your own table, for example df = pd.read_csv("deliveries.csv")
+rng = np.random.default_rng(7)
+couriers = {
+    # name: (median minutes, spread, share of late deliveries)
+    "Bike Messenger": (24, 6, 0.04),
+    "Electric Scooter": (31, 8, 0.06),
+    "Motorbike Express": (19, 4, 0.05),
+    "Van Fleet": (46, 12, 0.08),
+    "Drone Service": (14, 3, 0.02),
+    "Parcel Locker Pickup": (58, 18, 0.10),
+}
+frames = []
+for name, (typical, spread, late_share) in couriers.items():
+    times = rng.lognormal(np.log(typical), spread / typical, 90)
+    late = rng.random(90) < late_share
+    times[late] *= rng.uniform(1.8, 2.6, late.sum())
+    frames.append(pd.DataFrame({COURIER: name, DELIVERY_TIME: times.round(1)}))
+df = pd.concat(frames, ignore_index=True)
 
-# Generate data with different distributions for each service
-data = []
-distributions = [
-    (120, 40, 15),  # Database Query - higher, more spread
-    (85, 25, 8),  # API Gateway - medium
-    (45, 15, 5),  # Authentication - fast, tight
-    (200, 80, 20),  # File Storage - slow, very spread, many outliers
-    (15, 5, 3),  # Cache Lookup - very fast
-    (65, 30, 10),  # Message Queue - medium with spread
-]
+# Plot: reads only df and the constants above
+order = df.groupby(COURIER)[DELIVERY_TIME].median().sort_values(ascending=False).index
 
-for service, (mean, std, n_outliers) in zip(services, distributions):
-    n = 100
-    values = np.random.normal(mean, std, n)
-    # Add some outliers
-    outliers = np.random.normal(mean + 3 * std, std / 2, n_outliers)
-    all_values = np.concatenate([values, outliers])
-    # Ensure positive values (response times can't be negative)
-    all_values = np.maximum(all_values, 5)
-    for v in all_values:
-        data.append({"Service": service, "Response Time (ms)": v})
-
-df = pd.DataFrame(data)
-
-# Sort services by median response time for easier comparison
-median_order = df.groupby("Service")["Response Time (ms)"].median().sort_values()
-services_sorted = median_order.index.tolist()
-
-# Create figure with horizontal box plots
 fig = go.Figure()
-
-for i, service in enumerate(services_sorted):
-    service_data = df[df["Service"] == service]["Response Time (ms)"]
+for i, courier in enumerate(order):
     fig.add_trace(
         go.Box(
-            x=service_data,
-            name=service,
+            x=df.loc[df[COURIER] == courier, DELIVERY_TIME],
+            name=courier,
             orientation="h",
-            marker=dict(color=IMPRINT[i % len(IMPRINT)], size=8, outliercolor=IMPRINT[i % len(IMPRINT)]),
-            line=dict(color=IMPRINT[i % len(IMPRINT)], width=2),
-            fillcolor=IMPRINT[i % len(IMPRINT)],
-            opacity=0.7,
-            boxmean=False,
-            hovertemplate="<b>%{name}</b><br>Value: %{x:.1f} ms<extra></extra>",
+            marker=dict(color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)], size=6),
+            line=dict(color=INK_SOFT, width=1.5),
+            fillcolor=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+            boxpoints="outliers",
+            hovertemplate="<b>%{y}</b><br>%{x:.1f} min<extra></extra>",
         )
     )
 
-# Layout
 fig.update_layout(
-    title=dict(text="box-horizontal · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    autosize=False,
+    margin=dict(l=130, r=40, t=70, b=60),
+    title=dict(text="box-horizontal · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5),
     xaxis=dict(
-        title=dict(text="Response Time (ms)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
+        title=dict(text=DELIVERY_TIME, font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
         gridcolor=GRID,
-        gridwidth=1,
         linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
+        zeroline=False,
     ),
-    yaxis=dict(
-        title=dict(text="Service Type", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        linecolor=INK_SOFT,
-    ),
+    yaxis=dict(tickfont=dict(size=10, color=INK_SOFT), linecolor=INK_SOFT, automargin=True),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    showlegend=False,
-    margin=dict(l=180, r=50, t=80, b=80),
     font=dict(color=INK),
+    showlegend=False,
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
