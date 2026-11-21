@@ -9,4 +9,5 @@ export * from 'src/utils/galleryScroll';
 export * from 'src/utils/claudePrompt';
 export * from 'src/utils/responsiveImage';
 export * from 'src/utils/shuffle';
+export * from 'src/utils/specSources';
 export * from 'src/utils/themedPreview';

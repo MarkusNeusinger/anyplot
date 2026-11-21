@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.cache import cache_key, get_or_set_cache, get_page_cache, set_page_cache
 from api.dependencies import optional_db
 from api.routers.stats import _compute_stats, _refresh_stats
-from api.schemas import StatsResponse
+from api.schemas import SourceEntry, SpecSources, StatsResponse
 from core import palette
 from core.config import settings
 from core.constants import LANGUAGE_NAMES, LANGUAGES_METADATA, LIBRARIES_METADATA, LIBRARY_LANGUAGES, LIBRARY_NAMES
@@ -491,6 +491,67 @@ def _build_home_body(spec_count: int | None) -> str:
     )
 
 
+def _source_item_html(entry: SourceEntry) -> str:
+    """One source as a list item: its title linked to its address, a DOI as a link to its resolver, an ISBN as text.
+
+    The DOI goes into the address as it stands: core/spec_sources.py admits only characters that need no escaping
+    in a URL path, and the site's page builds the same link the same way.
+    """
+    parts = [f'<a href="{html.escape(entry.url, quote=True)}">{html.escape(entry.title)}</a>']
+    if entry.doi:
+        doi_url = html.escape(f"https://doi.org/{entry.doi}", quote=True)
+        parts.append(f'<a href="{doi_url}">doi:{html.escape(entry.doi)}</a>')
+    if entry.isbn:
+        parts.append(f"ISBN {html.escape(entry.isbn)}")
+    return f"<li>{' · '.join(parts)}</li>"
+
+
+def _sources_html(sources: SpecSources | None) -> str:
+    """The visible sources of a spec, the crawler copy of the site's "Sources" section; empty without entries.
+
+    In the body as well as in the JSON-LD, because the HTML-to-Markdown converters assistants read pages through
+    drop ``<script>``.
+    """
+    if sources is None or not sources.has_entries:
+        return ""
+    groups = "".join(
+        f"<h3>{label}</h3><ul>{''.join(_source_item_html(entry) for entry in entries)}</ul>"
+        for label, entries in (("Inspired by", sources.inspired_by), ("References", sources.references))
+        if entries
+    )
+    return f"<h2>Sources</h2>{groups}"
+
+
+def _source_node(entry: SourceEntry) -> dict:
+    """A source as a schema.org CreativeWork; a DOI or an ISBN becomes an identifier."""
+    node: dict = {"@type": "CreativeWork", "name": entry.title, "url": entry.url}
+    identifiers = [
+        {"@type": "PropertyValue", "propertyID": kind, "value": value}
+        for kind, value in (("DOI", entry.doi), ("ISBN", entry.isbn))
+        if value
+    ]
+    if identifiers:
+        node["identifier"] = identifiers
+    return node
+
+
+def _sources_jsonld(sources: SpecSources | None) -> dict:
+    """The JSON-LD properties of a page node for the spec's sources; empty without entries.
+
+    `isBasedOn` for a work that gave the idea and `citation` for the literature the values follow. They go on the
+    page's node, never on the SoftwareSourceCode node: that one is based on the spec alone, because the catalogue
+    takes ideas from other works and never their code.
+    """
+    if sources is None:
+        return {}
+    properties: dict = {}
+    if sources.inspired_by:
+        properties["isBasedOn"] = [_source_node(entry) for entry in sources.inspired_by]
+    if sources.references:
+        properties["citation"] = [_source_node(entry) for entry in sources.references]
+    return properties
+
+
 def _build_spec_hub_html(spec, image: str) -> str:
     """Full bot page for the cross-language spec hub /{spec_id}.
 
@@ -552,8 +613,11 @@ def _build_spec_hub_html(spec, image: str) -> str:
         if sorted_impls
         else ""
     )
-    body = f"<h1>{heading_esc}</h1>{lead}<p>{desc_esc}</p>{plot_img}" + (
-        f"<h2>Implementations</h2><ul>{''.join(impl_links)}</ul>" if impl_links else ""
+    sources = SpecSources.from_stored(spec.sources)
+    body = (
+        f"<h1>{heading_esc}</h1>{lead}<p>{desc_esc}</p>{plot_img}"
+        + (f"<h2>Implementations</h2><ul>{''.join(impl_links)}</ul>" if impl_links else "")
+        + _sources_html(sources)
     )
     page_node = {
         "@type": "CollectionPage",
@@ -562,6 +626,7 @@ def _build_spec_hub_html(spec, image: str) -> str:
         "name": heading,
         "mainEntity": {"@id": f"{hub_url}#implementations"},
         "breadcrumb": {"@id": f"{hub_url}#breadcrumb"},
+        **_sources_jsonld(sources),
     }
     # The search-thumbnail preference Google documents. og:image is the branded
     # card, whose plot is a small inset among text; this is the clean render
@@ -812,6 +877,7 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
     page_url = f"{hub_url}/{language_id}/{impl.library_id}"
     sorted_impls = _sorted_impls(spec)
     siblings = [s for s in sorted_impls if not (s.library_id == impl.library_id and s.library.language == language_id)]
+    sources = SpecSources.from_stored(spec.sources)
 
     # The meta/OG description names the library first. Reusing the spec
     # description verbatim gave every implementation page of a spec (up to 15)
@@ -877,6 +943,7 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
         )
         + _build_impl_retrieval(spec, impl, page_url, hub_url)
         + f'<p>Part of <a href="{html.escape(hub_url, quote=True)}">{title_esc}</a> on anyplot.ai.</p>'
+        + _sources_html(sources)
         + (f"<h2>Other implementations</h2><ul>{''.join(sibling_links)}</ul>" if sibling_links else "")
     )
     page_node = {
@@ -886,6 +953,7 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
         "name": heading,
         "mainEntity": {"@id": f"{page_url}#code"},
         "breadcrumb": {"@id": f"{page_url}#breadcrumb"},
+        **_sources_jsonld(sources),
     }
     # The search-thumbnail preference, at the exact URL of the body's <img src>
     # — see the hub builder. Without a render the card is the only image, and

@@ -1,9 +1,12 @@
 import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 
 import { MdHeading, MdListItem } from 'src/sections/spec-detail/SpecTabs/md';
 import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
-import { semanticColors, typography } from 'src/theme';
+import { proseLinkStyle, semanticColors, typography } from 'src/theme';
+import type { SourceEntry, SpecSources } from 'src/types';
+import { doiUrl, hasSourceEntries, isWebAddress } from 'src/utils/specSources';
 
 interface SpecTabProps {
   title: string;
@@ -11,9 +14,84 @@ interface SpecTabProps {
   applications?: string[];
   data?: string[];
   notes?: string[];
+  sources?: SpecSources | null;
 }
 
-export function SpecTab({ title, description, applications, data, notes }: SpecTabProps) {
+const sourceLinkSx = { ...proseLinkStyle, overflowWrap: 'anywhere' } as const;
+
+// One work: its title as a link to its address, a DOI as a link to its resolver, an ISBN as text.
+function SourceItem({ entry }: { entry: SourceEntry }) {
+  return (
+    <Typography
+      component="li"
+      sx={{
+        fontFamily: typography.fontFamily,
+        fontSize: '0.85rem',
+        color: semanticColors.labelText,
+        lineHeight: 1.7,
+        ml: 2,
+        mb: 0.25,
+        '&::marker': { color: 'var(--ink-muted)' },
+      }}
+    >
+      {isWebAddress(entry.url) ? (
+        <Link href={entry.url} target="_blank" rel="noopener noreferrer" sx={sourceLinkSx}>
+          {entry.title}
+        </Link>
+      ) : (
+        entry.title
+      )}
+      {entry.doi && (
+        <>
+          {' · '}
+          <Link
+            href={doiUrl(entry.doi)}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={sourceLinkSx}
+          >
+            {`doi:${entry.doi}`}
+          </Link>
+        </>
+      )}
+      {entry.isbn && (
+        <>
+          {' · '}
+          {/* One line: a phone would otherwise break the number at one of its hyphens. */}
+          <Box component="span" sx={{ whiteSpace: 'nowrap' }}>{`ISBN ${entry.isbn}`}</Box>
+        </>
+      )}
+    </Typography>
+  );
+}
+
+function SourceGroup({ label, entries }: { label: string; entries: SourceEntry[] }) {
+  if (!entries.length) return null;
+  return (
+    <>
+      <Typography
+        component="h3"
+        sx={{
+          fontFamily: typography.fontFamily,
+          fontSize: '0.8rem',
+          fontWeight: 400,
+          color: semanticColors.mutedText,
+          mt: 1,
+          mb: 0.5,
+        }}
+      >
+        {label}
+      </Typography>
+      <Box component="ul" sx={{ m: 0, pl: 0, listStyle: 'disc' }}>
+        {entries.map((entry, i) => (
+          <SourceItem key={i} entry={entry} />
+        ))}
+      </Box>
+    </>
+  );
+}
+
+export function SpecTab({ title, description, applications, data, notes, sources }: SpecTabProps) {
   return (
     <Box
       sx={{
@@ -83,6 +161,15 @@ export function SpecTab({ title, description, applications, data, notes }: SpecT
               <MdListItem key={i}>{note}</MdListItem>
             ))}
           </Box>
+        </>
+      )}
+
+      {/* Sources: only on a spec that names a work; most of the catalogue names none yet */}
+      {hasSourceEntries(sources) && (
+        <>
+          <MdHeading level={2}>Sources</MdHeading>
+          <SourceGroup label="inspired by" entries={sources.inspired_by ?? []} />
+          <SourceGroup label="references" entries={sources.references ?? []} />
         </>
       )}
     </Box>

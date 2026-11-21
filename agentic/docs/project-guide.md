@@ -147,7 +147,7 @@ Everything for one plot type lives in a single directory:
 ```
 plots/{specification-id}/
 ├── specification.md       # Description, Applications, Data, Notes, What a good version looks like
-├── specification.yaml     # Spec-level metadata (tags, created, issue, suggested, updates)
+├── specification.yaml     # Spec-level metadata (tags, created, issue, suggested, updates, sources)
 ├── metadata/              # Per-library metadata, grouped by language
 │   ├── python/{matplotlib,seaborn,…}.yaml
 │   ├── r/ggplot2.yaml
@@ -194,7 +194,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 
 - **`plots/{specification-id}/`**: Plot-centric directories (spec, metadata, implementations together)
   - `specification.md`: Library-agnostic specification (Description, Applications, Data, Notes, and a closing "What a good version looks like" section — 3-6 one-line bullets, each starting with its kind (`A good version shows:` for an observable property of a good render of that plot type, `Expected, not a defect:` for a permission), that the AI review scores against and CI lints (`automation/scripts/spec_characteristics_lint.py`); written by spec-create, never by spec polish, and not synced to the database)
-  - `specification.yaml`: Spec-level metadata (tags, created, issue, suggested, updates)
+  - `specification.yaml`: Spec-level metadata (tags, created, issue, suggested, updates, optional sources)
   - `metadata/{language}/{library}.yaml`: Per-library metadata (preview_url, quality_score, review feedback)
   - `implementations/{language}/{library}{ext}`: Library-specific implementations
 - **`prompts/`**: AI agent prompts for code generation, quality evaluation, and tagging
@@ -332,7 +332,9 @@ Quality: 92/100 | Created: 2025-01-10
 ```
 
 **Key points:**
-- Spec-level tracking in `specification.yaml`: `created`, `updated`, `issue`, `suggested`, `tags`
+- Spec-level tracking in `specification.yaml`: `created`, `updated`, `issue`, `suggested`, `tags`, and the optional
+  `sources` block (works that gave the idea, literature the values follow, where the example data comes from; rules in
+  [repository.md](../../docs/reference/repository.md#the-sources-block), checked by `core/spec_sources.py`)
 - Per-library metadata in separate files (no merge conflicts!)
 - **Review feedback** stored in metadata for regeneration (AI reads previous feedback to improve)
 - **Extended review data**: `image_description`, `criteria_checklist`, and `verdict` for targeted fixes

@@ -4,9 +4,51 @@ Pydantic schemas for anyplot API.
 Centralized schema definitions for request/response models.
 """
 
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ValidationError, field_validator
+
+from core.spec_sources import sources_problems
+
+
+class SourceEntry(BaseModel):
+    """One work a spec names: its title and address, and a DOI or an ISBN where it has one."""
+
+    title: str
+    url: str
+    doi: str | None = None
+    isbn: str | None = None
+
+
+class SpecSources(BaseModel):
+    """The sources of a spec (`specification.yaml`, core/spec_sources.py).
+
+    `inspired_by` lists the works that gave the idea for the plot, `references` the literature its values
+    follow, and `data` says whether the example data is invented, computed from a method, or real measurements.
+    No relation for adopted code exists: the catalogue's code is written for it.
+    """
+
+    data: Literal["invented", "computed", "real"] | None = None
+    inspired_by: list[SourceEntry] = []
+    references: list[SourceEntry] = []
+
+    @property
+    def has_entries(self) -> bool:
+        return bool(self.inspired_by or self.references)
+
+    @classmethod
+    def from_stored(cls, value: object) -> SpecSources | None:
+        """The stored `specs.sources`, or None when there is none or it does not pass the check.
+
+        The sync stores only blocks that passed; checking again keeps an address that is not http or https out of
+        every page that turns these entries into links.
+        """
+        if not isinstance(value, dict) or sources_problems(value):
+            return None
+        try:
+            return cls.model_validate(value)
+        except ValidationError:
+            return None
 
 
 class ImplementationResponse(BaseModel):
@@ -57,6 +99,8 @@ class SpecDetailResponse(BaseModel):
     suggested: str | None = None
     created: str | None = None
     updated: str | None = None
+    # None when the spec names no source, which is most of the catalogue.
+    sources: SpecSources | None = None
     implementations: list[ImplementationResponse] = []
 
 

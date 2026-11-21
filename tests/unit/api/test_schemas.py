@@ -4,6 +4,10 @@ Tests for API Pydantic schemas.
 Validates schema creation, defaults, and serialization.
 """
 
+from typing import get_args
+
+import pytest
+
 from api.schemas import (
     FilterCountsResponse,
     FilteredPlotsResponse,
@@ -12,8 +16,44 @@ from api.schemas import (
     LibraryInfo,
     SpecDetailResponse,
     SpecListItem,
+    SpecSources,
     StatsResponse,
 )
+from core.spec_sources import DATA_KINDS
+
+
+class TestSpecSources:
+    """The stored sources block as the API serves it."""
+
+    def test_the_data_kinds_are_the_checks(self) -> None:
+        literal, _none = get_args(SpecSources.model_fields["data"].annotation)
+        assert get_args(literal) == DATA_KINDS
+
+    def test_a_stored_block_is_served_with_every_field(self) -> None:
+        sources = SpecSources.from_stored({"inspired_by": [{"title": "A", "url": "https://example.org/a"}]})
+        assert sources is not None
+        assert sources.has_entries
+        assert sources.model_dump() == {
+            "data": None,
+            "inspired_by": [{"title": "A", "url": "https://example.org/a", "doi": None, "isbn": None}],
+            "references": [],
+        }
+
+    def test_data_alone_has_no_entries(self) -> None:
+        sources = SpecSources.from_stored({"data": "invented"})
+        assert sources is not None
+        assert not sources.has_entries
+
+    @pytest.mark.parametrize(
+        "value",
+        [None, "text", ["a"], {"references": [{"title": "A", "url": "javascript:alert(1)"}]}, {"unknown": []}],
+        ids=["null", "string", "list", "javascript-url", "unknown-key"],
+    )
+    def test_nothing_that_fails_the_check_is_served(self, value: object) -> None:
+        assert SpecSources.from_stored(value) is None
+
+    def test_the_spec_detail_defaults_to_no_sources(self) -> None:
+        assert SpecDetailResponse(id="scatter-basic", title="Basic Scatter Plot").sources is None
 
 
 class TestImplementationResponse:

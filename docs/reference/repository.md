@@ -329,7 +329,10 @@ asks for it. A person, as opposed to a published work, is named only with their 
 `core/spec_sources.py` holds the check. `tests/unit/core/test_spec_sources.py` runs it
 over every `specification.yaml`, and the Postgres sync skips a block that fails it with
 a warning. The sync stores the block in the `sources` column of `specs`
-([database reference](database.md#specs)).
+([database reference](database.md#specs)). The site shows the entries in a "Sources"
+section of the spec page and in the page's structured data
+([A spec's sources](seo.md#a-specs-sources)); the API serves the block as `sources` in
+[`GET /specs/{spec_id}`](api.md#get-specsspec_id).
 
 ---
 

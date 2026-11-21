@@ -25,7 +25,9 @@ no special user agent required.
 base URL: https://api.anyplot.ai — public, read-only, JSON, no auth.
 
 - `GET /specs` — all specs with metadata
-- `GET /specs/{spec_id}` — one spec with all implementations (preview URLs, quality, review)
+- `GET /specs/{spec_id}` — one spec with all implementations (preview URLs, quality, review), and its
+  `sources` where it names them: the works that gave the idea (`inspired_by`) and the literature its
+  values follow (`references`)
 - `GET /specs/{spec_id}/{library}/code` — runnable source for one implementation
 - `GET /plots/filter` — every rendered implementation, filterable and pageable.
   filter params: `plot=` (plot type, e.g. `plot=bar`), `lib=` (library), `lang=` (language),

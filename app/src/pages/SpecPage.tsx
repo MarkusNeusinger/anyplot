@@ -29,7 +29,8 @@ const SpecOverview = lazy(() =>
 const SpecDetailView = lazy(() =>
   import('src/sections/spec-detail/SpecDetailView').then(m => ({ default: m.SpecDetailView }))
 );
-import type { Implementation } from 'src/types';
+import type { Implementation, SpecSources } from 'src/types';
+import { sourcesJsonLd } from 'src/utils/specSources';
 
 interface SpecDetail {
   id: string;
@@ -41,6 +42,7 @@ interface SpecDetail {
   tags?: Record<string, string[]>;
   created?: string;
   updated?: string;
+  sources?: SpecSources | null;
   implementations: Implementation[];
 }
 
@@ -483,6 +485,20 @@ export function SpecPage() {
         }
       : null;
 
+  // The spec's sources on the page's node, as the bot HTML in api/routers/seo.py carries them:
+  // the hub's CollectionPage, a detail page's WebPage. Only for a spec that names a work.
+  const sourcesProps = sourcesJsonLd(specData.sources);
+  const sourcesPageJsonLd = Object.keys(sourcesProps).length
+    ? {
+        '@context': 'https://schema.org',
+        '@type': mode === 'detail' ? 'WebPage' : 'CollectionPage',
+        '@id': canonical,
+        url: canonical,
+        name: specData.title,
+        ...sourcesProps,
+      }
+    : null;
+
   // The implementation's render on a detail page; elsewhere what the bot HTML in
   // api/routers/seo.py shares for the hub: the spec card, or the home card for a
   // spec with no render yet (its spec card does not exist).
@@ -508,6 +524,11 @@ export function SpecPage() {
         {softwareSourceJsonLd && (
           <script type="application/ld+json">
             {JSON.stringify(softwareSourceJsonLd).replace(/</g, '\\u003c')}
+          </script>
+        )}
+        {sourcesPageJsonLd && (
+          <script type="application/ld+json">
+            {JSON.stringify(sourcesPageJsonLd).replace(/</g, '\\u003c')}
           </script>
         )}
       </>
@@ -610,6 +631,7 @@ export function SpecPage() {
                 applications={specData.applications}
                 data={specData.data}
                 notes={specData.notes}
+                sources={specData.sources}
                 tags={specData.tags}
                 created={specData.created}
                 imageDescription={undefined}
@@ -658,6 +680,7 @@ export function SpecPage() {
                 applications={specData.applications}
                 data={specData.data}
                 notes={specData.notes}
+                sources={specData.sources}
                 tags={specData.tags}
                 created={specData.created}
                 updated={currentImpl?.updated}
