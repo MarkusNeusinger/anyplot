@@ -1,7 +1,7 @@
 """ anyplot.ai
 venn-basic: Venn Diagram
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-11
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
@@ -11,104 +11,144 @@ import pandas as pd
 from lets_plot import *
 
 
-np.random.seed(42)
-
 LetsPlot.setup_html()
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per set in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Three research fields with overlapping expertise
-set_a_label = "Machine Learning"
-set_b_label = "Statistics"
-set_c_label = "Data Engineering"
+# Columns: one 0/1 membership column per set, plus the exclusive count of the region
+SOLAR = "Solar"  # role: set_labels
+WIND = "Wind"  # role: extra
+HYDRO = "Hydro"  # role: extra
+SITES = "Sites"  # role: set_sizes
+REGION = "Region"  # role: intersections
+SET_COLUMNS = [SOLAR, WIND, HYDRO]
 
-# Set sizes and intersections
-only_a = 45
-only_b = 35
-only_c = 30
-ab_only = 25
-ac_only = 15
-bc_only = 20
-abc = 10
-
-# Circle parameters (for 3-set Venn diagram)
-r = 1.8
-cx_a, cy_a = -0.85, 0.6
-cx_b, cy_b = 0.85, 0.6
-cx_c, cy_c = 0.0, -0.75
-
-# Generate circle points
-theta = np.linspace(0, 2 * np.pi, 100)
-
-# Create circle data
-circle_a_x = cx_a + r * np.cos(theta)
-circle_a_y = cy_a + r * np.sin(theta)
-circle_b_x = cx_b + r * np.cos(theta)
-circle_b_y = cy_b + r * np.sin(theta)
-circle_c_x = cx_c + r * np.cos(theta)
-circle_c_y = cy_c + r * np.sin(theta)
-
-# Create DataFrames for circles
-df_a = pd.DataFrame({"x": circle_a_x, "y": circle_a_y, "set": set_a_label})
-df_b = pd.DataFrame({"x": circle_b_x, "y": circle_b_y, "set": set_b_label})
-df_c = pd.DataFrame({"x": circle_c_x, "y": circle_c_y, "set": set_c_label})
-df_circles = pd.concat([df_a, df_b, df_c], ignore_index=True)
-
-# Label positions and values
-labels_data = pd.DataFrame(
+# Data: replace this block with your own table, for example df = pd.read_csv("regions.csv")
+# One row per region of the diagram; the membership flags say which sets it lies in.
+df = pd.DataFrame(
     {
-        "x": [cx_a - 0.6, cx_b + 0.6, cx_c, (cx_a + cx_b) / 2, (cx_a + cx_c) / 2 - 0.35, (cx_b + cx_c) / 2 + 0.35, 0.0],
-        "y": [cy_a + 0.4, cy_b + 0.4, cy_c - 0.75, cy_a + 0.75, (cy_a + cy_c) / 2 - 0.4, (cy_b + cy_c) / 2 - 0.4, 0.0],
-        "label": [str(only_a), str(only_b), str(only_c), str(ab_only), str(ac_only), str(bc_only), str(abc)],
+        SET_COLUMNS[0]: [1, 0, 0, 1, 1, 0, 1],
+        SET_COLUMNS[1]: [0, 1, 0, 1, 0, 1, 1],
+        SET_COLUMNS[2]: [0, 0, 1, 0, 1, 1, 1],
+        REGION: ["Solar", "Wind", "Hydro", "Solar+Wind", "Solar+Hydro", "Wind+Hydro", "All three"],
+        SITES: [42, 36, 24, 18, 9, 12, 6],
     }
 )
 
-# Set name labels (outside circles)
-set_labels_data = pd.DataFrame(
-    {
-        "x": [cx_a - 0.9, cx_b + 0.9, cx_c],
-        "y": [cy_a + 1.5, cy_b + 1.5, cy_c - 1.6],
-        "label": [set_a_label, set_b_label, set_c_label],
-    }
+# Plot
+members = df[SET_COLUMNS].fillna(0).to_numpy(dtype=float) > 0
+counts = df[SITES].to_numpy(dtype=float)
+n_sets = len(SET_COLUMNS)
+
+# Inclusive set sizes and pairwise overlaps follow from the exclusive counts
+set_sizes = np.array([np.nansum(counts[members[:, i]]) for i in range(n_sets)])
+radii = np.sqrt(set_sizes / np.pi)
+
+
+def lens_area(d, r1, r2):
+    """Overlap area of two circles whose centers are d apart."""
+    if d >= r1 + r2:
+        return 0.0
+    if d <= abs(r1 - r2):
+        return np.pi * min(r1, r2) ** 2
+    a1 = np.arccos((d**2 + r1**2 - r2**2) / (2 * d * r1))
+    a2 = np.arccos((d**2 + r2**2 - r1**2) / (2 * d * r2))
+    return r1**2 * a1 + r2**2 * a2 - 0.5 * np.sqrt((-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2))
+
+
+def distance_for_overlap(target, r1, r2):
+    """Center distance at which two circles overlap by the target area (bisection)."""
+    lo, hi = abs(r1 - r2), r1 + r2
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        if lens_area(mid, r1, r2) > target:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+def pair_size(i, j):
+    return np.nansum(counts[members[:, i] & members[:, j]])
+
+
+# Place circles so each pairwise overlap area matches its inclusive intersection size
+d01 = distance_for_overlap(pair_size(0, 1), radii[0], radii[1])
+d02 = distance_for_overlap(pair_size(0, 2), radii[0], radii[2])
+d12 = distance_for_overlap(pair_size(1, 2), radii[1], radii[2])
+cx_c = (d01**2 + d02**2 - d12**2) / (2 * d01)
+cy_c = -np.sqrt(max(d02**2 - cx_c**2, 0.0))
+centers = np.array([[0.0, 0.0], [d01, 0.0], [cx_c, cy_c]])
+centers -= centers.mean(axis=0)
+
+# Circle outlines
+theta = np.linspace(0, 2 * np.pi, 200)
+df_circles = pd.concat(
+    [
+        pd.DataFrame(
+            {
+                "x": centers[i, 0] + radii[i] * np.cos(theta),
+                "y": centers[i, 1] + radii[i] * np.sin(theta),
+                "set": SET_COLUMNS[i],
+            }
+        )
+        for i in range(n_sets)
+    ],
+    ignore_index=True,
 )
 
-# Map sets to Okabe-Ito palette
-set_colors = {set_a_label: IMPRINT[0], set_b_label: IMPRINT[1], set_c_label: IMPRINT[2]}
+# Count labels sit at the most interior point of each region
+extent = (centers + radii[:, None]).max() + 0.1, (centers - radii[:, None]).min() - 0.1
+gx, gy = np.meshgrid(np.linspace(extent[1], extent[0], 500), np.linspace(extent[1], extent[0], 500))
+dist = np.stack([np.hypot(gx - centers[i, 0], gy - centers[i, 1]) for i in range(n_sets)])
+inside = dist < radii[:, None, None]
+margin = np.abs(dist - radii[:, None, None]).min(axis=0)
+label_rows = []
+for row, flags in enumerate(members):
+    in_region = np.all(inside == flags[:, None, None], axis=0)
+    best = np.where(in_region, margin, -1).argmax()
+    label_rows.append({"x": gx.flat[best], "y": gy.flat[best], "label": str(int(np.nan_to_num(counts[row])))})
+df_counts = pd.DataFrame(label_rows)
 
-# Create custom theme for chrome styling
+# Set names sit just outside each circle, pointing away from the diagram center
+directions = centers / np.linalg.norm(centers, axis=1, keepdims=True)
+name_pos = centers + directions * (radii[:, None] + 0.3 * radii.max())
+df_names = pd.DataFrame({"x": name_pos[:, 0], "y": name_pos[:, 1], "label": SET_COLUMNS})
+
+pad = 0.35 * radii.max()
+x_lim = [(centers[:, 0] - radii).min() - pad, (centers[:, 0] + radii).max() + pad]
+y_lim = [(centers[:, 1] - radii).min() - pad, (centers[:, 1] + radii).max() + pad]
+
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    axis_title=element_text(color=INK),
-    axis_text=element_text(color=INK_SOFT),
-    axis_line=element_blank(),
-    plot_title=element_text(size=28, face="bold", hjust=0.5, color=INK),
+    plot_title=element_text(size=18, face="bold", hjust=0.5, color=INK),
     legend_position="none",
-    plot_margin=[50, 30, 30, 30],
+    plot_margin=[40, 20, 20, 20],
 )
 
-# Create plot
 plot = (
     ggplot()
-    + geom_polygon(aes(x="x", y="y", fill="set"), data=df_circles, alpha=0.35, color=INK_SOFT, size=2.5)
-    + geom_text(aes(x="x", y="y", label="label"), data=labels_data, size=20, fontface="bold", color=INK)
-    + geom_text(aes(x="x", y="y", label="label"), data=set_labels_data, size=18, fontface="bold", color=INK)
-    + scale_fill_manual(values=set_colors)
-    + coord_fixed(ratio=1)
-    + labs(title="venn-basic · letsplot · anyplot.ai")
+    + geom_polygon(aes(x="x", y="y", fill="set"), data=df_circles, alpha=0.4, color=INK_SOFT, size=1.5)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_counts, size=7, fontface="bold", color=INK)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_names, size=8, fontface="bold", color=INK)
+    + scale_fill_manual(values=dict(zip(SET_COLUMNS, IMPRINT_PALETTE, strict=False)))
+    + coord_fixed(ratio=1, xlim=x_lim, ylim=y_lim)
+    + labs(title="venn-basic · python · letsplot · anyplot.ai")
     + theme_void()
     + anyplot_theme
-    + ggsize(1200, 1200)
+    + ggsize(600, 600)
 )
 
 # Save as PNG and HTML with theme suffix
-ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.png", scale=4)
 ggsave(plot, f"plot-{THEME}.html")
 
 # Move files from lets-plot-images subdirectory if needed
