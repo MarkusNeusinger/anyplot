@@ -2,55 +2,43 @@ library: seaborn
 language: python
 specification_id: timeline-basic
 created: '2025-12-29T22:49:26Z'
-updated: '2026-05-11T05:44:37Z'
-generated_by: claude-haiku
-workflow_run: 25652392902
+updated: '2026-11-21T01:02:49Z'
+generated_by: claude-sonnet
+workflow_run: 44847100248
 issue: 2443
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 83
 review:
   strengths:
-  - 'Perfect visual quality: All text explicitly sized and readable in both themes,
-    no overlap, excellent element visibility and palette compliance'
-  - 'Fully spec-compliant: Correct horizontal timeline with temporal axis, event markers,
-    category color-coding, alternating labels, and proper title/legend format'
-  - 'Clean, idiomatic code: Uses seaborn scatterplot API, proper theme-adaptive styling
-    with rc parameters, deterministic data, no unnecessary complexity'
-  - 'Excellent theme adaptation: Identical data colors across light/dark renders,
-    proper INK/INK_SOFT/PAGE_BG tokens, no dark-on-dark or light-on-light issues'
-  - 'Professional design: Removed spines, generous whitespace, white marker edges
-    for definition, clear visual hierarchy through color coding and label positioning'
+  - Labels alternate above and below and use two connector lengths per side, so all
+    ten event names stay clear of each other in both themes
+  - Native seaborn hue mapping (hue, hue_order, palette dict) produces the category
+    colors and the Phase legend together
+  - Theme tokens threaded through sns.set_theme rc; data colors identical across light
+    and dark renders
+  - Exact 3200x1800 canvas with subplots_adjust instead of bbox_inches='tight'
   weaknesses:
-  - Design is competent but fairly standard for timeline visualization - no exceptional
-    aesthetic innovation or sophistication beyond correct implementation
-  - Library mastery is solid but not distinctive - uses seaborn's standard scatterplot
-    with custom matplotlib for timeline-specific features, not leveraging seaborn-unique
-    capabilities
+  - 'Suggestion: the date tick row sits about 420 px below the timeline line; drawing
+    the ticks closer to the axis line would make reading dates off markers easier.'
+  - 'Suggestion: a seaborn-native touch such as sns.rugplot or a seaborn context would
+    raise library distinctiveness.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified, clean and professional
-      Chrome: Title "timeline-basic · seaborn · anyplot.ai" in dark text (#1A1A17), clearly readable and bold (fontsize=24)
-      Axis: X-axis shows date labels (Jan 2024, Mar 2024, etc.) formatted as "Mon YYYY" with monthly intervals, rotated 45° for clarity, all readable in INK_SOFT color (#4A4A44); Y-axis hidden (appropriate for timeline)
-      Data: 9 event markers as colored circles using Okabe-Ito palette (green #009E73 for Planning, orange #D55E00 for Design, blue #0072B2 for Development, reddish-purple #CC79A7 for Testing, orange #E69F00 for Deployment). White edge color provides definition. Connector lines link markers to labels.
-      Labels: Event names (Project Kickoff, Requirements Done, Architecture Design, etc.) in bold dark text (fontsize=15), alternating above/below the timeline axis to prevent overlap. All text is clearly visible.
-      Legend: Horizontal layout at bottom center showing "Phase" with 5 categories and colored dots. All legend text and background are correct.
-      Legibility verdict: PASS - All text elements are readable against the light background with no "light-on-light" issues
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'timeline-basic · python · seaborn · anyplot.ai' in dark ink centered at top; date ticks Apr 2025 – Feb 2026 every two months in INK_SOFT below the timeline; framed 'Phase' legend below on elevated #FFFDF6 surface. All readable.
+      Data: thick INK_SOFT horizontal timeline with ten round markers at their dates (page-colored outline), colored stems up/down to bold dark event labels (Permit Granted … Keys Handed Over) at two stem lengths per side. Colors: Site prep #009E73, Foundation #C475FD, Structure #4467A3, Systems #BD8233, Finishing #AE3030.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title in light text (#F0EFE8), clearly visible against dark background. X-axis date labels also in light INK_SOFT color (#B8B7B0), all readable.
-      Data: All event marker colors are IDENTICAL to the light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00) - data colors remain theme-independent as required. White marker edges remain visible on dark background.
-      Connector lines: Same colored lines as light render, visible against dark background.
-      Labels: All event labels rendered in light text (#F0EFE8), clearly visible against dark background with no "dark-on-dark" failures.
-      Legend: Same layout with light text on dark background, all labels readable.
-      Legibility verdict: PASS - All text elements are readable against the dark background. No dark-on-dark issues found. Data colors perfect match with light render.
-
-    Both renders pass legibility checks. Theme adaptation is correct with identical data colors and properly flipped chrome elements.
+      Background: warm near-black #1A1A17.
+      Chrome: title, event labels and legend text in light ink; tick labels light grey; legend box on #242420 with light outline; timeline line light grey. No dark-on-dark text.
+      Data: marker and stem colors identical to the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,74 +49,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (24pt), event labels (15pt), tick labels (16pt) all explicitly
-          sized and readable in BOTH themes
+        comment: Title 12 pt, event labels 8 pt bold, ticks and legend 8 pt, all explicitly
+          set; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Event labels alternate above/below axis, all fully readable, no collisions
+        comment: Alternating sides plus two connector lengths keep all ten labels
+          apart; legend sits clear below the tick row
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (s=500), connector lines (2.5px), timeline axis (3px) all
-          optimal for 9 events
+        comment: Ten markers at s=110 with page-colored outlines, 1.3 px connectors,
+          legend dots enlarged to 7 pt
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe, good contrast, no red-green-only
-          encoding
+        comment: Five distinct Imprint hues on a neutral axis line; labels carry the
+          event identity, not hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape, plot uses 50-70% of canvas, balanced margins, generous
-          whitespace
+        comment: 3200x1800, no canvas-gate file; timeline fills the width, legend
+          close below, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title, date labels with month/year formatting, appropriate
-          for timeline
+        comment: 'N/A: a timeline has no value axis; dates labelled ''Mon YYYY'' on
+          the time axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
-          #FAF8F1/#1A1A17, both renders theme-correct'
+        comment: 'Imprint positions 1-5 in canonical order, first #009E73; backgrounds
+          #FAF8F1/#1A1A17, chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Color coding intentional, spines removed, professional layout but
-          fairly standard timeline approach - not exceptional sophistication
+        comment: The style-guide baseline, nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Spines removed, generous whitespace, white marker edges for definition,
-          good visual refinement above defaults
+        passed: false
+        comment: Four-level label stagger (two connector lengths per side) chosen
+          for this event density, tick marks removed, elevated legend surface
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy through color and positioning, chronological narrative
-          clear, alternating labels guide reading
+        passed: false
+        comment: Data displayed in sequence; no hierarchy beyond the Notes' category
+          colors
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +126,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal event timeline with temporal axis
+        comment: Horizontal event timeline, markers + labels + connectors only, no
+          extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: horizontal orientation, temporal axis,
-          event markers, alternating labels, category color-coding'
+        comment: C1 markers at dates, C2 alternating connected labels, C3 month-year
+          ticks, C4 category colors with legend, C5 nothing beyond basic
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis dates correct, Y-axis appropriately hidden, all 9 events displayed
+        comment: Markers at their true dates on one axis; only label offsets vary
+          (C6)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'timeline-basic · seaborn · anyplot.ai' correct, legend
-          title 'Phase' with matching category labels
+        comment: Title 'timeline-basic · python · seaborn · anyplot.ai'; legend 'Phase'
+          with readable entries
     data_quality:
       score: 15
       max: 15
@@ -168,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all timeline aspects: events, dates, categories, names, varied
-          phases'
+        comment: Ten events, five phases, uneven spacing with clusters and gaps
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software project milestones with realistic phases (Planning→Design→Development→Testing→Deployment),
-          neutral context, real-world scenario
+        comment: Single-house construction project, neutral and concrete milestone
+          names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12-month project timeline (Jan 2024-Jan 2025) sensible, 9 events
-          in 5-50 range, realistic phase spacing
+        comment: 'Checked: milestones in a plausible order (permit → site → foundation
+          → frame → roof → systems → drywall → inspection → keys) over ~12 months;
+          no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -193,61 +183,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports→Data→Plot→Save, no functions/classes, straightforward implementation
+        comment: Flat script, column constants, Data/Plot zones; adapt checker passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses fixed data list, no randomization, deterministic output
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib.pyplot, pandas, seaborn'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, appropriate complexity, no fake functionality
-          or over-engineering
+        comment: Appropriate complexity; one loop for connectors and labels
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with theme support, uses current API
+        comment: plot-{THEME}.png, dpi=400, no bbox_inches='tight'
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses sns.scatterplot() (high-level API), sns.set_theme() with rc
-          parameters, theme-adaptive styling, DateFormatter for dates
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: Good seaborn + matplotlib combination but not particularly distinctive
-          to seaborn - custom connector lines and labels could be implemented similarly
-          in other libraries
-    score_caps_applied: []
+        comment: sns.scatterplot with hue/hue_order/palette dict and sns.despine;
+          correct but connectors and labels are plain matplotlib
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-21T00:59:25Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
+  - layer-composition
   patterns:
   - explicit-figure
   dataprep:
   - time-series
   styling:
   - minimal-chrome
+  - edge-highlighting
