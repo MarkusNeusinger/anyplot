@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 confusion-matrix: Confusion Matrix Heatmap
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-09
@@ -6,12 +6,10 @@ Quality: 86/100 | Updated: 2026-05-09
 
 import os
 
-import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
-    coord_fixed,
     element_blank,
     element_rect,
     element_text,
@@ -21,6 +19,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    scale_color_identity,
     scale_fill_gradient,
     theme,
     theme_minimal,
@@ -36,84 +35,81 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Multi-class classification results for image classifier
-np.random.seed(42)
+# Imprint palette: imprint_seq runs from position 1 to position 3
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-class_names = ["Cat", "Dog", "Bird", "Fish"]
-n_classes = len(class_names)
+# Constants
+LIGHT_TEXT = "#FAF8F1"  # annotation color on the deep cells of the colormap
+DEEP_CELL_SHARE = 0.5  # cells above this share of the largest count get light text
 
-# Create a realistic confusion matrix with strong diagonal
-# and some realistic misclassification patterns
-confusion_data = np.array(
+# Columns: set these to your table's column names
+TRUE_LABEL = "True Label"  # role: true_labels
+PRED_LABEL = "Predicted Label"  # role: predicted_labels
+COUNT = "Count"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
+# One row per classified sample; the example expands a 4-class result (rows = true, columns = predicted)
+_classes = ["Cat", "Dog", "Bird", "Fish"]
+_counts = [
+    [45, 8, 3, 2],  # Cat: sometimes confused with Dog
+    [6, 52, 4, 1],  # Dog: sometimes confused with Cat
+    [2, 3, 38, 5],  # Bird: sometimes confused with Fish
+    [1, 2, 7, 41],  # Fish: sometimes confused with Bird
+]
+df = pd.DataFrame(
     [
-        [45, 8, 3, 2],  # Cat: sometimes confused with Dog
-        [6, 52, 4, 1],  # Dog: sometimes confused with Cat
-        [2, 3, 38, 5],  # Bird: sometimes confused with Fish
-        [1, 2, 7, 41],  # Fish: sometimes confused with Bird
-    ]
+        (t, p)
+        for t, row in zip(_classes, _counts, strict=True)
+        for p, n in zip(_classes, row, strict=True)
+        for _ in range(n)
+    ],
+    columns=[TRUE_LABEL, PRED_LABEL],
 )
 
-# Build long-form data for geom_tile
-rows = []
-for i, true_label in enumerate(class_names):
-    for j, pred_label in enumerate(class_names):
-        count = confusion_data[i, j]
-        rows.append(
-            {"True Label": true_label, "Predicted Label": pred_label, "Count": count, "true_idx": i, "pred_idx": j}
-        )
+# Plot
+class_names = list(dict.fromkeys(list(df[TRUE_LABEL].dropna()) + list(df[PRED_LABEL].dropna())))
+matrix = pd.crosstab(
+    pd.Categorical(df[TRUE_LABEL], categories=class_names),
+    pd.Categorical(df[PRED_LABEL], categories=class_names),
+    dropna=False,
+)
+matrix.index.name, matrix.columns.name = TRUE_LABEL, PRED_LABEL
+long = matrix.stack().rename(COUNT).reset_index()
+row_total = matrix.sum(axis=1).clip(lower=1)
+row_share = (matrix.div(row_total, axis=0) * 100).round().stack().to_numpy().astype(int)
+long["Label"] = [f"{c}\n({p}%)" for c, p in zip(long[COUNT], row_share, strict=True)]
+long["text_color"] = [LIGHT_TEXT if c > long[COUNT].max() * DEEP_CELL_SHARE else INK for c in long[COUNT]]
 
-df = pd.DataFrame(rows)
+# Rows run top to bottom, so reverse the true labels for the diagonal to fall from top-left
+long[TRUE_LABEL] = pd.Categorical(long[TRUE_LABEL], categories=class_names[::-1], ordered=True)
+long[PRED_LABEL] = pd.Categorical(long[PRED_LABEL], categories=class_names, ordered=True)
 
-# Calculate percentages for annotation (row normalization = recall)
-total_per_row = confusion_data.sum(axis=1, keepdims=True)
-percentages = (confusion_data / total_per_row * 100).astype(int)
-df["Percentage"] = [percentages[r["true_idx"], r["pred_idx"]] for _, r in df.iterrows()]
-df["Label"] = df.apply(lambda r: f"{r['Count']}\n({r['Percentage']}%)", axis=1)
-
-# Set category order for proper matrix layout
-df["True Label"] = pd.Categorical(df["True Label"], categories=class_names[::-1], ordered=True)
-df["Predicted Label"] = pd.Categorical(df["Predicted Label"], categories=class_names, ordered=True)
-
-# Determine text color based on count (theme-adaptive)
-max_count = df["Count"].max()
-if THEME == "light":
-    df["text_color"] = df["Count"].apply(lambda c: "#1A1A17" if c > max_count * 0.4 else "#4A4A44")
-else:
-    df["text_color"] = df["Count"].apply(lambda c: "#F0EFE8" if c > max_count * 0.4 else "#B8B7B0")
-
-# Color gradient for sequential data (Blues)
-if THEME == "light":
-    low_color = "#E7F0F9"
-    high_color = "#08519C"
-else:
-    low_color = "#1F3D5C"
-    high_color = "#74B3E5"
-
-# Create confusion matrix heatmap
 plot = (
-    ggplot(df, aes(x="Predicted Label", y="True Label", fill="Count"))
-    + geom_tile(color=INK_SOFT, size=1.5, tooltips="none")
-    + geom_text(aes(label="Label", color="text_color"), size=14, fontface="bold")
-    + scale_fill_gradient(low=low_color, high=high_color, name="Count")
-    + labs(x="Predicted Label", y="True Label", title="confusion-matrix · letsplot · anyplot.ai")
+    ggplot(long, aes(x=PRED_LABEL, y=TRUE_LABEL, fill=COUNT))
+    + geom_tile(color=PAGE_BG, size=1.5, tooltips="none")
+    + geom_text(aes(label="Label", color="text_color"), size=5, fontface="bold")
+    + scale_color_identity()
+    + scale_fill_gradient(low=IMPRINT_PALETTE[0], high=IMPRINT_PALETTE[2], name=COUNT)
+    + labs(
+        title="confusion-matrix · python · letsplot · anyplot.ai",
+        caption="Cell labels: count (share of the true class, row-normalized)",
+    )
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=28, face="bold", color=INK),
-        axis_title=element_text(size=22, color=INK),
-        axis_text=element_text(size=18, color=INK_SOFT),
+        plot_title=element_text(size=14, face="bold", color=INK),
+        plot_caption=element_text(size=10, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=11, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         panel_grid=element_blank(),
     )
-    + ggsize(1200, 1200)
-    + coord_fixed()
+    + ggsize(600, 600)
 )
 
-# Save as PNG (scale 3x for 3600x3600 px)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
-
-# Save interactive HTML
+# Save PNG (scale 4x = 2400 x 2400 px) and interactive HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
