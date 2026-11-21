@@ -2,45 +2,46 @@ library: bokeh
 language: python
 specification_id: histogram-cumulative
 created: '2025-12-30T09:32:31Z'
-updated: '2026-05-11T22:43:49Z'
-generated_by: claude-haiku
-workflow_run: 25701439795
+updated: '2026-11-21T03:40:48Z'
+generated_by: claude-sonnet
+workflow_run: 44861720279
 issue: 2549
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/bokeh/plot-dark.html
-quality_score: 95
+quality_score: 81
 review:
   strengths:
-  - Perfect theme adaptation with all chrome elements using correct color tokens for
-    both light and dark renders
-  - Excellent text legibility at all scales with proper font sizing (28pt title, 22pt
-    axis labels, 18pt tick labels)
-  - Correct cumulative histogram implementation with proper step function and monotonic
-    increase
-  - Realistic, well-chosen data (web service response times with plausible 10-1000ms
-    distribution)
-  - Clean idiomatic bokeh code following library best practices and theme-adaptive
-    patterns
-  - Proper use of ColumnDataSource and layered glyphs (line, patch, scatter) for visual
-    hierarchy
-  - 'Title format exactly as specified: histogram-cumulative · bokeh · anyplot.ai'
-  weaknesses: []
+  - 'Correct cumulative step function: each bin''s level is the running total to its
+    upper edge, rising monotonically from 0 to the full sample of 500'
+  - Theme tokens threaded through every chrome element; both renders readable with
+    identical brand-green data marks
+  - Canvas and margins follow the bokeh prompt exactly (3200x1800, toolbar off, min_border
+    reservations), so nothing is clipped
+  - Adaptable data block with named column constants, read through ColumnDataSource
+  weaknesses:
+  - 'CQ-04 (code): lines 53-60 build the step outline by hand and lines 62-63 duplicate
+    it as a closed polygon for the fill, which bokeh''s own glyphs draw → p.step(x=bin_edges,
+    y=np.r_[0, cumulative_counts], mode="before") for the outline and p.varea_step(x=bin_edges,
+    y1=0, y2=np.r_[0, cumulative_counts], step_mode="before") for the fill. Likely
+    cause: a hand-rolled step loop plus patch() instead of the step glyphs.'
+  - 'Suggestion: a cumulative-proportion secondary axis (bokeh extra_y_ranges) would
+    let readers read percentiles directly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "histogram-cumulative · bokeh · anyplot.ai" in dark INK (#1A1A17); axis labels "Response Time (ms)" and "Cumulative Count" clearly visible; tick labels and grid all readable against light surface
-      Data: Bluish-green step line (#009E73) with filled area at 15% alpha; circular markers at bin edges; monotonic increase from 0 to 500
-      Legibility verdict: PASS - All elements readable, no "light on light" contrast issues
+      Background: warm off-white #FAF8F1, plot area and border alike, thin INK_SOFT outline
+      Chrome: bold dark title 'histogram-cumulative · python · bokeh · anyplot.ai' top left; italic axis titles 'Response Time (ms)' and 'Cumulative Count'; ticks 0-700 and 0-500 in dark grey; faint grid — all readable
+      Data: #009E73 step line over 30 contiguous bins with a 15% green fill beneath and small outlined markers at each upper bin edge; rises from 0 near 10 ms to 500 at ~720 ms, steep at first and flattening to the right
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title in light INK (#F0EFE8); axis labels clearly visible; tick labels in INK_SOFT (#B8B7B0) with good contrast on dark surface; grid visible at 10% alpha
-      Data: Identical bluish-green (#009E73) to light render - step line, fill, and markers all match; no color shift between themes
-      Legibility verdict: PASS - All text readable, no "dark-on-dark" issues, brand green maintains visibility on dark surface
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels light grey, grid faint but visible; no dark-on-dark text
+      Data: identical #009E73 step line, fill and markers (marker outline flips to the light INK_SOFT); same shape and values as the light render
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,67 +52,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both light and dark themes
+        comment: Title 50pt, axis titles 42pt, ticks 34pt, all explicitly set and
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clear spacing, no collisions or unreadable text
+        comment: No text collisions; markers sit cleanly on the step corners
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers, line, and fill all clearly distinguishable
+        comment: 4px step line, 15% fill and 30 markers with an outline all visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito brand green with strong contrast in both themes
+        comment: Single brand-green series, strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions, nothing cut off, generous margins
+        comment: 3200x1800 canvas, balanced margins, nothing cut off; title ~55% of
+          width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; title in correct format
+        comment: '''Response Time (ms)'' with units and ''Cumulative Count'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds correct, both renders theme-correct'
+        comment: '#009E73 first series, #FAF8F1 / #1A1A17 backgrounds, chrome flips
+          correctly'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional use of brand color and filled area with alpha; fairly
-          standard approach
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, brand green, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid lines, clean outline, excellent typography
+        passed: false
+        comment: Subtle grid and thin outline as the style guide requires; nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Monotonic rise guides viewer; filled area emphasizes cumulative nature;
-          markers identify thresholds
+        passed: false
+        comment: Data displayed clearly; no hierarchy or focal point chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative histogram with step function and monotonic increase
+        comment: Cumulative step histogram over 30 contiguous bins
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features from spec present
+        comment: C1 one level per bin at the running total to its upper edge, never
+          decreasing; C2 y axis from 0 labeled Cumulative Count reaching n=500 at
+          the last bin; C3 steps keep the bins readable
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis and Y-axis correctly mapped with appropriate ranges
+        comment: Markers at each upper bin edge at the cumsum; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed for single series
+        comment: Title 'histogram-cumulative · python · bokeh · anyplot.ai'; single
+          series, legend N/A
     data_quality:
       score: 15
       max: 15
@@ -149,21 +158,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete cumulative distribution from 0 to 500
+        comment: 'Steep early rise, flattening tail from the bimodal mix: shows the
+          full cumulative shape'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Web service response times realistic and neutral
+        comment: Web service response times, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible for the domain
+        comment: Values 10-~720 ms; last level 500 = sample size (400+100) read off
+          the axis and computed by np.cumsum; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -171,58 +182,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct implementation, no unnecessary functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI or suspicious patterns
+        passed: false
+        comment: Hand-built step coordinates and fill polygon (lines 53-63) that p.step
+          / p.varea_step draw (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and API usage
+        comment: plot-{THEME}.png and plot-{THEME}.html, current Bokeh 3 API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: ColumnDataSource pattern, figure() and glyphs used idiomatically,
-          theme tokens follow bokeh.md
+        passed: false
+        comment: ColumnDataSource with named columns and figure glyphs; standard usage
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Effective use of patch() and layer composition
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T03:37:33Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - columndatasource
   dataprep:
+  - binning
   - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling
