@@ -2,60 +2,55 @@ library: pygal
 language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:48:29Z'
-updated: '2026-05-13T09:51:09Z'
-generated_by: claude-haiku
-workflow_run: 25790570388
+updated: '2026-11-21T09:34:52Z'
+generated_by: claude-sonnet
+workflow_run: 44889734354
 issue: 2782
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - Excellent subplot grid layout with consistent spacing and alignment across all
-    four panels
-  - Dashboard-style composition effectively combines four different chart types (line,
-    bar, scatter, histogram) in a cohesive figure
-  - Proper theme-adaptive text colors and backgrounds - all text readable in both
-    light and dark renders with no legibility issues
-  - Realistic and neutral business metrics (revenue trends, category sales, ROI analysis,
-    order distribution) demonstrate data quality
-  - Both PNG and interactive HTML outputs generated correctly with proper file naming
-    convention
-  - Reproducible implementation using numpy seed for deterministic scatter data generation
+  - 'Single vector composite: each pygal chart''s SVG is nested into one 3200x1800
+    canvas SVG, so the HTML keeps pygal''s native hover tooltips in every cell'
+  - All four cells are aggregated from one tidy daily table, so the bar totals add
+    up to the line chart's annual revenue and the cells read as one shop
+  - Theme tokens threaded through Style (foreground, foreground_strong, foreground_subtle);
+    both renders fully legible
+  - Native pygal.Histogram with (count, start, end) bins from np.histogram
   weaknesses:
-  - Scatter plot uses cyan/light blue instead of brand green (#009E73) - violates
-    first-series-always-green rule from style guide
-  - Custom style colors not being applied correctly by pygal - bar and histogram render
-    in green despite code specifying COLOR_2 (#D55E00)
-  - Color rendering disconnect suggests Style object colors aren't reaching pygal
-    chart rendering engine
-  - Pygal default styling (visible spines, borders) reduces visual refinement compared
-    to more polished implementations
-  - 'Library mastery issue: not effectively leveraging pygal''s Style system for color
-    application across all chart types'
+  - 'VQ-05 (both): the plot areas do not line up along the grid: the left column''s
+    y axes sit at about x=240 px (line) and x=180 px (scatter), the right column''s
+    at about x=1815 px (bar) and x=1735 px (histogram), and the top row''s x axes
+    end at about y=820 px vs y=790 px → one shared left offset per column and one
+    bottom per row (about ±60 px). Likely cause: each pygal cell sizes its own y-tick
+    label gutter and title block (12000 vs 40 tick widths, Revenue ($K) title), so
+    the inner plot box floats; fix with equal margin_left / margin_bottom per cell
+    or y_labels_major formatting of the same width.'
+  - 'CQ-01 (code): two helper functions cell_style() and make_cell() wrap chart construction
+    → build one Style object once and call the chart classes directly with the shared
+    kwargs dict. Likely cause: def cell_style / def make_cell.'
+  - 'Suggestion: the bar cell''s 13 y ticks at 1000 steps are dense; a coarser step
+    would quiet the axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface for light theme
-      Chrome: Title "subplot-grid · pygal · anyplot.ai" in dark text (#1A1A17), axis labels and tick labels in soft dark ink (#4A4A44) - all readable
-      Data: Line chart with teal-green line/dots; bar chart with green bars; scatter plot with cyan/light-blue dots; histogram with green bars
-      Layout: 2×2 grid with consistent spacing, good proportions, nothing cut off
-      Legibility verdict: PASS (all text readable, grid spacing consistent)
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas, no cell borders
+      Chrome: bold dark title 'subplot-grid · python · pygal · anyplot.ai' centred on top; four cell titles (Monthly revenue, Revenue by category, Ad spend vs return, Daily order volume), axis titles and tick labels in dark ink; dashed subtle guides; all readable
+      Data: 2x2 grid — top-left green line with dots (12 months, 1.9 to 3.6 M$), top-right five green bars sorted descending (Electronics 12000 to Books 3200), bottom-left 240 green scatter dots of ad spend vs ROI with upward trend, bottom-right green 15-bin histogram of orders per day peaking at 130-150; all marks #009E73
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct surface for dark theme
-      Chrome: Title in light text (#F0EFE8), axis labels and tick labels in soft light ink (#B8B7B0) - all readable, no dark-on-dark failures
-      Data: All data colors identical to light render (teal-green line/bars, cyan scatter points) - good consistency between themes
-      Layout: Identical grid structure to light render, proportions maintained
-      Legibility verdict: PASS (all text readable, no dark-on-dark failures, colors consistent with light render)
-
-    Critical Issue: Scatter plot uses cyan instead of brand green (#009E73), violating first-series-always-green rule. Bar/histogram colors rendered as green despite code specifying COLOR_2 (#D55E00).
+      Background: warm near-black #1A1A17
+      Chrome: title, cell titles, axis titles and ticks in light ink; guides subtle dark dashes; no dark-on-dark text
+      Data: identical green #009E73 marks and identical layout to the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,71 +58,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All titles, axis labels, tick labels readable in both light and dark
-          themes
+        comment: Explicit Style font sizes (title 40, labels 32, ticks 28); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Consistent spacing, no text or element collisions across grid
+        comment: No text collisions; the bar chart's 13 y ticks are dense but separate
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All data markers, lines, bars clearly visible and distinguishable
+        comment: Dots sized for 12 and 240 points, bars and histogram bins clearly
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Adequate contrast, intended use of colorblind-safe palette
+        comment: Single brand green on high-contrast surfaces; no color-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Excellent 2×2 grid proportions, nothing cut off, well-balanced layout
+        passed: false
+        comment: Canonical 3200x1800; plot areas do not line up along the columns
+          or the top row (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All subplots titled descriptively with proper units and labels
+        comment: Every cell has descriptive axis titles with units (Revenue ($K),
+          ROI (%), Orders per day)
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Scatter plot uses cyan instead of brand green; bar/histogram
-          colors don''t match intended COLOR_2; violates first-series-always-green
-          rule'
+        passed: true
+        comment: 'Every single-series cell uses #009E73; backgrounds #FAF8F1 / #1A1A17;
+          chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional subplot layout and custom theme tokens, but color rendering
-          issues reduce polish
+        comment: Clean style-guide baseline with a bold figure title over regular
+          cell titles; nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle grid lines and good spacing, but pygal defaults (spines, borders)
-          remain visible
+        comment: 'Grid density chosen per cell: x guides only on the scatter, y guides
+          elsewhere'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Dashboard-style layout effectively combines metrics with clear hierarchy
-          and visual organization
+        comment: Category bars sorted descending so Electronics leads the comparison
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct subplot grid implementation with multiple distinct chart
-          types
+        comment: Subplot grid combining line, bar, scatter and histogram cells
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Configurable 2×2 grid, different plot types per cell, independent
-          axes
+        comment: 2x2 grid, a different type per cell, independent axes each with own
+          ticks and titles, a title per cell; C1-C5 met apart from the alignment gap
+          scored in VQ-05
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct for each chart type, all data visible and properly
-          scaled
+        comment: All four cells map their data correctly; all aggregated from one
+          daily table
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Main title follows spec format, all subplots properly titled
+        comment: Title 'subplot-grid · python · pygal · anyplot.ai' matches the format;
+          no legend needed (single series per cell, N/A)
     data_quality:
       score: 15
       max: 15
@@ -168,86 +165,93 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates 4 distinct chart types (line, bar, scatter, histogram)
-          with comprehensive metrics
+        comment: Four distinct plot types with independent scales show the grid's
+          range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Financial dashboard with realistic business metrics (revenue, sales,
-          ROI, order volume)
+        comment: Plausible, neutral online-shop dashboard (revenue, categories, ad
+          spend, order volume)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value ranges sensible for respective metrics and domains
+        comment: 'Monthly revenue 1.9-3.6 M$, 40-320 orders per day, ROI -2 to 8 %
+          are sensible; the bar totals sum to the annual revenue of the line cell
+          (checked in code: both from df[REVENUE])'
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Straightforward chart creation and composition without unnecessary
-          complexity
+        passed: false
+        comment: Two helper functions cell_style() and make_cell() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (pygal, cairosvg, PIL, numpy)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: PIL image stitching works but inelegant; pygal lacks native subplot
-          support
+        passed: true
+        comment: Compact; groupby/np.histogram used for aggregation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
         passed: false
-        comment: Correct pygal API for individual charts, PIL workaround reasonable
-          but not idiomatic. Color application via Style system not working.
+        comment: Composes the four chart SVGs from chart.render() into one vector
+          canvas instead of rasterising; native pygal.Histogram with (count, start,
+          end) tuples
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Custom Style objects show intent but color rendering failures indicate
-          incomplete style system mastery
-  verdict: REJECTED
+        comment: HTML keeps pygal's interactive SVG tooltips in every cell of the
+          composite
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T09:31:15Z'
 impl_tags:
-  dependencies:
-  - pillow
-  - cairosvg
+  dependencies: []
   techniques:
   - subplots
+  - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - groupby-aggregation
   - iteration-over-groups
   dataprep:
   - binning
-  styling: []
+  styling:
+  - minimal-chrome
+  - grid-styling
