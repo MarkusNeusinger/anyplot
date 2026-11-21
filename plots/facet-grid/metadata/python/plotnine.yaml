@@ -2,52 +2,60 @@ library: plotnine
 language: python
 specification_id: facet-grid
 created: '2025-12-30T16:31:36Z'
-updated: '2026-05-13T03:40:32Z'
-generated_by: claude-haiku
-workflow_run: 25776601759
+updated: '2026-11-21T08:29:32Z'
+generated_by: claude-sonnet
+workflow_run: 44884347590
 issue: 2696
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 79
 review:
   strengths:
-  - Perfect theme adaptation with no legibility failures in either render; data colors
-    identical between themes
-  - Excellent plotnine idiomatic usage with clean composition syntax and facet_grid()
-    mastery
-  - Correct Okabe-Ito palette application with brand green (#009E73) as first series
-  - Clear facet structure with readable labels and excellent spatial organization
-  - Professional, reproducible code with clean imports and appropriate complexity
-  - Full spec compliance with realistic, plausible student data across subjects and
-    teaching methods
+  - Native facet_grid(rows=, cols=) with labeller='label_both' gives a clean 4x3 grid
+    with column and row strips that name each category
+  - Shared scales with tick labels only on outer panels make positions directly comparable
+    across subjects and methods
+  - 'Theme tokens threaded through every chrome element: text, strips and legend read
+    correctly on both #FAF8F1 and #1A1A17'
+  - 'Category order kept from the data via pd.Categorical and scale limits, so In-Person
+    gets #009E73'
   weaknesses:
-  - DE-03 data storytelling could be strengthened with bolder visual emphasis (size
-    variation or strategic color focus) to elevate from functional to insightful
-  - DE-01 aesthetic sophistication could push further with custom fonts or more sophisticated
-    grid styling
+  - 'VQ-02 (both): the legend title ''Method'' sits flush against the left edge of
+    the legend frame and the ''In-Person'' label runs into its right edge → keep at
+    least ~4 px of padding inside the frame. Likely cause: legend_background frame
+    with no legend_box_margin / legend padding set.'
+  - 'VQ-05 (both): the row strips on the right are oversized empty boxes (about 290
+    of 2000 px width, ~15 % of the canvas) for one-word labels, squeezing the 3 panel
+    columns → a narrow strip, e.g. rotated row-strip text or shorter row labels, so
+    the panels gain the width. Likely cause: strip_text_y rotation=0 with label_both,
+    which sizes the strip to the horizontal ''Subject: Science'' text.'
+  - 'DQ-03 (both): the score model 60 + 6·hours + effects reaches ~125 at 10 hours
+    and is clipped, so a large share of points across all 12 panels sits on a flat
+    line at exactly 100 and the relationship flattens into a ceiling → generate scores
+    that stay mostly under 100 (e.g. a smaller slope or lower intercept, about −20
+    points at the top). Likely cause: np.clip(score, 30, 100) on an uncapped linear
+    model.'
+  - 'Suggestion: color repeats the column facet; a variable not already shown by the
+    layout (or a single color) would make the legend carry information.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct per style guide
-      Chrome: Title 'facet-grid · plotnine · anyplot.ai' centered in dark text; axis labels 'Study Hours' and 'Exam Score' in dark ink; tick labels in medium gray; facet labels ('method: In-Person', 'subject: Math', etc.) on elevated light backgrounds with dark bold text - all readable
-      Data: Scatter points color-coded by method - In-Person (#009E73 teal, brand green), Online (#D55E00 orange), Hybrid (#0072B2 blue) - colors match Okabe-Ito positions 1-3
-      Grid lines: Subtle (alpha 0.10 major, 0.05 minor), do not compete with data
-      Legend: Method legend on right side, all text readable in dark color
-      Legibility verdict: PASS - all text elements fully readable against warm off-white background
+      Background: warm off-white #FAF8F1 across canvas and panels, 3200x1800.
+      Chrome: centered title "facet-grid · python · plotnine · anyplot.ai" in dark ink; axis titles "Study Hours" / "Exam Score"; ticks 2–10 and 60–100 in INK_SOFT on outer panels only; column strips "Method: In-Person/Online/Hybrid" and wide row strips "Subject: Math/Science/Reading/Writing" in bold dark text on #FFFDF6 framed boxes; legend "Method" at right with framed elevated background. All readable; legend title and "In-Person" touch the legend frame.
+      Data: 4x3 grid of scatter panels, 15 points each; In-Person #009E73, Online #C475FD, Hybrid #4467A3, alpha 0.75. Rising score with hours in every panel; many points pile up on the 100 ceiling.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct per style guide, not pure black
-      Chrome: Title and all axis/tick labels in light text (#F0EFE8 for primary, #B8B7B0 for secondary) - fully readable against dark background. Facet labels in light bold text on dark-elevated backgrounds (#242420) - no dark-on-dark failures observed
-      Data: Colors IDENTICAL to light render - In-Person still teal (#009E73), Online still orange (#D55E00), Hybrid still blue (#0072B2) - perfect theme adaptation
-      Grid lines: Subtle, visible but not dominant
-      Legend: Method legend with light text, fully readable
-      Legibility verdict: PASS - all text elements fully readable against warm near-black background, no dark-on-dark issues, no invisible elements
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and strip text in light ink #F0EFE8, ticks and legend text in #B8B7B0; strips and legend on #242420 with light frames. No dark-on-dark text anywhere.
+      Data: identical colors and positions to the light render; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,75 +63,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicitly set and readable in both themes; no rendering
-          issues
+        comment: Title 12 pt, axis titles 10 pt, ticks/strips 8 pt (style-guide sizes);
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Facet labels clear, no overlapping text, legend well-positioned,
-          natural data spacing
+        comment: Legend title 'Method' and the 'In-Person' label touch the legend
+          frame (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Data points (size=4) clearly visible, colors distinct, facet boundaries
-          clear, no overcrowding
+        comment: 180 points at size 2.5, alpha 0.75, clearly visible; legend glyphs
+          match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (colorblind-safe), first series #009E73, positions
-          1→3 followed in order'
+        comment: Imprint green/violet/blue are CVD-distinct, and the column facet
+          carries the same information
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Figure 16:9 appropriate for 4×3 grid, excellent proportions, nothing
-          cut off, generous whitespace
+        comment: 3200x1800 canvas; row strips are oversized empty boxes taking ~15%
+          of the width (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format, axes clearly labeled with units (Study Hours,
-          Exam Score), legend descriptive
+        comment: '''Study Hours'', ''Exam Score'' readable; strips ''Method: In-Person''
+          / ''Subject: Math'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓, Okabe-Ito order ✓, backgrounds #FAF8F1/#1A1A17
-          ✓, both renders theme-correct ✓'
+        comment: 'First series #009E73, Imprint order, full 8-hue list with data-ordered
+          limits; #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: 'Professional polish: custom strip backgrounds, refined grid styling
-          (alpha tuning), clear typography hierarchy, deliberate palette order'
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: theme_minimal() removes clutter, subtle grid, panel spacing (0.06)
-          generous, strip backgrounds add sophistication
+        passed: false
+        comment: Subtle grid and theme tokens met, nothing beyond; heavy framed strips
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear hierarchy and facet structure enable pattern comparison; functional
-          and clear rather than deeply insightful
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -133,29 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct faceted grid plot with 4×3 layout
+        comment: 4x3 facet grid of scatter panels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Row (subject) and column (method) faceting, scatter base, all facets
-          labeled
+        comment: C1 same base plot per panel; C2 shared scales with outer tick labels;
+          C3 column and row strips; C4 equal aligned panels with separated ticks;
+          C5 color explained once
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct (hours/score), all data visible, axes scales sensible
+        comment: Hours on x, score on y, marks at their values, all data in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match categories, axis labels
-          descriptive
+        comment: Title 'facet-grid · python · plotnine · anyplot.ai'; legend 'Method'
+          with readable entries in data order
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -163,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 4×3 grid demonstrating all facet combinations; each subplot
-          shows scatter relationship
+        comment: Both row and column faceting, every combination populated, cross-facet
+          differences visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic ranges (hours 2-10, scores 30-100), plausible subject/method
-          effects, neutral context
+        comment: Study hours vs exam score by subject and teaching method; neutral
+          and plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Sensible value ranges for student exam context, grid proportions
-          match data complexity
+        comment: Score model reaches ~125 and is clipped, so a large share of points
+          piles up at exactly 100 (defect line); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -188,59 +194,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes, straightforward data generation
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42), fully deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, sys, numpy, pandas, plotnine), no extraneous
-          packages
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, no premature abstraction
+        comment: Concise data block with named column constants
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, uses current plotnine API
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, 8x4.5 in); facet_grid(rows=,
+          cols=) current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Excellent plotnine composition syntax: ggplot() + geom_point() +
-          facet_grid() + scale_color_manual() + theme(); uses labeller=''label_both''
-          for facet clarity'
+        comment: Standard grammar composition; nothing beyond the library prompt
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Strong use of facet_grid() with labeller, element_text/element_rect,
-          element_line for grid, strip_text_x/y customization, panel_spacing control
+        passed: false
+        comment: facet_grid with label_both is what the spec requires; nothing beyond
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T08:25:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - faceting
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
-  - theme-adaptive
