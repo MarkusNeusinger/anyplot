@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-stacked: Stacked Histogram
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-12
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-21
 """
 
 import os
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -17,23 +18,23 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Test scores from three different study methods
-np.random.seed(42)
+SCORE = "Test Score (points)"  # role: values
+METHOD = "Study Method"  # role: group
+STUDENTS = "Number of Students"
 
-method_a = np.random.normal(loc=72, scale=10, size=150)
-method_b = np.random.normal(loc=78, scale=8, size=120)
-method_c = np.random.normal(loc=68, scale=12, size=100)
-
-method_a = np.clip(method_a, 0, 100)
-method_b = np.clip(method_b, 0, 100)
-method_c = np.clip(method_c, 0, 100)
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+rng = np.random.default_rng(42)
+method_a = rng.normal(loc=72, scale=10, size=150)
+method_b = rng.normal(loc=78, scale=8, size=120)
+method_c = rng.normal(loc=68, scale=12, size=100)
 
 df = pd.DataFrame(
     {
-        "Score": np.concatenate([method_a, method_b, method_c]),
-        "Study Method": (
+        SCORE: np.clip(np.concatenate([method_a, method_b, method_c]), 0, 100),
+        METHOD: (
             ["Traditional Study"] * len(method_a)
             + ["Active Recall"] * len(method_b)
             + ["Passive Reading"] * len(method_c)
@@ -42,39 +43,63 @@ df = pd.DataFrame(
 )
 
 # Plot
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+score_field = SCORE.translate(ESCAPE)
+method_field = METHOD.translate(ESCAPE)
+
 chart = (
     alt.Chart(df)
-    .mark_bar(opacity=0.85, stroke="white", strokeWidth=0.5)
+    .mark_bar(opacity=0.85, stroke=PAGE_BG, strokeWidth=0.5)
     .encode(
-        x=alt.X(
-            "Score:Q",
-            bin=alt.Bin(maxbins=20),
-            title="Test Score (points)",
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22),
-        ),
-        y=alt.Y(
-            "count():Q", title="Number of Students", stack="zero", axis=alt.Axis(labelFontSize=18, titleFontSize=22)
-        ),
+        x=alt.X(score_field, type="quantitative", bin=alt.Bin(maxbins=20), title=SCORE),
+        y=alt.Y("count()", type="quantitative", title=STUDENTS, stack="zero"),
         color=alt.Color(
-            "Study Method:N",
-            scale=alt.Scale(domain=["Traditional Study", "Active Recall", "Passive Reading"], range=IMPRINT),
-            legend=alt.Legend(title="Study Method", titleFontSize=18, labelFontSize=16, orient="right"),
+            method_field,
+            type="nominal",
+            title=METHOD,
+            scale=alt.Scale(domain=list(df[METHOD].dropna().unique()), range=IMPRINT_PALETTE),
+            legend=alt.Legend(orient="right"),
         ),
-        order=alt.Order("Study Method:N", sort="ascending"),
+        order=alt.Order(method_field, type="nominal", sort="ascending"),
     )
     .properties(
-        width=1600,
-        height=900,
+        width=540,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title("histogram-stacked · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        title=alt.Title("histogram-stacked · python · altair · anyplot.ai", fontSize=16, anchor="middle"),
     )
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0.5)
     .configure_axis(
-        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=11,
+        titleFontSize=13,
     )
-    .configure_title(color=INK, fontSize=28)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=11,
+        titleFontSize=12,
+        padding=8,
+    )
 )
 
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad to the canonical 3200x1800 canvas
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TW}x{TH}")
+canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+canvas.save(f"plot-{THEME}.png")
