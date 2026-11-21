@@ -2,106 +2,109 @@ library: seaborn
 language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:36:36Z'
-updated: '2026-05-10T12:42:22Z'
-generated_by: claude-haiku
-workflow_run: 25628802647
+updated: '2026-11-21T00:27:05Z'
+generated_by: claude-sonnet
+workflow_run: 44786902955
 issue: 2334
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - Excellent visual quality with perfect palette compliance across both light and
-    dark themes
-  - Complete spec implementation with all required features present and correctly
-    executed
-  - Realistic data context demonstrating genuine customer segmentation clustering
-    scenario
-  - Clean, readable design with appropriate spacing and typography hierarchy
-  - Proper theme adaptation ensuring text readability in both renders without dark-on-dark
-    failures
-  - Well-placed cluster annotations providing interpretive insight into cluster quality
-    variation
+  - Silhouette values come from sklearn silhouette_samples / silhouette_score, so
+    the average line at 0.633 and the cluster means fall out of the computation
+  - Cluster averages sit in a gutter left of zero in each cluster's own color, clear
+    of the bars, and the blocks are separated by a gap scaled to the sample count
+  - 'Clusters follow the Imprint order (#009E73, #C475FD, #4467A3) with theme-correct
+    chrome in both renders'
+  - Customer segmentation on spending, frequency and recency is a real, neutral scenario
+    with clusters of unequal size and quality
   weaknesses:
-  - Library Mastery is moderate—doesn't deeply leverage seaborn's distinctive clustering
-    or statistical visualization features beyond basic theming and plotting
-  - Design Excellence could be strengthened with visual emphasis techniques to highlight
-    cluster quality differences (opacity variation, size variation, or color saturation)
-  - Generic professional styling lacks distinctive visual distinction—all clusters
-    presented equally without emphasizing performance variation
+  - 'VQ-01 (dark): the C2 annotation in #4467A3 at 8 pt reads faint on the #1A1A17
+    background (about 3:1 contrast) beside the other annotations → a lighter text
+    color for that label in the dark theme, e.g. INK text with a cluster-colored marker,
+    or a contrast-checked tint. Likely cause: ax.text color=IMPRINT_PALETTE[i] used
+    for text on both backgrounds.'
+  - 'LM-01 (code): every data mark is drawn with matplotlib ax.barh (lines 85-93);
+    seaborn contributes only set_theme and despine → draw the bars from a tidy frame
+    of sorted values with a seaborn call (e.g. sns.barplot(data=..., x=silhouette,
+    y=row, hue=cluster, orient=''h'', palette=IMPRINT_PALETTE[:n], width=1, native_scale=True,
+    ax=ax)). Likely cause: the matplotlib silhouette recipe was ported unchanged.'
+  - 'Suggestion: the legend repeats the cluster names already given by the C0–C2 annotations;
+    a legend with only the average line would lighten the bottom of the canvas.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Title "silhouette-basic · seaborn · anyplot.ai" in dark text (24pt, readable). X-axis "Silhouette Coefficient" (20pt), Y-axis "Samples (grouped by cluster)" (20pt) both dark and readable. X-axis tick labels (0.0, 0.2, 0.4, 0.6, 0.8, 1.0) at 16pt in soft gray (#4A4A44), clear. Y-axis shows no ticks, cluster annotations positioned left (C0 0.59, C1 0.62, C2 0.72) in colored text.
-      Data: Cluster 0 (green #009E73) spans bottom with bars 0.0-0.85. Cluster 1 (orange #D55E00) middle 0.0-0.80. Cluster 2 (blue #0072B2) top 0.05-0.95. Bars are height=1.0, well-spaced with 10-unit padding between clusters. Average line is vertical dashed at 0.633 in soft gray. Grid is subtle (alpha=0.15) on x-axis only.
-      Legend: Bottom-right, shows "Average: 0.633", cluster labels. Background #FFFDF6 with soft edge.
-      Legibility verdict: PASS — all elements readable against light background.
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'silhouette-basic · python · seaborn · anyplot.ai' in dark ink, x-axis 'Silhouette Coefficient' with ticks 0.0-1.0, y-axis 'Samples (grouped by cluster)' without ticks, subtle vertical grid, legend centered below the axis ('Average: 0.633', Cluster 0-2) on an elevated box. All readable.
+      Data: three sorted, tapering blocks — Cluster 0 green #009E73 (bottom, ~0-0.78), Cluster 1 purple #C475FD (middle, ~0-0.75), Cluster 2 blue #4467A3 (top, ~0-0.84), separated by gaps; dashed INK_SOFT average line at 0.633 across all blocks; annotations C0 0.59, C1 0.62, C2 0.72 in cluster colors left of zero.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title and labels now light colored (#F0EFE8) and readable. X-axis ticks in soft ink (#B8B7B0), good contrast. Cluster annotations (C0 0.59, C1 0.62, C2 0.72) remain colored text, readable. All text maintains strong contrast.
-      Data: Cluster colors IDENTICAL to light render — green #009E73, orange #D55E00, blue #0072B2. No color shift, only chrome adapted. Bar visibility maintained, average line visible in light dashed style.
-      Legend: Dark background #242420 with light edge color, proper adaptation.
-      Legibility verdict: PASS — all text readable on dark background, no dark-on-dark failures. Brand green remains visible and accessible.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, axis titles in light ink, ticks in #B8B7B0, legend box #242420 with light text; no dark-on-dark text. The blue C2 annotation is readable but faint.
+      Data: bar colors identical to the light render; average line now light gray dashed and clearly visible; brand green reads well.
+      Legibility verdict: PASS (C2 annotation low contrast, deducted under VQ-01)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All text sizes explicit and readable in both themes; title 24pt,
-          labels 20pt, ticks 16pt
+        passed: false
+        comment: 'Sizes explicit (title 12, labels 10, ticks/annotations/legend 8
+          pt); all readable in light; the C2 annotation in #4467A3 reads faint on
+          the dark background (defect line)'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clusters spaced with 10-unit padding; annotations left-aligned without
-          collision; legend positioned cleanly
+        comment: No text collisions; annotations sit in the gutter left of zero, legend
+          below the axes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars clearly visible and distinguishable; height=1.0 appropriate;
-          no density/alpha issues
+        comment: 200 bars at height 1.0 form solid tapering blocks; legend swatches
+          match the bars in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (colorblind-safe); good contrast in both themes;
-          no red-green as sole differentiator
+        comment: Clusters separated by hue, gap and position; average line in INK_SOFT
+          dashed, distinct from bars
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape format appropriate; generous margins; spines removed
-          (top/right/left); nothing cut off
+        comment: 3200x1800, axes fill most of the canvas, legend centered just below
+          the axis, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; X-axis descriptive; Y-axis descriptive
+        comment: '''Silhouette Coefficient'' (unitless quantity) and ''Samples (grouped
+          by cluster)'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: C0=#009E73 (pos 1), C1=#D55E00 (pos 2), C2=#0072B2 (pos 3); backgrounds
-          correct; data colors identical across themes
+        comment: 'Clusters #009E73, #C475FD, #4467A3 in canonical Imprint order; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct; data colors identical across renders'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -109,22 +112,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional but generic styling. Okabe-Ito required (not a choice).
-          No visual emphasis to distinguish cluster quality variation.
+        comment: The style-guide baseline; cluster-colored annotations are the Notes'
+          requirement
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Spines removed cleanly; subtle grid (alpha=0.15); generous whitespace;
-          legend styled properly
+        passed: false
+        comment: 'Beyond baseline: a dedicated annotation gutter left of zero keeps
+          the cluster labels clear of the bars, meaningless y ticks removed, cluster
+          gap scaled to sample count (5% of n)'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Average line provides focal point; cluster annotations enable interpretation;
-          could emphasize quality variation more
+        passed: false
+        comment: Data displayed with the required average line and annotations; no
+          hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -134,27 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct silhouette plot with horizontal bars
+        comment: Silhouette plot, single clustering, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bars sorted within clusters; distinct colors per cluster; average
-          line at 0.633; cluster annotations; sklearn.metrics.silhouette_samples used
+        comment: Sorted per-sample bars (C1), colored cluster blocks with gaps (C2),
+          dashed average line across all clusters (C3), per-cluster averages beside
+          each block (C4), silhouette_samples used
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis silhouette coefficient correct; Y-axis samples grouped by
-          cluster; axes show all data
+        comment: Bars run from zero to each score; all data visible within -0.15..1.0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows clusters and average
+        comment: 'Title ''silhouette-basic · python · seaborn · anyplot.ai''; legend
+          ''Average: 0.633'', ''Cluster 0-2'''
     data_quality:
       score: 15
       max: 15
@@ -164,22 +169,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 200 samples, 3 clusters, 3 features (spending, frequency, recency);
-          demonstrates silhouette use case completely
+        comment: Three clusters of unequal size (60/90/50 generated) with distinct
+          average quality and tapering tips; negative scores are permitted, not required
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer segmentation is real-world plausible, neutral, and demonstrates
-          business value
+        comment: Customer segmentation on spending, frequency and recency — real,
+          neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 samples readable; 3 clusters good for comparison; silhouette
-          scores 0.59-0.72 realistic
+        comment: 'Checked: scores within [0, 0.84], overall average 0.633 drawn at
+          0.633 on the axis and computed by silhouette_score (line 72); cluster means
+          0.59/0.62/0.72 computed from the values'
     code_quality:
       score: 10
       max: 10
@@ -189,58 +195,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow; no unnecessary classes/functions
+        comment: Linear script, no functions or classes; Data and Plot blocks marked
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeds set (42 for data, 123 for KMeans); deterministic
+        comment: np.random.seed(42), KMeans random_state=123
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; no AR-08 violations
+        comment: Appropriate complexity, sklearn computes the scores
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 6
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: sns.set_theme() used correctly; theme-aware rc dict; matplotlib integration
-          clean; barh() idiomatic
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Basic seaborn usage; doesn't leverage distinctive seaborn capabilities
-          beyond standard theming and plotting
+        comment: seaborn is used only for set_theme and despine; every mark is drawn
+          with matplotlib ax.barh (defect line)
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-20T17:54:37Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
-  - barh
-  - custom-legend
   - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
