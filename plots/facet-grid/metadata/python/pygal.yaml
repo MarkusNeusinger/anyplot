@@ -2,97 +2,112 @@ library: pygal
 language: python
 specification_id: facet-grid
 created: '2025-12-30T16:37:40Z'
-updated: '2026-05-13T03:44:09Z'
-generated_by: claude-haiku
-workflow_run: 25776532605
+updated: '2026-11-21T08:37:16Z'
+generated_by: claude-sonnet
+workflow_run: 44884593834
 issue: 2696
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 78
 review:
   strengths:
-  - Perfect theme-adaptive rendering with correct light/dark color schemes and no
-    readability failures
-  - Proper Okabe-Ito palette application (#009E73) with excellent contrast in both
-    themes
-  - Clean, well-organized faceted grid layout with clear row/column labels and generous
-    spacing
-  - Complete specification compliance with realistic, well-chosen data demonstrating
-    facet variation
-  - High code quality with proper reproducibility (seeded randomness) and clean imports
-  - Correct title format and axis labeling with appropriate units
+  - One shared y range (0 to 1.15 x max) computed from the data across all six panels,
+    so heights compare directly and no point is clipped
+  - Column headers via the top row's pygal titles and rotated row headers in the composed
+    SVG label both facet dimensions clearly in both themes
+  - Theme tokens threaded through the pygal Style and the composed SVG chrome; Imprint
+    brand green on correct light and dark surfaces
+  - Panels composed as nested vector SVG before rasterizing, so the HTML output keeps
+    pygal's live per-point tooltips
   weaknesses:
-  - 'Design excellence limited: implementation is functional but lacks additional
-    visual refinement or emphasis techniques beyond the faceting structure itself'
-  - Library mastery constrained by using PIL for image composition rather than pure
-    pygal features—pragmatic but limits showcase of pygal-specific capabilities
-  - No additional visual hierarchy or data storytelling techniques beyond the faceting
-    comparison
+  - 'VQ-01 (both): tick labels render at 28-32 px and axis titles at 44 px, below
+    the pygal references of 44 px and 56 px, and read small beside the 64 px title
+    → tick labels 44 px (+12 to +16 px), axis titles about 56 px (+12 px), shrinking
+    the facet headers if needed. Likely cause: label_font_size=32, major_label_font_size=28,
+    title_font_size=44 in the Style.'
+  - 'VQ-05 (both): the first column''s plot frames are about 6 % narrower than those
+    of the other two columns (y-axis title inside the equal-width cell), so panel
+    frames do not line up across columns → equal plot-area widths in every column.
+    Likely cause: y_title drawn only in column 0 inside a cell of the same width;
+    give every panel the same left margin (e.g. draw the y-axis title once outside
+    the cells).'
+  - 'DQ-01 (code): 6 panels x 7 days = 42 points, below the spec''s Data size of 100-5000
+    → at least 100 points, for example several plants per condition or more sampling
+    days. Likely cause: sample_days of 7 values and one plant per facet.'
+  - 'Suggestion: an XY chart with numeric Days would make the x axis a true numeric
+    scale instead of category labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - matches spec exactly
-      Chrome: Title "facet-grid · pygal · anyplot.ai" centered at top, dark text (#1A1A17). Row labels "Sandy Soil" and "Clay Soil" on left side in dark text. Column headers "Low Light", "Medium Light", "High Light" above grid in dark text. Y-axis label "Height (cm)" on left, X-axis label "Days" at bottom. All tick labels clearly visible in dark text. Title font 60px, labels 42px, tick labels appropriately sized.
-      Data: 2×3 grid of line charts. Each cell shows plant height vs days. Data color is bright cyan (#009E73, Okabe-Ito position 1). Markers (size 8) with connecting lines (stroke_width 4). Data clearly distinguishable from light background.
-      Legibility verdict: PASS - All text readable against light background, no contrast failures, data colors distinct from background
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: bold dark title 'facet-grid · python · pygal · anyplot.ai' centered; column headers Low Light / Medium Light / High Light over the top row; rotated row headers Sandy Soil / Clay Soil at the left; 'Height (cm)' on the first column and 'Days' under the bottom row; dark tick labels 0-40 and 0-30 on every panel; dotted grey horizontal guides. All readable, tick labels on the small side.
+      Data: one brand-green #009E73 line with dots per panel, 7 points each, all panels on the same 0-43 y range; Clay/Medium reaches ~37 cm.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - matches spec exactly
-      Chrome: Title in light text (#F0EFE8), clearly visible and readable. Row labels and column headers in light text, all readable. Y-axis "Height (cm)" and X-axis "Days" labels in light text, clearly visible against dark background. No dark-on-dark failures (e.g., black text on near-black background).
-      Data: Identical 2×3 grid layout. Data color is identical to light render (cyan #009E73 - only chrome flips between themes, not data colors). Markers and lines clearly visible on dark background.
-      Legibility verdict: PASS - All text readable against dark background, data colors identical to light render, no legibility failures in either theme
+      Background: warm near-black #1A1A17.
+      Chrome: title, facet headers, axis titles and tick labels in light ink, all readable; no dark-on-dark text; dotted guides faint but visible.
+      Data: identical #009E73 lines and dots in the same positions as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
-        passed: true
-        comment: All text explicitly sized and color-adapted with theme tokens
+        passed: false
+        comment: All text set explicitly and readable in both themes, but tick labels
+          (28/32 px) and axis titles (44 px) sit below the pygal references of 44
+          and 56 px and read small (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean grid layout with adequate spacing, no overlapping elements
+        comment: No text collisions; facet headers, row labels and axis titles stay
+          clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Data markers size 8, lines stroke_width 4, all distinct
+        comment: '7 points per panel with 8 px dots and 4 px lines: prominent for
+          sparse data in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, good contrast
+        comment: Single brand-green series on both surfaces, no color-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Good proportions, centered title, generous whitespace
+        passed: false
+        comment: Canvas 3200x1800; the first column's plot frames are narrower than
+          the other columns because its y-axis title takes room inside the equal-width
+          cell (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, axes labeled with units
+        comment: Height (cm) and Days, with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds correct, both themes correct'
+        comment: 'Single series #009E73, backgrounds #FAF8F1 / #1A1A17, chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -100,19 +115,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional theme-adaptive styling, but fairly standard presentation
+        comment: 'Style-guide baseline: theme tokens, bold title, sans-serif; nothing
+          decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clean layout, minimal customization beyond requirements
+        comment: Spine and grid rules met (y guides only); nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Faceting enables comparison, no additional emphasis techniques
+        comment: Data displayed in the facet grid; no hierarchy chosen beyond the
+          Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,47 +139,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct faceted grid with line charts
+        comment: Faceted grid of identical line charts, 2 rows x 3 columns
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Row/column faceting, proper base plot
+        comment: 'Shared scales, row and column facet labels, same base plot per panel,
+          single color with no per-panel legend: C1, C2, C3, C5 met; C4 panel alignment
+          scored in VQ-05'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct, facets split by categories
+        comment: Days on x, height on y; shared y range 0 to 1.15 x max shows every
+          point including Clay/Medium day 30 (~37 cm)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title formatted correctly
+        comment: Title 'facet-grid · python · pygal · anyplot.ai'; single series per
+          panel, no legend needed (N/A)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Full facet-grid capabilities demonstrated
+        passed: false
+        comment: Both facet dimensions and the shared-scale comparison shown, but
+          42 points total sit below the spec's 100-point minimum (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plant growth under conditions is realistic
+        comment: 'Plant growth by soil type and light level: plausible, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible units and ranges
+        comment: Heights 0 to ~37 cm over 30 days are sensible for seedlings; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -172,33 +195,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear execution, no unnecessary abstraction
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Compact composition of the pygal SVGs into one SVG; nothing a shorter
+          form replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output naming
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -206,20 +230,25 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Style object correct, but PIL composition bypasses some features
+        comment: Style object, Line chart with range and x_labels; composition needed
+          because pygal has no facets; default
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Limited showcase of pygal-specific features
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T08:33:37Z'
 impl_tags:
-  dependencies:
-  - pillow
-  - cairosvg
+  dependencies: []
   techniques:
+  - faceting
+  - subplots
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
