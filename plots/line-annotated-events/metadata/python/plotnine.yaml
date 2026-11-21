@@ -2,46 +2,45 @@ library: plotnine
 language: python
 specification_id: line-annotated-events
 created: '2025-12-31T10:55:04Z'
-updated: '2026-05-16T01:21:03Z'
-generated_by: claude-haiku
-workflow_run: 25948783349
+updated: '2026-11-21T21:30:01Z'
+generated_by: claude-sonnet
+workflow_run: 44951356646
 issue: 2997
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - 'Perfect theme-adaptive rendering: data colors remain constant, chrome adapts
-    correctly to both light and dark surfaces'
-  - Clean, deterministic code with proper seeding for reproducibility
-  - Thoughtful event label positioning (alternating heights) prevents overlap while
-    maintaining readability
-  - 'Comprehensive event annotations: vertical lines, markers, and labels work together
-    to mark key dates'
-  - All specification requirements met; no missing features
+  - Event layers (geom_vline, geom_point, geom_text) each take their own data= frame,
+    the idiomatic grammar-of-graphics way to overlay annotations
+  - Alternating label heights keep all five event labels clear of each other and of
+    the data line in both themes
+  - Dashed purple event lines are distinct from the green data line without overpowering
+    it
+  - Theme tokens threaded through every chrome element; both renders read cleanly
   weaknesses:
-  - 'Design Excellence could be elevated: consider removing full-frame border (keep
-    L-shaped spines instead) for a more minimal aesthetic'
-  - 'Library Mastery is standard: implementation uses high-level geoms correctly but
-    doesn''t showcase distinctive plotnine features (e.g., faceting, advanced positioning)'
+  - 'DE-02 (both): all four spines are drawn as a full box around the panel, which
+    a line chart does not need → keep only the left and bottom spines (L-shaped frame)
+    per the style guide. Likely cause: panel_border=element_rect(color=INK_SOFT) in
+    theme().'
+  - 'Suggestion: thousands separators on the y-axis tick labels (50,000) would read
+    faster than 50000.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1
-      Chrome: Title, axis labels, tick labels all in dark ink (#1A1A17), clearly readable
-      Data: Green line (#009E73), orange event markers (#D55E00) with diamond shapes, dashed vertical lines for events
-      Layout: Clean with generous margins, complete frame border, subtle grid lines
-      Legibility verdict: PASS - All text fully readable against light background
+      Background: warm off-white #FAF8F1, 3200x1800 canvas.
+      Chrome: bold title "line-annotated-events · python · plotnine · anyplot.ai" in dark ink, ~63% of width; axis titles "Date" and "Daily Visitors (count)"; y ticks 40000-55000, x ticks Feb-Dec 2024 rotated 45°; subtle grid; full four-sided panel border in INK_SOFT. All text readable.
+      Data: green #009E73 daily line with a strong weekly zigzag, seasonal dip into Oct and recovery in Dec; five dashed purple #C475FD vertical lines with diamond markers at alternating heights (~54.6k / ~53.5k) and bold dark labels above each marker: v2.0 Release, Mobile App Launch, API Update, Enterprise Tier, Holiday Campaign. No label overlaps another label or the line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17
-      Chrome: Title, axis labels, tick labels all in light ink (#F0EFE8), clearly readable; no dark-on-dark failures
-      Data: Green line (#009E73) identical to light, orange event markers (#D55E00) identical to light render
-      Layout: Same frame border and grid styling adapted to dark theme with appropriate opacity
-      Legibility verdict: PASS - All text fully readable against dark background, color consistency confirmed across both renders
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink; tick labels in light grey INK_SOFT; grid subtle; light panel border. No dark-on-dark text.
+      Data: green line and purple event lines/diamonds identical to the light render; event labels in light ink, clearly readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,69 +51,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes properly scaled; readable in both light and dark themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, bold event labels at
+          about tick size; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Event labels use alternating vertical offsets; no collisions with
-          data
+        comment: Alternating label heights keep the five labels apart and clear of
+          the data line's peaks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Data line, event markers, vertical dashed lines all clearly visible
+        comment: Data line, dashed event lines and diamond markers all clearly visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00); good contrast; CVD-safe'
+        comment: Green line vs purple dashed event markers; distinguished by hue,
+          lightness and line style
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing cut off
+        comment: 3200x1800 canvas, panel fills the canvas with balanced margins, title
+          ~63% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; axes descriptive with units
+        comment: '''Date'' and ''Daily Visitors (count)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct; both themes correct'
+        comment: 'Data line #009E73, events Imprint position 2 #C475FD, backgrounds
+          #FAF8F1 / #1A1A17, chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Theme-adaptive colors well-executed; event positioning shows design
-          intent; fairly standard overall
+        comment: The style-guide baseline (Imprint palette, theme tokens, explicit
+          sizes), nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
-        passed: true
-        comment: Subtle grid and clean layout; full-frame border slightly less minimal
-          than L-shaped spines
+        passed: false
+        comment: All four spines drawn via panel_border where the plot type does not
+          require them (defect line); grid subtle
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
         passed: true
-        comment: Clear narrative through product events; alternating heights create
-          visual rhythm
+        comment: Events marked as the spec asks; no hierarchy or focal point chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,25 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with event annotations
+        comment: Time-series line with vertical event lines and labels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Line, vertical markers, diamond points, text labels all present
+        comment: C1 line + vline per event, C2 dashed purple markers, C3 label above
+          each marker, C4 alternating heights; C5 N/A (one event type)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (date), Y-axis (value); data range properly displayed
+        comment: Date on x, visitors on y, full range shown; event lines at their
+          dates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; event labels serve as inline legend
+        comment: Title 'line-annotated-events · python · plotnine · anyplot.ai'; legend
+          N/A for one event type
     data_quality:
       score: 15
       max: 15
@@ -152,19 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Time series with realistic patterns; 5 events well-distributed
+        comment: 365 daily points, 5 unevenly spaced events, trend + seasonality +
+          weekly cycle
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic scenario plausible and neutral
+        comment: Website traffic with product-release events; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Visitor counts sensible; one-year time span appropriate
+        comment: ~40k-56k daily visitors over 2024; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -174,13 +182,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct plotting, no functions/classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -192,15 +200,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: plot.save to plot-{THEME}.png, 8x4.5 in at dpi 400
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -208,22 +216,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar with clean aesthetics and theme configuration
+        comment: Layered grammar with per-layer data= for the event geoms and scale_x_datetime(date_breaks,
+          date_labels)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: Standard geom usage; doesn't showcase advanced plotnine capabilities
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T21:26:24Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - reference-lines
   patterns:
   - data-generation
+  - layer-composition
   dataprep:
-  - cumulative-sum
   - time-series
   styling:
   - alpha-blending
+  - theme-adaptive
