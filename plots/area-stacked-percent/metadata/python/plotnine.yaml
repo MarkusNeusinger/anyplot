@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:23:41Z'
-updated: '2026-05-12T11:20:59Z'
-generated_by: claude-haiku
-workflow_run: 25730484771
+updated: '2026-11-21T06:27:55Z'
+generated_by: claude-sonnet
+workflow_run: 44874994503
 issue: 2647
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,36 +15,36 @@ preview_html_dark: null
 quality_score: 83
 review:
   strengths:
-  - Excellent theme adaptation with perfect chrome color switching between light and
-    dark
-  - Perfect text legibility across both renders with explicit font sizing
-  - Correct 100% stacking implementation with percentage normalization
-  - Realistic, meaningful data showing real market trends (smartphone decline, wearables
-    rise)
-  - Clean, reproducible code with minimal complexity
-  - All spec features correctly implemented and visible
+  - 'Correct 100% stack: shares computed per year with groupby().transform, the top
+    edge sits flat at 100% and expand=(0,0) makes the stack fill the panel exactly'
+  - Theme tokens threaded through every chrome element; full-opacity Imprint fills
+    are identical in both renders and all text reads in both themes
+  - Thin page-colored seams separate neighboring layers cleanly on both backgrounds
+  - 'Legend colors follow the data order via scale_fill_manual(limits=...), so Smartphones
+    takes #009E73'
+  - Realistic, neutral consumer-device scenario with clearly shifting shares
   weaknesses:
-  - 'VQ-07: First categorical series (Smartphones) assigned #0072B2 instead of canonical
-    #009E73 — color sequence does not match expected Okabe-Ito position 1'
-  - 'DE-01/DE-02: Generic design aesthetic with minimal visual refinement beyond library
-    defaults'
-  - 'DE-03: Data storytelling limited — viewer sees trends but lacks visual hierarchy
-    or emphasis'
+  - 'Suggestion: the stack runs Laptops, Smartphones, Tablets, Wearables from top
+    to bottom (plotnine''s alphabetical factor order) while the legend lists Smartphones,
+    Tablets, Wearables, Laptops; making PRODUCT a pd.Categorical in data order would
+    let the legend read in the stack''s order.'
+  - 'Suggestion: plotnine''s geom_area(position=''fill'') normalizes to 100% natively
+    and could replace the groupby share column.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct per spec
-      Chrome: Title "area-stacked-percent · plotnine · anyplot.ai" in dark text (INK #1A1A17), axis labels "Market Share (%)" and "Year" in dark text, tick labels (years and percentages) all dark and fully readable against light background
-      Data: Four stacked areas representing market share: Smartphones, Tablets, Wearables, Laptops in Okabe-Ito palette colors showing realistic market evolution (smartphone 50%→20%, wearables 4%→48%)
-      Legibility verdict: PASS - All text clearly readable with excellent contrast and no overlap
+      Background: warm off-white #FAF8F1, panel the same with a thin INK_SOFT border.
+      Chrome: bold title "area-stacked-percent · python · plotnine · anyplot.ai" in dark ink (~62% of width); axis titles "Year" and "Market share (%)" and ticks 2015-2023 (every 2 years) and 0%-100% in dark grey, all readable. Vertical legend "Product category" on the right in an elevated box.
+      Data: four full-opacity layers, bottom to top Wearables (#4467A3, 4% -> 48%), Tablets (#C475FD, shrinking to ~5%), Smartphones (#009E73), Laptops (#BD8233) at the top; flat top edge at 100%, layers separated by thin page-colored seams. Smartphones (first data series) is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct per spec
-      Chrome: Title and axis labels rendered in light text (INK #F0EFE8 and INK_SOFT #B8B7B0), all clearly visible against dark background, no dark-on-dark failures
-      Data: Identical color sequence to light render (only chrome flips, data colors remain constant), stacked areas show same proportional relationships and trends, legend clearly visible
-      Legibility verdict: PASS - All text readable with proper light-on-dark contrast, no chrome failures in dark theme
+      Background: warm near-black #1A1A17, panel border in light grey.
+      Chrome: title and axis titles in light ink, ticks and legend text in light grey, legend box #242420; no dark-on-dark text anywhere.
+      Data: layer colors identical to the light render; only the seams flip to the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -52,50 +52,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all explicitly set and perfectly
-          readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (the library-prompt
+          sizes); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels and legend elements fully separated, no overlapping text
+        comment: No text collisions; the 0% and 2015 corner labels sit close but stay
+          separate
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked areas perfectly adapted to data density with clear distinction
-          between categories
+        comment: Four solid layers, thinnest (Tablets ~5%) still clearly visible;
+          legend swatches match the fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is inherently CVD-safe with adequate contrast
+        comment: 'Imprint green, lavender, blue, ochre: distinct in lightness and
+          hue, no red-green pair'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape 16:9 (4800x2700px) fills 60-70% of canvas with balanced
-          margins
+        comment: 3200x1800 canvas (gate passed); title ~62% of width; panel fills
+          the canvas, legend balanced on the right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Y-axis has %, title matches spec
-          format'
+        comment: '''Market share (%)'' and ''Year'': descriptive, with unit'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Okabe-Ito used but first series (Smartphones) assigned #0072B2 (position
-          3) instead of #009E73 (position 1). Theme chrome perfect in both renders.'
+        passed: true
+        comment: 'First series Smartphones = #009E73, Imprint order, full opacity
+          so data colors are identical in both themes; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -103,22 +104,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults but not particularly sophisticated
-          or distinctive
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization beyond defaults - grid alpha adjusted but panel
-          border remains
+        comment: Thin page-colored seams between the layers and expand=(0,0) so the
+          stack meets the panel edges exactly at 0% and 100%
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data choice tells story (smartphone/wearable trends) but visualization
-          lacks visual hierarchy or emphasis
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -128,29 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked area chart with proper position='stack' and
-          0-100% Y-axis
+        comment: 100% stacked area via geom_area(position='stack') on per-year shares
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: temporal X-axis, percentage Y-axis, categorical
-          fill, stacked normalization'
+        comment: C1 layers start where the one below ends; C2 flat top at 100%, no
+          gap; C3 axis 0-100% untruncated; C4 constant order, one color per layer,
+          legend, neighbors distinct in both themes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Year (continuous), Y=Percent (0-100%), Fill=Category. All data
-          visible and correctly mapped.
+        comment: x = Year 2015-2024, y = share of the yearly total; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''area-stacked-percent · plotnine · anyplot.ai''.
-          Legend shows 4 categories correctly.'
+        comment: Title 'area-stacked-percent · python · plotnine · anyplot.ai'; legend
+          'Product category' with the four product names
     data_quality:
       score: 15
       max: 15
@@ -160,22 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Excellent: shows all 4 categories with varying trends (smartphones
-          50%→20%, wearables 4%→48%)'
+        comment: A rising, a falling, a shrinking-to-thin and a steady layer show
+          how shares shift and how inner boundaries move
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world scenario: electronics market share evolution. Comprehensible
-          and factually plausible.'
+        comment: Consumer-device unit shares 2015-2024, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10-year span (2015-2024) realistic. Market shares sum to 100%. Trends
-          align with real market evolution.
+        comment: 'Checked 2015: Wearables 4/100 = 4%, Tablets 28% (top at 32%), Smartphones
+          50% (top at 82%) - matches the render; totals sum to 100 every year by computation'
     code_quality:
       score: 10
       max: 10
@@ -185,56 +182,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple: imports → data → plot → save. No functions or classes.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data generated deterministically from hardcoded lists. Fully reproducible.
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports used: os, sys, pandas, plotnine. All utilized.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. Appropriate complexity. No fake functionality.
+        comment: Shares via one groupby().transform('sum') line; no hand-rolled loops
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using current plotnine API
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi 400; current plotnine 0.15
+          API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: false
-        comment: Good ggplot() + grammar of graphics usage. Theme customization via
-          element_* is idiomatic. Could leverage more advanced features.
+        passed: true
+        comment: Grammar-of-graphics pipeline with scale_fill_manual limits from the
+          data, as the library prompt prescribes
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses pd.Categorical for ordered categories and theme_minimal() base.
-          Fairly generic usage overall.
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T06:24:01Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  - groupby-aggregation
+  dataprep:
+  - normalization
   styling:
-  - alpha-blending
+  - edge-highlighting
   - grid-styling
