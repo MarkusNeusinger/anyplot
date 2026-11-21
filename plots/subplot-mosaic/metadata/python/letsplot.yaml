@@ -12,120 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 63
 review:
   strengths:
-  - 'Perfect visual quality: all text legible in both light and dark modes, no overlap,
-    proper theming, correct color palette'
-  - 'Strong spec compliance: mosaic layout correctly implemented with clear hierarchy
-    and six distinct plot types'
-  - 'Clean code: simple, reproducible, well-organized implementation with proper imports
-    and current API usage'
-  - 'Effective data hierarchy: layout creates clear overview → details → metrics narrative
-    flow'
-  - 'Comprehensive feature coverage: six plot types demonstrate mosaic subplot versatility'
-  - 'Proper theme adaptation: both light and dark renders fully functional with correct
-    colors and background consistency'
+  - Layout AAA/BBC/DEF via ggbunch regions with a full-width primary panel and varied
+    panel sizes
+  - Six different plot types, each with a title and labelled axes suited to its panel
+  - Generous font sizes keep panel text readable at full size
   weaknesses:
-  - 'Generic design excellence: styling relies heavily on defaults, no exceptional
-    visual polish or custom refinements beyond required palette'
-  - 'Limited distinctive library features: implementation uses standard ggplot2 patterns
-    rather than showcasing advanced letsplot-specific capabilities'
+  - 'VQ-01, VQ-07 (dark): the main title renders near-white #F0EFE8 on a pure-white
+    outer canvas and cannot be read → title on the #1A1A17 page. Likely cause: the
+    ggbunch-level theme sets no plot_background, so the bunch canvas stays white.'
+  - 'VQ-07 (both): outer canvas and gutters are pure white #FFFFFF around the #FAF8F1
+    / #1A1A17 panel boxes → whole canvas in the theme background. Likely cause: no
+    plot_background on the ggbunch.'
+  - 'VQ-07 (both): heatmap uses viridis → imprint_seq (#009E73 → #4467A3). Likely
+    cause: scale_fill_viridis.'
+  - 'VQ-05 (both): canvas 4800x2700, not a canonical size → 3200x1800 (−1600 × −900).
+    Likely cause: ggsize(1600, 900) with scale=3 instead of ggsize(800, 450) with
+    scale=4.'
+  - 'VQ-04 (light): black heatmap cell values on the darkest viridis tiles (61, 63,
+    64) have low contrast → label color that contrasts with every tile. Likely cause:
+    geom_text color=INK on a dark-to-bright colormap.'
+  - 'SC-04 (both): title ''subplot-mosaic · letsplot · anyplot.ai'' lacks the language
+    segment → ''subplot-mosaic · python · letsplot · anyplot.ai''. Likely cause: ggtitle
+    string.'
+  - 'SC-02 (code): the layout is typed as six fraction tuples, with the ASCII pattern
+    only in a comment, while the Notes ask for a layout defined by a string pattern
+    → derive the regions from a pattern string such as "AAA;BBC;DEF". Likely cause:
+    regions list written by hand.'
+  - 'DQ-02 (both): labels Product A–E and Region A–C read as generic placeholders
+    → concrete product and region names. Likely cause: the categories list and the
+    heatmap column labels.'
+  - 'CQ-01 (code): no column-0 # Data block and no column constants for the x/y roles
+    → one data block binding df with column constants above it. Likely cause: six
+    separate DataFrames with column names typed where used.'
+  - 'Suggestion: a focal accent in the primary panel would strengthen the dashboard
+    story.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme surface
-      Chrome: Title "subplot-mosaic · letsplot · anyplot.ai" bold and prominent at top; all panel titles, axis labels, and tick labels in dark text (#1A1A17), clearly readable against light background
-      Data: Panel A (area chart) green (#009E73) with subtle fill; Panel B (bar chart) green bars with rotated x-labels preventing overlap; Panel C (scatter) green points with orange regression line (#D55E00); Panel D (histogram) green bars; Panel E (line chart) green line with points; Panel F (heatmap) viridis colormap with numeric labels. All colors consistent with Okabe-Ito palette.
-      Layout: Six-panel mosaic with clear hierarchy—Panel A spans full width at top (overview), Panels B-C in middle row (details), Panels D-E-F in bottom row (metrics). Spacing is generous and consistent.
-      Legibility verdict: PASS - All text readable, no collisions, proper contrast
+      Background: outer canvas and gutters pure white #FFFFFF; each panel sits on its own #FAF8F1 box.
+      Chrome: bold dark title 'subplot-mosaic · letsplot · anyplot.ai' at top; panel titles, axis titles and ticks dark and readable; rotated product labels.
+      Data: A green line over a green area from zero (flat-looking trend); B green bars; C green scatter with lavender lm line; D green histogram; E green line with markers; F heatmap in viridis with black cell values, low contrast on the darkest purple tiles. Canvas 4800x2700.
+      Legibility verdict: PASS (with low-contrast heatmap values on dark tiles)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme surface
-      Chrome: Title at top in light text (#F0EFE8), all axis labels and tick labels in appropriate light color (#B8B7B0 for secondary), clearly readable against dark background. No dark-on-dark failures.
-      Data: Data colors identical to light render—green (#009E73), orange (#D55E00), viridis colormap unchanged. Only chrome elements (text, background, grid, legend frame) have flipped to dark theme tokens.
-      Layout: Same six-panel mosaic arrangement with consistent spacing as light render. Visual hierarchy maintained.
-      Legibility verdict: PASS - All text readable in light color, data colors match light render exactly, no theme-adaptation failures
+      Background: panels on #1A1A17 boxes, but the outer canvas and gutters stay pure white.
+      Chrome: panel text light and readable; the main title is near-white on the white outer strip and effectively invisible (light-on-light).
+      Data: identical colors to the light render, viridis heatmap with light cell values.
+      Legibility verdict: FAIL (main title unreadable)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 15
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: Font sizes follow letsplot guide; all text readable in both themes
-          with clear hierarchy
+        passed: false
+        comment: 'Main title in the dark render is near-white #F0EFE8 on a pure-white
+          outer canvas and cannot be read (defect line)'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; rotated category labels prevent x-axis overlap;
-          ample panel spacing
+        comment: No text collisions; rotated product labels clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, bars, histogram bins clearly visible with appropriate
-          alpha values
+        comment: Markers, lines and bars well sized for their densities
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All colors from Okabe-Ito palette; CVD-safe greens and oranges; viridis
-          colormap perceptually uniform
+        passed: false
+        comment: Black cell labels on the darkest viridis tiles (61, 63, 64) have
+          low contrast in the light render (defect line)
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Canvas 4800x2700px; landscape aspect ratio appropriate; all elements
-          fit with generous whitespace
+        passed: false
+        comment: Canvas 4800x2700, not one of the two canonical sizes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All panels have descriptive axis labels with units; main title follows
-          format requirement
+        comment: Every panel titled, axis labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First series #009E73; secondary #D55E00; viridis for continuous;
-          backgrounds correct for both themes'
+        passed: false
+        comment: 'Outer canvas and gutters pure white #FFFFFF in both renders and
+          heatmap uses viridis instead of imprint_seq (defect lines)'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Thoughtful hierarchy (overview → details → metrics) and multi-type
-          variety, but styling mostly defaults—generic composition
+        comment: Style-guide baseline with a shared theme; nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Minimal spine customization; adequate grid styling; clean but not
-          particularly refined
+        comment: Baseline spines and grid; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy and narrative flow through layout; could be
-          more dramatic with emphasis techniques
+        passed: false
+        comment: Hierarchy is what the Notes ask for
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -133,28 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mosaic subplot layout via ggbunch with region coordinates
+        comment: Mosaic of six plot types via ggbunch
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec features: mosaic patterns, asymmetric arrangement, spacing,
-          hierarchy, six distinct plot types'
+        passed: false
+        comment: Layout typed as fraction tuples, not defined by a string pattern
+          (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x/y mappings; axes show all data; appropriate color encoding
+        comment: All marks at their data values; area from zero
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Format requirement met; panel titles and legends present
+        passed: false
+        comment: Title lacks the 'python' language segment (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -162,72 +171,74 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six distinct plot types showcase mosaic versatility comprehensively
+        comment: Spanning panel, asymmetric rows, six plot types
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: All synthetic data plausible and neutral; realistic domain ranges
-          throughout
+        passed: false
+        comment: Generic labels Product A-E and Region A-C (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values within sensible domain ranges; no scale distortions
+        comment: All values sensible
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Straightforward, readable code with clear logical flow
+        passed: false
+        comment: 'No column-0 # Data block and no column constants for the x/y roles
+          (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; no bloat
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with proper pandas/ggplot2 usage; no fake UI
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output files and current API usage
+        comment: Saves plot-{THEME}.png and .html
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper ggplot2 grammar and idiomatic letsplot patterns throughout
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses ggbunch and theme control correctly, but mostly standard patterns
-          rather than pushing distinctive capabilities
+        comment: 'Reusable theme object, ggbunch regions, geom_smooth lm: idiomatic
+          grammar'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond the ggbunch the spec needs
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
 impl_tags:
   dependencies: []
   techniques:
