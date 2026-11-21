@@ -2,46 +2,44 @@ library: seaborn
 language: python
 specification_id: point-basic
 created: '2025-12-30T09:31:12Z'
-updated: '2026-05-12T01:02:28Z'
+updated: '2026-11-21T03:27:16Z'
 generated_by: claude-sonnet
-workflow_run: 25706346445
+workflow_run: 44860614798
 issue: 2551
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - 'Perfect theme adaptation: both light and dark renders pass all readability checks
-    with no dark-on-dark or light-on-light failures'
-  - All font sizes explicitly set (24/20/16pt), meeting the full 8/8 VQ-01 requirement
-  - seaborn native bootstrap CI (errorbar=(ci, 95)) used idiomatically — avoids manual
-    scipy computation
-  - Realistic log-normal latency distribution produces naturally asymmetric, credible
-    confidence intervals
-  - Reference line at overall mean creates an effective focal point; Analytics outlier
-    immediately stands out
+  - Rows sorted by estimate on a horizontal layout, so the latency ranking reads top
+    to bottom
+  - Capped 95% bootstrap intervals with page-colored marker edges keep every estimate
+    distinct on its interval line in both themes
+  - 'Theme tokens threaded through sns.set_theme rc: chrome flips cleanly, data colors
+    identical in both renders'
+  - Tidy summary table with column constants feeds sns.scatterplot via data=df, matching
+    the spec's category/estimate/lower/upper roles
+  - Right-skewed log-normal latency gives realistic, asymmetric intervals of very
+    different widths
   weaknesses:
-  - 'DE-01 not reaching 6+: design is correct and clean but could be elevated with
-    stronger typographic hierarchy (e.g., a subtitle or annotation on the Analytics
-    outlier)'
-  - 'LM-02: bootstrap CI is seaborn-specific but the implementation does not showcase
-    additional seaborn statistical features (e.g., overlaying sns.stripplot for raw
-    data or using native_scale=True)'
+  - 'Suggestion: the legend label''s f-string (line 86) fails when the estimate column
+    contains missing values; computing the reference with df[ESTIMATE].mean() over
+    a float column (skipna) keeps the adaptable-code smoke test green.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "point-basic · seaborn · anyplot.ai" in dark INK (#1A1A17), clearly readable. Axis labels "Response Time (ms)" and "API Endpoint" in dark INK (#1A1A17), 20pt, clearly readable. Tick labels in INK_SOFT (#4A4A44), 16pt, clearly readable. Legend "Overall Mean (103 ms)" in dark text on #FFFDF6 elevated background.
-      Data: All six endpoint points in brand green #009E73 with capped error bars. Dashed reference line in #D55E00 (Okabe-Ito position 2). Subtle x-axis grid (alpha=0.10).
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: title 'point-basic · python · seaborn · anyplot.ai' in dark ink, axis titles 'Response Time (ms)' and 'API Endpoint' in dark ink, tick labels in INK_SOFT, legend 'Mean of endpoints (100 ms)' in an elevated box top right; all readable
+      Data: six #009E73 markers with page-colored edges on capped green intervals, rows sorted by estimate from Auth Service (about 47 ms) to Analytics (about 194 ms); dashed #C475FD reference line at 100 ms; subtle vertical grid
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light #F0EFE8, clearly readable against dark background. Axis labels in #F0EFE8, clearly readable. Tick labels in #B8B7B0 (INK_SOFT dark), clearly readable — no dark-on-dark text failures. Legend on #242420 elevated background with light text.
-      Data: Points and error bars in identical #009E73 green (same as light render). Reference line in identical #D55E00. Data colors are theme-invariant as required.
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title, axis titles and legend text in light ink, tick labels light grey, legend on #242420; no dark-on-dark text
+      Data: identical #009E73 markers and intervals and #C475FD reference line as the light render; caps clearly visible
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -53,75 +51,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt all explicitly set; both renders
-          fully readable
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, the style-guide
+          sizes; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements across either render
+        comment: No text collides with text or data; the legend sits in empty space
+          top right
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: markersize=12 with linewidth=2.5 error bars clearly visible; reference
-          line prominent
+        comment: Six markers at s=60 with a page-colored edge sit clearly on 1.25
+          px interval lines; caps visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Teal (#009E73) vs orange (#D55E00); CVD-safe Okabe-Ito combination,
-          not red-green
+        comment: Green marks and violet reference line are CVD-safe; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Horizontal layout uses canvas well; balanced margins; legend does
-          not overlap data
+        comment: 3200x1800 canvas (gate passed), balanced margins, title about 45%
+          of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Response Time (ms) with units; API Endpoint descriptive
+        comment: '''Response Time (ms)'' with unit, ''API Endpoint'' descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series #009E73; reference line #D55E00 (Okabe-Ito pos 2);
-          backgrounds #FAF8F1/#1A1A17 correct; both renders theme-correct'
+        comment: 'Single series #009E73, reference line #C475FD (Imprint position
+          2), backgrounds #FAF8F1/#1A1A17, chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above well-configured defaults: brand color, warm background, L-shaped
-          spines, reference line. Not publication-ready — no exceptional typography
-          hierarchy or annotation'
+        passed: false
+        comment: The style-guide baseline (theme tokens, Imprint palette, explicit
+          sizes), nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Top/right spines removed, subtle x-axis grid (alpha=0.10), theme-correct
-          legend. Good refinement above minimal defaults
+        passed: false
+        comment: Top/right spines removed and a subtle x grid, the spine and grid
+          rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Reference line creates focal point; Analytics outlier visually prominent
-          with wide CI (170-235ms). Viewer immediately identifies above/below-baseline
-          services
+        passed: false
+        comment: Rows sorted by estimate as C4 asks and one reference line the Notes
+          allow; no hierarchy chosen beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -131,29 +128,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct point estimate plot with CIs, horizontal orientation per
-          spec recommendation
+        comment: Horizontal point estimate plot, one estimate and interval per category,
+          plus the single reference line the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Point estimates (means), 95% CIs, capped error bars, reference line
-          all present
+        comment: 'Distinct markers, 95% intervals, caps at both ends, horizontal layout,
+          ordered by estimate, reference line: every Notes and A-good-version bullet
+          met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = estimate values (ms), Y = categories; all 6 endpoints displayed
-          with full CI range visible
+        comment: Markers at their estimates, intervals from lower to upper bound,
+          x axis spans every interval in full
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'point-basic · seaborn · anyplot.ai' correct; legend shows
-          reference line label
+        comment: Title 'point-basic · python · seaborn · anyplot.ai' correct; legend
+          names the reference line with its value
     data_quality:
       score: 15
       max: 15
@@ -163,22 +161,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide range of estimates (50-200ms) and CI widths; demonstrates narrow
-          vs wide uncertainty
+        comment: Narrow and wide intervals, asymmetric bootstrap CIs from skewed latency,
+          estimates on both sides of the reference line
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: API endpoint response times in microservices context; specific named
-          services; log-normal distribution is technically accurate
+        comment: Named microservice endpoints with plausible latency, neutral technology
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Auth Service ~50ms, Analytics ~200ms; realistic API latency range;
-          log-normal produces plausible asymmetric CIs
+        comment: 'Checked: Auth mean about 47 ms vs lognormal(3.8,0.4) expectation
+          exp(3.88) = 48 ms; Analytics about 194 ms vs exp(5.28) = 196 ms; reference
+          line at 100 ms equals the mean of the six estimates read off the axis'
     code_quality:
       score: 10
       max: 10
@@ -188,61 +187,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports -> Data -> Plot -> Save; no functions or classes
+        comment: Linear tokens -> constants -> data -> plot -> save; column constants
+          with role comments; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib, numpy, pandas, seaborn — all used, none superfluous
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; strict=True in zip shows Python 3.10+ awareness;
-          no fake functionality
+        comment: Bootstrap of the means in two vectorised lines; nothing written out
+          that a call replaces more simply
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi, bbox_inches, facecolor;
-          seaborn 0.14+ errorbar API used correctly
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches; current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: sns.pointplot with errorbar=(ci, 95) is canonical seaborn approach;
-          orient=h correct; axes-level API with ax=ax; sns.set_theme for global rc
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Bootstrap CI via errorbar=(ci, 95) is seaborn-specific (automatic
-          statistical computation); err_kws and capsize show API depth. Could have
-          layered sns.stripplot for raw data overlay
+        passed: false
+        comment: Axes-level sns.scatterplot with data=df and column constants, sns.set_theme
+          rc block; intervals drawn by matplotlib errorbar as the precomputed bounds
+          require
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-21T03:23:36Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
-  - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - edge-highlighting
   - grid-styling
