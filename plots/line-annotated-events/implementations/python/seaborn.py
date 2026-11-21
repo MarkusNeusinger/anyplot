@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-annotated-events: Annotated Line Plot with Event Markers
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-16
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-21
 """
 
 import os
@@ -20,11 +20,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # Position 1 - bluish green for main series
-EVENT_COLOR = "#954477"  # Position 7 - yellow for annotations
+# Imprint palette
+BRAND = "#009E73"  # position 1: the main series
+EVENT_COLOR = "#954477"  # position 7: event markers and labels
 
-# Configure seaborn with theme tokens
 sns.set_theme(
     style="ticks",
     rc={
@@ -42,85 +41,71 @@ sns.set_theme(
     },
 )
 
-# Data - Simulating monthly product sales with marketing events
-np.random.seed(42)
+# Constants
+LABEL_HEIGHTS = (0.90, 0.80)  # alternating label heights, as axes fractions
 
-# Create 365 days of sales data
+# Columns
+DATE = "Date"  # role: date
+SALES = "Daily Sales (Units)"  # role: value
+EVENT_DATE = "Event Date"  # role: event_date
+EVENT_LABEL = "Event"  # role: event_label
+
+# Data
+np.random.seed(42)
 dates = pd.date_range("2024-01-01", periods=365, freq="D")
-# Base trend with seasonality and noise
 trend = np.linspace(100, 180, 365)
 seasonality = 15 * np.sin(np.linspace(0, 4 * np.pi, 365))
 noise = np.random.normal(0, 8, 365)
-sales = trend + seasonality + noise
-
-df = pd.DataFrame({"date": dates, "sales": sales})
-
-# Events - Key marketing milestones
-events = pd.DataFrame(
-    {
-        "event_date": pd.to_datetime(["2024-02-14", "2024-05-01", "2024-07-15", "2024-09-20", "2024-11-25"]),
-        "event_label": ["Valentine's Campaign", "Spring Sale", "Summer Launch", "Fall Promotion", "Black Friday"],
-    }
-)
+df = pd.DataFrame({DATE: dates, SALES: trend + seasonality + noise})
+event_names = {
+    "2024-02-14": "Valentine's Campaign",
+    "2024-05-01": "Spring Sale",
+    "2024-07-15": "Summer Launch",
+    "2024-09-20": "Fall Promotion",
+    "2024-11-25": "Black Friday",
+}
+df[EVENT_LABEL] = df[DATE].dt.strftime("%Y-%m-%d").map(event_names)
+df[EVENT_DATE] = df[DATE].where(df[EVENT_LABEL].notna())
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Main line plot using seaborn
-sns.lineplot(data=df, x="date", y="sales", ax=ax, linewidth=2.5, color=BRAND)
+sns.lineplot(data=df, x=DATE, y=SALES, ax=ax, linewidth=1.8, color=BRAND)
 
-# Add event markers with alternating heights for readability
-y_positions = [0.85, 0.75, 0.85, 0.75, 0.85]
+events = df.dropna(subset=[EVENT_LABEL])
 
-for i, (_, event) in enumerate(events.iterrows()):
-    # Vertical line at event date
-    ax.axvline(x=event["event_date"], color=EVENT_COLOR, linestyle="--", linewidth=2, alpha=0.8)
-
-    # Event label with background
-    y_pos = ax.get_ylim()[0] + (ax.get_ylim()[1] - ax.get_ylim()[0]) * y_positions[i]
+for i, (event_date, label, sales) in enumerate(
+    zip(events[EVENT_DATE], events[EVENT_LABEL], events[SALES], strict=True)
+):
+    ax.axvline(x=event_date, color=EVENT_COLOR, linestyle="--", linewidth=1.2, alpha=0.85)
     ax.annotate(
-        event["event_label"],
-        xy=(event["event_date"], y_pos),
-        fontsize=14,
+        label,
+        xy=(event_date, LABEL_HEIGHTS[i % len(LABEL_HEIGHTS)]),
+        xycoords=("data", "axes fraction"),
+        xytext=(4, 0),
+        textcoords="offset points",
+        fontsize=8,
         fontweight="bold",
-        color=INK,
-        ha="center",
-        va="bottom",
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": EVENT_COLOR, "edgecolor": "none", "alpha": 0.9},
-        rotation=0,
+        color="#FFFFFF",
+        ha="left",
+        va="center",
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": EVENT_COLOR, "edgecolor": "none"},
     )
+    ax.scatter(event_date, sales, color=EVENT_COLOR, s=45, zorder=5, edgecolor=INK, linewidth=1)
 
-    # Small marker on the line at event date
-    event_sales = df.loc[df["date"] == event["event_date"], "sales"]
-    if not event_sales.empty:
-        ax.scatter(
-            event["event_date"], event_sales.values[0], color=EVENT_COLOR, s=150, zorder=5, edgecolor=INK, linewidth=2
-        )
-
-# Styling
-ax.set_xlabel("Date", fontsize=20, color=INK)
-ax.set_ylabel("Daily Sales (Units)", fontsize=20, color=INK)
-ax.set_title("line-annotated-events · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for spine in ["left", "bottom"]:
-    ax.spines[spine].set_color(INK_SOFT)
-
-# Subtle y-axis grid
+ax.set_ylim(df[SALES].min() - 10, df[SALES].max() + 20)
+ax.set_xlabel(DATE, fontsize=10)
+ax.set_ylabel(SALES, fontsize=10)
+ax.set_title("line-annotated-events · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium")
+ax.tick_params(axis="both", labelsize=8)
+sns.despine(ax=ax)
 ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 
-# Add legend explaining event markers
 legend_elements = [
-    Line2D([0], [0], color=BRAND, lw=2.5, label="Daily Sales"),
-    Line2D([0], [0], color=EVENT_COLOR, lw=2, linestyle="--", label="Event Marker"),
+    Line2D([0], [0], color=BRAND, lw=1.8, label="Daily sales"),
+    Line2D([0], [0], color=EVENT_COLOR, lw=1.2, linestyle="--", label="Event marker"),
 ]
-ax.legend(handles=legend_elements, loc="upper left", fontsize=16, frameon=True, fancybox=True)
-
-# Format x-axis dates
-fig.autofmt_xdate(rotation=30)
+ax.legend(handles=legend_elements, loc="lower right", fontsize=8, frameon=True, fancybox=True)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
