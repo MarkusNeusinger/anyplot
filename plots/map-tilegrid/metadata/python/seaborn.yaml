@@ -12,113 +12,118 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tileg
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 72
 review:
   strengths:
-  - Luma-adaptive tile text coloring ensures readability across all 50 states in both
+  - Luminance-switched tile label color keeps all 50 abbreviations readable in both
     themes
-  - 'Both renders theme-correct: correct backgrounds, adaptive chrome, identical viridis
-    data colors between themes'
-  - 'Full spec compliance: all 50 US states, colorbar with units, geographic grid
-    layout, equal-area tiles'
-  - Clean reproducible code with proper random seed and flat script structure
+  - Recognizable US tile layout with every tile clearly visible against both backgrounds
+  - Theme chrome correct in both renders with explicit font sizes
   weaknesses:
-  - Title at 22pt vs. guideline 24pt for high-res canvas
-  - Seaborn contribution limited to sns.set_theme() theme setup; core visualization
-    is 100% raw matplotlib patches and text
-  - 'No data storytelling: Pacific NW vs Southeast renewable energy divide is visible
-    but not annotated or emphasized'
-  - State abbreviation fontsize 15pt slightly under 16pt guideline for high-res canvas
+  - 'VQ-05 (both): canvas is 3372x3391, off both canonical sizes, and the title spans
+    about 97% of the width up to the top edge → 2400x2400 square (−972 × −991 px)
+    with the title under 90% width. Likely cause: figsize=(12, 12) at dpi=300 with
+    bbox_inches=''tight'', title fontsize=22.'
+  - 'VQ-07 (both): tiles and colorbar use viridis, a colormap outside Imprint → imprint_seq
+    for this unipolar share. Likely cause: plt.colormaps[''viridis''].'
+  - 'SC-04 (both): title ''Renewable Energy by State · map-tilegrid · seaborn · anyplot.ai''
+    lacks the language segment → ''… · map-tilegrid · python · seaborn · anyplot.ai''.
+    Likely cause: the set_title string.'
+  - 'CQ-04 (code): lines 166-187 draw each tile with mpatches.Rectangle and compute
+    a manual luma for the text color, which sns.heatmap(grid, annot=labels, fmt='''',
+    mask=grid.isna(), square=True) computes; line 11 inserts a hard-coded venv path
+    into sys.path → use the heatmap call and delete the sys.path line. Likely cause:
+    hand-rolled tile drawing.'
+  - 'LM-01 (code): seaborn contributes only sns.set_theme; the chart itself is raw
+    matplotlib patches and text → build the grid with sns.heatmap on a pivoted DataFrame.
+    Likely cause: the patch loop.'
+  - 'Suggestion: an above/below-average framing of the regional divide would give
+    the map a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 as specified
-      Chrome: Title "Renewable Energy by State - map-tilegrid - seaborn - anyplot.ai" at fontsize 22 in dark ink, clearly readable; colorbar label "Renewable Energy Adoption (%)" at fontsize 20 with ticks at fontsize 16 in INK_SOFT - all readable
-      Data: 50 US state tiles colored with viridis from deep purple (~10-20%) through teal/cyan (~40-50%) to yellow-green (~70-80%); state abbreviations in bold with luma-adaptive color (dark text on bright tiles, light text on dark tiles)
-      Legibility verdict: PASS - all text readable against warm off-white background
+      Background: Warm off-white #FAF8F1; canvas 3372x3391 from bbox_inches='tight'.
+      Chrome: Title 'Renewable Energy by State · map-tilegrid · seaborn · anyplot.ai' in dark ink spanning nearly the full width up to the top edge; colorbar label 'Renewable Energy Adoption (%)' and ticks 10-80 readable.
+      Data: 50 square state tiles in a US tile-grid layout colored with viridis (purple low to yellow high, WA highest); bold abbreviations switch dark/light by tile luminance and are all clearly readable.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 as specified
-      Chrome: Title in light ink (#F0EFE8) clearly readable; colorbar label in light ink readable; ticks in INK_SOFT (#B8B7B0) readable against dark background; no dark-on-dark text failures
-      Data: Viridis tile colors identical to light render confirming only chrome has flipped; luma-adaptive state abbreviation text coloring unchanged and legible
-      Legibility verdict: PASS - all text readable against warm near-black background
+      Background: Warm near-black #1A1A17.
+      Chrome: Title, colorbar label in light ink, ticks in soft light ink; no dark-on-dark text.
+      Data: Viridis tile colors identical to the light render; all tiles stand out from the background and all labels are readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title at 22pt vs guideline 24pt; colorbar label 20pt and ticks 16pt
-          correct; state abbreviations 15pt clear
+        comment: All text sized explicitly and readable in both themes; luminance-switched
+          tile labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Tiles have proper gap; no text collisions between state labels
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 50 state tiles visible; viridis range clearly differentiated
-          across color spectrum
+        comment: Every tile clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe; no red-green encoding
+        comment: Viridis is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Square 12x12 figure appropriate for tile grid; colorbar well-placed
-          below
+        passed: false
+        comment: Canvas 3372x3391 off both canonical sizes; title spans ~97% of the
+          width (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with spec-id; colorbar label includes unit (%)
+        comment: Colorbar label with unit
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Viridis correct for continuous data; backgrounds #FAF8F1 light and
-          #1A1A17 dark both correct'
+        passed: false
+        comment: Viridis instead of imprint_seq/imprint_div (defect line)
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Luma-adaptive tile text coloring is genuinely clever; otherwise functional
-          rather than artful
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Axis fully hidden; clean layout; proper tile gap; limited additional
-          refinement
+        comment: Axes hidden, tile gap; nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Geographic pattern visible but not emphasized; no annotations or
-          callouts guiding the viewer
+        comment: Data displayed, no hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -126,26 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct square-tile grid map with geographic positioning
+        comment: Square tile grid map
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Region abbreviation labels, colorbar, equal-area tiles, geographic
-          row/col layout all present
+        comment: 'C1-C4 met: equal tiles at row/col, US outline, labels on every tile,
+          sequential map with colorbar'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value encoded via tile color; full 10-80% range shown
+        comment: Tiles at grid positions, value to color
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title includes spec-id, library, anyplot.ai; colorbar legend present
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -155,21 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all defining characteristics of tile grid maps
+        comment: 50 states, holes and ragged edge
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US state renewable energy adoption is plausible and politically neutral
+        comment: Renewable share by state, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 10-80% with realistic geographic variation
+        comment: Shares 17-76% plausible; no Check values in spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -177,50 +182,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no unnecessary functions or classes
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Luma calculation for adaptive text color is elegant and correct
+        passed: false
+        comment: Hand-drawn Rectangle/text loop and manual luma where sns.heatmap(annot=,
+          mask=) computes it; sys.path hack (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as f"plot-{THEME}.png" correctly
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 6
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: sns.set_theme() with rc dict is the correct seaborn theming pattern;
-          matplotlib patches appropriate for this chart type
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Seaborn contribution limited to theme setup; core visualization is
-          100% matplotlib patches and text; no seaborn-specific features demonstrated
+        comment: Seaborn used only for set_theme; the chart is raw matplotlib patches
+          (defect line)
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
 impl_tags:
   dependencies: []
   techniques:
