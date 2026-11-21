@@ -2,46 +2,47 @@ library: altair
 language: python
 specification_id: timeline-basic
 created: '2025-12-29T22:51:19Z'
-updated: '2026-05-11T05:44:17Z'
-generated_by: claude-haiku
-workflow_run: 25652378844
+updated: '2026-11-21T01:01:33Z'
+generated_by: claude-sonnet
+workflow_run: 44846789675
 issue: 2443
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/altair/plot-dark.html
-quality_score: 96
+quality_score: 86
 review:
   strengths:
-  - Excellent theme-adaptive implementation with all INK/INK_SOFT tokens correctly
-    applied throughout
-  - Perfect use of Okabe-Ito palette with proper category color mapping and theme-independent
-    data colors
-  - Clever alternating label positioning effectively prevents text overlap across
-    all 12 events
-  - 'High-quality professional design with intentional visual hierarchy: timeline
-    axis → connectors → points → labels → legend'
-  - Both light and dark renders perfectly readable with no legibility issues - theme
-    chrome properly adapted
-  - Idiomatic altair usage with sophisticated mark layering, custom color scales,
-    and manual legend implementation
-  weaknesses: []
+  - Markers sit at their exact dates on one horizontal axis; alternating sides plus
+    two label tiers per side keep all 12 event labels clear of each other
+  - 'Theme tokens threaded through every chrome element: readable in both renders,
+    data colors identical across themes'
+  - Imprint palette in canonical order with a native alt.Legend titled 'Phase'
+  - Idiomatic alt.layer composition over shared scales, mark_rule y/y2 stems, page-colored
+    marker halo
+  - Formatted tooltips (date, event, phase) and .interactive() zoom/pan in the HTML
+    output
+  - 45-day padding on the date domain keeps the first and last labels inside the canvas
+  weaknesses:
+  - 'Suggestion: the date ticks sit on a separate axis well below the timeline rule;
+    placing the month ticks on the timeline itself would shorten the eye travel from
+    marker to date.'
+  - 'Suggestion: the month-year tick labels have room to stay horizontal; dropping
+    the -45° rotation would read faster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (not pure white)
-      Chrome: Title in dark ink clearly readable; date axis labels rotated at 45° with proper contrast; legend positioned at top-left with dark text
-      Data: Planning (green #009E73), Development (orange #D55E00), Testing (blue #0072B2), Release (pink #CC79A7) - Okabe-Ito palette in correct order; vertical connector lines color-coded by category; event markers are clean circles with white strokes; central timeline axis is dark and prominent
-      Events: All 12 event labels (6 above, 6 below the axis) are clearly readable with no overlap
-      Legibility verdict: PASS - All text is dark on light background with excellent contrast; markers and lines are clearly distinguishable
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: bold dark title "timeline-basic · python · altair · anyplot.ai" centered at top; horizontal legend "Phase" at top-left (Planning, Development, Testing, Release); bottom date axis titled "Date" with month ticks Dec 2023 - Jan 2025 rotated -45° in soft ink; no y-axis, no grid. All text dark on light and readable.
+      Data: a thick soft-ink timeline rule at the vertical middle; 12 events with colored stems and circles (page-colored halo) alternating above/below at two heights; bold dark event labels beyond each marker. Planning #009E73, Development #C475FD, Testing #4467A3, Release #BD8233. No label collisions, nothing clipped.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (not pure black)
-      Chrome: Title in light text clearly readable against dark background; date axis labels light-colored and readable; legend shows same colors as light render (data colors are theme-independent)
-      Data: All colors identical to light render - Planning green, Development orange, Testing blue, Release pink; connector lines and event markers render properly; central timeline axis is light-colored and visible
-      Events: All 12 event labels are light-colored and readable above and below the axis
-      Legibility verdict: PASS - All text is light on dark background with no dark-on-dark issues; no unreadable elements; visual hierarchy and clarity preserved perfectly across both themes
+      Background: warm near-black #1A1A17.
+      Chrome: title, legend title and event labels in light ink #F0EFE8; ticks, legend labels and the timeline rule in light soft ink; no dark-on-dark text anywhere.
+      Data: identical positions and identical Imprint colors to the light render; brand green #009E73 clearly visible; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,73 +53,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px,
-          legend 16px); readable in both themes
+        comment: All sizes set explicitly (title 16, axis title 12, ticks 10, event
+          labels 10 bold, legend 11/12 at scale 4); every element readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Event labels alternated above/below axis; no overlapping elements
+        comment: Alternating sides plus two label tiers per side keep all 12 labels
+          clear of each other and of the markers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (600 and 300); lines prominent; all elements clearly
-          visible
+        comment: 12 sparse events drawn as prominent circles with a page-colored halo;
+          stems and legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety; excellent contrast
+        comment: Imprint positions 1-4, distinct under CVD; category also readable
+          from labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 with 3.0 scale factor = 4800×2700px; balanced margins, nothing
-          cut off
+        comment: 3200x1800 canvas, balanced margins, title ~43% wide, nothing cut
+          off; edge labels fit thanks to the 45-day domain padding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'timeline-basic · altair · anyplot.ai'; X-axis 'Date' with
-          format '%b %Y'
+        comment: Date axis titled 'Date' with month-year ticks; legend titled 'Phase'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; follows Okabe-Ito positions 2-4 (#D55E00,
-          #0072B2, #CC79A7); background #FAF8F1 light/#1A1A17 dark; both renders theme-correct'
+        comment: 'First category #009E73, Imprint order; #FAF8F1 / #1A1A17 backgrounds;
+          data colors identical across themes'
     design_excellence:
-      score: 17
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Publication-ready design; intentional color mapping; clear visual
-          hierarchy; professional polish
+        comment: Two label tiers per side give a staggered rhythm beyond the plain
+          alternation the Notes ask for; bold event labels over soft-ink ticks set
+          a clear hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Y-axis disabled; minimal chrome; generous whitespace; manual legend
-          shows sophistication
+        comment: Page-colored halo separates each marker from its stem; date domain
+          padded by 45 days so the first and last labels sit inside the frame
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear narrative of project phases over time; visual hierarchy guides
-          viewer through temporal progression
+        passed: false
+        comment: Phases shown by color as the Notes allow; no focal point chosen beyond
+          that
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: horizontal timeline with event markers and milestones'
+        comment: Horizontal event timeline; only markers, labels, connectors and category
+          color
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: date/timestamp, event names, category grouping,
-          horizontal orientation, alternated labels'
+        comment: C1 markers at their dates on one horizontal axis; C2 labels alternate
+          above/below next to their markers; C3 '%b %Y' monthly ticks; C4 one color
+          per phase with legend; C5 no extra layers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date (temporal), Y=alternating positions, color=category; all data
-          visible
+        comment: x = date; vertical offsets are layout only (C6); all 12 events inside
+          the axis range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend shows all 4 categories with proper labels
+        comment: Title 'timeline-basic · python · altair · anyplot.ai'; legend 'Phase'
+          with readable entries
     data_quality:
       score: 15
       max: 15
@@ -158,20 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all timeline aspects: events, dates, categories, temporal
-          progression'
+        comment: Uneven spacing, four categories, 12 events across a year
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software project milestones - realistic, plausible, neutral domain
+        comment: Software project milestones, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 months (Jan-Dec 2024); 12 events with descriptive names
+        comment: 12 events in 2024 within the spec's 5-50; no Check values in the
+          Notes
     code_quality:
       score: 10
       max: 10
@@ -181,59 +188,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct implementation, no unnecessary functions
+        comment: Flat script in the six-zone layout with column constants and the
+          full eight-position palette
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, altair, pandas'
+        comment: os, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake functionality
+        comment: Native legend, shared scales, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html with scale_factor=3.0
+        comment: plot-{THEME}.png padded to 3200x1800 + plot-{THEME}.html; Altair
+          6 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert altair patterns: alt.layer() for composition, proper encoding
-          with types, theme-adaptive chrome'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Sophisticated use of mark layering, custom color scales, manual legend,
-          tooltip integration
+        comment: alt.layer composition over shared x/y scales, rule with y/y2 for
+          stems, alt.Legend configured on the encoding, configure_* chrome
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Formatted tooltips and .interactive() zoom/pan in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T00:57:23Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - custom-legend
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
-  - publication-ready
+  - minimal-chrome
+  - edge-highlighting
