@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-loss-training: Training Loss Curve
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-14
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-21
 """
 
 import os
@@ -21,13 +21,13 @@ from lets_plot import (
     geom_point,
     geom_vline,
     ggplot,
+    ggsave,
     ggsize,
     labs,
     scale_color_manual,
     theme,
     theme_minimal,
 )
-from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
@@ -39,43 +39,32 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # Training loss (first series)
-ACCENT = "#C475FD"  # Validation loss (second series)
-OPTIMAL = "#DC2626"  # Optimal epoch marker
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+OPTIMAL = "#AE3030"  # Imprint position 5, marks the early-stopping epoch
 
-# Data - Simulated neural network training loss over 100 epochs
+# Constants
+LOSS_FUNCTION = "Cross-Entropy Loss"  # the loss that the y axis reports
+
+# Columns: set these to your table's column names
+EPOCH = "Epoch"  # role: epoch
+TRAIN_LOSS = "Training loss"  # role: train_loss
+VAL_LOSS = "Validation loss"  # role: val_loss
+
+# Data: replace this block with your own table, for example df = pd.read_csv("history.csv")
 np.random.seed(42)
 epochs = np.arange(1, 101)
-
-# Training loss: starts high, decreases with noise - continues to decrease throughout
+# Training loss keeps falling; validation loss falls, then rises after epoch 50 (overfitting)
 train_loss = 2.5 * np.exp(-0.05 * epochs) + 0.08 + np.random.normal(0, 0.015, len(epochs))
+val_loss = 2.5 * np.exp(-0.045 * epochs) + 0.2 + np.random.normal(0, 0.02, len(epochs))
+val_loss[50:] += 0.008 * (epochs[50:] - 50)
+df = pd.DataFrame({EPOCH: epochs, TRAIN_LOSS: train_loss, VAL_LOSS: val_loss})
 
-# Validation loss: decreases then increases (overfitting after ~50 epochs)
-val_loss_base = 2.5 * np.exp(-0.045 * epochs) + 0.2
-noise = np.random.normal(0, 0.02, len(epochs))
-val_loss = val_loss_base + noise
-# Add overfitting effect - validation loss increases after epoch 50
-overfitting_start = 50
-val_loss[overfitting_start:] = val_loss[overfitting_start:] + 0.008 * (epochs[overfitting_start:] - overfitting_start)
+# Plot: reads only df and the constants above
+long_df = df.melt(id_vars=EPOCH, value_vars=[TRAIN_LOSS, VAL_LOSS], var_name="Series", value_name=LOSS_FUNCTION)
+best = df.loc[df[VAL_LOSS].idxmin()]
+optimal_df = pd.DataFrame({EPOCH: [best[EPOCH]], LOSS_FUNCTION: [best[VAL_LOSS]]})
 
-# Find optimal epoch (minimum validation loss)
-optimal_epoch = int(epochs[np.argmin(val_loss)])
-optimal_loss = float(val_loss.min())
-
-# Create DataFrame for plotting
-df = pd.DataFrame(
-    {
-        "Epoch": np.tile(epochs, 2),
-        "Loss": np.concatenate([train_loss, val_loss]),
-        "Type": ["Training Loss"] * len(epochs) + ["Validation Loss"] * len(epochs),
-    }
-)
-
-# Optimal point marker
-optimal_df = pd.DataFrame({"Epoch": [optimal_epoch], "Loss": [optimal_loss]})
-
-# Custom theme
 custom_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -84,30 +73,31 @@ custom_theme = theme(
     panel_grid_minor=element_blank(),
     axis_line_x=element_line(color=INK_SOFT, size=0.5),
     axis_line_y=element_line(color=INK_SOFT, size=0.5),
-    axis_title=element_text(size=20, color=INK),
-    axis_text=element_text(size=16, color=INK_SOFT),
-    plot_title=element_text(size=24, color=INK),
+    axis_title=element_text(size=12, color=INK),
+    axis_text=element_text(size=10, color=INK_SOFT),
+    plot_title=element_text(size=16, color=INK),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(size=16, color=INK_SOFT),
-    legend_title=element_text(size=16, color=INK),
+    legend_text=element_text(size=10, color=INK_SOFT),
+    legend_title=element_blank(),
     legend_position="top",
 )
 
-# Create plot
 plot = (
-    ggplot(df, aes(x="Epoch", y="Loss", color="Type"))
-    + geom_line(size=1.5, alpha=0.9)
-    + geom_point(data=optimal_df, mapping=aes(x="Epoch", y="Loss"), color=OPTIMAL, size=6, shape=18, inherit_aes=False)
-    + geom_vline(xintercept=optimal_epoch, color=OPTIMAL, size=0.8, linetype="dashed", alpha=0.7)
-    + scale_color_manual(values=[BRAND, ACCENT])
-    + labs(title="line-loss-training · letsplot · anyplot.ai", x="Epoch", y="Cross-Entropy Loss", color="")
+    ggplot(long_df, aes(x=EPOCH, y=LOSS_FUNCTION, color="Series"))
+    + geom_line(size=1.2, alpha=0.9)
+    + geom_vline(xintercept=float(best[EPOCH]), color=OPTIMAL, size=0.6, linetype="dashed", alpha=0.7)
+    + geom_point(
+        data=optimal_df, mapping=aes(x=EPOCH, y=LOSS_FUNCTION), color=OPTIMAL, size=5, shape=18, inherit_aes=False
+    )
+    + scale_color_manual(values=IMPRINT_PALETTE)
+    + labs(title="line-loss-training · python · letsplot · anyplot.ai", x=EPOCH, y=LOSS_FUNCTION, color="")
     + theme_minimal()
     + custom_theme
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, f"plot-{THEME}.png", scale=3)
+# Save: PNG at 3200 x 1800 and interactive HTML
+ggsave(plot, f"plot-{THEME}.png", scale=4)
 ggsave(plot, f"plot-{THEME}.html")
 
 # Move files from lets-plot-images directory to current directory
