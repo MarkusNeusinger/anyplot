@@ -2,109 +2,114 @@ library: matplotlib
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T10:56:15Z'
-updated: '2026-05-14T16:57:01Z'
-generated_by: claude-haiku
-workflow_run: 25873004439
+updated: '2026-11-21T17:18:16Z'
+generated_by: claude-sonnet
+workflow_run: 44928606121
 issue: 3002
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - 'Perfect theme adaptation: data colors identical across light/dark, chrome adapts
-    correctly'
-  - Excellent use of matplotlib.subplot_mosaic() — distinctive feature that creates
-    readable complex layouts
-  - 'All text explicitly sized and perfectly legible in both themes (VQ-01: 8/8)'
-  - 'Perfect spec compliance: implements string-pattern mosaic layout exactly as specified'
-  - 'Strong library mastery: idiomatic matplotlib usage with high-level API and distinctive
-    features'
-  - 'Clean data visualization: realistic business dashboard scenario with multiple
-    chart types'
-  - 'Proper handling of design tokens: uses theme-aware color system throughout'
-  - 'No visual defects: no overlapping text, invisible elements, or contrast failures'
+  - plt.subplot_mosaic with the readable ASCII pattern AAB;AAB;CDE gives a 2x2 primary
+    panel, a 2-row side panel and three small bottom panels, exactly the hierarchy
+    the spec asks for
+  - 'Theme tokens threaded through every element: all text readable on #FAF8F1 and
+    #1A1A17, data colors identical in both renders'
+  - Native ax.bar_label for the bar values and gridspec_kw height_ratios passed through
+    subplot_mosaic
+  - Data block with role-tagged column constants and one DataFrame; each panel reads
+    its own columns
+  - 'Key Metrics panel fixed: name and value on one row each, nothing collides with
+    the frame'
   weaknesses:
-  - 'Design Excellence limited to 10/20 — styling is well-configured defaults rather
-    than distinctive aesthetic (DE-01: 4/8)'
-  - 'Minimal visual storytelling — data is displayed with clear structure but without
-    special emphasis or hierarchy to guide the viewer (DE-03: 2/6)'
+  - 'VQ-01 (both): the tick labels of the Correlation and Distribution panels and
+    the bar value labels of Product Performance are set at 7 pt, below the style guide''s
+    8 pt reference, and read small next to the 9 pt axis titles → 8 pt (+1 pt). Likely
+    cause: tick_params(labelsize=7) in panels C and D and bar_label(fontsize=7).'
+  - 'VQ-05 (both): an empty band of about 12 % of the canvas height (about 210 px)
+    sits between the suptitle and the top panel titles → about half of that. Likely
+    cause: tight_layout(rect=(0, 0, 1, 0.95)) reserving space above the panels while
+    the suptitle stays at its default y; layout="constrained" in subplot_mosaic places
+    the suptitle and panels together.'
+  - 'DQ-02 (both): the bar categories ''Product A''–''Product D'', the scatter axes
+    ''Feature X'' / ''Feature Y'' and the histogram axis ''Value'' read as placeholders
+    → real product names and named variables (for example ad spend vs. revenue, order
+    value in $). Likely cause: placeholder labels in the Data block.'
+  - 'Suggestion: the Key Metrics values take Imprint positions 1–3 although the color
+    encodes nothing; a single ink color would keep the focus on the numbers.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, correctly applied to all subplot backgrounds
-      Chrome: Title "subplot-mosaic · matplotlib · anyplot.ai" in dark ink (#1A1A17) is bold and prominent. All axis labels ("Day", "Cumulative Sales ($)", "Units Sold", "Feature X", "Feature Y", "Value", "Frequency") are descriptive with units and clearly readable at fontsize 18-20. All tick labels are at fontsize 14-16 and easily visible. Subplot titles ("Sales Overview", "Product Performance", "Correlation", "Distribution", "Key Metrics") are in dark ink at fontsize 20-22.
-      Data: Primary series uses #009E73 (brand green) for the time series line and bars. Scatter plot uses #D55E00 (Okabe-Ito position 2). Histogram uses #0072B2 (Okabe-Ito position 3). Metrics panel displays values in the same color sequence. All colors are vibrant and distinct against the light background.
-      Layout: Mosaic arrangement "AAB;AAB;CDE" creates proper visual hierarchy with the large sales chart dominating, product performance on the right, and three small supporting metrics below. Spacing is balanced with no overlapping elements.
-      Legibility verdict: PASS — All text is explicitly sized and perfectly readable
+      Background: warm off-white #FAF8F1 on the figure and every axes; 3200x1800 canvas.
+      Chrome: suptitle "subplot-mosaic · python · matplotlib · anyplot.ai" in dark ink, centered. Panel titles "Sales Overview", "Product Performance", "Correlation", "Distribution", "Key Metrics" in dark ink; axis labels (Day, Cumulative Sales ($), Units Sold, Feature X/Y, Value, Frequency) dark; ticks in INK_SOFT gray; subtle grids; top/right spines removed. A wide empty band separates the suptitle from the top panel titles. Small-panel ticks (7 pt) read slightly small.
+      Data: mosaic AAB;AAB;CDE. A (2x2): green #009E73 cumulative sales line with a light green area fill, 500 → 648 over 100 days. B (2 rows): four green horizontal bars Product A–D with value labels 85/120/95/110. C: purple #C475FD scatter of 80 points with a positive correlation. D: blue #4467A3 histogram of 200 values around 100. E: framed Key Metrics tile with Growth 12.5% (green), Conversion 3.2% (purple), Retention 87.4% (blue), names left, values right, no collisions.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, correctly applied to all subplot backgrounds
-      Chrome: Title and all labels are rendered in light ink (#F0EFE8 for primary, #B8B7B0 for secondary). CRITICAL VERIFICATION: No dark-on-dark failures detected. All tick labels, axis labels, and titles are light-colored and fully readable against the dark background. Grid lines are rendered in light color with appropriate alpha. Legend box (on metrics panel) uses elevated background #242420.
-      Data: Colors are IDENTICAL to light render — #009E73 (green), #D55E00 (orange), #0072B2 (blue) all render exactly the same. This confirms proper theme-token implementation: data colors are theme-independent, only chrome (background, text, grid) adapts.
-      Layout: Identical to light render, mosaic structure preserved perfectly with proper spacing and visual hierarchy.
-      Legibility verdict: PASS — All text is light-colored and clearly visible on dark background. No legibility failures.
+      Background: warm near-black #1A1A17 on the figure and every axes.
+      Chrome: suptitle, panel titles and axis labels in light ink #F0EFE8; ticks in #B8B7B0; grids subtle but visible; bar edges and Key Metrics frame light gray. No dark-on-dark text anywhere.
+      Data: identical colors to the light render (#009E73 line and bars, #C475FD scatter, #4467A3 histogram, same three metric value colors); area fill reads as a dark green tint. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22pt, labels 18-20pt, ticks
-          14-16pt). All text perfectly readable in both light and dark renders.
+        comment: All text readable in both themes; small-panel tick labels and bar
+          value labels at 7 pt sit below the 8 pt reference (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. All axis labels, categorical labels
-          on bars, and value labels are clearly visible without collision.
+        comment: No text collisions; Key Metrics names and values sit on separate
+          columns of one row each
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and lines perfectly visible. Scatter points (s=150, alpha=0.7),
-          histogram bars (alpha=0.8), line chart (linewidth=3 with fill) all clearly
-          distinguishable.
+        comment: Line, bars, 80 scatter points (s=14, alpha 0.7, page-colored outline)
+          and histogram all clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety. Good contrast between
-          all elements. Data colors are distinct and readable.
+        comment: Imprint colors with good contrast on both surfaces; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Figure size 16x9 with proper proportions. Mosaic layout utilizes
-          canvas excellently. All subplots visible and well-proportioned. Balanced
-          margins throughout.
+        comment: 3200x1800 canvas, balanced panels; an empty band of about 12 % of
+          the height between the suptitle and the top panel titles (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All labels descriptive with units: ''Cumulative Sales ($)'', ''Units
-          Sold'', etc. Subplot titles clear and informative.'
+        comment: Axis labels carry units where they apply (Cumulative Sales ($));
+          every panel has a title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 ✓. Multi-series follows Okabe-Ito order
-          (#D55E00, #0072B2) ✓. Backgrounds are #FAF8F1 (light) and #1A1A17 (dark)
-          ✓. Theme-adaptive chrome correct in both renders ✓.'
+        comment: 'Primary series #009E73, further panels #C475FD and #4467A3 in Imprint
+          order; backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -112,27 +117,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults with Okabe-Ito palette and intentional
-          layout choices. Professional polish evident. However, lacks distinctive
-          custom design flourishes or unique aesthetic beyond defaults.
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Spines removed from top/right ✓. Subtle grid with alpha=0.10 ✓. Generous
-          whitespace with tight_layout ✓. Edge highlighting on scatter/bars. Metrics
-          panel has rectangle border. Some refinement visible but relatively minimal
-          customization.
+        passed: false
+        comment: Grid direction chosen per panel (y-grid on the time series and histogram,
+          x-grid on the bars) and a taller bottom row via height_ratios
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Each subplot has clear purpose and title. Layout creates visual hierarchy
-          (large overview dominates, supporting plots provide context). However, no
-          special emphasis, annotations, or narrative focus to highlight key insights.
-          Data is displayed but viewer must find their own story.
+        comment: Hierarchy is the one the spec prescribes; no focal point chosen beyond
+          it
     spec_compliance:
       score: 15
       max: 15
@@ -142,33 +141,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses plt.subplot_mosaic() with string pattern layout. Correct chart
-          type for mosaic subplot specification.
+        comment: plt.subplot_mosaic with the ASCII pattern AAB;AAB;CDE
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: String pattern 'AAB;AAB;CDE' ✓. ASCII-art style definition ✓. Varying
-          subplot sizes (large A, tall B, small C/D/E) ✓. Different plot types per
-          subplot ✓. Consistent spacing ✓.
+        comment: String-pattern layout with spanning panels (C1), largest panel holds
+          the primary time series (C2), consistent spacing with no collisions (C3),
+          every panel titled and labelled (C4); no empty cell is used, which the Notes
+          only allow (C5 n/a)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned in all subplots. Axes show all data without
-          clipping. Data ranges appropriate for each visualization.
+        comment: All marks at their data values; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Main title 'subplot-mosaic · matplotlib · anyplot.ai' correct format
-          ✓. Each subplot has appropriate title ✓. No legend needed (single-series
-          plots appropriately omitted) ✓.
+        comment: Title 'subplot-mosaic · python · matplotlib · anyplot.ai'; no legend
+          needed (single series per panel)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -176,24 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Time series shows trend with variation ✓. Bar chart shows comparative
-          data ✓. Scatter shows correlation pattern ✓. Histogram shows distribution
-          ✓. Metrics panel shows summary statistics ✓. All dashboard features demonstrated.
+        comment: Five panels, four plot types, 2x2 span, 2-row span, small bottom
+          row
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Realistic business dashboard scenario (sales, products, metrics)
-          ✓. Comprehensible and neutral ✓. Not controversial or sensitive ✓.
+        comment: Sales dashboard is plausible and neutral, but Product A–D, Feature
+          X/Y and 'Value' read generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values (500-650) plausible ✓. Product units (85-120) reasonable
-          ✓. Feature scales (20-80, 25-75) appropriate ✓. Percentages (12.5%, 3.2%,
-          87.4%) sensible ✓.
+        comment: Sales 500–650, units 85–120, percentages 3–87 % all plausible; no
+          Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -203,66 +198,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → theme tokens → palette → data → plot
-          → save. No functions, no classes. Clear and straightforward.'
+        comment: 'Linear script, column constants with roles, # Data / # Plot blocks'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set ✓. All data generation deterministic ✓.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib.pyplot, numpy ✓. All used
-          ✓. No bloat.'
+        comment: os, pyplot, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. Appropriate complexity for visualization. Uses
-          strict=True in zip (good practice). No fake functionality or over-engineering.
+        comment: bar_label instead of hand-placed text; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png ✓. Uses current matplotlib API (axes methods,
-          not pyplot) ✓. No deprecated functions ✓.
+        comment: Saves plot-{THEME}.png at 3200x1800; current API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of plt.subplot_mosaic() for complex layouts ✓. Proper
-          axes methods (not pyplot) ✓. Idiomatic theme adaptation pattern ✓. Professional
-          tight_layout() usage ✓.
+        comment: subplot_mosaic dict of axes, gridspec_kw height_ratios, ax.bar_label
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: plt.subplot_mosaic() with string patterns is distinctive to matplotlib
-          ✓. Not easily replicated in other libraries ✓. Uses fill_between() for area
-          visualization ✓. Custom patches for refinement ✓.
+        passed: false
+        comment: ax.bar_label and gridspec_kw pass-through through subplot_mosaic
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T17:14:21Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
+  - patches
   patterns:
   - data-generation
   - explicit-figure
   dataprep:
   - cumulative-sum
+  - binning
   styling:
-  - grid-styling
+  - alpha-blending
   - edge-highlighting
+  - grid-styling
