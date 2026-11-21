@@ -2,42 +2,52 @@ library: plotly
 language: python
 specification_id: contour-filled
 created: '2025-12-30T00:02:58Z'
-updated: '2026-05-11T13:29:54Z'
-generated_by: claude-haiku
-workflow_run: 25672570541
+updated: '2026-11-21T02:33:35Z'
+generated_by: claude-sonnet
+workflow_run: 44855159538
 issue: 2500
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 81
 review:
   strengths:
-  - 'Perfect visual quality across all dimensions (30/30): exceptional text legibility,
-    zero overlap, optimal element visibility'
-  - 'Flawless theme-adaptive implementation: data colors identical between light and
-    dark renders, chrome colors theme-correct, no dark-on-dark failures'
-  - 'Strong idiomatic Plotly usage with sophisticated features: RdBu_r colorscale,
-    contour labeling with custom fonts, hover tooltips, clean code structure'
-  - 'Excellent data representation: multiple features (peaks, valleys, saddle surface)
-    clearly visualized with perceptually-uniform color encoding'
-  - Clean, reproducible, maintainable code with proper separation of theme-adaptive
-    concerns
-  weaknesses: []
+  - 'Uses the Imprint diverging ramp with the theme-adaptive midpoint; chrome flips
+    cleanly between #FAF8F1 and #1A1A17 while the data colors stay the same'
+  - Native go.Contour coloring='fill' with explicit start/end/size gives 16 evenly
+    stepped bands with smooth boundaries on a 100x100 grid
+  - Thin INK_SOFT contour lines run along every band boundary and stay visible in
+    both themes without competing with the fills
+  - hovertemplate exposes x, y and the surface value in the HTML view
+  weaknesses:
+  - 'SC-02, SC-03 (both): the diverging ramp is centered near +0.5 instead of zero:
+    the colorscale spans the contour range -0.94 to 2.0, so the near-white midpoint
+    falls on the 0.4-0.6 bands and the near-zero outer region (and the 0 to 0.4 bands)
+    is drawn red/pink as if negative, while the colorbar axis runs -2 to 2 with a
+    flat red block below -0.94 → map the midpoint color to z = 0 so values near zero
+    read neutral (signed delta about -0.5 on the midpoint). Likely cause: contours
+    start/end = data min/max drive the fill colors, so zmin/zmax=±bound does not center
+    the scale; set start/end/size symmetrically around zero or pass zmid=0 with levels
+    that bracket zero.'
+  - 'Suggestion: round the colorbar ticks (1.8, 0.886, -0.028 …) to the level step,
+    for example by stepping the levels at a round 0.2 so ticks land on readable values.'
+  - 'Suggestion: drop the unused GRID token and the six unused Imprint categorical
+    colors to keep the theme block lean.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1, proper theme-light surface
-      Chrome: Title "contour-filled · plotly · anyplot.ai" clearly visible in dark text. Axis labels "X Position" and "Y Position" readable. Tick labels, colorbar title "Surface Value", and legend label "Peaks" all in appropriate dark text (#1A1A17 and #4A4A44). Grid lines subtle but visible.
-      Data: Filled contour regions with RdBu_r diverging colormap (red/pink for high values, blue for low values). White contour line overlays with numerical labels. Three white star markers with black outlines at peak locations.
-      Legibility verdict: PASS - All text fully readable, no contrast issues, data clearly visible, proper color differentiation.
+      Background: warm off-white #FAF8F1 page and plot background, 3200x1800.
+      Chrome: bold title "contour-filled · python · plotly · anyplot.ai" centered at the top in dark ink; "X position" and "Y position" axis titles and -3..3 ticks in dark ink/ink-soft; a boxed colorbar "Surface value" on the right with ticks 1.8, 0.886, -0.028, -0.943, -1.857. All text readable.
+      Data: 16 filled bands of the Imprint diverging ramp (#AE3030 red - off-white - #4467A3 blue) over a 6x6 domain: a deep blue peak at (1, 1), a lighter blue peak at (-1, -1), a red basin at (1, -1) and a pale shoulder at (-1.5, 1.5). Thin dark-grey contour lines run along every band boundary; boundaries are smooth. The near-white midpoint sits on the 0.4-0.6 bands, and the near-zero outer region is pink.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17, proper theme-dark surface
-      Chrome: Title clearly visible in light text. Axis labels, tick labels, colorbar title, and legend all rendered in light colors (#F0EFE8 and #B8B7B0) with excellent contrast against dark background. Grid lines visible without being dominant. No dark-on-dark failures.
-      Data: Contour colors IDENTICAL to light render - same RdBu_r mapping with red peaks and blue valleys, confirming proper theme-adaptive implementation. Star markers remain white with dark outlines, clearly visible.
-      Legibility verdict: PASS - All text fully readable with proper light-on-dark contrast, data representation identical to light render (only chrome adapted), no theme-adaptation failures.
+      Background: warm near-black #1A1A17 page and plot background.
+      Chrome: title, axis titles, ticks and colorbar labels in light ink (#F0EFE8 / #B8B7B0); colorbar box in the elevated dark surface with a light border. No dark-on-dark text.
+      Data: same bands and level geometry; the red and blue poles are identical to the light render, and the midpoint flips to the dark page color as the style guide asks, so the mid bands are near-black and the outer near-zero region dark red. Contour lines are light grey and visible on every band.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,74 +58,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px.
-          Perfectly readable in both themes.'
+        comment: Title 16, axis titles 12, ticks 10 (library reference sizes); all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements well-spaced, no overlaps detected.
+        comment: No text collisions; colorbar sits clear of the plot area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Star markers and contour regions clearly visible and properly adapted
-          to data density.
+        comment: Thin INK_SOFT contour lines visible on every band in both themes;
+          bands distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: RdBu_r colormap is perceptually uniform. White contour lines add
-          definition beyond color alone.
+        comment: Red-blue diverging ramp is CVD-safe; contour lines add a non-color
+          cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with appropriate plot area and balanced margins.
+        comment: 3200x1800 canvas; field fills the plot area; balanced margins, title
+          ~40% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with semantic meaning, correct title format.
+        comment: X position / Y position / Surface value; the mathematical field has
+          no units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: RdBu_r appropriate for continuous diverging data. Background colors
-          correct. Text colors theme-adaptive in both renders.
+        comment: 'imprint_div (#AE3030 - theme midpoint - #4467A3); backgrounds #FAF8F1
+          / #1A1A17'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: RdBu_r colorscale and white contour overlays show sophistication.
-          Star markers intentionally placed. Above defaults but not publication-exceptional.
+        passed: false
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good refinement: white contours for precision, custom colorbar styling,
-          subtle grid. Could refine further.'
+        passed: false
+        comment: Spine and grid rules met (no grid, axis lines only), nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear narrative with multiple peaks, colorbar mapping, and marker
-          emphasis. Good visual hierarchy through color intensity.
+        passed: false
+        comment: Field displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -123,27 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled contour plot with colored regions and overlay lines.
+        comment: Filled contour with go.Contour coloring='fill', no extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All features present: filled contours, contour lines with labels,
-          colorbar, smooth grid resolution.'
+        passed: false
+        comment: 'Colorbar, 16 even levels, overlay lines, smooth 100x100 grid present;
+          C4 missed: the diverging ramp is not centered on zero (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X/Y axes correctly mapped, Z values properly represented through
-          color.
+        passed: false
+        comment: x/y correct and full extent shown, but near-zero values are drawn
+          red as if negative (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels appropriate.
+        comment: Title in the mandated format; colorbar titled with the quantity;
+          no legend needed
     data_quality:
       score: 15
       max: 15
@@ -153,21 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Excellent diversity: positive peaks, negative saddle, smooth transitions
-          demonstrate all contour plot features.'
+        comment: 'Two peaks, a basin, a shoulder and a saddle-like neck: closed bands,
+          steep and flat regions all shown'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical function (Gaussian peaks) provides realistic scientific
-          context.
+        comment: Gaussian-peak function, the spec's own example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Gaussian function values are factually correct with proper proportions.
+        comment: Values -0.94 to 2.0 follow from the Gaussian sum; no Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -177,61 +187,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no unnecessary abstraction.
+        comment: Linear script, Data block between markers, column constants
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only essential imports: os, sys, numpy, plotly.'
+        comment: os, numpy, pandas, plotly all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and clean. Theme-adaptive architecture elegant.
+        comment: Appropriate complexity, native contour levels
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format with theme suffix, current API.
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert Plotly patterns: go.Figure, go.Contour, go.Scatter, proper
-          update_layout usage.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses colorscale parameter, contours dict with custom fonts, hovertemplate,
-          scatter overlay. Plotly-distinctive features.
+        passed: false
+        comment: go.Contour with contours dict (start/end/size) and styled colorbar,
+          the idiomatic route
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: hovertemplate for value inspection in the HTML and line smoothing;
+          otherwise what the prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T02:28:51Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - layer-composition
-  - annotations
+  - contour-lines
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - wide-to-long
+  dataprep:
+  - pivot
   styling:
   - custom-colormap
+  - theme-adaptive
