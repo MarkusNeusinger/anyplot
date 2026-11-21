@@ -1,11 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 gantt-basic: Basic Gantt Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-10
 """
 
 import os
-from datetime import datetime
 
 import pandas as pd
 import plotly.express as px
@@ -19,79 +18,115 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Software Development Project Timeline
-tasks = [
-    {"task": "Requirements Analysis", "start": "2025-01-06", "end": "2025-01-17", "category": "Planning"},
-    {"task": "System Design", "start": "2025-01-13", "end": "2025-01-31", "category": "Planning"},
-    {"task": "Database Design", "start": "2025-01-27", "end": "2025-02-07", "category": "Design"},
-    {"task": "UI/UX Design", "start": "2025-01-27", "end": "2025-02-14", "category": "Design"},
-    {"task": "Backend Development", "start": "2025-02-03", "end": "2025-03-14", "category": "Development"},
-    {"task": "Frontend Development", "start": "2025-02-10", "end": "2025-03-21", "category": "Development"},
-    {"task": "API Integration", "start": "2025-03-03", "end": "2025-03-21", "category": "Development"},
-    {"task": "Unit Testing", "start": "2025-03-10", "end": "2025-03-28", "category": "Testing"},
-    {"task": "Integration Testing", "start": "2025-03-24", "end": "2025-04-04", "category": "Testing"},
-    {"task": "User Acceptance Testing", "start": "2025-04-01", "end": "2025-04-11", "category": "Testing"},
-    {"task": "Documentation", "start": "2025-03-17", "end": "2025-04-11", "category": "Deployment"},
-    {"task": "Deployment & Launch", "start": "2025-04-07", "end": "2025-04-18", "category": "Deployment"},
-]
+# Constants
+TODAY_SHARE = 0.44  # the current-date line sits at this share of the schedule's span
 
-df = pd.DataFrame(tasks)
-df["start"] = pd.to_datetime(df["start"])
-df["end"] = pd.to_datetime(df["end"])
+# Columns: set these to your table's column names
+TASK = "Task"  # role: task
+START = "Start"  # role: start
+END = "End"  # role: end
+CATEGORY = "Category"  # role: category
 
-# Sort by start date for logical ordering
-df = df.sort_values("start").reset_index(drop=True)
+# Data: replace this block with your own table, for example df = pd.read_csv("schedule.csv", parse_dates=[START, END])
+df = pd.DataFrame(
+    {
+        TASK: [
+            "Requirements Analysis",
+            "System Design",
+            "Database Design",
+            "UI/UX Design",
+            "Backend Development",
+            "Frontend Development",
+            "API Integration",
+            "Unit Testing",
+            "Integration Testing",
+            "User Acceptance Testing",
+            "Documentation",
+            "Deployment & Launch",
+        ],
+        START: pd.to_datetime(
+            [
+                "2025-01-06",
+                "2025-01-13",
+                "2025-01-27",
+                "2025-01-27",
+                "2025-02-03",
+                "2025-02-10",
+                "2025-03-03",
+                "2025-03-10",
+                "2025-03-24",
+                "2025-04-01",
+                "2025-03-17",
+                "2025-04-07",
+            ]
+        ),
+        END: pd.to_datetime(
+            [
+                "2025-01-17",
+                "2025-01-31",
+                "2025-02-07",
+                "2025-02-14",
+                "2025-03-14",
+                "2025-03-21",
+                "2025-03-21",
+                "2025-03-28",
+                "2025-04-04",
+                "2025-04-11",
+                "2025-04-11",
+                "2025-04-18",
+            ]
+        ),
+        CATEGORY: ["Planning"] * 2 + ["Design"] * 2 + ["Development"] * 3 + ["Testing"] * 3 + ["Deployment"] * 2,
+    }
+)
 
-# Color map using Okabe-Ito palette
-color_map = {
-    "Planning": IMPRINT[0],
-    "Design": IMPRINT[1],
-    "Development": IMPRINT[2],
-    "Testing": IMPRINT[3],
-    "Deployment": IMPRINT[4],
-}
+# Plot: reads only df and the constants above
+df = df.sort_values(START, kind="stable").reset_index(drop=True)
+today = df[START].min() + (df[END].max() - df[START].min()) * TODAY_SHARE
 
-# Create Gantt chart using timeline
-fig = px.timeline(df, x_start="start", x_end="end", y="task", color="category", color_discrete_map=color_map)
+title = "Software Development Project · gantt-basic · python · plotly · anyplot.ai"
+title_size = round(16 * 67 / len(title)) if len(title) > 67 else 16
 
-# Reverse y-axis so earliest tasks are at top
+fig = px.timeline(df, x_start=START, x_end=END, y=TASK, color=CATEGORY, color_discrete_sequence=IMPRINT_PALETTE)
 fig.update_yaxes(autorange="reversed")
 
-# Add current date line (vertical marker)
-today = datetime(2025, 2, 20)
+# Current-date line, spanning the full plot height
 fig.add_shape(
     type="line",
+    xref="x",
+    yref="paper",
     x0=today,
     x1=today,
-    y0=-0.5,
-    y1=len(df) - 0.5,
-    line={"color": INK_SOFT, "width": 3, "dash": "dash"},
+    y0=0,
+    y1=1,
+    line={"color": INK_SOFT, "width": 1.5, "dash": "dash"},
     layer="above",
 )
 fig.add_annotation(
     x=today,
-    y=len(df) - 0.5,
+    xref="x",
+    yref="paper",
+    y=0,
     text="Today",
     showarrow=False,
-    font={"size": 18, "color": INK_SOFT, "family": "Arial"},
-    yanchor="top",
-    yshift=-5,
+    font={"size": 10, "color": INK_SOFT},
+    yanchor="bottom",
+    xanchor="left",
+    xshift=4,
+    yshift=4,
 )
 
-# Update layout for 4800x2700 px
 fig.update_layout(
-    title={
-        "text": "Software Development Project · gantt-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    width=800,
+    height=450,
+    title={"text": title, "font": {"size": title_size, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Timeline (2025)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Date", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickformat": "%b %d",
         "showgrid": True,
         "gridwidth": 1,
@@ -100,8 +135,8 @@ fig.update_layout(
         "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Project Tasks", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": TASK, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "linecolor": INK_SOFT,
     },
@@ -109,8 +144,8 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     legend={
-        "title": {"text": "Category", "font": {"size": 20, "color": INK}},
-        "font": {"size": 18, "color": INK_SOFT},
+        "title": {"text": CATEGORY, "font": {"size": 10, "color": INK}},
+        "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
@@ -120,15 +155,10 @@ fig.update_layout(
         "xanchor": "center",
         "x": 0.5,
     },
-    margin={"l": 220, "r": 80, "t": 130, "b": 80},
+    margin={"l": 130, "r": 40, "t": 90, "b": 55},
     bargap=0.3,
 )
+fig.update_traces(marker={"line": {"color": PAGE_BG, "width": 0.5}}, opacity=0.9)
 
-# Update bar appearance
-fig.update_traces(marker={"line": {"color": PAGE_BG, "width": 1}}, opacity=0.9)
-
-# Save as PNG
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
