@@ -2,47 +2,55 @@ library: plotly
 language: python
 specification_id: gain-curve
 created: '2025-12-29T23:20:47Z'
-updated: '2026-05-11T09:33:13Z'
-generated_by: claude-haiku
-workflow_run: 25661829357
+updated: '2026-11-21T01:38:59Z'
+generated_by: claude-sonnet
+workflow_run: 44850670837
 issue: 2440
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/plotly/plot-dark.html
-quality_score: 94
+quality_score: 83
 review:
   strengths:
-  - Perfect theme adaptation with readable text in both light and dark renders
-  - Clean, idiomatic Plotly code using Graph Objects with proper API
-  - Excellent spec compliance with all required features (model curve, baseline, perfect
-    model reference)
-  - Realistic data generation with proper random seeding for reproducibility
-  - Proper use of Okabe-Ito palette with brand green (#009E73) as first series
-  - Visual hierarchy effectively established through line widths, dash patterns, and
-    colors
+  - Gains curve computed in a few vectorised numpy lines and drawn through every computed
+    point with no smoothing; perfect-model kink derived from the data's own positive
+    rate
+  - 'Clear hierarchy: heavy brand-green model curve with a translucent area fill against
+    thin dashed baseline and dotted perfect-model references'
+  - Per-trace hovertemplates give population/positives readouts in the HTML view
+  - Theme tokens threaded through every chrome element; both renders fully legible
   weaknesses:
-  - Design Excellence could be elevated with more refined styling (e.g., spine removal,
-    subtle background color distinctions)
-  - Hover tooltips are functional but could include more contextual information (e.g.,
-    lift value interpretation)
+  - 'VQ-07 (both): the random baseline is drawn in the custom hex #888888, outside
+    the Imprint palette and its anchors, and the perfect-model line takes position
+    3 #4467A3 as the second series → baseline in the theme-adaptive neutral/muted
+    anchor (#6B6A63 light / #A8A79F dark), perfect model in position 2 #C475FD (or
+    keep a palette member in canonical order). Likely cause: BASELINE = "#888888"
+    and IMPRINT_PALETTE[2] in the perfect-model trace.'
+  - 'DQ-02 (both): the render never names its scenario — the legend reads only ''Model''
+    and the column constants are ''Actual outcome (0 or 1)'' / ''Predicted probability'',
+    so the chart reads as a generic model → name the domain in the legend entry (e.g.
+    ''Campaign response model''). Likely cause: name="Model" and the generic column
+    labels.'
+  - 'Suggestion: a direct label at the kink of the perfect-model line (the positive
+    rate) would let readers see the class rate without hovering.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) providing excellent contrast for data elements
-      Chrome: Title "gain-curve · plotly · anyplot.ai" in 28px dark text is clearly visible. X-axis label "Percentage of Population Targeted (%)" and Y-axis label "Percentage of Positives Captured (%)" in 22px dark text are sharp and readable. Tick labels in 18px soft gray (#4A4A44) are legible. Grid lines are subtle (alpha=0.10) and don't compete with data.
-      Data: Model curve in brand green (#009E73) with 4px width is prominent. Baseline reference (dashed, gray #888888, 3px) provides clear visual distinction. Perfect Model reference (dotted, orange #E69F00, 3px) is easily distinguishable. Fill area under model curve (rgba with 15% opacity) adds visual depth. All series are clearly readable.
-      Legibility verdict: PASS - All text elements are dark and highly visible against the light surface. No contrast issues detected.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: centered title 'gain-curve · python · plotly · anyplot.ai' in dark ink; axis titles 'Percentage of population targeted (%)' and 'Percentage of positives captured (%)' in dark ink; ticks 0-100 every 20 in soft gray; subtle grid; framed legend lower right on the elevated surface. All readable.
+      Data: brand-green #009E73 model gains curve (thick, stepped from the finite sample) with a 15 % green area fill, gray dashed random diagonal corner to corner, blue #4467A3 dotted perfect-model line rising to 100 % at about 20 % and flat after. Model rises steeply, coincides with the perfect line to about 35 %, flattens, and reaches 100 % near 71 %.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) providing appropriate contrast without harsh pure-black effect
-      Chrome: Title in light text is clearly visible against dark background. X-axis and Y-axis labels in light text are sharp and readable. Tick labels in light gray (#B8B7B0) are legible with good contrast. Grid lines remain subtle and appropriately visible.
-      Data: Model curve green (#009E73) retains identical color and prominence as light render. Baseline and Perfect Model references maintain their visual distinction through line styles and colors. Fill area is appropriately visible on dark surface. All data colors are identical to light render.
-      Legibility verdict: PASS - All text elements are light-colored with excellent contrast against dark background. No dark-on-dark failures. All chrome successfully adapted for dark theme readability.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, ticks in light soft gray, subtle light grid, legend on #242420 with light border. No dark-on-dark text.
+      Data: identical colors to the light render (green model, gray dashed baseline, blue dotted perfect line); the fill reads as a dark green tint.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,77 +58,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes (28px title, 22px labels, 18px ticks) correctly set
-          with proper theme-adaptive colors; readable in both light and dark renders
+        comment: Title 16, axis titles 12, ticks and legend 10 set explicitly (library
+          prompt sizes); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; title, axis labels, tick labels, and legend
-          all properly positioned without collision
+        comment: No text collisions; legend sits in the empty lower-right region below
+          the diagonal
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Model curve (4px width), baseline (3px dashed), and perfect model
-          (3px dotted) all clearly visible with appropriate line styling
+        comment: Model line 3.5 px, references 2.5 px dashed/dotted; legend line samples
+          visible and matching in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette used (#009E73 brand, #E69F00 orange, #888888 neutral);
-          colorblind-safe with adequate contrast'
+        comment: Three series told apart by line style (solid/dash/dot) as well as
+          hue; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio with generous margins (100/80/100/100); nothing
-          cut off, well-proportioned layout
+        comment: 3200x1800 canvas (gate passed); plot fills most of the canvas with
+          balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format 'gain-curve · plotly · anyplot.ai' correct; axis labels
-          descriptive with units (%)
+        comment: Both axis titles descriptive with units (%)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73 (Okabe-Ito position 1); backgrounds #FAF8F1
-          (light) / #1A1A17 (dark); both renders theme-correct'
+        passed: false
+        comment: 'Model #009E73 and theme-correct chrome, but the baseline is the
+          custom hex #888888 and the perfect-model line skips palette position 2 (defect
+          line)'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Custom color choices and line styles (solid, dashed, dotted) show
-          design intent beyond defaults; theme-adaptive chrome demonstrates attention
-          to detail
+        comment: The style-guide baseline; nothing typographic decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid (alpha=0.10), clean appearance, generous whitespace;
-          could benefit from spine removal or additional refinement
+        comment: Legend deliberately placed in the empty area under the diagonal,
+          line weights graded 3.5 vs 2.5
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Clear visual hierarchy with thick model curve (4px) contrasting baseline/perfect
-          model (3px); effectively guides viewer through model-vs-baseline-vs-perfect
-          comparison
+        comment: 'Focal point chosen: the model curve is the heaviest line and carries
+          a translucent area fill, the two references stay thin and dashed'
     spec_compliance:
       score: 15
       max: 15
@@ -130,30 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative gains chart type with all required components
+        comment: Cumulative gains chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Model curve, baseline reference line, perfect model line all present;
-          0-100% ranges on both axes
+        comment: Model curve, diagonal baseline, perfect-model curve, legend; both
+          axes 0-100 (C1-C5 all met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: population percentage (0-100); Y-axis: positive percentage
-          (0-100); data properly sorted by probability descending'
+        comment: x = % population sorted by score descending, y = % positives captured;
+          linear segments, no smoothing; starts at origin, ends at (100,100)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend clearly labels all three series (Random,
-          Perfect Model, Model)
+        comment: Title 'gain-curve · python · plotly · anyplot.ai' correct; legend
+          Random (Baseline) / Perfect Model / Model
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -161,22 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive gains chart with all aspects: model performance, baseline,
-          upper bound; realistic customer response scenario with 1000 samples'
+        comment: Steep rise and flattening, perfect bound and baseline all shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Customer response prediction is realistic, neutral scenario; proper
-          beta distributions for positive/negative scores; added noise for realism
+        passed: false
+        comment: Plausible model-evaluation data, but nothing in the render names
+          the scenario (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20% positive rate sensible for customer response; sample size (1000)
-          produces smooth curve; percentage ranges (0-100) appropriate
+        comment: 'Checked: diagonal 0->100 corner to corner; perfect kink at ranked.mean()*100
+          computed from the data (about 20 % in the render); model curve monotonic
+          and ends at (100,100); model coincides with the perfect line while only
+          positives are ranked'
     code_quality:
       score: 10
       max: 10
@@ -186,63 +192,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; straightforward linear script structure
-          easy to follow
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42); all random generation seeded for deterministic
-          output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, numpy, plotly.graph_objects; no unused
-          imports'
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, readable code with clear variable names; no unnecessary
-          complexity or fake functionality
+        comment: Gains computed in four vectorised lines (sort, cumsum, insert); no
+          dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; correct Plotly API
-          usage
+        comment: Writes plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Graph Objects (go.Figure, go.Scatter) used idiomatically; proper
-          add_trace(), update_layout() patterns; theme tokens threaded throughout
+        comment: Correct graph_objects usage; default level
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: 'Plotly-specific features: hovertemplate for tooltips, fill=''tozeroy''
-          for area, dash patterns for distinction; leverages interactivity well'
+        comment: Per-trace hovertemplate and fill='tozeroy' area under the model curve
+          are plotly-native touches beyond the mandated blocks
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T01:35:14Z'
 impl_tags:
   dependencies: []
   techniques:
-  - fill-area
   - hover-tooltips
+  - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - publication-ready
+  - alpha-blending
