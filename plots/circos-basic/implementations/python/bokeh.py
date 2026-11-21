@@ -1,40 +1,43 @@
-""" anyplot.ai
+"""anyplot.ai
 circos-basic: Circos Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-15
 """
 
-import sys
+import os
+import time
 from pathlib import Path
 
-
-script_dir = str(Path(__file__).parent.absolute())
-sys.path = [p for p in sys.path if p != script_dir and p != ""]
-
-import os  # noqa: E402
-import time  # noqa: E402
-
-import numpy as np  # noqa: E402
-from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource  # noqa: E402
-from bokeh.plotting import figure  # noqa: E402
-from selenium import webdriver  # noqa: E402
-from selenium.webdriver.chrome.options import Options  # noqa: E402
+import numpy as np
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per region in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-np.random.seed(42)
+# Constants
+FLOW_THRESHOLD = 15  # region pairs with a combined flow below this get no ribbon
+SEGMENT_GAP = 0.03  # gap between outer segments, in radians
 
+# Columns: set these to your table's column names
+SOURCE = "Origin region"  # role: source
+TARGET = "Destination region"  # role: target
+VALUE = "Trade flow (USD bn)"  # role: value
+TRACK = "GDP growth (%)"  # role: track_data
+
+# Data: replace this block with your own edge list, for example df = pd.read_csv("flows.csv")
+# One row per directed flow; the track value of the origin region repeats on its rows.
 regions = ["Asia", "Europe", "N. America", "S. America", "Africa", "Oceania"]
-n_regions = len(regions)
-
 flow_matrix = np.array(
     [
         [0, 45, 52, 18, 15, 22],
@@ -45,35 +48,48 @@ flow_matrix = np.array(
         [20, 10, 18, 6, 4, 0],
     ]
 )
+gdp_growth = [4.2, 1.8, 2.5, 1.5, 3.8, 2.2]
+df = pd.DataFrame(
+    [
+        {SOURCE: regions[i], TARGET: regions[j], VALUE: flow_matrix[i, j], TRACK: gdp_growth[i]}
+        for i in range(len(regions))
+        for j in range(len(regions))
+        if i != j
+    ]
+)
 
-segment_sizes = flow_matrix.sum(axis=0) + flow_matrix.sum(axis=1)
-track_values = np.array([4.2, 1.8, 2.5, 1.5, 3.8, 2.2])
+# Plot: reads only df and the constants above
+regions = list(df[SOURCE].unique())
+n_regions = len(regions)
+flows = df.pivot_table(index=SOURCE, columns=TARGET, values=VALUE, aggfunc="sum", sort=False)
+flows = flows.reindex(index=regions, columns=regions).to_numpy(dtype=float)
+flows = np.nan_to_num(flows, nan=0.0)  # a pair with no row is a pair with no flow
+track_values = df.groupby(SOURCE, sort=False)[TRACK].first().reindex(regions).to_numpy(dtype=float)
 
+segment_sizes = flows.sum(axis=0) + flows.sum(axis=1)
 total_size = segment_sizes.sum()
-gap = 0.03
-total_gap = gap * n_regions
-available_angle = 2 * np.pi - total_gap
+available_angle = 2 * np.pi - SEGMENT_GAP * n_regions
 
 segment_angles = []
-current_angle = 0
+current_angle = 0.0
 for size in segment_sizes:
-    angle_span = (size / total_size) * available_angle
-    start = current_angle
-    end = current_angle + angle_span
-    segment_angles.append((start, end))
-    current_angle = end + gap
+    end = current_angle + (size / total_size) * available_angle
+    segment_angles.append((current_angle, end))
+    current_angle = end + SEGMENT_GAP
 
+SIZE = 2400
+LIMIT = 1.65
 p = figure(
-    width=3600,
-    height=3600,
-    title="circos-basic · bokeh · anyplot.ai",
-    x_range=(-1.5, 1.5),
-    y_range=(-1.5, 1.5),
+    width=SIZE,
+    height=SIZE,
+    title="circos-basic · python · bokeh · anyplot.ai",
+    x_range=(-LIMIT, LIMIT),
+    y_range=(-LIMIT, LIMIT),
     tools="",
     toolbar_location=None,
 )
 
-p.title.text_font_size = "36pt"
+p.title.text_font_size = "50pt"
 p.title.align = "center"
 p.title.text_color = INK
 
@@ -93,180 +109,125 @@ ribbon_radius = 0.65
 
 for i, (start, end) in enumerate(segment_angles):
     theta = np.linspace(start, end, 50)
-    outer_x = outer_radius * np.cos(theta)
-    outer_y = outer_radius * np.sin(theta)
-    inner_x = inner_radius * np.cos(theta[::-1])
-    inner_y = inner_radius * np.sin(theta[::-1])
-
-    xs = np.concatenate([outer_x, inner_x, [outer_x[0]]])
-    ys = np.concatenate([outer_y, inner_y, [outer_y[0]]])
-
-    source = ColumnDataSource(data={"xs": [xs], "ys": [ys]})
-    color = IMPRINT[i % len(IMPRINT)]
-    p.patches(xs="xs", ys="ys", source=source, fill_color=color, line_color=INK_SOFT, line_width=1, alpha=0.85)
+    xs = np.concatenate([outer_radius * np.cos(theta), inner_radius * np.cos(theta[::-1])])
+    ys = np.concatenate([outer_radius * np.sin(theta), inner_radius * np.sin(theta[::-1])])
+    p.patches(xs=[xs], ys=[ys], fill_color=IMPRINT_PALETTE[i], line_color=INK_SOFT, line_width=2, alpha=0.85)
 
     mid_angle = (start + end) / 2
     label_radius = outer_radius + 0.12
-    label_x = label_radius * np.cos(mid_angle)
-    label_y = label_radius * np.sin(mid_angle)
-
-    angle = mid_angle * 180 / np.pi
+    angle = np.degrees(mid_angle)
     if 90 < angle < 270:
         angle += 180
-
     p.text(
-        x=[label_x],
-        y=[label_y],
+        x=[label_radius * np.cos(mid_angle)],
+        y=[label_radius * np.sin(mid_angle)],
         text=[regions[i]],
-        text_font_size="20pt",
+        text_font_size="30pt",
         text_align="center",
         text_baseline="middle",
         text_color=INK,
         angle=[np.radians(angle - 90)],
     )
 
-max_track = track_values.max()
+# Inner track: bar height follows the region's track value
 min_track = track_values.min()
-track_range = max_track - min_track
-
+track_range = track_values.max() - min_track
 for i, (start, end) in enumerate(segment_angles):
     norm_val = (track_values[i] - min_track) / track_range if track_range > 0 else 0.5
     bar_radius = track_inner + norm_val * (track_outer - track_inner)
-
     theta = np.linspace(start, end, 30)
-    outer_x = bar_radius * np.cos(theta)
-    outer_y = bar_radius * np.sin(theta)
-    inner_x = track_inner * np.cos(theta[::-1])
-    inner_y = track_inner * np.sin(theta[::-1])
+    xs = np.concatenate([bar_radius * np.cos(theta), track_inner * np.cos(theta[::-1])])
+    ys = np.concatenate([bar_radius * np.sin(theta), track_inner * np.sin(theta[::-1])])
+    p.patches(xs=[xs], ys=[ys], fill_color=IMPRINT_PALETTE[i], line_color=None, alpha=0.4)
 
-    xs = np.concatenate([outer_x, inner_x, [outer_x[0]]])
-    ys = np.concatenate([outer_y, inner_y, [outer_y[0]]])
+ring = np.linspace(0, 2 * np.pi, 100)
+p.line(track_inner * np.cos(ring), track_inner * np.sin(ring), line_color=INK_SOFT, line_width=2, line_alpha=0.2)
 
-    source = ColumnDataSource(data={"xs": [xs], "ys": [ys]})
-    color = IMPRINT[i % len(IMPRINT)]
-    p.patches(xs="xs", ys="ys", source=source, fill_color=color, line_color=None, alpha=0.4)
-
-track_ref_theta = np.linspace(0, 2 * np.pi, 100)
-track_ref_x = track_inner * np.cos(track_ref_theta)
-track_ref_y = track_inner * np.sin(track_ref_theta)
-p.line(track_ref_x, track_ref_y, line_color=INK_SOFT, line_width=1, line_alpha=0.2)
-
-flow_threshold = 15
-
+# Ribbons: width on each segment is proportional to the pair's combined flow
+n_curve = 30
+t = np.linspace(0, 1, n_curve)
 for i in range(n_regions):
     for j in range(i + 1, n_regions):
-        flow_ij = flow_matrix[i, j]
-        flow_ji = flow_matrix[j, i]
-        total_flow = flow_ij + flow_ji
-
-        if total_flow < flow_threshold:
+        total_flow = flows[i, j] + flows[j, i]
+        if total_flow < FLOW_THRESHOLD:
             continue
 
         start_i, end_i = segment_angles[i]
-        seg_span_i = end_i - start_i
-        ribbon_width_i = (total_flow / segment_sizes[i]) * seg_span_i * 0.8
-
         start_j, end_j = segment_angles[j]
-        seg_span_j = end_j - start_j
-        ribbon_width_j = (total_flow / segment_sizes[j]) * seg_span_j * 0.8
-
+        width_i = (total_flow / segment_sizes[i]) * (end_i - start_i) * 0.8
+        width_j = (total_flow / segment_sizes[j]) * (end_j - start_j) * 0.8
         mid_i = (start_i + end_i) / 2
         mid_j = (start_j + end_j) / 2
+        i_lo, i_hi = mid_i - width_i / 2, mid_i + width_i / 2
+        j_lo, j_hi = mid_j - width_j / 2, mid_j + width_j / 2
 
-        theta_i_start = mid_i - ribbon_width_i / 2
-        theta_i_end = mid_i + ribbon_width_i / 2
+        def bezier(a0, a1):
+            """Quadratic curve between two ribbon-radius points, pulled to the centre."""
+            x0, y0 = ribbon_radius * np.cos(a0), ribbon_radius * np.sin(a0)
+            x1, y1 = ribbon_radius * np.cos(a1), ribbon_radius * np.sin(a1)
+            return (1 - t) ** 2 * x0 + t**2 * x1, (1 - t) ** 2 * y0 + t**2 * y1
 
-        theta_j_start = mid_j - ribbon_width_j / 2
-        theta_j_end = mid_j + ribbon_width_j / 2
+        curve1_x, curve1_y = bezier(i_lo, j_lo)
+        curve2_x, curve2_y = bezier(j_hi, i_hi)
+        arc_j = np.linspace(j_lo, j_hi, 10)
+        arc_i = np.linspace(i_hi, i_lo, 10)
 
-        n_curve = 30
-        t = np.linspace(0, 1, n_curve)
-        ctrl_x, ctrl_y = 0, 0
-
-        x1_start = ribbon_radius * np.cos(theta_i_start)
-        y1_start = ribbon_radius * np.sin(theta_i_start)
-        x1_end = ribbon_radius * np.cos(theta_j_start)
-        y1_end = ribbon_radius * np.sin(theta_j_start)
-
-        curve1_x = (1 - t) ** 2 * x1_start + 2 * (1 - t) * t * ctrl_x + t**2 * x1_end
-        curve1_y = (1 - t) ** 2 * y1_start + 2 * (1 - t) * t * ctrl_y + t**2 * y1_end
-
-        arc_j_theta = np.linspace(theta_j_start, theta_j_end, 10)
-        arc_j_x = ribbon_radius * np.cos(arc_j_theta)
-        arc_j_y = ribbon_radius * np.sin(arc_j_theta)
-
-        x2_start = ribbon_radius * np.cos(theta_j_end)
-        y2_start = ribbon_radius * np.sin(theta_j_end)
-        x2_end = ribbon_radius * np.cos(theta_i_end)
-        y2_end = ribbon_radius * np.sin(theta_i_end)
-
-        curve2_x = (1 - t) ** 2 * x2_start + 2 * (1 - t) * t * ctrl_x + t**2 * x2_end
-        curve2_y = (1 - t) ** 2 * y2_start + 2 * (1 - t) * t * ctrl_y + t**2 * y2_end
-
-        arc_i_theta = np.linspace(theta_i_end, theta_i_start, 10)
-        arc_i_x = ribbon_radius * np.cos(arc_i_theta)
-        arc_i_y = ribbon_radius * np.sin(arc_i_theta)
-
-        ribbon_x = np.concatenate([curve1_x, arc_j_x, curve2_x, arc_i_x])
-        ribbon_y = np.concatenate([curve1_y, arc_j_y, curve2_y, arc_i_y])
-
-        ribbon_color = IMPRINT[i % len(IMPRINT)]
-
-        source = ColumnDataSource(data={"xs": [ribbon_x], "ys": [ribbon_y]})
+        ribbon_x = np.concatenate([curve1_x, ribbon_radius * np.cos(arc_j), curve2_x, ribbon_radius * np.cos(arc_i)])
+        ribbon_y = np.concatenate([curve1_y, ribbon_radius * np.sin(arc_j), curve2_y, ribbon_radius * np.sin(arc_i)])
         p.patches(
-            xs="xs",
-            ys="ys",
-            source=source,
-            fill_color=ribbon_color,
-            line_color=ribbon_color,
-            line_width=0.5,
+            xs=[ribbon_x],
+            ys=[ribbon_y],
+            fill_color=IMPRINT_PALETTE[i],
+            line_color=IMPRINT_PALETTE[i],
+            line_width=1,
             alpha=0.45,
         )
 
-legend_x = 1.15
-legend_y_start = 0.8
-legend_spacing = 0.15
-
+# Legend and track caption below the circle, two rows of three
 for i, region in enumerate(regions):
-    y_pos = legend_y_start - i * legend_spacing
-    color = IMPRINT[i % len(IMPRINT)]
-    p.rect(x=[legend_x], y=[y_pos], width=0.08, height=0.08, fill_color=color, line_color=None)
+    x_pos = -1.15 + (i % 3) * 0.85
+    y_pos = -1.40 - (i // 3) * 0.13
+    p.rect(x=[x_pos], y=[y_pos], width=0.08, height=0.08, fill_color=IMPRINT_PALETTE[i], line_color=None)
     p.text(
-        x=[legend_x + 0.12],
+        x=[x_pos + 0.09],
         y=[y_pos],
         text=[region],
-        text_font_size="16pt",
+        text_font_size="26pt",
         text_align="left",
         text_baseline="middle",
         text_color=INK_SOFT,
     )
 
 p.text(
-    x=[-0.35],
-    y=[-0.20],
-    text=["Inner track: GDP Growth (%)"],
-    text_font_size="18pt",
+    x=[0],
+    y=[-1.27],
+    text=[f"Inner track: {TRACK}"],
+    text_font_size="26pt",
     text_color=INK_SOFT,
     text_align="center",
+    text_baseline="middle",
 )
 
+# Output
 output_file(f"plot-{THEME}.html")
 save(p)
 
-W, H = 3600, 3600
 opts = Options()
 for arg in (
     "--headless=new",
     "--no-sandbox",
     "--disable-dev-shm-usage",
     "--disable-gpu",
-    f"--window-size={W},{H}",
+    f"--window-size={SIZE},{SIZE}",
     "--hide-scrollbars",
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
-driver.set_window_size(W, H)
+driver.set_window_size(SIZE, SIZE)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": SIZE, "height": SIZE, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
