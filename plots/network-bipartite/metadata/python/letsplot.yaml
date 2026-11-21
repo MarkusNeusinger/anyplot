@@ -2,139 +2,135 @@ library: letsplot
 language: python
 specification_id: network-bipartite
 created: '2026-05-14T21:27:30Z'
-updated: '2026-05-14T21:44:48Z'
+updated: '2026-11-21T17:55:37Z'
 generated_by: claude-sonnet
-workflow_run: 25886306635
+workflow_run: 44932003526
 issue: 5247
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 77
 review:
   strengths:
-  - Clean bipartite layout with students and courses in clearly separated columns
-    — two-mode structure is immediately apparent
-  - Node size effectively encodes degree, highlighting hub nodes (Machine Learning
-    and Statistics with 5 connections each)
-  - 'Proper theme-adaptive chrome: warm backgrounds (#FAF8F1 light, #1A1A17 dark)
-    and all text colors adapt correctly via INK/INK_SOFT/INK_MUTED tokens'
-  - 'First series (Students) correctly uses #009E73, second series (Courses) uses
-    #D55E00 — Okabe-Ito canonical order'
-  - Grid and axes appropriately removed (element_blank()) for a clean network visualization
-  - 'Full spec compliance: all required features present, correct title format, separate
-    legends for Group and Connections'
-  - KISS code structure with hardcoded deterministic data and clean import list
+  - 'Clean two-column bipartite layout: students left, courses right, vertically centered,
+    every edge crossing between the sets'
+  - Node size from degree computed with value_counts makes Machine Learning and Statistics
+    read as hubs while the 2-connection nodes stay visible in both themes
+  - Labels on the outer side of each column (hjust=1 / hjust=0) keep them clear of
+    the edges
+  - 'Theme tokens threaded through title, labels, legend and backgrounds; Imprint
+    #009E73 / #C475FD identical in both renders'
+  - Adaptable data block with SOURCE/TARGET constants and an edge-list DataFrame
   weaknesses:
-  - 'LM-02 LOW: Library mastery is generic — implementation could largely be reproduced
-    in plotnine with minor syntax changes; no feature unique to lets-plot is prominently
-    leveraged'
-  - 'DE-01 MODERATE: Design sophistication is above default but hasn''t reached publication-ready
-    level — node border color (PAGE_BG) blends with background nicely but overall
-    aesthetic lacks distinctive typographic or layout choices'
-  - 'VQ-05 MINOR: Legend placement on the right creates slightly imbalanced canvas
-    — could be repositioned or the xlim adjusted to better center the network'
-  - 'DQ-01 MINOR: Student degree distribution is uniform (most have 2-3 connections
-    with no isolated nodes), limiting variation in student node sizes; adding 1-2
-    isolated or highly-connected students would improve feature coverage'
+  - 'VQ-03 (light): the Connections size-legend circles are drawn white and nearly
+    vanish on the #FFFDF6 legend background; in both renders they do not match the
+    colored node marks → fill them with a visible ink color (e.g. INK_SOFT) like a
+    neutral node. Likely cause: scale_size legend without guide_legend(override_aes={''fill'':
+    INK_SOFT, ''color'': PAGE_BG, ''shape'': 21}).'
+  - 'SC-04 (both): the Connections legend lists 2, 2.5, 3, 3.5, 4, 4.5, 5 for an integer
+    degree, so three entries are values no node can have → integer breaks 2, 3, 4,
+    5. Likely cause: scale_size(range=[3, 8]) without breaks=[2, 3, 4, 5].'
+  - 'DE-02 (both): a full four-sided panel frame encloses the network although it
+    has no axes, short of the style guide''s spine rule (none or L-shaped) → no panel
+    border. Likely cause: default theme panel border not set to element_blank() (panel_border=element_blank()).'
+  - 'Suggestion: theme_void() as the base would drop the frame and axes in one call.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white
-      Chrome: Title "network-bipartite · letsplot · anyplot.ai" in dark INK (#1A1A17) at size 24, clearly readable. A secondary text line appears below the title describing the insight. Node labels use dark INK color at geom_text size=13 — all readable. Legend ("Connections" size scale, "Group" color legend) in INK_SOFT colors. No axis labels (appropriately blank).
-      Data: Students on the left in #009E73 (Okabe-Ito position 1 = brand green). Courses on the right in #D55E00 (Okabe-Ito position 2 = vermillion). Node sizes visibly encode degree — Machine Learning and Statistics nodes are clearly larger (5 connections each). Edges are drawn as muted segments with alpha=0.3, creating a subtle web without overwhelming the nodes.
-      Legibility verdict: PASS — all text is readable against the warm off-white background; no light-on-light failures.
+      Background: warm off-white #FAF8F1, 3200x1800; panel enclosed by a thin dark four-sided frame
+      Chrome: title "network-bipartite · python · letsplot · anyplot.ai" in dark ink top-left (~47% width); node labels in dark ink on the outer side of each column; legends Connections (size) and Group on the right in an elevated #FFFDF6 box. All text readable. The Connections legend circles are white and nearly invisible on the legend box.
+      Data: 12 students in #009E73 on the left, 10 courses in #C475FD on the right, sized by degree (Machine Learning and Statistics largest; James, Grace, Computer Vision smallest but visible); 34 thin grey straight edges at alpha 0.3, all visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
-      Chrome: Title and node labels render in light INK (#F0EFE8) — clearly visible against the dark background. Legend text in INK_SOFT (#B8B7B0). No dark-on-dark failures observed.
-      Data: Student nodes remain #009E73 (identical to light render). Course nodes remain #D55E00. Node sizes and edge layout are identical. The Connections legend circles appear as white outlines on the dark background, which is readable.
-      Legibility verdict: PASS — all text is readable against the near-black background; no dark-on-dark failures detected.
+      Background: warm near-black #1A1A17; same frame in a lighter grey
+      Chrome: title, node labels and legend text in light ink, all readable; no dark-on-dark text. Legend box #242420; size circles white and visible here.
+      Data: node colors identical to the light render (#009E73, #C475FD); edges lighter grey, all visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title size=24, legend size=16, node labels size=13 explicitly set;
-          all readable in both renders; slight deduction because node label size may
-          be marginally small for 4800px canvas
+        comment: Title 16 pt, node labels geom_text size 5, legend 10/11 pt explicitly
+          set; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels positioned with hjust=1 (students) and hjust=0 (courses) outside
-          nodes; no collisions; edges expected to cross in bipartite network
+        comment: Labels on the outer side of each column, clear of edges and nodes;
+          no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Node sizes clearly differentiated via scale_size range=[5,12]; edge
-          alpha=0.3 appropriate for density; all elements clearly visible
+        comment: Nodes and alpha 0.3 edges visible in both themes, but the Connections
+          legend circles are white and nearly vanish on the light legend background
+          (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 and #D55E00 are colorblind-safe; adequate contrast
-          against both light and dark backgrounds'
+        comment: 'Green #009E73 vs lavender #C475FD, distinct under CVD and on both
+          surfaces'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Network fills canvas well; legend on right creates slightly imbalanced
-          horizontal space but overall good utilization
+        comment: 3200x1800 canvas; network centered, legends on the right, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title follows spec format: network-bipartite · letsplot · anyplot.ai;
-          no axis labels needed for network graph'
+        comment: N/A for axes (layout-positioned network); legend titles Connections
+          and Group read for a person
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Students=#009E73 (position 1), Courses=#D55E00 (position 2); light
-          bg=#FAF8F1, dark bg=#1A1A17; all chrome tokens theme-adaptive
+        comment: 'Students #009E73, Courses #C475FD (Imprint 1 and 2); #FAF8F1 / #1A1A17
+          backgrounds; chrome theme-adaptive'
     design_excellence:
-      score: 13
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above well-configured default: node sizing by degree is thoughtful,
-          shape=21 with PAGE_BG border creates elegant cutout effect, intentional
-          Okabe-Ito mapping; not quite at strong-design (6) level'
+        comment: 'The style-guide baseline: theme tokens, Imprint palette, explicit
+          font sizes, nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: Grid and all axes removed (element_blank()); warm theme-adaptive
-          background; edge alpha blending; good whitespace via xlim/ylim padding
+        passed: false
+        comment: A full four-sided panel frame encloses a network that has no axes,
+          short of the spine baseline (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Size encoding creates clear visual hierarchy — ML and Statistics
-          nodes immediately draw the eye as hubs; subtitle reinforces the insight;
-          good focal point
+        passed: false
+        comment: Hubs stand out through the degree size encoding the Notes require;
+          no further hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -142,54 +138,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bipartite network: two node sets in separate columns, edges
-          only between sets'
+        comment: Bipartite network with two parallel columns, edges only across sets
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes colored by set membership, size encodes degree, labels positioned
-          outside edges, clean layout with segment edges
+        comment: 'C1 columns, C2 set colors + legend, C3 degree size with smallest
+          nodes visible, C4 thin straight edges, C5 labels on outer side: all met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Students at x=0 (left), courses at x=1 (right); all 12 students and
-          10 courses visible with all 34 edges
+        comment: All 12 students, 10 courses and 34 edges drawn; layout-positioned
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Title: network-bipartite · letsplot · anyplot.ai; Group legend (Students/Courses)
-          and Connections size legend both present'
+        comment: Title correct; the Connections legend lists 2.5, 3.5, 4.5 for an
+          integer degree (defect line)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows course degree variation (ML/Stats=5, CompVis=2); student variation
-          limited (mostly 2-3, no isolated nodes); good but not full coverage
+        comment: Hubs (Machine Learning, Statistics with 5), low-degree nodes (2),
+          crossings and a dense middle band
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world student-course enrollment scenario; named students and
-          recognizable CS/Math courses; neutral education context
+        comment: Student-course enrollment with recognizable CS/math courses; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 students, 10 courses, 34 edges — all within spec bounds (10-50
-          nodes/set, 20-200 edges); realistic enrollment numbers
+        comment: 12 + 10 nodes and 34 edges inside the spec's 10-50 per set and 20-200
+          edges; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -199,66 +192,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → data → compute degrees → build DataFrames
-          → theme → plot → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; fully deterministic output
+        comment: Hardcoded edge list, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: element_blank, element_rect, element_text, geom_point,
-          geom_segment, geom_text, ggplot, ggsave, ggsize, labs, scale_fill_manual,
-          scale_size, theme, xlim, ylim'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; appropriate complexity for network visualization;
-          no over-engineering
+        comment: Degrees via value_counts, positions via dict maps; no hand-rolled
+          algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current letsplot API
-          used
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Good grammar-of-graphics layering with geom_segment + geom_point
-          + geom_text; proper scale_fill_manual and scale_size; theme customization
-          via element_* functions
+        comment: Layered geom_segment + geom_point(shape=21) + geom_text with scale_fill_manual/scale_size;
+          standard grammar, nothing beyond
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: HTML export alongside PNG is lets-plot distinctive; shape=21 is well-used;
-          but implementation could largely be reproduced in plotnine — no truly unique
-          lets-plot feature prominently leveraged
+        comment: Nothing beyond the mandated HTML export
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T17:51:43Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
+  - annotations
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
