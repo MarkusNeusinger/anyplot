@@ -1,359 +1,230 @@
-""" anyplot.ai
+"""anyplot.ai
 circlepacking-basic: Circle Packing Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-11
+Library: plotly | Python 3.13
+Quality: pending | Updated: 2026-11-21
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per top-level group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-np.random.seed(42)
+# Canvas (square, 600 x 600 CSS px at scale 4 = 2400 x 2400) and the layout margins
+SIZE = 600
+MARGIN = {"l": 30, "r": 30, "t": 70, "b": 80}
 
-# Data: Investment portfolio hierarchy by asset class and holdings
-portfolio = {
-    "Equities": {
-        "US Large Cap": {"AAPL": 45000, "MSFT": 38000, "JPM": 32000},
-        "International": {"ASML": 28000, "TSM": 35000, "SAP": 22000},
-        "Emerging Markets": {"BABA": 18000, "TCEHY": 15000},
-    },
-    "Fixed Income": {
-        "Government Bonds": {"US 10Y": 50000, "DE Bund": 35000},
-        "Corporate Bonds": {"AAA": 42000, "BBB": 28000, "High Yield": 18000},
-    },
-    "Real Estate": {
-        "REITs": {"Industrial": 22000, "Residential": 28000, "Commercial": 18000},
-        "Direct": {"Property A": 65000, "Property B": 55000},
-    },
-    "Alternatives": {
-        "Commodities": {"Gold": 20000, "Oil Futures": 15000},
-        "Private Equity": {"Fund 1": 40000, "Fund 2": 35000},
-    },
+# Columns: set these to your table's column names
+NODE = "Node"  # role: id
+HABITAT = "Habitat"  # role: parent
+TAXON = "Taxon group"  # role: label
+SPECIES = "Species count"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("species.csv")
+# One row per leaf circle: the group it sits in, its name and the value that sets its area.
+habitats = {
+    "Wetland": {"Birds": 118, "Amphibians": 24, "Fish": 46, "Dragonflies": 31, "Mammals": 12},
+    "Forest": {"Birds": 96, "Mammals": 42, "Beetles": 150, "Fungi": 88, "Reptiles": 14},
+    "Grassland": {"Butterflies": 64, "Birds": 52, "Reptiles": 18, "Bees": 71},
+    "Coastal": {"Seabirds": 38, "Crustaceans": 55, "Fish": 83, "Mammals": 9},
+    "Alpine": {"Birds": 27, "Mammals": 16, "Beetles": 44},
 }
-
-# Calculate total portfolio value
-total_value = sum(sum(sum(items.values()) for items in subcats.values()) for subcats in portfolio.values())
-
-# Build circles with packing algorithm
-all_circles = []
-
-# Root circle
-root_radius = 450
-all_circles.append(
-    {"x": 0, "y": 0, "r": root_radius, "label": "Portfolio", "value": total_value, "color": "#808080", "level": -1}
+df = pd.DataFrame(
+    [
+        (f"{habitat}/{taxon}", habitat, taxon, count)
+        for habitat, groups in habitats.items()
+        for taxon, count in groups.items()
+    ],
+    columns=[NODE, HABITAT, TAXON, SPECIES],
 )
 
-# Calculate asset class data and sort by value
-asset_data = []
-for asset_class, subcats in portfolio.items():
-    total = sum(sum(items.values()) for items in subcats.values())
-    asset_data.append((asset_class, total, subcats))
-asset_data.sort(key=lambda x: x[1], reverse=True)
+# Plot: reads only df and the constants above
+leaves = df.dropna(subset=[HABITAT, SPECIES]).reset_index(drop=True)
+tops = list(dict.fromkeys(leaves[HABITAT]))
 
-# Calculate asset class radii
-asset_radii = [(name, np.sqrt(total) * 7.0, total, subcats) for name, total, subcats in asset_data]
 
-# Pack asset classes
-packed_assets = []
-for i, (name, radius, value, subcats) in enumerate(asset_radii):
-    if i == 0:
-        packed_assets.append(
-            {"name": name, "r": radius, "value": value, "subcats": subcats, "x": 0, "y": radius * 0.35}
-        )
-    else:
-        best_pos = None
-        min_dist_from_center = float("inf")
-        for existing in packed_assets:
-            for angle in np.linspace(0, 2 * np.pi, 36):
-                dist = existing["r"] + radius + 12
-                nx = existing["x"] + dist * np.cos(angle)
-                ny = existing["y"] + dist * np.sin(angle)
-                d_to_center = np.sqrt(nx**2 + ny**2)
-                if d_to_center + radius > root_radius * 0.93:
+def enclose(circles):
+    """Center and radius of a circle enclosing all given (x, y, r) circles (iterative approximation)."""
+    pts = np.array(circles)
+    center = (pts[:, :2] * pts[:, 2:3] ** 2).sum(axis=0) / (pts[:, 2] ** 2).sum()
+    for step in range(1, 400):
+        far = np.argmax(np.hypot(*(pts[:, :2] - center).T) + pts[:, 2])
+        center = center + (pts[far, :2] - center) / (step + 1) * 0.5
+    return center, float((np.hypot(*(pts[:, :2] - center).T) + pts[:, 2]).max())
+
+
+def pack(radii, gap):
+    """Place circles of the given radii close together without overlap; returns centered (x, y, r) rows."""
+    order = np.argsort(radii)[::-1]
+    placed = []
+    for idx in order:
+        r = radii[idx]
+        if not placed:
+            placed.append([0.0, 0.0, r])
+            continue
+        if len(placed) == 1:
+            placed.append([placed[0][2] + r + gap, 0.0, r])
+            continue
+        best, best_d = None, np.inf
+        for i, a in enumerate(placed):
+            for b in placed[i + 1 :]:
+                da, db = a[2] + r + gap, b[2] + r + gap
+                dx, dy = b[0] - a[0], b[1] - a[1]
+                d = np.hypot(dx, dy)
+                if d > da + db or d < abs(da - db) or d == 0:
                     continue
-                overlaps = False
-                for other in packed_assets:
-                    d = np.sqrt((nx - other["x"]) ** 2 + (ny - other["y"]) ** 2)
-                    if d < other["r"] + radius + 10:
-                        overlaps = True
-                        break
-                if not overlaps and d_to_center < min_dist_from_center:
-                    min_dist_from_center = d_to_center
-                    best_pos = (nx, ny)
-        if best_pos:
-            packed_assets.append(
-                {"name": name, "r": radius, "value": value, "subcats": subcats, "x": best_pos[0], "y": best_pos[1]}
-            )
+                t = (da**2 - db**2 + d**2) / (2 * d)
+                h = np.sqrt(max(da**2 - t**2, 0.0))
+                for sign in (1, -1):
+                    cx = a[0] + (t * dx - sign * h * dy) / d
+                    cy = a[1] + (t * dy + sign * h * dx) / d
+                    if all(np.hypot(cx - o[0], cy - o[1]) >= o[2] + r + gap - 1e-9 for o in placed):
+                        cost = np.hypot(cx, cy) + r
+                        if cost < best_d:
+                            best, best_d = (cx, cy), cost
+        placed.append([best[0], best[1], r])
+    center, radius = enclose(placed)
+    out = np.zeros((len(radii), 3))
+    for idx, (x, y, r) in zip(order, placed, strict=True):
+        out[idx] = (x - center[0], y - center[1], r)
+    return out, radius
 
-# Build hierarchy with subcategories and leaf holdings
-for idx, asset_info in enumerate(packed_assets):
-    asset_class = asset_info["name"]
-    cx, cy = asset_info["x"], asset_info["y"]
-    asset_radius = asset_info["r"]
-    subcats = asset_info["subcats"]
-    asset_color = IMPRINT[idx % len(IMPRINT)]
 
-    all_circles.append(
-        {
-            "x": cx,
-            "y": cy,
-            "r": asset_radius,
-            "label": asset_class,
-            "value": asset_info["value"],
-            "color": asset_color,
-            "level": 0,
-        }
-    )
+# Bottom-up: leaf area is proportional to its value, each habitat encloses its packed leaves,
+# and the root encloses the habitats
+GAP = 1.2
+leaf_r = np.sqrt(leaves[SPECIES].to_numpy(dtype=float))
+members = {top: np.flatnonzero((leaves[HABITAT] == top).to_numpy()) for top in tops}
+packs = {top: pack(leaf_r[idx], GAP) for top, idx in members.items()}
+top_r = np.array([packs[top][1] + GAP * 2 for top in tops])
+top_layout, root_r = pack(top_r, GAP * 3)
+root_r += GAP * 4
 
-    # Pack subcategories within asset class
-    subcat_list = sorted(
-        [(name, sum(items.values()), items) for name, items in subcats.items()], key=lambda x: x[1], reverse=True
-    )
-    packed_subs = []
-    sub_scale = 3.5
+limit = root_r * 1.04
+plot_px = min(SIZE - MARGIN["l"] - MARGIN["r"], SIZE - MARGIN["t"] - MARGIN["b"])
+px_per_unit = plot_px / (2 * limit)
 
-    for j, (sub_name, sub_value, sub_items) in enumerate(subcat_list):
-        sub_r = np.sqrt(sub_value) * sub_scale
-        if j == 0:
-            packed_subs.append({"name": sub_name, "value": sub_value, "items": sub_items, "r": sub_r, "x": cx, "y": cy})
-        else:
-            best_pos = None
-            min_dist = float("inf")
-            for existing in packed_subs:
-                for angle in np.linspace(0, 2 * np.pi, 24):
-                    dist = existing["r"] + sub_r + 5
-                    nx = existing["x"] + dist * np.cos(angle)
-                    ny = existing["y"] + dist * np.sin(angle)
-                    d_to_parent = np.sqrt((nx - cx) ** 2 + (ny - cy) ** 2)
-                    if d_to_parent + sub_r > asset_radius * 0.87:
-                        continue
-                    overlaps = False
-                    for other in packed_subs:
-                        d = np.sqrt((nx - other["x"]) ** 2 + (ny - other["y"]) ** 2)
-                        if d < other["r"] + sub_r + 4:
-                            overlaps = True
-                            break
-                    if not overlaps:
-                        d_center = np.sqrt((nx - cx) ** 2 + (ny - cy) ** 2)
-                        if d_center < min_dist:
-                            min_dist = d_center
-                            best_pos = (nx, ny)
-            if best_pos:
-                packed_subs.append(
-                    {
-                        "name": sub_name,
-                        "value": sub_value,
-                        "items": sub_items,
-                        "r": sub_r,
-                        "x": best_pos[0],
-                        "y": best_pos[1],
-                    }
-                )
-
-    for sub in packed_subs:
-        sub_x, sub_y, sub_r = sub["x"], sub["y"], sub["r"]
-        sub_color = asset_color
-        all_circles.append(
-            {
-                "x": sub_x,
-                "y": sub_y,
-                "r": sub_r,
-                "label": sub["name"],
-                "value": sub["value"],
-                "color": sub_color,
-                "level": 1,
-                "parent": asset_class,
-            }
-        )
-
-        # Pack leaf nodes (holdings) within subcategory
-        leaf_list = sorted(sub["items"].items(), key=lambda x: x[1], reverse=True)
-        packed_leaves = []
-        leaf_scale = 2.0
-
-        for k, (leaf_name, leaf_value) in enumerate(leaf_list):
-            leaf_r = np.sqrt(leaf_value) * leaf_scale
-            if k == 0:
-                packed_leaves.append({"name": leaf_name, "value": leaf_value, "r": leaf_r, "x": sub_x, "y": sub_y})
-            else:
-                best_pos = None
-                min_dist = float("inf")
-                for existing in packed_leaves:
-                    for angle in np.linspace(0, 2 * np.pi, 24):
-                        dist = existing["r"] + leaf_r + 2
-                        nx = existing["x"] + dist * np.cos(angle)
-                        ny = existing["y"] + dist * np.sin(angle)
-                        d_to_parent = np.sqrt((nx - sub_x) ** 2 + (ny - sub_y) ** 2)
-                        if d_to_parent + leaf_r > sub_r * 0.84:
-                            continue
-                        overlaps = False
-                        for other in packed_leaves:
-                            d = np.sqrt((nx - other["x"]) ** 2 + (ny - other["y"]) ** 2)
-                            if d < other["r"] + leaf_r + 1:
-                                overlaps = True
-                                break
-                        if not overlaps:
-                            d_center = np.sqrt((nx - sub_x) ** 2 + (ny - sub_y) ** 2)
-                            if d_center < min_dist:
-                                min_dist = d_center
-                                best_pos = (nx, ny)
-                if best_pos:
-                    packed_leaves.append(
-                        {"name": leaf_name, "value": leaf_value, "r": leaf_r, "x": best_pos[0], "y": best_pos[1]}
-                    )
-
-        for leaf in packed_leaves:
-            all_circles.append(
-                {
-                    "x": leaf["x"],
-                    "y": leaf["y"],
-                    "r": leaf["r"],
-                    "label": leaf["name"],
-                    "value": leaf["value"],
-                    "color": sub_color,
-                    "level": 2,
-                    "parent": sub["name"],
-                }
-            )
-
-# Create figure
 fig = go.Figure()
+fig.add_shape(
+    type="circle",
+    x0=-root_r,
+    x1=root_r,
+    y0=-root_r,
+    y1=root_r,
+    fillcolor=INK_SOFT,
+    opacity=0.07,
+    line={"color": INK_SOFT, "width": 1.2},
+    layer="below",
+)
 
-# Draw circles by level (background to foreground)
-for level in [-1, 0, 1, 2]:
-    for circle in all_circles:
-        if circle["level"] == level:
-            if level == -1:
-                opacity, line_width = 0.08, 4
-            elif level == 0:
-                opacity, line_width = 0.8, 4
-            elif level == 1:
-                opacity, line_width = 0.7, 3
-            else:
-                opacity, line_width = 0.85, 2
-
-            fig.add_shape(
-                type="circle",
-                xref="x",
-                yref="y",
-                x0=circle["x"] - circle["r"],
-                y0=circle["y"] - circle["r"],
-                x1=circle["x"] + circle["r"],
-                y1=circle["y"] + circle["r"],
-                fillcolor=circle["color"],
-                opacity=opacity,
-                line={"color": INK_SOFT, "width": line_width},
-            )
-
-# Add labels
-for circle in all_circles:
-    level = circle["level"]
-
-    if level == -1:
-        fig.add_annotation(
-            x=circle["x"],
-            y=circle["y"] - circle["r"] * 0.88,
-            text=f"<b>{circle['label']}</b><br>${circle['value']:,.0f}",
-            showarrow=False,
-            font={"size": 22, "color": INK},
-        )
-    elif level == 0:
-        fig.add_annotation(
-            x=circle["x"],
-            y=circle["y"] + circle["r"] * 0.7,
-            text=f"<b>{circle['label']}</b>",
-            showarrow=False,
-            font={"size": 18, "color": INK},
-        )
-        fig.add_annotation(
-            x=circle["x"],
-            y=circle["y"] + circle["r"] * 0.5,
-            text=f"${circle['value']:,.0f}",
-            showarrow=False,
-            font={"size": 14, "color": INK_SOFT},
-        )
-    elif level == 1 and circle["r"] > 30:
-        fig.add_annotation(
-            x=circle["x"], y=circle["y"], text=f"{circle['label']}", showarrow=False, font={"size": 13, "color": INK}
-        )
-    elif level == 2 and circle["r"] > 12:
-        fig.add_annotation(
-            x=circle["x"], y=circle["y"], text=circle["label"], showarrow=False, font={"size": 10, "color": INK_SOFT}
-        )
-
-# Add hover traces for interactivity
-for circle in all_circles:
-    level_names = {-1: "Portfolio", 0: "Asset Class", 1: "Category", 2: "Holding"}
-    fig.add_trace(
-        go.Scatter(
-            x=[circle["x"]],
-            y=[circle["y"]],
-            mode="markers",
-            marker={"size": max(circle["r"], 12), "opacity": 0},
-            hovertemplate=f"<b>{circle['label']}</b><br>{level_names[circle['level']]}: ${circle['value']:,.0f}<extra></extra>",
-            showlegend=False,
-        )
+leaf_marks = []  # (x, y, r, row, color)
+for i, top in enumerate(tops):
+    hx, hy, _ = top_layout[i]
+    color = IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)]
+    fig.add_shape(
+        type="circle",
+        x0=hx - top_r[i],
+        x1=hx + top_r[i],
+        y0=hy - top_r[i],
+        y1=hy + top_r[i],
+        fillcolor=color,
+        opacity=0.22,
+        line={"color": color, "width": 1.5},
+        layer="below",
+    )
+    for row, (lx, ly, lr) in zip(members[top], packs[top][0], strict=True):
+        leaf_marks.append((hx + lx, hy + ly, lr, row, color))
+for x, y, r, _, color in leaf_marks:
+    fig.add_shape(
+        type="circle",
+        x0=x - r,
+        x1=x + r,
+        y0=y - r,
+        y1=y + r,
+        fillcolor=color,
+        opacity=0.9,
+        line={"color": PAGE_BG, "width": 0.8},
+        layer="below",
     )
 
-# Add legend traces for asset classes
-for idx, (name, _, _) in enumerate(asset_data):
+# Labels for the leaves whose circle is large enough to hold the text
+LEAF_FONT = 8
+for x, y, r, row, _ in leaf_marks:
+    diameter_px = 2 * r * px_per_unit
+    name = str(leaves.loc[row, TAXON])
+    if diameter_px < len(name) * LEAF_FONT * 0.66 + 2:
+        continue
+    text = f"<b>{name}</b><br>{leaves.loc[row, SPECIES]:,.0f}" if diameter_px > 34 else f"<b>{name}</b>"
+    fig.add_annotation(x=x, y=y, text=text, showarrow=False, font={"size": LEAF_FONT, "color": "#1A1A17"})
+
+# Invisible hover targets for every leaf
+fig.add_trace(
+    go.Scatter(
+        x=[m[0] for m in leaf_marks],
+        y=[m[1] for m in leaf_marks],
+        mode="markers",
+        marker={"size": [2 * m[2] * px_per_unit for m in leaf_marks], "opacity": 0},
+        customdata=[
+            [leaves.loc[m[3], TAXON], leaves.loc[m[3], HABITAT], leaves.loc[m[3], SPECIES]] for m in leaf_marks
+        ],
+        hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}: %{customdata[2]:,.0f} species<extra></extra>",
+        showlegend=False,
+    )
+)
+
+# Legend entries for the habitats
+for i, top in enumerate(tops):
     fig.add_trace(
         go.Scatter(
             x=[None],
             y=[None],
             mode="markers",
-            marker={"size": 16, "color": IMPRINT[idx % len(IMPRINT)], "line": {"color": INK_SOFT, "width": 2}},
-            name=name,
-            showlegend=True,
+            marker={
+                "size": 10,
+                "color": IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+                "line": {"color": INK_SOFT, "width": 0.8},
+            },
+            name=str(top),
         )
     )
 
-# Layout
+# Style
+title = "circlepacking-basic · python · plotly · anyplot.ai"
 fig.update_layout(
-    title={
-        "text": "circlepacking-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+    autosize=False,
+    width=SIZE,
+    height=SIZE,
+    margin=MARGIN,
+    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    xaxis={"visible": False, "range": [-limit, limit], "scaleanchor": "y", "scaleratio": 1},
+    yaxis={"visible": False, "range": [-limit, limit]},
+    legend={
+        "orientation": "h",
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.97,
-    },
-    xaxis={
-        "showgrid": False,
-        "zeroline": False,
-        "showticklabels": False,
-        "range": [-550, 550],
-        "scaleanchor": "y",
-        "scaleratio": 1,
-    },
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-550, 550]},
-    plot_bgcolor=PAGE_BG,
-    paper_bgcolor=PAGE_BG,
-    margin={"t": 80, "l": 40, "r": 40, "b": 40},
-    showlegend=True,
-    legend={
-        "x": 0.98,
-        "y": 0.98,
-        "xanchor": "right",
+        "y": -0.02,
         "yanchor": "top",
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
-        "borderwidth": 2,
-        "font": {"size": 14, "color": INK_SOFT},
-        "title": {"text": "Asset Classes", "font": {"size": 16, "color": INK}},
+        "borderwidth": 1,
+        "font": {"size": 11, "color": INK_SOFT},
+        "title": {"text": HABITAT, "font": {"size": 11, "color": INK}},
     },
 )
 
-# Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=SIZE, height=SIZE, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
