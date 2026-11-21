@@ -2,48 +2,45 @@ library: bokeh
 language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:38:37Z'
-updated: '2026-05-13T15:31:05Z'
-generated_by: claude-haiku
-workflow_run: 25808421085
+updated: '2026-11-21T10:31:51Z'
+generated_by: claude-sonnet
+workflow_run: 44894245621
 issue: 2600
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - Perfect visual quality across all criteria (30/30) — text legibility, element
-    visibility, and theme compliance are flawless in both light and dark renders
-  - Correct step-line implementation with markers at discrete points, clearly showing
-    state changes and CPU usage patterns
-  - Proper theme-adaptive styling with all chrome elements (text, grid, backgrounds)
-    correctly themed; data colors identical in both renders
-  - Clean, reproducible code following bokeh idioms (ColumnDataSource, proper Selenium
-    screenshot pattern)
-  - Full specification compliance with correct title format, axis labels with units,
-    and appropriate data mapping
+  - Uses bokeh's native p.step glyph with mode='after', so every value is held flat
+    until the next hour and each change is a clean vertical jump
+  - Text sizes, borders and toolbar_location=None follow the bokeh canvas contract;
+    the render is exactly 3200x1800 with nothing clipped
+  - Markers carry a page-colored ring that separates each data point from the step
+    corner in both themes
+  - Theme tokens are threaded through every chrome element; both renders are fully
+    legible
+  - HoverTool scoped to the marker renderer gives exact hour and CPU values in the
+    HTML artifact
   weaknesses:
-  - Design Excellence is minimal (9/20) — uses default bokeh styling with only required
-    theme tokens, no special visual refinement or custom styling beyond requirements
-  - No advanced bokeh features or distinctive design elements — could benefit from
-    custom legend styling, marker size variation, or additional visual hierarchy
-  - Limited Library Mastery distinctive features — uses HoverTool but doesn't explore
-    callbacks, custom extensions, or other bokeh-specific capabilities
+  - 'Suggestion: the example uses 24 points, below the Data section''s 50-500; a finer
+    sampling (for example readings every 15 minutes with held states) would sit inside
+    the range and show longer plateaus.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1), clean and professional
-      Chrome: Title "line-stepwise · bokeh · anyplot.ai" in dark ink, X-axis "Hour of Day" and Y-axis "CPU Usage (%)" labels clearly visible in dark text, tick labels (0-100+ on axes) dark and readable against light background. All text properly sized for 4800px canvas (28pt title, 22pt axis labels, 18pt ticks).
-      Data: Step line in brand green (#009E73) with markers at each transition point. Line shows realistic CPU usage pattern over 24 hours with clear discrete state changes. Subtle gridlines (10% alpha) provide visual reference without competing with data.
-      Legibility verdict: PASS - All text is readable, no contrast issues, step function pattern is crystal clear.
+      Background: Warm off-white #FAF8F1 across canvas and plot area; no frame around the plot, only left and bottom axis lines.
+      Chrome: Bold title "line-stepwise · python · bokeh · anyplot.ai" top-left in dark ink; italic axis labels "Hour of day" and "CPU usage (%)"; tick labels 0-20 (x) and 0-100 (y) in soft dark grey. All readable. Grid lines faint but visible.
+      Data: A single #009E73 step line (post alignment) over 24 hourly CPU readings with small green markers ringed in the page color at each data point; two daily peaks (92 at hour 5, 95 at hour 16) and a trough of 28 at hour 11, ending at 25.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17), properly themed
-      Chrome: Title and labels rendered in light ink (#F0EFE8). Tick labels in soft ink (#B8B7B0). All text elements are clearly visible against dark background with proper contrast. No dark-on-dark failures detected.
-      Data: Step line and markers maintain identical brand green (#009E73) as light render. The green is vibrant and clearly visible on the dark surface. Gridlines remain subtle at 10% alpha with theme-adapted color. Data visualization is identical to light render (only chrome adapted).
-      Legibility verdict: PASS - All text readable, proper light-text contrast, no theme-readability failures. Data colors perfectly consistent with light render.
+      Background: Warm near-black #1A1A17; same layout without frame.
+      Chrome: Title and axis labels in light ink, tick labels in light grey; all readable, no dark-on-dark text. Grid faint but visible.
+      Data: Identical #009E73 step line and markers as the light render; only chrome flipped. Brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,50 +51,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (28pt title, 22pt axis labels, 18pt ticks)
-          and clearly readable in both light and dark themes. Theme tokens (INK, INK_SOFT)
-          properly applied throughout.
+        comment: Title 50pt, axis labels 42pt, ticks 34pt at the library prompt's
+          reference sizes; INK/INK_SOFT read clearly on both backgrounds
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean plot layout with adequate spacing. No overlapping text elements.
+        comment: No text collisions; markers sit on the line corners without hiding
+          anything
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line and markers are clearly visible. Markers at each discrete
-          point provide good visual clarity of state changes.
+        comment: 5 px step line and 14 px markers suit 24 points; flat segments still
+          read as lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses Okabe-Ito brand green (#009E73) which is colorblind-safe. Adequate
-          contrast in both themes.
+        comment: Single brand-green series with strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions at 4800×2700. Nothing cut off. Canvas well-utilized.
+        comment: 3200x1800 canvas, no canvas-gate file; balanced margins, title about
+          47 % of the width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Hour of Day'' and ''CPU Usage (%)'' with units.
-          Title format correct.'
+        comment: '''Hour of day'' and ''CPU usage (%)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 ✓. Backgrounds correct (#FAF8F1 light, #1A1A17
-          dark). Both renders theme-correct with no dark-on-dark or light-on-light
-          issues. Okabe-Ito compliance verified.'
+        comment: 'Series in #009E73; backgrounds #FAF8F1 / #1A1A17; data color identical
+          in both renders'
     design_excellence:
       score: 9
       max: 20
@@ -107,24 +102,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Default bokeh styling with theme tokens applied. Markers help show
-          discrete points, but no special design thinking beyond requirements. Generic
-          default aesthetic.
+        comment: The style-guide baseline, cleanly applied; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Spines remain (bokeh default). Grid present but minimal (10% alpha).
-          Only required theme customization, no additional refinement.
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Step pattern clearly shows discrete nature of changes. Markers emphasize
-          discrete steps. Some visual hierarchy via markers, but basic—no special
-          focal point or advanced storytelling technique.
+        comment: 'Beyond baseline: markers carry a 2 px page-colored ring that separates
+          each data point from the step corner, and the plot frame is dropped entirely
+          (outline_line_color=None)'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed; the twin-peak daily pattern is visible but no focal
+          point is chosen
     spec_compliance:
       score: 15
       max: 15
@@ -134,30 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step line plot with horizontal-then-vertical transitions
-          showing discrete state changes.
+        comment: Step line plot, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: step function behavior is clear,
-          discrete changes emphasized, data context (CPU usage) fits specification
-          examples.'
+        comment: C1 only horizontal/vertical segments; C2 one 'post' alignment with
+          jumps on the data x values; C3 plateaus read as single flat segments; C4
+          markers on the data points and small
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly maps hours (0-23). Y-axis correctly maps CPU usage
-          percentage (0-105%). All data displayed.
+        comment: Hour on x, CPU % on y; y from 0 shows all data; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''line-stepwise · bokeh · anyplot.ai''. No
-          legend needed for single series—correctly omitted.'
+        comment: Title 'line-stepwise · python · bokeh · anyplot.ai'; legend N/A for
+          a single series
     data_quality:
       score: 15
       max: 15
@@ -167,24 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Step-wise line plot type fully showcased with 24 data points. Realistic
-          CPU usage patterns with discrete state changes demonstrate all aspects of
-          plot type.
+        comment: Rises and falls, jumps of very different height (6 to 26 points);
+          all aspects of a step plot shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CPU usage data is realistic and plausible. Values (25-95%) within
-          normal CPU range. Data shows realistic patterns (low at night, peaks during
-          day). Neutral, appropriate context.
+        comment: Hourly server CPU usage, neutral and concrete
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range (0-105%) sensible for CPU percentage. X-axis shows 24-hour
-          period appropriate. Scale choices are well-considered.
+        comment: Values 25-95 % within a 0-100 % domain; y axis 0 to 104.5; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -194,63 +182,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Simple, direct implementation.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42). Deterministic output.
+        comment: Fixed literal data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, time, pathlib, numpy, bokeh (io, models,
-          plotting), selenium. All used.'
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI. HoverTool is real bokeh interactivity,
-          not simulated.
+        comment: Native p.step(mode='after') computes the staircase; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.html and plot-{THEME}.png. Correct naming and
-          API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; toolbar_location=None;
+          current bokeh 3.9 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource correctly. Follows bokeh patterns (figure,
-          glyphs, styling). Step-line technique (duplicating points) is the correct
-          bokeh idiom. Selenium screenshot pattern matches library best practices.
+        comment: Uses bokeh's dedicated step glyph with mode='after' on a tidy ColumnDataSource(df)
+          instead of building the staircase by hand
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses HoverTool for interactive tooltips (bokeh-specific). Proper
-          large-canvas handling with Selenium. Doesn't leverage callbacks, custom
-          extensions, or other advanced bokeh features.
+        comment: HoverTool scoped to the marker renderer with a numeric formatter,
+          so tooltips fire on the data points only (HTML artifact)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T10:27:49Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - columndatasource
   dataprep: []
   styling:
+  - edge-highlighting
   - grid-styling
