@@ -1,12 +1,13 @@
 """ anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 88/100 | Created: 2026-05-14
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-21
 """
 
 import os
 
 import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap, to_rgb
 from plotnine import (
     aes,
     coord_fixed,
@@ -18,7 +19,8 @@ from plotnine import (
     ggplot,
     labs,
     scale_color_identity,
-    scale_fill_cmap,
+    scale_fill_gradient,
+    scale_y_reverse,
     theme,
 )
 
@@ -30,8 +32,18 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# US state tile grid: (state, col, row, renewable_energy_pct)
-# Grid approximates geographic positions; row 0 = north, row 7 = south
+# Imprint palette: sequential ramp for unipolar data runs from position 1 to position 3
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+SEQ_LOW, SEQ_HIGH = IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]
+
+# Columns: set these to your table's column names
+REGION = "State"  # role: region
+VALUE = "Renewable energy (%)"  # role: value
+ROW = "Grid row"  # role: row
+COL = "Grid column"  # role: col
+
+# Data: replace this block with your own table, for example df = pd.read_csv("tiles.csv")
+# US state tile grid; the grid approximates geography, row 0 = north
 records = [
     ("ME", 11, 0, 34),
     ("VT", 10, 1, 71),
@@ -85,17 +97,29 @@ records = [
     ("AK", 0, 7, 28),
     ("HI", 1, 7, 34),
 ]
+df = pd.DataFrame(records, columns=[REGION, COL, ROW, VALUE])
 
-df = pd.DataFrame(records, columns=["state", "col", "row", "renewable_pct"])
-df["row_pos"] = -df["row"]  # Flip so row 0 is at top (geographic north)
+# Plot: reads only df and the constants above
+# Label color follows the tile's luminance: dark ink on light tiles, white on dark tiles
+ramp = LinearSegmentedColormap.from_list("imprint_seq", [SEQ_LOW, SEQ_HIGH])
+share = (df[VALUE] - df[VALUE].min()) / (df[VALUE].max() - df[VALUE].min())
 
-# Text contrast: white on dark viridis tiles, dark on bright viridis tiles
-mid = (df["renewable_pct"].min() + df["renewable_pct"].max()) / 2
-df["label_color"] = df["renewable_pct"].apply(lambda v: "#FFFFFF" if v < mid else "#1A1A17")
 
-# Theme
+def luminance(rgb):
+    r, g, b = rgb[:3]
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+df["label_color"] = [("#1A1A17" if luminance(to_rgb(ramp(s))) > 0.5 else "#FFFFFF") for s in share]
+
+top, bottom = df.nlargest(2, VALUE), df.nsmallest(1, VALUE)
+subtitle = (
+    f"Highest: {top[REGION].iloc[0]} {top[VALUE].iloc[0]:.0f}%, {top[REGION].iloc[1]} {top[VALUE].iloc[1]:.0f}%"
+    f"  ·  lowest: {bottom[REGION].iloc[0]} {bottom[VALUE].iloc[0]:.0f}%"
+)
+
 anyplot_theme = theme(
-    figure_size=(16, 9),
+    figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_blank(),
@@ -105,24 +129,25 @@ anyplot_theme = theme(
     axis_text=element_blank(),
     axis_ticks=element_blank(),
     axis_line=element_blank(),
-    plot_title=element_text(color=INK, size=22),
+    plot_title=element_text(color=INK, size=12),
+    plot_subtitle=element_text(color=INK_SOFT, size=9),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=14),
-    legend_title=element_text(color=INK, size=16),
+    legend_text=element_text(color=INK_SOFT, size=8),
+    legend_title=element_text(color=INK, size=9),
     legend_position="right",
 )
 
-# Plot
 plot = (
-    ggplot(df, aes(x="col", y="row_pos", fill="renewable_pct"))
-    + geom_tile(color=PAGE_BG, size=1.5)
-    + geom_text(aes(label="state", color="label_color"), size=11, fontweight="bold")
-    + scale_fill_cmap(cmap_name="viridis", name="Renewable\nEnergy (%)")
+    ggplot(df, aes(x=COL, y=ROW, fill=VALUE))
+    + geom_tile(color=PAGE_BG, size=1.0)
+    + geom_text(aes(label=REGION, color="label_color"), size=6.5, fontweight="bold")
+    + scale_fill_gradient(low=SEQ_LOW, high=SEQ_HIGH, name="Renewable\nenergy (%)")
     + scale_color_identity()
+    + scale_y_reverse()
     + coord_fixed()
-    + labs(title="US Renewable Energy Share · map-tilegrid · plotnine · anyplot.ai")
+    + labs(title="US Renewable Energy Share · map-tilegrid · python · plotnine · anyplot.ai", subtitle=subtitle)
     + anyplot_theme
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
