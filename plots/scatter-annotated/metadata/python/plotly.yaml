@@ -2,52 +2,54 @@ library: plotly
 language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:49:25Z'
-updated: '2026-05-13T11:18:09Z'
-generated_by: claude-haiku
-workflow_run: 25795066115
+updated: '2026-11-21T09:46:25Z'
+generated_by: claude-sonnet
+workflow_run: 44890512924
 issue: 2790
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 85
 review:
   strengths:
-  - 'Theme adaptation excellence: both light and dark renders flawlessly legible with
-    correctly adapted chrome and identical data colors'
-  - 'Comprehensive annotations: all 12 points labeled with smart directional positioning
-    and color-coded emphasis arrows providing clear visual hierarchy'
-  - 'Explicit sizing throughout: all text elements (title 28px, labels 22px, ticks
-    18px, annotations 18-19px) explicitly set and perfectly readable at full resolution'
-  - 'Realistic, comprehensible data: real tech companies with factually plausible
-    market cap vs revenue relationships telling a coherent business story'
-  - 'Clean implementation: straightforward code structure, proper theme token usage,
-    deterministic output, no over-engineering'
+  - Every point labeled in a bold annotation box on the elevated surface, tied to
+    its marker by a thin INK_SOFT leader line with standoff; markers stay at their
+    exact values
+  - 'Theme tokens threaded through all chrome, label boxes and leader lines: both
+    renders fully legible with identical data colors'
+  - Top-3 companies by market cap emphasized with Imprint purple, larger markers and
+    accent label borders, derived from the data via nlargest
+  - 'Adaptable structure: column constants with roles, a Data block binding df, axis
+    ranges derived from the data'
+  - hovertemplate with customdata adds a revenue/market-cap ratio in the interactive
+    HTML view
   weaknesses:
-  - 'Design sophistication: color differentiation and marker sizing are effective
-    but subtle—implemented as thoughtful defaults rather than distinctive publication-ready
-    aesthetics'
-  - 'Visual storytelling: plot displays data clearly but lacks deeper narrative emphasis
-    or exceptional visual insight framing beyond straightforward color hierarchy'
-  - 'Annotation positioning: uses cyclic directional offsets rather than adaptive
-    collision-avoidance, limiting scalability for larger or differently distributed
-    datasets'
+  - 'SC-02 (both): in the low-left cluster the Netflix and Oracle leader lines cross
+    each other between x=250 and x=300, so which label names which of the three nearby
+    markers takes tracing (C2) → offsets that keep the cluster''s leaders from crossing
+    (Netflix above-left of its point, Oracle below-right of its own). Likely cause:
+    LABEL_OFFSETS assigned cyclically by row index instead of by each point''s neighbourhood.'
+  - 'SC-04 (both): the purple color and larger size of Apple, Microsoft and Alphabet
+    encode ''top 3 by market cap'', but no legend or key says so → a legend entry
+    or a short key naming the highlight group. Likely cause: showlegend=False with
+    a single trace carrying both groups.'
+  - 'Suggestion: a slightly lighter leader-line opacity in the dark render would push
+    the lines further behind the labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, not pure white
-      Chrome: Title (28px) "scatter-annotated · plotly · anyplot.ai" in dark text, clearly visible. Axis labels "Market Cap (Billion USD)" and "Annual Revenue (Billion USD)" in 22px dark text with units. Tick labels (18px) in muted dark text. All text readable against light background.
-      Data: 12 tech companies plotted. Primary series (9 companies) in green #009E73, secondary series (top 3 by market cap: Apple, Microsoft, Alphabet) in orange #D55E00. Markers 20-25px with white edges, 0.8 opacity. Each point annotated with label in styled box with color-coded arrow.
-      Grid: Subtle gridlines, visible but not dominant
-      Legibility verdict: PASS - All text clearly readable, excellent contrast, no dark-on-light failures
+      Background: warm off-white #FAF8F1, canvas 3200x1800.
+      Chrome: title 'scatter-annotated · python · plotly · anyplot.ai' centered in dark ink; axis titles 'Market Cap (Billion USD)' and 'Annual Revenue (Billion USD)' in dark ink, ticks in INK_SOFT; subtle grid; left and bottom axis lines. All readable.
+      Data: 12 companies; 9 in #009E73 at 10 px, Apple/Microsoft/Alphabet in #C475FD at 13 px, opacity 0.8 with page-colored outline. Each point carries a bold label in an off-white box (purple border for the top 3) tied by a thin dark-grey leader line. No label boxes collide; Netflix and Oracle leaders cross in the low-left cluster; Netflix and Salesforce markers nearly coincide.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, not pure black
-      Chrome: Title in light text (#F0EFE8-equivalent), clearly visible against dark background. Axis labels in light text, tick labels in muted light text. All text readable against dark background.
-      Data: Colors identical to light render—green #009E73 and orange #D55E00 on same company groups. Markers and arrows maintain visibility and distinction.
-      Grid: Adapted to dark theme with appropriate opacity
-      Legibility verdict: PASS - All text clearly readable in light colors, no dark-on-dark failures, data colors preserved, excellent theme adaptation
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in near-white, ticks in light grey, subtle light grid; no dark-on-dark text.
+      Data: same green and purple markers as light; label boxes on #242420 with near-white text and light-grey leader lines.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,53 +60,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px,
-          annotations 18-19px). Perfectly readable in both themes.
+        comment: Title 16px, axis titles 12px, ticks 10px, labels 10px bold, all at
+          the plotly style-guide sizes; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 12 annotations with directional offsets. All labels fully readable
-          with clear separation via color-coded arrows.
+        comment: No label box collides with another label or a marker; the near-coincident
+          Netflix/Salesforce markers are data, handled by translucency
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers 20-25px, opacity 0.8, white edges. Well-sized for 12-point
-          dataset. Colors distinct from background.
+        comment: 12 sparse points at 10/13 px with 0.8 opacity and a page-colored
+          outline; clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (CVD-safe). Good contrast. No red-green-only signaling.
-          Marker edges enhance discernibility.
+        comment: Green vs purple is CVD-safe; black/near-white label text on elevated
+          boxes has strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas. Balanced margins. Excellent whitespace
-          management. Nothing cut off.
+        comment: 3200x1800 canvas, title ~40% width, balanced axis titles, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Market Cap (Billion USD)'' and ''Annual
-          Revenue (Billion USD)''. Title correctly formatted.'
+        comment: Market Cap (Billion USD) and Annual Revenue (Billion USD) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand), second #D55E00 (Okabe-Ito pos 2).
-          Backgrounds correct. Text and grid colors theme-adapted correctly in both
-          renders.'
+        comment: 'First series #009E73, highlight #C475FD (Imprint position 2); backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -112,24 +112,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Color differentiation for hierarchy, marker sizing, directional arrows.
-          Above defaults but not publication-ready aesthetic.
+        comment: 'Bold labels on elevated-surface boxes with accent borders for the
+          highlighted group: a typographic hierarchy beyond the baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Subtle grid, balanced whitespace, annotation styling adds polish.
-          Some refinement evident but minimal explicit customization.
+        comment: Thin INK_SOFT leader lines with standoff and no arrowheads, padded
+          axis ranges that keep low labels inside the frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Visual hierarchy through color emphasis on top 3 companies. Good
-          focal point but lacking deeper narrative framing.
+        comment: Implementation chose the top-3 by market cap as focal group (larger
+          purple markers, accent label borders)
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -137,27 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with text annotation feature.
+        comment: Scatter with text annotation per point
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: X/Y scatter, label annotations on all points, directional arrows,
-          color-coded emphasis—all present.
+        passed: false
+        comment: 'Labels on every point, leader lines, alpha 0.8, legible text; C2
+          partly broken: Netflix and Oracle leader lines cross in the low-left cluster
+          (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=market cap, Y=revenue. Axes show full data range. Correct assignment.
+        comment: Markers at exact (x, y); only labels are offset; axes show all data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title 'scatter-annotated · plotly · anyplot.ai' correct. No legend
-          needed (all points labeled). Hover provides efficiency metric.
+        passed: false
+        comment: Title format correct; the purple highlight encoding has no legend
+          or key (defect line)
     data_quality:
       score: 15
       max: 15
@@ -167,23 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows diverse company sizes, varying revenue scales, high-margin
-          and high-revenue profiles, efficiency range.
+        comment: Labels on all sides and distances, a tight low-left cluster and isolated
+          outliers show the annotation problem
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real companies, real domain (tech market cap vs revenue), neutral
-          and non-controversial, comprehensible scenario.
+        comment: 'Large tech companies, market cap vs revenue: neutral and plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Market cap 250–2800B and revenue 32–520B values plausible for major
-          tech firms. Relationships factually reasonable (Amazon high revenue/lower
-          cap, Apple high cap/moderate revenue).
+        comment: Values of the right order for the named companies (Apple ~2800B cap
+          / 380B revenue, Amazon 520B revenue); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -193,61 +192,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → figure → annotations → layout
-          → save. Helper function is simple and focused.'
+        comment: Flat script with constants, column constants with roles, a Data block
+          binding df, then Plot and Style
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data fully deterministic.
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects all used. No dead imports.
+        comment: os, pandas, graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Appropriate complexity. No fake UI or simulated
-          interactivity.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Width/height/scale
-          correct for target resolution.
+        comment: plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of go.Figure(), go.Scatter(), add_trace(), update_layout().
-          Smart customdata for hover metrics.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: false
-        comment: Uses annotation positioning with directional offsets, color-coded
-          arrows, marker size variation. Good but fairly standard plotly workflows.
+        comment: go.Scatter with per-point marker arrays and layout annotations using
+          pixel ax/ay offsets and standoff
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: hovertemplate with customdata showing a revenue/market-cap ratio
+          in the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T09:42:34Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
-  - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
