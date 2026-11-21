@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-density: Density Contour Plot
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-16
@@ -19,56 +19,50 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Imprint palette: single series, position 1
 BRAND = "#009E73"
 
-# Data - three clusters with different spreads for bivariate distribution
-np.random.seed(42)
+# Columns: set these to your table's column names
+TEMPERATURE = "Temperature (°C)"  # role: x
+HUMIDITY = "Relative Humidity (%)"  # role: y
 
-# Cluster 1: Dense core cluster (temperature measurements)
-n1 = 400
-x1 = np.random.normal(loc=22, scale=3, size=n1)
-y1 = np.random.normal(loc=55, scale=8, size=n1)
+# Data: replace this block with your own table, for example df = pd.read_csv("measurements.csv")
+rng = np.random.default_rng(42)
+clusters = [
+    (400, 22, 3, 55, 8),  # dense core cluster
+    (300, 32, 5, 75, 10),  # more diffuse cluster
+    (150, 15, 2, 80, 5),  # small dense cluster
+]
+df = pd.DataFrame(
+    {
+        TEMPERATURE: np.concatenate([rng.normal(mx, sx, n) for n, mx, sx, _, _ in clusters]),
+        HUMIDITY: np.concatenate([rng.normal(my, sy, n) for n, _, _, my, sy in clusters]),
+    }
+)
 
-# Cluster 2: More diffuse cluster
-n2 = 300
-x2 = np.random.normal(loc=32, scale=5, size=n2)
-y2 = np.random.normal(loc=75, scale=10, size=n2)
-
-# Cluster 3: Small dense cluster
-n3 = 150
-x3 = np.random.normal(loc=15, scale=2, size=n3)
-y3 = np.random.normal(loc=80, scale=5, size=n3)
-
-# Combine clusters
-x = np.concatenate([x1, x2, x3])
-y = np.concatenate([y1, y2, y3])
-
-df = pd.DataFrame({"temperature": x, "humidity": y})
-
-# Plot - density contour with scatter overlay for context
+# Plot: density contours with a faint scatter overlay for context
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_line(color=RULE, size=0.3),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(size=20, color=INK),
-    axis_text=element_text(size=16, color=INK_SOFT),
-    plot_title=element_text(size=24, color=INK),
+    axis_title=element_text(size=12, color=INK),
+    axis_text=element_text(size=10, color=INK_SOFT),
+    plot_title=element_text(size=16, color=INK),
     axis_line=element_line(color=INK_SOFT, size=0.5),
 )
 
 plot = (
-    ggplot(df, aes(x="temperature", y="humidity"))
-    + geom_density2d(color=BRAND, size=1.2, bins=10)
-    + geom_point(color=BRAND, alpha=0.2, size=2)
-    + labs(x="Temperature (°C)", y="Relative Humidity (%)", title="contour-density · letsplot · anyplot.ai")
+    ggplot(df, aes(x=TEMPERATURE, y=HUMIDITY))
+    + geom_point(color=BRAND, alpha=0.2, size=1.5)
+    + geom_density2d(color=BRAND, size=0.9, bins=10)
+    + labs(title="contour-density · python · letsplot · anyplot.ai")
     + theme_minimal()
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
-
-# Save as HTML for interactive version
+# Output
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
 ggsave(plot, f"plot-{THEME}.html", path=".")
