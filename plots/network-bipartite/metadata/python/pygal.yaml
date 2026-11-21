@@ -2,124 +2,133 @@ library: pygal
 language: python
 specification_id: network-bipartite
 created: '2026-05-14T21:19:25Z'
-updated: '2026-05-14T22:12:44Z'
+updated: '2026-11-21T18:00:38Z'
 generated_by: claude-sonnet
-workflow_run: 25885929546
+workflow_run: 44932547953
 issue: 5247
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 84
 review:
   strengths:
-  - Clean readable bipartite layout with two-color Okabe-Ito scheme precisely distinguishing
-    node sets
-  - Both theme renders pass readability checks with correct background tokens and
-    flipping chrome
-  - Deterministic realistic academic collaboration dataset with good variation in
-    connection counts
-  - 'Excellent code quality: KISS structure, clean imports, idiomatic pygal theming
-    via Style object'
+  - 'All five characteristic properties are met: two columns, set colors with named
+    headings, node size by degree, muted straight edges, labels on the outer side
+    of each column'
+  - 'Per-point node dicts ({''node'': {''r'': ...}}) size each dot by degree, a native
+    pygal idiom'
+  - Edges drawn as one None-separated XY series, grey at 0.55 opacity, visible but
+    subordinate in both themes
+  - Theme tokens thread through Style; both renders are readable with identical data
+    colors
+  - Degree counts in the labels make the hubs readable at a glance
+  - Interactive HTML export with pygal tooltips
   weaknesses:
-  - Node size does not clearly encode degree — spec explicitly requires degree-encoded
-    node sizes; overlapping-dot side effect is not a satisfactory substitute
-  - Title includes non-standard prefix before required {spec-id} · {library} · anyplot.ai
-    format
-  - 'Design Excellence at defaults: no visual hierarchy to emphasize hub authors or
-    densely-connected papers'
+  - 'VQ-05 (both): the drawing sits right of centre: about 15 % of the width is empty
+    left of the author labels while the PAPERS heading ends about 3 % from the right
+    edge → balance the margins (shift the view about 0.1 data units left). Likely
+    cause: xrange=(-0.55, 1.4) against label carriers at -0.33 and 1.05.'
+  - 'DQ-02 (both): papers are labelled P01–P10, which reads as placeholder ids → short
+    real-looking paper titles or keywords. Likely cause: the paper ids in the edge
+    list.'
+  - 'CQ-01 (code): four helper functions (column, radius, node_points, label_points)
+    wrap one-line expressions → inline them as comprehensions in the Plot zone. Likely
+    cause: helpers kept from a draft.'
+  - 'Suggestion: the ''Labels'' series could set tooltips off so the invisible label
+    carriers do not show hover boxes in the HTML.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "network-bipartite · pygal · anyplot.ai" in dark text, readable. Column headers "Authors" and "Papers" visible. Author names (Smith, Zhang, Patel, Mueller, Garcia, Kim, Okonkwo, Novak) and paper IDs (P01-P10) legible as node labels.
-      Data: Author nodes are teal (#009E73), paper nodes are orange (#D55E00), edges are neutral gray. Bipartite layout with two columns.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "network-bipartite · python · pygal · anyplot.ai" in dark monospace at top centre; headings "AUTHORS (size = papers)" and "PAPERS (size = authors)"; author labels with degree on the left of the left column, paper labels P01–P10 with degree on the right of the right column. No axes or grid. All text readable.
+      Data: 8 author nodes in #009E73 on the left, 10 paper nodes in #C475FD on the right, sized by degree (Patel 6 and P09 5 the largest); 29 thin grey straight edges between the columns, none within a column.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct
-      Chrome: Title, column headers, and node labels render in light-colored text, clearly readable against dark surface. No dark-on-dark issues detected.
-      Data: Data colors identical to light render — teal authors, orange papers, gray edges. Chrome flips correctly.
+      Background: warm near-black #1A1A17.
+      Chrome: title, headings and labels flip to light text and are clearly readable; no dark-on-dark text.
+      Data: node colors identical to light (#009E73, #C475FD); edges a lighter grey, still visible and subordinate.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, label=18, legend=16); all text
-          readable in both themes; minor deduction for node labels slightly tight
-          at full resolution
+        comment: Title 66 px, labels and headings 44 px; all text readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant label collisions; dense edge bundle in center does
-          not obscure text
+        comment: Labels sit on the outer side of each column, clear of edges and nodes
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Teal/orange dots clearly visible; edges appropriately subtle gray
+        comment: Smallest nodes (degree 2) clearly visible; grey edges at 0.55 opacity
+          visible in both themes, thinner and lighter than the nodes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Teal and orange (Okabe-Ito 1-2) are colorblind-safe; gray edges neutral
+        comment: Green vs purple sets are CVD-safe; neutral grey edges
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Bipartite layout fills canvas well; wide empty horizontal band in
-          center edge-crossing zone
+        comment: '3200x1800 canvas; drawing shifted right: wide empty left margin,
+          right heading close to the edge (defect line)'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Authors/Papers column headers serve as effective labels; title present
+        comment: No axes by design; column headings name both sets and the size encoding
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First set uses #009E73, second uses #D55E00; backgrounds #FAF8F1/#1A1A17
-          correct; chrome flips correctly'
+        comment: 'Authors #009E73, papers #C475FD, neutral edges; #FAF8F1 / #1A1A17
+          backgrounds; data colors identical in both themes'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Intentional two-color scheme above defaults; not exceptional — no
-          visual hierarchy or distinctive styling choices
+        comment: Column headings that also explain the size encoding, set in capitals
+          above each column; consistent type hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid guides disabled, axis ticks/labels hidden, clean minimal chrome
+        comment: Labels placed on the outer side with even rhythm, node and label
+          rows aligned, edges muted so nodes lead
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed correctly but no visual emphasis on hubs or clusters;
-          degree in legend labels adds modest context
+        passed: true
+        comment: Degree counts in each label make the hubs (Patel 6, Smith 5, P09
+          5) readable beyond the size encoding
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,91 +136,89 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bipartite network: two distinct node sets in separate columns,
-          edges only between sets'
+        comment: Bipartite network with two parallel columns, edges only between sets
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Node coloring by set ✓; columnar separation ✓; degree-encoded node
-          size missing — overlapping dot effect is not clearly intentional or readable
+        comment: C1 columns, C2 set colors + headings, C3 degree sizing, C4 straight
+          muted edges, C5 outer-side labels all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Authors left (x=0), Papers right (x=10); Y positions evenly distributed;
-          all nodes visible
+        comment: Layout-positioned type; every edge drawn between its author and paper
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title has extra 'Author-Paper Network · ' prefix before required
-          format; legend labels meaningful with degree annotations
+        comment: Title 'network-bipartite · python · pygal · anyplot.ai'; headings
+          serve as the legend
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows varied connection counts (2-4 per author, 1-3 per paper); reveals
-          hubs; no isolated nodes is slight gap
+        comment: Hubs and low-degree nodes on both sides, crossings, dense central
+          band
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Academic author-paper collaboration network: classic, neutral, realistic
-          bipartite use case'
+        comment: Author-paper network is neutral and plausible, but papers labelled
+          P01–P10 read as abstract (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8 authors, 10 papers, 24 edges; within spec range; realistic academic
-          proportions
+        comment: 8 authors, 10 papers, 29 edges, inside spec range; degree labels
+          checked against the edge list (Patel 6, Smith 5, P09 5, P10 4)
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Clear flow; sys.path workaround is necessary and well-commented
+        comment: Four helper functions (column, radius, node_points, label_points)
+          (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Deterministic hard-coded edge list
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, pygal, Style imported and used
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; clever None-separated segment technique; no
-          fake functionality
+        comment: Appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -219,22 +226,26 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY() with proper Style theming; workaround for no native
-          network type is pragmatic but not idiomatic
+        comment: pygal.XY with Style theming; label carrier series is a workaround
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Leverages pygal interactive HTML export, series-based legend with
-          degree annotations, None-separator segment pattern
+        comment: Per-point node dicts set each dot radius, print_labels for per-point
+          text, None-separated segments for edges
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T17:56:55Z'
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - custom-legend
   - html-export
-  patterns:
-  - iteration-over-groups
+  patterns: []
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
