@@ -2,50 +2,51 @@ library: plotnine
 language: python
 specification_id: contour-filled
 created: '2025-12-30T00:04:15Z'
-updated: '2026-05-11T13:36:27Z'
-generated_by: claude-haiku
-workflow_run: 25672904962
+updated: '2026-11-21T02:33:22Z'
+generated_by: claude-sonnet
+workflow_run: 44856004471
 issue: 2500
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 83
 review:
   strengths:
-  - 'Perfect visual quality: all text explicitly sized and readable in both light
-    and dark themes with zero overlap or visibility issues'
-  - 'Excellent theme implementation: both renders pass the legibility check with proper
-    color adaptation and no dark-on-dark failures'
-  - Correct palette selection (BrBG diverging) with strong contrast and smooth transitions
-    ideal for continuous 2D fields
-  - 'Full spec compliance: correct filled contour plot type with all required features,
-    colorbar, and proper title/legend formatting'
-  - Clean KISS code structure with deterministic sinusoidal interference pattern data
-    generation
-  - 'Expertly idiomatic plotnine usage: proper grammar of graphics patterns with geom_tile,
-    scale_fill_cmap, and comprehensive theme customization'
+  - Evenly stepped, zero-symmetric levels (14 bands from ±max|z|) give a true banded
+    filled contour with the diverging midpoint exactly at 0
+  - imprint_div built with scale_fill_gradient2 and a theme-adaptive page-colored
+    midpoint; chrome flips cleanly between the two themes
+  - guide_colorbar(nbin=N_LEVELS) and breaks on the level boundaries make the colorbar
+    show the same steps as the field
+  - scale expand=(0, 0) lets the bands fill the panel edge to edge with no empty margin
+  - 'Clean adaptable-code layout: column constants with role comments, one Data block,
+    plot reads only df'
   weaknesses:
-  - 'Design Excellence is generic (10/20): implementation follows configured library
-    defaults without introducing distinctive aesthetic choices or visual hierarchy
-    that would elevate it from polished to exceptional'
-  - 'Data storytelling absent (DE-03 = 2/6): while the sinusoidal interference pattern
-    is interesting, the visualization presents raw data without visual emphasis or
-    narrative that guides the viewer toward insights'
+  - 'SC-02 (both): C2 missed: band boundaries are stair-stepped, every band edge follows
+    the 100x100 tile grid in visible square steps (clearest around the peaks at (±5,
+    0) and (±1, ±3)) → smooth band edges. Likely cause: geom_tile on the raw grid;
+    interpolate the field to a finer grid (e.g. 300x300) before digitizing, or draw
+    the bands as polygons.'
+  - 'CQ-04 (code): IMPRINT_PALETTE on line 35 is defined and never used → delete it.
+    Likely cause: copied token block; only the three DIV_* colors are used.'
+  - 'Suggestion: thin contour lines along the band boundaries (the Notes allow them)
+    would make the level edges easier to read in the dark render, where the near-zero
+    bands are close to the background.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct specification
-      Chrome: Title "contour-filled · plotnine · anyplot.ai" in dark text (24pt, easily readable); axis labels "X Coordinate" and "Y Coordinate" in dark text (20pt, fully legible); tick labels at -4, 0, 4 in secondary dark tone (16pt, clear contrast); grid lines subtle (alpha=0.10, barely visible but present)
-      Data: Filled contour using BrBG diverging colormap showing sinusoidal interference pattern; teal colors represent lower values (~-1.5), orange/brown represent higher values (~1.5); smooth color transitions without banding; colorbar legend labeled "Value" on right side with clear scale markings
-      Legibility verdict: PASS - all text perfectly readable with excellent contrast against light background; no legibility issues
+      Background: warm off-white #FAF8F1 page and panel; 3200x1800.
+      Chrome: title 'Interference field · contour-filled · python · plotnine · anyplot.ai' in dark ink, centered, ~80% width; axis titles 'X coordinate' / 'Y coordinate' and ticks -6, -3, 0, 3, 6 in dark soft ink; colorbar 'Field value' with labels -1.6 … 1.6 in an elevated light box; all readable.
+      Data: 14 evenly stepped bands of a sine/cosine interference field on a 100x100 grid, red (#AE3030) for negative, blue (#4467A3) for positive, near-page pinkish/bluish greys around zero; 4x5 grid of alternating red and blue closed lobes; band edges stair-stepped along the tile grid. No categorical series (continuous ramp).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct specification
-      Chrome: Title in light text (#F0EFE8, 24pt, clearly visible); axis labels in light text (20pt, fully readable); tick labels in secondary light tone (#B8B7B0, 16pt, good contrast); grid lines subtle but slightly more visible due to dark background; legend box background uses elevated dark tone (#242420, proper contrast)
-      Data: Identical data colors to light render - teal and orange/brown regions match exactly; sinusoidal interference pattern shows the same visual structure; no color shifts or inconsistencies between themes (only chrome adapted)
-      Legibility verdict: PASS - all text readable in dark theme with no dark-on-dark failures; secondary text color (#B8B7B0) maintains adequate contrast; data visualization remains clear and distinct
+      Background: warm near-black #1A1A17 page and panel.
+      Chrome: title, axis titles in light ink, ticks and colorbar labels in light soft ink, colorbar box in #242420; no dark-on-dark text.
+      Data: same red and blue poles as the light render; the diverging midpoint follows the page color, so near-zero bands are dark reddish/bluish greys, still distinguishable from each other; same lobe layout and stair-stepped edges.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,53 +57,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis_title 20pt, axis_text
-          16pt; perfectly readable in both light and dark renders'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend text 8 pt (style-guide
+          sizes); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements; all labels clearly separated; axes
-          and tick marks fully distinct
+        comment: No text collisions; colorbar sits clear of the panel
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled contour tiles crisp and distinct; 80x80 grid resolution provides
-          smooth color transitions; no blockiness or visibility issues
+        comment: Bands fill the whole panel; 14 band colors distinguishable in both
+          themes, including the dark near-zero bands
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: BrBG diverging colormap is perceptually uniform and colorblind-safe;
-          strong contrast between teal and orange; adequate luminance difference
+        comment: Red–blue diverging ramp, CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot occupies 60-70% of canvas; balanced margins on all sides; legend
-          positioned naturally; excellent space utilization
+        comment: 3200x1800 canvas; expand=(0,0) lets the field fill the panel; title
+          ~80% width as expected for the mandated title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''contour-filled · plotnine · anyplot.ai'';
-          axes descriptively labeled ''X Coordinate'' and ''Y Coordinate'''
+        comment: '''X coordinate'', ''Y coordinate'', colorbar ''Field value'' are
+          reader text for a unitless math field'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'BrBG is recommended diverging continuous colormap; background #FAF8F1
-          light / #1A1A17 dark correct; theme-adaptive text and grid colors perfect
-          in both renders'
+        comment: 'imprint_div (#AE3030 / page-colored midpoint / #4467A3) centered
+          at 0; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -110,24 +108,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional polish with theme tokens and diverging colormap; follows
-          configured defaults rather than distinctive or exceptional aesthetic choices
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Grid subtly customized (alpha 0.10/0.05); panel border refined; good
-          whitespace but room for enhancement
+        comment: 'Beyond baseline: zero scale expansion so bands meet the frame, colorbar
+          breaks placed on every other level boundary with one-decimal labels'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Sinusoidal interference pattern is interesting but no visual hierarchy
-          or emphasis guides viewer toward insights; presents raw data without narrative
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,29 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled contour plot; uses geom_tile with continuous fill
-          mapping
+        comment: 'Filled contour: discrete bands between evenly stepped levels'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Colorbar present; 80x80 grid resolution provides smooth transitions;
-          filled contour complete
+        passed: false
+        comment: 'Colorbar, 14 evenly stepped levels symmetric about 0 (C3, C4) present;
+          C2 missed: band boundaries render stair-stepped (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly mapped to spatial axes; Z correctly mapped to fill
-          color via BrBG; axes show full data extent
+        comment: x/y on the axes, full grid extent shown, each cell colored by its
+          band
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec format; legend label 'Value' appropriate; both
-          present and correct
+        comment: '''Interference field · contour-filled · python · plotnine · anyplot.ai'';
+          colorbar titled ''Field value'''
     data_quality:
       score: 15
       max: 15
@@ -167,24 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full range: high positive (orange), low negative (teal), smooth
-          transitions; demonstrates 2D field variation comprehensively'
+        comment: Peaks, basins, saddles and flat near-zero areas all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sinusoidal interference is realistic mathematical phenomenon; could
-          represent weather, acoustic, or physical fields; neutral and scientific
+        comment: Mathematical interference field, the spec's own example kind; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values -1.5 to 1.5 mathematically correct for sine/cosine combinations;
-          proportions logically sound; no impossibilities
+        comment: 'Checked: field range about ±1.6 matches the colorbar limits computed
+          from nanmax(|z|); no check values in the spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -192,53 +185,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → save; no unnecessary
-          functions or classes'
+        comment: Imports → tokens → constants → Data block → Plot → Save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic np.linspace data generation; no randomness; fully reproducible
+        comment: Deterministic meshgrid
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, plotnine); all utilized
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean Pythonic code; appropriate complexity; no over-engineering
-          or fake functionality
+        passed: false
+        comment: IMPRINT_PALETTE defined on line 35 and never used (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png; uses current plotnine API; proper
-          DPI and dimensions
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi=400; current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert grammar of graphics: ggplot() + geom_tile() + scale_fill_cmap()
-          + theme(); proper aes() mapping; idiomatic element_* customization'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses theme-adaptive tokens and theme system effectively; however,
-          features are standard grammar-of-graphics patterns, not unique to plotnine
+        comment: 'Beyond the prompt: scale_fill_gradient2 with limits/breaks/labels
+          callable and scale expand control'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: guide_colorbar(nbin=N_LEVELS) to step the colorbar to the band count
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T02:29:42Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -246,7 +238,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - binning
   styling:
-  - custom-colormap
-  - grid-styling
+  - publication-ready

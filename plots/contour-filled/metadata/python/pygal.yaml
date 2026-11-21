@@ -12,145 +12,160 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 58
 review:
   strengths:
-  - Excellent technical execution with sophisticated marching squares algorithm for
-    accurate contour rendering
-  - Perfect theme adaptation with correct colors and readable text in both light and
-    dark renders
-  - All specification requirements met with professional colorbar and overlaid contour
-    lines
-  - Clean code structure with deterministic data generation and proper reproducibility
-  - High-resolution rendering (4800×2700) with appropriately scaled fonts and elements
-  - Professional diverging colormap (blue-white-red) appropriate for continuous data
-    visualization
+  - Theme tokens applied to all injected text and frame elements
+  - Deterministic Gaussian-peaks field with peaks, a basin and a saddle neck
   weaknesses:
-  - Design Excellence could be improved - while technically excellent, visual design
-    is relatively straightforward without additional visual refinement beyond the
-    colormap
-  - Library Mastery reduced due to heavy reliance on manual SVG injection rather than
-    leveraging pygal's high-level API features
-  - Visual hierarchy is natural from colormap but not explicitly emphasized - no specific
-    peak is highlighted as a focal point
-  - Minimal design customization beyond required elements - no additional annotations
-    or advanced visual storytelling techniques
+  - 'VQ-05 (both): canvas is 4800x2700, not a canonical size → 3200x1800 (−1600 ×
+    −900). Likely cause: pygal.XY(width=4800, height=2700).'
+  - 'VQ-01 (both): title at 28 px and ticks at 36 px on the 4800-wide canvas read
+    far below the style guide''s 66 px title / 44 px ticks at 3200 → style-guide sizes
+    on a 3200x1800 canvas. Likely cause: title_font_size=28 and the 36 px tick font.'
+  - 'SC-04 (both): title ''contour-filled · pygal · anyplot.ai'' lacks the language
+    segment → ''contour-filled · python · pygal · anyplot.ai''. Likely cause: the
+    title string.'
+  - 'VQ-07 (both): continuous ramp is custom RdBu-style hexes (#08306b … #67001f),
+    not imprint_div → #AE3030 ↔ page-colored midpoint ↔ #4467A3. Likely cause: the
+    colormap list.'
+  - 'SC-01, SC-02 (both): the field is drawn as 80x80 flat-colored cells in a continuous
+    gradient, so there are no level bands and the boundaries stair-step (C1, C2, C3)
+    → filled polygons between evenly stepped levels. Likely cause: one <rect> per
+    cell colored by the cell mean.'
+  - 'SC-02 (both): the diverging ramp''s white midpoint sits near 0.26 instead of
+    the field''s zero, and the color bar is a continuous gradient that shows no levels
+    (C4) → levels symmetric about 0 and a discrete color bar of the fill''s levels.
+    Likely cause: linspace(z_min, z_max) normalisation.'
+  - 'VQ-03, SC-02 (both): contour lines render as disjoint short dashes instead of
+    continuous curves (C5) → joined segments along every band boundary. Likely cause:
+    marching-squares segments drawn as separate <line> elements with gaps at cell
+    edges.'
+  - 'VQ-02 (both): color-bar title ''Intensity'' runs into the plot frame; in the
+    dark render its ''I'' sits over the light-blue field and vanishes → clear it of
+    the frame. Likely cause: cb_x only 60 px right of the plot with a centred title.'
+  - 'CQ-01 (code): line 27 opens the Data block with no column-0 # Plot marker after
+    it → one block between # Data and # Plot markers that ends by binding df. Likely
+    cause: the plot code is not separated from the data generation.'
+  - 'CQ-01 (code): no column constant for the required roles x, y, z → one string
+    constant per role above the Data block with a # role: comment. Likely cause: column
+    names typed where they are used.'
+  - 'CQ-04 (code): lines 116–128 and 262–274 write out the same color interpolation
+    twice → one matplotlib.colors.LinearSegmentedColormap called in both places. Likely
+    cause: copy-pasted inline interpolation.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface
-      Chrome: Title "contour-filled · pygal · anyplot.ai" (bold, dark), axis labels "X Position (a.u.)" and "Y Position (a.u.)" (dark, rotated), tick labels (gray), colorbar title "Intensity" (bold, dark), all text clearly readable against light background
-      Data: Filled contour plot with diverging blue-white-red colormap showing four Gaussian peaks (two positive/red, one negative/blue, one mixed). Contour lines overlay the filled regions. Colorbar on right shows value mapping from low (blue) to high (red) intensity
-      Legibility verdict: PASS - All text is clearly visible and well-positioned
+      Background: warm off-white #FAF8F1 page around a 4800x2700 canvas.
+      Chrome: tiny title 'contour-filled · pygal · anyplot.ai' (28 px) at top; bold axis titles 'X Position (a.u.)' / 'Y Position (a.u.)'; small ticks -3.0..3.0; color bar 'Intensity' with labels 1.50, 0.88, 0.26, -0.36, -0.98; the title's 'I' touches the plot frame. Readable but small.
+      Data: an 80x80 grid of flat-colored rectangles in a continuous RdBu-style ramp (dark blue basin at (-1,-1), dark red peak at (1,1), salmon peak at (1,-1.5), white bump at (-1.5,0.6)), visibly stair-stepped; dark contour lines drawn as disconnected short dashes.
+      Legibility verdict: PASS (small text)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface
-      Chrome: Title, axis labels, and tick labels are light-colored (#F0EFE8 for titles, #B8B7B0 for ticks) and clearly readable against dark background. Colorbar labels are light and visible. Axis frame is rendered in light gray
-      Data: Identical filled contours and colorbar colors as light render - data visualization colors are perfectly consistent between themes. Only the chrome (text and frame colors) has adapted to dark theme
-      Legibility verdict: PASS - All text is clearly visible against dark background, no dark-on-dark failures. Contour lines remain visible
-
-    Both renders pass theme-readability checks with high quality.
+      Background: warm near-black #1A1A17 page; the plot area stays the same light-blue ramp.
+      Chrome: light title, axis titles and ticks, readable; the color-bar title's 'I' sits over the light-blue plot edge and disappears.
+      Data: identical cell colors; contour dashes in light ink, faint over the pale blue regions.
+      Legibility verdict: PASS (small text; colorbar title partly lost)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 15
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 3
         max: 8
-        passed: true
-        comment: 'All fonts explicitly sized: title 28px, labels 22px, ticks 18px.
-          Readable in both themes'
+        passed: false
+        comment: Title 28 px and ticks 36 px on a 4800-wide canvas read far below
+          the style-guide sizes (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Well-spaced elements, no overlapping text
+        comment: Color-bar title 'Intensity' runs into the plot frame (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: 80x80 grid produces smooth color transitions without jagging
+        passed: false
+        comment: Contour lines render as disjoint dashes (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging colormap is colorblind-safe with good contrast
+        comment: Red-blue diverging ramp is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Generous margins (120-300px), good aspect ratio, nothing cut off
+        passed: false
+        comment: Canvas 4800x2700, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All labels descriptive with units
+        comment: Axis titles with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Correct BrBG-like diverging colormap, backgrounds #FAF8F1/#1A1A17,
-          theme-adapted text'
+        passed: false
+        comment: RdBu-style custom hex ramp, not imprint_div (defect line)
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional custom colormap and marching squares algorithm, intentional
-          design
+        passed: false
+        comment: Baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle contour lines provide refinement, good whitespace, professional
-          styling
+        passed: false
+        comment: Baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Natural visual hierarchy from cool-warm color progression guides
-          viewer
+        passed: false
+        comment: Field displayed, no chosen hierarchy
     spec_compliance:
-      score: 15
+      score: 9
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Filled contour plot with overlaid lines - correct
+        passed: false
+        comment: Continuous-gradient cell heatmap rather than level bands (defect
+          line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: 'All features present: colorbar, contour lines, color bands'
+        passed: false
+        comment: Misses C1/C2 (stair-stepped cells), C3/C4 (no levels in the fill,
+          color bar continuous, ramp centred near 0.26 not 0), C5 (broken lines) (defect
+          lines)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, Z to color, full range displayed
+        comment: x/y full extent, z to color
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct, colorbar labels show value mapping
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -160,70 +175,72 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows multiple peaks with different intensities and widths
+        comment: Peaks, basin, saddle neck present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical Gaussian function realistic for scientific visualization
+        comment: Gaussian peaks, the spec's example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 80x80 grid and data range are sensible and proportional
+        comment: Range -0.98..1.50 matches the formula
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Direct script without unnecessary functions
+        passed: false
+        comment: No Data/Plot separation and no column constants (defect lines)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used and necessary
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Sophisticated marching squares algorithm, no fake interactivity
+        passed: false
+        comment: Color interpolation written out twice (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format plot-{THEME}.png and .html
+        comment: plot-{THEME}.png/.html
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses pygal.XY and Style correctly, but heavy manual SVG injection
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Leverages SVG rendering capability and cairosvg integration
+        passed: false
+        comment: Style/XY for canvas; field injected as SVG
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond the mandated
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies:
   - cairosvg
