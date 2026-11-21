@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-15
@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label, Span
+from bokeh.models import ColumnDataSource, FixedTicker, HoverTool, Label, Range1d, Span
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -24,15 +24,21 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for data colors
-CHROM_COLOR_1 = "#009E73"  # Okabe-Ito position 1 (first series)
-CHROM_COLOR_2 = "#C475FD"  # Okabe-Ito position 2 (alternating)
-SIG_COLOR = "#954477"  # Okabe-Ito position 7 (significant SNPs highlight)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulated GWAS data with significant peaks
+# Constants
+GENOME_WIDE_P = 5e-8  # conventional genome-wide significance threshold
+SUGGESTIVE_P = 1e-5  # optional suggestive threshold
+
+# Columns: set these to your table's column names
+CHROMOSOME = "Chromosome"  # role: chromosome
+POSITION = "Position (bp)"  # role: position
+P_VALUE = "p-value"  # role: p_value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("gwas.csv")
 np.random.seed(42)
-
-chrom_sizes = {
+chrom_sizes_mb = {
     "1": 248,
     "2": 242,
     "3": 198,
@@ -56,169 +62,140 @@ chrom_sizes = {
     "21": 46,
     "22": 50,
 }
-
-# Generate SNP data
 n_snps_per_chrom = 2000
-data = []
-cumulative_pos = 0
-chrom_centers = {}
-
-for chrom, size in chrom_sizes.items():
+peak_chromosomes = ["2", "6", "11", "17"]
+chunks = []
+for chrom, size in chrom_sizes_mb.items():
     positions = np.sort(np.random.randint(1, size * 1_000_000, n_snps_per_chrom))
     p_values = np.random.uniform(0.001, 1.0, n_snps_per_chrom)
+    if chrom in peak_chromosomes:
+        n_peak = np.random.randint(5, 15)
+        peak_idx = np.random.choice(n_snps_per_chrom, n_peak, replace=False)
+        p_values[peak_idx] = 10 ** np.random.uniform(-12, -8, n_peak)
+    chunks.append(pd.DataFrame({CHROMOSOME: chrom, POSITION: positions, P_VALUE: p_values}))
+df = pd.concat(chunks, ignore_index=True)
 
-    if chrom in ["2", "6", "11", "17"]:
-        n_significant = np.random.randint(5, 15)
-        peak_indices = np.random.choice(n_snps_per_chrom, n_significant, replace=False)
-        p_values[peak_indices] = 10 ** np.random.uniform(-12, -8, n_significant)
+# Plot: reads only df and the constants above
+NEG_LOG_P = "-log₁₀(p-value)"
+CUMULATIVE = "Cumulative position (bp)"
+chroms = list(df[CHROMOSOME].unique())
+extent = df.groupby(CHROMOSOME, sort=False)[POSITION].max()
+offsets = extent.cumsum().shift(fill_value=0)
+df[CUMULATIVE] = df[POSITION] + df[CHROMOSOME].map(offsets)
+df[NEG_LOG_P] = -np.log10(df[P_VALUE])
+centers = offsets + extent / 2
 
-    cumulative_positions = positions + cumulative_pos
-    chrom_centers[chrom] = cumulative_pos + (size * 1_000_000) / 2
+sig_line = -np.log10(GENOME_WIDE_P)
+sug_line = -np.log10(SUGGESTIVE_P)
+is_sig = df[NEG_LOG_P] >= sig_line
+is_odd = df[CHROMOSOME].map({c: i % 2 == 0 for i, c in enumerate(chroms)})
+groups = [
+    ("Odd chromosomes", ~is_sig & is_odd, IMPRINT_PALETTE[0], 4),
+    ("Even chromosomes", ~is_sig & ~is_odd, IMPRINT_PALETTE[1], 4),
+    ("Genome-wide significant", is_sig, IMPRINT_PALETTE[6], 11),
+]
 
-    for i in range(n_snps_per_chrom):
-        data.append(
-            {
-                "chromosome": chrom,
-                "position": positions[i],
-                "cumulative_pos": cumulative_positions[i],
-                "p_value": p_values[i],
-                "neg_log_p": -np.log10(p_values[i]),
-            }
-        )
-
-    cumulative_pos += size * 1_000_000
-
-df = pd.DataFrame(data)
-
-# Assign alternating colors based on chromosome parity
-chrom_int = df["chromosome"].astype(int)
-df["color"] = df["chromosome"].apply(lambda x: CHROM_COLOR_1 if int(x) % 2 == 1 else CHROM_COLOR_2)
-df["color_label"] = df["chromosome"].apply(lambda x: "Odd chromosome" if int(x) % 2 == 1 else "Even chromosome")
-
-# Highlight significant SNPs
-significance_threshold = -np.log10(5e-8)
-significant_mask = df["neg_log_p"] >= significance_threshold
-df.loc[significant_mask, "color"] = SIG_COLOR
-df.loc[significant_mask, "color_label"] = "Significant SNP (p < 5×10⁻⁸)"
-
-# Adjust point sizes
-df["size"] = 6
-df.loc[significant_mask, "size"] = 12
-
-# Plot
-source = ColumnDataSource(df)
-
+title = "manhattan-gwas · python · bokeh · anyplot.ai"
 p = figure(
-    width=4800,
-    height=2700,
-    title="manhattan-gwas · bokeh · anyplot.ai",
-    x_axis_label="Genomic Position",
-    y_axis_label="-log₁₀(p-value)",
+    width=3200,
+    height=1800,
+    title=title,
+    x_axis_label=CHROMOSOME,
+    y_axis_label=NEG_LOG_P,
     tools="pan,wheel_zoom,box_zoom,reset,save",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
+)
+p.y_range = Range1d(0, df[NEG_LOG_P].max() * 1.08)
+p.x_range = Range1d(0, extent.sum())
+
+for label, mask, color, size in groups:
+    p.scatter(
+        x=CUMULATIVE,
+        y=NEG_LOG_P,
+        source=ColumnDataSource(df[mask]),
+        size=size,
+        color=color,
+        alpha=1.0 if size > 4 else 0.7,
+        line_color=None,
+        legend_label=label,
+    )
+
+# Threshold lines: dashed genome-wide, dotted suggestive
+p.add_layout(Span(location=sig_line, dimension="width", line_color=INK_SOFT, line_dash="dashed", line_width=3))
+p.add_layout(Span(location=sug_line, dimension="width", line_color=INK_SOFT, line_dash="dotted", line_width=2))
+for loc, text in (
+    (sig_line, f"p = {GENOME_WIDE_P / 1e-8:.0f}×10⁻⁸"),
+    (sug_line, f"p = {SUGGESTIVE_P / 1e-5:.0f}×10⁻⁵"),
+):
+    p.add_layout(
+        Label(
+            x=extent.sum(),
+            y=loc,
+            y_offset=8,
+            x_offset=-10,
+            text=text,
+            text_font_size="24pt",
+            text_align="right",
+            text_color=INK_SOFT,
+            background_fill_color=PAGE_BG,
+            background_fill_alpha=0.8,
+        )
+    )
+
+p.add_tools(
+    HoverTool(
+        tooltips=[
+            (CHROMOSOME, f"@{{{CHROMOSOME}}}"),
+            (POSITION, f"@{{{POSITION}}}{{0,0}}"),
+            (NEG_LOG_P, f"@{{{NEG_LOG_P}}}{{0.00}}"),
+        ]
+    )
 )
 
-# Scatter plot with legend
-p.scatter(
-    x="cumulative_pos",
-    y="neg_log_p",
-    source=source,
-    size="size",
-    color="color",
-    alpha=0.7,
-    line_color=None,
-    legend_field="color_label",
-)
-
-# Significance threshold line
-significance_line = Span(
-    location=significance_threshold, dimension="width", line_color=INK_SOFT, line_dash="dashed", line_width=3
-)
-p.add_layout(significance_line)
-
-# Suggestive threshold line
-suggestive_threshold = -np.log10(1e-5)
-suggestive_line = Span(
-    location=suggestive_threshold, dimension="width", line_color=INK_SOFT, line_dash="dotted", line_width=2
-)
-p.add_layout(suggestive_line)
-
-# Threshold labels
-sig_label = Label(
-    x=cumulative_pos * 0.98,
-    y=significance_threshold + 0.3,
-    text="p = 5×10⁻⁸",
-    text_font_size="18pt",
-    text_color=INK_SOFT,
-)
-p.add_layout(sig_label)
-
-sug_label = Label(
-    x=cumulative_pos * 0.98, y=suggestive_threshold + 0.3, text="p = 1×10⁻⁵", text_font_size="18pt", text_color=INK_SOFT
-)
-p.add_layout(sug_label)
-
-# Add chromosome labels
-for chrom, center in chrom_centers.items():
-    chrom_label = Label(x=center, y=-0.8, text=chrom, text_font_size="16pt", text_align="center", text_color=INK_SOFT)
-    p.add_layout(chrom_label)
-
-# Add HoverTool for interactivity
-hover = HoverTool(
-    tooltips=[
-        ("Chromosome", "@chromosome"),
-        ("Position", "@{position:0,0}"),
-        ("-log₁₀(p)", "@{neg_log_p:.2f}"),
-        ("Type", "@color_label"),
-    ]
-)
-p.add_tools(hover)
-
-# Style the plot
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "0pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.ticker = FixedTicker(ticks=[float(c) for c in centers])
+p.xaxis.major_label_overrides = {float(c): str(name) for name, c in centers.items()}
+p.xaxis.major_label_text_font_size = "26pt"
+p.yaxis.major_label_text_font_size = "30pt"
+p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-
-# Hide x-axis ticks (using chromosome labels instead)
 p.xaxis.major_tick_line_color = None
 p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-
-# Grid styling
-p.xgrid.grid_line_alpha = 0.10
-p.ygrid.grid_line_alpha = 0.10
-p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
-
-# Background and borders
+p.ygrid.grid_line_alpha = 0.15
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Legend styling
-if p.legend:
-    p.legend.background_fill_color = ELEVATED_BG
-    p.legend.border_line_color = INK_SOFT
-    p.legend.label_text_color = INK_SOFT
-    p.legend.label_text_font_size = "16pt"
-    p.legend.location = "top_right"
+p.legend.location = "top_right"
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.label_text_color = INK
+p.legend.label_text_font_size = "26pt"
+p.legend.glyph_height = 40
+p.legend.glyph_width = 40
+p.legend.padding = 20
 
-# Set y-axis range to accommodate chromosome labels
-p.y_range.start = -1.5
-p.y_range.end = df["neg_log_p"].max() + 1
-
-# Save HTML
+# Save HTML + PNG
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome via Selenium
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -233,6 +210,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
