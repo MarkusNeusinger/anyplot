@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stepwise: Step Line Plot
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-13
@@ -24,55 +24,49 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"
 
-# Data - Server Response Time Monitor (discrete state changes)
+# Column constants
+HOUR = "Hour of Day"  # role: x
+RESPONSE = "Response Time (ms)"  # role: y
+
+# Data: server response time monitor (discrete state changes); replace with your own table
 np.random.seed(42)
-hours = np.arange(0, 24)
-
-# Response time that changes in steps (server performance states)
-base_response = 50
-response_times = [base_response]
-
-for i in range(1, 24):
-    if i in [6, 9, 12, 15, 18, 21]:
+levels = [50]
+for hour in range(1, 24):
+    if hour in [6, 9, 12, 15, 18, 21]:
         change = np.random.choice([-20, -10, 10, 20, 30])
-        new_val = max(20, min(150, response_times[-1] + change))
-        response_times.append(new_val)
+        levels.append(max(20, min(150, levels[-1] + change)))
     else:
-        response_times.append(response_times[-1])
+        levels.append(levels[-1])
+df = pd.DataFrame({HOUR: np.arange(0, 24), RESPONSE: levels})
 
-response_times = np.array(response_times)
-df = pd.DataFrame({"hour": hours, "response_time": response_times})
-
-# Theme-adaptive plot styling
+# Plot
 anyplot_theme = theme(  # noqa: F405
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_line(color=INK_SOFT, size=0.3),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(size=20, color=INK),
-    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_title=element_text(size=12, color=INK),
+    axis_text=element_text(size=10, color=INK_SOFT),
     axis_line=element_line(color=INK_SOFT, size=0.5),
-    plot_title=element_text(size=24, color=INK),
+    plot_title=element_text(size=16, color=INK),
 )
 
-# Plot
+# Mark the points where the level changes
+changes = df[df[RESPONSE].diff().fillna(0) != 0]
+
 plot = (
-    ggplot(df, aes(x="hour", y="response_time"))  # noqa: F405
-    + geom_step(color=BRAND, size=2, direction="hv")  # noqa: F405
-    + geom_point(  # noqa: F405
-        data=df[df["hour"].isin([6, 9, 12, 15, 18, 21])], color=BRAND, size=5, shape=21, fill=BRAND, stroke=1.5
-    )
-    + labs(  # noqa: F405
-        x="Hour of Day", y="Response Time (ms)", title="line-stepwise · letsplot · anyplot.ai"
-    )
-    + scale_x_continuous(breaks=list(range(0, 25, 3)))  # noqa: F405
+    ggplot(df, aes(x=HOUR, y=RESPONSE))  # noqa: F405
+    + geom_step(color=BRAND, size=1.0, direction="hv")  # noqa: F405
+    + geom_point(data=changes, color=BRAND, size=2.5, shape=21, fill=BRAND, stroke=0.8)  # noqa: F405
+    + labs(title="line-stepwise · python · letsplot · anyplot.ai")  # noqa: F405
+    + scale_x_continuous(breaks=list(range(0, int(df[HOUR].max()) + 2, 3)))  # noqa: F405
     + scale_y_continuous(expand=[0.05, 0.05])  # noqa: F405
     + theme_minimal()  # noqa: F405
     + anyplot_theme
     + theme(legend_position="none")  # noqa: F405
-    + ggsize(1600, 900)  # noqa: F405
+    + ggsize(800, 450)  # noqa: F405
 )
 
 # Save PNG and HTML with theme suffix
-export_ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=3)
+export_ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
 export_ggsave(plot, filename=f"plot-{THEME}.html", path=".")
