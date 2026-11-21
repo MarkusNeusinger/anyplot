@@ -1,106 +1,124 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-asymmetric: Asymmetric Error Bars Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-13
 """
 
 import os
-import sys
+
+import altair as alt
+import numpy as np
+import pandas as pd
+from PIL import Image
 
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir and p != ""]
-
-import altair as alt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+# Imprint palette: a single series uses position 1 alone
 BRAND = "#009E73"
 
-np.random.seed(42)
-products = ["Product A", "Product B", "Product C", "Product D", "Product E", "Product F"]
-central_values = np.array([85.2, 72.8, 91.5, 68.3, 78.9, 82.1])
-error_lower = np.array([5.2, 8.1, 3.8, 9.5, 6.3, 4.9])
-error_upper = np.array([8.7, 4.3, 6.2, 5.8, 10.1, 7.6])
+# Columns: set these to your table's column names
+PRODUCT = "Product"  # role: x
+QUALITY = "Quality score"  # role: y
+ERROR_LOWER = "Error below (points)"  # role: error_lower
+ERROR_UPPER = "Error above (points)"  # role: error_upper
 
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 df = pd.DataFrame(
     {
-        "Product": products,
-        "Quality Score": central_values,
-        "Lower": central_values - error_lower,
-        "Upper": central_values + error_upper,
+        PRODUCT: ["Product A", "Product B", "Product C", "Product D", "Product E", "Product F"],
+        QUALITY: [85.2, 72.8, 91.5, 68.3, 78.9, 82.1],
+        ERROR_LOWER: [5.2, 8.1, 3.8, 9.5, 6.3, 4.9],
+        ERROR_UPPER: [8.7, 4.3, 6.2, 5.8, 10.1, 7.6],
     }
 )
 
-error_bars = (
-    alt.Chart(df)
-    .mark_rule(strokeWidth=3, color=BRAND)
-    .encode(
-        x=alt.X("Product:N", title="Product", axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=0)),
-        y=alt.Y(
-            "Lower:Q",
-            title="Quality Score (10th–90th Percentile)",
-            scale=alt.Scale(domain=[50, 105]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22),
-        ),
-        y2=alt.Y2("Upper:Q"),
-    )
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+LOWER_BOUND = "10th percentile"
+UPPER_BOUND = "90th percentile"
+bars = df.copy()
+bars[LOWER_BOUND] = df[QUALITY] - df[ERROR_LOWER]
+bars[UPPER_BOUND] = df[QUALITY] + df[ERROR_UPPER]
+y_domain = [float(np.floor(bars[LOWER_BOUND].min() - 4)), float(np.ceil(bars[UPPER_BOUND].max() + 4))]
+
+x_enc = alt.X(
+    PRODUCT.translate(ESCAPE),
+    type="nominal",
+    title=PRODUCT,
+    sort=None,
+    axis=alt.Axis(labelAngle=0, ticks=False, domain=False),
 )
+y_scale = alt.Scale(domain=y_domain, zero=False)
+low = LOWER_BOUND.translate(ESCAPE)
+high = UPPER_BOUND.translate(ESCAPE)
 
-lower_caps = alt.Chart(df).mark_tick(size=30, thickness=3, color=BRAND).encode(x=alt.X("Product:N"), y=alt.Y("Lower:Q"))
-
-upper_caps = alt.Chart(df).mark_tick(size=30, thickness=3, color=BRAND).encode(x=alt.X("Product:N"), y=alt.Y("Upper:Q"))
-
-points = (
-    alt.Chart(df)
-    .mark_point(size=300, filled=True, color=BRAND, stroke=INK_SOFT, strokeWidth=2)
-    .encode(
-        x=alt.X("Product:N"),
-        y=alt.Y("Quality Score:Q"),
-        tooltip=[
-            alt.Tooltip("Product:N", title="Product"),
-            alt.Tooltip("Quality Score:Q", title="Quality Score", format=".1f"),
-            alt.Tooltip("Lower:Q", title="10th Percentile", format=".1f"),
-            alt.Tooltip("Upper:Q", title="90th Percentile", format=".1f"),
-        ],
-    )
+base = alt.Chart(bars)
+arms = base.mark_rule(strokeWidth=2.5, color=BRAND).encode(
+    x=x_enc,
+    y=alt.Y(low, type="quantitative", title=f"{QUALITY} (10th–90th percentile)", scale=y_scale),
+    y2=alt.Y2(high),
 )
-
-annotation = (
-    alt.Chart(pd.DataFrame({"x": ["Product F"], "y": [53], "text": ["Error bars show 10th–90th percentile range"]}))
-    .mark_text(fontSize=16, fontStyle="italic", color=INK_MUTED, align="right")
-    .encode(x=alt.X("x:N"), y=alt.Y("y:Q"), text="text:N")
+caps = (
+    base.transform_fold([low, high], as_=["Bound", "Bound value"])
+    .mark_tick(size=26, thickness=2.5, color=BRAND)
+    .encode(x=x_enc, y=alt.Y("Bound value:Q", scale=y_scale))
+)
+points = base.mark_point(size=170, filled=True, color=BRAND, stroke=PAGE_BG, strokeWidth=1.5, opacity=1).encode(
+    x=x_enc,
+    y=alt.Y(QUALITY.translate(ESCAPE), type="quantitative", scale=y_scale),
+    tooltip=[
+        alt.Tooltip(PRODUCT.translate(ESCAPE), type="nominal", title=PRODUCT),
+        alt.Tooltip(QUALITY.translate(ESCAPE), type="quantitative", title=QUALITY, format=".1f"),
+        alt.Tooltip(low, type="quantitative", title=LOWER_BOUND, format=".1f"),
+        alt.Tooltip(high, type="quantitative", title=UPPER_BOUND, format=".1f"),
+    ],
 )
 
 chart = (
-    alt.layer(error_bars, lower_caps, upper_caps, points, annotation)
+    alt.layer(arms, caps, points)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title("errorbar-asymmetric · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
+        title=alt.Title(
+            "errorbar-asymmetric · python · altair · anyplot.ai",
+            subtitle="Error bars show the 10th–90th percentile range",
+            fontSize=16,
+            subtitleFontSize=11,
+            subtitleFontStyle="italic",
+            anchor="middle",
+            color=INK,
+            subtitleColor=INK_SOFT,
+        ),
     )
     .configure_axis(
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=10,
+        titleFontSize=12,
         grid=True,
-        gridOpacity=0.1,
+        gridColor=INK,
+        gridOpacity=0.12,
+        gridWidth=0.5,
         labelColor=INK_SOFT,
         titleColor=INK,
         domainColor=INK_SOFT,
-        gridColor=INK_SOFT,
+        tickColor=INK_SOFT,
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
-    .configure_title(color=INK)
+    .configure_axisX(grid=False)
+    .configure_view(fill=PAGE_BG, stroke=None)
 )
 
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save: pad (never crop) the vl-convert output to the 3200 x 1800 target
+TARGET_W, TARGET_H = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_W or img.height > TARGET_H:
+    raise SystemExit(f"vl-convert produced {img.width}x{img.height}, exceeds {TARGET_W}x{TARGET_H}")
+canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
