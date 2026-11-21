@@ -411,6 +411,7 @@ from .generate import FUNCTIONS, IDENTIFIER, Expr, GenerateError, evaluate, pars
 from .months import month_number, named_months
 from .parse import (
     AMBIGUOUS_DATE_ORDER,
+    AMBIGUOUS_MONTH_FIRST,
     DATE_FORMS,
     DATE_OFFSET,
     DATE_SIGN_DIGITS,
@@ -425,6 +426,7 @@ from .parse import (
     ascii_minus,
     canonical_names,
     date_offset,
+    day_month_orders,
     hour_of_day,
     keeps_value,
     minus_note,
@@ -436,6 +438,7 @@ from .parse import (
     twelve_hour_time,
     utc_offset,
     value_like,
+    with_day_month,
 )
 
 
@@ -665,12 +668,7 @@ _TRAILING_UNIT = re.compile(rf"^(?P<body>{_BODY})\s*(?P<unit>[^0-9\s][^0-9]*)$")
 _LEADING_UNIT = re.compile(rf"^(?P<unit>[^0-9\s+-][^0-9]*?)\s*(?P<body>{_BODY})$")
 _SPACES = re.compile(r"\s+")
 _HEADER_BREAKS = re.compile(r"[\t\r\n]")
-AMBIGUOUS_MONTH_FIRST = "day and month order is ambiguous; read as MM/DD/YYYY"
-"""The note of a date column whose every day is at most 12, read month first (`set_type` with `MM/DD/YYYY`)."""
 _ORDER_NOTES: dict[str, str] = {"day": AMBIGUOUS_DATE_ORDER, "month": AMBIGUOUS_MONTH_FIRST}
-_AMBIGUOUS_WARNING = re.compile(
-    rf"column '(?P<name>.+)': (?P<note>{re.escape(AMBIGUOUS_DATE_ORDER)}|{re.escape(AMBIGUOUS_MONTH_FIRST)})"
-)
 _DAY_FIRST_FORMATS = frozenset(("DD.MM.YYYY", "DD/MM/YYYY"))
 """The formats that read a day before a month; `MM/DD/YYYY` is the one that reads the month first."""
 
@@ -720,7 +718,8 @@ class Prepared:
 
 
 def with_date_notes(parsed: ParsedDataset, prepared: Prepared) -> ParsedDataset:
-    """The re-parsed version with `prepared.date_notes` among its warnings, the profile's included.
+    """The re-parsed version with `prepared.date_notes` among its warnings, the profile's included, and each such
+    column's `ColumnProfile.day_month` read from them (`parse.with_day_month`).
 
     The canonical CSV writes ISO dates, so its re-parse no longer knows that the order of
     a column's day and month was a guess; the note keeps that knowledge with the version.
@@ -728,7 +727,9 @@ def with_date_notes(parsed: ParsedDataset, prepared: Prepared) -> ParsedDataset:
     if not prepared.date_notes:
         return parsed
     notes = [*parsed.warnings, *prepared.date_notes][:MAX_WARNINGS]
-    return replace(parsed, warnings=notes, profile=parsed.profile.model_copy(update={"warnings": notes}))
+    return replace(
+        parsed, warnings=notes, profile=with_day_month(parsed.profile.model_copy(update={"warnings": notes}))
+    )
 
 
 @dataclass
@@ -765,11 +766,9 @@ class _Carried:
 
     @classmethod
     def of(cls, parsed: ParsedDataset, language: str = DEFAULT_LANGUAGE) -> "_Carried":
-        matches = (_AMBIGUOUS_WARNING.fullmatch(warning) for warning in parsed.warnings)
+        # The profile's `day_month` is read from the same warnings, so the two never disagree.
         order = {
-            match.group("name"): "day" if match.group("note") == AMBIGUOUS_DATE_ORDER else "month"
-            for match in matches
-            if match
+            name: "day" if read == "day_first" else "month" for name, read in day_month_orders(parsed.warnings).items()
         }
         with_time = {
             column.name: isinstance(column.min, str) and "T" in column.min

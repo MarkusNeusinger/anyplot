@@ -182,6 +182,7 @@ from ..schemas import (
     ColumnDtype,
     ColumnProfile,
     DatasetProfile,
+    DayMonth,
     SourceFormat,
     listed_values,
 )
@@ -571,7 +572,13 @@ MONTH_YEARS = (1000, 2200)
 
 _INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 AMBIGUOUS_DATE_ORDER = "day and month order is ambiguous; read as DD/MM/YYYY"
-"""The note of a slash date column read day first by guess; `prepare.py` finds those columns by it."""
+"""The note of a slash date column read day first by guess; `day_month_orders` finds those columns by it."""
+AMBIGUOUS_MONTH_FIRST = "day and month order is ambiguous; read as MM/DD/YYYY"
+"""The note of a date column whose every day is at most 12, read month first (`set_type` with `MM/DD/YYYY`)."""
+_DAY_MONTH_NOTES: dict[str, DayMonth] = {AMBIGUOUS_DATE_ORDER: "day_first", AMBIGUOUS_MONTH_FIRST: "month_first"}
+_DAY_MONTH_WARNING = re.compile(
+    rf"column '(?P<name>.+)': (?P<note>{re.escape(AMBIGUOUS_DATE_ORDER)}|{re.escape(AMBIGUOUS_MONTH_FIRST)})"
+)
 _BOM = "\N{ZERO WIDTH NO-BREAK SPACE}"
 _NO_DELIMITER = "\x00"  # NUL never survives the control-character check, so it never splits a line
 
@@ -646,8 +653,29 @@ def with_warning(parsed: ParsedDataset, warning: str) -> ParsedDataset:
         omitted += len(lines) - keep
         lines = [*lines[:keep], f"{omitted} more warnings omitted"]
     warnings = lines
-    profile = parsed.profile.model_copy(update={"warnings": warnings})
+    profile = with_day_month(parsed.profile.model_copy(update={"warnings": warnings}))
     return replace(parsed, profile=profile, warnings=warnings)
+
+
+def day_month_orders(warnings: Iterable[str]) -> dict[str, DayMonth]:
+    """By column, the order day and month were read in, for each date column whose order warning says it reads both
+    ways: the one reading of those warnings, for `ColumnProfile.day_month` and for the order `prepare_data` swaps."""
+    matches = (_DAY_MONTH_WARNING.fullmatch(warning) for warning in warnings)
+    return {match.group("name"): _DAY_MONTH_NOTES[match.group("note")] for match in matches if match}
+
+
+def with_day_month(profile: DatasetProfile) -> DatasetProfile:
+    """`profile` with each datetime column's `day_month` as the profile's own warnings say it (`day_month_orders`).
+
+    Every place that writes a profile's warnings writes the field from them, so the field never names an order that
+    a cut of the warnings (`MAX_WARNINGS`) dropped and `prepare_data` therefore could not swap.
+    """
+    orders = day_month_orders(profile.warnings)
+    columns = [
+        column.model_copy(update={"day_month": orders.get(column.name) if column.dtype == "datetime" else None})
+        for column in profile.columns
+    ]
+    return profile.model_copy(update={"columns": columns})
 
 
 @dataclass
@@ -4423,14 +4451,16 @@ def _finish(
     rows = [list(row) for row in zip(*(column.cells for column in columns), strict=True)]
     capped = _cap_warnings(warnings)
     listed = [column.name for column in columns if column.from_list]
-    profile = DatasetProfile(
-        rows=len(rows),
-        columns=[_profile_column(column) for column in columns],
-        sample=[[_clip(cell) for cell in row] for row in rows[:MAX_SAMPLE_ROWS]],
-        source_format=source_format,
-        decimal="," if any(column.decimal_comma for column in columns) else ".",
-        warnings=capped,
-        list_columns=listed or None,
+    profile = with_day_month(
+        DatasetProfile(
+            rows=len(rows),
+            columns=[_profile_column(column) for column in columns],
+            sample=[[_clip(cell) for cell in row] for row in rows[:MAX_SAMPLE_ROWS]],
+            source_format=source_format,
+            decimal="," if any(column.decimal_comma for column in columns) else ".",
+            warnings=capped,
+            list_columns=listed or None,
+        )
     )
     return ParsedDataset(
         profile=profile,
