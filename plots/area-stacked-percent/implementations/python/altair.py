@@ -1,14 +1,14 @@
 """ anyplot.ai
 area-stacked-percent: 100% Stacked Area Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-12
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-21
 """
 
 import os
 
 import altair as alt
-import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -18,70 +18,73 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Energy source mix evolution
-np.random.seed(42)
-years = list(range(2015, 2025))
+# Columns: set these to your table's column names
+YEAR = "Year"  # role: time
+SOURCE = "Energy source"  # role: category
+SHARE = "Share (%)"  # role: value
 
-# Evolving percentages showing energy transition (with slight variation for realism)
-coal = [45, 42, 39, 35, 32, 28, 25, 22, 19, 16]
-natural_gas = [25, 26, 27, 28, 29, 30, 31, 31, 30, 28]
-nuclear = [12, 12.5, 12, 11.5, 12, 12.5, 12, 11, 12.5, 12]
-renewables = [18, 19.5, 22, 25.5, 27, 29.5, 32, 36, 36.5, 44]
+# Data: replace this block with your own table, for example df = pd.read_csv("energy.csv")
+sources = ["Coal", "Natural Gas", "Nuclear", "Renewables"]
+shares = {
+    "Coal": [45, 42, 39, 35, 32, 28, 25, 22, 19, 16],
+    "Natural Gas": [25, 26, 27, 28, 29, 30, 31, 31, 30, 28],
+    "Nuclear": [12, 12.5, 12, 11.5, 12, 12.5, 12, 11, 12.5, 12],
+    "Renewables": [18, 19.5, 22, 25.5, 27, 29.5, 32, 36, 36.5, 44],
+}
+df = pd.DataFrame(
+    {
+        YEAR: [year for name in sources for year in range(2015, 2025)],
+        SOURCE: [name for name in sources for _ in range(10)],
+        SHARE: [value for name in sources for value in shares[name]],
+    }
+)
 
-# Create DataFrame in long format for Altair
-data = []
-for i, year in enumerate(years):
-    data.append({"Year": year, "Source": "Renewables", "Percentage": renewables[i]})
-    data.append({"Year": year, "Source": "Nuclear", "Percentage": nuclear[i]})
-    data.append({"Year": year, "Source": "Natural Gas", "Percentage": natural_gas[i]})
-    data.append({"Year": year, "Source": "Coal", "Percentage": coal[i]})
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+categories = list(df[SOURCE].unique())
+df["Stack order"] = df[SOURCE].map({name: i for i, name in enumerate(categories)})
 
-df = pd.DataFrame(data)
-
-# Define stacking order (bottom to top)
-source_order = ["Coal", "Natural Gas", "Nuclear", "Renewables"]
-stack_order = {"Coal": 1, "Natural Gas": 2, "Nuclear": 3, "Renewables": 4}
-df["StackOrder"] = df["Source"].map(stack_order)
-
-# Plot - 100% Stacked Area Chart
 chart = (
     alt.Chart(df)
-    .mark_area(opacity=0.85, line=alt.MarkConfig(strokeWidth=2))
+    .mark_area(opacity=0.85, line=alt.MarkConfig(strokeWidth=1))
     .encode(
-        x=alt.X("Year:O", title="Year", axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=0)),
+        x=alt.X(
+            YEAR.translate(ESCAPE),
+            type="ordinal",
+            title=YEAR,
+            axis=alt.Axis(labelAngle=0, labelFontSize=10, titleFontSize=12),
+        ),
         y=alt.Y(
-            "Percentage:Q",
-            title="Share of Energy Mix (%)",
+            SHARE.translate(ESCAPE),
+            type="quantitative",
+            title="Share of total (%)",
             stack="normalize",
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, format=".0%"),
+            axis=alt.Axis(format=".0%", labelFontSize=10, titleFontSize=12),
         ),
         color=alt.Color(
-            "Source:N",
-            scale=alt.Scale(domain=source_order, range=IMPRINT),
+            SOURCE.translate(ESCAPE),
+            type="nominal",
+            title=SOURCE,
+            sort=None,
+            scale=alt.Scale(domain=categories, range=IMPRINT_PALETTE[: len(categories)]),
             legend=alt.Legend(
-                title="Energy Source",
-                titleFontSize=20,
-                labelFontSize=18,
-                orient="bottom",
-                direction="horizontal",
-                symbolSize=300,
-                symbolStrokeWidth=0,
+                orient="bottom", direction="horizontal", titleFontSize=11, labelFontSize=10, symbolSize=120
             ),
         ),
-        order=alt.Order("StackOrder:Q", sort="ascending"),
+        order=alt.Order("Stack order", type="quantitative", sort="ascending"),
         tooltip=[
-            alt.Tooltip("Year:O", title="Year"),
-            alt.Tooltip("Source:N", title="Source"),
-            alt.Tooltip("Percentage:Q", title="Share", format=".1f"),
+            alt.Tooltip(YEAR.translate(ESCAPE), type="ordinal", title=YEAR),
+            alt.Tooltip(SOURCE.translate(ESCAPE), type="nominal", title=SOURCE),
+            alt.Tooltip(SHARE.translate(ESCAPE), type="quantitative", title=SHARE, format=".1f"),
         ],
     )
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title(text="area-stacked-percent · altair · anyplot.ai", fontSize=28),
+        width=620,
+        height=320,
+        title=alt.Title(text="area-stacked-percent · python · altair · anyplot.ai", fontSize=16),
         background=PAGE_BG,
     )
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
@@ -93,5 +96,16 @@ chart = (
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the canonical canvas
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TW}x{TH}; shrink width/height")
+if (w, h) != (TW, TH):
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
