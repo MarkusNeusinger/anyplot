@@ -1,12 +1,13 @@
 """ anyplot.ai
 histogram-density: Density Histogram
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-11
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-21
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from scipy import stats
 
@@ -19,74 +20,81 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-BRAND = "#009E73"  # Okabe-Ito position 1
-OKABE_ITO_2 = "#C475FD"  # Okabe-Ito position 2 for KDE curve
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - simulated test scores with a more pronounced bimodal distribution
+# Columns: set these to your table's column names
+SCORE = "Test Score (points)"  # role: values
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-test_scores = np.concatenate(
-    [
-        np.random.normal(loc=65, scale=8, size=350),  # Main group (lower peak)
-        np.random.normal(loc=90, scale=6, size=200),  # High performers (upper peak)
-    ]
+df = pd.DataFrame(
+    {
+        SCORE: np.concatenate(
+            [
+                np.random.normal(loc=65, scale=8, size=350),  # main group (lower peak)
+                np.random.normal(loc=90, scale=6, size=200),  # high performers (upper peak)
+            ]
+        )
+    }
 )
 
-# Create histogram with density normalization
+# Plot: reads only df and the constants above
+scores = df[SCORE].dropna()
+x_range = np.linspace(scores.min() - 5, scores.max() + 5, 200)
+kde = stats.gaussian_kde(scores)
+
 fig = go.Figure()
 
-# Histogram trace (normalized to density)
+# Histogram normalized to probability density (bar areas sum to 1)
 fig.add_trace(
     go.Histogram(
-        x=test_scores,
+        x=scores,
         histnorm="probability density",
         nbinsx=30,
-        marker={"color": BRAND, "line": {"color": PAGE_BG, "width": 1}},
+        marker={"color": IMPRINT_PALETTE[0], "line": {"color": PAGE_BG, "width": 0.5}},
         opacity=0.75,
-        name="Test Scores",
-        hovertemplate="<b>Score Range</b>: %{x:.1f}<br><b>Density</b>: %{y:.4f}<extra></extra>",
+        name="Histogram (density)",
+        hovertemplate="<b>Score range</b>: %{x:.1f}<br><b>Density</b>: %{y:.4f}<extra></extra>",
     )
 )
 
-# Overlay KDE (kernel density estimate) for smooth reference curve
-x_range = np.linspace(test_scores.min() - 5, test_scores.max() + 5, 200)
-kde = stats.gaussian_kde(test_scores)
+# Kernel density estimate on the same density scale
 fig.add_trace(
     go.Scatter(
         x=x_range,
         y=kde(x_range),
         mode="lines",
-        line={"color": OKABE_ITO_2, "width": 4},
-        name="Density Curve (KDE)",
+        line={"color": IMPRINT_PALETTE[1], "width": 2.5},
+        name="Density curve (KDE)",
         hovertemplate="<b>Score</b>: %{x:.1f}<br><b>Density</b>: %{y:.4f}<extra></extra>",
     )
 )
 
-# Layout
+# Style
+axis_style = {
+    "tickfont": {"size": 10, "color": INK_SOFT},
+    "showgrid": True,
+    "gridcolor": GRID,
+    "gridwidth": 1,
+    "linecolor": INK_SOFT,
+    "zerolinecolor": INK_SOFT,
+}
 fig.update_layout(
-    title={"text": "histogram-density · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
-    xaxis={
-        "title": {"text": "Test Score (points)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
-        "showgrid": True,
-        "gridcolor": GRID,
-        "gridwidth": 1,
-        "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
+    autosize=False,
+    title={
+        "text": "histogram-density · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
     },
-    yaxis={
-        "title": {"text": "Density (probability per unit)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
-        "showgrid": True,
-        "gridcolor": GRID,
-        "gridwidth": 1,
-        "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
-    },
+    xaxis={"title": {"text": SCORE, "font": {"size": 12, "color": INK}}, **axis_style},
+    yaxis={"title": {"text": "Density (probability per unit)", "font": {"size": 12, "color": INK}}, **axis_style},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     legend={
-        "font": {"size": 18, "color": INK_SOFT},
+        "font": {"size": 11, "color": INK_SOFT},
         "x": 0.98,
         "y": 0.98,
         "xanchor": "right",
@@ -95,13 +103,10 @@ fig.update_layout(
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 80, "r": 40, "t": 80, "b": 80},
-    bargap=0.02,
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    bargap=0,
     hovermode="closest",
 )
 
-# Save as PNG (4800 x 2700 via scale=3)
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

@@ -2,46 +2,48 @@ library: matplotlib
 language: python
 specification_id: histogram-density
 created: '2025-12-29T22:46:41Z'
-updated: '2026-05-11T03:31:05Z'
-generated_by: claude-haiku
-workflow_run: 25648498888
+updated: '2026-11-21T00:40:40Z'
+generated_by: claude-sonnet
+workflow_run: 44844741629
 issue: 2442
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - Perfect text legibility across both light and dark themes with explicitly set
-    font sizes
-  - Flawless theme adaptation—data colors identical across renders, only chrome flips
-  - Excellent spec compliance with all required features implemented correctly
-  - Expert matplotlib API usage with clean, Pythonic code
-  - Strong visual hierarchy that guides viewers through the comparison (empirical
-    vs. theoretical)
-  - Perfect palette compliance—Okabe-Ito colors correct, backgrounds and text theme-appropriate
-  - Realistic, neutral data with appropriate scale and context
-  - Clean layout with optimal canvas utilization and zero overlap
+  - Native ax.hist(density=True) normalizes the bars so their areas sum to 1, with
+    contiguous 30-bin bars separated only by thin page-colored edges
+  - Log-normal density fitted from the sample's log mean and log SD is drawn over
+    the bars on the same density scale in contrasting Imprint purple, and the legend
+    states the fitted parameters
+  - Right-skewed delivery-time data shows a peak, a long tail and an isolated late
+    delivery near 110 min; the mean line sits right of the fitted mode and makes the
+    skew readable
+  - Y-axis title carries the density unit (1/minute) that follows from the x unit,
+    so the values cannot be read as counts
+  - Theme tokens threaded through title, labels, ticks, spines, grid and legend frame;
+    both renders fully legible on the 3200×1800 canvas
   weaknesses:
-  - Design Excellence could be stronger with more custom/intentional aesthetic touches
-    beyond library defaults
-  - LM-02 uses solid but common matplotlib patterns rather than uniquely distinctive
-    features
+  - 'Suggestion: the hand-written log-normal formula on line 39 could be `scipy.stats.lognorm.pdf(x_pdf,
+    s=sigma, scale=np.exp(mu))`, a one-line change in readability only.'
+  - 'Suggestion: a slightly lower bar alpha (about 0.7) would let the fitted curve
+    read more clearly where it crosses the tallest bars.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "histogram-density · matplotlib · anyplot.ai" in dark text (24pt); axis labels "Test Score (points)" and "Probability Density" in dark text (20pt); tick labels in soft gray (16pt); y-axis grid in light gray (alpha=0.15); legend upper-right with light frame and readable text
-      Data: Histogram bars in brand green (#009E73) showing test score distribution (30–110); orange PDF curve (#D55E00) overlaying theoretical normal distribution; gray dashed mean line at 75; fill_between in subtle orange
-      Legibility verdict: PASS - All text clearly readable against light background
+      Background: warm off-white #FAF8F1 across canvas and axes, 3200×1800.
+      Chrome: title "histogram-density · python · matplotlib · anyplot.ai" in dark ink at about half the width; axis titles "Delivery time (minutes)" and "Probability density (1/minute)" in dark ink; tick labels 0–100 and 0.000–0.035 in soft gray; subtle horizontal grid; top/right spines removed; legend upper right on an elevated light frame with three entries. All readable.
+      Data: 30 contiguous brand-green #009E73 bars (alpha 0.8) forming a right-skewed distribution peaking at about 0.038 near 27 min, long tail to ~110 min with a lone bar there; purple #C475FD log-normal fit curve over the bars peaking at ~0.034 near 24 min; dark gray dashed mean line at 32.6 min.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title, axis labels, and tick labels in light text colors; legend frame is dark-themed; grid in light gray; all elements clearly readable against dark surface
-      Data: Histogram bars remain identical #009E73 (confirming theme-independent data colors); PDF curve identical #D55E00; mean line identical gray dashed style
-      Legibility verdict: PASS - No dark-on-dark failures, all text readable; data colors perfectly preserved
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, tick labels in light gray, grid subtle light, legend on a dark elevated frame with light text. No dark-on-dark text.
+      Data: identical green bars (darker-looking only through alpha over the dark page), identical purple curve; mean line flips to light gray dashed. Same layout as light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,47 +54,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt), perfectly
-          readable in both themes
+        comment: Title 12pt, labels 10pt, ticks/legend 8pt explicitly set; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements fully separated
+        comment: No text collisions; legend sits clear of bars and curve
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, curve, fill, and mean line all optimally visible
+        comment: Bars, 2.5-lw curve and dashed mean line all distinct; legend glyphs
+          match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast, CVD-safe
+        comment: Green bars vs purple curve differ in hue and luminance; mean line
+          differs by dash style
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 4800x2700 layout, 60-70% canvas use, balanced margins
+        comment: 3200×1800, plot fills most of the canvas, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, spec-format title
+        comment: Both axes descriptive with units (minutes, 1/minute)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, backgrounds correct, all text
-          theme-correct'
+        comment: 'First series #009E73, overlay #C475FD (Imprint position 2), correct
+          backgrounds and theme chrome in both renders'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -100,19 +105,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults, lacks exceptional custom design
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, theme-aware legend, clean
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Clear narrative: empirical vs theoretical, good visual hierarchy'
+        comment: 'Data choice: a right-skewed sample where the mean line lands right
+          of the fitted mode, so the tail''s pull on the mean is visible at a glance'
     spec_compliance:
       score: 15
       max: 15
@@ -122,47 +128,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density histogram with density=True normalization
+        comment: Density histogram; PDF overlay and reference line are both offered
+          by the Notes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All elements: histogram, PDF overlay, mean line'
+        comment: C1 contiguous bars from zero on a density axis, C2 density=True,
+          C3 fitted curve over bars in contrasting style with legend, C4 30 bins show
+          skew and tail
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X/Y, axes show full range
+        comment: x = delivery time, y = density; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Spec-format title, accurate legend labels
+        comment: Mandated title format; legend entries readable and accurate
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows distribution shape, variation, central tendency
+        comment: Skew, peak, long tail, an isolated tail bar, bars above and below
+          the fit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test scores with realistic parameters, neutral scenario
+        comment: Food-delivery times in minutes, neutral and concrete
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct proportions
+        comment: 'Checked: fitted μ=3.39/σ=0.44 match the generator (3.4, 0.45); curve
+          mode at ~24 min = exp(μ−σ²); mean 32.6 near the theoretical 33.1; peak density
+          ~0.034 consistent with the bars. No check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -172,55 +184,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions/classes
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: os, plt, np, pd all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering
+        comment: One-line closed-form PDF is a suggestion at most
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: plot-{THEME}.png at dpi 400, no bbox_inches tight
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ax methods, proper fig/ax pattern
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
+        passed: true
+        comment: Correct Axes API (hist density=True, axvline, legend frame styling),
+          nothing beyond the mandated patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
         passed: false
-        comment: Good patterns but common, not uniquely distinctive
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-21T00:36:53Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - binning
   styling:
-  - grid-styling
   - alpha-blending
+  - edge-highlighting
+  - grid-styling

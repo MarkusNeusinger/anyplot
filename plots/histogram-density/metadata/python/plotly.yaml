@@ -2,42 +2,45 @@ library: plotly
 language: python
 specification_id: histogram-density
 created: '2025-12-29T22:48:14Z'
-updated: '2026-05-11T03:30:18Z'
-generated_by: claude-haiku
-workflow_run: 25648612820
+updated: '2026-11-21T00:37:54Z'
+generated_by: claude-sonnet
+workflow_run: 44844405538
 issue: 2442
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 84
 review:
   strengths:
-  - Perfect visual quality with no legibility or overlap issues
-  - Excellent data storytelling through bimodal distribution choice; KDE overlay demonstrates
-    spec-suggested feature
-  - Flawless theme adaptation in both light and dark renders
-  - Professional use of Okabe-Ito palette with intentional design choices
-  - Code is clean, reproducible, and follows KISS principles
+  - Native histnorm='probability density' with bargap=0 gives contiguous bars whose
+    areas sum to 1 without manual normalization
+  - 'KDE overlay in Imprint #C475FD sits on the same density scale and contrasts clearly
+    with the #009E73 bars, named in the legend'
+  - Theme tokens threaded through title, axes, grid and legend; both renders fully
+    readable with identical data colors
+  - Bimodal test-score data makes the density curve informative, and the 5-point bins
+    show both modes and the tails
+  - Custom hovertemplates expose score range and density in the interactive HTML
   weaknesses:
-  - 'Design Excellence slightly below exceptional: while thoughtful, the aesthetic
-    choices are well-executed Plotly defaults rather than custom sophistication'
+  - 'Suggestion: set yaxis rangemode=''tozero'' so the x-axis line meets the zero
+    baseline instead of sitting a small strip below it.'
+  - 'Suggestion: a fitted two-component normal mixture would add a theoretical PDF
+    alongside the empirical KDE.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "histogram-density · plotly · anyplot.ai" is large and centered in dark text; X-axis labeled "Test Score (points)" and Y-axis "Density (probability per unit)" in dark text; tick labels (0.005 to 0.035 on Y; 40 to 110 on X) are dark and readable; grid lines are subtle gray
-      Data: Histogram bars in Okabe-Ito green (#009E73) with white edges, 75% opacity; KDE curve in orange (#D55E00) with 4px width; both colors are distinct and clearly visible
-      Legend: Top-right corner with light background, dark text, listing "Test Scores" and "Density Curve (KDE)"
-      Legibility verdict: PASS - all text is readable against the light background; no dark-on-light failures
+      Background: warm off-white #FAF8F1, canvas 3200x1800
+      Chrome: centered title 'histogram-density · python · plotly · anyplot.ai' in dark ink; x title 'Test Score (points)', y title 'Density (probability per unit)'; ticks 40-110 and 0-0.035 in INK_SOFT; subtle grid; bordered legend top right on elevated surface
+      Data: 15 contiguous #009E73 bars (5-point bins, 0.75 opacity, thin page-colored seams) showing a bimodal distribution with peaks near 67 and 88; purple #C475FD KDE line over the bars
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title is light text, clearly visible; axis labels are light text, readable; tick labels are soft gray (INK_SOFT token), readable against dark background; grid lines are subtle light-gray
-      Data: Histogram bars remain identical #009E73 green, KDE curve remains identical #D55E00 orange - data colors preserved across themes
-      Legend: Top-right corner with dark background, light text
-      Legibility verdict: PASS - all text is light-colored and visible; no dark-on-dark failures (e.g., no black text on near-black background); excellent contrast maintained
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink, all readable; grid subtle; legend on #242420 with light text and border; no dark-on-dark text
+      Data: same #009E73 bars and #C475FD curve as the light render; only chrome flips
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,74 +51,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks);
-          perfectly readable in both themes
+        comment: Title 16, axis titles 12, ticks 10, legend 11 — style-guide sizes;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; clean, well-spaced text
+        comment: No text collisions; legend sits clear of the right tail
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars and KDE curve both optimally visible; 75% opacity
-          and 4px line width are well-chosen
+        comment: Bars at 0.75 opacity and a 2.5 px KDE line both clearly visible;
+          legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Excellent contrast between data and backgrounds; Okabe-Ito palette
-          ensures CVD safety
+        comment: Green bars vs purple curve differ in hue and lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions; plot uses 60-70% of canvas with generous, balanced
-          margins
+        comment: 3200x1800 canvas; balanced margins; title ~40% of width; no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Test Score (points), Density (probability
-          per unit))
+        comment: '''Test Score (points)'' and ''Density (probability per unit)'' are
+          descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, KDE #D55E00 (Okabe-Ito positions 1-2); backgrounds
-          correct; theme-adaptive text in both renders'
+        comment: 'Bars #009E73, curve #C475FD (Imprint 1-2); backgrounds #FAF8F1 /
+          #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: 'Thoughtful design choices: KDE overlay adds genuine value; bimodal
-          distribution is intentional; white bar edges enhance definition'
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid styling, white bar edges, generous whitespace, careful
-          typography; legend has bordered frame
+        comment: Spine and grid rules met; page-colored bar seams; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Bimodal distribution tells clear story (two student groups); KDE
-          demonstrates utility of density histograms
+        comment: Bimodal data with KDE overlay as the Notes suggest; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -125,26 +124,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density histogram; KDE overlay exceeds spec suggestion
+        comment: Density histogram with a density-curve overlay the Notes suggest
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: density normalization, histogram with 30 bins,
-          interactive tooltips'
+        comment: C1 contiguous bars (bargap=0) from zero on a density axis; C2 histnorm='probability
+          density'; C3 KDE on same scale, contrasting, in legend; C4 15 bins of width
+          5 show both modes and tails
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show full data range
+        comment: Scores on x, density on y; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title 'histogram-density · python · plotly · anyplot.ai'; legend
+          entries readable
     data_quality:
       score: 15
       max: 15
@@ -154,20 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full bimodal distribution with distinct peaks and tails
+        comment: Bimodal sample with a dip, two peaks and thin tails exercises density
+          normalization and overlay
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world scenario (test scores); neutral, comprehensible context
+        comment: Test scores of 550 students, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic test score range, normal distributions, appropriate sample
-          sizes
+        comment: Scores 35-115 with densities up to ~0.033 per point; checked bar
+          area ≈ 1 (5-point bins × summed heights); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -177,58 +179,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports → data → plot → save; no unnecessary functions'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42; fully deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, numpy, plotly, scipy.stats'
+        comment: os, numpy, pandas, plotly.graph_objects, scipy.stats all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        comment: Native histnorm and gaussian_kde; shared axis_style dict
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output files (plot-{THEME}.png and .html)
+        comment: Writes plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of go.Figure, go.Histogram, go.Scatter, update_layout
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
+        passed: true
+        comment: go.Histogram with histnorm='probability density' and bargap=0 lets
+          plotly compute the density natively
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
         passed: false
-        comment: Good use of histnorm, hover tooltips, and layer composition; good
-          but not groundbreaking
+        comment: Custom hovertemplates for bars and curve in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T00:34:54Z'
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - hover-tooltips
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - kde
+  - binning
   styling:
-  - edge-highlighting
+  - alpha-blending
