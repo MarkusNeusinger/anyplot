@@ -63,7 +63,7 @@ sns.set_theme(
 
 order = list(dict.fromkeys(df[BROWSER]))
 n_cat = len(order)
-palette = dict(zip(order, IMPRINT_PALETTE[:n_cat]))
+palette = dict(zip(order, IMPRINT_PALETTE[:n_cat], strict=True))
 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
