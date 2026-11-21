@@ -2,43 +2,48 @@ library: matplotlib
 language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T05:42:26Z'
-updated: '2026-05-16T07:12:08Z'
-generated_by: claude-haiku
-workflow_run: 25955568513
+updated: '2026-11-21T22:21:40Z'
+generated_by: claude-sonnet
+workflow_run: 44955751093
 issue: 2921
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 83
 review:
   strengths:
-  - Perfect theme-adaptive implementation with correct token threading to all elements
-  - Excellent data visualization clarity—decision boundary and training data both
-    prominent
-  - Clean code structure with proper reproducibility (seed=42)
-  - Idiomatic matplotlib usage with fig/ax pattern throughout
-  - Strong visual refinement—subtle grid, removed top/right spines, white marker edges
-  - 'Correct Okabe-Ito palette with first series as #009E73 brand green'
-  - Educational data choice (two-moons) demonstrates classifier behavior effectively
-  - Perfect palette compliance in both light and dark renders
-  weaknesses: []
+  - Misclassified points made the focal layer with larger X markers and a full-ink
+    outline, so errors along the boundary read at once in both themes
+  - Training points keep their true-class color and get a page-colored outline, so
+    they read on both regions
+  - Region levels and palette are derived from the class list, so the code generalises
+    to any number of classes
+  - 'Clean adaptable structure: column constants, a Data block ending in df, and a
+    plot that reads only df'
+  - Theme tokens threaded through title, labels, ticks, spines, grid and legend frame
+  weaknesses:
+  - 'SC-02 (both): the decision boundary steps along the mesh cells on the curved
+    left flank (x about -0.9 to -0.3) and along the near-vertical right edge (x about
+    1.45), missing C4 → a smooth boundary that hides the grid. Likely cause: contour/contourf
+    drawn on the integer predict() labels, whose 0/1 jumps contour can only trace
+    cell by cell; contour classifier.decision_function on the mesh at level 0 instead.'
+  - 'Suggestion: the boundary could be drawn from decision_function with the margin
+    levels -1 and +1 as faint dashed lines to show the SVM''s margin.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 with subtle grid (alpha=0.1). Perfect warm tone, not pure white.
-      Chrome: Title ("contour-decision-boundary · matplotlib · anyplot.ai") at top, axis labels "Feature X1" and "Feature X2", tick labels all clearly visible in dark text (#1A1A17) against light background. Legend in upper left with light background frame.
-      Data: Two decision regions filled with transparent contourf (green #009E73 and orange #D55E00 at 30% alpha), clear dark contour line showing boundary. Training points as circles (correct) and X markers (misclassified), with white edge colors for definition. First data series is correctly #009E73 (brand green). Okabe-Ito position 2 (#D55E00) for second class.
-      Legibility verdict: PASS - All text elements readable, no contrast issues, clean light-on-light design.
+      Background: warm off-white #FAF8F1 page and plot area, subtle ink grid.
+      Chrome: title 'contour-decision-boundary · python · matplotlib · anyplot.ai' centered in dark ink, axis titles 'Feature X1' / 'Feature X2', soft-ink tick labels, left and bottom spines only; legend upper left on an elevated frame with four entries (Class 0/1 correct, Class 0/1 misclassified). All readable.
+      Data: predicted regions filled at alpha 0.3 — green #009E73 for class 0 (upper moon and left), purple #C475FD for class 1 (lower right and a small upper-left island); dark-gray boundary line, visibly stair-stepped on the left flank and the right vertical edge. 200 two-moons points as circles in their true-class color with page-colored outlines; 17 misclassified points as larger X markers with ink outlines. First series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, identical visual character to light render (not pure black). Subtle grid with light color.
-      Chrome: Title clearly visible in light text (#F0EFE8), axis labels readable, tick labels all clearly visible in soft light text (#B8B7B0) against dark background. Legend frame dark-themed. No dark-on-dark failures.
-      Data: Decision regions and boundary identical to light render - data colors (#009E73 and #D55E00) are perfectly preserved. Training point markers and colors match light render exactly. Only chrome/background adapted for theme.
-      Legibility verdict: PASS - All text readable, excellent dark mode adaptation, no dark-on-dark text failures, clean design in both themes.
-
-    Both renders pass theme-readability check. Data colors are identical between light and dark. Chrome is properly theme-adaptive. The implementation successfully threads theme tokens through all elements.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, tick labels in light soft ink, legend frame dark elevated with light text; no dark-on-dark text.
+      Data: same green and purple point colors as light; the alpha-0.3 regions read as deep green and deep purple; boundary line light gray; X markers now outlined in light ink. Data colors identical to the light render, only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,79 +54,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
-          Perfectly readable in both themes.'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (library prompt
+          sizes); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Axes, ticks, legend all properly spaced.
+        comment: No text collisions; the legend sits in the empty upper-left corner
+          clear of all training points
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker sizes (s=150 correct, s=200 misclassified) optimal for 200-point
-          dataset. Decision boundary clearly visible.
+        comment: 200 points at s=45 with page-colored outlines read on both regions;
+          misclassified X marks larger with an ink outline; legend glyphs match the
+          marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette #009E73 and #D55E00 colorblind-safe. Good contrast
-          between regions.'
+        comment: Green vs purple differ strongly in lightness and hue; misclassification
+          carried by marker shape too, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent 16:9 landscape composition. Plot fills 60-70% of canvas
-          with balanced margins.
+        comment: 3200x1800 canvas, balanced margins, title about 62 % of the width,
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels 'Feature X1' and 'Feature X2' appropriate for
-          generic feature space. Title format correct.
+        comment: Feature X1 / Feature X2 match the spec's generic feature roles; title
+          format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: first series #009E73, second #D55E00 (Okabe-Ito order).
-          Light bg #FAF8F1, dark bg #1A1A17. Chrome theme-correct in both renders.'
+        comment: 'Class 0 #009E73, class 1 #C475FD (Imprint order); backgrounds #FAF8F1
+          / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Well-executed clean design with proper palette, theme adaptation,
-          and white marker edges. Looks like a carefully-configured default rather
-          than exceptional.
+        comment: Style-guide baseline typography and palette, nothing decided beyond
+          it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Excellent refinement: subtle grid (alpha=0.1), top/right spines
-          removed, left/bottom colored appropriately, generous whitespace, styled
-          legend frame.'
+        passed: false
+        comment: Spine and grid rules met; nothing beyond them
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Clear narrative: two-moons dataset choice is pedagogical, visual
-          hierarchy via marker distinction (circles vs X) and region colors guides
-          understanding of classifier behavior.'
+        comment: 'Misclassified points made the focal layer: larger X marks with a
+          full-ink outline at a higher zorder draw the eye to the errors along the
+          boundary'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -129,30 +133,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision boundary visualization with colored regions and
-          training data overlay.
+        comment: 'Decision-boundary plot: filled predicted regions, boundary line,
+          training points overlaid'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: decision regions (contourf), boundary line
-          (contour), training points overlay, correct vs. misclassified distinction,
-          legend.'
+        passed: false
+        comment: 'Regions, true-class markers, correct/misclassified marker styles
+          and legend present; but C4 missed: the boundary steps along the mesh cells
+          on the left flank and the right vertical edge (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X1→X-axis, X2→Y-axis correct. Classes correctly mapped to colors.
-          All data visible.
+        comment: Points at their exact feature values; mesh spans data range +-0.5
+          on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format perfect: ''contour-decision-boundary · matplotlib ·
-          anyplot.ai''. Legend shows all 4 classes with accurate labels.'
+        comment: Title 'contour-decision-boundary · python · matplotlib · anyplot.ai';
+          legend entries name class and correct/misclassified
     data_quality:
       score: 15
       max: 15
@@ -162,24 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two-moons dataset with 200 points shows correctly classified and
-          misclassified examples, demonstrates classifier complexity and decision
-          boundary smoothness.
+        comment: Curved non-linear boundary, both classes, 17 misclassified points
+          on both sides of the boundary, a small island in the corner
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic ML example (two-moons) is a standard pedagogical dataset
-          for demonstrating classifier behavior. Realistic and neutral context.
+        comment: make_moons with an RBF SVM, the spec's own example scenario; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Feature values (-2 to 2.5 range) are plausible. SVM(kernel='rbf',
-          C=1.0) produces realistic boundary complexity. All proportions factually
-          correct.
+        comment: Noise 0.25 gives a plausible ~91 % training accuracy for an RBF SVM;
+          no check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -189,64 +190,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data gen → model → mesh → predict → plot
-          → save. No unnecessary functions or classes.'
+        comment: Imports, tokens, column constants, Data block ending in df, Plot
+          reading only df; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and sklearn random_state=42 ensure full reproducibility.
+        comment: random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib, numpy, sklearn.datasets, sklearn.svm.
-          No extraneous dependencies.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic implementation. No over-engineering, no fake functionality.
-          Appropriate complexity.
+        comment: Class loop generalises to n classes; levels derived from the class
+          list; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly. Uses current matplotlib API
-          (no deprecated functions).
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert matplotlib: fig/ax pattern throughout, ax methods (not pyplot),
-          proper tight_layout(), savefig() with correct params, theme-adaptive implementation
-          via environment.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses contourf() and contour() for boundary regions/lines, conditional
-          marker styling based on classification results, white edge colors for visibility—solid
-          distinctive techniques within matplotlib's strengths.
+        comment: Axes API throughout, contourf/contour with explicit half-integer
+          levels derived from classes, tight_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: contourf + contour are what the spec asks for; nothing distinctive
+          beyond it
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T22:17:52Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
