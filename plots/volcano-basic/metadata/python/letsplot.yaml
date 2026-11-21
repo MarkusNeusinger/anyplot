@@ -2,46 +2,61 @@ library: letsplot
 language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:34:59Z'
-updated: '2026-05-14T11:31:59Z'
-generated_by: claude-haiku
-workflow_run: 25856959226
+updated: '2026-11-21T16:08:39Z'
+generated_by: claude-sonnet
+workflow_run: 44922213107
 issue: 2924
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/letsplot/plot-dark.html
-quality_score: 80
+quality_score: 78
 review:
   strengths:
-  - Theme-adaptive chrome properly implemented for title, axes, grid, and legend
-  - Correct Okabe-Ito colors for up-regulated (#D55E00) and down-regulated (#0072B2)
-  - Clear volcanic structure with obvious significance grouping
-  - Proper typography sizing (24pt title, 20pt labels, 16pt ticks) for large canvas
-  - Reproducible data generation with seed, appropriate sample size (500 genes)
-  - Both PNG and HTML exports generated correctly
+  - 'Status colors follow the Notes through the Imprint semantic exception: matte
+    red #AE3030 for up, Imprint blue #4467A3 for down, and the theme-adaptive muted
+    anchor for non-significant features'
+  - All three threshold lines drawn at their values in dashed INK_SOFT, visible through
+    the points in both themes
+  - Correct 3200x1800 canvas with library-prompt font sizes; all text readable in
+    both themes
+  - 'Clean adaptable structure: column constants with role comments, a separate Data
+    block and a Plot block reading only df'
+  - HTML export keeps lets-plot's native hover tooltips for each gene
   weaknesses:
-  - 'Neutral/gray color (#888888) is fixed, not theme-adaptive — should use #1A1A1A
-    (light) / #E8E8E0 (dark) per style guide'
-  - Generic design with minimal visual refinement beyond required elements
-  - No visual emphasis or hierarchy to create focal points
-  - Standard legend placement without distinctive design touches
+  - 'DE-02 (both): the major and minor grid is drawn in full-opacity INK (#1A1A17
+    light / #F0EFE8 dark) and the panel carries a four-sided frame, so the grid competes
+    with the points → grid at the style guide''s 15 % ink (for example #DAD8D1 light
+    / #3A3A36 dark), no minor grid, and an L-shaped or no frame. Likely cause: panel_grid_major/minor=element_line(color=INK)
+    and theme_minimal''s panel border kept.'
+  - 'DQ-03 (code): within each arm -log10 p is drawn from a flat uniform(1.5, 3.5)
+    independent of fold change, so the arms read as rectangles instead of rising with
+    |log2 FC| → let -log10 p grow with |log2 FC| (for example a z-test p-value from
+    fold change over a standard error). Likely cause: the tiered np.random.uniform
+    loop at lines 52–59.'
+  - 'CQ-04 (code): a per-gene for-loop with if/elif assigns the p-value tiers (lines
+    52–59) → one vectorized np.select over np.abs(log2_fc) with three np.random.uniform
+    arrays, as the Status column already does. Likely cause: element-wise loop kept
+    from an earlier version.'
+  - 'Suggestion: label the five most significant features by name, which the Notes
+    allow, using geom_text with a gene label column.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title bold and dark, axis labels and tick labels dark and clearly readable
-      Data: Blue points (down-regulated, left), orange points (up-regulated, right), gray points (not significant, center). Threshold lines (dashed) at ±1 fold change and 1.3 p-value cutoff are visible. Grid subtle but present.
-      Legibility verdict: PASS — all text readable, colors distinct, no contrast issues
+      Background: warm off-white #FAF8F1 across canvas and panel.
+      Chrome: bold dark title 'volcano-basic · python · letsplot · anyplot.ai' at top left (~54 % width); axis titles 'Log2 fold change' and '-Log10(p-value)' dark; tick labels dark gray; legend 'Status' on an elevated card at the right. Grid is dark full-opacity major + minor lines and a four-sided frame, visibly heavy.
+      Data: ~400 gray (#6B6A63) non-significant points in the central column below ~1.5; 50 blue (#4467A3) down-regulated points top-left; 50 red (#AE3030) up-regulated points top-right; alpha 0.6. Dashed threshold lines at y=1.3 and x=±1.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title light and clear, axis labels and tick labels light-colored and readable
-      Data: Blue, orange, and gray points identical to light render (only background/text colors adapted). Threshold lines visible.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, data colors maintain identity across themes
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink; tick labels light gray; legend card #242420 with light text; grid light-gray lines, visibly prominent. No dark-on-dark text.
+      Data: blue and red identical to the light render; the non-significant mass flips to the dark muted anchor #A8A79F. Threshold lines light dashed and visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -49,67 +64,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark renders
+        comment: Title 16 pt, axis titles 12 pt, ticks and legend 10 pt at ggsize(800,450)
+          scale 4; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Well-distributed points, no text collisions
+        comment: No text collisions; the legend sits outside the panel
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, and text clearly visible
+        comment: 500 points at size 2.5 with alpha 0.6 suit the density; legend glyphs
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Red/blue status split plus gray; no red-green pair
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: 3200x1800 canvas; title about 54 % of the width; balanced axis titles
+          and ticks
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with proper units and correct title format
+        comment: '''Log2 fold change'' and ''-Log10(p-value)'' are descriptive; quantities
+          are unitless'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Okabe-Ito colors correct for up/down, but neutral gray is fixed
-          #888888 instead of theme-adaptive'
+        passed: true
+        comment: 'Semantic exception: up = matte red #AE3030, down = Imprint blue
+          #4467A3, not significant = theme-adaptive muted anchor (#6B6A63 / #A8A79F);
+          backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 8
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
-        passed: false
-        comment: Generic styling, uses theme_minimal() defaults with no custom palette
-          refinements
+        passed: true
+        comment: The style-guide baseline (Imprint semantic colors, theme tokens,
+          explicit font sizes), nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
+        score: 0
+        max: 6
+        passed: false
+        comment: 'Short of the baseline: full-opacity INK major and minor grid plus
+          a four-sided panel frame (defect line)'
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond theme_minimal, standard grid and legend
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Clear volcanic structure visible but no emphasis or focal point techniques
+        comment: Status colors as the Notes prescribe; no hierarchy chosen beyond
+          them
     spec_compliance:
       score: 15
       max: 15
@@ -119,28 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with proper volcano structure
+        comment: Correct volcano scatter; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: x/y axes, color by significance, threshold
-          lines'
+        comment: 'Horizontal threshold at 1.3, vertical thresholds at ±1, status colors,
+          alpha transparency: all Notes and C1-C4 met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct mapping: log2 fold change to x, -log10 p-value to y'
+        comment: log2 FC on x, -log10 p on y, every point at its values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: Title 'volcano-basic · python · letsplot · anyplot.ai'; legend 'Status'
+          with readable entries
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -148,22 +171,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates all aspects of volcano plot (up-regulated, down-regulated,
-          not significant)
+        comment: Shows up-regulated, down-regulated and non-significant groups plus
+          borderline features near the thresholds
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated gene expression data is realistic and domain-appropriate
+        comment: 'Simulated differential gene expression: a real, neutral science
+          scenario'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'Sensible ranges: fold changes -4 to 4, p-values 0 to 3.5'
+        passed: false
+        comment: 'Checked: threshold at 1.3 = -log10(0.05), fold thresholds at ±1.
+          Within each arm -log10 p is uniform and unrelated to fold change (defect
+          line)'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -171,33 +197,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward code, no unnecessary functions
+        comment: Flat script; head, column constants, Data and Plot blocks; adaptability
+          check passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only imports used: numpy, pandas, lets_plot'
+        comment: numpy, pandas, lets_plot, os all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake interactivity
+        passed: false
+        comment: Per-gene Python loop for the p-value tiers where a vectorized np.select
+          replaces it (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -205,16 +233,19 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Good use of ggplot composition, geoms, and theme API; fairly standard
-          approach
+        comment: Idiomatic grammar of graphics; axis titles taken from the column
+          names, as the library prompt describes
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: HTML export present but not leveraged; no distinctive lets_plot features
-          beyond basic API
+        comment: Nothing beyond what the library prompt mandates; HTML export gives
+          default tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T16:04:26Z'
 impl_tags:
   dependencies: []
   techniques:
