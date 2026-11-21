@@ -50,7 +50,13 @@ function SourceItem({ entry }: { entry: SourceEntry }) {
           </Link>
         </>
       )}
-      {entry.isbn && ` · ISBN ${entry.isbn}`}
+      {entry.isbn && (
+        <>
+          {' · '}
+          {/* One line: a phone would otherwise break the number at one of its hyphens. */}
+          <Box component="span" sx={{ whiteSpace: 'nowrap' }}>{`ISBN ${entry.isbn}`}</Box>
+        </>
+      )}
     </Typography>
   );
 }

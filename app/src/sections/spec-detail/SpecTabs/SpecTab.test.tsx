@@ -84,7 +84,7 @@ describe('SpecTab', () => {
         'href',
         'https://doi.org/10.1000/xyz123'
       );
-      expect(screen.getByText(/· ISBN 978-3-16-148410-0/)).toBeInTheDocument();
+      expect(screen.getByText('ISBN 978-3-16-148410-0').tagName).toBe('SPAN');
       expect(screen.queryByRole('link', { name: /ISBN/ })).not.toBeInTheDocument();
     });
 
