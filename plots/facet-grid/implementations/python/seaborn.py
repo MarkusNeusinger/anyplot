@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 facet-grid: Faceted Grid Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-13
@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.ticker import MaxNLocator
 
 
 # Theme tokens
@@ -19,43 +20,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"
 
-# Data - Differentiated scenario: Production Cost vs Profit Margin by Product Line and Month
-np.random.seed(42)
-
-product_lines = ["Electronics", "Apparel", "Food"]
-months = ["Jan", "Feb", "Mar", "Apr"]
-
-data = []
-for product_idx, product in enumerate(product_lines):
-    for month_idx, month in enumerate(months):
-        n_points = 30
-        # Vary profit margin by product line (Electronics: high margin but higher cost,
-        # Apparel: moderate, Food: low margin, high volume)
-        base_margin = 15 + 10 * product_idx
-        margin_noise = np.random.normal(0, 3, n_points)
-
-        # Cost varies by month (seasonality)
-        base_cost = 800 + 200 * month_idx
-        cost_var = np.random.uniform(-100, 100, n_points)
-
-        # Profit margin increases with cost for some products
-        cost = base_cost + cost_var
-        profit_margin = base_margin + 0.01 * (cost - base_cost) + margin_noise
-        profit_margin = np.clip(profit_margin, 5, 40)
-
-        for i in range(n_points):
-            data.append(
-                {
-                    "Production Cost ($)": cost[i],
-                    "Profit Margin (%)": profit_margin[i],
-                    "Product Line": product,
-                    "Month": month,
-                }
-            )
-
-df = pd.DataFrame(data)
+# Imprint palette: first series is always brand green
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Setup theme
 sns.set_theme(
@@ -75,38 +42,65 @@ sns.set_theme(
     },
 )
 
-# Plot
-g = sns.FacetGrid(df, row="Product Line", col="Month", height=3.8, aspect=1.1, margin_titles=True)
+# Columns: set these to your table's column names
+COST = "Production Cost ($)"  # role: x
+MARGIN = "Profit Margin (%)"  # role: y
+PRODUCT_LINE = "Product Line"  # role: row_facet
+MONTH = "Month"  # role: col_facet
 
-# Map scatterplot with regression line
+# Data: replace this block with your own table, for example df = pd.read_csv("margins.csv")
+np.random.seed(42)
+product_lines = ["Electronics", "Apparel", "Food"]
+months = ["Jan", "Feb", "Mar", "Apr"]
+n_points = 30
+
+rows = []
+for product_idx, product in enumerate(product_lines):
+    for month_idx, month in enumerate(months):
+        # Margin level rises with the product line index; cost level rises with the month (seasonality)
+        base_margin = 15 + 10 * product_idx
+        margin_noise = np.random.normal(0, 3, n_points)
+        base_cost = 800 + 200 * month_idx
+        cost = base_cost + np.random.uniform(-100, 100, n_points)
+        margin = np.clip(base_margin + 0.01 * (cost - base_cost) + margin_noise, 5, 40)
+        rows.append(pd.DataFrame({COST: cost, MARGIN: margin, PRODUCT_LINE: product, MONTH: month}))
+
+df = pd.concat(rows, ignore_index=True)
+
+# Plot
+n_cols = df[MONTH].nunique()
+n_rows = df[PRODUCT_LINE].nunique()
+panel_h = 4.5 / n_rows
+g = sns.FacetGrid(
+    df, row=PRODUCT_LINE, col=MONTH, height=panel_h, aspect=8 / (n_cols * panel_h), margin_titles=True, despine=True
+)
+g.figure.set_dpi(400)
+g.figure.set_size_inches(8, 4.5)
+
 g.map_dataframe(
     sns.regplot,
-    x="Production Cost ($)",
-    y="Profit Margin (%)",
-    scatter_kws={"color": BRAND, "s": 140, "alpha": 0.75, "edgecolor": PAGE_BG, "linewidths": 0.8},
-    line_kws={"color": INK_SOFT, "linewidth": 2.5, "alpha": 0.6},
+    x=COST,
+    y=MARGIN,
+    scatter_kws={"color": IMPRINT_PALETTE[0], "s": 14, "alpha": 0.75, "edgecolor": PAGE_BG, "linewidths": 0.3},
+    line_kws={"color": INK_SOFT, "linewidth": 1.2, "alpha": 0.7},
     ci=None,
 )
 
-# Styling
-g.set_titles(row_template="{row_name}", col_template="{col_name}", size=18, fontweight="medium")
+# Facet labels: month across the top, product line down the right
+g.set_titles(row_template="{row_name}", col_template="{col_name}", size=9, fontweight="medium")
 
-# Remove y-axis label repetition: only show on leftmost column
-for i, ax in enumerate(g.axes.flat):
-    ax.tick_params(axis="both", labelsize=14)
-    ax.grid(True, alpha=0.12, linestyle="-", linewidth=0.7)
+for ax in g.axes.flat:
+    ax.tick_params(axis="both", labelsize=7, length=2, pad=1.5)
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=3))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=4))
+    ax.grid(True, alpha=0.12, linestyle="-", linewidth=0.5)
 
-    # Only leftmost column keeps y-axis label
-    if i % 4 != 0:
-        ax.set_ylabel("")
+# Axis titles once for the whole figure
+g.set_axis_labels(COST, MARGIN, fontsize=9)
 
-# Set labels once globally
-g.set_axis_labels("Production Cost ($)", "Profit Margin (%)", fontsize=18)
-
-# Add main title
-g.figure.suptitle("facet-grid · seaborn · anyplot.ai", fontsize=26, fontweight="medium", y=0.995, color=INK)
-
-g.tight_layout()
+title = "facet-grid · python · seaborn · anyplot.ai"
+g.figure.suptitle(title, fontsize=12, fontweight="medium", color=INK)
+g.figure.subplots_adjust(left=0.07, right=0.93, bottom=0.11, top=0.88, wspace=0.12, hspace=0.3)
 
 # Save
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
