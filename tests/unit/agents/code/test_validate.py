@@ -2233,6 +2233,7 @@ PLOTNINE_EXPRESSION_ESCAPES = [
     pytest.param("aes(x=\"np.testing.measure('1')\")", "aes", "banned-attribute", id="exec route"),
     pytest.param("aes(**{'x': 'open(\"x\")'})", "aes", "banned-name", id="unpacked dict literal"),
     pytest.param("aes(x=COLUMN)", "aes", "banned-name", id="a module-level name bound to the string"),
+    pytest.param("aes(x=UNPACKED)", "aes", "banned-name", id="a module-level name unpacked from the string"),
 ]
 # Arguments plotnine would evaluate that the walk cannot read: a variable, a concatenation, an unpacked name.
 PLOTNINE_OPAQUE_ARGUMENTS = [
@@ -2242,9 +2243,22 @@ PLOTNINE_OPAQUE_ARGUMENTS = [
     pytest.param("aes(x=f\"{'op'}en('x')\")", id="f-string"),
     pytest.param("aes(x=LATER)", id="a name bound twice"),
     pytest.param("facet_wrap(facets=columns)", id="facet name"),
+    pytest.param("aes(x=STARRED)", id="a name of a starred unpacking"),
+    pytest.param("aes(x=SPREAD)", id="an unpacking with a starred item on the right"),
+    pytest.param("aes(x=PICKED)", id="a name unpacked from a subscript"),
+    pytest.param("aes(x=FROM_NAME)", id="a name unpacked from another name"),
+    pytest.param("aes(x=NESTED)", id="a name of a nested unpacking"),
+    pytest.param("aes(x=INSIDE)", id="an unpacking below the top level"),
 ]
 EXPRESSION_BINDINGS = (
     'COLUMN = \'open("/etc/passwd").read()\'\ncolumns = ["a"]\nmapping = {"x": "a"}\nLATER = "a"\nLATER = "b"\n'
+    'SAFE, UNPACKED = "a", \'open("/etc/passwd").read()\'\n'
+    'STARRED, *REST = "a", "b", "c"\n'
+    'SPREAD, SPREAD_B = *columns, "b"\n'
+    'PICKED, PICKED_B = columns[0], "b"\n'
+    'PAIR = ("a", "b")\nFROM_NAME, FROM_NAME_B = PAIR\n'
+    '(NESTED, NESTED_B), NESTED_C = ("a", "b"), "c"\n'
+    'if THEME:\n    INSIDE, INSIDE_B = "a", "b"\n'
 )
 
 
@@ -2379,12 +2393,27 @@ class TestPlotnineProfile:
             pytest.param("def COLUMN():\n    return 1\n", id="function name"),
         ],
     )
-    def test_a_name_bound_twice_is_not_read_as_its_literal(self, rebinding: str) -> None:
+    @pytest.mark.parametrize(
+        "binding",
+        [pytest.param('COLUMN = "a"\n', id="assigned"), pytest.param('COLUMN, OTHER = "a", "b"\n', id="unpacked")],
+    )
+    def test_a_name_bound_twice_is_not_read_as_its_literal(self, binding: str, rebinding: str) -> None:
         """`COLUMN = "a"` and then `case COLUMN:` would hand plotnine the subject string, which the walk never saw
         (the validator pass of 2026-10-26: the 1b rule counted only assignments and passed the match capture)."""
-        body = EXPRESSION_IMPORTS + 'COLUMN = "a"\n' + rebinding + "m = aes(x=COLUMN)\n"
+        body = EXPRESSION_IMPORTS + binding + rebinding + "m = aes(x=COLUMN)\n"
         findings = validate_security(plotnine_plot(body), library="plotnine")
         assert any(f.message == "aes takes its column names as string literals, not as an expression" for f in findings)
+
+    def test_names_unpacked_from_literal_strings_pass(self) -> None:
+        """One top-level unpacking of string literals binds each name once, as `col = "x"` does; the drawing tables
+        of venn-basic in plotnine name their columns this way (#13396)."""
+        body = EXPRESSION_IMPORTS + (
+            'POS_X, POS_Y, TEXT, GROUP = "x", "y", "label", "set"\n'
+            "[ROW, COL] = ['pane', 'np.log10(x)']\n"
+            "m = aes(x=POS_X, y=POS_Y, fill=GROUP, group=GROUP, label=TEXT)\n"
+            "f = facet_grid(rows=ROW, cols=COL)\n"
+        )
+        assert rules_of(plotnine_plot(body), "plotnine") == set()
 
     def test_literal_arguments_the_walk_can_read_pass(self) -> None:
         body = EXPRESSION_IMPORTS + (
