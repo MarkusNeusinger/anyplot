@@ -1,24 +1,16 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-box: Violin Plot with Embedded Box Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-12
 """
 
-import importlib
 import os
-import sys
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 
-# Avoid importing from local directory
-for path in list(sys.path):
-    if "violin-box" in path or "implementations" in path:
-        sys.path.remove(path)
-
-matplotlib = importlib.import_module("matplotlib")
-plt = importlib.import_module("matplotlib.pyplot")
-np = importlib.import_module("numpy")
-pd = importlib.import_module("pandas")
-sns = importlib.import_module("seaborn")
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -27,27 +19,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series always #009E73
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Product quality scores across manufacturing batches
-np.random.seed(42)
-
-# Create varied distributions for each batch to demonstrate violin plot value
-batch_a = np.random.normal(75, 8, 120)  # Normal, centered around 75
-batch_b = np.concatenate([np.random.normal(60, 5, 60), np.random.normal(80, 5, 60)])  # Bimodal
-batch_c = np.random.exponential(10, 120) + 50  # Right-skewed
-batch_d = 95 - np.random.exponential(10, 120)  # Left-skewed
-
-# Combine into DataFrame
-df = pd.DataFrame(
-    {
-        "Quality Score": np.concatenate([batch_a, batch_b, batch_c, batch_d]),
-        "Batch": ["Batch A"] * 120 + ["Batch B"] * 120 + ["Batch C"] * 120 + ["Batch D"] * 120,
-    }
-)
-
-# Configure seaborn theme with theme-adaptive chrome
+# Library setup: seaborn theme with theme-adaptive chrome
 sns.set_theme(
     style="ticks",
     rc={
@@ -65,40 +40,56 @@ sns.set_theme(
     },
 )
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Columns: set these to your table's column names
+BATCH = "Manufacturing Batch"  # role: group
+SCORE = "Quality Score (0-100)"  # role: value
 
-# Create violin plot with embedded box plot
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+np.random.seed(42)
+n_per_batch = 120
+batch_a = np.random.normal(75, 8, n_per_batch)  # roughly normal
+batch_b = np.concatenate(
+    [np.random.normal(60, 5, n_per_batch // 2), np.random.normal(80, 5, n_per_batch // 2)]
+)  # bimodal
+batch_c = np.random.exponential(10, n_per_batch) + 50  # right-skewed
+batch_d = 95 - np.random.exponential(10, n_per_batch)  # left-skewed
+df = pd.DataFrame(
+    {
+        BATCH: np.repeat(["Batch A", "Batch B", "Batch C", "Batch D"], n_per_batch),
+        SCORE: np.concatenate([batch_a, batch_b, batch_c, batch_d]),
+    }
+)
+
+# Plot: reads only df and the constants above
+n_groups = df[BATCH].nunique()
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+
 sns.violinplot(
     data=df,
-    x="Batch",
-    y="Quality Score",
-    hue="Batch",
-    palette=IMPRINT,
+    x=BATCH,
+    y=SCORE,
+    hue=BATCH,
+    palette=IMPRINT_PALETTE[:n_groups],
     inner="box",
-    linewidth=2,
+    inner_kws={"box_width": 4, "whis_width": 1.2, "color": INK},
+    cut=0,
+    linewidth=1.0,
+    linecolor=INK_SOFT,
     saturation=0.9,
     legend=False,
     ax=ax,
 )
 
-# Styling
-ax.set_title("violin-box · seaborn · anyplot.ai", fontsize=24, fontweight="medium", pad=20)
-ax.set_xlabel("Manufacturing Batch", fontsize=20, color=INK)
-ax.set_ylabel("Quality Score (0-100)", fontsize=20, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.grid(True, alpha=0.15, axis="y", linewidth=0.8)
-ax.set_ylim(30, 100)
+# Style
+ax.set_title("violin-box · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=10)
+ax.set_xlabel(BATCH, fontsize=10)
+ax.set_ylabel(SCORE, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
+ax.set_axisbelow(True)
+pad = 0.05 * (df[SCORE].max() - df[SCORE].min())
+ax.set_ylim(df[SCORE].min() - pad, df[SCORE].max() + pad)
+sns.despine(ax=ax)
 
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for spine in ["left", "bottom"]:
-    ax.spines[spine].set_color(INK_SOFT)
-
-# Save to script directory
-script_dir = os.path.dirname(os.path.abspath(__file__))
-output_path = os.path.join(script_dir, f"plot-{THEME}.png")
-
-plt.tight_layout()
-plt.savefig(output_path, dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.09, right=0.97, top=0.9, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
