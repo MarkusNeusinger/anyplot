@@ -2,46 +2,48 @@ library: plotly
 language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:49:58Z'
-updated: '2026-05-13T09:24:32Z'
-generated_by: claude-haiku
-workflow_run: 25789999160
+updated: '2026-11-21T09:20:01Z'
+generated_by: claude-sonnet
+workflow_run: 44888527812
 issue: 2782
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/plotly/plot-dark.html
-quality_score: 97
+quality_score: 82
 review:
   strengths:
-  - Perfect theme adaptation with both renders fully readable and correct color-token
-    application
-  - Excellent library mastery demonstrated through make_subplots with specs for per-cell
-    plot type definition
-  - Real-world financial dashboard context with realistic data generation including
-    technical indicators and proper correlation
-  - Professional typography hierarchy and consistent styling across all four subplots
-  - Flawless color compliance with Okabe-Ito palette correctly applied and data colors
-    identical between themes
-  - Clean, straightforward code with deterministic seeding and appropriate complexity
+  - make_subplots with per-cell specs combines a line, bar, histogram and scatter
+    into one aligned 2x2 grid with even gaps
+  - Independent axes each carry their own tick labels and unit-bearing title, so every
+    cell reads alone
+  - The Price / 20-day MA legend sits inside the price cell, so it is clear which
+    subplot it explains
+  - Theme tokens threaded through every axis, annotation and the legend; both renders
+    fully legible with identical data colors
+  - Native plotly hover and zoom in the HTML output
   weaknesses:
-  - 'Minor design refinement opportunity: legend styling could include more sophisticated
-    visual treatments such as custom positioning or enhanced visual hierarchy'
-  - 'Minor design opportunity: data storytelling could emphasize key insights more
-    explicitly, such as highlighting peak price points or volume extremes'
+  - 'SC-04 (both): the Trading Volume bars switch between green #009E73 and purple
+    #C475FD by up/down day, but no legend or label says what the two colors mean,
+    and purple also means the 20-day MA in the neighbouring cell → explain the encoding
+    inside the volume cell (legend entries ''Up day'' / ''Down day'') or draw the
+    bars in one color. Likely cause: up_down color list on the go.Bar trace with showlegend=False.'
+  - 'Suggestion: hide the x=0 zero line in the histogram cell so it does not run through
+    the bars.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct per style guide
-      Chrome: Title (28px, dark #1A1A17), axis labels (22px), tick labels (18px), subplot titles (20px) all clearly readable against light surface. Legend positioned top-right with light elevated background (#FFFDF6) and subtle INK_SOFT border
-      Data: Stock price line (#009E73 - Okabe-Ito position 1), moving average dashed line (#D55E00 - position 2), volume bars in dual colors, histogram bars, scatter markers all clearly visible with appropriate opacity values
-      Legibility verdict: PASS - All text fully readable; no light-on-light failures; theme tokens properly applied
+      Background: warm off-white #FAF8F1 across paper and all four plot areas; 3200x1800.
+      Chrome: centred title "subplot-grid · python · plotly · anyplot.ai" in dark ink; subplot titles "Stock Price & Moving Average", "Trading Volume", "Daily Returns Distribution", "Price vs Volume"; axis titles Date, Price ($), Volume, Daily Return (%), Frequency; tick labels in INK_SOFT; subtle grid. All readable.
+      Data: top-left green #009E73 price line with purple #C475FD dashed 20-day MA and a bordered legend inside the cell; top-right volume bars alternating green/purple by up/down day; bottom-left green histogram with page-colored separators and a dark zero line at x=0; bottom-right 60 green scatter markers with light outlines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct per style guide
-      Chrome: Title (light #F0EFE8), axis labels, tick labels, subplot titles all clearly readable against dark surface. No dark-on-dark failures detected. Legend background is elevated dark (#242420) with light border (#B8B7B0). Grid lines subtle but visible.
-      Data: Data colors identical to light render (#009E73, #D55E00 preserved); only chrome has adapted to theme. Markers, lines, and bars all clearly distinguishable from dark background
-      Legibility verdict: PASS - All text fully readable; theme adaptation flawless; no legibility failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, subplot titles and axis titles in light ink, tick labels in light grey; legend box on #242420 with light border; grid subtle but visible. No dark-on-dark text.
+      Data: identical colors to the light render (#009E73 green, #C475FD purple); only chrome flipped; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,78 +54,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, tick labels 18px, subplot titles 20px
-          - all clearly readable in both themes
+        comment: Title 16, subplot titles 13, axis titles 12, ticks 10 px at scale
+          4 (library-prompt sizes); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text non-overlapping; legend clearly positioned; subplot spacing
-          well-managed (h=0.1, v=0.12)
+        comment: No text collisions; the Price/MA legend sits in empty space of its
+          own cell; vertical spacing 0.25 keeps x-axis titles clear of the lower subplot
+          titles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers, lines, bars, histogram all clearly visible with appropriate
-          sizing (line width 3, marker size 14, opacity 0.75-0.8)
+        comment: Line width 2.5/2, 60 scatter markers at size 8 with page-colored
+          outline, histogram bars with separators; all visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette used (#009E73, #D55E00); CVD-safe; no problematic
-          contrasts'
+        comment: Green/purple pair is CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2x2 grid well-proportioned for 4800x2700; nothing cut off; margins
-          appropriate (l:80, r:150, t:120, b:80)
+        comment: 3200x1800 canvas; four evenly spaced cells aligned along rows and
+          columns; title about 35% of width; nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title clear with brand attribution; axis labels descriptive with
-          units (Date, Price ($), Volume, Daily Return (%), Frequency)
+        comment: 'Descriptive axis titles with units: Price ($), Volume, Daily Return
+          (%), Frequency, Date'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series follows Okabe-Ito; backgrounds
-          #FAF8F1/#1A1A17; theme-adaptive chrome fully applied'
+        comment: 'First series #009E73, second #C475FD in Imprint order; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 17
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: Custom theme tokens, intentional hierarchy, professional financial
-          context, legend styled with border - minor refinement opportunity in legend
-          design
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit font
+          sizes; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Grid subtle (opacity 0.10); generous whitespace; clean margins; minimal
-          decoration - very clean design
+        passed: false
+        comment: Spine and grid rules met, legend placed inside its cell; nothing
+          beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear narrative flow through four subplots; color consistency aids
-          understanding; could emphasize key insights more explicitly
+        passed: false
+        comment: Data displayed as four related views; no focal point chosen beyond
+          the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,27 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2x2 subplot grid with mixed plot types (line, bar, histogram,
-          scatter)
+        comment: 2x2 subplot grid with line, bar, histogram and scatter cells
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid dimensions configurable, independent axes, different plot types
-          per cell, consistent spacing, clear labels
+        comment: Configurable grid via make_subplots, different type per cell, independent
+          axes each with ticks and titles (C4), consistent spacing (C2), subplot titles
+          (C3), cell-local legend (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped in all subplots; axes show complete data range
+        comment: All marks at their data values; axes cover all data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title correct format; legend labels accurate for all series
+        passed: false
+        comment: Title format correct; the volume bars' green/purple up/down coloring
+          has no legend or label (defect line)
     data_quality:
       score: 15
       max: 15
@@ -161,21 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates 4+ plot types with technical indicators (moving average),
-          volume, distribution, and correlation
+        comment: Shows mixed plot types, a multi-series cell, a distribution and a
+          relationship cell
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price walk, correlated volume, plausible returns,
-          professional financial dashboard
+        comment: Plausible 60-day stock dashboard; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Stock price $80-110, volume 500K-3M, returns -4% to +4% - all realistic
+        comment: 'Price $82-110, volume 0.9-3M, daily returns -4 to +4 %: sensible;
+          no Check values in the Notes'
     code_quality:
       score: 10
       max: 10
@@ -185,60 +187,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward procedural code
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no redundancy
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake features; appropriate complexity
+        comment: Appropriate complexity; rolling() for the moving average, nbinsx
+          for the histogram
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 10
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: make_subplots(), go.Scatter/Bar/Histogram, specs parameter, proper
-          add_trace() pattern, update_layout()
+        passed: false
+        comment: make_subplots with per-cell specs, update_xaxes/update_yaxes targeted
+          by row/col, styling subplot-title annotations through layout
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: make_subplots with mixed types, specs for per-cell definition, spacing
-          control, multi-cell legend, theme-adaptive tokens
+        passed: false
+        comment: 'Default: nothing beyond what the library prompt mandates; native
+          hover in HTML'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T09:16:24Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - custom-legend
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep:
-  - cumulative-sum
   - rolling-window
+  - binning
   - time-series
   styling:
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
