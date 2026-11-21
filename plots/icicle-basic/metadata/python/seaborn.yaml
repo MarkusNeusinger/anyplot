@@ -2,49 +2,51 @@ library: seaborn
 language: python
 specification_id: icicle-basic
 created: '2025-12-30T00:03:13Z'
-updated: '2026-05-13T22:57:13Z'
-generated_by: claude-haiku
-workflow_run: 25830410893
+updated: '2026-11-21T13:28:32Z'
+generated_by: claude-sonnet
+workflow_run: 44908434604
 issue: 2497
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 82
 review:
   strengths:
-  - Clean, readable visualization in both light and dark themes with proper contrast
-    throughout
-  - 'Smart label handling: truncation, dynamic font sizing, luminance-based text coloring
-    adapt well to varying rectangle sizes'
-  - Clear visual hierarchy through color progression (viridis) and strategic layout
-  - Properly implements theme-adaptive chrome while keeping data colors consistent
-  - Well-structured procedural code with clear logic for hierarchy traversal
+  - Branch hue from the Imprint palette in canonical order with lighter tints per
+    depth reads both category and hierarchy level, identical in both themes
+  - Labels only where they fit, truncated with an ellipsis, with text color chosen
+    per fill by WCAG contrast — readable on every rectangle in both themes
+  - Exact 3200x1800 canvas via figsize x dpi with subplots_adjust, no bbox_inches
+    trimming
+  - 'Clean adaptable layout: column constants, one Data block, a plot section that
+    reads only df'
   weaknesses:
-  - 'Design sophistication is modest: viridis is sensible but custom palette or accent
-    colors could add visual interest'
-  - 'Library mastery moderate: using matplotlib directly is necessary but additional
-    seaborn styling techniques could enhance'
-  - 'Visual emphasis could be stronger: hierarchy levels distinguishable but lack
-    focal points or deliberate weight contrast'
+  - 'VQ-01 (both): the level-2 and leaf labels (Platform, Mobile App, Shipping, Rent
+    …) are set at 7 pt, below the style guide''s 8 pt floor for the smallest text
+    → 8 pt (+1 pt), keeping 9 pt or more for the upper rows. Likely cause: fontsize
+    = 9 if level < 2 else 7.'
+  - 'CQ-01 (code): two recursive helper functions total() and depth() (lines 80–90)
+    break the Imports → Data → Plot → Save flow → compute the subtree totals and the
+    level count inline, for example by a reverse level-order pass over the children
+    dict. Likely cause: recursion used for the tree sums.'
+  - 'Suggestion: leaf names such as ''Platform Cloud'' and ''Retail Staff'' are cut
+    to ''Platfor…'' / ''Retai…'' although their rectangles are tall enough for a two-line
+    wrap of the name.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), properly themed
-      Chrome: Title "icicle-basic · seaborn · anyplot.ai" in dark text (INK), readable; legend frame off-white (ELEVATED_BG) with dark text; borders in soft gray (INK_SOFT)
-      Data: Root node in purple with white text; level-1 nodes (Projects, Media, Documents) in blue with white text; level-2 nodes in green with dark gray text; level-3 nodes (files) in yellow with dark gray text. Color progression from viridis shows clear hierarchy.
-      Labels: Smart truncation applied to long names (e.g., 'Templat...'). Small rectangles skip labels. All visible text readable.
-      Legibility verdict: PASS - All text readable against light background, no light-on-light issues
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "icicle-basic · python · seaborn · anyplot.ai" in dark ink, centered above the chart at ~44% width; no axes or grid. All text readable.
+      Data: four-row icicle. Top row: gray "Company 8,630" root spanning the width. Row 2: Engineering 3,360 (#009E73), Marketing 1,440 (#C475FD), Operations 1,840 (#4467A3, white text), Sales 1,990 (#BD8233). Rows 3 and 4: the same hues tinted lighter per level (Platform 2,230, Mobile App 1,130, Campaigns 970, Brand 470, Logistics 1,170, Facili… 670, Enterprise 1,120, Retail 870; leaves Platform Staff 1,450, Platfor… 780, Mobile St… 920, Campai… 640, Shipping 710, Ware… 460, Rent 520, Enterpris… 880, Retai… 560, plus six thin unlabeled slivers). Rectangles separated by thin page-colored gaps. Level-2 and leaf labels are smaller (7 pt) than the upper rows.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), properly themed
-      Chrome: Title in light text (INK = #F0EFE8), clearly readable on dark background; legend frame dark (#242420) with light text (INK_SOFT or lighter); borders in light tone
-      Data: Data colors identical to light render (purple→blue→green→yellow). Root in purple with white text; level-1 in blue with white text; level-2 in green with gray text (INK_SOFT = #B8B7B0); level-3 in yellow with gray text. Strong contrast maintained across all levels.
-      Labels: Same smart truncation as light render. Label visibility consistent.
-      Legibility verdict: PASS - All text readable against dark background, no dark-on-dark failures detected, yellow text (gray on yellow) maintains sufficient contrast
-
-    Theme comparison: Data colors stay identical between light and dark (only chrome adapts). Both renders fully legible and properly theme-aware.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, clearly readable; gaps between rectangles now near-black (page color).
+      Data: fills identical to the light render (gray root, the same four Imprint hues and tints); label text colors unchanged (dark on the fills, white on Operations), all readable against their fills. No dark-on-dark text.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -52,76 +54,81 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes scale by hierarchy level. All text readable in both light/dark
-          themes. Luminance-based contrast selection ensures good readability.
+        comment: Title, root and level-1 labels readable in both themes; level-2 and
+          leaf labels are set at 7 pt, below the 8 pt style-guide floor (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Smart label truncation with ellipsis. Small rectangles skip labels.
-          No text collisions detected.
+        comment: No text collisions; every label stays inside its rectangle, truncated
+          with an ellipsis where needed
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 21 nodes visible. Viridis color progression clearly separates
-          hierarchy levels.
+        comment: All 29 rectangles visible with thin page-colored gaps; pale leaf
+          tints still clear on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe for sequential data.
+        comment: Branches differ in hue and lightness steps; text color chosen per
+          fill by WCAG contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions (16:9). Nothing cut off. Margins generous.
+        comment: 3200x1800 canvas, chart fills the frame with even margins, title
+          at ~44% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title present and correct format. Axes off (appropriate for icicle
-          chart).
+        comment: N/A for axes (layout-positioned, axes off as the spec asks); node
+          names are readable labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis appropriate for sequential hierarchy data. Backgrounds #FAF8F1/#1A1A17
-          correct. Data colors consistent light↔dark (chrome-only flip).'
+        comment: 'Imprint positions 1-4 in canonical order for the four branches (Engineering
+          #009E73 first), neutral root, white-mixed tints identical in both themes;
+          backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Uses standard viridis default. Clean but lacks custom palette or
-          accent colors for sophistication.
+        passed: true
+        comment: 'Raised: combines branch hue with a depth tint so both level and
+          category read at once, and a two-tier bold label hierarchy (9 pt upper rows,
+          smaller lower rows)'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Axes off, minimal elements, whitespace generous. Could explore subtle
-          grid refinement or edge styling.
+        passed: true
+        comment: 'Raised: page-colored rectangle borders that dissolve into the background
+          in each theme, thousands-separated values under each name, per-fill contrast
+          text'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Hierarchy clearly shown. Could emphasize focal points through color
-          contrast or size variation.
+        comment: Hierarchy displayed as the Notes ask; no focal hierarchy chosen beyond
+          that
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical icicle chart with proper hierarchy representation.
+        comment: Horizontal-row icicle, root at top, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: hierarchy levels, proportional sizes, value
-          labels, category names.'
+        comment: C1 rows per level, C2 widths proportional with children within parents,
+          C3 color by category consistently, C4 labels only where they fit, C5 no
+          axes/grid/extra layers - all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct. All 21 data points represented.
+        comment: Widths follow summed leaf values (Engineering 1450+780+920+210 =
+          3,360 checked)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend correct format and content.
+        comment: Title 'icicle-basic · python · seaborn · anyplot.ai'; legend N/A,
+          branches labelled in place
     data_quality:
       score: 15
       max: 15
@@ -160,85 +170,86 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full icicle features: 4 levels, 21 nodes, realistic file system
-          structure.'
+        comment: 4 levels, 29 nodes, varied sibling sizes including thin unlabeled
+          slivers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: File system example realistic and neutral. Domain-appropriate.
+        comment: Company budget by department, project and expense category; neutral
+          and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible (10-1000 MB), hierarchy depth typical.
+        comment: Budget lines 150-1,450 thousand USD, total 8,630; checked that parent
+          totals equal child sums (Sales 880+240+560+310 = 1,990). No Check values
+          in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Pure procedural code, no unnecessary functions.
+        passed: false
+        comment: Two recursive helper functions total() and depth() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed data, deterministic algorithm.
+        comment: Fixed data table
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, none unused.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Smart label truncation and luminance-based coloring are
-          thoughtful.
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Uses matplotlib Rectangle (necessary—seaborn has no icicle chart).
-          Good matplotlib patterns but not seaborn-idiomatic.
+        passed: true
+        comment: 'Default: seaborn has no icicle; sns.set_theme for chrome plus matplotlib
+          patches is the expected route'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Smart label truncation and luminance-based coloring are nice touches
-          but modest in scope.
+        comment: Nothing seaborn-specific beyond set_theme
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T13:24:37Z'
 impl_tags:
   dependencies: []
   techniques:
   - patches
-  - custom-legend
   - annotations
   patterns:
   - explicit-figure
-  - data-generation
-  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
-  - custom-colormap
+  - edge-highlighting
