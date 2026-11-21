@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-15
@@ -7,21 +7,31 @@ Quality: 89/100 | Updated: 2026-05-15
 import os
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
-np.random.seed(42)
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Chromosome lengths (simplified, in Mb)
+# Constants
+GENOME_WIDE_P = 5e-8  # conventional genome-wide significance threshold
+SUGGESTIVE_P = 1e-5  # conventional suggestive threshold
+
+# Columns: set these to your table's column names
+CHROMOSOME = "Chromosome"  # role: chromosome
+POSITION = "Position (Mb)"  # role: position
+P_VALUE = "p-value"  # role: p_value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("gwas.csv")
+rng = np.random.default_rng(42)
 chrom_lengths = {
     "1": 249,
     "2": 243,
@@ -46,161 +56,123 @@ chrom_lengths = {
     "21": 47,
     "22": 51,
 }
+n_snps = 500
+frames = []
+for chrom, length in chrom_lengths.items():
+    pvalues = rng.uniform(0, 1, n_snps)
+    # Association peaks on three chromosomes
+    if chrom in ("6", "11", "16"):
+        hits = rng.choice(n_snps, rng.integers(3, 8), replace=False)
+        pvalues[hits] = 10 ** (-rng.uniform(8, 15, len(hits)))
+    # Suggestive signals everywhere
+    suggestive = rng.choice(n_snps, rng.integers(5, 15), replace=False)
+    pvalues[suggestive] = 10 ** (-rng.uniform(5, 8, len(suggestive)))
+    frames.append(
+        pd.DataFrame({CHROMOSOME: chrom, POSITION: np.sort(rng.uniform(0, length, n_snps)), P_VALUE: pvalues})
+    )
+df = pd.concat(frames, ignore_index=True)
 
-chromosomes = list(chrom_lengths.keys())
-n_snps_per_chrom = 500
+# Plot: cumulative genome position, chromosomes laid end to end in data order
+chroms = list(dict.fromkeys(df[CHROMOSOME]))
+lengths = df.groupby(CHROMOSOME, sort=False)[POSITION].max().reindex(chroms)
+offsets = lengths.cumsum().shift(fill_value=0)
+genome_end = float(lengths.sum())
+midpoints = (offsets + lengths / 2).tolist()
 
-# Storage for data
-all_chroms = []
-all_cumulative_pos = []
-all_pvalues = []
+df["x"] = df[POSITION] + df[CHROMOSOME].map(offsets)
+df["y"] = -np.log10(df[P_VALUE])
+df["odd"] = df[CHROMOSOME].map({c: i % 2 == 0 for i, c in enumerate(chroms)})
+gw_line = -np.log10(GENOME_WIDE_P)
+sugg_line = -np.log10(SUGGESTIVE_P)
+significant = df["y"] >= gw_line
 
-# Track chromosome boundaries for x-axis labels
-chrom_midpoints = []
-cumulative_offset = 0
-
-for chrom in chromosomes:
-    length = chrom_lengths[chrom]
-    positions = np.sort(np.random.uniform(0, length, n_snps_per_chrom))
-
-    # Store chromosome midpoint for x-axis label
-    chrom_midpoints.append(cumulative_offset + length / 2)
-
-    # Generate p-values: mostly uniform with some significant hits
-    pvalues = np.random.uniform(0, 1, n_snps_per_chrom)
-
-    # Add significant peaks on selected chromosomes
-    if chrom in ["6", "11", "16"]:
-        n_sig = np.random.randint(3, 8)
-        sig_indices = np.random.choice(n_snps_per_chrom, n_sig, replace=False)
-        pvalues[sig_indices] = 10 ** (-np.random.uniform(8, 15, n_sig))
-
-    # Add suggestive signals
-    n_sugg = np.random.randint(5, 15)
-    sugg_indices = np.random.choice(n_snps_per_chrom, n_sugg, replace=False)
-    pvalues[sugg_indices] = 10 ** (-np.random.uniform(5, 8, n_sugg))
-
-    cumulative_positions = positions + cumulative_offset
-    all_chroms.extend([chrom] * n_snps_per_chrom)
-    all_cumulative_pos.extend(cumulative_positions)
-    all_pvalues.extend(pvalues)
-
-    cumulative_offset += length
-
-# Convert to -log10 p-values
-neg_log_pvalues = -np.log10(np.array(all_pvalues))
-
-# Thresholds
-genome_wide_sig = -np.log10(5e-8)  # ~7.3
-suggestive_sig = 5.0  # -log10(1e-5)
-
-# Custom style with theme-adaptive colors
+# Style
+title = "manhattan-gwas · python · pygal · anyplot.ai"
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=34,
+    legend_font_size=36,
+    value_font_size=36,
+    stroke_width=4,
 )
 
-# Create XY scatter chart
+
+def chromosome_label(x_value):
+    """Label of the chromosome whose midpoint is closest to x_value."""
+    return chroms[int(np.argmin([abs(x_value - m) for m in midpoints]))]
+
+
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="manhattan-gwas · pygal · anyplot.ai",
-    x_title="Chromosome",
+    title=title,
+    x_title=CHROMOSOME,
     y_title="-log₁₀(p-value)",
-    show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
-    legend_box_size=16,
+    legend_box_size=30,
     stroke=False,
-    dots_size=4,
+    dots_size=3.5,
     show_x_guides=False,
     show_y_guides=True,
     truncate_label=-1,
     print_values=False,
     x_label_rotation=0,
-    range=(0, 16),
-    xrange=(0, cumulative_offset),
-    tooltip_border_radius=5,
+    range=(min(0.0, float(np.floor(df["y"].min()))), float(np.ceil(max(df["y"].max(), gw_line) + 1))),
+    xrange=(0, genome_end),
     explicit_size=True,
-    spacing=20,
-    margin=50,
-    margin_bottom=150,
-    margin_top=80,
+    margin_bottom=40,
+)
+chart.x_labels = midpoints
+chart.x_value_formatter = chromosome_label
+
+# Each point sits at its base-pair position; adjacent chromosomes alternate color
+chart.add(
+    "Odd chromosomes",
+    list(zip(df.loc[~significant & df["odd"], "x"], df.loc[~significant & df["odd"], "y"], strict=True)),
+    stroke=False,
+)
+chart.add(
+    "Even chromosomes",
+    list(zip(df.loc[~significant & ~df["odd"], "x"], df.loc[~significant & ~df["odd"], "y"], strict=True)),
+    stroke=False,
+)
+hits = df[significant]
+chart.add(
+    "Genome-wide significant",
+    [
+        {"value": (row.x, row.y), "label": f"Chr {row[CHROMOSOME]}: {row[POSITION]:.1f} Mb, -log₁₀(p) = {row.y:.1f}"}
+        for _, row in hits.iterrows()
+    ],
+    stroke=False,
+    dots_size=6,
 )
 
-# Set x-axis labels at chromosome midpoints
-chart.x_labels = chrom_midpoints
+# Dashed threshold lines across the whole genome
+dashed = {"width": 4, "dasharray": "24,14", "linecap": "butt"}
+chart.add(
+    f"Suggestive (p = {SUGGESTIVE_P:g})",
+    [(0, sugg_line), (genome_end, sugg_line)],
+    stroke=True,
+    show_dots=False,
+    stroke_style=dashed,
+)
+chart.add(
+    f"Genome-wide (p = {GENOME_WIDE_P:g})",
+    [(0, gw_line), (genome_end, gw_line)],
+    stroke=True,
+    show_dots=False,
+    stroke_style=dashed,
+)
 
-
-def format_x_label(x_val):
-    """Find closest chromosome midpoint and return chromosome number."""
-    if not chrom_midpoints:
-        return ""
-    min_dist = float("inf")
-    closest_idx = 0
-    for i, pos in enumerate(chrom_midpoints):
-        dist = abs(x_val - pos)
-        if dist < min_dist:
-            min_dist = dist
-            closest_idx = i
-    # Only return label if close to midpoint
-    if min_dist < 50:
-        return str(closest_idx + 1)
-    return ""
-
-
-chart.x_value_formatter = lambda x: format_x_label(x)
-
-# Prepare data by chromosome with alternating colors
-odd_chrom_points = []
-even_chrom_points = []
-significant_points = []
-
-for idx, chrom in enumerate(chromosomes):
-    chrom_mask = [c == chrom for c in all_chroms]
-    chrom_x = [all_cumulative_pos[j] for j in range(len(all_chroms)) if chrom_mask[j]]
-    chrom_y = [neg_log_pvalues[j] for j in range(len(all_chroms)) if chrom_mask[j]]
-
-    for x, y in zip(chrom_x, chrom_y, strict=True):
-        point = {"value": (x, y), "label": f"Chr {chrom}: {x:.1f} Mb, -log₁₀(p)={y:.2f}"}
-        if y >= genome_wide_sig:
-            significant_points.append(point)
-        elif idx % 2 == 0:
-            odd_chrom_points.append(point)
-        else:
-            even_chrom_points.append(point)
-
-# Add data series
-chart.add("Odd chromosomes", odd_chrom_points, stroke=False, show_dots=True)
-chart.add("Even chromosomes", even_chrom_points, stroke=False, show_dots=True)
-chart.add("Significant (p<5×10⁻⁸)", significant_points, stroke=False, show_dots=True)
-
-# Add threshold lines
-n_line_points = 200
-threshold_x = np.linspace(10, cumulative_offset - 10, n_line_points)
-
-gw_line_points = [
-    {"value": (x, genome_wide_sig), "label": f"Genome-wide threshold: -log₁₀(5×10⁻⁸) = {genome_wide_sig:.1f}"}
-    for x in threshold_x
-]
-chart.add("p = 5×10⁻⁸ threshold", gw_line_points, stroke=True, show_dots=True, dots_size=2)
-
-sugg_line_points = [
-    {"value": (x, suggestive_sig), "label": f"Suggestive threshold: -log₁₀(1×10⁻⁵) = {suggestive_sig:.1f}"}
-    for x in threshold_x
-]
-chart.add("p = 1×10⁻⁵ threshold", sugg_line_points, stroke=True, show_dots=True, dots_size=2)
-
-# Save outputs
+# Save
 chart.render_to_file(f"plot-{THEME}.html")
 chart.render_to_png(f"plot-{THEME}.png")
