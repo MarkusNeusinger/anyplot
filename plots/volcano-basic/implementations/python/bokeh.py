@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 volcano-basic: Volcano Plot for Statistical Significance
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-14
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Span
 from bokeh.plotting import figure
@@ -22,143 +23,121 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-COLOR_UP = "#C475FD"  # vermillion
-COLOR_DOWN = "#4467A3"  # blue
-COLOR_NS = "#AAAAAA"  # neutral gray
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulated differential expression results
+# Constants
+P_THRESHOLD = 0.05  # significance cutoff on the p-value
+FC_THRESHOLD = 1.0  # log2(2): a 2-fold change in either direction
+UP, DOWN, NS = "Up-regulated", "Down-regulated", "Not significant"
+STATUS_COLORS = {NS: INK_MUTED, DOWN: IMPRINT_PALETTE[2], UP: IMPRINT_PALETTE[4]}  # gray, blue, red
+
+# Columns: set these to your table's column names
+LOG2_FC = "Log₂ Fold Change"  # role: log2_fold_change
+NEG_LOG_P = "-Log₁₀ (P-value)"  # role: neg_log10_pvalue
+
+# Data: replace this block with your own table, for example df = pd.read_csv("de_results.csv")
 np.random.seed(42)
 n_genes = 2000
-
-# Generate log2 fold changes (effect sizes)
-log2_fc = np.random.normal(0, 1.5, n_genes)
-
-# Generate p-values: most genes non-significant, some highly significant
-# Use inverse relationship with fold change magnitude for realism
+fold_change = np.random.normal(0, 1.5, n_genes)
 base_pvals = np.random.uniform(0.001, 1, n_genes)
-fold_effect = np.abs(log2_fc) / np.max(np.abs(log2_fc))
+fold_effect = np.abs(fold_change) / np.max(np.abs(fold_change))
 pvals = base_pvals * (1 - 0.7 * fold_effect) + 0.01 * np.random.random(n_genes)
 pvals = np.clip(pvals, 1e-50, 1)
+df = pd.DataFrame({LOG2_FC: fold_change, NEG_LOG_P: -np.log10(pvals)})
 
-neg_log10_pval = -np.log10(pvals)
-
-# Significance thresholds
-pval_threshold = -np.log10(0.05)  # ~1.3
-fc_threshold = 1.0  # log2(2) = 1
-
-# Classify points by significance
-significant_up = (neg_log10_pval > pval_threshold) & (log2_fc > fc_threshold)
-significant_down = (neg_log10_pval > pval_threshold) & (log2_fc < -fc_threshold)
-
-# Create separate data sources for each category (enables proper legend)
-source_up = ColumnDataSource(
-    data={
-        "x": log2_fc[significant_up],
-        "y": neg_log10_pval[significant_up],
-        "description": [
-            f"Up-regulated: FC={x:.2f}, p={10 ** (-y):.2e}"
-            for x, y in zip(log2_fc[significant_up], neg_log10_pval[significant_up], strict=True)
-        ],
-    }
+# Plot: reads only df and the constants above
+p_cutoff = -np.log10(P_THRESHOLD)
+significant = df[NEG_LOG_P] > p_cutoff
+STATUS = "Status"
+df[STATUS] = np.select(
+    [significant & (df[LOG2_FC] > FC_THRESHOLD), significant & (df[LOG2_FC] < -FC_THRESHOLD)], [UP, DOWN], default=NS
 )
 
-source_down = ColumnDataSource(
-    data={
-        "x": log2_fc[significant_down],
-        "y": neg_log10_pval[significant_down],
-        "description": [
-            f"Down-regulated: FC={x:.2f}, p={10 ** (-y):.2e}"
-            for x, y in zip(log2_fc[significant_down], neg_log10_pval[significant_down], strict=True)
-        ],
-    }
-)
-
-source_ns = ColumnDataSource(
-    data={
-        "x": log2_fc[~(significant_up | significant_down)],
-        "y": neg_log10_pval[~(significant_up | significant_down)],
-        "description": [
-            f"Not significant: FC={x:.2f}, p={10 ** (-y):.2e}"
-            for x, y in zip(
-                log2_fc[~(significant_up | significant_down)], neg_log10_pval[~(significant_up | significant_down)], strict=True
-            )
-        ],
-    }
-)
-
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="volcano-basic · bokeh · anyplot.ai",
-    x_axis_label="Log₂ Fold Change",
-    y_axis_label="-Log₁₀ (P-value)",
+    width=3200,
+    height=1800,
+    title="volcano-basic · python · bokeh · anyplot.ai",
+    x_axis_label=LOG2_FC,
+    y_axis_label=NEG_LOG_P,
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Hover tool
-hover = HoverTool(tooltips=[("", "@description")])
-p.add_tools(hover)
-
-# Plot points by category (non-significant first, then significant on top)
-p.scatter(x="x", y="y", source=source_ns, color=COLOR_NS, size=18, alpha=0.5, legend_label="Not significant")
-
-p.scatter(x="x", y="y", source=source_down, color=COLOR_DOWN, size=25, alpha=0.7, legend_label="Down-regulated")
-
-p.scatter(x="x", y="y", source=source_up, color=COLOR_UP, size=25, alpha=0.7, legend_label="Up-regulated")
-
-# Add threshold lines
-hline = Span(
-    location=pval_threshold, dimension="width", line_color=INK_SOFT, line_dash="dashed", line_width=3, line_alpha=0.5
+# Non-significant first, significant on top; alpha keeps the dense mass readable
+glyphs = []
+for status, size, alpha in ((NS, 12, 0.5), (DOWN, 16, 0.7), (UP, 16, 0.7)):
+    rows = ColumnDataSource(df[df[STATUS] == status])
+    glyphs.append(
+        p.scatter(
+            x=LOG2_FC,
+            y=NEG_LOG_P,
+            source=rows,
+            color=STATUS_COLORS[status],
+            size=size,
+            alpha=alpha,
+            legend_label=status,
+        )
+    )
+p.add_tools(
+    HoverTool(
+        renderers=glyphs,
+        tooltips=[
+            (STATUS, f"@{{{STATUS}}}"),
+            (LOG2_FC, f"@{{{LOG2_FC}}}{{0.00}}"),
+            (NEG_LOG_P, f"@{{{NEG_LOG_P}}}{{0.00}}"),
+        ],
+    )
 )
-p.add_layout(hline)
 
-vline_pos = Span(
-    location=fc_threshold, dimension="height", line_color=INK_SOFT, line_dash="dashed", line_width=3, line_alpha=0.5
-)
-p.add_layout(vline_pos)
+# Threshold lines
+for location, dimension in ((p_cutoff, "width"), (FC_THRESHOLD, "height"), (-FC_THRESHOLD, "height")):
+    p.add_layout(
+        Span(
+            location=location,
+            dimension=dimension,
+            line_color=INK_SOFT,
+            line_dash="dashed",
+            line_width=2,
+            line_alpha=0.6,
+        )
+    )
 
-vline_neg = Span(
-    location=-fc_threshold, dimension="height", line_color=INK_SOFT, line_dash="dashed", line_width=3, line_alpha=0.5
-)
-p.add_layout(vline_neg)
-
-# Styling - scaled for 4800x2700 canvas
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-
-# Grid styling
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.1
 p.ygrid.grid_line_alpha = 0.1
-
-# Background
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
-# Legend styling
 p.legend.location = "top_right"
-p.legend.label_text_font_size = "18pt"
+p.legend.label_text_font_size = "30pt"
 p.legend.label_text_color = INK_SOFT
-p.legend.glyph_height = 40
-p.legend.glyph_width = 40
-p.legend.spacing = 15
-p.legend.padding = 20
+p.legend.glyph_height = 36
+p.legend.glyph_width = 36
+p.legend.spacing = 10
+p.legend.padding = 16
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 
@@ -167,7 +146,7 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -181,6 +160,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
