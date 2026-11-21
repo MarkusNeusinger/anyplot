@@ -12,112 +12,126 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 61
 review:
   strengths:
-  - 'Excellent palette compliance: Okabe-Ito #009E73, #D55E00, #0072B2 perfectly applied'
-  - 'Perfect theme adaptation: backgrounds, text, and chrome flip correctly; data
-    colors stay constant across light/dark'
-  - 'Superior text legibility: All font sizes explicitly set and readable in both
-    renders; zero overlaps'
-  - Custom ribbon implementation showcases matplotlib's Path API skillfully
-  - Clear visual hierarchy through color encoding and ribbon width proportionality
-  - Data is realistic, neutral, and well-proportioned for e-commerce domain
+  - Cubic Bezier ribbons built from matplotlib.path.Path CURVE4 codes and drawn as
+    PathPatch
+  - Segment lengths are proportional to category shares on every axis
+  - 'Imprint palette in canonical order with #009E73 first; data colors identical
+    across themes'
   weaknesses:
-  - 'DE-03 narrative could be stronger: Consider strategic color emphasis or focal
-    point annotation to deepen data storytelling (optional improvement)'
-  - LM-02 uses straightforward Path rendering; could explore more advanced matplotlib
-    features for enhanced sophistication
+  - 'VQ-01, VQ-07 (dark): the legend title ''Channel'' renders near-black on the #242420
+    legend frame and cannot be read → INK text (#F0EFE8). Likely cause: the legend
+    title color is never set (leg.get_title().set_color(INK) missing).'
+  - 'VQ-05 (both): canvas is 2997x2667, neither 3200x1800 nor 2400x2400 → 3200x1800
+    (+203 × −867 px). Likely cause: figsize=(16, 9) at dpi 300 with set_aspect(''equal'')
+    and bbox_inches=''tight''; use figsize=(8, 4.5), dpi=400 and no tight bbox.'
+  - 'VQ-02 (both): the legend box covers the lower right corner of the Purchased segment,
+    and the ''Electronics'' and ''Abandoned'' labels overrun their box edges → legend
+    clear of the segments, labels inside the boxes (14 pt → about 8 pt on the target
+    canvas). Likely cause: loc=''lower right'' with bbox_to_anchor=(1.12, 0) and fontsize=14
+    labels on dim_width=0.08 boxes.'
+  - 'SC-02 (both): C3 missed: between Category and Outcome the ribbons do not keep
+    the Channel colors (Mobile blue never reaches the Outcome axis) → split second-gap
+    ribbons by channel and color each by its channel. Likely cause: second-gap flows
+    grouped by (Category, Outcome) only.'
+  - 'SC-03 (both): second-gap ribbons take the modal channel of their left category,
+    so whole flows are drawn in a color most of their observations do not have → color
+    by the observations'' own channel. Likely cause: `df[df[dim1] == cat1][''Channel''].mode()`.'
+  - 'SC-04 (both): title ''parallel-categories-basic · matplotlib · anyplot.ai'' lacks
+    the language segment → ''parallel-categories-basic · python · matplotlib · anyplot.ai''.
+    Likely cause: the title string.'
+  - 'DQ-01 (both): Channel, Category and Outcome are drawn independently, so every
+    ribbon splits in the same proportions and the plot shows no co-occurrence pattern
+    → draw later dimensions conditionally on earlier ones. Likely cause: three independent
+    np.random.choice calls.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) – correct for light theme
-      Chrome: Title "parallel-categories-basic · matplotlib · anyplot.ai" in 24pt dark text (INK=#1A1A17) is prominent and readable. Dimension labels "Channel", "Category", "Outcome" in 20pt bold dark text are clear. Category labels (Electronics, Clothing, Home, Sports, Online, Store, Mobile, Purchased, Returned, Abandoned) in 14pt dark text centered in elevated boxes – all readable. Legend title and labels in 16pt dark text on elevated background (#FFFDF6) – fully readable. Legibility verdict: PASS
-      Data: Ribbons render in Okabe-Ito colors: green (#009E73) for Online (position 1), orange (#D55E00) for Store (position 2), blue (#0072B2) for Mobile (position 3). Alpha=0.6 allows overlapping ribbons to remain visible. Category boxes use elevated background with thin borders. Ribbon width is proportional to observation counts. All data elements clearly distinguishable.
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: title 'parallel-categories-basic · matplotlib · anyplot.ai' in dark ink at the top left; a large empty band separates it from the bold dimension names Channel, Category, Outcome. Outlined elevated boxes with bold dark category labels; 'Electronics' and 'Abandoned' spill past their box edges. A framed legend titled Channel sits at the lower right and covers the lower right corner of the Purchased box. The canvas is a near-square 2997x2667.
+      Data: translucent Bezier ribbons, Online #009E73, Store #C475FD, Mobile #4467A3. Between Category and Outcome nearly every ribbon is green or lilac: the Mobile blue never reaches the Outcome axis.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) – correct for dark theme
-      Chrome: Title in 24pt light text (INK=#F0EFE8) is highly readable against dark background. Dimension labels in 20pt bold light text are clear. Category labels in 14pt light text (INK_SOFT=#B8B7B0) are readable in elevated boxes (#242420). Legend in 16pt light text on dark elevated background – fully readable. No dark-on-dark failures. All text legibility confirmed. Legibility verdict: PASS
-      Data: Ribbon colors are IDENTICAL to light render – green (#009E73), orange (#D55E00), blue (#0072B2) – confirming consistent data encoding across themes. Only chrome (backgrounds, text, borders) has flipped. Category boxes and elevated backgrounds properly adapted to dark theme. All data elements remain clearly visible and distinguishable.
-
-    Theme Consistency: Both renders pass legibility checks. Data colors are constant; chrome is correctly theme-adaptive.
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title, dimension names and category labels in light ink; the legend entries are light, but the legend title 'Channel' renders black on the dark legend frame and is nearly invisible.
+      Data: ribbon colors identical to the light render; only the chrome flipped.
+      Legibility verdict: FAIL (legend title dark-on-dark)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 13
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, categories
-          14pt, legend 16pt); perfect readability in both themes
+        passed: false
+        comment: Legend title 'Channel' black on the dark render's legend frame (defect
+          line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Zero text overlaps; all elements well-separated with appropriate
-          spacing
+        passed: false
+        comment: Legend covers the Purchased box; Electronics and Abandoned labels
+          overrun their boxes (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ribbons clearly visible at alpha=0.6; boxes well-defined; data density
-          appropriately handled
+        comment: Ribbons at alpha 0.6 visible in both themes; legend swatches match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1–3 with good contrast; CVD-safe palette
+        comment: Imprint positions 1-3, CVD-distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Landscape 4800×2700px; plot fills ~75% of canvas; balanced margins
+        passed: false
+        comment: Canvas 2997x2667 is neither 3200x1800 nor 2400x2400 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive dimension labels; title format correct
+        comment: Dimension names are reader text
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First series #009E73 (brand green); Okabe-Ito 1–3 in order; backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark); theme-correct chrome in both renders'
+        passed: false
+        comment: 'Dark-on-dark chrome element in the dark render (defect line); data
+          colors otherwise Imprint, first #009E73'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom bezier ribbons with Path curves, thoughtful alpha blending,
-          elevated box styling. Strong design; room for increased sophistication
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, no grid (appropriate), generous whitespace, subtle
-          edges. Well-refined
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Color guides channel tracing; ribbon width encodes flow. Good visual
-          hierarchy; could strengthen narrative with strategic emphasis
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -125,51 +139,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel categories with ribbon flows; all subtypes present
+        comment: Parallel categories with ribbons
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Ribbons proportional to counts; multiple dimensions; color by source;
-          ordering optimized
+        passed: false
+        comment: 'C3 missed: the first dimension''s colors are not kept across the
+          second gap (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Dimensions correctly mapped; flows connect consecutive axes; all
-          data visible
+        passed: false
+        comment: Second-gap ribbons take the left category's modal channel color,
+          misattributing observations (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; legend labels match data (Online, Store, Mobile)
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 'All aspects shown: diverse channels, product categories, outcome
-          variation'
+        passed: false
+        comment: Independently drawn dimensions show no co-occurrence pattern (defect
+          line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: E-commerce purchase flow is realistic, neutral, and comprehensible
+        comment: E-commerce purchase flow, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions plausible for domain (60% purchased, 15% returned, 25%
-          abandoned)
+        comment: 500 sessions with plausible shares; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -179,53 +192,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: data → setup → draw → style → save; no over-abstraction'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; no clutter
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; custom ribbon logic well-justified, no fake UI
+        comment: Proportionate; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; correct dpi/bbox; current API
+        comment: Saves plot-{THEME}.png; current API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Expert use of Axes methods, patches, Path with bezier codes (CURVE4,
-          LINETO, CLOSEPOLY), custom legend
+        comment: Standard Axes patches and legend usage
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: Custom bezier ribbons via Path API; distinctive but straightforward
-          implementation
-    total_score: 94
-    max_score: 100
-    verdict: APPROVED
+        comment: Cubic Bezier ribbons via matplotlib.path.Path CURVE4 codes and PathPatch
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
 impl_tags:
   dependencies: []
   techniques:
