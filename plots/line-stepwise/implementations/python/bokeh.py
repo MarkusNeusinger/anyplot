@@ -1,16 +1,16 @@
 """ anyplot.ai
 line-stepwise: Step Line Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-13
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-21
 """
 
 import os
 import time
 from pathlib import Path
 
-import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import ColumnDataSource, HoverTool, Range1d
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -19,100 +19,85 @@ from selenium.webdriver.chrome.options import Options
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: a single series uses the first position
 BRAND = "#009E73"
 
-# Data - CPU usage readings over time with discrete state changes
-np.random.seed(42)
-n_points = 24
-hours = np.arange(n_points)
+# Columns: set these to your table's column names
+HOUR = "Hour of day"  # role: x
+CPU = "CPU usage (%)"  # role: y
 
-# Realistic CPU usage that stays at levels then jumps
-# Removed random noise to better represent discrete state changes
-cpu_usage = np.array(
-    [35, 42, 55, 72, 85, 92, 88, 70, 55, 40, 32, 28, 35, 52, 78, 88, 95, 90, 75, 60, 48, 42, 32, 25], dtype=float
+# Data: replace this block with your own table, for example df = pd.read_csv("cpu.csv")
+df = pd.DataFrame(
+    {
+        HOUR: list(range(24)),
+        CPU: [35, 42, 55, 72, 85, 92, 88, 70, 55, 40, 32, 28, 35, 52, 78, 88, 95, 90, 75, 60, 48, 42, 32, 25],
+    }
 )
 
-# Create step function data by duplicating points for post-step behavior
-# For 'post' step style: value changes after the point
-x_step = []
-y_step = []
-for i in range(len(hours)):
-    x_step.append(hours[i])
-    y_step.append(cpu_usage[i])
-    if i < len(hours) - 1:
-        x_step.append(hours[i + 1])
-        y_step.append(cpu_usage[i])
+# Plot: reads only df and the constants above
+source = ColumnDataSource(df)
 
-# Create data source for the step line
-source = ColumnDataSource(data={"x": x_step, "y": y_step})
-
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="line-stepwise · bokeh · anyplot.ai",
-    x_axis_label="Hour of Day",
-    y_axis_label="CPU Usage (%)",
+    width=3200,
+    height=1800,
+    title="line-stepwise · python · bokeh · anyplot.ai",
+    x_axis_label=HOUR,
+    y_axis_label=CPU,
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Plot step line
-p.line(x="x", y="y", source=source, line_width=4, line_color=BRAND, line_alpha=0.9)
+# 'after' alignment: each value is held flat until the next x, then jumps
+p.step(x=HOUR, y=CPU, source=source, mode="after", line_width=5, line_color=BRAND)
 
-# Add markers at actual data points for clarity - larger for visibility
-marker_source = ColumnDataSource(data={"x": hours, "y": cpu_usage})
-p.scatter(x="x", y="y", source=marker_source, size=16, color=BRAND, alpha=0.9)
+# Markers sit on the data points, small enough that the flat segments still read as lines
+points = p.scatter(x=HOUR, y=CPU, source=source, size=14, color=BRAND, line_color=PAGE_BG, line_width=2)
 
-# Add HoverTool for enhanced interactivity
-hover = HoverTool(tooltips=[("Hour", "@x{0}"), ("Usage", "@y{0.0}%")])
-p.add_tools(hover)
+# Hover on the data points (HTML artifact only)
+p.add_tools(HoverTool(renderers=[points], tooltips=[(HOUR, f"@{{{HOUR}}}"), (CPU, f"@{{{CPU}}}{{0.0}}")]))
 
-# Style text sizes for large canvas
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
-p.yaxis.axis_label_text_font_size = "22pt"
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.major_label_text_color = INK_SOFT
-p.yaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_color = INK_SOFT
 
-# Theme-adaptive styling
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
-# Subtle grid with theme-adaptive colors
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
 
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
-# Legend styling if present
-if p.legend:
-    p.legend.background_fill_color = ELEVATED_BG
-    p.legend.border_line_color = INK_SOFT
-    p.legend.label_text_color = INK_SOFT
+p.y_range = Range1d(0, df[CPU].max() * 1.1)
 
-# Axis ranges
-p.y_range.start = 0
-p.y_range.end = 105
-
-# Save as HTML
+# Save HTML
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome using Selenium
-W, H = 4800, 2700
+# Screenshot with headless Chrome
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -126,6 +111,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
