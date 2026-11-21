@@ -2,44 +2,41 @@ library: matplotlib
 language: python
 specification_id: histogram-stepwise
 created: '2025-12-30T11:21:16Z'
-updated: '2026-05-12T09:19:13Z'
-generated_by: claude-haiku
-workflow_run: 25724974770
+updated: '2026-11-21T05:15:14Z'
+generated_by: claude-sonnet
+workflow_run: 44869528912
 issue: 2645
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - Perfect theme-adaptive rendering with equal readability in both light and dark
-    modes
-  - Correct specification compliance implementing step histogram with proper overlay
-    technique
-  - Okabe-Ito palette correctly applied with strong visual hierarchy via color and
-    line style
-  - Clean, maintainable code with robust data generation and proper theme token handling
-  - All text elements clearly visible in both themes with no legibility failures
+  - Uses ax.hist(histtype='step') with one shared edge array from np.histogram_bin_edges,
+    so both outlines step at the same bin edges
+  - Outlines are told apart by color (Imprint positions 1 and 2) and line style, and
+    the legend glyphs match both encodings in both themes
+  - 'Theme tokens applied to every chrome element — readable on #FAF8F1 and #1A1A17
+    with identical data colors'
+  - Exact 3200x1800 canvas with style-guide text sizes and a correctly formatted title
   weaknesses:
-  - Design Excellence modest - uses standard matplotlib conventions; could explore
-    subtle alpha-blending or background color zones
-  - Library Mastery underutilized - only demonstrates basic-to-intermediate features;
-    could leverage more distinctive matplotlib capabilities
+  - 'Suggestion: a legend title such as ''Species'' would name what the two outlines
+    share.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and professional
-      Chrome: Title "histogram-stepwise · matplotlib · anyplot.ai" (24pt, dark), X-axis "Score (%)" (20pt, dark), Y-axis "Number of Students" (20pt, dark), tick labels (16pt, soft gray), legend with semi-transparent white frame - all clearly readable
-      Data: Two overlapping step histograms - Multiple Choice (green #009E73, solid line) shows symmetric distribution ~72%, Essay Exam (orange #D55E00, dashed line) shows right-skewed distribution. Colors distinct and vibrant.
-      Legibility verdict: PASS - all elements readable with strong contrast and no overlaps
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'histogram-stepwise · python · matplotlib · anyplot.ai' in dark ink, axis titles 'Body length (cm)' and 'Number of fish' in dark ink, soft-gray ticks 20–70 and 0–80, subtle horizontal grid, legend upper right on an elevated frame — all readable.
+      Data: brown trout as a solid #009E73 step outline (symmetric, peak about 94 near 34 cm); rainbow trout as a dashed #C475FD step outline (right-skewed, peak about 47, tail to about 78 cm with baseline segments). Outlines share bin edges and cross.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and professional
-      Chrome: Title and axis labels now in light text (#F0EFE8) for proper dark-theme contrast, tick labels in soft gray (#B8B7B0), legend frame in elevated background (#242420) with light text - all clearly readable
-      Data: Identical green (#009E73) and orange (#D55E00) step histograms; colors unchanged from light render confirming proper theme-adaptive implementation
-      Legibility verdict: PASS - all elements readable in dark theme, no dark-on-dark failures, brand green clearly visible, data colors identical to light render
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks and legend text in light soft gray, grid subtle but visible, legend frame elevated dark — no dark-on-dark text.
+      Data: identical #009E73 and #C475FD outlines; only chrome flipped. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,71 +47,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicit sized, readable in both themes, proper color tokens
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (style-guide
+          sizes); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions, legend positioned clearly, histograms distinguishable
+        comment: No text collisions; legend in the empty upper right clear of both
+          outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both step lines clearly visible, 3pt linewidth appropriate, solid/dashed
-          easily distinguished
+        comment: 2.5-pt outlines clearly visible; legend glyphs match color and dash
+          style in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2, CVD-safe palette, sufficient contrast
-          both themes
+        comment: Green vs purple plus solid vs dashed — redundant, CVD-safe encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 well-proportioned, no cut-offs, generous whitespace
+        comment: 3200x1800 canvas, balanced margins, title about 55 % of width, no
+          overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, axes labeled with units, legend clear
+        comment: '''Body length (cm)'' and ''Number of fish'' — descriptive with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order maintained, backgrounds correct,
-          both renders theme-correct'
+        comment: 'Imprint positions 1 and 2 (#009E73, #C475FD) identical in both renders;
+          #FAF8F1 / #1A1A17 backgrounds; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional palette use, dashed line adds hierarchy, legend refined;
-          relies on standard conventions
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, good whitespace; could enhance alpha-blending
-          or grid subtlety
+        comment: Spine and grid rules met (y-grid only, top/right spines off), nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Overlaid distributions compare shapes well, visual hierarchy via
-          color/style; could emphasize insights
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +121,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step histogram with histtype=step and no fill
+        comment: Step histogram via histtype='step', outline only
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Outline only, horizontal segments, vertical connectors, overlaid
-          distributions all correct
+        comment: C1 outline only with horizontal and vertical segments; C2 contiguous
+          bins on a zero-based count axis; C3 strong outline in both themes; C4 shared
+          bin edges, color+style, legend — all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Score 0-100, Y: Count 0-30, all data visible'
+        comment: Body length on x, count on y; full range shown including the sparse
+          tail
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct, labels match, legend positioned well
+        comment: Title 'histogram-stepwise · python · matplotlib · anyplot.ai' correct;
+          legend names both species
     data_quality:
       score: 15
       max: 15
@@ -153,20 +153,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both histogram aspects shown, distinct shapes, realistic data
+        comment: Symmetric (brown trout) vs right-skewed (rainbow trout) distributions,
+          overlapping and crossing outlines, empty tail bins — all aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: MC (μ=72, σ=8) and Essay (beta-skewed) realistic, neutral educational
-          context
+        comment: Fish body lengths of two trout species — plausible, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 bins appropriate for 250 points, 0-100 range sensible
+        comment: 400 fish per species, lengths 18–78 cm with a peak near 34 cm — sensible;
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -176,55 +177,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward data+plot+save
+        comment: Flat script in the adaptable-code zones; adapt check passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, matplotlib, numpy; all used
+        comment: os, matplotlib, numpy, pandas — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, theme via environment variable, robust path handling
+        comment: Appropriate complexity; shared edges via np.histogram_bin_edges
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: High-level API, proper fig/ax pattern, axes methods, clean theme
-          tokens
+        comment: Axes API with ax.hist(histtype='step'); default level
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: false
-        comment: Uses histtype=step correctly, line style variation nice; limited
-          advanced features
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-21T05:11:58Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - binning
   styling:
