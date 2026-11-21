@@ -12,101 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-dia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/altair/plot-dark.html
-quality_score: 97
+quality_score: 71
 review:
   strengths:
-  - Perfect theme adaptation with readable text in both light and dark renders
-  - Excellent physics visualization clearly showing damped pendulum convergence to
-    equilibrium
-  - Effective use of Okabe-Ito color palette with intentional design and visual hierarchy
-  - Professional appearance with appropriate font sizing, opacity, and styling throughout
-  - Idiomatic Altair usage with clean layer composition and proper encoding types
-  - Clear data storytelling that guides viewer to understand basin of attraction and
-    initial condition dependence
-  weaknesses: []
+  - 'Theme tokens threaded through title, axes, grid and legend: both renders fully
+    readable'
+  - Time order of each trajectory enforced with alt.Order, so every curve is one continuous
+    line from its filled start marker
+  - Equilibrium cross in INK stays visible where the spirals wind in
+  - Interactive HTML export via chart.interactive()
+  weaknesses:
+  - 'VQ-05 (both): canvas is 5514x2979, not a canonical size, and the legend sits
+    flush against the right canvas edge → 3200x1800 (−2314 × −1179). Likely cause:
+    width=1600, height=900 with scale_factor=3.0 and no pad-to-target step.'
+  - 'SC-04 (both): title ''phase-diagram · altair · anyplot.ai'' lacks the language
+    segment → ''phase-diagram · python · altair · anyplot.ai''. Likely cause: the
+    title string.'
+  - 'VQ-01 (both): legend labels (16) and tick labels (18) at scale 3 read small on
+    the 5514 px canvas beside the 22 pt axis titles → about 48–52 px text on a 3200
+    px canvas. Likely cause: oversized canvas with unchanged font sizes.'
+  - 'VQ-02 (both): legend title ''Initial Condition'' runs over the legend frame on
+    both sides → give it room inside the frame. Likely cause: legend frame sized to
+    the labels, not the bold title.'
+  - 'VQ-06 (both): axis titles ''Position (x)'' and ''Velocity (dx/dt)'' carry no
+    units for a pendulum angle → ''Angle x (rad)'' and ''Angular velocity dx/dt (rad/s)''.
+    Likely cause: the encoding titles.'
+  - 'SC-02 (both): C2 missed: the damped spirals stop after 10 s at radius ~1, nowhere
+    near the equilibrium → integrate long enough that each spiral ends at (0, 0).
+    Likely cause: range(500) with dt = 0.02 and gamma = 0.15.'
+  - 'CQ-01 (code): the Data block opened at line 27 has no column-0 # Plot marker
+    after it and no column constants for the x and dx_dt roles → one Data block between
+    # Data and # Plot that binds df, with role-commented column constants above it.
+    Likely cause: column names typed inline.'
+  - 'Suggestion: a sparser grid (0.5 steps) would calm the busy 0.2-step tick rhythm.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, tick labels all in dark text (#1A1A17 / #4A4A44) - clearly readable
-      Data: Four trajectories in Okabe-Ito colors (first series is #009E73 brand green); starting points marked as circles; equilibrium at origin marked with dark cross
-      Legibility verdict: PASS - all text is clearly readable against the light background
+      Background: warm off-white #FAF8F1, 5514x2979 (non-canonical)
+      Chrome: title 'phase-diagram · altair · anyplot.ai' in dark ink; axis titles 'Position (x)' / 'Velocity (dx/dt)'; dense 0.2-step ticks on both axes; legend 'Initial Condition' with IC 1–4 labels small and flush against the right canvas edge, its title running over the frame. All readable
+      Data: four damped-pendulum spirals in Imprint #009E73, #C475FD, #4467A3, #BD8233 with filled start markers; dark outline cross at (0, 0); spirals stop at radius ~1
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8 / #B8B7B0) - clearly readable; no dark-on-dark failures
-      Data: Same Okabe-Ito colors as light render (identical data colors, theme-independent); starting points and equilibrium cross properly styled in light color
-      Legibility verdict: PASS - all text is clearly readable against the dark background with proper theme-aware token usage
+      Background: warm near-black #1A1A17
+      Chrome: light title, axis titles and ticks; subtle grid; dark legend panel; no dark-on-dark text
+      Data: identical four Imprint colors; cross in light gray
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: Legend labels at 16 and ticks at 18 at scale 3 on a 5514 px canvas
+          read small beside the axis titles (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Trajectories clearly separated; no text collisions
+        comment: Legend title 'Initial Condition' runs over the legend frame on both
+          sides (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Trajectories, points, and cross all clearly visible
+        comment: Lines, start markers and cross clearly visible in both themes; legend
+          swatches match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette; first series #009E73'
+        comment: Imprint hues distinct; no red-green pair
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 4800x2700px landscape; nothing cut off
+        passed: false
+        comment: Canvas 5514x2979, not a canonical size; legend flush against the
+          right canvas edge (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title correct format; axes descriptive
+        passed: false
+        comment: Axis titles carry no units for the pendulum angle and angular velocity
+          (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct backgrounds; theme-adaptive chrome
+        comment: 'Imprint colors with #009E73 first; correct backgrounds; chrome flips
+          correctly'
     design_excellence:
-      score: 17
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: Custom palette, intentional hierarchy, careful styling
+        passed: false
+        comment: Style-guide baseline; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid, clean axis styling, visual interest
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy showing convergence and dynamics
+        passed: false
+        comment: Start markers and equilibrium cross follow the Notes; no further
+          hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -114,25 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct phase diagram
+        comment: Correct phase portrait x vs dx/dt
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Multiple trajectories, equilibrium, basin visible
+        comment: 'C1, C4, C5 met; C2 missed: the damped spirals stop at radius ~1,
+          far from the equilibrium (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y axes correct; all data shown
+        comment: Axes correct, all data shown, marks at their values, time-ordered
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; legend shows all conditions
+        passed: false
+        comment: Title 'phase-diagram · altair · anyplot.ai' lacks the language segment
+          (defect line)
     data_quality:
       score: 15
       max: 15
@@ -142,70 +172,75 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows convergence, damping, stability, basin of attraction
+        comment: Multiple initial conditions, damping, start points, fixed point all
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Damped pendulum physics; realistic parameters
+        comment: Damped pendulum, neutral textbook system
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2000 points; ranges appropriate for pendulum
+        comment: 'No check values in spec; checked: a = -sin(x) - 0.15 v has its rest
+          state at (0, 0) where the cross sits'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No unnecessary functions; clean flow
+        comment: 'No column-0 # Plot marker closing the Data block and no column constants
+          for x / dx_dt (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with seed(42)
+        comment: Deterministic integration
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; proper API usage
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct filenames and scale_factor
+        comment: Saves plot-{THEME}.png and .html; current API
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: High-level API; proper encodings; layer composition
+        comment: 'Layered charts, alt.Order, configure_* theming: baseline'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Layer composition; custom mark shapes; Order encoding; interactive()
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
 impl_tags:
   dependencies: []
   techniques:

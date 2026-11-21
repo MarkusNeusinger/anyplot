@@ -2,52 +2,56 @@ library: bokeh
 language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:10:12Z'
-updated: '2026-05-14T15:15:11Z'
-generated_by: claude-haiku
-workflow_run: 25867767494
+updated: '2026-11-21T17:06:27Z'
+generated_by: claude-sonnet
+workflow_run: 44927406422
 issue: 3004
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 85
 review:
   strengths:
-  - Correct phase diagram visualization with multiple trajectories showing spiral
-    convergence to equilibrium
-  - Theme-adaptive styling applied consistently throughout both light and dark renders
-  - Proper use of Okabe-Ito palette (positions 1-4 in order) for trajectory starting
-    points
-  - Viridis colormap appropriately used for continuous time evolution data
-  - Excellent text legibility in both themes with explicit font size declarations
-  - Clean, reproducible code with proper seed management and deterministic behavior
-  - Idiomatic Bokeh usage with ColumnDataSource, LinearColorMapper, and HoverTool
-  - Realistic physics data (damped harmonic oscillator with reasonable parameters)
-  - No text overlap or collision issues; legend properly positioned
-  - Professional appearance with all required elements (fixed point, zero velocity
-    line, trajectories)
+  - Segment glyphs colored through a LinearColorMapper field transform give each trajectory
+    a continuous imprint_seq time gradient, explained by a native ColorBar titled
+    Time (s)
+  - Start markers in Imprint positions 1-4 with ink outlines, legend entries listing
+    each initial condition
+  - Equilibrium X sits on the dashed dx/dt = 0 axis and stays visible where all spirals
+    converge
+  - Theme tokens applied to every chrome element; both renders fully legible
+  - Canvas pinned to 3200x1800 with toolbar_location=None and the CDP viewport override
   weaknesses:
-  - Design excellence is at functional level rather than exceptional - could benefit
-    from additional visual refinement
-  - No directional arrows on trajectories to explicitly show time evolution direction
-  - Fixed point at equilibrium could be more visually emphasized to draw focus
+  - 'VQ-03 (both): legend glyphs are drawn at about 10 px while the start markers
+    on the plot are 34 px, and the equilibrium entry''s ''x'' shrinks to an unreadable
+    blob → legend glyphs closer to the plotted marker size so the x shape reads (about
+    +10 px). Likely cause: scatter legend glyphs are scaled to glyph_height=36 with
+    the marker size not carried over; set a larger legend glyph size or use a LegendItem
+    bound to a size-matched renderer.'
+  - 'LM-01 (code): HoverTool(renderers=[line]) binds hover to the loop variable `line`,
+    so only trajectory 4 responds in the HTML → collect every segment renderer in
+    a list and pass all of them. Likely cause: `line` reassigned in the for-loop before
+    HoverTool is created.'
+  - 'Suggestion: a few direction arrows on the outer turn would reinforce the clockwise
+    time flow already carried by the gradient.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text against light background
-      Data: Four spiral trajectories with viridis time coloring; starting points marked in Okabe-Ito colors (#009E73 first, then #D55E00, #0072B2, #CC79A7); equilibrium at origin marked with red X; zero velocity reference line dashed at y=0
-      Legibility verdict: PASS - All elements readable, no dark-on-light issues
+      Background: warm off-white #FAF8F1, canvas 3200x1800, plot area framed by a soft INK_SOFT outline
+      Chrome: bold title "phase-diagram · python · bokeh · anyplot.ai" top-left (~48% width), axis titles "Position x (m)" and "Velocity dx/dt (m/s)" in dark ink, tick labels in INK_SOFT, subtle grid; legend top-right on an elevated panel; vertical ColorBar at the right titled "Time (s)" (0-16) — all readable
+      Data: four damped spirals drawn as continuous lines whose color runs from #009E73 (t=0) to #4467A3 (t=16) (imprint_seq), converging clockwise to the origin; start markers in #009E73, #C475FD, #4467A3, #BD8233 with dark outlines; red #AE3030 X at the origin on a dashed dx/dt=0 line
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels all clearly visible in light text against dark background; no dark-on-dark failures
-      Data: Identical color scheme to light render (viridis time progression, Okabe-Ito starting point colors, red X equilibrium, dashed reference line) - only chrome has adapted between themes
-      Legibility verdict: PASS - All elements readable, excellent contrast, no dark-on-dark issues
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles in light ink, ticks/legend/colorbar labels in light INK_SOFT; no dark-on-dark text; grid subtle but visible
+      Data: identical trajectory gradient, start-marker colors and red equilibrium X as the light render; start markers now outlined in light ink; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,46 +59,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes at all levels; all readable in both themes
+        comment: Title 50pt, axis titles 42pt, ticks 34pt, legend 30pt, colorbar 34/30pt;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; legend properly positioned with spacing
+        comment: No text collisions; legend sits in the empty top-right corner clear
+          of every trajectory
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Viridis time coloring clearly shows progression; markers well-differentiated
+        comment: Curves at line_width 7 and 34px start markers read well in both themes,
+          but legend glyphs are tiny and the equilibrium 'x' glyph reads as a blob
+          (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito and viridis are CVD-safe; adequate contrast
+        comment: Green-to-blue ramp and Imprint start colors are CVD-safe with good
+          contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700px; well-proportioned; nothing cut off
+        comment: 3200x1800, balanced margins, title ~48% of width, colorbar fits at
+          right; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec/library/source; axes descriptive with units
+        comment: Position x (m) and Velocity dx/dt (m/s) with units; colorbar titled
+          Time (s)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Starting points #009E73 (first), then Okabe-Ito order; viridis for
-          continuous time data; correct backgrounds and theme adaptation'
+        comment: 'Time gradient is imprint_seq (#009E73 -> #4467A3); start markers
+          Imprint positions 1-4 in order; #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -102,22 +113,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional polish with theme-adaptive styling; good palette choices;
-          functional but not exceptional
+        comment: Start legend entries carry their initial coordinates; elevated legend
+          panel; clear title/label/tick hierarchy beyond baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Legend styled; subtle grid; theme-adaptive elements throughout; solid
-          refinement
+        comment: Dashed low-alpha dx/dt=0 reference axis and outlined start markers
+          (ink outline) separate starts from curves
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Color gradient shows time evolution; clear focal point on equilibrium
-          convergence; good visual hierarchy
+        comment: Converging spirals lead to a red equilibrium X as focal point; beyond
+          the Notes only modestly
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct phase diagram with x vs dx/dt; multiple trajectories show
-          convergence
+        comment: 'Correct phase portrait: x vs dx/dt, damped spirals'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Fixed points shown; convergence behavior visible; time evolution
-          colored; all spec requirements met
+        comment: Continuous curves in time order (C1), inward spirals to equilibrium
+          (C2), time gradient with colorbar running clockwise (C3), four start-marked
+          trajectories (C4), fixed point on dx/dt=0 visible (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position, Y=velocity; axes appropriately scaled; all data visible
+        comment: x horizontal, dx/dt vertical; all data inside the ranges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title matches phase-diagram · python · bokeh · anyplot.ai; legend
+          entries readable
     data_quality:
       score: 15
       max: 15
@@ -157,21 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple trajectories; damped oscillator physics; fixed point; time
-          coloring
+        comment: Four initial conditions, spiral convergence, fixed point, time evolution
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Canonical pendulum example; realistic damping parameters (omega=2.0,
-          gamma=0.3); appropriate initial conditions
+        comment: 'Damped harmonic oscillator, omega=2, gamma=0.3: physically plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Position and velocity ranges sensible; axes labeled with units
+        comment: Positions up to 2.5 m, velocities to +-4.8 m/s consistent with omega=2;
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -181,61 +194,71 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward script
+        comment: Flat script; the single _lerp_hex helper is the library prompt's
+          prescribed ramp builder
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42); deterministic
+        comment: Fully deterministic Euler integration
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured; theme handling via environment; clean Bokeh patterns
+        comment: Compact integration loop and per-trajectory segment sources; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.html and plot-{THEME}.png; current API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png with toolbar_location=None
+          and CDP viewport override
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper figure(), scatter(), line() patterns; ColumnDataSource; HoverTool;
-          Bokeh output best practices
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses LinearColorMapper with Viridis256, HoverTool with formatted
-          tooltips, theme-adaptive styling
+        comment: ColumnDataSource, segment glyph with a field transform, Span and
+          ColorBar are idiomatic, but the HoverTool is bound to the last trajectory
+          only (defect line)
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: LinearColorMapper field transform on segment glyphs plus a native
+          ColorBar
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T17:02:25Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - custom-colormap
+  - colorbar
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
+  - columndatasource
   dataprep: []
   styling:
-  - publication-ready
+  - custom-colormap
+  - edge-highlighting
   - grid-styling
