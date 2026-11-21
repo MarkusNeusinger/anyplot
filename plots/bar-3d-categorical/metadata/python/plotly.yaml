@@ -2,12 +2,12 @@ library: plotly
 language: python
 specification_id: bar-3d-categorical
 created: '2026-05-15T08:50:45Z'
-updated: '2026-05-15T09:07:59Z'
+updated: '2026-11-21T20:02:08Z'
 generated_by: claude-sonnet
-workflow_run: 25908610916
+workflow_run: 44943347891
 issue: 5248
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/plotly/plot-light.html
@@ -15,111 +15,119 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-ca
 quality_score: 82
 review:
   strengths:
-  - 'Perfect Spec Compliance and Data Quality: all required 3D bar chart features
-    present with realistic neutral business data'
-  - Correct Okabe-Ito palette in canonical order with both themes fully adaptive
-  - All font sizes explicitly set at recommended pixel sizes (28/22/18/16)
-  - Clean well-structured code using idiomatic Plotly Mesh3d approach
-  - Flatshading and custom lighting parameters give professional 3D appearance
-  - Value labels on all 20 bars aid data reading
+  - Mesh3d bars with flatshading and tuned lighting give clean, readable faces and
+    depth in both themes
+  - Imprint palette in canonical order with fully theme-adaptive chrome; data colors
+    identical across renders
+  - Elevated oblique camera keeps nearly every rear bar top and the value axis in
+    sight
+  - Value labels on all 20 bars of the small grid, readable in both themes
+  - Correct 3200x1800 canvas and mandated title
   weaknesses:
-  - 'Axis label crowding at 3D projection base: Product Category and Sales Region
-    labels overlap with tick labels due to 3D perspective'
-  - Grid color uses solid hex values instead of recommended rgba semi-transparent
-    values resulting in slightly harder grid lines
-  - 'DE-03 weak: no visual hierarchy or emphasis — all bars treated equally with no
-    focal point guiding the viewer to an insight'
+  - 'VQ-02 (both): the value labels ''29'' (Food·Central) and ''60'' (Sports·West)
+    touch with no gap and read as ''2960'' → at least a few px clear. Likely cause:
+    the camera eye (x=1.5, y=-2.2, z=1.2) projects these two label anchors (h+2) onto
+    the same spot; a slightly different azimuth or a larger label z-offset separates
+    them.'
+  - 'VQ-05 (both): the 3D scene fills only about the centre 45 % of the canvas width,
+    leaving a wide empty band below the title and a large empty right third → enlarge
+    the scene to fill more of the canvas. Likely cause: default scene domain with
+    camera eye distance ~2.9; set scene.domain or move the eye closer (e.g. scale
+    eye by ~0.8).'
+  - 'CQ-01 (code): helper function axis_style() (lines 108-118) breaks the flat Imports-Data-Plot-Save
+    structure → inline a shared axis dict constant instead of a function. Likely cause:
+    the def axis_style(title) helper.'
+  - 'Suggestion: the legend title ''Product'' could read ''Product Category'' to match
+    the axis title.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme-adaptive surface
-      Chrome: Title "bar-3d-categorical · plotly · anyplot.ai" in dark #1A1A17 — readable. Axis labels "Product Category", "Sales Region", "Sales ($K)" in dark ink. Tick labels in #4A4A44 (INK_SOFT). Legend with border and "Product" heading in dark ink.
-      Data: Electronics=#009E73 (green, tallest bars 95-105K), Clothing=#D55E00 (orange, 50-80K), Food=#0072B2 (blue, 38-66K), Sports=#CC79A7 (pink, 29-74K). All Okabe-Ito positions 1-4 in correct order. Value labels float above bars.
-      Legibility verdict: PASS — all text readable. Minor crowding where 3D projection compresses axis label and tick label text near chart base.
+      Background: warm off-white #FAF8F1 on paper and the 3D scene panels
+      Chrome: title 'bar-3d-categorical · python · plotly · anyplot.ai' centred in dark ink; axis titles Product Category / Sales Region / Sales ($K) in dark ink, ticks in INK_SOFT; subtle grid on the base plane and walls; legend 'Product' upper left on #FFFDF6 with a thin border. All readable.
+      Data: 20 flat-shaded bars on a 4x5 grid — Electronics #009E73 (74-105), Clothing #C475FD, Food #4467A3, Sports #BD8233; value labels in dark ink above each bar; '29' and '60' touch.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark surface
-      Chrome: Title in light #F0EFE8 — clearly visible. Axis labels in light ink. Tick labels in #B8B7B0. Legend box in #242420. No dark-on-dark failures observed.
-      Data: Colors identical to light render — #009E73, #D55E00, #0072B2, #CC79A7. Value labels rendered in light INK color (#F0EFE8) for dark theme. 3D panel backgrounds correctly use #1A1A17.
-      Legibility verdict: PASS — all text readable against dark background. Same minor axis label crowding as light render but no visibility failures.
+      Background: warm near-black #1A1A17 on paper and scene panels
+      Chrome: title, axis titles in light ink, ticks in light INK_SOFT; grid subtle; legend box #242420 with light text. No dark-on-dark.
+      Data: bar colors identical to light render; value labels flip to light ink.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28, axis=22, ticks=18, legend=16-17,
-          value labels=14). Readable in both themes. Minor deduction for angled 3D
-          axis labels.
+        comment: Explicit sizes (title 20, axis titles 14, ticks 11, legend 12/13,
+          value labels 10); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Minimal-to-moderate overlap at 3D projection base where axis labels
-          crowd tick labels. Main content readable.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
+        passed: false
+        comment: Value labels '29' (Food·Central) and '60' (Sports·West) touch each
+          other (defect line); axis titles now clear of tick labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
         passed: true
-        comment: Bars clearly visible with good flatshading. Value labels readable.
-          Minor occlusion of background bars by foreground.
+        comment: 20 opaque flat-shaded bars clearly visible; legend swatches visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe palette. Four categories use distinct hues with
-          good luminance contrast.
+        comment: Imprint hues with distinct luminance; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: true
-        comment: 3D scene fills good portion of canvas. Camera angle appropriate.
-          Small empty band at bottom from projection geometry.
+        passed: false
+        comment: Canvas 3200x1800 passes the gate; the 3D scene uses only the centre
+          ~45% of the width with a wide empty band below the title and on the right
+          (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Product Category, Sales Region, Sales ($K) — descriptive with units.
+        comment: 'Product Category, Sales Region, Sales ($K): descriptive, with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct Okabe-Ito order starting with #009E73. Backgrounds #FAF8F1/#1A1A17.
-          Theme-adaptive chrome in both renders.'
+        comment: 'Imprint positions 1-4 in canonical order starting #009E73; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above defaults: Okabe-Ito palette, flatshading with intentional
-          lighting, legend with custom border. Professional but not exceptional.'
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Subtle grid lines, theme-adaptive 3D panel backgrounds, styled legend.
-          Grid color slightly more opaque than recommended rgba values.
+        comment: Spine and grid rules met; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Value labels help readability. No visual hierarchy or emphasis on
-          insight. All bars equal visual weight.
+        passed: true
+        comment: Data displayed with value labels the Notes suggest; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D bar chart with bars rising from 2D categorical grid.
+        comment: Correct 3D bar chart on a 4x5 categorical grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Spacing, color encoding, camera angle, grid lines, value labels,
-          legend all present.
+        comment: 'Bar gaps, ~30° elevated oblique camera, base-plane grid, value labels
+          on the small grid, legend for the color encoding: all present; C1-C4 shown'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Product Category (4), Y=Sales Region (5), Z=Sales ($K). Correct.
+        comment: X=product, Y=region, Z=sales from 0; bars on their cells
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: bar-3d-categorical · plotly · anyplot.ai. Legend shows all
-          4 products with correct colors.'
+        comment: Title 'bar-3d-categorical · python · plotly · anyplot.ai' correct;
+          legend 'Product' with four readable entries
     data_quality:
       score: 15
       max: 15
@@ -159,56 +167,56 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4x5=20 bars showing variation across both categorical dimensions.
-          Full feature set demonstrated.
+        comment: 20 bars with clear variation across both dimensions; rear bars partly
+          hidden as permitted
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sales figures for product categories across geographic regions. Neutral,
-          plausible business scenario.
+        comment: 'Retail sales by product category and region: neutral and plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values $29K-$105K in sales. Plausible and well-scaled.
+        comment: 29-105 $K per cell, plausible; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Imports -> Data -> Plot loop -> Style -> Save. No functions or classes.
+        passed: false
+        comment: A helper function axis_style() (lines 108-118) breaks the flat Imports-Data-Plot-Save
+          structure (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects imported and all used.
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Mesh3d vertex/face construction is verbose but unavoidable for 3D
-          bars. Clean code.
+        comment: Mesh3d cube construction with shared face index constants is lean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: write_image 800x450 scale 4 to plot-{THEME}.png plus plot-{THEME}.html;
+          current API
     library_mastery:
       score: 7
       max: 10
@@ -218,24 +226,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correctly uses go.Mesh3d (proper approach since Plotly lacks go.Bar3d),
-          go.Scatter3d for text labels, and 3D scene configuration.
+        comment: 'go.Mesh3d per product as legend-bearing trace plus go.Scatter3d
+          text layer and scene camera eye config: idiomatic graph-objects 3D'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Mesh3d flatshading and custom lighting (ambient/diffuse/specular/roughness),
-          lightposition, interactive 3D scene with HTML export. Distinctly Plotly.
+        comment: Mesh3d flatshading with tuned lighting/lightposition for face shading;
+          interactive rotatable scene in HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T19:58:43Z'
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - annotations
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - theme-adaptive
+  - custom-lighting
