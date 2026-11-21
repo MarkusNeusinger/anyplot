@@ -2,44 +2,49 @@ library: seaborn
 language: python
 specification_id: gain-curve
 created: '2025-12-29T22:49:43Z'
-updated: '2026-05-11T09:30:33Z'
-generated_by: claude-haiku
-workflow_run: 25661729821
+updated: '2026-11-21T01:33:50Z'
+generated_by: claude-sonnet
+workflow_run: 44850369363
 issue: 2440
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 83
 review:
   strengths:
-  - Flawless theme-adaptive implementation with identical data colors across light/dark
-    renders
-  - Excellent visual hierarchy through filled area emphasizing model advantage
-  - Perfect typography and text sizing across all elements
-  - Correct Okabe-Ito palette with strong aesthetic choices
-  - Complete spec compliance with clear data storytelling
-  - Clean, reproducible code with good structure
+  - 'Imprint palette applied correctly: model in #009E73, perfect model in #C475FD,
+    baseline in the theme-adaptive neutral, identical across themes'
+  - Gains computed directly from the ranked df with cumsum, drawn unsmoothed from
+    the origin to the top-right corner
+  - Three curves separated by both color and line style (solid, dashed, dotted), legible
+    in both themes
+  - Idiomatic seaborn theming via sns.set_theme rc tokens and sns.despine
+  - 'Adaptable layout: column constants and a single Data block binding df'
   weaknesses:
-  - LM-02 could leverage more seaborn-specific features beyond basic lineplot
-  - DE-01 could incorporate more sophisticated custom design elements
+  - 'VQ-02 (both): the opaque legend box (framealpha 0.95) in the upper left covers
+    the Perfect Model''s dotted rise from about 85 % to 100 % between 26 % and 29
+    % targeted → legend clear of all three curves, e.g. loc="lower right" where the
+    area under the diagonal is empty. Likely cause: ax.legend(loc="upper left").'
+  - 'Suggestion: a direct label on the model curve at a decision point (e.g. 20 %
+    targeted) would turn the band into a concrete takeaway.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text (24pt, 20pt, 16pt respectively); no legibility issues
-      Data: Main model curve in Okabe-Ito brand green (#009E73) with semi-transparent fill; orange dotted perfect model; black dashed baseline all clearly visible and distinct
-      Legibility verdict: PASS - All elements perfectly readable with excellent contrast
+      Background: warm off-white #FAF8F1, 3200x1800 canvas
+      Chrome: title 'gain-curve · python · seaborn · anyplot.ai' in dark ink, axis titles 'Customers Targeted (%)' and 'Churners Captured (%)', grey tick labels 0-100, subtle horizontal grid, top/right spines removed; legend upper left on an elevated box — all readable
+      Data: solid #009E73 model curve rising steeply to ~80 % at 27 % targeted then flattening to 100 % near 76 %; translucent green band down to the near-black dashed diagonal baseline; lilac #C475FD dotted perfect-model line reaching 100 % at ~29 % then flat. The legend box covers the top of the perfect-model rise.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: All text light-colored and clearly readable against dark background; title, labels, ticks all legible with no dark-on-dark failures
-      Data: Green, orange, and white curves identical in color to light render, confirming data color preservation across themes
-      Legibility verdict: PASS - All elements readable with proper theme-adapted contrast
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink, legend box dark elevated with light text, grid subtle — no dark-on-dark text
+      Data: same #009E73 model curve and #C475FD perfect line as light; baseline flips to off-white dashed; green band darker through alpha on the dark page
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,68 +52,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        comment: Explicit sizes 12/10/8 pt per the library prompt; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text; all fully readable
+        comment: Opaque legend box (framealpha 0.95) hides the Perfect Model's rise
+          from about 85 % to 100 % near 26-29 % targeted (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines perfectly adapted to data density; all clearly visible
+        comment: Three lines with distinct solid/dashed/dotted styles, clearly visible
+          in both themes; legend samples match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; colorblind-safe Okabe-Ito palette
+        comment: Green vs lilac vs neutral, also separated by line style; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout; balanced margins; 60-70% canvas utilization
+        comment: 3200x1800 canvas, balanced margins, title well inside the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct title format
+        comment: Customers Targeted (%) / Churners Captured (%) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito correct (#009E73 first); theme-correct backgrounds and
-          chrome
+        comment: 'Model in #009E73, perfect model in Imprint #C475FD, baseline in
+          neutral; correct page backgrounds in both themes'
     design_excellence:
-      score: 16
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful color choices; intentional visual hierarchy via filled
-          area; professional polish
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit sizes'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed; subtle grid; generous whitespace; deliberate legend
-          placement
+        passed: false
+        comment: Spines removed and subtle y-grid, as the style guide mandates; nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Filled area emphasizes model lift; three curves tell coherent story
+        comment: Translucent green band between model and baseline makes the lift
+          the focal area of the chart
     spec_compliance:
       score: 15
       max: 15
@@ -124,19 +132,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: model, baseline, perfect model'
+        comment: Diagonal baseline corner to corner, perfect model reaching 100 %
+          at the ~30 % positive rate and flat, legend separating all curves (C1-C5
+          met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; axes span 0-100% appropriately
+        comment: Curve drawn through computed points from the origin to (100, 100),
+          unsmoothed; both axes full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels descriptive
+        comment: Title gain-curve · python · seaborn · anyplot.ai; legend entries
+          readable
     data_quality:
       score: 15
       max: 15
@@ -146,19 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates all gain curve aspects
+        comment: Steep initial slope, flattening, perfect-model and random references
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer churn scenario is realistic and well-established
+        comment: Customer churn targeting, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic proportions and model differentiation
+        comment: ~30 % churn rate; perfect model kinks at ~29 % targeted, computed
+          from the data; model reaches 100 % near 76 %
     code_quality:
       score: 10
       max: 10
@@ -168,54 +182,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no unnecessary functions
+        comment: Linear script with column constants and Data/Plot zones
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no over-engineering
+        comment: Compact cumsum-based gains computation; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: plot-{THEME}.png at dpi=400, default bbox
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert seaborn lineplot and set_theme usage
+        comment: sns.set_theme with an rc theme dictionary, sns.lineplot with labels,
+          sns.despine
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Uses seaborn theme system; could leverage more features
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-21T01:30:34Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - cumulative-sum
+  - normalization
   styling:
+  - minimal-chrome
+  - alpha-blending
   - grid-styling
