@@ -2,45 +2,45 @@ library: seaborn
 language: python
 specification_id: line-styled
 created: '2025-12-30T10:37:42Z'
-updated: '2026-05-12T07:24:12Z'
-generated_by: claude-haiku
-workflow_run: 25719399821
+updated: '2026-11-21T05:13:24Z'
+generated_by: claude-sonnet
+workflow_run: 44868843116
 issue: 2598
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 85
 review:
   strengths:
-  - Both light and dark renders perfectly theme-adapted with correct backgrounds and
-    full legibility
-  - Typography uses theme-appropriate color tokens throughout; no text-legibility
-    failures
-  - Line styles are all clearly visible and serve dual purpose (style distinction
-    + monochrome printing)
-  - First series correctly uses brand green (#009E73); full Okabe-Ito order maintained
-  - Data is realistic, neutral, and well-chosen (seasonal temperature patterns across
-    climate zones)
-  - Clean code with deterministic seeding and proper theme-token pattern
-  - Professional use of seaborn styling system
+  - sns.lineplot maps one Service column to both hue and style with a dashes dict,
+    so seaborn builds the combined style+color legend natively
+  - All four standard styles with tuned dash lengths stay recognizable along dense
+    96-point lines in both themes
+  - Legend swatches lengthened (handlelength 4.5) so the dash-dot pattern is shown
+    in full
+  - Realistic daily CPU-load scenario with complementary peaks makes the lines cross,
+    which exercises style-only separation
+  - Theme tokens threaded through rc params; both renders theme-correct
   weaknesses:
-  - Design excellence is solid but conventional; could benefit from more distinctive
-    visual refinement beyond standard seaborn best practices
+  - 'Suggestion: a subtle shaded night window (00:00–06:00) could anchor the batch-worker
+    peak, if a later spec variant asks for annotation.'
+  - 'Suggestion: placing the legend outside the plot area on the right would free
+    the upper-right corner where Web API and Database run near 40%.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, not pure white
-      Chrome: Title "line-styled · seaborn · anyplot.ai" in dark text (#1A1A17), fully readable. Axis labels "Month" and "Temperature (°C)" in dark text, clearly visible. Tick labels in soft gray (#4A4A44), all readable. Subtle y-axis grid (alpha=0.10) visible but not dominant.
-      Data: Four lines with distinct styles - Coastal (solid green #009E73), Continental (dashed orange #D55E00), Mountain (dotted blue #0072B2), Mediterranean (dash-dot purple #CC79A7). All colors and line styles clearly distinguishable. Legend in upper right with series names and styles.
-      Legibility verdict: PASS - All text is readable against the light background with proper contrast. No "light-on-light" issues.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title 'line-styled · python · seaborn · anyplot.ai' in dark ink at the top centre; axis titles 'Hour of day' and 'CPU load (%)' in dark ink; tick labels 00:00–20:00 every 4 h and 0–80 in soft grey; faint horizontal grid; left and bottom spines only; legend box (elevated off-white, grey frame) titled 'Service' in the upper right. All readable.
+      Data: four lines at one width — Web API solid #009E73 (midday peak ~72%), Database dashed #C475FD (evening peak ~43%), Cache dotted #4467A3 (10–25%), Batch worker dash-dot #BD8233 (night peak ~69% at 02:30, then ~12%). Patterns remain recognizable along each line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, not pure black
-      Chrome: Title in light text (#F0EFE8), clearly visible. Axis labels in light text, readable. Tick labels in light gray (#B8B7B0), all readable. Y-axis grid visible and appropriate. NO dark-on-dark failures observed.
-      Data: Four lines with IDENTICAL colors to light render - all data colors maintained (#009E73, #D55E00, #0072B2, #CC79A7). Only chrome (background, text, grid, legend frame) has flipped to dark theme. Line styles remain perfectly distinguishable.
-      Legibility verdict: PASS - All text is readable against the dark background. Brand green #009E73 is clearly visible. Zero theme-adaptation failures. Chrome elements properly use light colors on dark surface.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis titles in light ink; tick labels light grey; grid subtle; legend on #242420 with light frame and light text. No dark-on-dark text.
+      Data: colors and dash patterns identical to the light render; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,47 +51,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicitly set with proper color tokens; readable
-          in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, legend 8/9 pt, all set
+          explicitly; readable in both themes; title spans about 43% of the width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; legend well-positioned; sufficient spacing
+        comment: No text collides with text or lines; legend sits in the empty upper-right
+          corner above the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four line styles clearly visible and distinguishable
+        comment: 96 points per series drawn as 2.2-wide lines without markers, right
+          for dense lines; legend swatches (handlelength 4.5) show each full pattern
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with redundant color+style encoding for accessibility
+        comment: Style is the primary encoding, hue is redundant on top; green/purple/blue/ochre
+          separate well in luminance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio appropriate; good proportions; nothing cut off
+        comment: 3200x1800 canvas, plot fills most of it with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; descriptive axis labels with units
+        comment: '''Hour of day'' and ''CPU load (%)'' — descriptive with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order maintained; backgrounds correct;
-          theme-adapted properly'
+        comment: 'Imprint palette in canonical order starting #009E73; #FAF8F1 / #1A1A17
+          backgrounds; chrome theme-correct in both renders; data colors identical'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -99,22 +104,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional Okabe-Ito palette with intentional visual hierarchy;
-          somewhat conventional
+        comment: 'Beyond baseline: titled legend, HH:00 clock tick labels, dash on/off
+          lengths tuned so each pattern reads at this width'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Spines removed (top/right); subtle grid; generous whitespace; refined
-          legend
+        comment: 'Beyond baseline: x-range clipped exactly to the data, y anchored
+          at 0 with headroom for the legend, 4-hour tick spacing chosen for a daily
+          cycle'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy; focal point around July peak; seasonal patterns
-          visible
+        comment: Data displayed with complementary daily peaks (nightly batch, midday
+          web, evening DB) but no emphasis chosen beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -130,21 +136,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: All four standard line styles present; legend maps styles to series;
-          consistent linewidth
+        comment: Solid, dashed, dotted and dash-dot drawn (C1); separable by style
+          alone (C2); patterns stay recognizable along the lines (C3); one width 2.2
+          for all (C4); legend maps style to name with long swatches (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: months 1-12; Y: temperature values; all data visible; appropriate
-          range'
+        comment: Hour on x, CPU load on y, lines join values in x order; full range
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels match; well-positioned
+        comment: Title 'line-styled · python · seaborn · anyplot.ai' correct; legend
+          titled 'Service' with readable entries
     data_quality:
       score: 15
       max: 15
@@ -154,20 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four standard line styles demonstrated; optimal series count
+        comment: Four series crossing and separating, peaks at different times, noise
+          — shows everything the plot type needs
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible seasonal temperature patterns; neutral; realistic regional
-          variation
+        comment: Server CPU load per service over a day — real, neutral, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 months standard; -5 to 30°C sensible; good tick spacing
+        comment: 'Checked: loads stay within 10–72%, batch peak around 02:30, web
+          peak near 13:00, DB evening peak near 20:00 — plausible for the domain'
     code_quality:
       score: 10
       max: 10
@@ -177,49 +186,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; direct plotting code
+        comment: Flat Imports → Data → Plot → Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic output
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; no cruft
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; zip(..., strict=True) for safety
+        comment: Appropriate complexity; noise smoothing via np.convolve is one call
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png format; proper savefig parameters
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches; current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Professional sns.set_theme() usage; proper rc-param configuration;
-          theme tokens pattern
+        comment: Tidy long-form df with sns.lineplot(data=, hue=, style=, dashes=dict)
+          and sns.despine — high-level seaborn API
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: true
-        comment: Effective use of seaborn theme system; somewhat standard approach
+        comment: The style= semantic mapping is the call every seaborn version of
+          this spec would use; nothing beyond it
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-21T05:10:02Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -227,6 +240,9 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - rolling-window
   styling:
   - grid-styling
+  - publication-ready
