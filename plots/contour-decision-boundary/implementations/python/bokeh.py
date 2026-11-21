@@ -1,40 +1,23 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-decision-boundary: Decision Boundary Classifier Visualization
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-16
+Quality: 85/100 | Updated: 2026-11-21
 """
 
 import os
-import sys
 import time
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, LinearColorMapper
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from sklearn.datasets import make_moons
+from sklearn.neighbors import KNeighborsClassifier
 
-# Remove current directory from path to avoid shadowing bokeh package
-if "" in sys.path:
-    sys.path.remove("")
-sys.path.insert(0, "/home/runner/work/anyplot/anyplot/.venv/lib/python3.13/site-packages")
-
-# Change to script directory to save files in the correct location
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-# isort: off
-import numpy as np  # noqa: E402
-from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import (  # noqa: E402
-    ColumnDataSource,
-    HoverTool,
-    Legend,
-    LegendItem,
-    LinearColorMapper,
-)
-from bokeh.palettes import Cividis256  # noqa: E402
-from bokeh.plotting import figure  # noqa: E402
-from selenium import webdriver  # noqa: E402
-from selenium.webdriver.chrome.options import Options  # noqa: E402
-from sklearn.datasets import make_moons  # noqa: E402
-from sklearn.neighbors import KNeighborsClassifier  # noqa: E402
-# isort: on
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -43,188 +26,147 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito colors for classes
-CLASS_COLORS = ["#009E73", "#C475FD"]  # Positions 1 and 2 of the palette
+# Imprint palette: all eight positions, one per class in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Generate synthetic classification data
-np.random.seed(42)
+# Constants
+MESH_POINTS = 400  # mesh resolution along the longer feature axis
+MARGIN = 0.15  # share of each feature's range added around the points
+
+# Columns: set these to your table's column names
+FEATURE_1 = "Feature 1"  # role: X1
+FEATURE_2 = "Feature 2"  # role: X2
+CLASS = "Class"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("points.csv")
 X, y = make_moons(n_samples=200, noise=0.25, random_state=42)
+df = pd.DataFrame({FEATURE_1: X[:, 0], FEATURE_2: X[:, 1], CLASS: [f"Class {c}" for c in y]})
 
-# Train a classifier
-clf = KNeighborsClassifier(n_neighbors=15)
-clf.fit(X, y)
+# Plot: reads only df and the constants above
+df = df.dropna(subset=[FEATURE_1, FEATURE_2, CLASS]).reset_index(drop=True)
+classes = list(df[CLASS].unique())
+features = df[[FEATURE_1, FEATURE_2]].to_numpy(dtype=float)
+labels = df[CLASS].map({c: i for i, c in enumerate(classes)}).to_numpy()
 
-# Create mesh grid for decision boundary
-x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
-y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
-h = 0.02  # Step size
-xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+clf = KNeighborsClassifier(n_neighbors=min(15, len(df))).fit(features, labels)
+predicted = clf.predict(features)
+df["Predicted"] = [classes[i] for i in predicted]
+df["Wrong"] = predicted != labels
 
-# Get predictions for mesh grid
-Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
-Z = Z.reshape(xx.shape)
+# Mesh over the padded feature plane
+lo = features.min(axis=0)
+hi = features.max(axis=0)
+pad = (hi - lo) * MARGIN
+lo, hi = lo - pad, hi + pad
+step = (hi - lo).max() / MESH_POINTS
+xx, yy = np.meshgrid(np.arange(lo[0], hi[0], step), np.arange(lo[1], hi[1], step))
+Z = clf.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
 
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="Decision Boundary Classifier Visualization",
-    x_axis_label="Feature 1",
-    y_axis_label="Feature 2",
+    width=3200,
+    height=1800,
+    title="contour-decision-boundary · python · bokeh · anyplot.ai",
+    x_axis_label=FEATURE_1,
+    y_axis_label=FEATURE_2,
     tools="",
     toolbar_location=None,
-    x_range=(x_min, x_max),
-    y_range=(y_min, y_max),
+    x_range=(lo[0], hi[0]),
+    y_range=(lo[1], hi[1]),
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Use continuous colormap for decision regions (Cividis for diverging appearance)
-color_mapper = LinearColorMapper(palette=Cividis256, low=0, high=1)
+# Predicted regions: one Imprint color per class, translucent so the points stay strongest
+region_mapper = LinearColorMapper(palette=IMPRINT_PALETTE[: max(len(classes), 2)], low=0, high=len(classes) - 1)
 p.image(
-    image=[Z.astype(float)], x=x_min, y=y_min, dw=x_max - x_min, dh=y_max - y_min, color_mapper=color_mapper, alpha=0.4
+    image=[Z.astype(float)],
+    x=lo[0],
+    y=lo[1],
+    dw=hi[0] - lo[0],
+    dh=hi[1] - lo[1],
+    color_mapper=region_mapper,
+    alpha=0.28,
 )
 
-# Separate data points by class
-class_0_mask = y == 0
-class_1_mask = y == 1
-
-# Get predictions for training points to identify misclassified
-y_pred = clf.predict(X)
-correct_mask = y == y_pred
-
-# Data sources for each class with hover info
-source_class0 = ColumnDataSource(
-    data={
-        "x": X[class_0_mask, 0],
-        "y": X[class_0_mask, 1],
-        "class": ["Class 0"] * np.sum(class_0_mask),
-        "status": ["Correct" if c else "Misclassified" for c in correct_mask[class_0_mask]],
-    }
-)
-
-source_class1 = ColumnDataSource(
-    data={
-        "x": X[class_1_mask, 0],
-        "y": X[class_1_mask, 1],
-        "class": ["Class 1"] * np.sum(class_1_mask),
-        "status": ["Correct" if c else "Misclassified" for c in correct_mask[class_1_mask]],
-    }
-)
-
-# Plot training points for each class
-c0_scatter = p.scatter(
-    x="x",
-    y="y",
-    source=source_class0,
-    size=25,
-    fill_color=CLASS_COLORS[0],
-    line_color="white",
-    line_width=3,
-    alpha=0.85,
-)
-
-c1_scatter = p.scatter(
-    x="x",
-    y="y",
-    source=source_class1,
-    size=25,
-    fill_color=CLASS_COLORS[1],
-    line_color="white",
-    line_width=3,
-    alpha=0.85,
-)
-
-# Mark misclassified points with X marker
-misclassified_mask = ~correct_mask
-misclassified_marker = None
-if np.any(misclassified_mask):
-    source_misclassified = ColumnDataSource(
-        data={
-            "x": X[misclassified_mask, 0],
-            "y": X[misclassified_mask, 1],
-            "true_class": [f"Class {c}" for c in y[misclassified_mask]],
-            "pred_class": [f"Class {c}" for c in y_pred[misclassified_mask]],
-        }
-    )
-    misclassified_marker = p.scatter(
-        x="x", y="y", source=source_misclassified, marker="x", size=45, line_color="#CC3333", line_width=5, alpha=1.0
-    )
-
-# Add HoverTool for interactivity
-hover = HoverTool(
-    tooltips=[("Feature 1", "@x{0.2f}"), ("Feature 2", "@y{0.2f}"), ("Class", "@class"), ("Status", "@status")],
-    renderers=[c0_scatter, c1_scatter],
-)
-p.add_tools(hover)
-
-# Add separate HoverTool for misclassified points
-if misclassified_marker is not None:
-    hover_misclassified = HoverTool(
-        tooltips=[
-            ("Feature 1", "@x{0.2f}"),
-            ("Feature 2", "@y{0.2f}"),
-            ("True Class", "@true_class"),
-            ("Predicted", "@pred_class"),
-        ],
-        renderers=[misclassified_marker],
-    )
-    p.add_tools(hover_misclassified)
-
-# Create legend with classes and misclassified entry
-legend_items = [
-    LegendItem(label="Class 0", renderers=[c0_scatter]),
-    LegendItem(label="Class 1", renderers=[c1_scatter]),
+# Training points at their true class, outlined in the page ink so they read on every region
+tips = [
+    (FEATURE_1, f"@{{{FEATURE_1}}}{{0.2f}}"),
+    (FEATURE_2, f"@{{{FEATURE_2}}}{{0.2f}}"),
+    ("True class", f"@{{{CLASS}}}"),
+    ("Predicted", "@Predicted"),
 ]
-if misclassified_marker is not None:
-    legend_items.append(LegendItem(label="Misclassified", renderers=[misclassified_marker]))
+point_layers = []
+for i, cls in enumerate(classes):
+    rows = ColumnDataSource(df[df[CLASS] == cls])
+    layer = p.scatter(
+        x=FEATURE_1,
+        y=FEATURE_2,
+        source=rows,
+        size=26,
+        fill_color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+        line_color=INK,
+        line_width=2.5,
+        fill_alpha=0.95,
+        legend_label=f"{cls} (true)",
+    )
+    point_layers.append(layer)
+p.add_tools(HoverTool(tooltips=tips, renderers=point_layers))
 
-legend = Legend(items=legend_items, location="top_right")
-legend.label_text_font_size = "18pt"
-legend.glyph_height = 35
-legend.glyph_width = 35
-legend.background_fill_alpha = 0.95
-legend.padding = 15
-legend.spacing = 10
-p.add_layout(legend, "right")
+# Misclassified training points get an X on top
+wrong = ColumnDataSource(df[df["Wrong"]])
+if df["Wrong"].any():
+    p.scatter(
+        x=FEATURE_1,
+        y=FEATURE_2,
+        source=wrong,
+        marker="x",
+        size=44,
+        line_color=INK,
+        line_width=6,
+        legend_label="Misclassified",
+    )
 
-# Title and axis styling
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-
-# Grid styling
-p.xgrid.grid_line_color = INK
-p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.10
-p.ygrid.grid_line_alpha = 0.10
-
-# Axis and background styling
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
-# Legend styling
-if legend:
-    legend.background_fill_color = ELEVATED_BG
-    legend.border_line_color = INK_SOFT
-    legend.label_text_color = INK_SOFT
+p.legend.location = "top_right"
+p.legend.label_text_font_size = "30pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.glyph_height = 40
+p.legend.glyph_width = 40
+p.legend.padding = 18
+p.legend.spacing = 10
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.background_fill_alpha = 0.92
+p.legend.border_line_color = INK_SOFT
 
-# Save HTML file
+# Save HTML and screenshot it with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with Selenium
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -235,10 +177,12 @@ for arg in (
     "--hide-scrollbars",
 ):
     opts.add_argument(arg)
-
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
-time.sleep(3)  # Let Bokeh's JS render the canvas
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+time.sleep(3)  # let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
