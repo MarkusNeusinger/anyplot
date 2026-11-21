@@ -6,4 +6,4 @@
   line passed; a regeneration of venn-basic in plotnine was kept for that alone.
   A top-level unpacking of literals now counts as the one binding the rule
   needs, and a starred item, a nested target or a value the walk cannot read
-  is still refused.
+  is still refused. (#13480)
