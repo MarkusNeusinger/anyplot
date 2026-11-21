@@ -1,7 +1,7 @@
 """ anyplot.ai
 area-stacked-percent: 100% Stacked Area Chart
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-12
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-21
 """
 
 import os
@@ -15,42 +15,37 @@ import seaborn as sns
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (positions 1-4 for 4 categories)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Market share evolution of renewable energy sources
-np.random.seed(42)
-years = np.arange(2015, 2025)
+# Columns: set these to your table's column names
+YEAR = "Year"  # role: time
+BROWSER = "Browser"  # role: category
+USERS = "Users (millions)"  # role: value
 
-# Generate synthetic data showing interesting transitions
-solar = np.array([10, 12, 15, 18, 22, 26, 30, 35, 40, 45])
-wind = np.array([20, 22, 24, 26, 28, 30, 32, 33, 34, 35])
-hydro = np.array([50, 48, 45, 42, 38, 34, 30, 27, 23, 18])
-other = np.array([20, 18, 16, 14, 12, 10, 8, 5, 3, 2])
+# Data: replace this block with your own table, for example df = pd.read_csv("usage.csv")
+years = np.arange(2010, 2025)
+browsers = ["Chrome", "Safari", "Edge", "Firefox", "Other"]
+users = {
+    "Chrome": [310, 420, 530, 640, 760, 880, 1000, 1110, 1200, 1280, 1340, 1380, 1410, 1430, 1440],
+    "Safari": [60, 85, 115, 150, 190, 235, 285, 335, 385, 430, 470, 505, 530, 550, 565],
+    "Edge": [10, 12, 15, 18, 22, 27, 33, 40, 50, 62, 90, 130, 150, 160, 165],
+    "Firefox": [160, 175, 185, 190, 190, 185, 175, 160, 140, 120, 100, 85, 72, 62, 55],
+    "Other": [260, 250, 235, 215, 190, 165, 140, 115, 95, 80, 70, 60, 55, 50, 45],
+}
+df = pd.DataFrame(
+    {
+        YEAR: np.tile(years, len(browsers)),
+        BROWSER: np.repeat(browsers, len(years)),
+        USERS: np.concatenate([users[b] for b in browsers]),
+    }
+)
 
-# Create DataFrame and normalize to 100%
-df_wide = pd.DataFrame({"Year": years, "Solar": solar, "Wind": wind, "Hydro": hydro, "Other": other})
-
-# Calculate percentages (normalize to 100%)
-total = df_wide[["Solar", "Wind", "Hydro", "Other"]].sum(axis=1)
-for col in ["Solar", "Wind", "Hydro", "Other"]:
-    df_wide[col] = df_wide[col] / total * 100
-
-# Calculate cumulative values for stacking
-df_wide["Other_top"] = df_wide["Other"]
-df_wide["Hydro_top"] = df_wide["Other"] + df_wide["Hydro"]
-df_wide["Wind_top"] = df_wide["Other"] + df_wide["Hydro"] + df_wide["Wind"]
-df_wide["Solar_top"] = 100
-
-df_wide["Other_bottom"] = 0
-df_wide["Hydro_bottom"] = df_wide["Other"]
-df_wide["Wind_bottom"] = df_wide["Other"] + df_wide["Hydro"]
-df_wide["Solar_bottom"] = df_wide["Other"] + df_wide["Hydro"] + df_wide["Wind"]
-
-# Configure seaborn theme
+# Plot: reads only df and the constants above
 sns.set_theme(
     style="ticks",
     rc={
@@ -62,47 +57,57 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
     },
 )
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
+order = list(dict.fromkeys(df[BROWSER]))
+n_cat = len(order)
+palette = dict(zip(order, IMPRINT_PALETTE[:n_cat], strict=True))
 
-# Plot stacked areas in order: Solar (brand green), Wind, Hydro, Other
-categories = ["Solar", "Wind", "Hydro", "Other"]
-colors_map = dict(zip(categories, IMPRINT, strict=True))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-for cat in categories:
-    ax.fill_between(
-        df_wide["Year"],
-        df_wide[f"{cat}_bottom"],
-        df_wide[f"{cat}_top"],
-        label=cat,
-        color=colors_map[cat],
-        alpha=0.85,
-        linewidth=0.5,
-        edgecolor=colors_map[cat],
-    )
+# seaborn's weighted histogram with multiple="fill" normalizes every year to 100 %
+sns.histplot(
+    data=df,
+    x=YEAR,
+    hue=BROWSER,
+    weights=USERS,
+    hue_order=order[::-1],
+    multiple="fill",
+    discrete=True,
+    element="poly",
+    palette=palette,
+    alpha=0.9,
+    linewidth=0.8,
+    edgecolor=PAGE_BG,
+    legend=True,
+    ax=ax,
+)
 
-# Style
-ax.set_xlabel("Year", fontsize=20, color=INK)
-ax.set_ylabel("Share (%)", fontsize=20, color=INK)
-ax.set_title("area-stacked-percent · seaborn · anyplot.ai", fontsize=24, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_title("area-stacked-percent · python · seaborn · anyplot.ai", fontsize=12, color=INK)
+ax.set_xlabel(YEAR, fontsize=10)
+ax.set_ylabel("Share of users (%)", fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.set_xlim(df[YEAR].min(), df[YEAR].max())
+ax.set_ylim(0, 1)
+ax.set_yticks(np.linspace(0, 1, 6), [f"{int(v * 100)}" for v in np.linspace(0, 1, 6)])
+ax.set_xticks(np.arange(df[YEAR].min(), df[YEAR].max() + 1, 2))
+ax.yaxis.grid(True, linewidth=0.6)
+ax.set_axisbelow(True)
+sns.despine(ax=ax)
 
-ax.set_ylim(0, 100)
-ax.set_xlim(2015, 2024)
+sns.move_legend(
+    ax,
+    "center left",
+    bbox_to_anchor=(1.01, 0.5),
+    title=BROWSER,
+    fontsize=8,
+    title_fontsize=9,
+    frameon=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+)
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for spine in ("left", "bottom"):
-    ax.spines[spine].set_color(INK_SOFT)
-
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
-
-ax.legend(loc="upper left", fontsize=16, framealpha=0.95, facecolor=PAGE_BG, edgecolor=INK_SOFT)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.87, top=0.92, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
