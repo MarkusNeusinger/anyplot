@@ -12,47 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 78
 review:
   strengths:
-  - Excellent text legibility in both light and dark themes with proper theme-token
-    colors applied throughout
-  - 'Perfect visual hierarchy: box plots as primary element (brand green) with strip
-    overlay (vermillion) clearly distinguishable'
-  - Clean, professional styling with appropriate spine removal (top/right), subtle
-    grid, and generous whitespace
-  - 'Strong theme-adaptive color handling: Okabe-Ito palette (#009E73, #D55E00) remains
-    identical across both renders while chrome (text, grid, spines) properly flips
-    with theme'
-  - 'Comprehensive data representation: box-strip combination effectively shows distribution
-    statistics, individual points, and outliers simultaneously'
-  - Idiomatic seaborn usage with proper axes-level API (sns.boxplot, sns.stripplot),
-    clean theme configuration, and deterministic data generation with seed
+  - Axes-level sns.boxplot and sns.stripplot share one categorical axis
+  - fliersize=0 hands the outliers to the strip layer, so no point is drawn twice
+  - Translucent Imprint-violet points with page-colored rims over opaque green boxes
+    keep the overlap readable
+  - The data varies center, spread and sample size across the batches, and Batch C
+    has clear outliers
   weaknesses:
-  - 'Design Excellence at 16/20: While professional, styling is somewhat standard
-    seaborn defaults - could incorporate more distinctive visual refinements or advanced
-    design choices'
-  - 'Library Mastery at 6/10: Implementation uses basic seaborn API rather than more
-    advanced patterns - could demonstrate deeper library expertise through figure-level
-    APIs or custom palette orchestration'
+  - 'VQ-03 (dark): the box outlines, medians, whiskers and caps keep seaborn''s default
+    dark gray and nearly vanish on the #1A1A17 background → light INK_SOFT (#B8B7B0)
+    lines. Likely cause: sns.boxplot without linecolor=INK_SOFT.'
+  - 'VQ-05 (both): the canvas is 4748x2653, not a canonical size → 3200x1800 (-1548
+    x -853). Likely cause: figsize=(16, 9) at dpi=300 with bbox_inches=''tight''.'
+  - 'SC-04 (both): the title ''cat-box-strip · seaborn · anyplot.ai'' lacks the language
+    segment → ''cat-box-strip · python · seaborn · anyplot.ai''. Likely cause: the
+    ax.set_title string.'
+  - 'DQ-02 (both): the unit ''Quality Score (points)'' is an abstract score with no
+    measurable quantity → a concrete measured quantity with its unit (for example
+    ''Tensile Strength (MPa)''). Likely cause: the y column name and ylabel.'
+  - 'Suggestion: a short subtitle naming the comparison to make would give the chart
+    a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface, appropriate and readable
-      Chrome: Title, x-axis label ("Manufacturing Batch"), y-axis label ("Quality Score (points)"), and tick labels all rendered in dark INK (#1A1A17) and INK_SOFT (#4A4A44) colors - all clearly readable against light background with no legibility issues
-      Data: Four box plots in brand green (#009E73) with overlaid strip points in vermillion (#D55E00). Strip points display alpha=0.7 jitter pattern showing individual observations. Clear distinction between summary statistics (boxes) and raw data (points). Outliers in Batch C clearly visible.
-      Visual Elements: Y-axis grid visible at subtle alpha=0.10, box whiskers and medians clearly defined, strip points well-spaced with jitter=0.2. Top/right spines removed, creating clean L-shaped frame.
-      Legibility verdict: PASS - All text fully readable, all data elements clearly distinguishable, no legibility failures
+      Background: warm off-white #FAF8F1; the canvas is 4748x2653, tight-cropped rather than 3200x1800.
+      Chrome: title 'cat-box-strip · seaborn · anyplot.ai' in dark ink, axis titles 'Manufacturing Batch' and 'Quality Score (points)' at the same size, ticks Batch A–D and 40–100 in INK_SOFT, subtle y-grid, top and right spines removed. All text is readable.
+      Data: four #009E73 boxes with near-black outlines, medians and whiskers; translucent #C475FD jittered strip points with page-colored rims. Batch C has outliers beyond its whiskers.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface, appropriate and readable
-      Chrome: Title, axis labels, and tick labels all rendered in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) colors - all clearly visible and readable against dark background with no dark-on-dark failures
-      Data: Four box plots in brand green (#009E73) - identical color to light render, clearly visible against dark background. Overlaid strip points in vermillion (#D55E00) - same color as light render, no change in data palette. Both plot elements maintain perfect visibility and contrast.
-      Visual Elements: Y-axis grid lines rendered in light INK with alpha=0.10 opacity, visible but subtle. Spines colored with INK_SOFT for proper contrast against dark background. Strip point edges visible with careful edge color handling.
-      Color Consistency: Data colors (#009E73 box, #D55E00 strip) are pixel-perfect identical to light render - only chrome (text, grid, spine colors) has changed between themes
-      Legibility verdict: PASS - All text fully readable in light color, no dark-on-dark issues detected, all data elements perfectly visible and distinguishable
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, readable; faint grid.
+      Data: the same green boxes and violet points as the light render. The box outlines, medians and whiskers stay seaborn's default dark gray, so the whiskers and caps nearly vanish against #1A1A17.
+      Legibility verdict: PASS for text; the whiskers are barely visible
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -60,85 +57,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'Title (fontsize=24), axis labels (fontsize=20), tick labels (fontsize=16)
-          all explicitly color-coded with INK/INK_SOFT tokens. Fully readable in both
-          light (#1A1A17/#4A4A44 on #FAF8F1) and dark (#F0EFE8/#B8B7B0 on #1A1A17)
-          themes.'
+        comment: Explicit, proportional sizes; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Strip plot uses jitter=0.2 and alpha=0.7 to prevent overlapping.
-          Box width=0.5 allows spacing. No text collisions. All elements readable.
+        comment: No text collisions; point overlap handled with alpha and rims
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Strip points (size=10, color=#D55E00, alpha=0.7) highly visible.
-          Box plots (color=#009E73, linewidth=2) prominently displayed. Points have
-          edgecolor=PAGE_BG for definition.
+        passed: false
+        comment: Whiskers, caps and box outlines are dark gray on the dark background
+          and barely visible (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Uses Okabe-Ito palette (#009E73 green, #D55E00 vermillion) - fully
-          colorblind-safe. Adequate contrast. Shape differentiation (boxes vs points)
-          provides non-color signal.'
+        comment: Green and violet are CVD-distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: figsize=(16, 9), dpi=300 produces 4800×2700px. Proper proportions.
-          tight_layout() + bbox_inches='tight' prevents waste. No cut-off.
+        passed: false
+        comment: The canvas is 4748x2653, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title: ''cat-box-strip · seaborn · anyplot.ai'' (spec format). X:
-          ''Manufacturing Batch''. Y: ''Quality Score (points)'' with units.'
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (boxes) #009E73 brand green (Okabe-Ito pos 1). Second
-          series (strip) #D55E00 vermillion (pos 2). Backgrounds #FAF8F1 light / #1A1A17
-          dark. Both renders theme-correct with proper chrome adaptation.'
+        comment: '#009E73 then #C475FD; correct backgrounds'
     design_excellence:
-      score: 16
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful Okabe-Ito color choice. Clean, professional appearance.
-          Theme-aware styling shows design intention. Slightly standard seaborn -
-          could have more distinctive custom refinements.
+        comment: The style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Top/right spines removed (L-shaped frame). Subtle y-grid (alpha=0.10).
-          Generous whitespace. Minor: Could push visual sophistication further with
-          typography or layout enhancement.'
+        comment: Page-colored rims on the strip markers separate overlapping points
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: large green boxes (primary) vs orange points
-          (secondary). Shows distribution, outliers, sample size variation. Could
-          enhance with annotations highlighting key insights.'
+        comment: The data is displayed; no hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -146,31 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements box plot + strip overlay combination as specified.
+        comment: Box plot with a strip overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Box shows median/Q1/Q3/whiskers. Strip shows individual points with
-          jitter. Outliers visible (Batch C). Combination reveals distribution + sample
-          size.
+        comment: Quartile boxes, medians, whiskers, jittered translucent points, shared
+          non-zero axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Batch (categorical). Y-axis: Quality Score (numeric, range
-          35-105). All data visible, no truncation.'
+        comment: Points at their values; only categorical jitter
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct. No separate legend needed (colors self-evident,
-          single series per plot type).
+        passed: false
+        comment: The title lacks the language segment (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -178,23 +155,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete distribution (boxes), individual points (strip), outliers
-          (visible in Batch C), sample size variation (40/35/34/45 points). All aspects
-          demonstrated.
+        comment: Different centers, spreads, sizes and outliers
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Manufacturing quality scores (range 35-105) is realistic, domain-appropriate,
-          not controversial or sensitive.
+        comment: The abstract 'Quality Score (points)' unit reads generic (defect
+          line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis limits 35-105 provide good padding. Quality score domain is
-          sensible. No arbitrary or unrealistic scales.
+        comment: Values of 45–100 are sensible; there are no Check values
     code_quality:
       score: 10
       max: 10
@@ -204,36 +178,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes. Straightforward linear script. Clear and simple.
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output. Fully reproducible.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib.pyplot, numpy, pandas, seaborn.
-          No unused imports.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI or simulated interactivity. Clean
-          theme token setup. Well-organized data generation.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly. No bare plot.png. Proper DPI
-          and bbox_inches.
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -241,18 +212,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses high-level API (sns.boxplot, sns.stripplot) with axes-level
-          functions. Proper sns.set_theme() for global styling. Theme tokens are idiomatic.
-          Below 5 due to no advanced seaborn features.
+        comment: Axes-level box and strip layering on a shared categorical axis
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: false
-        comment: Basic box+strip overlay pattern - common seaborn use case, not highly
-          distinctive. No advanced features like hue splitting or complex grouping.
-          Standard approach.
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
 impl_tags:
   dependencies: []
   techniques: []
