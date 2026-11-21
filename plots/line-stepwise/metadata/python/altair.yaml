@@ -2,44 +2,49 @@ library: altair
 language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:39:38Z'
-updated: '2026-05-13T15:33:27Z'
-generated_by: claude-haiku
-workflow_run: 25808540142
+updated: '2026-11-21T10:34:28Z'
+generated_by: claude-sonnet
+workflow_run: 44894478967
 issue: 2600
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 81
 review:
   strengths:
-  - Excellent theme-adaptive implementation with proper chrome color mapping in both
-    light and dark themes
-  - Clear step-function visualization showing discrete changes with proper horizontal-then-vertical
-    segments
-  - Clean, reproducible code with deterministic seed and no unnecessary imports
-  - Appropriate font sizes (28px title, 22px axis, 18px ticks) for high-resolution
-    rendering
-  - Thoughtful visual design with subtle dashed grid (15% opacity) and area fill emphasis
+  - Native Vega-Lite step interpolation (mark_line interpolate='step-after') draws
+    the series as pure horizontal and vertical segments with every jump on a data
+    day and every plateau at its exact price; the four-day hold at 110 and the three-day
+    holds read as single flat runs
+  - Y scale with zero=False lets the 100–147 price range fill the plot height, so
+    even the 1 $ steps at days 20–23 stay visible
+  - 'Theme tokens threaded through configure_axis/configure_view/configure_title:
+    chrome flips cleanly while the #009E73 line is identical in both renders'
+  - Canvas lands exactly on 3200×1800 through the library prompt's pad-only block
+  - Escaped column constants feed both the encodings and readable tooltips in the
+    interactive HTML
   weaknesses:
-  - 'Design Excellence could be elevated: consider removing top/right spines or more
-    aggressive grid styling'
-  - 'Data storytelling could be stronger: annotation or color variation to highlight
-    key price movements (e.g., largest jump)'
+  - 'DE-02 (both): vertical dashed gridlines at every second day on a line chart,
+    where the style guide''s grid rule allows a y-axis grid only → drop the x grid
+    and keep the subtle y grid. Likely cause: configure_axis(gridColor=…, gridDash=…)
+    applies the grid to both axes; set grid=False on the x axis.'
+  - 'Suggestion: small point markers on the 25 data days would show where each price
+    is sampled without breaking the plateaus.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, not pure white
-      Chrome: Title "line-stepwise · altair · anyplot.ai" in dark INK color (28px), X/Y axis labels in INK (22px), tick labels in INK_SOFT (18px) — all clearly readable against light background
-      Data: Step line in brand green (#009E73) with 4px stroke; horizontal segments show value persistence, vertical segments show discrete changes; light teal fill beneath emphasizes area; grid dashed at 15% opacity
-      Legibility verdict: PASS — all text and data elements readable; no light-on-light failures
+      Background: warm off-white #FAF8F1 across the whole 3200×1800 canvas, including the pad around the chart
+      Chrome: title "line-stepwise · python · altair · anyplot.ai" bold dark ink, centered; axis titles "Day" and "Price ($)" in dark ink; tick labels 0–24 (step 2) and 100–150 (step 5) in soft ink; left and bottom domain lines only; subtle dashed grid on both axes — all readable
+      Data: a single #009E73 step-after line, about 3 px; flat plateaus at exact integer prices, vertical jumps on the data days, from 100 rising to 110, dipping to 101, climbing to 129, dipping to 123, then stepping up to 147; no markers
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, not pure black
-      Chrome: Title in light INK color (#F0EFE8), axis labels and ticks in INK_SOFT (light gray) — all clearly readable against dark background
-      Data: Step line color identical to light render (#009E73), confirming proper theme-adaptive chrome; fill still visible; grid visible and subtle
-      Legibility verdict: PASS — all text readable in dark theme; no dark-on-dark failures; brand green visible on both light and dark; Okabe-Ito palette maintained across both renders
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels in light soft ink, domain lines light gray, dashed grid subtle — no dark-on-dark text anywhere
+      Data: the same #009E73 step line, identical to the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,69 +55,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, ticks 18px; all readable in both themes
+        comment: Explicit sizes per library prompt (title 16, axis titles 12, ticks
+          10 at scale 4); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no label collisions or text overlaps
+        comment: No text collisions; tick labels evenly spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line with 4px stroke clearly visible; step transitions distinct
+        comment: 3 px step line clearly visible over 25 points; no markers needed
+          (optional per C4)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 with good contrast; Okabe-Ito safe'
+        comment: Single green series, strong contrast on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 → 4800×2700px at 3× scale; well-proportioned
+        comment: 3200×1800 exact; canvas gate passed; balanced margins; title ~40%
+          width (no deduction)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Day, Price $); format correct
+        comment: '''Day'' and ''Price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
-          both renders theme-correct'
+        comment: '#009E73 first series; #FAF8F1 / #1A1A17 backgrounds; both renders
+          theme-correct'
     design_excellence:
-      score: 13
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Intentional area fill styling; professional polish; raised from default
-          4
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
-        passed: true
-        comment: Dashed grid (gridDash=[4,4]), opacity 0.15, refined configuration;
-          raised from default 2
+        passed: false
+        comment: Vertical gridlines on a line chart against the y-only grid rule (defect
+          line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy with step function as focal point; area fill
-          guides viewer; raised from default 2
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,25 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step-after interpolation via mark_line(interpolate='step-after')
+        comment: Step line via interpolate='step-after', no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function present, both axes labeled, discrete changes visible
+        comment: C1 pure horizontal/vertical segments, C2 one post alignment, C3 plateaus
+          read as single runs, C4 n/a (no markers)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Day (0–24 continuous); Y: Price $ (~95–155); axes span full data'
+        comment: Day on x, price on y; all 25 points shown at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; single series requires no legend
+        comment: Mandated title format; single series, legend N/A
     data_quality:
       score: 15
       max: 15
@@ -150,20 +157,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 25 data points; includes increases and decreases; demonstrates cumsum
-          pattern
+        comment: Rises, falls, multi-day plateaus and jumps of varied height
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price scenario plausible; $90–150 range sensible; neutral context
+        comment: Daily price stepping, a named application; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis sensible for price (zero=False); X-axis range appropriate
+        comment: 'Prices 100–147 $, cumulative sum of the change list (checked: day
+          24 = 147); no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -173,52 +180,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; straightforward data + chart
+        comment: Imports → constants → Data → Plot → Save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Deterministic change list
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; proper import conflict workaround
+        comment: os, sys, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable; no fake UI; no over-engineering
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: plot-{THEME}.png padded to target plus plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper alt.Chart(), encoding, configure_*() methods; follows altair
-          conventions
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: interpolate='step-after' for plot type; comprehensive theme-adaptive
-          configuration
+        passed: false
+        comment: Correct declarative Chart/encode/configure usage, as the library
+          prompt shows
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the spec and the library prompt mandate
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T10:30:23Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - hover-tooltips
   - html-export
@@ -226,4 +236,5 @@ impl_tags:
   - data-generation
   dataprep:
   - cumulative-sum
-  styling: []
+  styling:
+  - grid-styling
