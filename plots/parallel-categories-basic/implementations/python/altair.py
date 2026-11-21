@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 96/100 | Updated: 2026-05-13
@@ -16,6 +16,7 @@ if script_dir in sys.path:
 import altair as alt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402
 
 
 # Theme tokens
@@ -24,254 +25,205 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette (colorblind-safe)
-IMPRINT = [
-    "#009E73",  # brand green (position 1)
-    "#C475FD",  # vermillion (position 2)
-    "#4467A3",  # blue (position 3)
-    "#BD8233",  # reddish purple (position 4)
-    "#AE3030",  # orange (position 5)
-    "#2ABCCD",  # sky blue (position 6)
-    "#954477",  # yellow (position 7)
-]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Customer journey through product categories
+# Columns: set these to your table's column names, left to right
+DIMENSIONS = ["Channel", "Category", "Outcome"]  # role: dimension_
+
+# Data: replace this block with your own table, for example df = pd.read_csv("journeys.csv")
 np.random.seed(42)
-
 n_customers = 200
-channels = np.random.choice(["Direct", "Search", "Social", "Email"], n_customers, p=[0.3, 0.35, 0.2, 0.15])
-categories = np.random.choice(["Electronics", "Clothing", "Home", "Sports"], n_customers, p=[0.25, 0.35, 0.25, 0.15])
-outcomes = np.random.choice(["Purchase", "Abandon", "Browse"], n_customers, p=[0.4, 0.35, 0.25])
+df = pd.DataFrame(
+    {
+        DIMENSIONS[0]: np.random.choice(["Direct", "Search", "Social", "Email"], n_customers, p=[0.3, 0.35, 0.2, 0.15]),
+        DIMENSIONS[1]: np.random.choice(
+            ["Electronics", "Clothing", "Home", "Sports"], n_customers, p=[0.25, 0.35, 0.25, 0.15]
+        ),
+        DIMENSIONS[2]: np.random.choice(["Purchase", "Abandon", "Browse"], n_customers, p=[0.4, 0.35, 0.25]),
+    }
+)
 
-df = pd.DataFrame({"Channel": channels, "Category": categories, "Outcome": outcomes})
-agg_df = df.groupby(["Channel", "Category", "Outcome"]).size().reset_index(name="count")
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+COLOR_DIM = DIMENSIONS[0]  # ribbons take the color of the first dimension on every axis
+AXIS_GAP = 1.6  # distance between neighboring axes, in x units
+SEG_W = 0.5  # width of a category segment, in x units
+total = len(df)
+gap = 0.04 * total  # blank space between segments, in observation units
 
-# Dimension x-positions
-x_pos = {"Channel": 0, "Category": 250, "Outcome": 500}
+# Layout order: the largest category first on every axis
+order = {d: df[d].value_counts().index.tolist() for d in DIMENSIONS}
+rank = {d: {c: i for i, c in enumerate(order[d])} for d in DIMENSIONS}
+tallest = total + gap * (max(len(v) for v in order.values()) - 1)
 
-# Color maps using Okabe-Ito palette
-channel_colors = {
-    "Direct": IMPRINT[0],  # brand green
-    "Search": IMPRINT[1],  # vermillion
-    "Social": IMPRINT[2],  # blue
-    "Email": IMPRINT[3],  # reddish purple
-}
-category_colors = {
-    "Electronics": IMPRINT[0],  # green
-    "Clothing": IMPRINT[1],  # vermillion
-    "Home": IMPRINT[2],  # blue
-    "Sports": IMPRINT[3],  # reddish purple
-}
-outcome_colors = {
-    "Purchase": IMPRINT[0],  # green
-    "Abandon": IMPRINT[1],  # vermillion
-    "Browse": IMPRINT[2],  # blue
-}
+# Segment extents: length is the category's count, each axis centered vertically
+segments = {}
+for d in DIMENSIONS:
+    y = (tallest - (total + gap * (len(order[d]) - 1))) / 2
+    for cat in order[d]:
+        n = int((df[d] == cat).sum())
+        segments[(d, cat)] = (y, y + n, n)
+        y += n + gap
 
-scale_factor = 3.5
+# Ribbons between neighboring axes, stacked inside segments in the order that limits crossings
+ribbon_rows = []
+for i in range(len(DIMENSIONS) - 1):
+    a, b = DIMENSIONS[i], DIMENSIONS[i + 1]
+    cols = list(dict.fromkeys([COLOR_DIM, a, b]))
+    flows = df.groupby(cols, sort=False).size().reset_index(name="n")
+    left, right = {}, {}
+    cursor_l = {c: segments[(a, c)][0] for c in order[a]}
+    cursor_r = {c: segments[(b, c)][0] for c in order[b]}
+    for _, f in flows.sort_values(
+        by=list(dict.fromkeys([a, b, COLOR_DIM])), key=lambda s: s.map(rank[s.name])
+    ).iterrows():
+        key = (f[COLOR_DIM], f[a], f[b])
+        left[key] = cursor_l[f[a]]
+        cursor_l[f[a]] += f["n"]
+    by_right = flows.sort_values(by=list(dict.fromkeys([b, a, COLOR_DIM])), key=lambda s: s.map(rank[s.name]))
+    for _, f in by_right.iterrows():
+        right[(f[COLOR_DIM], f[a], f[b])] = cursor_r[f[b]]
+        cursor_r[f[b]] += f["n"]
+    t = np.linspace(0, 1, 30)
+    smooth = 3 * t**2 - 2 * t**3
+    x_start = i * AXIS_GAP + SEG_W
+    x_end = (i + 1) * AXIS_GAP
+    for rid, (_, f) in enumerate(flows.iterrows()):
+        key = (f[COLOR_DIM], f[a], f[b])
+        top = left[key] + (right[key] - left[key]) * smooth
+        for xv, yv in zip(x_start + (x_end - x_start) * t, top, strict=True):
+            ribbon_rows.append({"flow": f"{i}-{rid}", COLOR_DIM: f[COLOR_DIM], "x": xv, "y": yv, "y2": yv + f["n"]})
+ribbons_df = pd.DataFrame(ribbon_rows)
 
-# Calculate y-positions for each category in each dimension
-channel_totals = agg_df.groupby("Channel")["count"].sum().sort_values(ascending=False)
-category_totals = agg_df.groupby("Category")["count"].sum().sort_values(ascending=False)
-outcome_totals = agg_df.groupby("Outcome")["count"].sum().sort_values(ascending=False)
-
-channel_pos = {}
-y = 0
-for cat in channel_totals.index:
-    h = channel_totals[cat] * scale_factor
-    channel_pos[cat] = {"y0": y, "y1": y + h, "total": channel_totals[cat]}
-    y += h + 12
-
-category_pos = {}
-y = 0
-for cat in category_totals.index:
-    h = category_totals[cat] * scale_factor
-    category_pos[cat] = {"y0": y, "y1": y + h, "total": category_totals[cat]}
-    y += h + 12
-
-outcome_pos = {}
-y = 0
-for cat in outcome_totals.index:
-    h = outcome_totals[cat] * scale_factor
-    outcome_pos[cat] = {"y0": y, "y1": y + h, "total": outcome_totals[cat]}
-    y += h + 12
-
-# Build flow connections
-ch_offsets = dict.fromkeys(channel_pos, 0)
-cat_left_offsets = dict.fromkeys(category_pos, 0)
-cat_right_offsets = dict.fromkeys(category_pos, 0)
-out_offsets = dict.fromkeys(outcome_pos, 0)
-
-ch_cat_flows = agg_df.groupby(["Channel", "Category"])["count"].sum().reset_index()
-flow_lines = []
-
-for _, row in ch_cat_flows.iterrows():
-    ch, cat, cnt = row["Channel"], row["Category"], row["count"]
-    height = cnt * scale_factor
-    src_y = channel_pos[ch]["y0"] + ch_offsets[ch] + height / 2
-    ch_offsets[ch] += height
-    tgt_y = category_pos[cat]["y0"] + cat_left_offsets[cat] + height / 2
-    cat_left_offsets[cat] += height
-    flow_lines.append(
+# Segment boxes and their labels
+boxes_df = pd.DataFrame(
+    [
         {
-            "x0": x_pos["Channel"] + 50,
-            "y0": src_y,
-            "x1": x_pos["Category"],
-            "y1": tgt_y,
-            "strokeWidth": max(5, cnt * 2.0),
-            "color": channel_colors[ch],
+            "label": cat,
+            "count": str(n),
+            "x": k * AXIS_GAP,
+            "x2": k * AXIS_GAP + SEG_W,
+            "xmid": k * AXIS_GAP + SEG_W / 2,
+            "y": y0,
+            "y2": y1,
+            "ymid": (y0 + y1) / 2,
+            "fill": IMPRINT_PALETTE[rank[COLOR_DIM][cat] % len(IMPRINT_PALETTE)] if d == COLOR_DIM else ELEVATED_BG,
+            "ink": "#1A1A17" if d == COLOR_DIM else INK,
+            "ink_soft": "#1A1A17" if d == COLOR_DIM else INK_SOFT,
         }
-    )
+        for k, d in enumerate(DIMENSIONS)
+        for cat in order[d]
+        for y0, y1, n in [segments[(d, cat)]]
+    ]
+)
+headers_df = pd.DataFrame(
+    {"x": [k * AXIS_GAP + SEG_W / 2 for k in range(len(DIMENSIONS))], "y": -gap, "header": DIMENSIONS}
+)
 
-cat_out_flows = agg_df.groupby(["Category", "Outcome"])["count"].sum().reset_index()
-for _, row in cat_out_flows.iterrows():
-    cat, out, cnt = row["Category"], row["Outcome"], row["count"]
-    height = cnt * scale_factor
-    dom_ch = agg_df[agg_df["Category"] == cat].groupby("Channel")["count"].sum().idxmax()
-    src_y = category_pos[cat]["y0"] + cat_right_offsets[cat] + height / 2
-    cat_right_offsets[cat] += height
-    tgt_y = outcome_pos[out]["y0"] + out_offsets[out] + height / 2
-    out_offsets[out] += height
-    flow_lines.append(
-        {
-            "x0": x_pos["Category"] + 50,
-            "y0": src_y,
-            "x1": x_pos["Outcome"],
-            "y1": tgt_y,
-            "strokeWidth": max(5, cnt * 2.0),
-            "color": channel_colors[dom_ch],
-        }
-    )
+x_scale = alt.Scale(domain=[-0.05, (len(DIMENSIONS) - 1) * AXIS_GAP + SEG_W + 0.05], nice=False)
+y_scale = alt.Scale(domain=[-gap * 1.8, tallest + gap * 0.3], reverse=True, nice=False)
 
-# Create bezier curve points for smooth ribbons
-bezier_pts = []
-for flow_id, fl in enumerate(flow_lines):
-    for t in np.linspace(0, 1, 20):
-        x = (
-            fl["x0"] * (1 - t) ** 3
-            + (fl["x0"] + 60) * 3 * (1 - t) ** 2 * t
-            + (fl["x1"] - 60) * 3 * (1 - t) * t**2
-            + fl["x1"] * t**3
-        )
-        y = fl["y0"] * (1 - t) + fl["y1"] * t
-        bezier_pts.append(
-            {"x": x, "y": y, "flow_id": flow_id, "color": fl["color"], "strokeWidth": fl["strokeWidth"], "order": t}
-        )
-
-bezier_df = pd.DataFrame(bezier_pts)
-
-# Create category box data with distinct colors for each dimension
-box_data = []
-color_maps = {"Channel": channel_colors, "Category": category_colors, "Outcome": outcome_colors}
-for dim, pos_dict in [("Channel", channel_pos), ("Category", category_pos), ("Outcome", outcome_pos)]:
-    for cat, pos in pos_dict.items():
-        box_data.append(
-            {
-                "category": cat,
-                "x": x_pos[dim],
-                "x2": x_pos[dim] + 50,
-                "y0": pos["y0"],
-                "y1": pos["y1"],
-                "y_mid": (pos["y0"] + pos["y1"]) / 2,
-                "total": pos["total"],
-                "color": color_maps[dim].get(cat, INK_SOFT),
-            }
-        )
-
-box_df = pd.DataFrame(box_data)
-max_y = box_df["y1"].max() + 80
-
-# Visualization layers
-flows = (
-    alt.Chart(bezier_df)
-    .mark_line(opacity=0.65, strokeCap="round")
+ribbons = (
+    alt.Chart(ribbons_df)
+    .mark_area(opacity=0.6)
     .encode(
-        x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-50, 680])),
-        y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-70, max_y])),
-        detail="flow_id:N",
-        order="order:Q",
-        color=alt.Color("color:N", scale=None),
-        strokeWidth=alt.StrokeWidth("strokeWidth:Q", scale=None),
+        x=alt.X("x:Q", axis=None, scale=x_scale),
+        y=alt.Y("y:Q", axis=None, scale=y_scale),
+        y2="y2:Q",
+        detail="flow:N",
+        color=alt.Color(
+            COLOR_DIM.translate(ESCAPE),
+            type="nominal",
+            title=COLOR_DIM,
+            sort=None,
+            scale=alt.Scale(domain=order[COLOR_DIM], range=IMPRINT_PALETTE),
+            legend=alt.Legend(
+                orient="right",
+                columns=int(np.ceil(len(order[COLOR_DIM]) / 8)),
+                titleLimit=110,
+                labelLimit=110,
+                titleFontSize=11,
+                labelFontSize=10,
+                symbolSize=160,
+                titleColor=INK,
+                labelColor=INK_SOFT,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+                padding=6,
+            ),
+        ),
     )
 )
 
 boxes = (
-    alt.Chart(box_df)
-    .mark_rect(stroke=INK_SOFT, strokeWidth=2, cornerRadius=4)
+    alt.Chart(boxes_df)
+    .mark_rect(stroke=INK_SOFT, strokeWidth=0.8)
     .encode(
-        x=alt.X("x:Q", axis=None),
+        x=alt.X("x:Q", axis=None, scale=x_scale),
         x2="x2:Q",
-        y=alt.Y("y0:Q", axis=None),
-        y2="y1:Q",
-        color=alt.Color("color:N", scale=None),
+        y=alt.Y("y:Q", axis=None, scale=y_scale),
+        y2="y2:Q",
+        color=alt.Color("fill:N", scale=None),
     )
 )
 
 labels = (
-    alt.Chart(box_df)
-    .mark_text(align="left", baseline="middle", fontSize=18, fontWeight="bold", dx=58)
-    .encode(x="x:Q", y="y_mid:Q", text="category:N", color=alt.value(INK))
+    alt.Chart(boxes_df)
+    .mark_text(fontSize=10, fontWeight="bold", baseline="middle", dy=-5)
+    .encode(
+        x=alt.X("xmid:Q", scale=x_scale),
+        y=alt.Y("ymid:Q", scale=y_scale),
+        text="label:N",
+        color=alt.Color("ink:N", scale=None),
+    )
 )
 
 counts = (
-    alt.Chart(box_df)
-    .mark_text(align="left", baseline="middle", fontSize=15, dx=58, dy=24)
-    .encode(x="x:Q", y="y_mid:Q", text=alt.Text("total:Q", format="d"), color=alt.value(INK_SOFT))
+    alt.Chart(boxes_df)
+    .mark_text(fontSize=9, baseline="middle", dy=7)
+    .encode(
+        x=alt.X("xmid:Q", scale=x_scale),
+        y=alt.Y("ymid:Q", scale=y_scale),
+        text="count:N",
+        color=alt.Color("ink_soft:N", scale=None),
+    )
 )
 
-# Headers positioned above the boxes
-headers_df = pd.DataFrame(
-    {
-        "x": [x_pos["Channel"] + 25, x_pos["Category"] + 25, x_pos["Outcome"] + 25],
-        "y": [-45, -45, -45],
-        "header": ["Channel", "Category", "Outcome"],
-    }
-)
 headers = (
     alt.Chart(headers_df)
-    .mark_text(fontSize=24, fontWeight="bold")
-    .encode(x="x:Q", y="y:Q", text="header:N", color=alt.value(INK))
+    .mark_text(fontSize=12, fontWeight="bold", baseline="middle")
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), text="header:N", color=alt.value(INK))
 )
 
-# Legend for Channel colors (flow color coding) using square marks
-legend_items = []
-for i, (ch, color) in enumerate(channel_colors.items()):
-    legend_items.append({"label": ch, "color": color, "x": 600, "y": i * 32 + 10})
-legend_df = pd.DataFrame(legend_items)
-
-legend_marks = (
-    alt.Chart(legend_df).mark_square(size=400).encode(x="x:Q", y="y:Q", color=alt.Color("color:N", scale=None))
-)
-
-legend_labels = (
-    alt.Chart(legend_df)
-    .mark_text(align="left", baseline="middle", fontSize=16, dx=18)
-    .encode(x="x:Q", y="y:Q", text="label:N", color=alt.value(INK_SOFT))
-)
-
-legend_title_df = pd.DataFrame({"x": [600], "y": [-25], "text": ["Flow Colors"]})
-legend_title = (
-    alt.Chart(legend_title_df)
-    .mark_text(fontSize=18, fontWeight="bold", align="left")
-    .encode(x="x:Q", y="y:Q", text="text:N", color=alt.value(INK))
-)
-
-# Combine layers
 chart = (
-    alt.layer(flows, boxes, labels, counts, headers, legend_title, legend_marks, legend_labels)
+    alt.layer(ribbons, boxes, labels, counts, headers)
     .properties(
-        width=1600,
-        height=900,
+        width=540,
+        height=320,
         background=PAGE_BG,
         title=alt.Title(
-            "parallel-categories-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK, offset=30
+            "parallel-categories-basic · python · altair · anyplot.ai",
+            fontSize=16,
+            anchor="middle",
+            color=INK,
+            offset=10,
         ),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=None)
 )
 
-# Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save, then pad to the canonical canvas
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TW}x{TH}; shrink width/height")
+if (w, h) != (TW, TH):
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
