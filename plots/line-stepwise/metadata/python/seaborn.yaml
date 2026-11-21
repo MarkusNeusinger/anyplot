@@ -2,46 +2,42 @@ library: seaborn
 language: python
 specification_id: line-stepwise
 created: '2025-12-30T21:51:58Z'
-updated: '2026-05-13T15:21:27Z'
-generated_by: claude-haiku
-workflow_run: 25808180648
+updated: '2026-11-21T10:18:31Z'
+generated_by: claude-sonnet
+workflow_run: 44893262927
 issue: 2600
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - Perfect theme adaptation with correct INK/INK_SOFT tokens in both light and dark
-    renders
-  - Excellent text legibility across both themes with proper font sizing (24/20/16pt)
-  - Correct step line implementation using drawstyle="steps-post" demonstrating seaborn
-    mastery
-  - Clean code structure with proper reproducibility (seed=42) and comprehensive import
-    usage
-  - Full spec compliance with proper title format and axis labels with units
+  - 'Native step drawing through sns.lineplot(drawstyle=''steps-post'') on the tidy
+    df: flat plateaus and vertical jumps exactly on the trading days'
+  - Canonical 3200x1800 canvas with data-derived axis padding, so the last close on
+    day 30 is fully inside the axes
+  - 'Theme tokens threaded through sns.set_theme rc: chrome flips cleanly while the
+    #009E73 series stays identical'
   weaknesses:
-  - Design Excellence uses seaborn defaults with theme customization rather than exploring
-    advanced styling or visual hierarchy techniques
-  - Library mastery could be elevated with distinctive seaborn features (relplot for
-    multi-panel, enhanced legend styling, or advanced visual refinement)
+  - 'Suggestion: a light annotation of the overall gain (+$13.75 over the month) could
+    give the staircase a focal point.'
+  - 'Suggestion: sns.relplot(kind=''line'', drawstyle=...) or a seaborn context preset
+    could showcase more of seaborn''s own API.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct theme-adaptive surface)
-      Chrome: Title 'line-stepwise · seaborn · anyplot.ai' clearly visible in dark text (INK token); axis labels 'Trading Day' and 'Stock Price ($)' prominent with proper font sizing (20pt); tick labels (145–170 y-axis, 0–30 x-axis) readable in soft gray (INK_SOFT token); grid subtle with alpha=0.10
-      Data: Brand green #009E73 line with linewidth=3, white-edged markers at markersize=8; shows step function with horizontal segments (price persistence) and vertical transitions (discrete changes)
-      Legibility verdict: PASS — all text clearly readable, no contrast issues against light background
+      Background: warm off-white #FAF8F1 across canvas and axes
+      Chrome: title 'line-stepwise · python · seaborn · anyplot.ai' in dark INK, axis labels 'Trading Day' / 'Stock Price ($)' and tick labels (0–30, 150–164) in dark gray; subtle horizontal grid; left and bottom spines only — all readable
+      Data: one #009E73 step line (steps-post) from $150 to $164.50 with small green markers edged in the page color on each of the 31 trading days; jumps fall on the data x values, plateaus read as single flat segments
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct theme-adaptive surface)
-      Chrome: Title clearly visible in light text (INK token for dark theme); axis labels and tick labels in soft light gray (INK_SOFT for dark); grid similarly subtle
-      Data: Brand green #009E73 (identical to light render), confirming proper data-color theme-independence; markers and line identical to light render
-      Legibility verdict: PASS — all text clearly readable in light colors against dark background, no dark-on-dark failures; grid and spines appropriate contrast
-
-    Theme comparison: Data colors (brand green #009E73) identical between light and dark renders ✓. Only chrome (background, text colors, grid, spines) flips appropriately between themes ✓. Both renders meet legibility and theme-correctness standards ✓.
+      Background: warm near-black #1A1A17
+      Chrome: title and axis labels in light INK, tick labels and spines in light gray INK_SOFT, grid subtle; no dark-on-dark text
+      Data: identical #009E73 line and markers as the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,74 +48,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title 24pt, labels 20pt, ticks 16pt) correctly sized and
-          colored using INK/INK_SOFT tokens; readable in both light and dark themes
+        comment: Title 12 pt, axis labels 10 pt, ticks 8 pt (style-guide sizes); INK/INK_SOFT
+          tokens read clearly in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing throughout; no overlapping elements or text collisions
+        comment: No text collisions; markers sit on their plateaus without hiding
+          each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line (linewidth=3) and markers (markersize=8) clearly visible; appropriate
-          density for 31 points across 30 days
+        comment: '2 px step line and 4 px markers with page-colored edge: markers
+          mark the 31 data points while the plateaus still read as lines (C4)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Uses Okabe-Ito #009E73 (colorblind-safe); adequate contrast on both
-          light and dark backgrounds'
+        comment: 'Single #009E73 series, strong contrast on both surfaces'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio well-proportioned; generous margins; nothing cut
-          off
+        comment: 3200x1800 canvas; data-derived 3 %/10 % padding keeps every marker
+          inside the axes, including day 30
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format; axis labels descriptive with units ($)
+        comment: '''Trading Day'' and ''Stock Price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; backgrounds #FAF8F1 (light) / #1A1A17 (dark)
-          ✓; both renders theme-correct ✓'
+        comment: 'First series #009E73; backgrounds #FAF8F1 / #1A1A17; chrome flips,
+          data color identical'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Theme-token integration demonstrates design awareness; L-shaped spines
-          and clean typography; conservative styling without additional customization
-          beyond theme adaptation
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Top/right spines removed ✓; grid subtle (alpha=0.10, y-axis only)
-          ✓; generous whitespace ✓; clean appearance
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear narrative showing price persistence and discrete changes; fitting
-          stock price context; standard visual hierarchy rather than innovative emphasis
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +121,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step line plot using drawstyle="steps-post"
+        comment: Step line via drawstyle='steps-post'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step line visualization with horizontal-then-vertical transitions;
-          shows value persistence and discrete changes
+        comment: C1 only horizontal/vertical segments; C2 one post alignment, jumps
+          on the data x values; C3 plateaus read as single flat segments; C4 small
+          markers on the data points
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Trading Day (0–30); Y: Stock Price ($150–$165); axes show all
-          data without distortion'
+        comment: Trading Day on x, price on y; every point inside the axes at its
+          value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-stepwise · seaborn · anyplot.ai' matches spec format;
-          no legend needed for single series
+        comment: Title 'line-stepwise · python · seaborn · anyplot.ai'; single series,
+          no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -160,22 +153,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates full step function behavior; price persistence, discrete
-          changes, variety of price levels
+        comment: Rises and drops, jumps of different height, plateaus of 1–3 days
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price stepping realistic and plausible; trading day context
-          appropriate and neutral
+        comment: Closing stock price over 31 trading days; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range (145–170) sensible for data ($150–$164.50); X-axis range
-          (0–30) appropriate for 31 trading days
+        comment: Prices $150–$164.50 in quarter-dollar steps; no Check values in the
+          spec
     code_quality:
       score: 10
       max: 10
@@ -185,56 +176,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward linear flow
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with np.random.seed(42)
+        comment: Fully deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, numpy, matplotlib, seaborn); no extraneous
-          imports
+        comment: os, matplotlib, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity for static seaborn
-          plot
+        comment: Appropriate complexity; constants drive axis titles
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API usage
+        comment: Saves plot-{THEME}.png at 3200x1800 without bbox_inches='tight';
+          current API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Uses sns.lineplot() idiomatic function; sns.set_theme() with comprehensive
-          rc parameters; strong theme-token integration
+        passed: false
+        comment: sns.lineplot(data=df, x=..., y=...) and sns.set_theme rc — what the
+          library prompt mandates
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: Theme-token usage is distinctive; could leverage additional seaborn
-          features or advanced styling techniques
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T10:14:56Z'
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
-  - data-generation
+  - explicit-figure
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
+  - grid-styling
