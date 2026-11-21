@@ -2,120 +2,147 @@ library: bokeh
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T10:58:44Z'
-updated: '2026-05-14T17:03:20Z'
-generated_by: claude-haiku
-workflow_run: 25873319692
+updated: '2026-11-21T17:28:28Z'
+generated_by: claude-sonnet
+workflow_run: 44929162562
 issue: 3002
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/bokeh/plot-dark.html
-quality_score: 95
+quality_score: 77
 review:
   strengths:
-  - Perfect visual compliance with both light and dark renders passing legibility
-    checks and no theme-adaptation failures
-  - 'Flawless color usage with Okabe-Ito palette correctly applied and first series
-    always #009E73'
-  - Excellent Bokeh idioms with proper ColumnDataSource, layout composition, and theme-adaptive
-    styling throughout
-  - Strong spec adherence with all required features implemented including complex
-    asymmetric mosaic layout
-  - Clean, maintainable code with deterministic data generation and consistent helper
-    function pattern
+  - 'Clean AAB;CDB;EEE mosaic: revenue spans two columns, profitability spans two
+    rows and orders spans the full width, with equal gutters between panels'
+  - Every panel carries its own descriptive title and unit-bearing axis labels, and
+    legends appear only where a panel has two series
+  - Theme tokens are threaded through every figure, including the axis-free title
+    banner; both renders are fully legible and data colors are identical
+  - Tidy df with ColumnDataSource per series, a categorical x_range from the data,
+    and NumeralTickFormatter thousands separators
+  - Exact 3200x1800 canvas via the CDP viewport override
   weaknesses:
-  - 'Minor design polish: While styling is professional and consistent, could explore
-    more custom color schemes or visual treatments beyond theme-adaptive defaults'
-  - 'Limited interactive features: Bokeh supports hover tooltips and selection callbacks,
-    implementation uses static HTML + PNG export (valid but underutilizes library
-    capabilities)'
+  - 'VQ-01 (both): tick labels at 15pt, axis titles at 18pt and panel titles at 24pt,
+    against bokeh''s references of 34/42/50pt, render about 20 px tall on the 3200
+    px canvas and read small next to the plot area → tick labels about 24pt (+9pt),
+    axis titles about 28pt (+10pt), panel titles about 32pt (+8pt), with min_border
+    values enlarged to match. Likely cause: major_label_text_font_size=''15pt'', axis_label_text_font_size=''18pt'',
+    title.text_font_size=''24pt'' in make_panel.'
+  - 'SC-02 (code): the Notes ask for a layout defined by a string pattern where repeated
+    characters span cells, but the mosaic is hand-built from nested row()/column()
+    calls and the pattern appears only in a comment (''AAB;CFB;DDD'', which does not
+    even match the drawn layout) → define the layout as a string such as ''AAB;CDB;EEE''
+    and derive each panel''s (row, col, rowspan, colspan) from it for bokeh''s gridplot/GridBox.
+    Likely cause: the nested column(banner, row(column(...), p_profit), p_orders)
+    layout.'
+  - 'SC-02 (both): the full-width orders panel''s plot frame starts about 11 px left
+    of the revenue and sales frames above it, so the spanning panel is not flush with
+    the panels it spans (C3) → frames aligned on one left edge (0 px offset). Likely
+    cause: min_border_left=30 lets bokeh size the left border from each panel''s own
+    y tick-label width.'
+  - 'CQ-01 (code): a make_panel() helper function wraps all panel construction, against
+    the Imports → Data → Plot → Save structure → build the panels in straight-line
+    code. Likely cause: the def make_panel(key, width, height, kind) block.'
+  - 'Suggestion: the line p.y_range.start = 0 if categorical else p.y_range.start
+    is a no-op in its else branch, and marker_size''s ''bar'': 0 entry is never used;
+    both could go.'
+  - 'Suggestion: a HoverTool per panel would make the HTML dashboard inspectable.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with five subplots in mosaic arrangement
-      Chrome: All titles, axis labels, and tick labels rendered in dark text (INK #1A1A17 for primary, INK_SOFT #4A4A44 for secondary) with excellent legibility against light background. Legend backgrounds styled with ELEVATED_BG (#FFFDF6) and subtle borders.
-      Data: Green (#009E73) line for revenue trend with scatter overlay; orange (#D55E00) and green scatter for product profitability; green bars for category sales; orange bars for satisfaction scores; green and orange lines for order trends. All data clearly distinguishable from background.
-      Legibility verdict: PASS - All text is crisp and readable. No light-on-light failures. Grid lines subtle at 10% alpha but visible.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas, including the title banner
+      Chrome: centered bold title 'subplot-mosaic · python · bokeh · anyplot.ai'; five panel titles, italic axis titles and ticks in dark ink, all readable; subtle grid; legends on #FFFDF6 with a soft border
+      Data: mosaic AAB;CDB;EEE: wide revenue line (top left, #009E73), two-row profitability scatter (right, #009E73 premium / #C475FD standard), category sales and quarterly satisfaction bars (middle, #009E73), full-width monthly orders lines (bottom, 2023 #009E73 / 2024 #C475FD); first series #009E73 everywhere
+      Legibility verdict: PASS (tick labels small at 15pt but readable)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) maintaining the same mosaic layout
-      Chrome: All titles, axis labels, and tick labels rendered in light text (INK #F0EFE8 for primary, INK_SOFT #B8B7B0 for secondary) with excellent legibility against dark background. Legend backgrounds use dark theme variant (#242420). No dark-on-dark failures—tick labels properly use INK_SOFT token for adequate contrast.
-      Data: Colors identical to light render—green (#009E73) and orange (#D55E00) maintain full visibility and saturation on dark surface. Grid lines subtle at 10% alpha with theme-adaptive styling.
-      Legibility verdict: PASS - All text is crisp and readable against dark surface. Data colors are identical to light render, only chrome (background, text, borders) has flipped appropriately. No theme-adaptation failures detected.
+      Background: warm near-black #1A1A17 throughout
+      Chrome: title, panel titles, axis titles and ticks in light ink; no dark-on-dark text; legends on #242420
+      Data: colors identical to the light render; only chrome flips
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
-        passed: true
-        comment: 'All text readable in both themes. Font sizes explicitly set: 28pt
-          title, 22pt axis labels, 18pt ticks'
+        passed: false
+        comment: All sizes set and readable in both themes, but tick labels 15pt,
+          axis titles 18pt and panel titles 24pt sit far below bokeh's 34/42/50pt
+          references and read small at full size (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions. Mosaic layout provides adequate spacing
+        comment: No text collisions; legends sit in empty corners; scatter overlap
+          is light
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and lines clearly visible. Scatter size=18, line width=4-5
+        comment: Line markers small on the 90-day series, larger on the 12-month series;
+          scatter size 16 with alpha 0.75; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe, high contrast
+        comment: Green/lavender pair is CVD-safe; good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 landscape optimal for mosaic. Well-proportioned
+        comment: Canvas gate passed (3200x1800); title ~30% width; balanced axis titles;
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units. Title matches spec format
+        comment: Every panel has a descriptive title and axis labels with units (Revenue
+          ($), Profit margin (%), Sales ($))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Okabe-Ito order respected. Correct theme backgrounds'
+        comment: 'First series #009E73 in every panel, second #C475FD; backgrounds
+          #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional styling with theme-adaptive tokens. Intentional hierarchy
-          via sizing
+        passed: false
+        comment: Style-guide baseline with a clear three-level type hierarchy (banner,
+          panel titles, axis text); nothing beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid, refined legends, generous whitespace
+        passed: false
+        comment: Equal gutters meet the Notes' consistent-spacing requirement; nothing
+          beyond the spine and grid rules
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy clear through mosaic. Guides viewer overview→details
+        passed: false
+        comment: Hierarchy follows the layout the Notes ask for; no extra focal point
+          chosen
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -123,25 +150,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mosaic subplot layout
+        comment: 'Correct mosaic layout: panels span 2 columns, 2 rows and 3 columns'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All features: line, scatter, bar, varying sizes, asymmetric layout'
+        passed: false
+        comment: The Notes' string-pattern layout definition is not used (nested row/column
+          by hand), and the bottom spanning panel's frame is not flush with the panels
+          above (C3) (defect lines)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, axes encompass full data ranges
+        comment: All data mapped correctly; marks at their values; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legends with proper labels
+        comment: Title 'subplot-mosaic · python · bokeh · anyplot.ai' correct; legends
+          only on multi-series panels with readable labels
     data_quality:
       score: 15
       max: 15
@@ -151,81 +181,93 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple chart types and mosaic patterns demonstrated
+        comment: Line, scatter and bar panels; column, row and full-width spans; empty
+          cell optional and not required
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world plausible dashboard scenario with business metrics
+        comment: Plausible, neutral business dashboard (revenue, product margins,
+          category sales, satisfaction, orders)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue, profit, sales, satisfaction scales all realistic
+        comment: 'Daily revenue 42k–62k, margins 8–46 %, satisfaction 78–88 of 100,
+          orders 1,100–3,100: all sensible; no Check values in the spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No unnecessary functions. style_figure() justified
+        passed: false
+        comment: A make_panel() helper function builds every panel (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, fully deterministic
+        comment: np.random.seed(42); deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, no fake interactivity
+        comment: Appropriate complexity; one no-op y_range line is a suggestion only
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh 3 API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent Bokeh idioms: figure, ColumnDataSource, row/column layout'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: false
-        comment: Good use of Bokeh layout system and legend styling. Could leverage
-          more interactive features like HoverTool
+        comment: ColumnDataSource from tidy df, categorical x_range from data, legend_label,
+          bokeh.layouts row/column composition, NumeralTickFormatter for thousands
+          separators
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: 'Default: generic usage beyond the mandated layout; no HoverTool
+          or other bokeh-specific feature'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T17:24:07Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - subplots
+  - layer-composition
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   - columndatasource
   dataprep:
   - cumulative-sum
   styling:
-  - publication-ready
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

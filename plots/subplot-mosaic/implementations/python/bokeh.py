@@ -1,7 +1,7 @@
 """ anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-14
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 77/100 | Updated: 2026-11-21
 """
 
 import os
@@ -9,217 +9,160 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.layouts import Spacer, column, row
-from bokeh.models import ColumnDataSource
+from bokeh.layouts import column, row
+from bokeh.models import ColumnDataSource, DataRange1d, NumeralTickFormatter
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
+# Constants: the mosaic layout, in the spirit of "AAB;CFB;DDD" (one grid cell = one third of the width)
+W, H = 3200, 1800
+BANNER_H = 80
+CELL_W = W // 3
+HEIGHT_TOP, HEIGHT_MID, HEIGHT_LOW = 640, 560, 520  # row heights below the banner
+PANEL_TEXT = {  # panel key -> title, x label, y label
+    "revenue": ("Quarterly revenue overview", "Day", "Revenue ($)"),
+    "profit": ("Product profitability", "Units sold", "Profit margin (%)"),
+    "sales": ("Sales by category", "Category", "Sales ($)"),
+    "satisfaction": ("Customer satisfaction", "Quarter", "Score"),
+    "orders": ("Monthly orders, year over year", "Month", "Orders"),
+}
+
+# Columns: set these to your table's column names
+PANEL = "Panel"  # role: extra
+SERIES = "Series"  # role: extra
+X = "x"  # role: x
+Y = "y"  # role: y
+
+# Data: replace this block with your own table, one row per mark, for example df = pd.read_csv("panels.csv")
 np.random.seed(42)
-
-# Data for various subplots - Dashboard with business metrics
-
-# A: Large overview time series (top left, spans 2 cols)
 days = np.arange(1, 91)
 revenue = 50000 + np.cumsum(np.random.randn(90) * 2000) + days * 300
-source_a = ColumnDataSource(data={"day": days, "revenue": revenue})
-
-# B: Scatter plot (top right) - two product lines
-products_a = np.random.rand(25) * 100
-profit_margin_a = products_a * 0.35 + np.random.randn(25) * 4 + 12
-products_b = np.random.rand(25) * 100
-profit_margin_b = products_b * 0.25 + np.random.randn(25) * 5 + 8
-source_b1 = ColumnDataSource(data={"products": products_a, "profit_margin": profit_margin_a})
-source_b2 = ColumnDataSource(data={"products": products_b, "profit_margin": profit_margin_b})
-
-# C: Bar chart - Categories (middle left)
-categories = ["Electronics", "Clothing", "Food", "Books"]
-sales = [45000, 32000, 28000, 18000]
-source_c = ColumnDataSource(data={"category": categories, "sales": sales})
-
-# D: Line chart - Monthly trend (bottom, spans full width) - two years
+units_a = np.random.rand(25) * 100
+margin_a = units_a * 0.35 + np.random.randn(25) * 4 + 12
+units_b = np.random.rand(25) * 100
+margin_b = units_b * 0.25 + np.random.randn(25) * 5 + 8
 months = np.arange(1, 13)
 orders_2023 = [1200, 1400, 1100, 1600, 1800, 2100, 1900, 2200, 2400, 2100, 2300, 2800]
 orders_2024 = [1400, 1600, 1350, 1850, 2100, 2400, 2200, 2500, 2700, 2350, 2600, 3100]
-source_d1 = ColumnDataSource(data={"month": months, "orders": orders_2023})
-source_d2 = ColumnDataSource(data={"month": months, "orders": orders_2024})
-
-# E: Conversion rate trend (two channels)
-weeks = np.arange(1, 13)
-conversion_web = 3.2 + np.cumsum(np.random.randn(12) * 0.15)
-conversion_mobile = 2.8 + np.cumsum(np.random.randn(12) * 0.18)
-source_e1 = ColumnDataSource(data={"week": weeks, "conversion": conversion_web})
-source_e2 = ColumnDataSource(data={"week": weeks, "conversion": conversion_mobile})
-
-# F: Customer satisfaction
-quarters = ["Q1", "Q2", "Q3", "Q4"]
-satisfaction = [78, 82, 85, 88]
-source_f = ColumnDataSource(data={"quarter": quarters, "satisfaction": satisfaction})
-
-
-def style_figure(fig):
-    fig.background_fill_color = PAGE_BG
-    fig.border_fill_color = PAGE_BG
-    fig.outline_line_color = INK_SOFT
-    fig.title.text_color = INK
-    fig.title.text_font_size = "28pt"
-    fig.xaxis.axis_label_text_color = INK
-    fig.yaxis.axis_label_text_color = INK
-    fig.xaxis.axis_label_text_font_size = "22pt"
-    fig.yaxis.axis_label_text_font_size = "22pt"
-    fig.xaxis.major_label_text_color = INK_SOFT
-    fig.yaxis.major_label_text_color = INK_SOFT
-    fig.xaxis.major_label_text_font_size = "18pt"
-    fig.yaxis.major_label_text_font_size = "18pt"
-    fig.xaxis.axis_line_color = INK_SOFT
-    fig.yaxis.axis_line_color = INK_SOFT
-    fig.xgrid.grid_line_color = INK
-    fig.ygrid.grid_line_color = INK
-    fig.xgrid.grid_line_alpha = 0.10
-    fig.ygrid.grid_line_alpha = 0.10
-    fig.toolbar_location = None
-
-
-# A: Large Revenue Overview (spans 2 columns, taller)
-p_a = figure(
-    width=3200, height=1100, title="Quarterly Revenue Overview", x_axis_label="Day", y_axis_label="Revenue ($)"
+panels = [
+    ("revenue", "Daily revenue", days, revenue),
+    ("profit", "Premium line", units_a, margin_a),
+    ("profit", "Standard line", units_b, margin_b),
+    ("sales", "Q4 2024 sales", ["Electronics", "Clothing", "Food", "Books"], [45000, 32000, 28000, 18000]),
+    ("satisfaction", "Satisfaction score", ["Q1", "Q2", "Q3", "Q4"], [78, 82, 85, 88]),
+    ("orders", "2023", months, orders_2023),
+    ("orders", "2024", months, orders_2024),
+]
+df = pd.concat(
+    [pd.DataFrame({PANEL: key, SERIES: name, X: xs, Y: ys}) for key, name, xs, ys in panels], ignore_index=True
 )
-p_a.line("day", "revenue", source=source_a, line_width=4, color=IMPRINT[0], legend_label="Daily Revenue")
-p_a.scatter("day", "revenue", source=source_a, size=15, color=IMPRINT[0], alpha=0.7)
-p_a.legend.label_text_font_size = "16pt"
-p_a.legend.background_fill_color = ELEVATED_BG
-p_a.legend.border_line_color = INK_SOFT
-p_a.legend.label_text_color = INK_SOFT
-style_figure(p_a)
 
-# B: Product Profitability Scatter with two product lines
-p_b = figure(
-    width=1600, height=1100, title="Product Profitability", x_axis_label="Units Sold", y_axis_label="Profit Margin (%)"
-)
-p_b.scatter(
-    "products", "profit_margin", source=source_b1, size=18, color=IMPRINT[0], alpha=0.7, legend_label="Premium Line"
-)
-p_b.scatter(
-    "products", "profit_margin", source=source_b2, size=18, color=IMPRINT[1], alpha=0.7, legend_label="Standard Line"
-)
-p_b.legend.label_text_font_size = "14pt"
-p_b.legend.background_fill_color = ELEVATED_BG
-p_b.legend.border_line_color = INK_SOFT
-p_b.legend.label_text_color = INK_SOFT
-p_b.title.text_font_size = "24pt"
-p_b.xaxis.axis_label_text_font_size = "18pt"
-p_b.yaxis.axis_label_text_font_size = "18pt"
-p_b.xaxis.major_label_text_font_size = "14pt"
-p_b.yaxis.major_label_text_font_size = "14pt"
-style_figure(p_b)
 
-# C: Category Sales Bar Chart
-p_c = figure(
-    width=2400,
-    height=900,
-    x_range=categories,
-    title="Sales by Category",
-    x_axis_label="Category",
-    y_axis_label="Sales ($)",
-)
-p_c.vbar(
-    x="category",
-    top="sales",
-    source=source_c,
-    width=0.7,
-    color=IMPRINT[0],
-    alpha=0.85,
-    line_color=PAGE_BG,
-    line_width=2,
-    legend_label="Q4 2024 Sales",
-)
-p_c.legend.label_text_font_size = "14pt"
-p_c.legend.background_fill_color = ELEVATED_BG
-p_c.legend.border_line_color = INK_SOFT
-p_c.legend.label_text_color = INK_SOFT
-p_c.title.text_font_size = "24pt"
-p_c.xaxis.axis_label_text_font_size = "18pt"
-p_c.yaxis.axis_label_text_font_size = "18pt"
-p_c.xaxis.major_label_text_font_size = "14pt"
-p_c.yaxis.major_label_text_font_size = "14pt"
-p_c.xaxis.major_label_orientation = 0.3
-style_figure(p_c)
+# Plot: reads only df and the constants above
+def make_panel(key, width, height, kind):
+    rows = df[df[PANEL] == key]
+    title, x_label, y_label = PANEL_TEXT[key]
+    series = list(rows[SERIES].unique())
+    categorical = kind == "bar"
+    cats = [str(c) for c in rows[X].unique()] if categorical else []
+    p = figure(
+        width=width,
+        height=height,
+        title=title,
+        x_axis_label=x_label,
+        y_axis_label=y_label,
+        x_range=cats or DataRange1d(),
+        toolbar_location=None,
+        min_border_left=30,
+        min_border_right=30,
+        min_border_top=10,
+        min_border_bottom=85,
+    )
+    marker_size = {"line": 7, "lines": 14, "scatter": 16, "bar": 0}[kind]
+    for i, name in enumerate(series):
+        part = rows[rows[SERIES] == name]
+        if categorical:
+            source = ColumnDataSource(part.astype({X: str, Y: float}))
+            p.vbar(x=X, top=Y, source=source, width=0.62, color=IMPRINT_PALETTE[i], alpha=0.9, line_color=PAGE_BG)
+            continue
+        source = ColumnDataSource(part.astype({X: float, Y: float}))
+        if kind in ("line", "lines"):
+            p.line(X, Y, source=source, line_width=4, color=IMPRINT_PALETTE[i], legend_label=str(name))
+        p.scatter(X, Y, source=source, size=marker_size, color=IMPRINT_PALETTE[i], alpha=0.75, legend_label=str(name))
 
-# Empty cell spacer (gap in mosaic)
-empty_spacer = Spacer(width=2400, height=450, background=ELEVATED_BG)
+    # Chrome
+    p.background_fill_color = PAGE_BG
+    p.border_fill_color = PAGE_BG
+    p.outline_line_color = INK_SOFT
+    p.title.text_color = INK
+    p.title.text_font_size = "24pt"
+    for axis in (p.xaxis, p.yaxis):
+        axis.axis_label_text_color = INK
+        axis.axis_label_text_font_size = "18pt"
+        axis.major_label_text_color = INK_SOFT
+        axis.major_label_text_font_size = "15pt"
+        axis.axis_line_color = INK_SOFT
+        axis.major_tick_line_color = INK_SOFT
+        axis.minor_tick_line_color = None
+    for grid in (p.xgrid, p.ygrid):
+        grid.grid_line_color = INK
+        grid.grid_line_alpha = 0.10
+    p.y_range.start = 0 if categorical else p.y_range.start
+    if kind != "scatter":
+        p.yaxis.formatter = NumeralTickFormatter(format="0,0")
+    if len(series) > 1:
+        p.legend.location = "top_left"
+        p.legend.label_text_font_size = "15pt"
+        p.legend.label_text_color = INK_SOFT
+        p.legend.background_fill_color = ELEVATED_BG
+        p.legend.border_line_color = INK_SOFT
+    elif p.legend:
+        p.legend.visible = False
+    return p
 
-# F: Customer Satisfaction Bar
-p_f = figure(
-    width=2400,
-    height=450,
-    x_range=quarters,
-    title="Customer Satisfaction",
-    x_axis_label="Quarter",
-    y_axis_label="Score",
+
+p_revenue = make_panel("revenue", 2 * CELL_W, HEIGHT_TOP, "line")
+p_profit = make_panel("profit", W - 2 * CELL_W, HEIGHT_TOP + HEIGHT_MID, "scatter")
+p_sales = make_panel("sales", CELL_W, HEIGHT_MID, "bar")
+p_satisfaction = make_panel("satisfaction", CELL_W, HEIGHT_MID, "bar")
+p_orders = make_panel("orders", W, HEIGHT_LOW, "lines")
+
+# Title banner: an axis-free figure that carries only the title
+banner = figure(
+    width=W, height=BANNER_H, title="subplot-mosaic · python · bokeh · anyplot.ai", toolbar_location=None, min_border=0
 )
-p_f.vbar(
-    x="quarter",
-    top="satisfaction",
-    source=source_f,
-    width=0.6,
-    color=IMPRINT[1],
-    alpha=0.9,
-    line_color=PAGE_BG,
-    line_width=2,
-    legend_label="Satisfaction Score",
-)
-p_f.legend.label_text_font_size = "12pt"
-p_f.legend.background_fill_color = ELEVATED_BG
-p_f.legend.border_line_color = INK_SOFT
-p_f.legend.label_text_color = INK_SOFT
-p_f.title.text_font_size = "22pt"
-p_f.xaxis.axis_label_text_font_size = "16pt"
-p_f.yaxis.axis_label_text_font_size = "16pt"
-p_f.xaxis.major_label_text_font_size = "14pt"
-p_f.yaxis.major_label_text_font_size = "14pt"
-style_figure(p_f)
+banner.xaxis.visible = False
+banner.yaxis.visible = False
+banner.xgrid.visible = False
+banner.ygrid.visible = False
+banner.outline_line_color = None
+banner.background_fill_color = PAGE_BG
+banner.border_fill_color = PAGE_BG
+banner.title.align = "center"
+banner.title.text_color = INK
+banner.title.text_font_size = "34pt"
 
-# D: Monthly Orders Trend (full width bottom) - comparing two years
-p_d = figure(
-    width=4800, height=700, title="subplot-mosaic · bokeh · anyplot.ai", x_axis_label="Month", y_axis_label="Orders"
-)
-p_d.line("month", "orders", source=source_d1, line_width=5, color=IMPRINT[0], legend_label="2023")
-p_d.scatter("month", "orders", source=source_d1, size=18, color=IMPRINT[0])
-p_d.line("month", "orders", source=source_d2, line_width=5, color=IMPRINT[1], legend_label="2024")
-p_d.scatter("month", "orders", source=source_d2, size=18, color=IMPRINT[1])
-p_d.legend.label_text_font_size = "18pt"
-p_d.legend.background_fill_color = ELEVATED_BG
-p_d.legend.border_line_color = INK_SOFT
-p_d.legend.label_text_color = INK_SOFT
-p_d.legend.orientation = "horizontal"
-p_d.title.text_font_size = "32pt"
-p_d.xaxis.axis_label_text_font_size = "22pt"
-p_d.yaxis.axis_label_text_font_size = "22pt"
-p_d.xaxis.major_label_text_font_size = "18pt"
-p_d.yaxis.major_label_text_font_size = "18pt"
-style_figure(p_d)
+# Mosaic: revenue spans two columns, profit spans two rows, orders spans all three columns
+layout = column(banner, row(column(p_revenue, row(p_sales, p_satisfaction)), p_profit), p_orders, spacing=0)
 
-# Create mosaic layout: AAB / C.F / DDD pattern
-row1 = row(p_a, p_b)
-row2 = row(p_c, column(empty_spacer, p_f))
-layout = column(row1, row2, p_d)
-
-# Write interactive HTML
+# Save: interactive HTML, then a headless Chrome screenshot at the exact canvas size
 output_file(f"plot-{THEME}.html")
 save(layout)
 
-# Screenshot with headless Chrome — Selenium 4 / Selenium Manager
-W, H = 4800, 2700
 opts = Options()
 for arg in (
     "--headless=new",
@@ -233,6 +176,12 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.execute_script(
+    f"document.body.style.background = '{PAGE_BG}'; document.documentElement.style.background = '{PAGE_BG}'"
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
