@@ -54,7 +54,7 @@ GATE = "automation/scripts/regen_gate.py"
 # Pull requests merged from the owner's account, and when that was counted:
 # `gh pr list --state merged --author MarkusNeusinger --limit 5000 --json number --jq length`.
 # Updated by the release procedure (agentic/commands/release.md, step 4) together with the texts' floor.
-MERGED_PRS_SNAPSHOT = (955, "2026-11-11")
+MERGED_PRS_SNAPSHOT = (1040, "2026-11-21")
 PR_FLOOR_STEP = 50
 
 NUMBER_WORDS = {
