@@ -1,144 +1,117 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-annotated: Annotated Scatter Plot with Text Labels
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-13
 """
 
 import os
-import sys
-import xml.etree.ElementTree as ET
 
 import cairosvg
-
-
-# Workaround: pygal.py file in cwd conflicts with pygal package.
-# Remove current directory from sys.path before importing.
-_original_path = sys.path[:]
-while "" in sys.path:
-    sys.path.remove("")
-if sys.path[0].endswith("implementations/python"):
-    sys.path.pop(0)
-
-import numpy as np  # noqa: E402
-import pygal  # noqa: E402
-from pygal.style import Style  # noqa: E402
-
-
-sys.path = _original_path
+import pandas as pd
+import pygal
+from pygal.style import Style
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette: first series = #009E73 (brand green)
-IMPRINT = (
-    "#009E73",  # 1: bluish green (brand)
-    "#C475FD",  # 2: vermillion
-    "#4467A3",  # 3: blue
-    "#BD8233",  # 4: reddish purple
-    "#AE3030",  # 5: orange
-    "#2ABCCD",  # 6: sky blue
-    "#954477",  # 7: yellow
-    "#009E73",  # 8: cycle back to brand for 8+ companies
-    "#C475FD",
-    "#4467A3",
-    "#BD8233",
-    "#AE3030",
+# Imprint palette: one position per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns: set these to your table's column names
+CITY = "City"  # role: label
+POPULATION = "Metro population (millions)"  # role: x
+AREA = "Urban area (km²)"  # role: y
+REGION = "Region"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("cities.csv")
+df = pd.DataFrame(
+    {
+        CITY: [
+            "Tokyo",
+            "Delhi",
+            "Shanghai",
+            "Mumbai",
+            "Seoul",
+            "Lagos",
+            "Cairo",
+            "Istanbul",
+            "Paris",
+            "London",
+            "Moscow",
+            "New York",
+            "Los Angeles",
+            "Mexico City",
+            "São Paulo",
+            "Buenos Aires",
+        ],
+        POPULATION: [37.3, 32.9, 28.5, 21.7, 10.0, 15.9, 21.8, 15.8, 11.2, 9.6, 12.7, 19.2, 12.5, 22.2, 22.6, 15.4],
+        AREA: [8547, 2344, 3820, 881, 2266, 1171, 1760, 5343, 2845, 1738, 5698, 11642, 6299, 4180, 3173, 2681],
+        REGION: ["Asia"] * 5 + ["Africa"] * 2 + ["Europe"] * 4 + ["Americas"] * 5,
+    }
 )
 
-# Data - Tech company market performance
-companies = [
-    "TechFlow",
-    "DataPrime",
-    "CloudNine",
-    "NetWave",
-    "CodeSphere",
-    "ByteLogic",
-    "SoftEdge",
-    "DevStack",
-    "AppForge",
-    "WebCore",
-    "CyberLink",
-    "DigiTech",
-]
+# Plot: reads only df and the constants above
+title = "scatter-annotated · python · pygal · anyplot.ai"
+groups = list(dict.fromkeys(df[REGION]))
 
-# Market cap (x) and annual revenue (y) in billions
-market_cap = np.array([15, 45, 75, 105, 135, 25, 55, 85, 115, 145, 35, 95])
-revenue = np.array([8, 22, 35, 28, 48, 12, 18, 42, 32, 55, 15, 38])
-
-# Custom style with theme-adaptive colors and chrome
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=16,
-    stroke_width=3,
+    colors=tuple(IMPRINT_PALETTE),
+    title_font_size=60,
+    label_font_size=48,
+    major_label_font_size=40,
+    legend_font_size=40,
+    value_font_size=38,
+    value_colors=(INK,) * len(IMPRINT_PALETTE),
+    stroke_width=2.5,
+    opacity=0.7,
+    opacity_hover=1.0,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
 )
 
-# Create scatter chart
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="scatter-annotated · pygal · anyplot.ai",
-    x_title="Market Cap (Billion $)",
-    y_title="Annual Revenue (Billion $)",
-    show_legend=False,
+    title=title,
+    x_title=POPULATION,
+    y_title=AREA,
+    show_legend=True,
+    legend_at_bottom=True,
     show_x_guides=True,
     show_y_guides=True,
-    dots_size=16,
     stroke=False,
-    show_dots=True,
-    range=(0, 65),
-    xrange=(0, 165),
+    dots_size=14,
+    range=(0, df[AREA].max() * 1.12),
+    xrange=(0, df[POPULATION].max() * 1.1),
     print_values=True,
     print_values_position="top",
+    truncate_legend=-1,
+    margin=40,
 )
 
-# Add each company as individual series with Okabe-Ito color and annotation
-for i, company in enumerate(companies):
+for group in groups:
+    sub = df[df[REGION] == group].dropna(subset=[POPULATION, AREA])
     chart.add(
-        company,
-        [{"value": (market_cap[i], revenue[i]), "label": company, "formatter": lambda x, c=company: c}],
-        dots_size=18,
-        formatter=lambda x, c=company: c,
+        group,
+        [
+            {"value": (x, y), "formatter": lambda _v, name=str(city): name}
+            for city, x, y in zip(sub[CITY], sub[POPULATION], sub[AREA], strict=True)
+        ],
     )
 
-# Render to SVG and fix label colors to match INK theme token
-svg_bytes = chart.render()
-
-# Parse SVG and fix label text colors
-ET.register_namespace("", "http://www.w3.org/2000/svg")
-ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
-root = ET.fromstring(svg_bytes)
-ns = {"svg": "http://www.w3.org/2000/svg"}
-
-# Find all text elements and fix those that contain company names
-for text_elem in root.findall(".//svg:text", ns):
-    text_content = "".join(text_elem.itertext()).strip()
-    if text_content in companies:
-        # Set fill color to INK using style attribute to ensure it takes precedence
-        current_style = text_elem.get("style", "")
-        if current_style:
-            text_elem.set("style", f"{current_style};fill:{INK}!important")
-        else:
-            text_elem.set("style", f"fill:{INK}")
-
-# Re-serialize SVG and render PNG
-modified_svg = ET.tostring(root, encoding="utf-8")
+# Output: SVG for the interactive page, PNG via cairosvg
+svg = chart.render()
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(modified_svg)
-
-# Convert SVG to PNG using cairosvg
-cairosvg.svg2png(bytestring=modified_svg, write_to=f"plot-{THEME}.png")
+    f.write(svg)
+cairosvg.svg2png(bytestring=svg, write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800)
