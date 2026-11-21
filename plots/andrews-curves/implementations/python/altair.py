@@ -1,7 +1,7 @@
 """ anyplot.ai
 andrews-curves: Andrews Curves for Multivariate Data
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-15
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-21
 """
 
 import os
@@ -16,8 +16,8 @@ if script_dir in sys.path:
 import altair as alt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402
 from sklearn.datasets import load_iris  # noqa: E402
-from sklearn.preprocessing import StandardScaler  # noqa: E402
 
 
 # Theme tokens
@@ -27,96 +27,107 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Load and prepare data
-np.random.seed(42)
+# Constants
+N_POINTS = 200  # evaluation points of t over one full period, dense enough for smooth curves
+
+# Columns: set these to your table's column names
+VARIABLES = ["Sepal length (cm)", "Sepal width (cm)", "Petal length (cm)", "Petal width (cm)"]  # role: variable_
+SPECIES = "Species"  # role: category
+
+# Data: replace this block with your own table, for example df = pd.read_csv("measurements.csv")
 iris = load_iris()
-X = iris.data
-y = iris.target
-species_names = ["Setosa", "Versicolor", "Virginica"]
+df = pd.DataFrame(iris.data, columns=VARIABLES)
+df[SPECIES] = pd.Categorical.from_codes(iris.target, ["Setosa", "Versicolor", "Virginica"]).astype(str)
 
-# Normalize variables to similar scales
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+OBSERVATION = "Observation"
+VALUE = "Andrews curve value"
+T = "t (radians)"
 
-# Andrews curve transformation
-# f(t) = x1/sqrt(2) + x2*sin(t) + x3*cos(t) + x4*sin(2t) + x5*cos(2t) + ...
-n_points = 100
-t = np.linspace(-np.pi, np.pi, n_points)
+# Normalize variables to similar scales so no single variable dominates
+values = df[VARIABLES].to_numpy(dtype=float)
+scaled = (values - np.nanmean(values, axis=0)) / np.nanstd(values, axis=0)
 
-# Compute Andrews curves for each observation
-curves_data = []
-for obs_idx in range(len(X_scaled)):
-    x = X_scaled[obs_idx]
-    curve = np.zeros(n_points)
-    curve += x[0] / np.sqrt(2)
+# Andrews transformation: f(t) = x1/sqrt(2) + x2 sin(t) + x3 cos(t) + x4 sin(2t) + x5 cos(2t) + ...
+t = np.linspace(-np.pi, np.pi, N_POINTS)
+curves = np.tile(scaled[:, [0]] / np.sqrt(2), (1, N_POINTS))
+for i in range(1, scaled.shape[1]):
+    freq = (i + 1) // 2
+    basis = np.sin(freq * t) if i % 2 == 1 else np.cos(freq * t)
+    curves = curves + scaled[:, [i]] * basis
 
-    for i in range(1, len(x)):
-        freq = (i + 1) // 2
-        if i % 2 == 1:
-            curve += x[i] * np.sin(freq * t)
-        else:
-            curve += x[i] * np.cos(freq * t)
+curve_df = pd.DataFrame(
+    {
+        T: np.tile(t, len(df)),
+        VALUE: curves.ravel(),
+        OBSERVATION: np.repeat(np.arange(len(df)), N_POINTS),
+        SPECIES: np.repeat(df[SPECIES].to_numpy(), N_POINTS),
+    }
+)
+groups = list(dict.fromkeys(df[SPECIES]))
 
-    for pt_idx in range(n_points):
-        curves_data.append(
-            {"t": t[pt_idx], "value": curve[pt_idx], "observation": obs_idx, "species": species_names[y[obs_idx]]}
-        )
-
-df = pd.DataFrame(curves_data)
-
-# Create chart
+title = "andrews-curves · python · altair · anyplot.ai"
 chart = (
-    alt.Chart(df)
-    .mark_line(opacity=0.5, size=2)
+    alt.Chart(curve_df)
+    .mark_line(opacity=0.4, strokeWidth=1.2)
     .encode(
-        x=alt.X(
-            "t:Q",
-            title="t (radians)",
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelColor=INK_SOFT, titleColor=INK),
-        ),
-        y=alt.Y(
-            "value:Q",
-            title="Andrews Curve Value",
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelColor=INK_SOFT, titleColor=INK),
-        ),
+        x=alt.X(T.translate(ESCAPE), type="quantitative", title=T, scale=alt.Scale(domain=[-np.pi, np.pi], nice=False)),
+        y=alt.Y(VALUE.translate(ESCAPE), type="quantitative", title=VALUE),
         color=alt.Color(
-            "species:N",
-            title="Species",
-            scale=alt.Scale(domain=species_names, range=IMPRINT),
-            legend=alt.Legend(
-                titleFontSize=18,
-                labelFontSize=16,
-                titleColor=INK,
-                labelColor=INK_SOFT,
-                fillColor=ELEVATED_BG,
-                strokeColor=INK_SOFT,
-            ),
+            SPECIES.translate(ESCAPE),
+            type="nominal",
+            title=SPECIES,
+            sort=None,
+            scale=alt.Scale(domain=groups, range=IMPRINT_PALETTE),
+            legend=alt.Legend(symbolOpacity=1, symbolStrokeWidth=3),
         ),
-        detail="observation:N",
-        tooltip=["species:N", "observation:N"],
+        detail=alt.Detail(OBSERVATION, type="nominal"),
     )
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         background=PAGE_BG,
-        title=alt.Title("andrews-curves · altair · anyplot.ai", fontSize=28, color=INK),
+        title=alt.Title(title, fontSize=16),
     )
-    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10)
-    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=620, continuousHeight=320)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
+    )
     .configure_title(color=INK)
     .configure_legend(
-        titleFontSize=18,
-        labelFontSize=16,
-        titleColor=INK,
-        labelColor=INK_SOFT,
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+        padding=6,
     )
 )
 
 # Save as PNG and HTML
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) the PNG to the canonical 3200 x 1800 canvas
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair vl-convert produced {w}x{h}, exceeds target {TW}x{TH}. Shrink width/height.")
+if w < TW or h < TH:
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
