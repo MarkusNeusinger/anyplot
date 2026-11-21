@@ -1,0 +1,16 @@
+{
+  "before_dataset_text": "Sensor,Temperature,Humidity\nS1,14.9,74.8\nS2,15.1,78.0\nS1,14.1,55.9\nS2,18.2,61.0\nS1,13.4,70.2\nS2,16.8,64.5\nS1,17.5,58.1\nS2,12.9,80.3\n",
+  "before_message": "Make the daily mean temperature per sensor.",
+  "before_reply": "8 rows of readings from two sensors, S1 and S2, with Temperature and Humidity. The table has no time column, so I cannot group the readings by day: add the time of each reading as a column and paste the table again, and I can make the daily mean per sensor.",
+  "dataset_text": "Timestamp,Sensor,Temperature,Humidity\n2026-01-01 00:00,S1,14.9,74.8\n2026-01-01 00:13,S2,15.1,78.0\n2026-01-01 00:26,S1,14.1,55.9\n2026-01-01 12:39,S2,18.2,61.0\n2026-01-02 00:52,S1,13.4,70.2\n2026-01-02 09:05,S2,16.8,64.5\n2026-01-02 17:18,S1,17.5,58.1\n2026-01-03 01:31,S2,12.9,80.3\n",
+  "message": "Try again.",
+  "first_turn": true,
+  "expected_operations": [
+    {"op": "aggregate", "by": ["Timestamp", "Sensor"], "column": "Temperature", "how": "mean", "period": "day"}
+  ],
+  "also_accepted": [
+    [{"op": "aggregate", "by": ["Sensor", "Timestamp"], "column": "Temperature", "how": "mean", "period": "day"}]
+  ],
+  "locale": "en",
+  "tags": ["note", "replaced_table", "aggregate", "mean", "period", "day"]
+}

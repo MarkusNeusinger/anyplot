@@ -1,7 +1,7 @@
 """ anyplot.ai
 silhouette-basic: Silhouette Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-10
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-20
 """
 
 import os
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, Label, Span
 from bokeh.plotting import figure
@@ -23,88 +24,85 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito colors for clusters
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions, one per cluster in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - simulating silhouette analysis of customer segmentation (3 clusters)
-# Realistic scenario: clustering customers by purchase behavior
+# Constants
+SIL_MAX = 1.0  # silhouette coefficients never exceed 1
+CLUSTER_GAP = 15  # empty rows between two cluster blocks
+BAR_HEIGHT = 0.85  # slightly under one row, leaves a hairline gap between bars
+
+# Columns: set these to your table's column names
+SAMPLE = "Sample"  # role: samples
+CLUSTER = "Cluster"  # role: cluster_labels
+SILHOUETTE = "Silhouette coefficient"  # role: silhouette_values
+
+# Data: replace this block with your own table, for example df = pd.read_csv("silhouette.csv")
+# Simulated silhouette analysis of a customer segmentation (3 clusters)
 np.random.seed(42)
-
-n_clusters = 3
-cluster_sizes = [50, 55, 45]  # Different sized clusters
-
-# Generate realistic silhouette values for each cluster
-# Cluster 0: Well-separated cluster (high silhouette scores)
-cluster0_vals = np.clip(np.random.beta(8, 2, cluster_sizes[0]) * 0.6 + 0.35, 0.1, 0.95)
-# Cluster 1: Good cluster with some overlap (medium-high scores)
-cluster1_vals = np.clip(np.random.beta(5, 2, cluster_sizes[1]) * 0.5 + 0.25, 0.0, 0.85)
-# Cluster 2: Some ambiguous samples (includes negative values)
-cluster2_vals = np.clip(np.random.beta(4, 3, cluster_sizes[2]) * 0.8 - 0.1, -0.15, 0.75)
-
-# Combine all values
-silhouette_vals = np.concatenate([cluster0_vals, cluster1_vals, cluster2_vals])
-cluster_labels = np.concatenate(
-    [
-        np.zeros(cluster_sizes[0], dtype=int),
-        np.ones(cluster_sizes[1], dtype=int),
-        np.full(cluster_sizes[2], 2, dtype=int),
-    ]
+cluster_sizes = [50, 55, 45]
+# Cluster 0: well separated, Cluster 1: good with some overlap, Cluster 2: ambiguous with negatives
+sil0 = np.clip(np.random.beta(8, 2, cluster_sizes[0]) * 0.6 + 0.35, 0.1, 0.95)
+sil1 = np.clip(np.random.beta(5, 2, cluster_sizes[1]) * 0.5 + 0.25, 0.0, 0.85)
+sil2 = np.clip(np.random.beta(4, 3, cluster_sizes[2]) * 0.8 - 0.1, -0.15, 0.75)
+df = pd.DataFrame(
+    {
+        SAMPLE: np.arange(sum(cluster_sizes)),
+        CLUSTER: np.repeat(np.arange(len(cluster_sizes)), cluster_sizes),
+        SILHOUETTE: np.concatenate([sil0, sil1, sil2]),
+    }
 )
 
-# Calculate average silhouette score
-avg_silhouette = float(np.mean(silhouette_vals))
+# Plot: reads only df and the constants above
+avg_silhouette = float(df[SILHOUETTE].mean())
+x_lo = min(float(df[SILHOUETTE].min()), 0.0) - 0.15
+x_hi = SIL_MAX + 0.3
 
-# Prepare data for plotting - sorted silhouette values within each cluster
-y_lower = 15
-bar_data = {"x": [], "y": [], "width": [], "height": [], "color": []}
-cluster_info = []  # For labels
+bars = []
+cluster_info = []
+y_lower = CLUSTER_GAP
+for i, (cluster, rows) in enumerate(df.groupby(CLUSTER, sort=False)):
+    values = np.sort(rows[SILHOUETTE].to_numpy())
+    y = y_lower + np.arange(len(values)) + 0.5
+    bars.append(
+        pd.DataFrame(
+            {
+                "x": values / 2,
+                "y": y,
+                "width": np.abs(values),
+                "height": BAR_HEIGHT,
+                "color": IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+            }
+        )
+    )
+    cluster_info.append((y_lower + len(values) / 2, float(values.mean()), len(values), cluster, i))
+    y_lower += len(values) + CLUSTER_GAP
+bar_df = pd.concat(bars, ignore_index=True)
 
-for i in range(n_clusters):
-    # Get silhouette values for this cluster
-    cluster_mask = cluster_labels == i
-    cluster_silhouette_vals = silhouette_vals[cluster_mask]
-    cluster_silhouette_vals.sort()
-
-    cluster_size = len(cluster_silhouette_vals)
-    y_upper = y_lower + cluster_size
-
-    # Store center position for cluster label
-    cluster_center = (y_lower + y_upper) / 2
-    cluster_avg = float(np.mean(cluster_silhouette_vals))
-    cluster_info.append((cluster_center, cluster_avg, cluster_size, i))
-
-    # Add bars for each sample in cluster
-    for j, val in enumerate(cluster_silhouette_vals):
-        bar_data["x"].append(val / 2)  # Center of bar
-        bar_data["y"].append(y_lower + j + 0.5)  # Y position
-        bar_data["width"].append(abs(val))  # Width = silhouette value
-        bar_data["height"].append(0.85)  # Slightly less than 1 for gap
-        bar_data["color"].append(IMPRINT[i])
-
-    y_lower = y_upper + 15  # Gap between clusters
-
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="silhouette-basic · bokeh · anyplot.ai",
-    x_axis_label="Silhouette Coefficient",
+    width=3200,
+    height=1800,
+    title="silhouette-basic · python · bokeh · anyplot.ai",
+    x_axis_label=SILHOUETTE,
     y_axis_label="Cluster (samples sorted by silhouette score)",
-    x_range=(-0.3, 1.25),
+    x_range=(x_lo, x_hi),
     y_range=(0, y_lower + 5),
     tools="",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Style the figure - sized for 4800x2700 canvas
-p.title.text_font_size = "28pt"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+# Style
+p.title.text_font_size = "50pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_standoff = 25
 p.yaxis.axis_label_standoff = 25
 
-# Theme-adaptive colors
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
@@ -113,82 +111,66 @@ p.title.text_color = INK
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_color = INK_SOFT
-p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
-p.yaxis.major_tick_line_color = INK_SOFT
 
-# Create data source for bars
-source = ColumnDataSource(data=bar_data)
-
-# Draw horizontal bars
+# One horizontal bar per sample
+source = ColumnDataSource(bar_df)
 p.rect(x="x", y="y", width="width", height="height", color="color", source=source, line_color=None, alpha=0.85)
 
-# Add vertical line for average silhouette score
-avg_line = Span(location=avg_silhouette, dimension="height", line_color=INK_SOFT, line_width=3, line_dash="dashed")
-p.add_layout(avg_line)
-
-# Add average silhouette score label at top
-avg_label = Label(
-    x=avg_silhouette + 0.03,
-    y=y_lower - 5,
-    text=f"Average: {avg_silhouette:.3f}",
-    text_font_size="20pt",
-    text_color=INK_SOFT,
-    text_font_style="bold",
-)
-p.add_layout(avg_label)
-
-# Add cluster labels with their average silhouette scores
-for center_y, cluster_avg, size, cluster_idx in cluster_info:
-    # Position label to the left side, outside the bars
-    cluster_label = Label(
-        x=-0.22,
-        y=center_y,
-        text=f"Cluster {cluster_idx}",
-        text_font_size="18pt",
-        text_color=IMPRINT[cluster_idx],
+# Vertical line at the average silhouette score, and the zero baseline
+p.add_layout(Span(location=avg_silhouette, dimension="height", line_color=INK_SOFT, line_width=5, line_dash="dashed"))
+p.add_layout(Span(location=0, dimension="height", line_color=INK_SOFT, line_width=3, line_alpha=0.5))
+p.add_layout(
+    Label(
+        x=avg_silhouette + 0.02,
+        y=y_lower - 5,
+        text=f"Average: {avg_silhouette:.3f}",
+        text_font_size="30pt",
+        text_color=INK_SOFT,
         text_font_style="bold",
-        text_align="left",
-        text_baseline="middle",
+        text_baseline="top",
     )
-    p.add_layout(cluster_label)
+)
 
-    # Add cluster stats on the right side
-    stats_label = Label(
-        x=1.01,
-        y=center_y,
-        text=f"n={size}, avg={cluster_avg:.2f}",
-        text_font_size="16pt",
-        text_color=IMPRINT[cluster_idx],
-        text_font_style="normal",
-        text_align="left",
-        text_baseline="middle",
+# Cluster names on the left, cluster statistics on the right
+for center_y, cluster_avg, size, cluster, i in cluster_info:
+    p.add_layout(
+        Label(
+            x=x_lo + 0.03,
+            y=center_y,
+            text=f"Cluster {cluster}",
+            text_font_size="30pt",
+            text_color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+            text_font_style="bold",
+            text_baseline="middle",
+        )
     )
-    p.add_layout(stats_label)
+    p.add_layout(
+        Label(
+            x=SIL_MAX + 0.02,
+            y=center_y,
+            text=f"n={size}, avg={cluster_avg:.2f}",
+            text_font_size="28pt",
+            text_color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+            text_baseline="middle",
+        )
+    )
 
-# Style grid
+# Grid: vertical only; y positions are sample ranks, not values
 p.xgrid.grid_line_color = RULE
-p.xgrid.grid_line_alpha = 0.10
 p.xgrid.grid_line_dash = [6, 4]
-p.ygrid.grid_line_alpha = 0.0  # No horizontal grid
-
-# Remove y-axis ticks (sample indices are not meaningful)
+p.ygrid.grid_line_alpha = 0.0
 p.yaxis.major_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 p.yaxis.major_label_text_font_size = "0pt"
 
-# Add vertical line at x=0 for reference
-zero_line = Span(location=0, dimension="height", line_color=INK_SOFT, line_width=2, line_alpha=0.5)
-p.add_layout(zero_line)
-
-# Save as HTML first
+# Save as HTML, then screenshot with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -202,6 +184,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()

@@ -2,48 +2,49 @@ library: plotnine
 language: python
 specification_id: scatter-marginal
 created: '2025-12-26T15:03:57Z'
-updated: '2026-05-09T05:41:41Z'
-generated_by: claude-haiku
-workflow_run: 25592916886
+updated: '2026-11-21T00:02:07Z'
+generated_by: claude-sonnet
+workflow_run: 44840173507
 issue: 2005
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 79
 review:
   strengths:
-  - Perfect theme adaptation with both renders visually correct and zero legibility
-    issues
-  - Clean intentional L-shaped composite layout demonstrating design thinking
-  - Proper Okabe-Ito palette usage with excellent color hierarchy
-  - Well-structured reproducible code with deterministic seed
-  - Complete spec compliance with all required features perfectly implemented
-  - Excellent axis alignment between scatter plot and marginal distributions
+  - Shared axis limits derived from df keep both marginals aligned with the scatter,
+    so histogram peaks sit above and beside the point clusters
+  - coord_flip draws the right marginal sideways, growing away from the scatter
+  - Composition with | and / plus & theme(figure_size=(16, 9)) yields the exact 3200x1800
+    canvas
+  - Theme tokens threaded through every element; both renders readable
   weaknesses:
-  - Design could show more sophistication or custom refinement beyond standard plotnine
-    defaults
-  - Code uses straightforward library patterns without pushing plotnine's more distinctive
-    features
+  - 'VQ-05, SC-02 (both): the top marginal takes about half the figure height and
+    the right marginal about half the width, so the scatter is no larger than the
+    marginals and the gaps between panels are wide (C1, C3) → scatter at roughly 75-80
+    % of width and height, marginals about 20 %. Likely cause: the composition uses
+    equal default widths/heights; set plot_layout(widths=[4, 1], heights=[1, 4]) or
+    equivalent.'
+  - 'Suggestion: a quieter marginal tone (the scatter green at lower alpha) would
+    keep the scatter the main panel.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title "scatter-marginal · plotnine · anyplot.ai" in bold dark text (24pt), axis labels "Study Hours per Week" and "Exam Score (%)" in dark (20pt), tick labels in softer gray (#4A4A44, 16pt) - all clearly readable against light surface
-      Data: Main scatter plot with 200 teal-green points (#009E73) showing positive correlation with alpha=0.6, top histogram showing study hours distribution in orange bars (#D55E00), right histogram showing exam score distribution in orange bars; subtle horizontal grid lines (alpha=0.10) provide reference without competition
-      Grid: Subtle horizontal grid lines only on scatter plot (alpha=0.10, light gray)
-      Legibility verdict: PASS - All text and data elements clearly readable
+      Background: warm off-white #FAF8F1
+      Chrome: title 'scatter-marginal · python · plotnine · anyplot.ai' bold dark, axis titles 'Study Hours per Week' / 'Exam Score (%)' bold dark, ticks soft gray; L-shaped axis lines, faint grid in the scatter only
+      Data: 200 translucent #009E73 points, positive correlation, outlier near (9, 33); top 15-bin histogram and sideways right histogram in purple #C475FD with thin outlines, aligned to the scatter axes; marginals are as large as the scatter; empty top-right corner
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title and axis labels now rendered in light colors (#F0EFE8) while maintaining same 24pt/20pt sizing, tick labels in appropriate soft gray for dark (#B8B7B0, 16pt) - all clearly readable against dark surface; no dark-on-dark text issues
-      Data: Scatter points remain identical teal-green (#009E73), histogram bars remain identical orange (#D55E00) - confirming only chrome adapted while data colors stayed constant; same alpha transparency patterns maintained
-      Grid: Identical subtle horizontal grid lines maintained with appropriate opacity for dark theme
-      Legibility verdict: PASS - All text and data elements clearly readable with perfect theme adaptation
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles light, ticks light gray; no dark-on-dark text
+      Data: identical green points and purple histograms; bar outlines lighter gray
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -51,70 +52,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized and colored for both themes, no readability
-          issues
+        comment: Title 24 pt, axis titles 20 pt, ticks 16 pt; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: L-shaped layout prevents all overlaps, proper spacing between elements
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 200 scatter points visible with density-appropriate alpha, histograms
-          clearly distinguishable
+        comment: 200 points at size 3.5, alpha 0.6; histogram bars outlined and visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, adequate contrast
+        comment: Green vs purple, CVD-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Well-proportioned 16:9 landscape, nothing cropped, balanced composition
+        passed: false
+        comment: 3200x1800 canvas correct, but the marginals take half the height
+          and half the width (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Proper format, descriptive labels with units
+        comment: Study Hours per Week, Exam Score (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds correct, both renders theme-correct'
+        comment: 'Scatter #009E73, marginals Imprint #2 #C475FD, backgrounds #FAF8F1
+          / #1A1A17'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Intentional L-shaped layout with custom sizing, clear hierarchy,
-          straightforward execution
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Minimal spines, subtle grid, generous whitespace
+        passed: false
+        comment: Spine and grid rules met; marginal chrome stripped, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy, correlation visually apparent
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -122,25 +123,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with marginals
+        comment: Scatter with top and right histograms
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Main scatter, top/right histograms, aligned axes
+        passed: false
+        comment: 'C1 missed: scatter is not the largest panel; C3 partly missed: full-size
+          purple marginals compete with the scatter (defect line). C2, C4 met: axes
+          aligned, translucent points'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly mapped, full data range visible
+        comment: Marks at their values; shared limits cover all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Proper title format, no legend needed
+        comment: Title in mandated format; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -150,19 +153,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete scatter-marginal visualization
+        comment: Correlation, skew and outliers visible in scatter and marginals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Study hours vs exam scores, realistic values and correlation
+        comment: Study hours vs exam score, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible axis ranges and data density
+        comment: 5-45 hours, 30-100 %; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -172,55 +175,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct code, no unnecessary abstractions
+        comment: Flat script, column constants, Data/Plot blocks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, plotnine composition used idiomatically
+        comment: Appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png, current composition API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Grammar of graphics syntax, proper theme composition, figure sizing
-          per panel
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses composition operators and plot_spacer, straightforward patterns
+        passed: false
+        comment: Grammar of graphics, coord_flip for the sideways marginal
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: plotnine.composition operators | and / with & theme(figure_size)
+          broadcast across all panels and plot_spacer
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-20T23:58:46Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - alpha-blending
+  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  - explicit-figure
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - minimal-chrome

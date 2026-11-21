@@ -107,6 +107,19 @@ too (`score_from_version`): some `prepare_data` or
 `query_data` call of the turn names it and no `prepare_data` call names another, or the case is a miss. The report
 lists every call's `from_version` under `from_versions`, scored or not.
 
+A case may come after an earlier paste that its own replaced (`before_dataset_text`, since 2026-11-20): the harness
+pastes that table first and writes its summary turn into the session as the route and the root leave one, without a
+model call (`_write_earlier_turn`): the user's message (`before_message`, typed with that paste, or else the page's
+summary action as the route stores it, `summary_action_line`), the root's `get_dataset_profile` call with the tool's
+own answer for that table, and the root's reply (`before_reply`). The paste then counts as summarized, and the case
+pastes `dataset_text` and runs its turn as any case does; the turn's calls, replies and verdicts are read from its own
+events only. `stale_values` are texts the turn's replies must not hold as a claim, such as the earlier table's values
+as a reply would write them, and `current_values` texts that name the table in force, such as its own dates, all
+compared without regard to case: a reply that holds a stale text and no current one is the reply miss `stale`, whatever
+its shape, while one that holds both corrects the earlier summary. The report counts them (`stale_named`,
+`current_named`), never the texts. A case with `scored_by_reply` is scored by its reply alone: any outcome of the data
+counts, and it matches when the turn wrote a reply that is no `stale` miss (`score_reply`).
+
 A case with `plot_request` asks for a change of the plot, alone or beside its data operations: an order of the
 bars, a total in the title. Its turn must send that wish to the plot, a `keep_plot_request` or a `plot_pipeline`
 call that carries a request, a text or a decision, and the plot must have it: the answer kept it for the next plot
@@ -175,7 +188,8 @@ from collections.abc import Collection, MutableMapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Literal, get_args
+from types import SimpleNamespace
+from typing import TYPE_CHECKING, Annotated, Any, Literal, cast, get_args
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
@@ -272,6 +286,10 @@ CONDITION_OPERATIONS = frozenset({"drop_rows", "blank", "keep_rows"})
 """The operations whose `where` is one list of conditions that must all hold."""
 MAX_REPLY_NAMES = 6
 """The texts one case may ask its reply to contain (`PrepCase.reply_names`)."""
+MAX_STALE_VALUES = 8
+"""The texts one case may forbid its reply (`PrepCase.stale_values`)."""
+PROFILE_TOOL = "get_dataset_profile"
+"""The call the root makes for a paste's summary, which a case's earlier turn holds (`_write_earlier_turn`)."""
 GUARD_FIELDS = ("tool", "outcome", "roles", "role", "kinds", "kind")
 """The fields of an `emptied_role` log line the report keeps (`CaseResult.guard`): the line without its envelope."""
 MAX_OTHER_READINGS = 1
@@ -414,6 +432,28 @@ class PrepCase(BaseModel):
     """Entries of the plot memory before the message (`memory.MemoryEntry` each), stored in the session as a plot's
     `remember` would have stored them, so the session block lists them while no message that set them is in the
     request, as after the context window dropped it."""
+    before_dataset_text: str | None = Field(default=None, min_length=1, max_length=MAX_DATASET_CHARS)
+    """A table pasted and summarized before the case's own, which `dataset_text` replaces (since 2026-11-20): the
+    harness writes its summary turn into the session without a model call (`_write_earlier_turn`)."""
+    before_message: str | None = Field(default=None, min_length=1, max_length=MAX_MESSAGE_CHARS)
+    """The message the user typed with the earlier paste, which its summary turn answered; None for the page's summary
+    action, the turn after a paste without a note."""
+    before_reply: str | None = Field(default=None, min_length=1, max_length=MAX_MESSAGE_CHARS)
+    """The root's reply on the earlier paste's summary turn: the discussion the case's turn keeps, such as what did not
+    fit and what the root offered."""
+    stale_values: list[Annotated[str, Field(min_length=1)]] = Field(default_factory=list, max_length=MAX_STALE_VALUES)
+    """Texts the turn's replies must not hold as a claim, compared without regard to case, such as the values of a
+    table a paste replaced as a reply would write them: a reply that holds one and none of `current_values` is the
+    reply miss `stale` (`measure_reply`)."""
+    current_values: list[Annotated[str, Field(min_length=1)]] = Field(default_factory=list, max_length=MAX_STALE_VALUES)
+    """Texts that name the table in force, as a reply writes them, such as its own dates: a reply that holds one beside
+    a stale value names the replaced table to correct itself ("not the 6 rows from November I described"), which is
+    no stale miss. Only with `stale_values`."""
+    scored_by_reply: bool = False
+    """The case is scored by its reply alone (since 2026-11-20): any outcome of the data counts, unchanged or
+    changed and a failed data call too, and the case matches when the turn wrote a reply that is no `stale` miss
+    (`score_reply`). For a request with several fair outcomes whose one wrong answer is a false claim, such as a note
+    on a replaced table whose column no date form reads. It needs `stale_values` and expects no operations."""
 
     @model_validator(mode="after")
     def _one_turn(self) -> PrepCase:
@@ -434,6 +474,18 @@ class PrepCase(BaseModel):
         if self.row_order == "any" and self.plot_request:
             # The order of the rows is how such a case sees a table that was sorted for the plot's order.
             raise ValueError("a plot_request case compares the rows in their order")
+        if (self.before_dataset_text is None) != (self.before_reply is None):
+            raise ValueError("an earlier paste comes with the root's reply to it, and a reply with its paste")
+        if self.before_message is not None and self.before_dataset_text is None:
+            raise ValueError("an earlier message comes with the earlier paste it was typed with")
+        if self.before_dataset_text is not None and self.dataset_text is None:
+            raise ValueError("an earlier paste is one the case's own dataset replaces")
+        if self.current_values and not self.stale_values:
+            raise ValueError("current_values tell a correction from a stale claim, so they need stale_values")
+        if self.scored_by_reply and (
+            not self.stale_values or self.expected_operations or self.refuse or self.strict_operations
+        ):
+            raise ValueError("a case scored by its reply names stale_values and expects no operations")
         return self
 
     @property
@@ -1013,9 +1065,15 @@ class CaseResult:
     closing_invitation: bool = False
     """The last sentence of the last reply text, or its last clause, asks the user to choose (`INVITATION`)."""
     reply_miss: str | None = None
-    """`unnamed` (the reply leaves out a text the case asks for, `PrepCase.reply_names`), `closing_question` or
+    """`stale` (the reply holds a text the case forbids it, `PrepCase.stale_values`, and none that names the table in
+    force, `PrepCase.current_values`), `unnamed` (the reply leaves out a
+    text the case asks for, `PrepCase.reply_names`), `closing_question` or
     `closing_invitation` (one the turn was not blocked for, see `measure_reply`), `long` (over `MAX_REPLY_WORDS`),
     or `no_row_count` (a summary turn whose reply names no row count of the data, `names_count`)."""
+    stale_named: int = 0
+    """How many of the case's `stale_values` the turn's replies hold: a count, never a text."""
+    current_named: int = 0
+    """How many of the case's `current_values` the turn's replies hold: a count, never a text."""
     roles_open: bool = False
     """The turn left a required role of the spec without a column, so the plot cannot be drawn until the user binds
     one or brings other data: the reply may close with a question about it."""
@@ -1108,6 +1166,25 @@ def _book(result: CaseResult, lines: list[dict[str, Any]], settings: AgentSettin
             result.cost_usd += judge_cost(settings.judge_model, settings.location, judge_in, judge_out)
 
 
+def summary_action_line(language: str, stored: StoredDataset) -> str:
+    """The user turn the route stores for the page's summary action on a paste (`agents/main.py`, the `/messages`
+    route): the action's fixed line, the line naming the session language when it is a known one other than English,
+    and the notes pasted with the table and the dropped file's name, each under its preamble, from the route's own
+    constants and blocks."""
+    from agents.anyplot.language import english_name
+    from agents.anyplot.policy import file_name_block, user_notes_block
+    from agents.main import ACTION_LANGUAGE_LINE, ACTION_MESSAGES
+
+    text = ACTION_MESSAGES["summarize_data"]
+    name = english_name(language)
+    if name is not None and name != "English":
+        text = f"{text} {ACTION_LANGUAGE_LINE.format(name=name)}"
+    blocks = [user_notes_block(stored.context_lines)] if stored.context_lines else []
+    if stored.file_name:
+        blocks.append(file_name_block(stored.file_name))
+    return "\n\n".join([text, *blocks])
+
+
 @dataclass
 class FigureLog:
     """The number-provenance checks of a run by request id, as the plugin hands them to an eval
@@ -1163,17 +1240,28 @@ class CaseRunner:
                 result.cause = f"session: {_detail(opened)}"
                 return result
             sid = opened.json()["session_id"]
+
+            async def post_dataset(text: str, step: str, what: str) -> httpx.Response | None:
+                """The paste's answer, or None when the table was not stored, with the cause written."""
+                stored = await self.client.post(
+                    f"/v1/sessions/{sid}/dataset", headers=headers(step), json={"text": text}
+                )
+                _book(result, self.collector.take(f"{tag}-{step}"), self.settings)
+                if stored.status_code == 200:
+                    return stored
+                if stored.status_code == 403:  # the judge refused a synthetic table: a miss, not an outage
+                    result.operations, result.match = [], False
+                result.cause = f"{what}: {_detail(stored)}"
+                return None
+
+            if case.before_dataset_text is not None:
+                if await post_dataset(case.before_dataset_text, "b", "earlier dataset") is None:
+                    return result
+                await self._write_earlier_turn(user, sid, case)
             pasted_rows: int | None = None
             if case.dataset_text is not None:
-                stored = await self.client.post(
-                    f"/v1/sessions/{sid}/dataset", headers=headers("d"), json={"text": case.dataset_text}
-                )
-                _book(result, self.collector.take(f"{tag}-d"), self.settings)
-                if stored.status_code != 200:
-                    if stored.status_code == 403:  # the judge refused a synthetic table: a miss, not an outage
-                        result.operations, result.match, result.cause = [], False, f"dataset: {_detail(stored)}"
-                    else:
-                        result.cause = f"dataset: {_detail(stored)}"
+                stored = await post_dataset(case.dataset_text, "d", "dataset")
+                if stored is None:
                     return result
                 pasted_rows = int(stored.json()["profile"]["rows"])
                 if case.message is not None and not case.first_turn:
@@ -1190,6 +1278,8 @@ class CaseRunner:
             owed = [line.operations() for line in listed if line.certain] if summary_turn else []
             result.offered = any(type(line).__name__ == "DateNumbers" for line in listed)
             message = {"action": case.action} if case.action is not None else {"text": case.message}
+            # The turn's own events start here: an earlier turn the case wrote is no part of what the turn did.
+            since = len((await self.runtime.session(user, sid)).events)
             turn = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers("m"), json=message)
             _book(result, self.collector.take(f"{tag}-m"), self.settings)
             self._figures(result, case.id, f"{tag}-m")
@@ -1209,7 +1299,7 @@ class CaseRunner:
                     result.refusal = str(data.get("code"))
                 if name == "done" and isinstance(data.get("dataset"), dict):
                     rows.add(int(data["dataset"]["profile"]["rows"]))  # the version this turn made
-            texts = await self._read_calls(result, user, sid, decimal)
+            texts = await self._read_calls(result, user, sid, decimal, since)
             found, language = await self._current_table(user, sid)
             expected, unscorable = self._expected_table(case, start, language)
             others = [
@@ -1232,7 +1322,10 @@ class CaseRunner:
                 blocked=bool(BLOCKED_TAGS.intersection(case.tags)),
                 rows=rows if summary_turn else None,
                 names=case.reply_names,
+                stale=case.stale_values,
+                current=case.current_values,
             )
+            score_reply(result, case.scored_by_reply)
             score_figures(result, case.figures)
             if result.reply_error is not None:
                 result.match = False
@@ -1245,7 +1338,7 @@ class CaseRunner:
                     logging.getLogger(__name__).warning(
                         "deleting the session of %s failed: %s", case.id, type(exc).__name__
                     )
-            for step in ("s", "d", "m", "x"):
+            for step in ("s", "b", "d", "m", "x"):
                 self.collector.take(f"{tag}-{step}")
                 if self.figures is not None:
                     self.figures.take(f"{tag}-{step}")
@@ -1277,6 +1370,46 @@ class CaseRunner:
 
         session = await self.runtime.session(user, sid)
         await self.runtime.write_state(session, {SUMMARY_PENDING: None})
+
+    async def _write_earlier_turn(self, user: str, sid: str, case: PrepCase) -> None:
+        """The summary turn of the case's earlier paste, written into the session as the route and the root leave one,
+        without a model call; then the paste counts as summarized.
+
+        Four events of one invocation, as a real turn stores them: the user's message (`before_message`, or the page's
+        summary action as the route stores it, `summary_action_line`), the root's `get_dataset_profile` call, the
+        tool's own answer for the earlier table, and the root's reply (`before_reply`). ADK's node path, its bookkeeping
+        of which node wrote an event, stays empty, which the root's request reads at any path."""
+        import uuid
+
+        from google.adk.events.event import Event
+        from google.genai import types
+
+        from agents.anyplot.services import get_services
+        from agents.anyplot.session_state import read_session
+        from agents.anyplot.tools.session import get_dataset_profile
+
+        session = await self.runtime.session(user, sid)
+        view = read_session(session.state)
+        stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+        if view is None or stored is None or case.before_reply is None:
+            raise RuntimeError("the case's session has no earlier paste to summarize")
+        invocation = f"e-{uuid.uuid4()}"
+        call_id = f"adk-{uuid.uuid4()}"
+        tool_context = SimpleNamespace(state=session.state, session=SimpleNamespace(id=sid), invocation_id=invocation)
+        profile = await get_dataset_profile(cast(Any, tool_context))
+        asked = case.before_message if case.before_message is not None else summary_action_line(view.language, stored)
+        call = types.FunctionCall(id=call_id, name=PROFILE_TOOL, args={})
+        answer = types.FunctionResponse(id=call_id, name=PROFILE_TOOL, response=profile)
+        contents = [
+            ("user", types.Content(role="user", parts=[types.Part(text=asked)])),
+            (ROOT_AUTHOR, types.Content(role="model", parts=[types.Part(function_call=call)])),
+            (ROOT_AUTHOR, types.Content(role="user", parts=[types.Part(function_response=answer)])),
+            (ROOT_AUTHOR, types.Content(role="model", parts=[types.Part(text=case.before_reply)])),
+        ]
+        for author, content in contents:
+            event = Event(invocation_id=invocation, author=author, content=content)
+            await self.runtime.session_service.append_event(session=session, event=event)
+        await self._mark_summarized(user, sid)
 
     async def _make_versions(self, user: str, sid: str, before: Sequence[Sequence[dict[str, Any]]]) -> None:
         """The case's earlier changes, each stored as the next data version as `prepare_data` stores one, with its
@@ -1382,8 +1515,9 @@ class CaseRunner:
         )
         return list(found)
 
-    async def _read_calls(self, result: CaseResult, user: str, sid: str, decimal: str) -> list[str]:
-        """The tool calls of the turn from the session's events; the data calls' operations, canonical.
+    async def _read_calls(self, result: CaseResult, user: str, sid: str, decimal: str, since: int = 0) -> list[str]:
+        """The tool calls of the turn from the session's events from `since` on, the turn's own; the data calls'
+        operations, canonical.
 
         A `run_data_code` call is read from its answer, not its arguments: the code varies
         from run to run, so it counts as the size of the table it stored. Returns the root's reply
@@ -1408,7 +1542,7 @@ class CaseRunner:
         result.server_operations = len(operations)
         texts: list[str] = []
         asked_ops: dict[str, list[str]] = {}  # each `query_data` call's operations by name, by the call's id
-        for event in session.events:
+        for event in session.events[since:]:
             if event.author == ROOT_AUTHOR and event.content is not None:
                 replies = [part.text for part in event.content.parts or [] if part.text and not part.thought]
                 result.instruction_talk |= any(INSTRUCTION_TALK.search(text) for text in replies)
@@ -1494,6 +1628,8 @@ def score_turn(
     result.ops_exact = any(same_operations(result.found, operations) for operations, _, _ in readings)
     if case.refuse:
         result.match = result.stored_calls == 0
+    elif case.scored_by_reply:
+        result.match = True  # any outcome of the data counts; the reply decides (`score_reply`)
     elif case.scored_by_table:
         misses = [
             missing
@@ -1572,6 +1708,13 @@ def score_question(result: CaseResult, asks: Literal["view", "table"] | None) ->
         result.match = False
 
 
+def score_reply(result: CaseResult, by_reply: bool) -> None:
+    """For a case scored by its reply (`PrepCase.scored_by_reply`): a miss when the turn wrote no reply to judge or its
+    reply is a `stale` miss (`measure_reply`). Its other reply misses count in the reply gate, as every case's do."""
+    if by_reply and (result.reply_words is None or result.reply_miss == "stale"):
+        result.match = False
+
+
 def score_figures(result: CaseResult, expected: FiguresExpectation | None) -> None:
     """Whether the number-provenance verdicts of the turn's replies (`result.figure_verdicts`) are what the case asks
     (`FIGURES_EXPECTATIONS`); a miss otherwise. A case without the expectation, or one that only records, is not
@@ -1632,6 +1775,8 @@ def measure_reply(
     blocked: bool,
     rows: Collection[int] | None = None,
     names: Sequence[str] = (),
+    stale: Sequence[str] = (),
+    current: Sequence[str] = (),
 ) -> None:
     """The reply's shape: its words and questions, whether it closes with a question, and its reply miss.
 
@@ -1644,7 +1789,10 @@ def measure_reply(
     summary may name: the paste's, and the last version's when the turn made one; a reply that names neither has
     no summary (`no_row_count`). `names` are the texts the case asks the reply to contain (`PrepCase.reply_names`):
     a reply that leaves one out is `unnamed`, whatever its shape, since what it left out is what the user had to
-    hear.
+    hear. `stale` are the texts the reply must not hold as a claim (`PrepCase.stale_values`) and `current` the ones
+    that name the data in force (`PrepCase.current_values`), all compared without regard to case: a reply that holds
+    a stale text and no current one is `stale` before any other miss, since it tells the user something false about
+    the data; one that holds both names the replaced data beside the data in force, as a correction does.
     """
     from agents.anyplot.telemetry import ends_with_question
 
@@ -1655,8 +1803,12 @@ def measure_reply(
     result.reply_questions = len(QUESTION.findall(reply))
     result.closing_question = ends_with_question(texts[-1])
     result.closing_invitation = closes_with_invitation(texts[-1])
+    result.stale_named = sum(1 for value in stale if value.casefold() in reply.casefold())
+    result.current_named = sum(1 for value in current if value.casefold() in reply.casefold())
     waiting = blocked or result.failed_calls or (result.roles_open and not result.offered)
-    if any(name not in reply for name in names):
+    if result.stale_named and not result.current_named:
+        result.reply_miss = "stale"
+    elif any(name not in reply for name in names):
         result.reply_miss = "unnamed"
     elif result.closing_question and not waiting:
         result.reply_miss = "closing_question"
@@ -2107,8 +2259,8 @@ def stamp(settings: AgentSettings, cases: Sequence[PrepCase]) -> dict[str, Any]:
 
 def check_cases(cases: Sequence[PrepCase]) -> None:
     """Every expected operation list passes the `Operation` and `Generate` models, every name in `question_ops` is an
-    operation a question takes, a case's earlier changes apply to its dataset one after the other, and a case scored
-    by its table gets one: its expected operations apply to the
+    operation a question takes, a case's earlier paste parses, its earlier changes apply to its dataset one after the
+    other, and a case scored by its table gets one: its expected operations apply to the
     version they start from (`expected_result`) and change its table as the scoring compares it (`table_difference`,
     the case's `row_order`), since a table they leave as it is cannot tell them from no data call (such a case is
     `strict_operations`). Raises `SetupError` otherwise."""
@@ -2142,6 +2294,11 @@ def check_cases(cases: Sequence[PrepCase]) -> None:
             versions = [parse_dataset(case.dataset_text)] if case.dataset_text is not None else []
         except ParseError as exc:
             raise SetupError(f"case {case.id}: dataset_text does not parse: {exc}") from exc
+        if case.before_dataset_text is not None:
+            try:
+                parse_dataset(case.before_dataset_text)
+            except ParseError as exc:
+                raise SetupError(f"case {case.id}: before_dataset_text does not parse: {exc}") from exc
         for place, operations in enumerate(case.before_operations):
             try:
                 args = PrepareArgs.model_validate({"operations": operations})
