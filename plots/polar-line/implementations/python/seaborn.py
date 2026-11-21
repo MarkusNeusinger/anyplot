@@ -1,13 +1,14 @@
 """ anyplot.ai
 polar-line: Polar Line Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-12
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-21
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -18,9 +19,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Configure seaborn theme with theme-adaptive colors
 sns.set_theme(
     style="ticks",
     rc={
@@ -32,72 +33,85 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Data - Wind speeds by compass direction (8 directions, two wind patterns)
-np.random.seed(42)
-angles = np.linspace(0, 2 * np.pi, 8, endpoint=False)
+# Columns: set these to your table's column names
+AZIMUTH = "Bearing (degrees)"  # role: theta
+GAINS = ["3-element Yagi", "Cardioid"]  # role: radius
 
-# Pattern 1: Prevailing winds (stronger from one direction)
-prevailing = 12 + 6 * np.sin(angles) + np.random.randn(8) * 0.3
+# Data: replace this block with your own table, for example df = pd.read_csv("patterns.csv")
+# Two horizontal antenna gain patterns (linear power ratio) measured every 5 degrees of bearing
+bearing = np.arange(0, 360, 5)
 
-# Pattern 2: Secondary wind pattern (different characteristic)
-secondary = 8 + 4 * np.sin(angles + np.pi / 2) + np.random.randn(8) * 0.3
 
-# Close the loop for continuous lines
-angles_closed = np.append(angles, angles[0])
-prevailing_closed = np.append(prevailing, prevailing[0])
-secondary_closed = np.append(secondary, secondary[0])
+def _offset(centre):
+    """Signed angular distance in degrees from `centre`, wrapped to [-180, 180)."""
+    return (bearing - centre + 180) % 360 - 180
 
-# Create polar plot (square format for circular plot)
-fig, ax = plt.subplots(figsize=(12, 12), subplot_kw={"projection": "polar"}, facecolor=PAGE_BG)
+
+# Directional Yagi: narrow main lobe at 60 degrees, small back lobe, weak side lobes
+yagi = (
+    0.5
+    + 9.5 * np.exp(-((_offset(60) / 22) ** 2))
+    + 0.9 * np.exp(-((_offset(240) / 18) ** 2))
+    + 0.6 * np.abs(np.cos(np.deg2rad(3 * (bearing - 60)))) * np.exp(-((_offset(60) / 90) ** 2))
+)
+# Cardioid: broad lobe at 210 degrees with a deep null behind
+cardioid = 0.3 + 5.2 * ((1 + np.cos(np.deg2rad(bearing - 210))) / 2) ** 1.5
+
+df = pd.DataFrame({AZIMUTH: bearing, GAINS[0]: yagi, GAINS[1]: cardioid})
+
+# Plot: reads only df and the constants above
+THETA = "theta_rad"
+
+# Close each loop by repeating the first row at bearing + 360 degrees
+wrap = df.head(1).copy()
+wrap[AZIMUTH] = wrap[AZIMUTH] + 360
+closed = pd.concat([df, wrap], ignore_index=True)
+closed[THETA] = np.deg2rad(closed[AZIMUTH])
+
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, subplot_kw={"projection": "polar"}, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
+ax.set_theta_zero_location("N")
+ax.set_theta_direction(-1)
 
-# Plot lines
-ax.plot(
-    angles_closed,
-    prevailing_closed,
-    linewidth=3.5,
-    color=IMPRINT[0],
-    label="Prevailing Winds",
-    marker="o",
-    markersize=12,
-    alpha=0.9,
+for i, series in enumerate(GAINS):
+    sns.lineplot(
+        data=closed, x=THETA, y=series, color=IMPRINT_PALETTE[i], label=series, sort=False, linewidth=2.2, ax=ax
+    )
+
+# Style
+top = np.nanmax(df[GAINS].to_numpy())
+ax.set_ylim(0, top * 1.05)
+ax.set_xticks(np.deg2rad(np.arange(0, 360, 45)))
+ax.set_xticklabels([f"{d}°" for d in range(0, 360, 45)], fontsize=10, color=INK_SOFT)
+ax.set_rlabel_position(105)
+ax.tick_params(axis="y", labelsize=8, labelcolor=INK_SOFT)
+ax.set_xlabel("")
+ax.set_ylabel("")
+ax.text(
+    1.09,
+    -0.09,
+    "Radius: antenna gain (linear power ratio)",
+    transform=ax.transAxes,
+    ha="right",
+    va="top",
+    fontsize=10,
+    color=INK_SOFT,
 )
-ax.plot(
-    angles_closed,
-    secondary_closed,
-    linewidth=3.5,
-    color=IMPRINT[1],
-    label="Secondary Pattern",
-    marker="s",
-    markersize=10,
-    alpha=0.9,
-)
-
-# Configure theta axis (compass directions)
-directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
-ax.set_xticks(angles)
-ax.set_xticklabels(directions, fontsize=18, color=INK_SOFT)
-
-# Configure radial axis (wind speed in m/s)
-ax.set_ylim(0, 20)
-ax.set_yticks([5, 10, 15, 20])
-ax.set_yticklabels(["5", "10", "15", "20"], fontsize=16, color=INK_SOFT)
-
-# Title and legend
+ax.grid(True, linewidth=0.8)
+ax.spines["polar"].set_color(INK_SOFT)
 ax.set_title(
-    "Wind Speed by Direction · polar-line · seaborn · anyplot.ai", fontsize=24, pad=30, fontweight="medium", color=INK
+    "Antenna Gain by Bearing · polar-line · python · seaborn · anyplot.ai",
+    fontsize=12,
+    fontweight="medium",
+    color=INK,
+    pad=22,
 )
-
-ax.legend(loc="upper right", bbox_to_anchor=(1.15, 1.05), fontsize=18, frameon=True)
-
-# Grid styling
-ax.grid(True, alpha=0.15, linestyle="-", linewidth=0.8)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+ax.legend(loc="lower left", bbox_to_anchor=(-0.09, -0.12), fontsize=8, frameon=True)
+fig.subplots_adjust(left=0.1, right=0.9, top=0.86, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
