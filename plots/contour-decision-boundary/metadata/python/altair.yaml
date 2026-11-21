@@ -2,41 +2,48 @@ library: altair
 language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T05:48:48Z'
-updated: '2026-05-16T07:11:50Z'
-generated_by: claude-haiku
-workflow_run: 25955735150
+updated: '2026-11-21T22:19:54Z'
+generated_by: claude-sonnet
+workflow_run: 44955487975
 issue: 2921
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 83
 review:
   strengths:
-  - Excellent theme adaptation with complete token coverage (PAGE_BG, ELEVATED_BG,
-    INK, INK_SOFT) applied consistently
-  - Perfect specification compliance with all required features cleanly implemented
-  - Professional code quality with deterministic seeding and clean KISS structure
-  - Idiomatic altair usage with proper layer composition and encoding patterns
-  - Both renders maintain legibility and theme correctness throughout
+  - Class colors shared between regions and point fills, so misclassified triangles
+    read as one class sitting on the other's region
+  - Native shape legend for Correct/Incorrect via resolve_scale independent, alongside
+    the decision-region legend
+  - Points outlined in INK_SOFT stay the strongest marks on both translucent regions
+    in both themes
+  - Region rects centred on the mesh nodes with x2/y2 and nice=False domains fill
+    the plane edge to edge
+  - Tooltips with feature values, class and status in the HTML output
   weaknesses:
-  - Design excellence could be enhanced with additional visual sophistication (stronger
-    visual hierarchy, refined typography emphasis)
-  - Library mastery could showcase more advanced altair features (interactive selection,
-    custom transforms, or dynamic interactivity beyond tooltips)
+  - 'SC-02 (both): the diagonal boundary at lower left (X1 -1.0 to -0.5, X2 -1.4 to
+    -0.6) shows the mesh as visible stair-steps about 15 px tall, violating C4 → a
+    finer mesh, 200 cells per axis (+50). Likely cause: MESH_SIZE = 150.'
+  - 'DQ-02 (both): classes labelled ''Class A''/''Class B'' and axes ''Feature X1''/''Feature
+    X2'' read as generic → name a plausible two-feature scenario and its classes.
+    Likely cause: the label strings in the data block and column constants.'
+  - 'Suggestion: a slightly lower region opacity in the dark theme would let the green
+    points separate more from the dark green region.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title "contour-decision-boundary · altair · anyplot.ai" is prominent and readable in dark text; axis labels "Feature X1" and "Feature X2" are clear; tick labels are appropriately sized; legend on right side shows decision regions and classification status
-      Data: Decision boundary regions in green (#009E73, Class A) and orange (#D55E00, Class B) from Okabe-Ito palette; training points as circles (correct) and triangles (incorrect); all colors bright and distinct
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'contour-decision-boundary · python · altair · anyplot.ai' in dark ink, Feature X1 / Feature X2 axis titles, soft-ink ticks, subtle grid; two framed legends at right ('Decision region' with Class A/B swatches, 'Training point' with circle = Correct, triangle = Incorrect); all readable
+      Data: translucent green (#009E73) and lavender (#C475FD) KNN decision regions fill the whole plane with a curved moon boundary; 150 training points filled by true class with a dark outline; 10 triangles mark misclassified points; the lower-left diagonal boundary shows small grid stair-steps
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title and axis labels visible in light text (#F0EFE8); tick labels in light secondary color (#B8B7B0); legend uses elevated background (#242420) for contrast; all text readable with no dark-on-dark failures
-      Data: Decision boundary colors identical to light render (green and orange maintained); marker shapes and colors consistent; all elements clearly visible
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles in light ink, ticks in light soft ink, legend frames on #242420 with light text; no dark-on-dark text
+      Data: same #009E73 and #C475FD fills as light, regions darker through the 0.4 opacity over the dark page; points outlined in light grey stay clearly visible
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -48,72 +55,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable at full size in both themes; proper font sizing
-          and color contrast
+        comment: Title 16, axis titles 14, ticks 12, legend 11-12 at scale 4; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements readable; no collisions between markers and regions
+        comment: No text collisions; marker overlap is light and every point stays
+          distinguishable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, and regions clearly visible with bright, distinct
-          colors
+        comment: 150 points at size 90 with an INK_SOFT outline stand out on both
+          regions in both themes; legend swatches and shapes visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; adequate contrast throughout
+        comment: Green vs lavender is CVD-safe; shape encodes correctness redundantly
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions at 1600x900 = 4800x2700px; nothing cut off
+        comment: 3200x1800 canvas, plot fills the frame, legends right, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format; axis labels are descriptive
+        comment: Feature X1 / Feature X2 readable axis titles (unitless synthetic
+          features)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds correct; both
-          renders theme-correct'
+        comment: 'Class A #009E73, Class B #C475FD (Imprint order); backgrounds #FAF8F1
+          / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional polish with intentional theme adaptation and thoughtful
-          layer composition
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, elevated legend frames, explicit
+          sizes'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid, elevated legend background, reasonable whitespace
+        passed: false
+        comment: Scale domains pinned to the mesh with nice=False so the regions fill
+          the plot edge to edge with no gutter, view stroke removed
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Uses shape and color to distinguish classification status; clear
-          focal point
+        passed: false
+        comment: Data displayed; misclassified marking is the spec's own Notes option
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -121,28 +130,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision boundary visualization
+        comment: Decision-region raster with training points overlaid
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: boundary regions, data overlay, classification
-          distinction, legends'
+        passed: false
+        comment: 'C1, C2, C3, C5 met; C4 missed: the diagonal boundary at lower left
+          shows the 150-cell grid as stair-steps (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X1/X2 correctly mapped; appropriate range
+        comment: Points at their exact feature values; region rects centred on mesh
+          nodes via x/x2, y/y2
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legends complete
+        comment: Mandated title; 'Decision region' and 'Training point' legends with
+          reader-facing labels
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -150,21 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete 2D feature space with boundary, training data, and classification
-          status
+        comment: Curved boundary, an island, and 10 misclassified points on the other
+          class's region
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Classic make_moons dataset; realistic KNN classifier; neutral educational
-          context
+        passed: false
+        comment: make_moons with labels Class A/B and Feature X1/X2 read as generic
+          (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150x150 mesh grid; 150 training samples; appropriate feature scale
+        comment: 150 points, 150x150 mesh, plane padded 0.5 around the data; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -174,55 +186,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions; straightforward layer composition
+        comment: 'Flat script: constants, data block, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with np.random.seed(42)
+        comment: random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: All imports used (PIL for padding)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Native shape legend; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct filenames with THEME variable; scale_factor=3.0
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Proper alt.Chart(), alt.layer(), encodings, and configure_* methods
+        passed: false
+        comment: Layered charts with x2/y2 rect encoding, shared alt.Scale objects,
+          configure_* theme
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Layer composition, custom legend construction, coordinated legends
+        passed: false
+        comment: resolve_scale(color/shape='independent') to get two native legends
+          from one layer, legend symbolFillColor, tooltips in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T22:16:17Z'
 impl_tags:
   dependencies:
-  - sklearn
+  - scikit-learn
+  - pillow
   techniques:
   - layer-composition
   - custom-legend
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  - matrix-construction
+  dataprep:
+  - classification-mesh
+  styling:
+  - alpha-blending
+  - edge-highlighting
