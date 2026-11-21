@@ -2,44 +2,47 @@ library: matplotlib
 language: python
 specification_id: violin-box
 created: '2025-12-30T11:21:48Z'
-updated: '2026-05-12T15:13:24Z'
-generated_by: claude-haiku
-workflow_run: 25743323782
+updated: '2026-11-21T06:53:21Z'
+generated_by: claude-sonnet
+workflow_run: 44877264428
 issue: 2646
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - 'Perfect spec compliance: all required features implemented correctly'
-  - Excellent visual quality in both light and dark themes; no legibility failures
-  - Clean, readable code with proper theme adaptation and deterministic seed
-  - All text elements properly sized for high-resolution canvas
-  - 'Good design choices: spine removal, subtle grid, appropriate whitespace'
-  - Effective visual hierarchy via nested box plot inside violin
+  - Native ax.violinplot plus ax.boxplot(patch_artist=True) with every returned artist
+    styled from theme tokens, so the box, whiskers and median stand out against the
+    green violin in both themes
+  - Data covers symmetric, bimodal, right-skewed and wide-with-outliers groups, so
+    each violin shape tells something the box alone hides
+  - Value axis fitted to the data range rather than zero, so the four groups compare
+    directly
+  - 'Adaptable structure: column constants, one tidy df, Imprint palette list, and
+    groups and limits derived from the data'
   weaknesses:
-  - Design could be more sophisticated; while well-executed, follows fairly standard
-    practices without distinctive creative choices
+  - 'DQ-02 (both): the y-axis reads ''Response value (units)'' and the groups ''Treatment
+    A/B/C'', a placeholder unit and abstract labels → name a concrete measure and
+    unit (e.g. ''Reaction time (ms)'') and real condition names. Likely cause: the
+    VALUE constant and the samples dict keys.'
+  - 'Suggestion: a slightly lower violin alpha in the dark theme would let the box
+    contrast more against the darker green.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text against light background
-      Data: Violins in brand green (#009E73, alpha=0.6) with gray box plots nested inside; outliers shown as green circles
-      Grid: Subtle y-axis only, does not compete with data
-      Spines: Top and right removed; left and bottom visible
-      Legibility verdict: PASS - all text readable
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'violin-box · python · matplotlib · anyplot.ai' dark ink at top centre; axis titles 'Experimental group' and 'Response value (units)' and ticks (Control, Treatment A-C; 20-100) in dark ink/soft ink; subtle horizontal grid; top/right spines removed; all readable
+      Data: four violins in #009E73 at alpha 0.6 with soft-ink outline; narrow dark-grey boxes with black median line, whiskers and caps centred inside; outliers as small green circles with ink edge (Control low, Treatment B high, Treatment C both tails); y range ~3-107
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title, axis labels, tick labels all clearly visible in light text against dark background; no dark-on-dark failures
-      Data: Violins same brand green (#009E73) as light render - colors identical; box plots light gray (#B8B7B0, INK_SOFT in dark theme)
-      Grid: Subtle, visible
-      Spines: Visible in light color
-      Legibility verdict: PASS - all text readable, proper theme adaptation
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink; grid subtle; no dark-on-dark text
+      Data: identical #009E73 violins (reads darker under alpha on the dark page); boxes light grey with near-white median, whiskers and caps; fliers green with light edge
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,66 +53,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized and readable in both light and dark renders
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt as the style guide sets;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no collisions or overlapping elements
+        comment: No text collisions; fliers sit clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violins, box plots, and outliers all clearly distinguishable
+        comment: Violins, boxes, medians, whiskers and fliers all distinct in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green is CVD-safe; adequate contrast
+        comment: Single hue plus ink box; no colour-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, generous whitespace
+        comment: 3200x1800 canvas, balanced margins, title ~45% width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title follows spec format
+        comment: Both axes titled from the column constants
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green used consistently; correct backgrounds; both themes theme-correct
+        comment: 'Single series in #009E73; #FAF8F1 / #1A1A17 backgrounds; chrome
+          flips correctly'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Clean and professional; custom color coordination; fairly standard
-          execution
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good refinement: spine removal, subtle grid, generous whitespace'
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good visual hierarchy; clear focal points showing distribution differences
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -119,28 +124,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: violin plot with embedded box plot'
+        comment: Violin with embedded box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: box centered, median/quartiles/whiskers visible,
-          KDE apparent, outliers shown'
+        comment: Box centred on the violin axis (C1), narrow box with violin visible
+          on both sides (C2), Q1-Q3 box, median line, whiskers, fliers at values (C3),
+          shared axis fitted to data not zero, tails end at data range (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: group labels; Y-axis: response values; appropriate range'
+        comment: Groups on x, values on y; all data within limits
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend appropriately omitted
+        comment: Title 'violin-box · python · matplotlib · anyplot.ai'; single series,
+          no legend needed (N/A)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -148,20 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: distribution shape, quartiles, whiskers, outliers,
-          group comparisons'
+        comment: Symmetric, bimodal, right-skewed and wide groups plus outliers
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Realistic experimental scenario with distinct distribution patterns
+        passed: false
+        comment: Plausible experiment, but 'Response value (units)' and 'Treatment
+          A-C' read generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value range (0-110); no distorting extremes
+        comment: Values 10-100 sensible for a response score; no check values in the
+          spec
     code_quality:
       score: 10
       max: 10
@@ -171,54 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple script; no unnecessary functions
+        comment: Flat script in the adaptable zones; adapt check passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: os, matplotlib, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity
+        comment: Native violinplot/boxplot compute KDE and quartiles; no hand-roll
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs as plot-{THEME}.png; current API
+        comment: plot-{THEME}.png, tick_labels (3.9+ API), no bbox_inches
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Idiomatic use of violinplot and boxplot; proper theme tokens
+        passed: false
+        comment: Axes API; styles the artist dicts returned by violinplot/boxplot
+          (bodies, boxes, whiskers, caps, medians, fliers) with patch_artist
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Shows understanding of matplotlib patching; nested visualization
-          effective
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-21T06:50:18Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - kde
   styling:
   - alpha-blending
