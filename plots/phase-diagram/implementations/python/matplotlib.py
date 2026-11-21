@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 phase-diagram: Phase Diagram (State Space Plot)
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-14
@@ -8,94 +8,107 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BRAND = "#009E73"
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per trajectory in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Damped harmonic oscillator: m*x'' + c*x' + k*x = 0
-# Using underdamped solution: x(t) = A*exp(-gamma*t)*cos(omega_d*t + phi)
-gamma = 0.15  # Damping coefficient
-omega0 = 1.0  # Natural frequency
-omega_d = np.sqrt(omega0**2 - gamma**2)  # Damped frequency (underdamped case)
+# Constants
+EQUILIBRIUM = 0.0  # the damped system comes to rest at x = 0, dx/dt = 0
+ARROWS_PER_TRAJECTORY = 4  # direction arrows spread along each curve
 
-# Time array
+# Columns: set these to your table's column names
+TRAJECTORY = "Trajectory"  # role: extra
+TIME = "Time (s)"  # role: t
+POSITION = "Position x (arbitrary units)"  # role: x
+VELOCITY = "Velocity dx/dt (arbitrary units)"  # role: dx_dt
+
+# Data: replace this block with your own table, for example df = pd.read_csv("trajectories.csv")
+# Damped harmonic oscillator x'' + 2*gamma*x' + omega0^2*x = 0 (underdamped), four initial conditions
+gamma = 0.15
+omega0 = 1.0
+omega_d = np.sqrt(omega0**2 - gamma**2)
 t = np.linspace(0, 50, 2000)
+starts = [(3.0, 0.0), (3.0, 0.5), (2.5, 2.5), (2.0, 4.0)]  # amplitude and phase
+frames = []
+for amplitude, phase in starts:
+    envelope = amplitude * np.exp(-gamma * t)
+    angle = omega_d * t + phase
+    frames.append(
+        pd.DataFrame(
+            {
+                TRAJECTORY: f"Trajectory {len(frames) + 1} (A={amplitude:.1f})",
+                TIME: t,
+                POSITION: envelope * np.cos(angle),
+                VELOCITY: envelope * (-gamma * np.cos(angle) - omega_d * np.sin(angle)),
+            }
+        )
+    )
+df = pd.concat(frames, ignore_index=True)
 
-# Multiple trajectories from different initial conditions
-# Format: (A, phi) - amplitude and phase for analytical solution
-initial_params = [(3.0, 0.0), (3.0, 0.5), (2.5, 2.5), (2.0, 4.0)]
-
-# Compute trajectories using analytical solution
-# x(t) = A * exp(-gamma*t) * cos(omega_d*t + phi)
-# v(t) = dx/dt = A * exp(-gamma*t) * (-gamma*cos(omega_d*t + phi) - omega_d*sin(omega_d*t + phi))
-trajectories = []
-for A, phi in initial_params:
-    exp_decay = A * np.exp(-gamma * t)
-    x = exp_decay * np.cos(omega_d * t + phi)
-    v = exp_decay * (-gamma * np.cos(omega_d * t + phi) - omega_d * np.sin(omega_d * t + phi))
-    trajectories.append((x, v, A, phi))
-
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot: reads only df and the constants above
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot each trajectory
-for i, (x, v, A, _phi) in enumerate(trajectories):
-    # Plot trajectory line
-    ax.plot(x, v, color=IMPRINT[i], linewidth=2.5, alpha=0.8, label=f"Trajectory {i + 1} (A={A:.1f})")
+for i, (name, rows) in enumerate(df.groupby(TRAJECTORY, sort=False)):
+    x = rows[POSITION].to_numpy()
+    v = rows[VELOCITY].to_numpy()
+    color = IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)]
+    ax.plot(x, v, color=color, linewidth=2.2, alpha=0.85, label=name)
+    ax.scatter(x[0], v[0], s=110, color=color, edgecolor=PAGE_BG, linewidth=1.2, zorder=5)
 
-    # Mark start point with larger marker
-    ax.scatter(x[0], v[0], s=250, color=IMPRINT[i], edgecolor=PAGE_BG, linewidth=2, zorder=5, marker="o")
+    # Arrows run with time: rightward above dx/dt = 0, leftward below it
+    for idx in np.linspace(len(x) // 20, len(x) - len(x) // 10, ARROWS_PER_TRAJECTORY, dtype=int):
+        ax.annotate(
+            "",
+            xy=(x[idx + 10], v[idx + 10]),
+            xytext=(x[idx], v[idx]),
+            arrowprops={"arrowstyle": "->", "color": color, "lw": 1.8, "mutation_scale": 14},
+        )
 
-    # Add arrows to show direction along trajectory
-    n_points = len(x)
-    n_arrows = 4
-    arrow_indices = np.linspace(100, n_points - 200, n_arrows, dtype=int)
-    for idx in arrow_indices:
-        dx = x[idx + 10] - x[idx]
-        dv = v[idx + 10] - v[idx]
-        length = np.sqrt(dx**2 + dv**2)
-        if length > 0.01:
-            ax.annotate(
-                "",
-                xy=(x[idx + 10], v[idx + 10]),
-                xytext=(x[idx], v[idx]),
-                arrowprops={"arrowstyle": "->", "color": IMPRINT[i], "lw": 2.5, "mutation_scale": 20},
-            )
+ax.scatter(
+    EQUILIBRIUM,
+    EQUILIBRIUM,
+    s=160,
+    color=INK,
+    marker="X",
+    edgecolor=PAGE_BG,
+    linewidth=1.0,
+    zorder=10,
+    label="Equilibrium (stable)",
+)
+ax.axhline(EQUILIBRIUM, color=INK_SOFT, linewidth=1.0, linestyle="--", alpha=0.4)
+ax.axvline(EQUILIBRIUM, color=INK_SOFT, linewidth=1.0, linestyle="--", alpha=0.4)
 
-# Mark the equilibrium point (stable fixed point at origin)
-ax.scatter(0, 0, s=400, color=INK_SOFT, marker="x", linewidth=4, zorder=10, label="Equilibrium (stable)")
-
-# Add reference lines for axes
-ax.axhline(y=0, color=INK_SOFT, linewidth=1.5, linestyle="--", alpha=0.4)
-ax.axvline(x=0, color=INK_SOFT, linewidth=1.5, linestyle="--", alpha=0.4)
-
-# Labels and styling
-ax.set_xlabel("Position x (arbitrary units)", fontsize=20, color=INK)
-ax.set_ylabel("Velocity dx/dt (arbitrary units)", fontsize=20, color=INK)
-ax.set_title("Damped Oscillator · phase-diagram · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
-ax.legend(fontsize=16, loc="upper right", framealpha=0.9)
+# Style
+title = "Damped Oscillator · phase-diagram · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=10, fontweight="medium", color=INK)
+ax.set_xlabel(POSITION, fontsize=10, color=INK)
+ax.set_ylabel(VELOCITY, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.grid(True, alpha=0.15, linestyle="-", color=INK_SOFT, linewidth=0.8)
+for s in ("top", "right"):
+    ax.spines[s].set_visible(False)
+ax.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
-# Set equal aspect ratio for proper visualization
+limit = np.ceil(max(df[POSITION].abs().max(), df[VELOCITY].abs().max()) * 1.15)
+ax.set_xlim(-limit, limit)
+ax.set_ylim(-limit, limit)
 ax.set_aspect("equal", adjustable="box")
 
-# Adjust axis limits for better visualization
-ax.set_xlim(-4, 4)
-ax.set_ylim(-3.5, 3.5)
+leg = ax.legend(fontsize=8, loc="upper right", framealpha=0.95)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.13, right=0.97, top=0.93, bottom=0.10)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
