@@ -2,45 +2,41 @@ library: matplotlib
 language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:38:07Z'
-updated: '2026-05-12T05:28:20Z'
-generated_by: claude-haiku
-workflow_run: 25715148757
+updated: '2026-11-21T04:38:33Z'
+generated_by: claude-sonnet
+workflow_run: 44866657460
 issue: 2601
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 83
 review:
   strengths:
-  - Excellent theme adaptation with proper color tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
-    threaded throughout—both renders are readable and data colors are identical
-  - Clean code structure with deterministic seeding and appropriate data clipping
-  - Proper use of Okabe-Ito palette in canonical order; brand green (#009E73) correctly
-    placed first
-  - Strong visual quality across all dimensions (text, layout, visibility, accessibility)
-  - Legend and grid styling professionally executed
-  - Specification compliance is perfect (plot type, features, data mapping, title
-    format)
+  - Native ax.hist with a list of arrays and stacked=True, on one shared set of bin
+    edges from np.histogram_bin_edges
+  - Theme tokens threaded through title, labels, ticks, spines, grid and legend; both
+    renders fully readable
+  - Exact 3200x1800 canvas via figsize=(8, 4.5) at dpi=400 with no bbox trimming
+  - Groups and colors derived from df in data order, legend titled from the REGION
+    constant
   weaknesses:
-  - Limited use of matplotlib-specific features; could enhance with hatching, per-group
-    edge styling, or step-filled alternatives
-  - Data storytelling could be strengthened with visual emphasis (e.g., color contrast
-    variation or focal-point design) to guide viewer attention
+  - 'Suggestion: ordering the stack so the group with the most mass sits at the bottom
+    would let the reader compare the largest group against the flat baseline.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as required
-      Chrome: Title, x-label (Response Time (ms)), y-label (Number of Requests), and tick labels all clearly readable in dark text (INK color); legend in upper right with proper elevated background styling
-      Data: Three server regions (US-East #009E73 green, Europe #D55E00 orange, Asia-Pacific #0072B2 blue) stacked within 20 bins; bar edges defined with page-background color for clarity
-      Legibility verdict: PASS - All text readable, excellent contrast on light background
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'histogram-stacked · python · matplotlib · anyplot.ai' in dark ink; axis titles 'Response Time (ms)' and 'Number of Requests'; INK_SOFT tick labels 0-70 and 20-140; subtle horizontal grid; legend 'Server region' upper right on an elevated box. All readable.
+      Data: 20 contiguous stacked bins; US-East #009E73 at the bottom, Europe #C475FD in the middle, Asia-Pacific #4467A3 on top, separated by thin off-white edges; tallest total 73 at about 49 ms.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as required
-      Chrome: Title, axis labels, and tick labels all clearly readable in light text (INK token adapted); legend background flipped to dark elevated tone (#242420); spines (left/bottom) in INK_SOFT color
-      Data: Identical colors to light render (green #009E73, orange #D55E00, blue #0072B2); stacking preserved exactly; bar edges properly styled; grid lines subtle and visible
-      Legibility verdict: PASS - All text readable, no dark-on-dark failures, excellent contrast on dark background
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks and legend text in light grey; legend box on #242420; grid subtle but visible. No dark-on-dark text.
+      Data: identical fill colors to the light render; segment edges now near-black; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,70 +47,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicit (title=24, labels=20, ticks=16); readable in
-          both themes with proper color tokens
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt per the matplotlib
+          prompt; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean legend placement, no text collisions
+        comment: Legend sits in the empty upper-right corner clear of the bars; no
+          text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars clearly visible with stacking properly rendered
+        comment: Opaque segments with thin page-colored edges; legend swatches match
+          the bars in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety
+        comment: Green, purple and blue are separable in lightness and hue; no red-green
+          pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-proportioned (16×9 figsize), tight_layout prevents waste
+        comment: 3200x1800 canvas, plot fills most of it with balanced margins; balanced
+          axis titles
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units and proper title format
+        comment: Response Time (ms) and Number of Requests, with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Okabe-Ito order, correct backgrounds,
-          both renders theme-correct'
+        comment: 'Imprint positions 1-3 at full opacity, identical in both renders;
+          #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 16
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional palette use, theme-aware styling, spines removed. No
-          distinctive matplotlib features applied.
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid (alpha=0.10), generous whitespace, elevated
-          background styling
+        passed: false
+        comment: Thin page-colored edges (0.4) separate stacked segments and neighbouring
+          bars without drawing outlines in the ink color
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Shows distribution and composition clearly; lacks focal-point emphasis
-          or visual hierarchy variation
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,25 +122,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked histogram with uniform bins
+        comment: Stacked histogram, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Three groups stacked with distinct colors and legend
+        comment: Shared bin edges, distinct colors, legend, total height = combined
+          frequency, one segment order in every bin (C1-C4 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, all data visible
+        comment: Zero baseline, y-axis reaches past the tallest total (73)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Title histogram-stacked · python · matplotlib · anyplot.ai; legend
+          titled Server region with the region names
     data_quality:
       score: 15
       max: 15
@@ -152,19 +152,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full histogram with all regions in every bin
+        comment: Three overlapping groups show varied composition per bin and a right-skewed
+          total
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times by region is plausible
+        comment: Request response times by server region; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible for response-time domain
+        comment: 10-160 ms latencies, 530 requests; spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -174,56 +175,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct code without unnecessary abstraction
+        comment: Header, tokens, column constants, Data block ending in df, Plot reading
+          only df
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: RandomState(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: os, matplotlib, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity or simulated UI
+        comment: Appropriate complexity; binning via np.histogram_bin_edges and ax.hist
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper ax.hist() with stacked=True, theme tokens throughout, high-level
-          API
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Basic stacked histogram without matplotlib-specific enhancements
-          (hatching, edge styling, step-filled)
+        comment: Correct ax.hist(stacked=True) usage, nothing beyond the library prompt
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-21T04:35:19Z'
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - binning
   styling:
+  - edge-highlighting
   - grid-styling
-  - alpha-blending

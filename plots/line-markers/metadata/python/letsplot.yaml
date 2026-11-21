@@ -2,52 +2,56 @@ library: letsplot
 language: python
 specification_id: line-markers
 created: '2025-12-30T10:39:36Z'
-updated: '2026-05-12T03:42:08Z'
-generated_by: claude-haiku
-workflow_run: 25711707367
+updated: '2026-11-21T04:37:06Z'
+generated_by: claude-sonnet
+workflow_run: 44866347213
 issue: 2599
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/letsplot/plot-dark.html
-quality_score: 91
+quality_score: 79
 review:
   strengths:
-  - Perfect theme adaptation with identical data colors in both renders and fully
-    readable text
-  - Excellent text legibility with explicit font sizes (title 24pt, labels 20pt, ticks
-    16pt)
-  - Clean, idiomatic lets-plot code using high-level API patterns and theme tokens
-  - Realistic business data showing diverse product trends (upward, downward, mixed
-    growth)
-  - 'Okabe-Ito palette correctly applied with first series = #009E73'
-  - No layout or overlap issues with excellent canvas utilization
-  - Full theme-token implementation for proper light/dark adaptation (PAGE_BG, ELEVATED_BG,
-    INK, INK_SOFT)
+  - Different marker shape per series (circle, square, triangle) via a shape mapping
+    in aes() and scale_shape_manual, so the series are told apart by shape as well
+    as color in both renders and in the legend
+  - 'Marker size 3.5 on 1.0 lines: markers stand out against the line without dominating
+    it, and stay separate symbols at 12 points per series'
+  - Y-only major grid with x grid and minor grid removed, matching the style guide
+    for line charts
+  - 'Full theme-token threading: page, legend, text and grid colors flip cleanly while
+    the Imprint data colors stay identical'
+  - Interactive HTML export alongside the PNG gives lets-plot's native hover tooltips
+    in the detail view
   weaknesses:
-  - Design Excellence is generic - well-configured defaults but not distinctive design
-    choices beyond spec requirements
-  - Grid could be refined to Y-axis only for cleaner line chart presentation
-  - Limited exploration of distinctive library features beyond core ggplot API
+  - 'DE-02 (both): all four panel spines are drawn (top and right frame lines around
+    the panel) where a line chart needs only the left and bottom axis → remove the
+    top and right spines (L-shaped frame) or all of them. Likely cause: theme_minimal()
+    plus axis_line still draws a panel border; set panel_border=element_blank() and
+    keep axis_line for x and y only.'
+  - 'DQ-02 (both): the series are labelled ''Product A'', ''Product B'', ''Product
+    C'', which read as generic placeholders → name the product lines concretely (for
+    example ''Cloud Storage'', ''Analytics Suite'', ''Mobile App''). Likely cause:
+    the PRODUCT label list in the data block.'
+  - 'Suggestion: the gridlines are drawn in solid INK at size 0.3; a lighter tone
+    closer to the style guide''s 15 % ink would push them further behind the data.'
+  - 'Suggestion: unfilled markers for one series (for example shape 1 or 0) would
+    add the filled-vs-unfilled distinction the Notes mention.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white ✓
-      Chrome: Bold title "line-markers · letsplot · anyplot.ai" (24pt dark text), axis labels "Quarter" and "Revenue (Million USD)" (20pt), tick labels 1-12 and 35-75 (16pt) all clearly readable ✓
-      Data: Three product lines with markers at each point - Product A (teal #009E73), Product B (orange #D55E00), Product C (blue #0072B2) with distinct growth patterns
-      Grid: Subtle gray lines that don't compete with data ✓
-      Legend: Right-side placement with product names, fully readable ✓
-      Legibility verdict: PASS - All text readable, no overlap, data clearly visible
+      Background: warm off-white #FAF8F1 across canvas and panel.
+      Chrome: bold dark title 'line-markers · python · letsplot · anyplot.ai' top-left at about 53% width; axis titles 'Quarter' and 'Revenue (Million USD)' in dark ink; ticks 1-12 and 35-75 in soft dark grey; thin y-only gridlines; legend 'Product' on the right in an elevated off-white box. All four panel edges carry a frame line. All text readable.
+      Data: Product A #009E73 circles rising from 46 to 78, Product B #C475FD squares falling from 61 to 43 and recovering to 48-52, Product C #4467A3 triangles rising from 34 to 57; lines 1.0, markers 3.5, a marker on every quarter. Crossings near Q3 and Q7-Q8.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black ✓
-      Chrome: Title, axis labels, tick labels all in light colors (#F0EFE8 and #B8B7B0) - fully readable against dark background ✓
-      Data: Colors identical to light render (Product A teal #009E73, Product B orange #D55E00, Product C blue #0072B2) ✓
-      Grid: Visible at same subtle intensity as light render ✓
-      Legend: Dark background with light text, properly readable ✓
-      Theme adaptation: Perfect - only chrome changed (dark text→light text, light background→dark background), data colors unchanged ✓
-      Legibility verdict: PASS - No dark-on-dark failures, all text readable against dark surface
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink #F0EFE8, ticks and legend text in #B8B7B0, light thin y gridlines, legend in a #242420 elevated box; no dark-on-dark text. Frame on all four panel edges as in light.
+      Data: identical colors and shapes to the light render; green, lilac and blue all clearly visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,48 +62,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (24pt title, 20pt labels, 16pt ticks), perfectly
-          readable in both themes
+        comment: Title 16 pt, axis titles 12 pt, ticks and legend 10 pt at the style-guide
+          reference; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, legend properly positioned, no collisions
+        comment: No text collisions; marker contact where series cross at Q3 and Q7-Q8
+          is permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers clearly visible, lines appropriately sized, data density
-          well-handled
+        comment: '12 points per series with 3.5 markers on 1.0 lines: markers stand
+          out and stay separate; legend glyphs match'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe, good contrast between series
+        comment: Imprint green/lilac/blue plus three marker shapes, so series do not
+          rely on color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, balanced margins, nothing cut off
+        comment: Canvas 3200x1800, balanced margins, title about 53% of width, nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (Million USD), title correct format
+        comment: Quarter and Revenue (Million USD), with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order followed, correct backgrounds,
-          both renders theme-correct'
+        comment: 'First series #009E73, Imprint order, backgrounds #FAF8F1 / #1A1A17,
+          chrome theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 6
       max: 20
       items:
       - id: DE-01
@@ -107,20 +114,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default but not exceptional design flourishes
+        comment: 'The style-guide baseline: explicit sizes, theme tokens, Imprint
+          palette; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
         passed: false
-        comment: Good grid and legend refinement, could be improved with Y-axis-only
-          grid
+        comment: All four panel spines drawn where a line chart does not require them
+          (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Good data variety and visual hierarchy through color
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with markers
+        comment: Line plot with markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present (lines, markers, multiple series)
+        comment: Marker on every point (C1), markers stand out sized to the line (C2),
+          circle/square/triangle per series (C3), markers stay separate (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X (Quarter), Y (Revenue), Color (Product) correctly mapped
+        comment: Quarter on x, revenue on y, marks at their values, all data in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Title line-markers · python · letsplot · anyplot.ai; legend Product
+          with matching entries
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -158,19 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows diverse product trends (upward, downward, mixed)
+        comment: Three series with rising, falling-then-recovering and steady trends,
+          two crossings
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Real business scenario (quarterly product revenue), neutral
+        passed: false
+        comment: Quarterly revenue is plausible, but the products are labelled Product
+          A-C (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue values plausible, growth patterns realistic
+        comment: Revenue 33-78 M USD over 12 quarters is sensible; no Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -180,54 +193,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions/classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: os, numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity, nothing hand-rolled
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and current API
+        comment: plot-{THEME}.png at scale=4 and plot-{THEME}.html; current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ggplot, aes, geoms, scales, theme system
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: Uses lets-plot-specific elements, could explore advanced features
-          further
+        comment: 'Standard grammar: aes color+shape mapping, scale_*_manual, theme;
+          nothing beyond the library prompt'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T04:33:35Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
-  styling: []
+  styling:
+  - grid-styling
