@@ -1,16 +1,16 @@
-""" anyplot.ai
+"""anyplot.ai
 venn-basic: Venn Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-11
 """
 
-import math
 import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    coord_fixed,
     element_blank,
     element_rect,
     element_text,
@@ -30,129 +30,134 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first three colors for three-set Venn
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Three overlapping sets representing skills in a tech team
-# Set A: Python developers (100 people)
-# Set B: Data Scientists (80 people)
-# Set C: ML Engineers (60 people)
-# Overlaps: A∩B=30, A∩C=20, B∩C=25, A∩B∩C=10
+# Constants
+CIRCLE_POINTS = 200
+TRIPLE_OVERLAP = 10  # inclusive size of A∩B∩C
+POS_X, POS_Y, TEXT, GROUP = "x", "y", "label", "set"  # columns of the derived drawing tables
 
-set_labels = ["Python\nDevelopers", "Data\nScientists", "ML\nEngineers"]
-# Region counts (exclusive to each region)
-# A only: 100 - 30 - 20 + 10 = 60
-# B only: 80 - 30 - 25 + 10 = 35
-# C only: 60 - 20 - 25 + 10 = 25
-# A∩B only: 30 - 10 = 20
-# A∩C only: 20 - 10 = 10
-# B∩C only: 25 - 10 = 15
-# A∩B∩C: 10
+# Columns
+SET_LABELS = "set_labels"  # role: set_labels
+SET_SIZES = "set_sizes"  # role: set_sizes
+PAIR_OVERLAP = "pair_overlap"  # role: intersections
 
-region_counts = {"A_only": 60, "B_only": 35, "C_only": 25, "AB_only": 20, "AC_only": 10, "BC_only": 15, "ABC": 10}
-
-# Circle positions for 3-set Venn diagram
-# Circles arranged in a triangle formation with significant overlap
-radius = 5
-offset = radius * 0.6  # Controls overlap amount
-n_points = 100
-
-# Circle centers
-centers = {
-    "A": (-offset, offset * 0.5),  # Top-left
-    "B": (offset, offset * 0.5),  # Top-right
-    "C": (0, -offset * 0.9),  # Bottom
-}
-
-# Create circle polygons
-circle_rows = []
-circle_id = 0
-for label, (cx, cy) in centers.items():
-    angles = np.linspace(0, 2 * math.pi, n_points + 1)
-    x_coords = cx + radius * np.cos(angles)
-    y_coords = cy + radius * np.sin(angles)
-    for i in range(len(x_coords)):
-        circle_rows.append({"x": x_coords[i], "y": y_coords[i], "circle_id": circle_id, "set": label})
-    circle_id += 1
-
-circle_df = pd.DataFrame(circle_rows)
-
-# Calculate positions for region labels
-# A only - left side of circle A
-label_A_only = {
-    "x": centers["A"][0] - radius * 0.45,
-    "y": centers["A"][1] + radius * 0.2,
-    "label": str(region_counts["A_only"]),
-}
-
-# B only - right side of circle B
-label_B_only = {
-    "x": centers["B"][0] + radius * 0.45,
-    "y": centers["B"][1] + radius * 0.2,
-    "label": str(region_counts["B_only"]),
-}
-
-# C only - bottom of circle C
-label_C_only = {"x": centers["C"][0], "y": centers["C"][1] - radius * 0.5, "label": str(region_counts["C_only"])}
-
-# AB intersection (top center)
-label_AB = {"x": 0, "y": centers["A"][1] + radius * 0.35, "label": str(region_counts["AB_only"])}
-
-# AC intersection (bottom-left)
-label_AC = {
-    "x": centers["A"][0] + radius * 0.35,
-    "y": (centers["A"][1] + centers["C"][1]) / 2 - radius * 0.1,
-    "label": str(region_counts["AC_only"]),
-}
-
-# BC intersection (bottom-right)
-label_BC = {
-    "x": centers["B"][0] - radius * 0.35,
-    "y": (centers["B"][1] + centers["C"][1]) / 2 - radius * 0.1,
-    "label": str(region_counts["BC_only"]),
-}
-
-# ABC intersection (center)
-centroid_x = (centers["A"][0] + centers["B"][0] + centers["C"][0]) / 3
-centroid_y = (centers["A"][1] + centers["B"][1] + centers["C"][1]) / 3
-label_ABC = {"x": centroid_x, "y": centroid_y, "label": str(region_counts["ABC"])}
-
-# Create label dataframes
-count_labels_df = pd.DataFrame([label_A_only, label_B_only, label_C_only, label_AB, label_AC, label_BC, label_ABC])
-
-# Set name labels - positioned outside circles
-set_name_labels = [
-    {"x": centers["A"][0] - radius * 0.8, "y": centers["A"][1] + radius * 0.9, "label": set_labels[0]},
-    {"x": centers["B"][0] + radius * 0.8, "y": centers["B"][1] + radius * 0.9, "label": set_labels[1]},
-    {"x": centers["C"][0], "y": centers["C"][1] - radius * 1.1, "label": set_labels[2]},
-]
-set_name_df = pd.DataFrame(set_name_labels)
-
-# Create color mapping dict for sets
-color_map = {"A": IMPRINT[0], "B": IMPRINT[1], "C": IMPRINT[2]}
+# Data: team skills; one row per set with its total size, the inclusive size of
+# its overlap with the next set (A∩B, B∩C, C∩A) and the inclusive triple overlap.
+df = pd.DataFrame(
+    {
+        SET_LABELS: ["Python Developers", "Data Scientists", "ML Engineers"],
+        SET_SIZES: [100, 80, 60],
+        PAIR_OVERLAP: [30, 25, 20],
+    }
+)
 
 # Plot
+# Exclusive count of each of the seven regions from the inclusive sizes
+sizes = df[SET_SIZES].to_numpy(dtype=float)
+ab, bc, ca = df[PAIR_OVERLAP].to_numpy(dtype=float)
+abc = float(TRIPLE_OVERLAP)
+region_counts = {
+    (1, 0, 0): sizes[0] - ab - ca + abc,
+    (0, 1, 0): sizes[1] - ab - bc + abc,
+    (0, 0, 1): sizes[2] - bc - ca + abc,
+    (1, 1, 0): ab - abc,
+    (0, 1, 1): bc - abc,
+    (1, 0, 1): ca - abc,
+    (1, 1, 1): abc,
+}
+
+# Circle radii: area proportional to set size
+radii = np.sqrt(sizes / np.pi)
+
+
+def lens_area(r1, r2, d):
+    """Area of the intersection of two circles with centres d apart."""
+    if d >= r1 + r2:
+        return 0.0
+    if d <= abs(r1 - r2):
+        return np.pi * min(r1, r2) ** 2
+    a1 = np.arccos((d**2 + r1**2 - r2**2) / (2 * d * r1))
+    a2 = np.arccos((d**2 + r2**2 - r1**2) / (2 * d * r2))
+    return r1**2 * a1 + r2**2 * a2 - 0.5 * np.sqrt((-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2))
+
+
+def distance_for_overlap(r1, r2, target):
+    """Centre distance at which two circles overlap by the target area."""
+    lo, hi = abs(r1 - r2), r1 + r2
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        if lens_area(r1, r2, mid) > target:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+# Pairwise centre distances give the layout: A at origin, B on the x axis, C by triangulation
+d_ab = distance_for_overlap(radii[0], radii[1], ab)
+d_bc = distance_for_overlap(radii[1], radii[2], bc)
+d_ca = distance_for_overlap(radii[2], radii[0], ca)
+cx_c = (d_ca**2 - d_bc**2 + d_ab**2) / (2 * d_ab)
+cy_c = -np.sqrt(max(d_ca**2 - cx_c**2, 0.0))
+centers = np.array([[0.0, 0.0], [d_ab, 0.0], [cx_c, cy_c]])
+centers = centers - centers.mean(axis=0)
+set_names = df[SET_LABELS].tolist()
+
+# Circle outlines as polygons
+angles = np.linspace(0, 2 * np.pi, CIRCLE_POINTS + 1)
+circle_df = pd.concat(
+    [
+        pd.DataFrame(
+            {
+                POS_X: centers[i, 0] + radii[i] * np.cos(angles),
+                POS_Y: centers[i, 1] + radii[i] * np.sin(angles),
+                GROUP: set_names[i],
+            }
+        )
+        for i in range(len(df))
+    ],
+    ignore_index=True,
+)
+
+# Region label anchor: the point inside each region farthest from every circle edge
+lim = (radii.max() + np.abs(centers).max()) * 1.05
+gx, gy = np.meshgrid(np.linspace(-lim, lim, 500), np.linspace(-lim, lim, 500))
+dist = np.stack([np.hypot(gx - centers[i, 0], gy - centers[i, 1]) for i in range(len(df))])
+inside = dist < radii[:, None, None]
+edge_gap = np.abs(dist - radii[:, None, None]).min(axis=0)
+label_rows = []
+for membership, count in region_counts.items():
+    mask = np.ones_like(gx, dtype=bool)
+    for i, member in enumerate(membership):
+        mask &= inside[i] if member else ~inside[i]
+    score = np.where(mask, edge_gap, -1.0)
+    row, col = np.unravel_index(score.argmax(), score.shape)
+    label_rows.append({POS_X: gx[row, col], POS_Y: gy[row, col], TEXT: str(int(count))})
+count_labels_df = pd.DataFrame(label_rows)
+
+# Set names just above (A, B) or below (C) each circle
+set_rows = []
+for i in range(len(df)):
+    side = 1.0 if i < 2 else -1.0  # sets A and B above their circles, C below
+    anchor = centers[i] + np.array([0.0, side * (radii[i] + 0.35 * radii.max())])
+    set_rows.append({POS_X: anchor[0], POS_Y: anchor[1], TEXT: set_names[i].replace(" ", "\n")})
+set_name_df = pd.DataFrame(set_rows)
+
 plot = (
     ggplot()
-    # Draw circles with transparency for overlap visibility
-    + geom_polygon(
-        aes(x="x", y="y", fill="set", group="circle_id"), data=circle_df, alpha=0.45, color=INK_SOFT, size=1.5
-    )
-    # Region count labels (larger, bold)
-    + geom_text(aes(x="x", y="y", label="label"), data=count_labels_df, size=18, fontweight="bold", color=INK)
-    # Set name labels (outside circles)
-    + geom_text(aes(x="x", y="y", label="label"), data=set_name_df, size=14, fontweight="bold", color=INK_SOFT)
-    # Colors using Okabe-Ito palette
-    + scale_fill_manual(values=color_map)
-    # Axis scaling for proper aspect ratio
-    + scale_x_continuous(limits=(-12, 12))
-    + scale_y_continuous(limits=(-12, 10))
-    # Title
-    + labs(title="venn-basic · plotnine · anyplot.ai")
-    # Theme with proper sizing and colors
+    + geom_polygon(aes(x=POS_X, y=POS_Y, fill=GROUP, group=GROUP), data=circle_df, alpha=0.45, color=INK_SOFT, size=1.0)
+    + geom_text(aes(x=POS_X, y=POS_Y, label=TEXT), data=count_labels_df, size=18, fontweight="bold", color=INK)
+    + geom_text(aes(x=POS_X, y=POS_Y, label=TEXT), data=set_name_df, size=13, fontweight="bold", color=INK_SOFT)
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=set_names)
+    + scale_x_continuous(limits=(-lim * 1.2, lim * 1.2))
+    + scale_y_continuous(limits=(-lim * 1.2, lim * 1.2))
+    + coord_fixed()
+    + labs(title="venn-basic · python · plotnine · anyplot.ai")
     + theme(
-        figure_size=(12, 12),
-        plot_title=element_text(size=24, ha="center", color=INK, fontweight="medium"),
+        figure_size=(6, 6),
+        plot_title=element_text(size=12, ha="center", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -166,4 +171,4 @@ plot = (
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
