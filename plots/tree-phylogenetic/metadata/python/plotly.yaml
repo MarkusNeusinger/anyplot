@@ -2,44 +2,46 @@ library: plotly
 language: python
 specification_id: tree-phylogenetic
 created: '2025-12-31T13:53:32Z'
-updated: '2026-05-15T01:08:01Z'
-generated_by: claude-haiku
-workflow_run: 25894420025
+updated: '2026-11-21T18:32:43Z'
+generated_by: claude-sonnet
+workflow_run: 44935477502
 issue: 3070
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 85
 review:
   strengths:
-  - Perfect visual quality with explicit font sizes and full theme compliance in both
-    renders
-  - Excellent spec compliance showing all required features (proportional branch lengths,
-    species labels, scale bar)
-  - Clean, readable code with proper theme token handling and deterministic data generation
-  - Professional phylogenetic tree layout with clear evolutionary relationships and
-    hierarchy
-  - Correct Okabe-Ito palette usage and theme-adaptive chrome throughout
+  - Branch geometry is computed from an edge list with cumulative branch lengths,
+    so every tip sits at its true distance from the root and the right-angled phylogram
+    is exact
+  - 'Clades colour-coded in Imprint order (Papionini #009E73, Cercopithecini, Colobinae)
+    with the neutral backbone in INK_SOFT and a native legend from one trace per clade'
+  - Both a 0.1 substitutions/site scale bar and a labeled distance axis, drawn in
+    branch units
+  - Theme tokens threaded through every text and line element; both renders read cleanly
+  - Hover on tips and internal nodes shows the node name and its distance in the HTML
+    view
   weaknesses:
-  - Design Excellence could be elevated with more distinctive aesthetic choices beyond
-    the standard phylogenetic tree layout
-  - Could leverage more advanced plotly-specific features for enhanced interactivity
-    or custom styling
+  - 'Suggestion: label the clades at their stems (or bracket them beside the tips)
+    so the colour key sits on the tree instead of only in the top legend.'
+  - 'Suggestion: drop the x-axis range to about 1.12 × the deepest tip; the band between
+    0.55 and 0.65 is empty beside the labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly set as page background
-      Chrome: Title "Old World Monkeys · tree-phylogenetic · plotly · anyplot.ai" in dark text (INK #1A1A17), x-axis label and tick labels clearly visible in dark/soft text colors. All text readable at full resolution.
-      Data: 8 species shown as large green circles (#009E73, Okabe-Ito position 1) with dark borders. Internal nodes as small gray circles. Tree branches in INK_SOFT (#4A4A44). Scale bar present with label "0.1 substitutions/site".
-      Legibility verdict: PASS - all elements clearly readable, no text-on-text issues
+      Background: warm off-white #FAF8F1 across paper and plot area
+      Chrome: title 'Old World Monkeys · tree-phylogenetic · python · plotly · anyplot.ai' in dark ink, centered at about 59 % width; frameless horizontal legend (Papionini, Cercopithecini, Colobinae) under it; x axis 'Distance from root (substitutions per site)' with ticks 0-0.6 in INK_SOFT; no y axis; scale bar 0.1 substitutions/site in dark ink below the tree. All readable
+      Data: rectangular phylogram, Papionini branches #009E73 (Macaque, Baboon, Mandrill, Gelada), Cercopithecini #C475FD (Patas, Guenon, Talapoin), Colobinae #4467A3 (Langur), backbone root->Cercopithecinae in dark grey; tip markers in clade colours with grey outline, small grey internal-node dots; tip labels in dark ink right of each marker
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly set as page background
-      Chrome: Title, axis labels, and tick labels all rendered in light text colors (INK #F0EFE8, INK_SOFT #B8B7B0). All text clearly visible against dark background. No dark-on-dark failures.
-      Data: Data colors remain identical to light render - green circles (#009E73) and gray nodes maintain their appearance. Chrome elements (lines, text) correctly adapted to dark theme.
-      Legibility verdict: PASS - all elements readable in both renders; theme adaptation is flawless
+      Background: warm near-black #1A1A17
+      Chrome: title, axis title and tip labels in light ink; ticks, legend text and scale-bar label in light grey; scale bar and axis line in light ink; no dark-on-dark text
+      Data: clade colours identical to the light render (#009E73, #C475FD, #4467A3); backbone and internal-node dots flip to light grey; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,73 +52,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
-          perfectly readable in both themes
+        comment: All sizes set explicitly (title 16, axis title 12, ticks 10, tip
+          labels 12, legend 11, scale-bar label 11 px at scale 4); all readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; species names positioned clearly to
-          the right of markers
+        comment: 'No collisions: tip labels sit right of their markers, legend clear
+          of the tree, scale bar clear of the Langur branch'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized and clearly visible; 18px leaf nodes, 12px internal
-          nodes
+        comment: '8 tips at 10 px with outline, internal nodes at 6 px, branches 2.5
+          px: right for a sparse tree'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Good contrast; brand green #009E73 accessible and CVD-safe'
+        comment: Green, purple and blue clades are CVD-distinguishable; neutral backbone
+          in INK_SOFT
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas with balanced margins; excellent proportions
+        comment: 3200x1800, title about 59 % of width, balanced margins, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Evolutionary Distance (substitutions per
-          site)'''
+        comment: '''Distance from root (substitutions per site)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Okabe-Ito pos 1); backgrounds #FAF8F1/#1A1A17
-          correct; theme-adaptive chrome perfect'
+        comment: 'Clades in Imprint order starting #009E73; backgrounds #FAF8F1 /
+          #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional phylogenetic tree with thoughtful layout; solid design
-          but not publication-exceptional
+        passed: false
+        comment: 'Style-guide baseline: Imprint, theme tokens, explicit sizes; nothing
+          decided clearly beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Clean layout with appropriate line widths and good whitespace; could
-          be more polished
+        passed: false
+        comment: 'Beyond baseline: y axis removed entirely because it carries no value,
+          frameless horizontal legend centered under the title, scale bar placed in
+          the empty band below the last tip'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear evolutionary hierarchy shown through tree structure and x-axis
-          distance; good but not exceptional
+        passed: false
+        comment: Clade colouring is what the Notes ask; no focal point chosen beyond
+          it
     spec_compliance:
       score: 15
       max: 15
@@ -126,27 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct phylogenetic tree with rectangular/cladogram layout
+        comment: Rectangular phylogram with right-angled branches
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: proportional branch lengths, species labels,
-          scale bar'
+        comment: Proportional branches (C1), right-angled layout (C2), every tip labeled
+          (C3), scale bar plus labeled axis (C4), clades coloured with a legend (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (evolutionary distance) and Y-axis (species position) correctly
-          mapped
+        comment: Tip x positions are cumulative branch lengths computed from the edge
+          list; topology drawn correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed for single-series tree
+        comment: '''Old World Monkeys · tree-phylogenetic · python · plotly · anyplot.ai'';
+          legend entries are clade names'
     data_quality:
       score: 15
       max: 15
@@ -156,22 +162,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows diverse species with varying distances and nested hierarchical
-          groups
+        comment: Nested splits, a polytomy, one long branch (Langur) and unequal tip
+          depths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Old World primates based on mitochondrial DNA - real scientific scenario,
-          neutral and comprehensible
+        comment: Old World monkeys from mitochondrial DNA; real, neutral scientific
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Evolutionary distances (0.42-0.54 substitutions/site) realistic for
-          mitochondrial DNA
+        comment: 'Colobinae (Langur) sister to Cercopithecinae, Papionini and Cercopithecini
+          as tribes; tip depths 0.42-0.54 subs/site plausible for mtDNA; read off
+          the axis: Langur 0.48, Talapoin 0.42, Mandrill 0.54'
     code_quality:
       score: 10
       max: 10
@@ -181,61 +188,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports, theme tokens, data, tree construction,
-          plot creation, save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data; no randomness
+        comment: Deterministic hard-coded tree
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported and used
+        comment: os, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with appropriate complexity for manual tree
-          construction
+        comment: Distances and rows derived from the edge list in a few lines; appropriate
+          complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and .html
+        comment: write_image plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses plotly.graph_objects correctly with proper patterns; solid but
-          could leverage more advanced features
+        passed: false
+        comment: Idiomatic go.Scatter with None-separated segments so each clade is
+          one trace and the legend is native; hovertemplate
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses hover templates and manual figure construction; somewhat generic
-          but shows plotly-specific patterns
+        passed: false
+        comment: Hover on tips and internal nodes reports node name and distance in
+          the HTML view; legend toggles whole clades
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T18:28:50Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
+  - annotations
   patterns:
-  - data-generation
   - explicit-figure
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
-  - dark-theme
+  - minimal-chrome
