@@ -1,20 +1,15 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-filled: Filled Contour Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-11
 """
 
 import os
-import sys
 
-# Remove script directory from sys.path to avoid importing local altair.py
-script_dir = os.path.dirname(os.path.abspath(__file__))
-if script_dir in sys.path:
-    sys.path.remove(script_dir)
-
-import altair as alt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
+import altair as alt
+import numpy as np
+import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -24,180 +19,132 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - 2D Gaussian peaks for filled contour visualization
-np.random.seed(42)
-n_points = 80
-x = np.linspace(-3, 3, n_points)
-y = np.linspace(-3, 3, n_points)
-X, Y = np.meshgrid(x, y)
+# Imprint palette (positions 1 to 8); the single-signed field uses the imprint_seq ramp below
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_SEQ = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]]  # imprint_seq: brand green to blue
 
-# Create surface with multiple peaks and valleys
-Z = (
-    1.5 * np.exp(-((X - 1) ** 2 + (Y - 1) ** 2) / 0.8)
-    + 1.2 * np.exp(-((X + 1) ** 2 + (Y + 0.5) ** 2) / 1.0)
-    - 0.6 * np.exp(-((X) ** 2 + (Y - 1.5) ** 2) / 0.6)
-    + 0.2 * np.sin(X * 2) * np.cos(Y * 2)
+# Constants
+N_LEVELS = 12  # number of evenly stepped bands
+N_FINE = 480  # resolution the bands are resolved at, so band boundaries read as smooth curves
+
+# Columns: set these to your table's column names
+X = "X coordinate"  # role: x
+Y = "Y coordinate"  # role: y
+Z = "Intensity"  # role: z
+
+# Data: replace this block with your own table, for example df = pd.read_csv("field.csv")
+# Two Gaussian peaks, a dip and a faint ripple, sampled on a 90 x 90 grid
+grid = np.linspace(-3, 3, 90)
+gx, gy = np.meshgrid(grid, grid)
+field = (
+    1.5 * np.exp(-((gx - 1) ** 2 + (gy - 1) ** 2) / 0.8)
+    + 1.2 * np.exp(-((gx + 1) ** 2 + (gy + 0.5) ** 2) / 1.0)
+    - 0.6 * np.exp(-(gx**2 + (gy - 1.5) ** 2) / 0.6)
+    + 0.2 * np.sin(gx * 2) * np.cos(gy * 2)
+)
+df = pd.DataFrame({X: gx.ravel(), Y: gy.ravel(), Z: field.ravel()})
+
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+alt.data_transformers.disable_max_rows()
+
+surface = df.pivot_table(index=Y, columns=X, values=Z, sort=True, dropna=False)
+xs, ys = surface.columns.to_numpy(float), surface.index.to_numpy(float)
+values = surface.to_numpy(float)
+
+# Resample bilinearly to a fine grid, then cut it into evenly stepped level bands
+fx, fy = np.linspace(xs.min(), xs.max(), N_FINE), np.linspace(ys.min(), ys.max(), N_FINE)
+rows = np.array([np.interp(fx, xs, r) for r in values])
+fine = np.array([np.interp(fy, ys, c) for c in rows.T]).T
+levels = np.linspace(np.nanmin(values), np.nanmax(values), N_LEVELS + 1)
+centers = (levels[:-1] + levels[1:]) / 2
+band = np.where(np.isnan(fine), -1, np.clip(np.digitize(fine, levels) - 1, 0, N_LEVELS - 1))
+
+# Merge neighbouring cells of one band along each row into a single rectangle
+dx, dy = fx[1] - fx[0], fy[1] - fy[0]
+runs = []
+for r, line in enumerate(band):
+    starts = np.flatnonzero(np.r_[True, line[1:] != line[:-1]])
+    stops = np.r_[starts[1:], len(line)]
+    for a, b in zip(starts, stops, strict=True):
+        if line[a] >= 0:
+            runs.append((fx[a] - dx / 2, fx[b - 1] + dx / 2, fy[r] - dy / 2, fy[r] + dy / 2, centers[line[a]]))
+rects = pd.DataFrame(runs, columns=["x0", "x1", "y0", "y1", Z])
+rects[["x0", "x1"]] = rects[["x0", "x1"]].clip(xs.min(), xs.max())
+rects[["y0", "y1"]] = rects[["y0", "y1"]].clip(ys.min(), ys.max())
+
+# Contour lines: fine-grid cells where the band changes toward the right or upper neighbour
+edge = np.zeros_like(band, dtype=bool)
+edge[:, :-1] |= band[:, :-1] != band[:, 1:]
+edge[:-1, :] |= band[:-1, :] != band[1:, :]
+edge &= band >= 0
+iy, ix = np.nonzero(edge)
+lines = pd.DataFrame({"x": fx[ix], "y": fy[iy]})
+
+x_scale = alt.Scale(domain=[float(xs.min()), float(xs.max())], nice=False)
+y_scale = alt.Scale(domain=[float(ys.min()), float(ys.max())], nice=False)
+color_scale = alt.Scale(domain=[float(centers[0]), float(centers[-1])], range=IMPRINT_SEQ, interpolate="lab")
+color = alt.Color(
+    Z.translate(ESCAPE),
+    type="quantitative",
+    title=Z,
+    scale=color_scale,
+    legend=alt.Legend(
+        type="symbol",
+        values=[float(c) for c in centers],
+        format=".2f",
+        symbolType="square",
+        symbolSize=260,
+        titleFontSize=13,
+        labelFontSize=11,
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        padding=8,
+    ),
 )
 
-# Create contour levels
-n_levels = 12
-z_min, z_max = Z.min(), Z.max()
-levels = np.linspace(z_min, z_max, n_levels + 1)
-
-# Bin z-values and map to level centers for color mapping
-Z_binned = np.digitize(Z, levels) - 1
-Z_binned = np.clip(Z_binned, 0, n_levels - 1)
-level_centers = (levels[:-1] + levels[1:]) / 2
-Z_discrete = level_centers[Z_binned]
-
-# Create rectangle grid for filled contours
-step = x[1] - x[0]
-half_step = step / 2
-
-df = pd.DataFrame(
-    {
-        "x": X.ravel() - half_step,
-        "x2": X.ravel() + half_step,
-        "y": Y.ravel() - half_step,
-        "y2": Y.ravel() + half_step,
-        "z": Z_discrete.ravel(),
-    }
-)
-
-# Filled contour using mark_rect
-filled_contour = (
-    alt.Chart(df)
-    .mark_rect(stroke="none")
+bands = (
+    alt.Chart(rects)
+    .mark_rect(strokeWidth=0.6)
     .encode(
-        x=alt.X(
-            "x:Q",
-            title="X Coordinate",
-            scale=alt.Scale(domain=[-3.1, 3.1]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, tickCount=7),
-        ),
-        x2="x2:Q",
-        y=alt.Y(
-            "y:Q",
-            title="Y Coordinate",
-            scale=alt.Scale(domain=[-3.1, 3.1]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, tickCount=7),
-        ),
-        y2="y2:Q",
-        color=alt.Color(
-            "z:Q",
-            title="Intensity",
-            scale=alt.Scale(scheme="viridis"),
-            legend=alt.Legend(
-                titleFontSize=20,
-                labelFontSize=16,
-                gradientLength=400,
-                gradientThickness=25,
-                fillColor=ELEVATED_BG,
-                strokeColor=INK_SOFT,
-            ),
-        ),
+        x=alt.X("x0:Q", title=X, scale=x_scale, axis=alt.Axis(tickCount=7)),
+        x2="x1:Q",
+        y=alt.Y("y0:Q", title=Y, scale=y_scale, axis=alt.Axis(tickCount=7)),
+        y2="y1:Q",
+        color=color,
+        stroke=alt.Stroke(Z.translate(ESCAPE), type="quantitative", scale=color_scale, legend=None),
     )
 )
-
-
-# Create contour line overlay
-def find_contours(Z, level, x_coords, y_coords):
-    """Extract contour lines using marching squares algorithm."""
-    rows, cols = Z.shape
-    segments = []
-
-    for i in range(rows - 1):
-        for j in range(cols - 1):
-            z00, z01, z10, z11 = Z[i, j], Z[i, j + 1], Z[i + 1, j], Z[i + 1, j + 1]
-            cell = [z00, z01, z10, z11]
-            case = sum([1 << k for k, v in enumerate(cell) if v >= level])
-
-            if case in (0, 15):
-                continue
-
-            x0, x1 = x_coords[j], x_coords[j + 1]
-            y0, y1 = y_coords[i], y_coords[i + 1]
-
-            def interp(v1, v2, c1, c2):
-                if abs(v2 - v1) < 1e-10:
-                    return (c1 + c2) / 2
-                t = (level - v1) / (v2 - v1)
-                return c1 + t * (c2 - c1)
-
-            edges = {
-                "top": (interp(z00, z01, x0, x1), y0),
-                "bottom": (interp(z10, z11, x0, x1), y1),
-                "left": (x0, interp(z00, z10, y0, y1)),
-                "right": (x1, interp(z01, z11, y0, y1)),
-            }
-
-            cases = {
-                1: [("left", "top")],
-                2: [("top", "right")],
-                3: [("left", "right")],
-                4: [("bottom", "left")],
-                5: [("top", "bottom")],
-                6: [("top", "left"), ("bottom", "right")]
-                if (z00 + z11) / 2 >= level
-                else [("top", "right"), ("bottom", "left")],
-                7: [("bottom", "right")],
-                8: [("right", "bottom")],
-                9: [("left", "bottom"), ("right", "top")]
-                if (z00 + z11) / 2 >= level
-                else [("left", "top"), ("right", "bottom")],
-                10: [("top", "bottom")],
-                11: [("left", "bottom")],
-                12: [("left", "right")],
-                13: [("top", "right")],
-                14: [("left", "top")],
-            }
-
-            for e1, e2 in cases.get(case, []):
-                segments.append((edges[e1], edges[e2]))
-
-    return segments
-
-
-contour_lines_data = []
-contour_levels_subset = levels[2:-2:2]
-
-for idx, level_val in enumerate(contour_levels_subset):
-    segments = find_contours(Z, level_val, x, y)
-    for seg_idx, (p1, p2) in enumerate(segments):
-        contour_id = f"L{idx}_S{seg_idx}"
-        contour_lines_data.append({"x": p1[0], "y": p1[1], "order": 0, "contour_id": contour_id})
-        contour_lines_data.append({"x": p2[0], "y": p2[1], "order": 1, "contour_id": contour_id})
-
-contour_df = pd.DataFrame(contour_lines_data)
-
-# Contour line overlay with theme-adaptive color
-contour_color = "#2A2A25" if THEME == "light" else "#D5D4CC"
-contour_overlay = (
-    alt.Chart(contour_df)
-    .mark_line(strokeWidth=1.2, opacity=0.4)
-    .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-3.1, 3.1])),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-3.1, 3.1])),
-        order="order:O",
-        detail="contour_id:N",
-        color=alt.value(contour_color),
-    )
+contour_lines = (
+    alt.Chart(lines)
+    .mark_circle(size=1.6, opacity=0.35, color=INK)
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale))
 )
 
-# Combine layers with theme-adaptive styling
+title = "contour-filled · python · altair · anyplot.ai"
 chart = (
-    alt.layer(filled_contour, contour_overlay)
-    .properties(
-        width=1600,
-        height=900,
-        title=alt.Title(text="contour-filled · altair · anyplot.ai", fontSize=28, anchor="middle"),
-        background=PAGE_BG,
+    alt.layer(bands, contour_lines)
+    .properties(width=380, height=400, background=PAGE_BG, title=alt.Title(title, fontSize=16, anchor="middle"))
+    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=11,
+        titleFontSize=13,
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
-    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
     .configure_title(color=INK)
+    .configure_legend(labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save PNG and HTML with theme suffix
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Output: pad (never crop) to the 2400 x 2400 square target
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+TARGET = 2400
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET or img.height > TARGET:
+    raise SystemExit(f"altair rendered {img.width}x{img.height}, larger than {TARGET}x{TARGET}; shrink the view")
+canvas = Image.new("RGB", (TARGET, TARGET), PAGE_BG)
+canvas.paste(img, ((TARGET - img.width) // 2, (TARGET - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
