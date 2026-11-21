@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-14
@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, DataRange1d, Label, Range1d
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -22,125 +22,120 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for visual distinction of components
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]  # Positions 1-4
+# Imprint palette: all eight positions, one per component in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Monthly airline passengers (classic time series dataset)
+# Constants
+PERIOD = 12  # observations per seasonal cycle (monthly data, annual cycle)
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+VALUE = "Passengers (thousands)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("passengers.csv", parse_dates=["Date"])
 np.random.seed(42)
-date_range = pd.date_range(start="2018-01-01", periods=120, freq="MS")  # 10 years monthly
-
-# Generate realistic airline passenger data with trend, seasonality, and noise
-trend = np.linspace(100, 250, 120)  # Upward trend in thousands of passengers
-seasonal_pattern = 30 * np.sin(2 * np.pi * np.arange(120) / 12)  # Annual seasonality
-noise = np.random.normal(0, 10, 120)
-passengers = trend + seasonal_pattern + noise
-
-# Create DataFrame and perform decomposition
-df = pd.DataFrame({"date": date_range, "passengers": passengers})
-df.set_index("date", inplace=True)
-decomposition = seasonal_decompose(df["passengers"], model="additive", period=12)
-
-# Extract components
-dates = df.index.to_list()
-original = df["passengers"].values
-trend_component = decomposition.trend.values
-seasonal_component = decomposition.seasonal.values
-residual_component = decomposition.resid.values
-
-# Panel dimensions (4 panels in vertical layout)
-panel_height = 650
-total_width = 4800
-
-
-# Helper function to create themed figure
-def create_themed_figure(width, height, title_text, y_label, show_x_axis=False, x_range=None):
-    kwargs = {
-        "width": width,
-        "height": height,
-        "x_axis_type": "datetime",
-        "title": title_text,
-        "toolbar_location": None,  # Hide toolbar for cleaner look
+n_months = 120  # 10 years of monthly observations
+months = np.arange(n_months)
+df = pd.DataFrame(
+    {
+        DATE: pd.date_range(start="2018-01-01", periods=n_months, freq="MS"),
+        VALUE: np.linspace(100, 250, n_months)
+        + 30 * np.sin(2 * np.pi * months / 12)
+        + np.random.normal(0, 10, n_months),
     }
-    if x_range is not None:
-        kwargs["x_range"] = x_range
+)
 
-    p = figure(**kwargs)
+# Plot: reads only df and the constants above
+series = df.set_index(DATE)[VALUE].interpolate(limit_direction="both")  # the decomposition needs gap-free input
+decomposition = seasonal_decompose(series, model="additive", period=min(PERIOD, len(series) // 2))
+panels = [
+    ("Original", df[VALUE].to_numpy()),
+    ("Trend", decomposition.trend.to_numpy()),
+    ("Seasonal", decomposition.seasonal.to_numpy()),
+    ("Residual", decomposition.resid.to_numpy()),
+]
 
-    # Theme-adaptive styling
+W, H = 3200, 1800
+heights = [480, 410, 410, H - 480 - 410 - 410]
+shared_range = DataRange1d()  # one time axis for all panels
+figures = []
+for i, ((name, values), height) in enumerate(zip(panels, heights, strict=True)):
+    first, last = i == 0, i == len(panels) - 1
+    p = figure(
+        width=W,
+        height=height,
+        x_axis_type="datetime",
+        toolbar_location=None,
+        title="timeseries-decomposition · python · bokeh · anyplot.ai" if first else None,
+        min_border_left=170,
+        min_border_right=60,
+        min_border_top=120 if first else 20,
+        min_border_bottom=130 if last else 10,
+        x_range=shared_range,
+    )
+    low, high = np.nanmin(values), np.nanmax(values)
+    p.y_range = Range1d(low - 0.06 * (high - low), high + 0.28 * (high - low))  # headroom for the component name
+
     p.background_fill_color = PAGE_BG
     p.border_fill_color = PAGE_BG
     p.outline_line_color = INK_SOFT
 
-    p.title.text_color = INK
-    p.title.text_font_size = "26pt"
-    p.title.text_font_style = "bold"
+    if first:
+        p.title.text_color = INK
+        p.title.text_font_size = "44pt"
+        p.title.text_font_style = "bold"
 
-    p.xaxis.axis_label_text_color = INK
+    p.yaxis.axis_label = VALUE
     p.yaxis.axis_label_text_color = INK
-    p.xaxis.axis_label_text_font_size = "20pt"
     p.yaxis.axis_label_text_font_size = "20pt"
-
-    p.xaxis.major_label_text_color = INK_SOFT
+    p.yaxis.axis_label_text_font_style = "normal"
     p.yaxis.major_label_text_color = INK_SOFT
-    p.xaxis.major_label_text_font_size = "16pt"
-    p.yaxis.major_label_text_font_size = "16pt"
+    p.yaxis.major_label_text_font_size = "22pt"
+    p.xaxis.major_label_text_color = INK_SOFT
+    p.xaxis.major_label_text_font_size = "24pt"
+    p.xaxis.visible = last
+    p.xaxis.axis_label = DATE
+    p.xaxis.axis_label_text_color = INK
+    p.xaxis.axis_label_text_font_size = "26pt"
+    p.xaxis.axis_label_text_font_style = "normal"
+    for axis in (p.xaxis, p.yaxis):
+        axis.axis_line_color = INK_SOFT
+        axis.major_tick_line_color = INK_SOFT
+        axis.minor_tick_line_color = None
 
-    p.xaxis.axis_line_color = INK_SOFT
-    p.yaxis.axis_line_color = INK_SOFT
-    p.xaxis.major_tick_line_color = INK_SOFT
-    p.yaxis.major_tick_line_color = INK_SOFT
-
-    p.ygrid.grid_line_color = INK
-    p.ygrid.grid_line_alpha = 0.12
     p.xgrid.grid_line_color = INK
     p.xgrid.grid_line_alpha = 0.08
+    p.ygrid.grid_line_color = INK
+    p.ygrid.grid_line_alpha = 0.12
 
-    p.yaxis.axis_label = y_label
-    if not show_x_axis:
-        p.xaxis.visible = False
-    else:
-        p.xaxis.axis_label = "Date"
+    source = ColumnDataSource({DATE: df[DATE], name: values})
+    p.line(DATE, name, source=source, line_width=4, color=IMPRINT_PALETTE[i])
 
-    p.min_border_left = 100
-    p.min_border_right = 40
-    p.min_border_top = 60
-    p.min_border_bottom = 60
+    # Component name, pinned to the top-left corner of the panel
+    p.add_layout(
+        Label(
+            x=24,
+            y=height - p.min_border_top - 54,
+            x_units="screen",
+            y_units="screen",
+            text=name,
+            text_color=INK,
+            text_font_size="30pt",
+            text_font_style="bold",
+        )
+    )
+    figures.append(p)
 
-    return p
-
-
-# Create subplots with theme-aware styling and distinct colors
-p1 = create_themed_figure(total_width, panel_height, "Original Series", "Passengers (thousands)")
-source1 = ColumnDataSource(data={"date": dates, "value": original})
-p1.line("date", "value", source=source1, line_width=3, color=IMPRINT[0])
-
-p2 = create_themed_figure(total_width, panel_height, "Trend Component", "Trend", x_range=p1.x_range)
-source2 = ColumnDataSource(data={"date": dates, "value": trend_component})
-p2.line("date", "value", source=source2, line_width=3, color=IMPRINT[1])
-
-p3 = create_themed_figure(total_width, panel_height, "Seasonal Component", "Seasonal", x_range=p1.x_range)
-source3 = ColumnDataSource(data={"date": dates, "value": seasonal_component})
-p3.line("date", "value", source=source3, line_width=3, color=IMPRINT[2])
-
-p4 = create_themed_figure(
-    total_width, panel_height, "Residual Component", "Residual", show_x_axis=True, x_range=p1.x_range
-)
-source4 = ColumnDataSource(data={"date": dates, "value": residual_component})
-p4.line("date", "value", source=source4, line_width=3, color=IMPRINT[3])
-
-# Combine all panels into vertical layout
-layout = column(p1, p2, p3, p4)
+layout = column(*figures, spacing=0)
 
 # Save interactive HTML
 output_file(f"plot-{THEME}.html")
 save(layout)
 
 # Screenshot with headless Chrome using Selenium
-W, H = 4800, 2700
 opts = Options()
 for arg in (
     "--headless=new",
@@ -155,6 +150,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)  # Let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
