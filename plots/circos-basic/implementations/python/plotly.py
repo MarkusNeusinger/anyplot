@@ -1,58 +1,41 @@
-""" anyplot.ai
+"""anyplot.ai
 circos-basic: Circos Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-15
 """
 
 import os
-import sys
-
-
-# Prioritize venv's site-packages over current directory
-if sys.prefix not in sys.path:
-    import site
-
-    site_packages = site.getsitepackages()
-    if isinstance(site_packages, list):
-        sys.path = site_packages + sys.path
-    else:
-        sys.path.insert(0, site_packages)
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette with first series as brand
-IMPRINT = [
-    "#009E73",  # bluish green (brand)
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-    "#BD8233",  # reddish purple
-    "#AE3030",  # orange
-    "#2ABCCD",  # sky blue
-    "#954477",  # yellow
-    "#1A1A1A" if THEME == "light" else "#E8E8E0",  # neutral
-]
+# Imprint palette: all eight positions, one per segment in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Trade flows between regions
-np.random.seed(42)
+# Constants
+GAP_DEG = 2  # gap between neighbouring segments on the outer ring
+MIN_FLOW = 5  # flows at or below this value are too thin to draw as ribbons
 
-segments = ["North America", "Europe", "East Asia", "South America", "Africa", "Middle East", "South Asia", "Oceania"]
-n_segments = len(segments)
+# Columns: set these to your table's column names
+SOURCE = "Source region"  # role: source
+TARGET = "Target region"  # role: target
+FLOW = "Trade flow (billion USD)"  # role: value
+SIZE = "Economic size (index)"  # role: segment_size
+TRACK = "GDP index"  # role: track_data
 
-# Segment sizes (proportional to economic importance)
-segment_sizes = np.array([25, 30, 28, 10, 8, 12, 15, 6])
-segment_sizes = segment_sizes / segment_sizes.sum() * 360
-
-# Connection matrix (trade flow values)
-connections = np.array(
+# Data: replace this block with your own edge list, for example df = pd.read_csv("flows.csv")
+regions = ["North America", "Europe", "East Asia", "South America", "Africa", "Middle East", "South Asia", "Oceania"]
+sizes = [25, 30, 28, 10, 8, 12, 15, 6]
+track_values = [0.8, 0.95, 0.9, 0.4, 0.25, 0.5, 0.55, 0.3]
+flows = np.array(
     [
         [0, 45, 60, 15, 5, 10, 8, 12],
         [40, 0, 35, 12, 18, 25, 15, 8],
@@ -64,217 +47,174 @@ connections = np.array(
         [15, 10, 22, 6, 3, 6, 10, 0],
     ]
 )
+df = pd.DataFrame(
+    [
+        {SOURCE: regions[i], TARGET: regions[j], FLOW: flows[i, j], SIZE: sizes[i], TRACK: track_values[i]}
+        for i in range(len(regions))
+        for j in range(len(regions))
+        if i != j
+    ]
+)
 
-# Calculate segment positions on circle
-gap = 2
-total_gap = gap * n_segments
-available = 360 - total_gap
-segment_angles = segment_sizes / segment_sizes.sum() * available
+# Plot: reads only df and the constants above
+names = list(pd.unique(pd.concat([df[SOURCE], df[TARGET]], ignore_index=True)))
+# Segment attributes come from the rows where the segment is the source; others get the median
+segments = df.drop_duplicates(SOURCE).set_index(SOURCE)[[SIZE, TRACK]].reindex(names)
+segments = segments.fillna(segments.median())
+n_segments = len(names)
+position = {name: k for k, name in enumerate(names)}
 
-start_angles = np.zeros(n_segments)
-for i in range(1, n_segments):
-    start_angles[i] = start_angles[i - 1] + segment_angles[i - 1] + gap
+available = 360 - GAP_DEG * n_segments
+segment_angles = segments[SIZE].to_numpy() / segments[SIZE].sum() * available
+start_angles = np.concatenate([[0], np.cumsum(segment_angles + GAP_DEG)[:-1]])
+track_scale = segments[TRACK].to_numpy()
 
-fig = go.Figure()
-
-# Radii for visualization layers
+# Radii of the layers
 outer_r = 1.0
 inner_r = 0.85
-ribbon_inner = 0.80
+ribbon_r = 0.80
 track_r_outer = 0.78
 track_r_inner = 0.60
 
-# Draw outer segments (arcs)
-for i in range(n_segments):
-    theta_start = start_angles[i]
-    theta_end = theta_start + segment_angles[i]
+fig = go.Figure()
 
-    theta = np.linspace(np.radians(theta_start), np.radians(theta_end), 50)
-    theta_rev = theta[::-1]
 
-    x_outer = outer_r * np.cos(theta)
-    y_outer = outer_r * np.sin(theta)
+def arc_band(theta_start, theta_end, r_out, r_in, n_points):
+    """Closed polygon between two radii over an angular span (degrees)."""
+    theta = np.radians(np.linspace(theta_start, theta_end, n_points))
+    x = np.concatenate([r_out * np.cos(theta), r_in * np.cos(theta[::-1])])
+    y = np.concatenate([r_out * np.sin(theta), r_in * np.sin(theta[::-1])])
+    return np.append(x, x[0]), np.append(y, y[0])
 
-    x_inner = inner_r * np.cos(theta_rev)
-    y_inner = inner_r * np.sin(theta_rev)
 
-    x_arc = np.concatenate([x_outer, x_inner, [x_outer[0]]])
-    y_arc = np.concatenate([y_outer, y_inner, [y_outer[0]]])
-
+# Outer ring segments with labels
+for i, name in enumerate(names):
+    mid_deg = start_angles[i] + segment_angles[i] / 2
+    x_arc, y_arc = arc_band(start_angles[i], start_angles[i] + segment_angles[i], outer_r, inner_r, 50)
     fig.add_trace(
         go.Scatter(
             x=x_arc,
             y=y_arc,
             fill="toself",
-            fillcolor=IMPRINT[i],
-            line={"color": INK_SOFT, "width": 1},
-            name=segments[i],
+            fillcolor=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+            line={"color": INK_SOFT, "width": 0.5},
+            mode="lines",
             hoverinfo="name",
-            showlegend=True,
+            name=name,
+            showlegend=False,
         )
     )
 
-    # Add segment labels
-    mid_angle = np.radians((theta_start + theta_end) / 2)
-    label_r = outer_r + 0.12
-    label_x = label_r * np.cos(mid_angle)
-    label_y = label_r * np.sin(mid_angle)
-
-    text_angle = (theta_start + theta_end) / 2
-    if 90 < text_angle < 270:
-        text_angle = text_angle - 180
-
-    mid_deg = (theta_start + theta_end) / 2
     if 45 < mid_deg < 135:
-        xanchor = "center"
-        yanchor = "bottom"
+        xanchor, yanchor = "center", "bottom"
     elif 225 < mid_deg < 315:
-        xanchor = "center"
-        yanchor = "top"
+        xanchor, yanchor = "center", "top"
     elif mid_deg <= 45 or mid_deg >= 315:
-        xanchor = "left"
-        yanchor = "middle"
+        xanchor, yanchor = "left", "middle"
     else:
-        xanchor = "right"
-        yanchor = "middle"
-
+        xanchor, yanchor = "right", "middle"
     fig.add_annotation(
-        x=label_x,
-        y=label_y,
-        text=segments[i],
+        x=(outer_r + 0.09) * np.cos(np.radians(mid_deg)),
+        y=(outer_r + 0.09) * np.sin(np.radians(mid_deg)),
+        text=name,
         showarrow=False,
-        font={"size": 20, "color": INK},
-        textangle=-text_angle,
+        font={"size": 11, "color": INK},
         xanchor=xanchor,
         yanchor=yanchor,
     )
 
-# Draw ribbons (connections between segments)
-mid_angles = start_angles + segment_angles / 2
-segment_positions = np.zeros(n_segments)
+# Ribbons: one per pair, width proportional to the flow value
+max_flow = df[FLOW].max()
+cursor = np.zeros(n_segments)
+for row in df.itertuples(index=False):
+    i, j = position[row[0]], position[row[1]]
+    value = row[2]
+    if i >= j or not value > MIN_FLOW:
+        continue
+    width_i = value / max_flow * segment_angles[i] * 0.3
+    width_j = value / max_flow * segment_angles[j] * 0.3
+    i_start = start_angles[i] + cursor[i]
+    j_start = start_angles[j] + cursor[j]
+    cursor[i] += width_i + 1
+    cursor[j] += width_j + 1
 
-for i in range(n_segments):
-    for j in range(i + 1, n_segments):
-        if connections[i, j] > 5:
-            max_conn = connections.max()
-            width_i = (connections[i, j] / max_conn) * segment_angles[i] * 0.3
-            width_j = (connections[i, j] / max_conn) * segment_angles[j] * 0.3
+    theta_src = np.radians(np.linspace(i_start, i_start + width_i, 10))
+    theta_tgt = np.radians(np.linspace(j_start, j_start + width_j, 10))
+    x_src, y_src = ribbon_r * np.cos(theta_src), ribbon_r * np.sin(theta_src)
+    x_tgt, y_tgt = ribbon_r * np.cos(theta_tgt), ribbon_r * np.sin(theta_tgt)
 
-            theta_i_start = start_angles[i] + segment_positions[i]
-            theta_i_end = theta_i_start + width_i
-            segment_positions[i] += width_i + 1
+    # Quadratic Bezier edges pulled towards the centre
+    t = np.linspace(0, 1, 30)
 
-            theta_j_start = start_angles[j] + segment_positions[j]
-            theta_j_end = theta_j_start + width_j
-            segment_positions[j] += width_j + 1
+    def bezier(p0, p1, t=t):
+        return (1 - t) ** 2 * p0 + 2 * (1 - t) * t * 0.2 * p0 + t**2 * p1
 
-            n_points = 30
+    x_ribbon = np.concatenate([x_src, bezier(x_src[-1], x_tgt[0]), x_tgt, bezier(x_tgt[-1], x_src[0]), [x_src[0]]])
+    y_ribbon = np.concatenate([y_src, bezier(y_src[-1], y_tgt[0]), y_tgt, bezier(y_tgt[-1], y_src[0]), [y_src[0]]])
 
-            theta_src = np.linspace(np.radians(theta_i_start), np.radians(theta_i_end), 10)
-            x_src = ribbon_inner * np.cos(theta_src)
-            y_src = ribbon_inner * np.sin(theta_src)
+    # Ribbon colour: even blend of the two segment colours
+    c1, c2 = IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)], IMPRINT_PALETTE[j % len(IMPRINT_PALETTE)]
+    mix = [(int(c1[k : k + 2], 16) + int(c2[k : k + 2], 16)) // 2 for k in (1, 3, 5)]
+    fig.add_trace(
+        go.Scatter(
+            x=x_ribbon,
+            y=y_ribbon,
+            fill="toself",
+            fillcolor=f"#{mix[0]:02x}{mix[1]:02x}{mix[2]:02x}",
+            opacity=0.5,
+            mode="lines",
+            line={"color": INK_SOFT, "width": 0.3},
+            hoverinfo="text",
+            hovertext=f"{names[i]} ↔ {names[j]}: {value}",
+            showlegend=False,
+        )
+    )
 
-            theta_tgt = np.linspace(np.radians(theta_j_start), np.radians(theta_j_end), 10)
-            x_tgt = ribbon_inner * np.cos(theta_tgt)
-            y_tgt = ribbon_inner * np.sin(theta_tgt)
-
-            t = np.linspace(0, 1, n_points)
-
-            cp1_x, cp1_y = 0.2 * x_src[-1], 0.2 * y_src[-1]
-            cp2_x, cp2_y = 0.2 * x_tgt[0], 0.2 * y_tgt[0]
-
-            curve1_x = (1 - t) ** 2 * x_src[-1] + 2 * (1 - t) * t * cp1_x + t**2 * x_tgt[0]
-            curve1_y = (1 - t) ** 2 * y_src[-1] + 2 * (1 - t) * t * cp1_y + t**2 * y_tgt[0]
-
-            cp3_x, cp3_y = 0.2 * x_tgt[-1], 0.2 * y_tgt[-1]
-            cp4_x, cp4_y = 0.2 * x_src[0], 0.2 * y_src[0]
-
-            curve2_x = (1 - t) ** 2 * x_tgt[-1] + 2 * (1 - t) * t * cp3_x + t**2 * x_src[0]
-            curve2_y = (1 - t) ** 2 * y_tgt[-1] + 2 * (1 - t) * t * cp3_y + t**2 * y_src[0]
-
-            x_ribbon = np.concatenate([x_src, curve1_x, x_tgt, curve2_x, [x_src[0]]])
-            y_ribbon = np.concatenate([y_src, curve1_y, y_tgt, curve2_y, [y_src[0]]])
-
-            # Blend colors inline
-            c1 = IMPRINT[i]
-            c2 = IMPRINT[j]
-            r1, g1, b1 = int(c1[1:3], 16), int(c1[3:5], 16), int(c1[5:7], 16)
-            r2, g2, b2 = int(c2[1:3], 16), int(c2[3:5], 16), int(c2[5:7], 16)
-            r = int(r1 * 0.5 + r2 * 0.5)
-            g = int(g1 * 0.5 + g2 * 0.5)
-            b = int(b1 * 0.5 + b2 * 0.5)
-            ribbon_color = f"#{r:02x}{g:02x}{b:02x}"
-
-            fig.add_trace(
-                go.Scatter(
-                    x=x_ribbon,
-                    y=y_ribbon,
-                    fill="toself",
-                    fillcolor=ribbon_color,
-                    opacity=0.5,
-                    line={"color": INK_SOFT, "width": 0.5},
-                    hoverinfo="text",
-                    hovertext=f"{segments[i]} ↔ {segments[j]}: {connections[i, j]}",
-                    showlegend=False,
-                )
-            )
-
-# Draw inner track (data bars)
-track_values = np.array([0.8, 0.95, 0.9, 0.4, 0.25, 0.5, 0.55, 0.3])
-
-for i in range(n_segments):
-    theta_start = start_angles[i]
-    theta_end = theta_start + segment_angles[i]
-
-    theta = np.linspace(np.radians(theta_start), np.radians(theta_end), 30)
-    theta_rev = theta[::-1]
-
-    height = track_r_inner + (track_r_outer - track_r_inner) * track_values[i]
-
-    x_outer = height * np.cos(theta)
-    y_outer = height * np.sin(theta)
-    x_inner = track_r_inner * np.cos(theta_rev)
-    y_inner = track_r_inner * np.sin(theta_rev)
-
-    x_bar = np.concatenate([x_outer, x_inner, [x_outer[0]]])
-    y_bar = np.concatenate([y_outer, y_inner, [y_outer[0]]])
-
+# Inner data track: bar height per segment
+for i, name in enumerate(names):
+    height = track_r_inner + (track_r_outer - track_r_inner) * track_scale[i] / track_scale.max()
+    x_bar, y_bar = arc_band(start_angles[i], start_angles[i] + segment_angles[i], height, track_r_inner, 30)
     fig.add_trace(
         go.Scatter(
             x=x_bar,
             y=y_bar,
             fill="toself",
-            fillcolor=IMPRINT[i],
+            fillcolor=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
             opacity=0.6,
-            line={"color": INK_SOFT, "width": 0.5},
+            mode="lines",
+            line={"color": INK_SOFT, "width": 0.3},
             hoverinfo="text",
-            hovertext=f"{segments[i]} GDP Index: {track_values[i]:.2f}",
+            hovertext=f"{name} {TRACK}: {track_scale[i]:.2f}",
             showlegend=False,
         )
     )
 
-# Update layout with theme-adaptive colors
-fig.update_layout(
-    title={"text": "circos-basic · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
-    showlegend=True,
-    legend={
-        "orientation": "h",
-        "yanchor": "bottom",
-        "y": -0.15,
-        "xanchor": "center",
-        "x": 0.5,
-        "font": {"size": 18, "color": INK_SOFT},
-        "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
-    },
-    xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-1.5, 1.5], "scaleanchor": "y", "scaleratio": 1},
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-1.5, 1.5]},
-    plot_bgcolor=PAGE_BG,
-    paper_bgcolor=PAGE_BG,
-    margin={"l": 50, "r": 50, "t": 100, "b": 120},
+# Caption explaining the layers
+fig.add_annotation(
+    xref="paper",
+    yref="paper",
+    x=0.5,
+    y=0.0,
+    yanchor="bottom",
+    showarrow=False,
+    text=f"Ribbons: {FLOW}, width ∝ value<br>Inner track: {TRACK}, bar height per region",
+    font={"size": 10, "color": INK_SOFT},
+    align="center",
 )
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-fig.write_image(os.path.join(script_dir, f"plot-{THEME}.png"), width=1600, height=900, scale=3)
-fig.write_html(os.path.join(script_dir, f"plot-{THEME}.html"), include_plotlyjs="cdn")
+# Style
+fig.update_layout(
+    autosize=False,
+    width=600,
+    height=600,
+    title={"text": "circos-basic · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}, "x": 0.5},
+    showlegend=False,
+    xaxis={"visible": False, "range": [-1.5, 1.5], "scaleanchor": "y", "scaleratio": 1},
+    yaxis={"visible": False, "range": [-1.2, 1.2]},
+    plot_bgcolor=PAGE_BG,
+    paper_bgcolor=PAGE_BG,
+    margin={"l": 20, "r": 20, "t": 45, "b": 35},
+)
+
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
