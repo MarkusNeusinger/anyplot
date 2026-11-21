@@ -287,12 +287,49 @@ tags:
   domain: [statistics, general]
   features: [basic, 2d]
   data_type: [numeric]
+sources:                  # optional, see "The sources block" below
+  data: computed
+  references:
+    - title: "An example paper whose values the spec follows"
+      url: "https://doi.org/10.1000/xyz123"
+      doi: "10.1000/xyz123"
 ```
 
 **Key Points**:
 - Tags are at spec level (same for all libraries)
 - `suggested` credits the contributor who proposed the spec
 - `updated` timestamp set on any change (git history for details)
+
+#### The sources block
+
+`sources` names what a spec took from elsewhere. It has two relations, and only these
+two:
+
+- `inspired_by`: works that gave the idea for the plot.
+- `references`: literature that the spec's domain values follow.
+
+Code is never adopted from another work, so there is no relation for it, and every
+implementation stays under the MIT License. `data` says where the spec's example data
+comes from: `invented`, `computed` from a method, or `real` measurements.
+
+Every key is optional. A missing or empty block means that no source is known, which is
+the case for most specs; existing specs get their sources in later passes. The rules:
+
+- The block holds only `data`, `inspired_by`, and `references`.
+- An entry holds `title` and `url`, both required, and optionally `doi` and `isbn`.
+  Nothing else is allowed in an entry.
+- `url` is an `http` or `https` address.
+- `doi` is the bare DOI (`10.1000/xyz123`), not a resolver address.
+- `isbn` is an ISBN-10 or ISBN-13, quoted, with or without hyphens, and its check digit must fit.
+- A key that is present has a value; leave a key out instead of writing `null`.
+
+Cite a work the way it cites itself, and name no person in the entry unless the author
+asks for it. A person, as opposed to a published work, is named only with their consent.
+
+`core/spec_sources.py` holds the check. `tests/unit/core/test_spec_sources.py` runs it
+over every `specification.yaml`, and the Postgres sync skips a block that fails it with
+a warning. The sync stores the block in the `sources` column of `specs`
+([database reference](database.md#specs)).
 
 ---
 
