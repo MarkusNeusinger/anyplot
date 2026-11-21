@@ -63,9 +63,8 @@ x_domain = [mesh[X1].min(), mesh[X1_END].max()]
 y_domain = [mesh[X2].min(), mesh[X2_END].max()]
 
 # Training points: true class as fill, correct vs misclassified as shape
-train = train.assign(
-    **{STATUS: np.where(clf.predict(train[[X1, X2]].to_numpy()) == train[CLASS].astype(str), "Correct", "Incorrect")}
-)
+train = train.copy()
+train[STATUS] = np.where(clf.predict(train[[X1, X2]].to_numpy()) == train[CLASS].astype(str), "Correct", "Incorrect")
 
 background = (
     alt.Chart(mesh)
