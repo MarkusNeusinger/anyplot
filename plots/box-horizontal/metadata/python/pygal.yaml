@@ -12,87 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 50
 review:
   strengths:
-  - Correct horizontal box plot with all statistical elements (median, quartiles,
-    whiskers, outliers)
-  - 'Proper theme-adaptive styling with correct background colors (#FAF8F1 light,
-    #1A1A17 dark)'
-  - Theme-adaptive text colors for title, axis labels, and ticks—readable in both
-    renders
-  - 'Excellent code quality: clean, reproducible, deterministic with seed'
-  - Proper spec compliance for plot type, features, and data mapping
-  - Realistic, plausible salary data with sensible distributions
+  - 'Theme tokens threaded through Style: correct backgrounds and readable text colors
+    in both renders'
+  - 'Imprint palette with #009E73 first'
+  - Native box_mode='tukey' computes quartiles and whiskers
+  - Plausible, neutral salary-by-job-title data, seeded
   weaknesses:
-  - 'Palette Compliance (VQ-07): First series must be brand green (#009E73), but visually
-    appears as pale peachy/gold tone—critical violation of core palette requirement'
-  - Categories not sorted by median value, missing the optimization suggested in the
-    spec
-  - Design is purely functional without visual sophistication or refinement
-  - Limited use of pygal-specific features beyond basic box plot rendering
+  - 'VQ-05 (both): the canvas is 4800x2700 and two quartile boxes run past the bottom
+    canvas edge → 3200x1800 with every box inside the plot area. Likely cause: width=4800,
+    height=2700 and the untransposed box rects.'
+  - 'VQ-01 (both): title 28 px, ticks 18 px and legend 16 px on a 4800 px canvas read
+    tiny → the style guide''s 66/56/44/44 px on a 3200 px canvas. Likely cause: the
+    Style font sizes.'
+  - 'VQ-02 (both): all five quartile boxes pile onto the bottom Software Engineer
+    row and cover the x tick labels around 0-100000 → one box per category row, clear
+    of the axis. Likely cause: HorizontalGraph transposes pygal''s lines but not the
+    box rect nodes.'
+  - 'VQ-03 (both): the legend sits as a tiny list in the top-left corner and the boxes
+    are detached from their whiskers → boxes drawn with their whiskers and a legend
+    at the style-guide size. Likely cause: untransposed rects and legend_font_size=16.'
+  - 'SC-01 (both): the quartile boxes are not drawn horizontally on their categories,
+    so the chart does not read as a horizontal box plot → each rect transposed onto
+    its category row. Likely cause: the bare type(''HorizontalBox'', (HorizontalGraph,
+    Box), {}) mixin.'
+  - 'SC-02 (both): C2 missed — no box spans Q1-Q3 around its median, and outlier circles
+    sit off their rows → boxes around the medians, outliers at their values on their
+    rows. Likely cause: rect and circle coordinates not swapped.'
+  - 'SC-03 (both): the value axis is forced to start at 0 and the boxes sit at wrong
+    salary values (one at 0-25000) → a shared axis around the data range (about 60k-220k)
+    with each box at its quartiles. Likely cause: Box''s zero default and the untransposed
+    rects.'
+  - 'SC-04 (both): the title reads ''box-horizontal · pygal · anyplot.ai'' without
+    the language segment and the legend truncates ''Software Engin…'' → ''box-horizontal
+    · python · pygal · anyplot.ai'' and full legend labels. Likely cause: the title
+    string and the narrow top-left legend column.'
+  - 'CQ-01 (code): a type()-built HorizontalBox class breaks the flat Imports → Data
+    → Plot → Save structure → no class in the script beyond what pygal needs. Likely
+    cause: pygal ships no HorizontalBox.'
+  - 'LM-01 (code): HorizontalGraph is mixed into Box without handling the rect and
+    circle nodes it does not transpose, which produces the broken render → transpose
+    those nodes or use a pygal pattern that renders horizontally. Likely cause: the
+    empty attribute dict of the type() call.'
+  - 'Suggestion: sorting the categories by median would make the ranking read at a
+    glance.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as required
-      Chrome: Title, axis labels, tick labels all in dark text—clearly readable
-      Data: Five horizontal box plots (Software Engineer, Data Scientist, Product Manager, Designer, DevOps Engineer) with salary distributions on x-axis (0-220K USD)
-      Legibility verdict: PASS—all text and elements clearly visible
+      Background: warm off-white #FAF8F1, but the canvas is 4800x2700.
+      Chrome: small title "box-horizontal · pygal · anyplot.ai" at top center; tiny legend top-left with "Software Engin…" truncated; category labels left of the axis; raw tick numbers 0-220000 along the bottom; "Salary (USD)" axis title. Text is dark and legible in color but very small for the canvas.
+      Data: whiskers and median lines sit on their category rows, but the five quartile rectangles are drawn untransposed, all piled at the bottom near the Software Engineer row at wrong x positions (one starting at 0), two of them running past the bottom canvas edge and over the x tick labels. Outlier circles are also misplaced. Colors follow Imprint, #009E73 first.
+      Legibility verdict: PASS for contrast, but the chart is visually broken
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as required
-      Chrome: All text in light color—clearly readable against dark surface; no dark-on-dark failures
-      Data: Same box plots with identical data colors to light render (only chrome flipped appropriately)
-      Legibility verdict: PASS—all text and elements clearly visible
-
-    Color consistency verified: Data colors remain identical between renders (only chrome theme-adapts). However, first series color does not visually match the required brand green (#009E73)—appears pale peachy/gold instead.
+      Background: warm near-black #1A1A17.
+      Chrome: title, labels, ticks and legend in light ink; no dark-on-dark text; guides barely visible.
+      Data: identical colors and the same misplaced boxes as the light render.
+      Legibility verdict: PASS for contrast, but the chart is visually broken
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 11
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 2
         max: 8
-        passed: true
-        comment: All text properly sized and readable in both themes
+        passed: false
+        comment: All text far below style-guide sizes for the canvas (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 1
         max: 6
-        passed: true
-        comment: Clean layout with no element collisions
+        passed: false
+        comment: Boxes pile onto the bottom row and over the x tick labels (defect
+          line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: All box plot elements clearly visible
+        passed: false
+        comment: Tiny legend; boxes detached from whiskers (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used, CVD-safe
+        comment: Imprint palette, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Excellent proportions with generous margins
+        passed: false
+        comment: 4800x2700 canvas, boxes spill past the bottom edge (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Salary (USD) with unit
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series should be brand green (#009E73), but appears pale peachy/gold—critical
-          violation
+        passed: true
+        comment: '#009E73 first, Imprint order, correct backgrounds'
     design_excellence:
       score: 8
       max: 20
@@ -102,47 +127,48 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Functional but generic; minimal custom design
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Standard styling, no exceptional visual polish
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Categories not sorted by median; no visual hierarchy
+        comment: No hierarchy beyond the Notes
     spec_compliance:
-      score: 15
+      score: 4
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Correct horizontal box plot
+        passed: false
+        comment: Quartile boxes not drawn on their category rows (defect line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: 'All elements present: median, quartiles, whiskers, outliers'
+        passed: false
+        comment: 'C2 missed: boxes do not span Q1-Q3 around the median; outliers misplaced
+          (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: X/Y axes correctly mapped
+        passed: false
+        comment: Boxes at wrong values; axis forced to zero, C3 missed (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Correct format; legend matches data
+        passed: false
+        comment: Title lacks the python segment; legend label truncated (defect line)
     data_quality:
       score: 15
       max: 15
@@ -152,70 +178,73 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects shown; realistic distributions
+        comment: Data has differing medians, spreads and outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary ranges are plausible and neutral
+        comment: Salaries by job title, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible salary values
+        comment: Plausible salary values
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Direct, no unnecessary abstraction
+        comment: type()-built class (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with seed
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: HorizontalBox workaround is justified; no fake UI
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of Style; HorizontalBox workaround is non-standard
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Theme tokens used; limited other distinctive features
-  verdict: REJECTED
+        comment: HorizontalGraph mixed into Box without handling its rect/circle nodes
+          (defect line)
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies: []
   techniques: []
