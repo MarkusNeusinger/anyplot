@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 point-basic: Point Estimate Plot
-Library: seaborn 0.13.2 | Python 3.13.13
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
