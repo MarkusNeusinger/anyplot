@@ -12,130 +12,134 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnosti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/bokeh/plot-dark.html
-quality_score: 83
+quality_score: 0
 review:
   strengths:
-  - 'Fully complete spec implementation: all four diagnostic panels (Residuals vs
-    Fitted, Normal Q-Q, Scale-Location, Residuals vs Leverage) with all required overlays
-    (LOWESS, Q-Q reference line, Cook''s D contours at 0.5 and 1.0) and top-3 influential
-    point labels in every panel'
-  - Engineered synthetic data that clearly demonstrates multiple regression assumption
-    violations — pedagogically effective diagnostic display
-  - 'Precise theme-adaptive chrome: all INK/INK_SOFT/PAGE_BG tokens correctly threaded
-    through every figure element in both light and dark renders'
-  - 'Rigorous statistical implementation: hat matrix computed from first principles,
-    studentized residuals, Cook''s distance formula, Q-Q via scipy.stats.probplot'
-  - Three-color Okabe-Ito coding (green scatter, orange smoothers, blue Cook's thresholds)
-    creates clear visual hierarchy guiding the viewer through each panel
+  - Theme tokens threaded through every element; no dark-on-dark text
+  - 'Statistics computed properly: hat matrix, studentized residuals, Cook''s D, probplot
+    quantiles, LOWESS'
+  - 'Imprint palette order respected: green points, purple smoothers, blue contour'
   weaknesses:
-  - Subplot titles use 22pt and axis labels 18pt, below the 28pt/22pt full-canvas
-    recommendation; tick labels at 15pt are small relative to the 4800px canvas —
-    increase subplot titles to 26pt and tick labels to 17-18pt
-  - All four panels retain a full box outline (outline_line_color=INK_SOFT) — style
-    guide mandates removing top and right spines (L-shaped frame default); set outline_line_color=None
-    and use axis line styling
-  - No ColumnDataSource used; bokeh library guide explicitly recommends it for flexibility
-    — wrap scatter data in ColumnDataSource(data={...}) and use source= parameter
-  - No HoverTool despite Bokeh being an interactive library — Cook's distance or residual
-    values on hover would be a distinctive Bokeh feature leveraging the interactive
-    HTML output
+  - 'AR-09, VQ-05 (both): the bottom edge of the lower two panels is cut off by the
+    canvas, so the x-axis tick labels and the titles ''Fitted values'' and ''Leverage''
+    are missing → keep the whole grid inside the canvas. Likely cause: the Selenium
+    window size W_SCR x H_SCR does not match the layout height.'
+  - 'VQ-05 (both): the canvas is 4800x2611 instead of 3200x1800, with an empty header
+    band and a stray Bokeh toolbar logo at the top right → 3200x1800 and toolbar_location=None
+    on the gridplot. Likely cause: W_SCR/H_SCR and gridplot(..., merge_tools=False)
+    without toolbar_location=None.'
+  - 'VQ-01, DE-01 (both): the figure title is a 28px Div, smaller than the 22pt panel
+    titles, and the ticks are 15pt on a 4800px canvas, far below the 34pt bokeh reference
+    → title about 56px, ticks about 26pt (+11pt). Likely cause: the Div font-size
+    and major_label_text_font_size=''15pt''.'
+  - 'SC-02 (both): only the upper Cook''s 0.5 contour enters the leverage panel; the
+    1.0 contour and the mirrored lower contours are not visible → draw both levels
+    above and below zero within the y-range. Likely cause: the y-range and the contour
+    leverage grid.'
+  - 'SC-04 (both): the title ''diagnostic-regression-panel · bokeh · anyplot.ai''
+    lacks the language segment → ''diagnostic-regression-panel · python · bokeh ·
+    anyplot.ai''. Likely cause: the Div text.'
+  - 'VQ-03 (both): points at size 9 and the legend glyph come out tiny on the 4800px
+    canvas → about size 10 on a 3200px canvas. Likely cause: the oversized canvas.'
+  - 'VQ-02 (both): in the Scale-Location panel the label ''1'' sits on a neighbouring
+    point instead of beside obs 1 → offset it clear of other marks. Likely cause:
+    the fixed Label offsets.'
+  - 'CQ-04 (code): the same figure and axis styling block is copied for each of the
+    four panels (about 160 lines) → one loop over the panel specs. Likely cause: the
+    per-panel p1..p4 blocks.'
+  - 'DE-02 (both): every panel keeps a full box outline → outline_line_color=None
+    for the L-frame. Likely cause: outline_line_color=INK_SOFT.'
+  - 'Suggestion: a ColumnDataSource with a HoverTool would show observation index
+    and Cook''s distance in the HTML.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 across all four panels and the title header area — correct theme surface.
-      Chrome: Top header "diagnostic-regression-panel · bokeh · anyplot.ai" in dark #1A1A17 text, clearly readable. Each panel subplot title (22pt bold) and axis labels (18pt) rendered in dark INK tokens. Tick labels in muted INK_SOFT (#4A4A44). All text clearly readable against the light background.
-      Data: Scatter points in #009E73 (Okabe-Ito pos 1 teal-green), LOWESS/reference lines in #D55E00 (pos 2 orange), Cook's distance contours in #0072B2 (pos 3 blue). Observation labels "0", "1", "71" visible near influential points in each panel. Panel 4 legend has styled background (ELEVATED_BG #FFFDF6).
-      Legibility verdict: PASS — no light-on-light failures, all elements distinguishable.
+      Background: warm off-white #FAF8F1 throughout; the canvas is 4800x2611.
+      Chrome: a tiny title 'diagnostic-regression-panel · bokeh · anyplot.ai' at the top left above an empty header band; small bold panel titles; small italic axis titles and tiny ticks; full box frames; a stray toolbar logo at the top right. The bottom of the lower two panels is cut off at the canvas edge, so their x-axis ticks and titles are missing.
+      Data: #009E73 points, #C475FD LOWESS and Q-Q lines, dashed zero lines, one #4467A3 Cook's 0.5 contour at the top right of the leverage panel with a tiny legend; labels 0, 1, 71 in every panel.
+      Legibility verdict: FAIL (text too small, bottom axes clipped)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 across all panels and header — correct dark theme surface.
-      Chrome: Header text rendered in light color (INK token = #F0EFE8 in dark theme), clearly readable. Panel titles, axis labels in light INK tokens. Tick labels in lighter INK_SOFT (#B8B7B0). Legend background uses ELEVATED_BG #242420 with light label text. No dark-on-dark failures detected anywhere in the render.
-      Data: Scatter points remain #009E73 (identical to light render), LOWESS/reference lines remain #D55E00, Cook's contours remain #0072B2 — confirming Okabe-Ito positions 1-7 are theme-invariant as required.
-      Legibility verdict: PASS — all text readable against dark background, no chrome inversion failures.
+      Background: warm near-black #1A1A17 throughout.
+      Chrome: light text with no dark-on-dark failures, but the same tiny sizes and the same clipped bottom axes.
+      Data: colours identical to the light render.
+      Legibility verdict: FAIL (text too small, bottom axes clipped)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 19
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 3
         max: 8
-        passed: true
-        comment: All sizes explicitly set. Subplot titles 22pt and axis labels 18pt
-          appropriate for 2400px panels but below 28pt/22pt full-canvas standard;
-          tick labels 15pt slightly small for 4800px canvas.
+        passed: false
+        comment: 'Title in a 28px Div, 22pt panel titles, 18pt axis titles, 15pt ticks
+          and 14pt labels on a 4800px-wide canvas: everything reads small (defect
+          line)'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Observation labels use x_offset/y_offset to avoid marker collisions;
-          no tick label overlap.
+        comment: Scale-Location label '1' sits on a neighbouring point (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: size=9, alpha=0.65 works well for 200 points; slight visual crowding
-          in panel center but data is readable.
+        comment: Points at size 9 and the legend glyph come out tiny on the 4800px
+          canvas (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three Okabe-Ito colors (green/orange/blue) are colorblind-safe with
-          adequate luminance contrast.
+        comment: Green, purple and blue are CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 0
         max: 4
-        passed: true
-        comment: 2x2 grid utilizes canvas well; minor gaps at panel borders and bottom.
+        passed: false
+        comment: Canvas 4800x2611 instead of 3200x1800, bottom of the lower panels
+          cut off, empty header band, stray toolbar logo (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All panels have descriptive labels: Fitted values, Theoretical quantiles,
-          sqrt|Standardized residuals|, Leverage.'
+        comment: Descriptive axis labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; LOWESS uses #D55E00 (pos 2); Cook''s contours
-          use #0072B2 (pos 3); backgrounds #FAF8F1/#1A1A17; chrome theme-correct in
-          both renders.'
+        comment: '#009E73 points, #C475FD smoothers, #4467A3 contour; correct backgrounds
+          and theme chrome'
     design_excellence:
-      score: 11
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
-        passed: true
-        comment: Professional regression panel aesthetic mirroring R plot.lm convention.
-          Clean, well-organized, themed. No exceptional design thinking beyond correct
-          token application.
+        passed: false
+        comment: The tiny figure title loses the hierarchy; it is smaller than the
+          panel titles
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Toolbar removed, grid alpha=0.10 subtle, fonts explicitly sized.
-          However outline_line_color=INK_SOFT retains full box frame; style guide
-          recommends removing top and right spines (L-shaped frame).
+        passed: false
+        comment: Full box outline kept on every panel; nothing refined beyond it
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Three-color coding (green data, orange smoothers, blue Cook's thresholds)
-          creates clear visual hierarchy. Influential-point labels across all four
-          panels provide clear focal points.
+        passed: false
+        comment: Data displayed with the labels the Notes ask for, nothing beyond
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -143,28 +147,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: All four standard diagnostic panels in correct 2x2 arrangement.
+        comment: Four diagnostic panels in a 2x2 grid
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: 'Panel 1: scatter+zero reference+LOWESS; Panel 2: Q-Q+45° reference;
-          Panel 3: sqrt-abs-std+LOWESS; Panel 4: leverage scatter+zero reference+Cook''s
-          D contours at 0.5 and 1.0; top-3 labels in each panel.'
+        comment: Only the upper 0.5 Cook's contour is visible; the 1.0 contour and
+          the mirrored lower contours never enter the frame (C4 missed) (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axis assignments match spec exactly across all four panels.
+        comment: Marks at their computed values
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Title: diagnostic-regression-panel · bokeh · anyplot.ai; Panel 4
-          legend: Cook''s D = 0.5 / Cook''s D = 1.0.'
+        comment: Title 'diagnostic-regression-panel · bokeh · anyplot.ai' lacks the
+          language segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -174,25 +177,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows: high-leverage influential point (obs 0, Cook''s D > 0.5),
-          moderate-leverage outlier (obs 1), low-leverage residual outlier (obs 70),
-          Q-Q tail deviations, heteroscedasticity signal in Scale-Location.'
+        comment: Influential high-leverage point, residual outlier, Q-Q tails
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Drug-response pharmacological study with standardised log-dose, BMI,
-          and patient age predictors. Real-world scenario, politically neutral.
+        comment: Drug-response study, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response ~50 units, noise SD=4, fitted range ~25-80, leverage and
-          Cook's D values physically consistent with 3-predictor OLS on n=200.
+        comment: Plausible response, leverage and Cook's D values
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -200,36 +199,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> data generation -> four panels -> assemble
-          -> export. No functions or classes.'
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: Seeded
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, no fake UI elements, appropriate complexity for a 4-panel
-          diagnostic tool.
+        comment: The same figure and axis styling block is copied four times (defect
+          line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html + plot-{THEME}.png using current Bokeh 3.x
-          API with Selenium screenshot pattern.
+        comment: Saves plot-{THEME}.html and .png
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -237,18 +234,16 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: 'Good Bokeh usage: figure(), gridplot, Div/column layout, Span, Label,
-          Range1d. Misses ColumnDataSource pattern recommended in library guide (passes
-          arrays directly).'
+        comment: figure, gridplot, Span, Label; raw arrays instead of a ColumnDataSource
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Uses Bokeh gridplot layout manager, Span model for reference lines,
-          Range1d for constrained y-axis, and interactive HTML export. No HoverTool
-          or callbacks despite being an interactive library.
+        passed: false
+        comment: Nothing beyond the mandated layout
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
 impl_tags:
   dependencies:
   - scipy
