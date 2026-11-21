@@ -2,122 +2,144 @@ library: bokeh
 language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:50:32Z'
-updated: '2026-05-13T09:26:10Z'
-generated_by: claude-haiku
-workflow_run: 25790097204
+updated: '2026-11-21T09:25:05Z'
+generated_by: claude-sonnet
+workflow_run: 44888775832
 issue: 2782
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 73
 review:
   strengths:
-  - Perfect visual quality across both themes with all text legible and properly contrasted
-  - Excellent data quality with realistic financial metrics (price, volume, returns)
-    demonstrating comprehensive dashboard design
-  - Clean, straightforward code structure with proper seeding for reproducibility
-    and all imports used
-  - Comprehensive subplot layout showcasing 4 distinct visualization types (line,
-    bar, scatter, histogram) in a cohesive 2x2 grid
-  - Proper theme-adaptive chrome implementation with all elements (backgrounds, text,
-    grid) correctly responding to light/dark modes while maintaining Okabe-Ito data
-    colors
+  - Exact 3200x1800 canvas with a figure heading composed via column(heading, gridplot),
+    and every panel's plot area aligned along rows and columns with even gaps
+  - Theme tokens threaded through every chrome element; both renders fully readable,
+    data colours identical across themes
+  - Four distinct plot types (line+markers, bars, scatter, histogram) reading as related
+    views of one financial dashboard
+  - Tidy df with column-name constants read through ColumnDataSource, and np.histogram
+    for binning
   weaknesses:
-  - 'Design Excellence: Spines not explicitly refined (could remove top/right for
-    more sophisticated appearance)'
-  - 'Design Excellence: Limited visual hierarchy emphasis within subplots (could use
-    more strategic color contrast or size variation)'
-  - 'Library Mastery: Could leverage more distinctive Bokeh features beyond basic
-    figure styling'
+  - 'VQ-01 (both): tick labels at 18pt and axis titles at 22pt sit far below bokeh''s
+    34pt/42pt reference and read small on the 3200x1800 canvas → tick labels about
+    26-34pt (+8 to +16 pt), axis titles about 32-42pt (+10 to +20 pt), panel titles
+    to match. Likely cause: the font sizes set in make_panel().'
+  - 'DE-02 (both): every panel draws all four spines as a closed box plus major and
+    minor tick marks → drop the outline and keep the L-shaped left/bottom axis lines.
+    Likely cause: p.outline_line_color = INK_SOFT.'
+  - 'VQ-07 (both): the Risk vs Return tiers (return below 5 %, 5-8 %, above 8 %) are
+    ordered categories but are drawn in unrelated categorical hues blue, lavender
+    and green, which also repeat the volume and histogram colours → ordered steps
+    of one Imprint ramp in their natural order with green at the high-return end.
+    Likely cause: the np.where tier mapping to IMPRINT_PALETTE[0..2].'
+  - 'SC-04 (both): the three tier colours in the Risk vs Return panel have no legend,
+    so the colour encoding cannot be read → a legend inside or beside that panel naming
+    the tiers. Likely cause: p3.scatter without legend_field.'
+  - 'SC-02 (both): all four panels have independent axes although the Notes ask to
+    support shared axes; price and volume both run over Trading Day but their x ranges
+    are not linked → share the x range between the two top panels. Likely cause: separate
+    default ranges per figure(); set p2.x_range = p1.x_range.'
+  - 'CQ-01 (code): two helper functions, padded() (lines 57-60) and make_panel() (lines
+    78-110), break the flat Imports-Data-Plot-Save structure → create the four figures
+    inline and style them in one loop over [p1, p2, p3, p4]; build each panel''s source
+    from its own arrays. Likely cause: the helper-based structure.'
+  - 'Suggestion: a HoverTool per panel would give the HTML view value inspection.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly themed and inviting
-      Chrome: Title "subplot-grid · bokeh · anyplot.ai" is centered, bold, and dark (#1A1A17). Axis labels (22pt) and tick labels (18pt) are all readable with appropriate contrast against the light background. Outline color is subtle.
-      Data: Top-left shows stock price line in brand green (#009E73) with scatter overlay. Top-right displays trading volume as orange bars (#D55E00). Bottom-left scatter plot uses green, orange, and blue for asset categorization. Bottom-right histogram uses blue (#0072B2). All data colors are distinct and readable.
-      Legibility verdict: PASS — all text is readable; no collisions; color contrast excellent.
+      Background: warm off-white #FAF8F1 across the heading and all four panels.
+      Chrome: centred bold title "subplot-grid · python · bokeh · anyplot.ai" at the top; panel titles "Stock Price Over Time", "Daily Trading Volume", "Risk vs Return Analysis", "Daily Returns Distribution" in dark ink; italic axis titles and tick labels dark and readable, though small for the 3200x1800 canvas. Each panel framed by a full INK_SOFT outline; subtle grid.
+      Data: top-left #009E73 price line with markers over 60 trading days (94-117 $); top-right 60 lavender #C475FD volume bars (0.84-1.41 M); bottom-left 40 assets scatter coloured green/lavender/blue by return tier, no legend; bottom-right 25-bin blue #4467A3 histogram of daily returns.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly themed with good readability
-      Chrome: Title, axis labels, and tick labels all rendered in light color (#F0EFE8) with perfect contrast against the dark background. No dark-on-dark issues detected. Outline color is subtle and appropriate.
-      Data: Stock price line remains the same teal/green (#009E73) as light render. Volume bars, scatter points, and histogram bars maintain identical colors to light render. Only chrome (background, text, grid) adapts to theme.
-      Legibility verdict: PASS — theme-adaptive text rendering is correct; data colors identical to light render; all elements readable.
+      Background: warm near-black #1A1A17 everywhere.
+      Chrome: title, panel titles, axis titles and tick labels in light ink, all readable; no dark-on-dark text; grid subtle.
+      Data: identical colours and marks to the light render; only chrome flipped. Histogram bar separators use the page colour.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
-        passed: true
-        comment: All text sizes explicitly set and readable in both themes
+        passed: false
+        comment: Font sizes explicitly set and readable in both themes, but tick labels
+          18pt and axis titles 22pt sit far below bokeh's 34pt/42pt reference and
+          read small on the 3200x1800 canvas (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing across all 4 subplots, no collisions
+        comment: No text collisions; panel titles, axis titles and ticks all clear
+          of neighbors
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and lines clearly visible and distinguishable
+        comment: Markers sized for 40-60 points, 60 bars and 25 histogram bins all
+          clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety; no red-green signaling
+        comment: Adequate contrast; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2x2 grid well-proportioned with generous whitespace
+        comment: Canvas 3200x1800; 2x2 grid well proportioned, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All axes labeled with units; spec format correct
+        comment: 'Descriptive axis titles with units: Price ($), Volume (Millions),
+          Risk (Volatility %), Daily Return (%)'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series green #009E73; backgrounds correct; theme-adaptive
-          chrome perfect'
+        passed: false
+        comment: 'First series #009E73, backgrounds correct in both themes; but the
+          ordered low/mid/high return tiers use unrelated categorical hues instead
+          of one Imprint ramp (defect line)'
     design_excellence:
-      score: 13
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional polish and intentional hierarchy; Okabe-Ito applied
-          consistently
+        comment: Style-guide baseline with a centred figure heading above the grid;
+          nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 0
         max: 6
-        passed: true
-        comment: Grid is subtle and effective; spines not explicitly refined
+        passed: false
+        comment: 'All four spines drawn on every panel (outline_line_color=INK_SOFT)
+          plus tick marks: short of the spine baseline (defect line)'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear financial dashboard narrative; could emphasize focal points
-          more
+        passed: false
+        comment: Data displayed; no focal point chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -125,26 +147,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct subplot grid with 4 distinct visualization types
+        comment: 'Correct subplot grid: 2x2 with line, bar, scatter and histogram
+          cells'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Grid dimensions, different plot types, consistent spacing, clear
-          titles
+        passed: false
+        comment: 'Grid, different plot types, consistent spacing and per-panel titles
+          present; the Notes bullet on shared axes is not met: price and volume share
+          Trading Day but their x ranges are not linked (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correct, all data displayed appropriately
+        comment: All marks at their data values; axes show all data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title format correct: subplot-grid · bokeh · anyplot.ai'
+        passed: false
+        comment: Title format correct; the performance-tier colours in the Risk vs
+          Return panel have no legend (defect line)
     data_quality:
       score: 15
       max: 15
@@ -154,71 +179,78 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All subplot types represented; comprehensive financial dashboard
+        comment: Four distinct plot types with time series, distribution and relationship
+          views of one dashboard
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic financial data with appropriate scales and neutral presentation
+        comment: Plausible, neutral financial dashboard scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price, volume, returns all have sensible magnitudes
+        comment: 'Checked on the axes: price 94-117 $, volume 0.84-1.41 M, annual
+          returns -0.5 to 19.6 %, volatility 3-12 %, daily returns -6 to +7 %: all
+          sensible'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Simple, linear code without unnecessary abstraction
+        passed: false
+        comment: Two helper functions padded() and make_panel() break the Imports-Data-Plot-Save
+          structure (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures consistent output
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; legitimate Bokeh patterns
+        comment: Appropriate complexity; np.histogram used for binning
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct use of figure(), ColumnDataSource, gridplot(); high-level
-          API
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses gridplot and ColumnDataSource well; theme-aware implementation
+        comment: figure, ColumnDataSource, gridplot and column layout used as intended;
+          nothing beyond the mandated patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No distinctive bokeh feature beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T09:20:40Z'
 impl_tags:
   dependencies:
   - selenium
@@ -229,8 +261,9 @@ impl_tags:
   - data-generation
   - columndatasource
   dataprep:
+  - binning
   - cumulative-sum
-  - time-series
   styling:
-  - theme-adaptive
-  - publication-ready
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

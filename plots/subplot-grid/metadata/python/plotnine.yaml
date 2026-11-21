@@ -2,42 +2,50 @@ library: plotnine
 language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:50:18Z'
-updated: '2026-05-13T09:29:39Z'
-generated_by: claude-haiku
-workflow_run: 25790302622
+updated: '2026-11-21T09:30:25Z'
+generated_by: claude-sonnet
+workflow_run: 44889260597
 issue: 2782
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 83
 review:
   strengths:
-  - Excellent idiomatic use of plotnine's composition operators for subplot layout
-  - Perfect theme adaptation with no dark-on-dark or light-on-light text failures
-  - All four plots effectively demonstrate different visualization types in a cohesive
-    dashboard
-  - Professional typography hierarchy with appropriate font sizes for 4800×2700 canvas
-  - Comprehensive theme token system enabling consistent styling across all subplots
-  - Clean, reproducible data generation with realistic product dashboard context
-  - Proper use of Okabe-Ito color palette with correct first-series green
+  - Builds the 2x2 grid with plotnine's native composition operators (| and /), each
+    cell a complete ggplot with its own independent, fully labelled axes
+  - 'Theme tokens threaded through every chrome element: subplot titles, axis text
+    and legend read correctly on both #FAF8F1 and #1A1A17'
+  - Product legend placed inside the Sales Trend cell (legend_position='inside'),
+    so it clearly belongs to that subplot
+  - Even spacing and aligned plot areas across all four cells on the 3200x1800 canvas
   weaknesses:
-  - Design Excellence could be slightly elevated with additional visual refinement
-    techniques (e.g., subtle shadow or more distinctive typography variations)
+  - 'DQ-02 (both): the products are labelled ''A'' and ''B'' in the legend and the
+    histogram title ''Sales Distribution (Product A)'', which reads as abstract →
+    real product names (e.g. ''Trail Runner'', ''Road Pro''). Likely cause: the (''A'',
+    100, 0.5), (''B'', 85, 0.8) tuples in the data block.'
+  - 'CQ-04 (code): line 64 unpacks the panels with a generator over panels[i % len(panels)]
+    and line 112 derives the histogram breaks from np.linspace(..., len(groups) +
+    1).round(-1), coupling the histogram''s tick count to the number of products →
+    plain df[df[PANEL] == ''trend''] filters and scale_x_continuous(breaks=[90, 110,
+    130]) or the default breaks. Likely cause: over-generalised data-adapter code.'
+  - 'Suggestion: the Frequency axis shows fractional counts (2.5, 7.5); integer breaks
+    would read more naturally for a count.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) correctly applied
-      Chrome: Title "subplot-grid · plotnine · anyplot.ai" is bold and centered, clearly readable. Axis labels "Day", "Sales (Units)", "Quarter", "Revenue (k$)", "Sales (Units)", "Frequency", "Units Sold", "Profit Margin (%)" are all readable in dark ink (#1A1A17). Tick labels are sized appropriately (16pt) and readable. Subplot titles "Sales Trend", "Quarterly Revenue", "Sales Distribution (Product A)", "Units vs Margin" are bold and clear. Legend text is readable.
-      Data: Green (#009E73), orange (#D55E00), blue (#0072B2), pink (#CC79A7) colors follow Okabe-Ito order. Line chart shows two product series with points and trend line. Bar chart shows four quarters with distinct colors. Histogram shows frequency distribution in green. Scatter plot shows relationship with trend line and confidence interval.
-      Legibility verdict: PASS - All text is clearly visible against the light background with no readability issues
+      Background: warm off-white #FAF8F1, 3200x1800, thin dark divider lines between the four cells.
+      Chrome: bold suptitle 'subplot-grid · python · plotnine · anyplot.ai' centred at top (~60% width); bold subplot titles Sales Trend, Quarterly Revenue, Sales Distribution (Product A), Units vs Margin; dark axis titles with units and soft-dark tick labels; subtle grid. All readable.
+      Data: top-left line+point chart of products A (#009E73) and B (#C475FD) over 40 days with a dashed grey linear trend and an inset horizontal 'Product' legend; top-right bars Q1-Q4 in #009E73, #C475FD, #4467A3, #BD8233; bottom-left green histogram of Product A sales (10 bins, page-colored outlines); bottom-right green scatter of units vs margin with a purple lm fit and translucent band.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) correctly applied
-      Chrome: Title is rendered in light text (#F0EFE8) and clearly readable on dark background. Axis labels in light color (#1A1A17) are readable. Tick labels in secondary light color (#B8B7B0) are visible. Subplot titles in light text are clear and bold. Legend text is in secondary light color and readable.
-      Data: Colors are identical to light render - green, orange, blue, and pink appear in exact same positions and proportions. Only chrome has adapted to dark theme (light text instead of dark).
-      Legibility verdict: PASS - No dark-on-dark failures. All text is properly contrasted. Brand green (#009E73) remains clearly visible and distinct. Both renders maintain identical data color integrity.
+      Background: warm near-black #1A1A17.
+      Chrome: suptitle, subplot titles and axis titles in light ink, tick labels soft-light, legend box on elevated dark with light text; no dark-on-dark text.
+      Data: identical colors to the light render; brand green clearly visible; trend line flips to light grey.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,70 +56,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized and colored for theme, readable in both renders
+        comment: Explicit sizes (suptitle 28, subplot titles 22, axis titles 20, ticks
+          16); all text readable in both themes, subplot titles threaded through INK
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements properly spaced, no collisions, good padding between
-          subplots
+        comment: No text collisions; suptitle clear of the subplot titles, inset legend
+          clear of the lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, and bars clearly visible; appropriate data density
+        comment: Markers, lines, bars and histogram bins clearly visible; legend glyphs
+          match the lines in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used, adequate contrast, CVD-safe colors
+        comment: Imprint hues with good contrast; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, nothing cut off, generous whitespace
+        comment: 3200x1800 canvas; balanced 2x2 grid, nothing cut off, suptitle about
+          60% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, correct title format
+        comment: Descriptive axis titles with units (Sales (Units), Revenue (k$),
+          Profit Margin (%))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, follows Okabe-Ito order, correct backgrounds,
-          both themes correct'
+        comment: 'First series #009E73, Imprint order for products and quarters, #FAF8F1
+          / #1A1A17 backgrounds, chrome correct in both themes'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional styling with cohesive color scheme, intentional hierarchy,
-          brand colors used effectively
+        comment: 'Style-guide baseline: clear title / subplot-title / axis hierarchy,
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle grid, generous whitespace; could
-          be slightly more refined
+        comment: '+1: legend inset into the empty top band of its own cell (y range
+          padded to make room) and histogram bins outlined in the page color'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy, four-plot narrative about product performance,
-          guides viewer effectively
+        comment: 'Default: four views displayed, no focal point chosen'
     spec_compliance:
       score: 15
       max: 15
@@ -121,29 +132,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements subplot grid with multiple plot types
+        comment: 'Correct subplot grid: line, bar, histogram and scatter in a 2x2
+          grid'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Different plot types per cell, configurable grid, clear titles/labels,
-          proper alignment
+        comment: Different plot type per cell, consistent spacing and alignment, a
+          title per subplot readable in both themes, independent axes each fully labelled,
+          legend inside its cell
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct and labeled, all data visible
+        comment: All marks at their data values; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct, subplot titles present, legend for multi-series line
-          chart
+        comment: Title 'subplot-grid · python · plotnine · anyplot.ai' correct; Product
+          legend matches the lines
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -151,23 +164,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows line, bar, histogram, scatter with trend; demonstrates subplot
-          grid capabilities
+        comment: Shows several distinct plot types, independent axes, per-cell titles
+          and a cell-local legend
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Product performance dashboard is plausible, financial data realistic
-          and neutral
+        passed: false
+        comment: Plausible neutral sales dashboard, but the products are labelled
+          'A' and 'B' (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales, revenue, units, margins all sensible values
+        comment: 'Sales ~75-135 units, revenue 18-45 k$, margins 18-46%: sensible;
+          no Check values in the spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -175,64 +189,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions, straightforward data generation
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, properly organized
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no faked features
+        passed: false
+        comment: Convoluted generator on line 64 and len(groups)-driven histogram
+          breaks on line 112 (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png, uses current API
+        comment: Saves plot-{THEME}.png at 3200x1800; current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of plotnine's composition operators, grammar of graphics,
-          proper aes() mapping
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Leverages plotnine's composition operators for layout, uses theme
-          system effectively
-    total:
-      score: 94
-      max: 100
+        comment: '+1: plotnine composition operators | and / build the grid natively,
+          grammar-of-graphics layers per cell'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: '+1: plotnine''s PlotComposition (| and /) with legend_position=''inside''
+          is plotnine-specific'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T09:27:04Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
-  - time-series
+  - regression
+  - binning
   styling:
-  - publication-ready
   - alpha-blending
+  - minimal-chrome
   - grid-styling
