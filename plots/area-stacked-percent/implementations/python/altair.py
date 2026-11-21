@@ -1,7 +1,7 @@
 """anyplot.ai
 area-stacked-percent: 100% Stacked Area Chart
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-12
+Quality: pending | Updated: 2026-05-12
 """
 
 import os
