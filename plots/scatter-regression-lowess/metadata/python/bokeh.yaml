@@ -2,55 +2,44 @@ library: bokeh
 language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:53:54Z'
-updated: '2026-05-14T01:20:54Z'
-generated_by: claude-haiku
-workflow_run: 25835521338
+updated: '2026-11-21T13:47:05Z'
+generated_by: claude-sonnet
+workflow_run: 44910009324
 issue: 2855
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - 'Flawless theme adaptation: both light and dark renders are perfectly readable
-    with correct background colors (#FAF8F1, #1A1A17) and all text colors properly
-    adapted'
-  - 'Excellent library mastery: idiomatic use of ColumnDataSource, HoverTool for interactivity,
-    and Selenium workaround for PNG export'
-  - 'Perfect visual quality: all text explicitly sized (28pt title, 22pt labels, 18pt
-    ticks) with zero overlaps, perfect palette compliance (#009E73 primary, #D55E00
-    secondary), and appropriate element sizing for 200-point scatter'
-  - 'Spec compliance: all required features present - LOWESS smoothing (frac=0.4),
-    scatter transparency (alpha=0.6), visually distinct curve, descriptive axis labels
-    with units'
-  - 'Data quality: realistic enzyme activity scenario with non-linear bell-curve pattern
-    typical of real enzyme behavior, factually correct scales'
+  - 'Every observation drawn as a translucent #009E73 point with one solid #C475FD
+    LOWESS curve on top, spanning 10–50°C and ending at the outermost points'
+  - 'Canvas contract met: 3200x1800, toolbar off, min_border reservations and CDP
+    viewport pin, nothing clipped'
+  - 'Adaptable code: column constants, a # Data block binding df, and ColumnDataSource(df)
+    glyphs reading the constants'
+  - HoverTool scoped to the scatter renderer with numeric formatters for the HTML
+    view
   weaknesses:
-  - 'Design Excellence (DE-03): Data storytelling is minimal - the plot displays the
-    enzyme activity curve clearly but lacks visual hierarchy or emphasis to guide
-    the viewer''s attention to the key insight (peak activity around 35°C). Consider
-    adding visual emphasis through color intensity, size variation, or annotations
-    to highlight the peak'
+  - 'Suggestion: the ''Observations'' legend glyph is much smaller than the plotted
+    points; a larger legend glyph would match them.'
+  - 'Suggestion: a focal cue at the activity optimum (~35°C) could give the chart
+    a reading entry point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface, consistent with style guide
-      Chrome: Title "scatter-regression-lowess · bokeh · anyplot.ai" clearly visible in dark text (28pt); axis labels "Temperature (°C)" and "Enzyme Activity (%)" with units are readable (22pt); tick labels at 18pt are sharp and legible against light background
-      Data: 200 scatter points in brand green #009E73 with alpha 0.6 showing good density without crowding; LOWESS curve in vermillion #D55E00 is smooth and visually distinct
-      Legend: Top-right legend with "Data Points" and "LOWESS Fit" labels; subtle background box
-      Grid: Both x and y grid lines at 10% alpha, subtle and supportive
-      Legibility verdict: PASS - all text is fully readable in light theme
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'LOWESS Smoothing · scatter-regression-lowess · python · bokeh · anyplot.ai' bold dark ink, ~75% of width; axis titles 'Temperature (°C)' and 'Enzyme Activity (%)' in dark italics; tick labels 10–50 and 20–80 in soft ink; subtle grid; full outline; legend top-right on elevated bg — all readable
+      Data: 200 #009E73 points at alpha 0.6; #C475FD LOWESS curve from ~20% at 10°C up to a ~76% plateau near 35°C and down to ~30% at 50°C, ending at the outermost points
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface, correctly theme-adapted
-      Chrome: Title clearly visible in light text against dark background; axis labels are sharp and readable (light #F0EFE8); tick labels in secondary light color #B8B7B0 are fully legible
-      Data: Scatter points identical green #009E73 (matching light render); LOWESS curve identical vermillion #D55E00 (matching light render) - data colors correctly preserved across themes
-      Legend: Light text on elevated dark background #242420, fully readable
-      Grid: Subtle grid lines visible at 10% alpha
-      No dark-on-dark issues detected - all text is properly theme-adapted
-      Legibility verdict: PASS - all text is fully readable in dark theme; data colors match light render perfectly
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks in light soft ink, legend on #242420 with light text — no dark-on-dark
+      Data: identical #009E73 points and #C475FD curve; brand green visible though muted at alpha 0.6
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,52 +50,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          labels 18pt, legend 18pt. Perfectly readable at 4800×2700 in both themes'
+        comment: 'Sizes explicitly set: title ~45pt (scaled for the 74-char title),
+          axis titles 42pt, ticks 34pt, legend 30pt; all readable in both themes,
+          title ~75% of width'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements. All text fully readable
+        comment: No text collisions; legend sits in the empty top-right corner above
+          the cloud
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter markers (size 18) appropriately adapted to 200 data points
-          with alpha 0.6. Line width 5 is clearly visible
+        comment: 200 points at size 13 with alpha 0.6 suit the density; 7 px LOWESS
+          line clearly visible; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette ensures CVD-safe contrast. Data colors (#009E73,
-          #D55E00) have good luminance separation'
+        comment: Green points vs lavender curve differ in hue and luminance; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect layout: plot fills appropriate portion of 4800×2700 canvas,
-          balanced margins, legend placement optimal'
+        comment: 3200x1800, plot area fills most of the canvas, balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct (spec-id · library · anyplot.ai). Axis labels
-          descriptive with units: Temperature (°C), Enzyme Activity (%)'
+        comment: Temperature (°C) and Enzyme Activity (%) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green), second series #D55E00 (vermillion,
-          position 2). Backgrounds correct: #FAF8F1 light / #1A1A17 dark. Theme-adaptive
-          chrome perfect in both renders'
+        comment: 'Points #009E73, curve #C475FD (Imprint position 2); backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -114,22 +102,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults with Okabe-Ito palette applied correctly.
-          No exceptional custom touches or design thought beyond standard configuration
+        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes),
+          nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Good: Grid subtle (10% alpha), outline refined, elevated background
-          for legend, generous whitespace. Some refinement visible beyond defaults'
+        comment: Subtle 10% grid and the library's outline/legend frame; nothing beyond
+          the baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly (enzyme peak pattern at ~35°C is evident),
-          but no visual hierarchy or emphasis to guide viewer to the insight
+        comment: Data and curve displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +126,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with LOWESS regression curve overlay
+        comment: Scatter with one LOWESS curve overlaid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: scatter points, LOWESS curve, visual distinction
-          (solid line, contrasting color #D55E00), moderate smoothing (frac=0.4),
-          transparency (alpha=0.6), axis labels, title'
+        comment: C1 translucent points with solid contrasting curve on top; C2 smooth
+          curve following the peak at ~35°C (frac 0.4); C3 curve spans 10–50°C and
+          ends at outermost points; C4 title mentions LOWESS Smoothing, no band drawn
+          (optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly mapped. Data range fully visible on both axes
+        comment: x = temperature, y = activity; all points within the axes; marks
+          at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format perfect: scatter-regression-lowess · bokeh · anyplot.ai.
-          Legend labels clear: ''Data Points'' and ''LOWESS Fit'''
+        comment: '''LOWESS Smoothing · scatter-regression-lowess · python · bokeh
+          · anyplot.ai''; legend ''Observations'' / ''LOWESS fit (frac = 0.4)'''
     data_quality:
       score: 15
       max: 15
@@ -170,22 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Data shows all aspects: non-linear relationship, varying density,
-          bell-curve peak pattern typical of enzyme behavior'
+        comment: 'Rise, plateau and fall: the curve bends twice, showing what LOWESS
+          adapts to'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world plausible: enzyme activity vs. temperature is scientifically
-          sound and neutral scenario'
+        comment: Enzyme activity vs temperature, neutral science scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Values factually correct: enzyme activity 20-90% is realistic, temperature
-          range 10-50°C is plausible for enzyme studies'
+        comment: 'No check values in the spec; checked: peak near 35°C in code (line
+          44) and render (curve max ~76% at ~35°C), activity 12–90%'
     code_quality:
       score: 10
       max: 10
@@ -195,56 +183,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data generation → Plot creation → Save. No functions or
-          classes. Linear, simple structure
+        comment: 'Constants, # Data block binding df, # Plot block, save; no functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at line 31 for deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh plotting/models/io, statsmodels.lowess,
-          selenium webdriver'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. Appropriate complexity. No over-engineering
-          or fake functionality
+        comment: LOWESS via statsmodels lowess; no written-out algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-{THEME}.html and plot-{THEME}.png with correct naming.
-          Current bokeh 3.9.0 API used throughout
+        comment: plot-{THEME}.html and .png, Bokeh 3 API, CDP viewport pin
     library_mastery:
-      score: 10
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Expert idiomatic usage: figure() high-level API, ColumnDataSource
-          pattern, HoverTool for interactivity, proper theme-token styling'
+        passed: false
+        comment: ColumnDataSource(df) with column-name strings, legend_label; correct
+          but the mandated pattern
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: 'Leverages bokeh-specific features: HoverTool for interactive tooltips,
-          ColumnDataSource data binding pattern, Selenium for PNG export (workaround
-          for bokeh.io.export_png snap limitation)'
-    score_caps_applied: []
+        passed: false
+        comment: HoverTool scoped to the scatter renderer with numeric formatters
+          for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T13:43:29Z'
 impl_tags:
   dependencies:
   - statsmodels
@@ -252,11 +237,12 @@ impl_tags:
   techniques:
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - columndatasource
   dataprep:
   - regression
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
