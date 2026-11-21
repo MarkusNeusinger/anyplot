@@ -74,10 +74,10 @@ df = pd.DataFrame(
 )
 
 # Plot: reads only df and the constants above
-parent_of = dict(zip(df[NAME], df[PARENT].fillna("")))
+parent_of = df.set_index(NAME)[PARENT].fillna("").to_dict()
 # A parent that names no row (or is empty) marks a root
 parent_of = {node: (parent if parent in parent_of else "") for node, parent in parent_of.items()}
-value_of = dict(zip(df[NAME], df[VALUE]))
+value_of = df.set_index(NAME)[VALUE].to_dict()
 children = {}
 for node, parent in parent_of.items():
     if parent:
