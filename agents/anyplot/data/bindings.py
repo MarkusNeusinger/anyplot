@@ -153,6 +153,17 @@ _CODE_VALUE = re.compile(r"[A-Z][A-Z0-9]{1,3}")
 
 
 @dataclass(frozen=True)
+class Misfit:
+    """A binding refused because its role takes no column of its column's type: the role as bound (`y2` for a member
+    of a family), the column, the column's dtype and the role's kinds."""
+
+    role: str
+    column: str
+    dtype: ColumnDtype
+    kinds: tuple[RoleKind, ...]
+
+
+@dataclass(frozen=True)
 class BindingCheck:
     """The verdict on a set of bindings. `complete` needs no errors and every required role bound.
 
@@ -174,6 +185,9 @@ class BindingCheck:
     repeated_key: RepeatedKey | None = None
     """The key of a spec that draws one value per key, when the bound columns of complete bindings repeat it in the
     rows (`fidelity.repeated_key`); its line is the last of `warnings`."""
+    misfits: list[Misfit] = field(default_factory=list)
+    """The bindings refused for their column's type, in binding order, each also one line of `errors`: the typed record
+    a guard reads instead of the line's words (`emptied.date_misfits`)."""
 
     @property
     def fit_warnings(self) -> list[str]:
@@ -924,7 +938,7 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     Errors: an unknown role (a variadic family is bound through its members
     `<name><n>`, never its bare name), a role bound twice, a column missing from the
     profile, a column bound to two members of one variadic family (the same series twice),
-    a dtype the role's kinds do not accept (see `ACCEPTS`). One column on several roles is
+    a dtype the role's kinds do not accept (see `ACCEPTS`; also typed, as `misfits`). One column on several roles is
     valid and carries no warning (owner decision of 2026-11-04: the y and the size of a
     bubble). `missing_roles` lists the required roles without a binding, except a role
     the plot can compute (`DataRole.computed`: bound, the plot uses the column; open, it
@@ -941,6 +955,7 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     columns = {column.name: column for column in profile.columns}
     siblings = label_siblings(roles, profile)
     errors: list[str] = []
+    misfits: list[Misfit] = []
     warnings: list[str] = []
     seen_roles: set[str] = set()
     seen_columns: set[str] = set()
@@ -972,6 +987,7 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
         if not accepts(role, column.dtype):
             wanted = " or ".join(role.kinds)
             errors.append(f"role '{binding.role}' needs {wanted} data, but column '{column.name}' is {column.dtype}")
+            misfits.append(Misfit(binding.role, column.name, column.dtype, role.kinds))
             continue
         bound.add(role.name)
         held[binding.role] = column
@@ -1017,6 +1033,7 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
         missing_roles=missing,
         warnings=warnings,
         repeated_key=repeated,
+        misfits=misfits,
     )
 
 
