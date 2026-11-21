@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 83/100 | Created: 2026-05-13
@@ -16,11 +16,9 @@ if _script_dir in sys.path:
 import altair as alt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
-from scipy.stats import probplot  # noqa: E402
-from statsmodels.nonparametric.smoothers_lowess import lowess  # noqa: E402
-from statsmodels.regression.linear_model import OLS  # noqa: E402
-from statsmodels.stats.outliers_influence import OLSInfluence  # noqa: E402
-from statsmodels.tools import add_constant  # noqa: E402
+import statsmodels.api as sm  # noqa: E402
+from PIL import Image  # noqa: E402
+from scipy.stats import norm  # noqa: E402
 
 
 # Theme tokens
@@ -30,223 +28,180 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"
-ACCENT = "#C475FD"
 
-# Data — housing price prediction scenario
+# Imprint palette: position 1 for the points, position 2 for the smoothers
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+COOK_LEVELS = [0.5, 1.0]  # Cook's distance contours named by the spec
+COOK_DASHES = [[6, 3], [2, 2]]  # one dash pattern per contour level
+N_LABELLED = 3  # most influential observations that get an index label
+
+# Columns: set these to your table's column names
+OBS = "Observation"  # role: extra
+FITTED = "Fitted values"  # role: fitted
+RESIDUAL = "Residuals"  # role: residuals
+STD_RESID = "Standardized residuals"  # role: std_residuals
+LEVERAGE = "Leverage"  # role: leverage
+COOKS_D = "Cook's distance"  # role: cooks_d
+
+# Data: replace this block with your own table, for example df = pd.read_csv("model_diagnostics.csv")
+# Housing price model (sqft, bedrooms, age) with three planted outliers, fitted by OLS
 np.random.seed(42)
-n = 150
-sqft = np.random.uniform(800, 3500, n)
-bedrooms = np.random.randint(1, 6, n).astype(float)
-age_yr = np.random.uniform(0, 50, n)
-X = add_constant(np.column_stack([sqft, bedrooms, age_yr]))
-price = X @ np.array([50000.0, 120.0, 8000.0, -800.0]) + np.random.normal(0, 25000, n)
-
-# Introduce a few influential outliers
+n_obs = 150
+sqft = np.random.uniform(800, 3500, n_obs)
+bedrooms = np.random.randint(1, 6, n_obs).astype(float)
+age_yr = np.random.uniform(0, 50, n_obs)
+X = sm.add_constant(np.column_stack([sqft, bedrooms, age_yr]))
+price = X @ np.array([50000.0, 120.0, 8000.0, -800.0]) + np.random.normal(0, 25000, n_obs)
 price[12] += 180000
 price[47] -= 150000
 price[88] += 120000
-
-model = OLS(price, X).fit()
-influence = OLSInfluence(model)
-
-fitted = np.asarray(model.fittedvalues)
-residuals = np.asarray(model.resid)
-std_resid = np.asarray(influence.resid_studentized_internal)
-leverage_vals = np.asarray(influence.hat_matrix_diag)
-cooks_d_vals = np.asarray(influence.cooks_distance[0])
-p_params = X.shape[1]
-
-top3 = set(np.argsort(cooks_d_vals)[-3:])
-
-# LOWESS smoothers for subplot 1 and 3
-smooth1 = lowess(residuals, fitted, frac=0.4)
-smooth3 = lowess(np.sqrt(np.abs(std_resid)), fitted, frac=0.4)
-
-# Main DataFrame
-df_main = pd.DataFrame(
+fit = sm.OLS(price, X).fit()
+influence = fit.get_influence()
+df = pd.DataFrame(
     {
-        "fitted": fitted,
-        "residuals": residuals,
-        "std_resid": std_resid,
-        "sqrt_abs_sr": np.sqrt(np.abs(std_resid)),
-        "leverage": leverage_vals,
-        "cooks_d": cooks_d_vals,
-        "obs": np.arange(n),
-        "label": [str(i) if i in top3 else "" for i in range(n)],
+        OBS: np.arange(n_obs),
+        FITTED: np.asarray(fit.fittedvalues),
+        RESIDUAL: np.asarray(fit.resid),
+        STD_RESID: np.asarray(influence.resid_studentized_internal),
+        LEVERAGE: np.asarray(influence.hat_matrix_diag),
+        COOKS_D: np.asarray(influence.cooks_distance[0]),
     }
 )
 
-# Q-Q plot data
-sort_order = np.argsort(std_resid)
-(theoretical_q, sample_q), (slope, intercept, _) = probplot(std_resid, fit=True)
-extreme_qq_pos = set(np.argsort(np.abs(sample_q))[-3:])
-qq_df = pd.DataFrame(
-    {
-        "theoretical": theoretical_q,
-        "sample": sample_q,
-        "label": [str(sort_order[i]) if i in extreme_qq_pos else "" for i in range(n)],
-    }
-)
-qq_ref_df = pd.DataFrame(
-    {
-        "theoretical": [theoretical_q[0], theoretical_q[-1]],
-        "sample": [intercept + slope * theoretical_q[0], intercept + slope * theoretical_q[-1]],
-    }
-)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+SQRT_ABS = "√|Standardized residuals|"
+THEORETICAL = "Theoretical quantiles"
+SMOOTH = "LOWESS"
+LEVEL = "Contour level"
+BRANCH = "Contour branch"
+LABEL = "Label"
 
-# LOWESS DataFrames
-loess1_df = pd.DataFrame({"fitted": smooth1[:, 0], "smoothed": smooth1[:, 1]})
-loess3_df = pd.DataFrame({"fitted": smooth3[:, 0], "smoothed": smooth3[:, 1]})
+n = len(df)
+p_params = df[LEVERAGE].sum()  # the trace of the hat matrix equals the number of model parameters
+df[SQRT_ABS] = np.sqrt(np.abs(df[STD_RESID]))
+df[THEORETICAL] = norm.ppf((df[STD_RESID].rank(method="first") - 0.5) / n)
+df[LABEL] = ""
+top = df[COOKS_D].nlargest(N_LABELLED).index
+df.loc[top, LABEL] = df.loc[top, OBS].astype(str)
+labelled = df.loc[top]
 
-# Cook's distance contour data for subplot 4
-h_vals = np.linspace(0.002, max(leverage_vals) * 1.5, 500)
-sr_max = max(np.abs(std_resid)) * 1.15
-contour_rows = []
-for D in [0.5, 1.0]:
-    sr_curve = np.sqrt(D * p_params * (1 - h_vals) / h_vals)
-    for branch, sr_vals in [("pos", sr_curve), ("neg", -sr_curve)]:
-        for h, sr in zip(h_vals, sr_vals, strict=True):
-            if abs(sr) <= sr_max:
-                contour_rows.append({"leverage": h, "std_resid": sr, "level": f"D={D}", "branch": f"{D}_{branch}"})
-contour_df = (
-    pd.DataFrame(contour_rows) if contour_rows else pd.DataFrame(columns=["leverage", "std_resid", "level", "branch"])
-)
+W, H = 329, 127
+POINT_SIZE, POINT_OPACITY = 70, 0.75
+TICK_FONT, AXIS_FONT, PANEL_FONT, LABEL_FONT = 10, 12, 14, 10
 
-zero_df = pd.DataFrame({"y": [0.0]})
-W, H = 740, 395
 
-# ── Chart 1: Residuals vs Fitted ──
-c1_pts = (
-    alt.Chart(df_main)
-    .mark_circle(color=BRAND, opacity=0.6, size=70)
-    .encode(
-        x=alt.X("fitted:Q", title="Fitted Values"),
-        y=alt.Y("residuals:Q", title="Residuals"),
-        tooltip=["obs:Q", alt.Tooltip("residuals:Q", format=".0f")],
+def ref(frame, x, y, **mark):
+    return (
+        alt.Chart(frame)
+        .mark_line(**mark)
+        .encode(x=alt.X(x.translate(ESCAPE), type="quantitative"), y=alt.Y(y.translate(ESCAPE), type="quantitative"))
     )
-)
-c1_ref = alt.Chart(zero_df).mark_rule(color=INK_SOFT, strokeDash=[6, 3], strokeWidth=1.5).encode(y="y:Q")
-c1_loess = alt.Chart(loess1_df).mark_line(color=ACCENT, strokeWidth=2.5).encode(x="fitted:Q", y="smoothed:Q")
-c1_lbl = (
-    alt.Chart(df_main[df_main["label"] != ""])
-    .mark_text(color=INK_MUTED, fontSize=14, dx=8, dy=-8)
-    .encode(x="fitted:Q", y="residuals:Q", text="label:N")
-)
-chart1 = (c1_pts + c1_ref + c1_loess + c1_lbl).properties(
-    width=W, height=H, title=alt.TitleParams(text="Residuals vs Fitted", fontSize=20, color=INK, anchor="start")
-)
 
-# ── Chart 2: Normal Q-Q ──
-c2_pts = (
-    alt.Chart(qq_df)
-    .mark_circle(color=BRAND, opacity=0.6, size=70)
-    .encode(
-        x=alt.X("theoretical:Q", title="Theoretical Quantiles"), y=alt.Y("sample:Q", title="Standardized Residuals")
-    )
-)
-c2_ref = (
-    alt.Chart(qq_ref_df)
-    .mark_line(color=INK_SOFT, strokeDash=[6, 3], strokeWidth=1.5)
-    .encode(x="theoretical:Q", y="sample:Q")
-)
-c2_lbl = (
-    alt.Chart(qq_df[qq_df["label"] != ""])
-    .mark_text(color=INK_MUTED, fontSize=14, dx=8, dy=-8)
-    .encode(x="theoretical:Q", y="sample:Q", text="label:N")
-)
-chart2 = (c2_pts + c2_ref + c2_lbl).properties(
-    width=W, height=H, title=alt.TitleParams(text="Normal Q–Q", fontSize=20, color=INK, anchor="start")
-)
 
-# ── Chart 3: Scale-Location ──
-c3_pts = (
-    alt.Chart(df_main)
-    .mark_circle(color=BRAND, opacity=0.6, size=70)
-    .encode(
-        x=alt.X("fitted:Q", title="Fitted Values"),
-        y=alt.Y("sqrt_abs_sr:Q", title="√|Standardized Residuals|"),
-        tooltip=["obs:Q", alt.Tooltip("sqrt_abs_sr:Q", format=".3f")],
-    )
-)
-c3_loess = alt.Chart(loess3_df).mark_line(color=ACCENT, strokeWidth=2.5).encode(x="fitted:Q", y="smoothed:Q")
-c3_lbl = (
-    alt.Chart(df_main[df_main["label"] != ""])
-    .mark_text(color=INK_MUTED, fontSize=14, dx=8, dy=-8)
-    .encode(x="fitted:Q", y="sqrt_abs_sr:Q", text="label:N")
-)
-chart3 = (c3_pts + c3_loess + c3_lbl).properties(
-    width=W, height=H, title=alt.TitleParams(text="Scale–Location", fontSize=20, color=INK, anchor="start")
-)
+def smoother(x, y):
+    smooth = sm.nonparametric.lowess(df[y], df[x], frac=0.4)
+    frame = pd.DataFrame({x: smooth[:, 0], y: smooth[:, 1]})
+    return ref(frame, x, y, color=IMPRINT_PALETTE[1], strokeWidth=2)
 
-# ── Chart 4: Residuals vs Leverage ──
-c4_pts = (
-    alt.Chart(df_main)
-    .mark_circle(color=BRAND, opacity=0.6, size=70)
-    .encode(
-        x=alt.X("leverage:Q", title="Leverage"),
-        y=alt.Y("std_resid:Q", title="Standardized Residuals"),
-        tooltip=[
-            "obs:Q",
-            alt.Tooltip("leverage:Q", format=".3f"),
-            alt.Tooltip("cooks_d:Q", format=".3f", title="Cook's D"),
-        ],
-    )
-)
-c4_ref = alt.Chart(zero_df).mark_rule(color=INK_SOFT, strokeDash=[6, 3], strokeWidth=1.5).encode(y="y:Q")
-c4_lbl = (
-    alt.Chart(df_main[df_main["label"] != ""])
-    .mark_text(color=INK_MUTED, fontSize=14, dx=8, dy=-8)
-    .encode(x="leverage:Q", y="std_resid:Q", text="label:N")
-)
 
-if len(contour_df) > 0:
-    contour_05_df = contour_df[contour_df["level"] == "D=0.5"]
-    contour_10_df = contour_df[contour_df["level"] == "D=1.0"]
-    c4_c05 = (
-        alt.Chart(contour_05_df)
-        .mark_line(color=INK_SOFT, strokeWidth=1.5, strokeDash=[6, 3], opacity=0.8)
-        .encode(x="leverage:Q", y="std_resid:Q", detail="branch:N")
-    )
-    c4_c10 = (
-        alt.Chart(contour_10_df)
-        .mark_line(color=INK_MUTED, strokeWidth=1.5, strokeDash=[3, 2], opacity=0.8)
-        .encode(x="leverage:Q", y="std_resid:Q", detail="branch:N")
-    )
-    # Text labels at the end of positive contour branches
-    contour_label_rows = []
-    for D, df_c in [(0.5, contour_05_df), (1.0, contour_10_df)]:
-        pos = df_c[df_c["branch"] == f"{D}_pos"]
-        if len(pos) > 0:
-            row = pos.iloc[-1]
-            contour_label_rows.append({"leverage": row["leverage"], "std_resid": row["std_resid"], "label": f"D={D}"})
-    if contour_label_rows:
-        c4_clabels = (
-            alt.Chart(pd.DataFrame(contour_label_rows))
-            .mark_text(color=INK_SOFT, fontSize=13, dx=4, dy=-6)
-            .encode(x="leverage:Q", y="std_resid:Q", text="label:N")
+def panel(x, y, title, x_title, y_title, extras=()):
+    pts = (
+        alt.Chart(df)
+        .mark_circle(color=IMPRINT_PALETTE[0], opacity=POINT_OPACITY, size=POINT_SIZE)
+        .encode(
+            x=alt.X(x.translate(ESCAPE), type="quantitative", title=x_title, scale=alt.Scale(zero=False)),
+            y=alt.Y(y.translate(ESCAPE), type="quantitative", title=y_title, scale=alt.Scale(zero=False)),
+            tooltip=[
+                alt.Tooltip(OBS.translate(ESCAPE), type="quantitative", title=OBS),
+                alt.Tooltip(y.translate(ESCAPE), type="quantitative", title=y_title, format=".3f"),
+            ],
         )
-        chart4_layers = c4_pts + c4_ref + c4_c05 + c4_c10 + c4_clabels + c4_lbl
-    else:
-        chart4_layers = c4_pts + c4_ref + c4_c05 + c4_c10 + c4_lbl
-else:
-    chart4_layers = c4_pts + c4_ref + c4_lbl
+    )
+    lbl = (
+        alt.Chart(labelled)
+        .mark_text(color=INK, fontSize=LABEL_FONT, fontWeight="bold", dx=9, dy=-7)
+        .encode(
+            x=alt.X(x.translate(ESCAPE), type="quantitative"),
+            y=alt.Y(y.translate(ESCAPE), type="quantitative"),
+            text=alt.Text(LABEL.translate(ESCAPE), type="nominal"),
+        )
+    )
+    layered = alt.layer(pts, *extras, lbl)
+    return layered.properties(
+        width=W, height=H, title=alt.TitleParams(text=title, fontSize=PANEL_FONT, color=INK, anchor="start")
+    )
 
-chart4 = chart4_layers.properties(
-    width=W, height=H, title=alt.TitleParams(text="Residuals vs Leverage", fontSize=20, color=INK, anchor="start")
+
+def zero_rule():
+    return (
+        alt.Chart(pd.DataFrame({"zero": [0.0]}))
+        .mark_rule(color=INK_SOFT, strokeDash=[6, 3], strokeWidth=1)
+        .encode(y="zero:Q")
+    )
+
+
+# Panel 1: residuals vs fitted, zero line and LOWESS smoother
+chart1 = panel(FITTED, RESIDUAL, "Residuals vs Fitted", FITTED, RESIDUAL, [zero_rule(), smoother(FITTED, RESIDUAL)])
+
+# Panel 2: normal Q-Q against the 45-degree line (standardized residuals are ~ N(0, 1))
+span = [df[THEORETICAL].min(), df[THEORETICAL].max()]
+qq_line = ref(
+    pd.DataFrame({THEORETICAL: span, STD_RESID: span}),
+    THEORETICAL,
+    STD_RESID,
+    color=INK_SOFT,
+    strokeDash=[6, 3],
+    strokeWidth=1,
+)
+chart2 = panel(THEORETICAL, STD_RESID, "Normal Q–Q", THEORETICAL, STD_RESID, [qq_line])
+
+# Panel 3: scale-location with LOWESS smoother
+chart3 = panel(FITTED, SQRT_ABS, "Scale–Location", FITTED, SQRT_ABS, [smoother(FITTED, SQRT_ABS)])
+
+# Panel 4: residuals vs leverage with Cook's distance contours at both signs
+sr_max = df[STD_RESID].abs().max() * 1.15
+# Extend leverage far enough that every contour comes into view of the residual range
+h_reach = max(level * p_params / (sr_max**2 + level * p_params) for level in COOK_LEVELS)
+h = np.linspace(df[LEVERAGE].min() * 0.5, max(df[LEVERAGE].max() * 1.5, h_reach * 1.05), 400)
+contours, contour_ends = [], []
+for level, dash in zip(COOK_LEVELS, COOK_DASHES, strict=False):
+    curve = np.sqrt(level * p_params * (1 - h) / h)
+    keep = curve <= sr_max
+    if not keep.any():
+        continue
+    for sign in (1, -1):
+        frame = pd.DataFrame({LEVERAGE: h[keep], STD_RESID: sign * curve[keep], BRANCH: f"{level}_{sign}"})
+        contours.append(
+            ref(frame, LEVERAGE, STD_RESID, color=INK_SOFT, strokeWidth=1.25, strokeDash=dash).encode(
+                detail=alt.Detail(BRANCH.translate(ESCAPE), type="nominal")
+            )
+        )
+    contour_ends.append({LEVERAGE: h[keep][-1], STD_RESID: curve[keep][-1], LEVEL: f"D = {level}"})
+contour_tags = (
+    alt.Chart(pd.DataFrame(contour_ends))
+    .mark_text(color=INK_SOFT, fontSize=LABEL_FONT, align="right", dx=-2, dy=-7)
+    .encode(
+        x=alt.X(LEVERAGE.translate(ESCAPE), type="quantitative"),
+        y=alt.Y(STD_RESID.translate(ESCAPE), type="quantitative"),
+        text=alt.Text(LEVEL.translate(ESCAPE), type="nominal"),
+    )
+)
+chart4 = panel(
+    LEVERAGE, STD_RESID, "Residuals vs Leverage", LEVERAGE, STD_RESID, [zero_rule(), *contours, contour_tags]
 )
 
-# ── Compose 2×2 panel ──
-panel = (
+# Style
+title = "diagnostic-regression-panel · python · altair · anyplot.ai"
+fig = (
     alt.concat(chart1, chart2, chart3, chart4, columns=2)
     .properties(
-        title=alt.TitleParams(
-            text="diagnostic-regression-panel · altair · anyplot.ai", fontSize=26, color=INK, anchor="middle", offset=14
-        ),
-        background=PAGE_BG,
+        title=alt.TitleParams(text=title, fontSize=18, color=INK, anchor="middle", offset=10), background=PAGE_BG
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0.5)
-    .configure_concat(spacing=50)
+    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_concat(spacing=28)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -254,18 +209,23 @@ panel = (
         gridOpacity=0.10,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=16,
-        titleFontSize=18,
-    )
-    .configure_legend(
-        fillColor=ELEVATED_BG,
-        strokeColor=INK_SOFT,
-        labelColor=INK_SOFT,
-        titleColor=INK,
-        labelFontSize=14,
-        titleFontSize=15,
+        labelFontSize=TICK_FONT,
+        titleFontSize=AXIS_FONT,
     )
 )
 
-panel.save(f"plot-{THEME}.png", scale_factor=3.0)
-panel.save(f"plot-{THEME}.html")
+fig.save(f"plot-{THEME}.png", scale_factor=4.0)
+fig.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the exact 3200 x 1800 landscape canvas
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TW or img.height > TH:
+    # Wide tick labels (other data) grow the figure: re-render smaller instead of cropping
+    shrink = min(TW / img.width, TH / img.height) * 0.995
+    fig.save(f"plot-{THEME}.png", scale_factor=4.0 * shrink)
+    img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.size != (TW, TH):
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - img.width) // 2, (TH - img.height) // 2))
+    canvas.save(f"plot-{THEME}.png")
