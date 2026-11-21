@@ -2,50 +2,62 @@ library: letsplot
 language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:18:38Z'
-updated: '2026-05-09T14:58:13Z'
-generated_by: claude-haiku
-workflow_run: 25603939017
+updated: '2026-11-21T00:25:39Z'
+generated_by: claude-sonnet
+workflow_run: 44842157195
 issue: 2035
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/letsplot/plot-dark.html
-quality_score: 92
+quality_score: 78
 review:
   strengths:
-  - Perfect spec compliance — all scatter-matrix requirements met with clean execution
-  - Excellent theme adaptation — correctly implements light/dark color tokens throughout
-    while keeping data colors constant
-  - 'Proper Okabe-Ito palette usage — first series is #009E73, colors follow canonical
-    order, palette is CVD-safe'
-  - Professional code quality — reproducible, clean imports, idiomatic letsplot usage
-    with proper API calls
-  - Strong visual hierarchy — species color encoding and layout guide viewers systematically
-    through multivariate relationships
-  - Custom grid layout — effective use of ggbunch to create a square, symmetric matrix
-    layout
+  - Shared limits per variable (scale_x/y_continuous(limits=...)) keep each column's
+    x range and each row's y range identical across the grid
+  - Theme tokens threaded through every cell, title and legend; data colors identical
+    in light and dark
+  - Full variable names with units along the left and bottom edges, sparse ticks that
+    never collide between cells
+  - Compact data generation from a per-species (mean, std) profile dict
   weaknesses:
-  - Design excellence could be elevated beyond theme defaults — could explore custom
-    styling refinements or additional visual emphasis
-  - HTML output not explicitly tested for interactivity — interactive features available
-    in letsplot HTML exports are not demonstrated
+  - 'VQ-07 (both): a pure-white #FFFFFF frame about 24 px wide surrounds the canvas,
+    glaring around the #1A1A17 dark render → the page color PAGE_BG to the canvas
+    edge. Likely cause: ggbunch''s own plot background is not themed; add theme(plot_background=element_rect(fill=PAGE_BG,
+    color=PAGE_BG)) to the ggbunch object.'
+  - 'VQ-05 (both): the hand-built legend''s species labels (geom_text size=7, about
+    40 px cap height) are larger than the 11 pt axis titles, and the gap from ''Versicolor''
+    to the Virginica key is about 35 px against about 110 px after ''Setosa'' → labels
+    at about the axis-title size with even spacing. Likely cause: geom_text size=7
+    with a fixed nudge_x on evenly spaced positions regardless of label length.'
+  - 'SC-02 (both): C2 — panel left edges shift between rows of the same column (column
+    1: about 135 px in the histogram row vs about 118 px in the scatter rows; column
+    3 likewise), so a point cannot be traced straight down a column → align panel
+    edges, e.g. a fixed y-tick label width or gggrid with align=True. Likely cause:
+    independent ggbunch cells whose y tick labels (''20'' vs ''4'') have different
+    widths.'
+  - 'CQ-01 (code): def cell_theme() is a function that returns a constant theme →
+    a plain variable cell_theme = theme(...). Likely cause: helper kept from an earlier
+    draft.'
+  - 'Suggestion: a slight emphasis on the strongest relationship (petal length vs
+    petal width) would give the grid a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title "scatter-matrix · letsplot · anyplot.ai" in bold dark text (32pt), clearly visible. Variable names along left (Sepal Len, Sepal Wid, Petal Len, Petal Wid) and bottom edges in dark text (18pt). Tick labels in soft gray (INK_SOFT, 14pt). Grid lines subtle but visible.
-      Data: First three Okabe-Ito colors (#009E73 green, #D55E00 orange, #0072B2 blue) correctly mapped to species. Histograms on diagonal show stacked bars by species. Off-diagonal scatter plots show points with alpha=0.7 transparency.
-      Legibility verdict: PASS - All text is readable with excellent contrast against light background. No light-on-light issues.
+      Background: warm off-white #FAF8F1 across the plot area; a ~24 px pure-white frame runs around the canvas edge.
+      Chrome: bold dark title 'scatter-matrix · python · letsplot · anyplot.ai'; variable names with units ('Sepal Length (cm)' etc.) in dark INK on the left and bottom edges; soft-gray tick labels, sparse; subtle gray grid; dark panel frames.
+      Data: 4x4 grid; off-diagonal scatters in #009E73 (Setosa), #C475FD (Versicolor), #4467A3 (Virginica) at alpha 0.7; diagonal overlaid histograms by species. Legend below the grid as three colored dots with species names.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title in light text, clearly visible. Variable names and axis labels in light gray (INK_SOFT adapted to dark). Tick labels clearly readable. Grid lines visible and subtle.
-      Data: Colors identical to light render (green, orange, blue). Data colors are theme-independent as required. Histograms and scatter points render consistently.
-      Legibility verdict: PASS - All text is readable with good contrast. No dark-on-dark failures. Legend renders on elevated background (#242420) with light text, fully legible.
+      Background: warm near-black #1A1A17; the same ~24 px pure-white frame surrounds the canvas.
+      Chrome: title and axis titles in light INK, tick labels light gray, all readable; no dark-on-dark text.
+      Data: colors identical to the light render; histogram bars and points clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -53,71 +65,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (32pt), axis labels (18pt), tick labels (14pt) all properly
-          sized and readable in both renders
+        comment: Explicit sizes (ticks 9, axis titles 11, title 18 at 600 px x4);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Spacious grid layout with ample margins, no overlapping elements
+        comment: No text collisions; sparse ticks keep neighbouring cells apart
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter points visible with alpha=0.7, histogram bars distinct, grid
-          subtle but visible
+        comment: 150 points at size 2, alpha 0.7; histogram bars and legend keys visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses Okabe-Ito palette, CVD-safe, strong contrast
+        comment: Green / purple / blue are CVD-distinguishable; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Symmetric 4×4 matrix, square format ideal, nothing cut off
+        passed: false
+        comment: 2400x2400 canvas; legend labels oversized and unevenly spaced (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes library and site name, variable names descriptive
-          with units
+        comment: Full variable names with units (cm)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73, correct order, backgrounds correct, both renders
-          theme-correct'
+        passed: false
+        comment: 'Imprint order from #009E73, correct surfaces, but a pure-white 24
+          px frame surrounds both renders (defect line)'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional, clean design with thoughtful ggbunch layout
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, generous spacing
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Systematic layout guides through relationships, color hierarchy clear
+        passed: false
+        comment: Species coloring the Notes allow; no hierarchy chosen beyond the
+          Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,27 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 4×4 scatter-matrix implementation
+        comment: 4x4 scatter matrix, histograms on the diagonal
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Diagonals are histograms, off-diagonals are scatter plots, all pairs
-          included
+        passed: false
+        comment: C1, C3, C4 met; C2 ranges shared but panel left edges shift between
+          rows (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, axes show all data, species differentiation
-          via color
+        comment: Shared limits per variable; all data visible; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend shows all species with correct labels
+        comment: Title 'scatter-matrix · python · letsplot · anyplot.ai'; one legend
+          for the grid with species names
     data_quality:
       score: 15
       max: 15
@@ -155,84 +168,86 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All scatter-matrix aspects shown: pairwise relationships, univariate
-          distributions, symmetric layout'
+        comment: Clusters, correlations and multimodal distributions all visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris-like synthetic dataset is realistic and neutral
+        comment: Iris-like flower measurements, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150 points (50 per species) appropriate, variable scales sensible
+        comment: Measurements in plausible cm ranges per species; no Check values
+          in the Notes
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear script, no unnecessary functions
+        passed: false
+        comment: def cell_theme() helper (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, no dead code
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Profile dict drives data generation; no hand-rolled computation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG and HTML output with scale parameter
+        comment: plot-{THEME}.png and .html via ggsave
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Excellent letsplot idioms: ggplot + aes + geoms + scales + theme,
-          proper ggbunch usage'
+        passed: false
+        comment: Grammar-of-graphics layers, scales and themes; default
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses ggbunch for custom grid, element_* for theme control, could
-          explore more HTML interactivity
+        passed: false
+        comment: ggbunch layout as the library prompt allows; nothing beyond
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T00:21:51Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - custom-legend
+  - layer-composition
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
   - grid-styling
-  - publication-ready
