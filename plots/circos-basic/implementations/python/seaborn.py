@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 circos-basic: Circos Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-15
@@ -9,7 +9,9 @@ import os
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
+from matplotlib.path import Path
 
 
 # Theme tokens
@@ -19,10 +21,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: one position per segment, in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Set seaborn theme for consistent styling
 sns.set_theme(
     style="white",
     rc={
@@ -31,209 +32,199 @@ sns.set_theme(
         "axes.edgecolor": INK_SOFT,
         "axes.labelcolor": INK,
         "text.color": INK,
-        "xtick.color": INK_SOFT,
-        "ytick.color": INK_SOFT,
-        "grid.color": INK,
-        "grid.alpha": 0.10,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Data: Software module dependencies (10 modules with inter-module calls)
-np.random.seed(42)
+# Constants
+GAP_DEG = 3.0  # empty angle between neighbouring segments
 
-# Define segments (modules) with their sizes (lines of code)
-segments = ["Core", "Auth", "API", "Database", "Cache", "Queue", "Logging", "Utils", "Metrics", "Config"]
-n_segments = len(segments)
+# Columns: set these to your table's column names
+ORIGIN = "Origin city"  # role: source
+DESTINATION = "Destination city"  # role: target
+MOVERS = "Movers per year (thousand)"  # role: value
+RENT = "Origin median rent (EUR per m2)"  # role: track_data
 
-# Segment sizes represent lines of code
-segment_sizes = np.array([2500, 1800, 2200, 2800, 1200, 1400, 900, 800, 1100, 600])
+# Data: replace this block with your own edge list, for example df = pd.read_csv("flows.csv")
+df = pd.DataFrame(
+    {
+        ORIGIN: [
+            "Berlin",
+            "Berlin",
+            "Berlin",
+            "Berlin",
+            "Hamburg",
+            "Hamburg",
+            "Hamburg",
+            "Munich",
+            "Munich",
+            "Munich",
+            "Cologne",
+            "Cologne",
+            "Cologne",
+            "Frankfurt",
+            "Frankfurt",
+            "Frankfurt",
+            "Stuttgart",
+            "Stuttgart",
+            "Leipzig",
+            "Leipzig",
+            "Dresden",
+            "Dresden",
+            "Munich",
+            "Hamburg",
+        ],
+        DESTINATION: [
+            "Hamburg",
+            "Leipzig",
+            "Munich",
+            "Dresden",
+            "Berlin",
+            "Cologne",
+            "Frankfurt",
+            "Stuttgart",
+            "Frankfurt",
+            "Berlin",
+            "Frankfurt",
+            "Hamburg",
+            "Berlin",
+            "Munich",
+            "Stuttgart",
+            "Cologne",
+            "Munich",
+            "Frankfurt",
+            "Berlin",
+            "Dresden",
+            "Leipzig",
+            "Munich",
+            "Leipzig",
+            "Munich",
+        ],
+        MOVERS: [42, 28, 35, 18, 30, 22, 25, 38, 33, 24, 36, 20, 17, 31, 26, 19, 29, 15, 22, 12, 14, 9, 8, 21],
+    }
+)
+rent_by_city = {
+    "Berlin": 14.5,
+    "Hamburg": 15.8,
+    "Munich": 21.5,
+    "Cologne": 13.2,
+    "Frankfurt": 16.9,
+    "Stuttgart": 15.1,
+    "Leipzig": 9.4,
+    "Dresden": 9.0,
+}
+df[RENT] = df[ORIGIN].map(rent_by_city)
 
-# Create dependency connections (source module, target module, call count)
-connections = [
-    (0, 1, 45),  # Core -> Auth
-    (0, 2, 65),  # Core -> API
-    (0, 7, 38),  # Core -> Utils
-    (1, 3, 55),  # Auth -> Database
-    (1, 7, 28),  # Auth -> Utils
-    (2, 1, 42),  # API -> Auth
-    (2, 3, 72),  # API -> Database
-    (2, 4, 35),  # API -> Cache
-    (3, 4, 48),  # Database -> Cache
-    (3, 6, 25),  # Database -> Logging
-    (4, 5, 32),  # Cache -> Queue
-    (5, 6, 20),  # Queue -> Logging
-    (6, 7, 15),  # Logging -> Utils
-    (9, 0, 18),  # Config -> Core
-    (9, 1, 12),  # Config -> Auth
-]
+# Plot: reads only df and the constants above
+outflow = df.groupby(ORIGIN, sort=False)[MOVERS].sum()
+inflow = df.groupby(DESTINATION, sort=False)[MOVERS].sum()
+cities = list(dict.fromkeys(pd.concat([df[ORIGIN], df[DESTINATION]])))
+n_cities = len(cities)
+total_flow = pd.Series({c: outflow.get(c, 0) + inflow.get(c, 0) for c in cities})
+rent = df.groupby(ORIGIN, sort=False)[RENT].mean().reindex(cities)  # track value: median rent per city
+rent_share = rent / rent.max()
+color_of = {c: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, c in enumerate(cities)}
 
-# Use Okabe-Ito palette, cycling through colors for segments
-colors = [IMPRINT[i % len(IMPRINT)] for i in range(n_segments)]
+# Segment angles (degrees, clockwise from 90°): arc length follows each city's total flow
+usable = 360.0 - GAP_DEG * n_cities
+spans = total_flow / total_flow.sum() * usable
+seg_start = {}
+cursor = 90.0
+for c in cities:
+    seg_start[c] = cursor
+    cursor -= spans[c] + GAP_DEG
 
-# Create square figure for circular symmetry
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
+# Ribbon slots: every flow gets an arc inside its segment whose length is proportional to the flow
+used = dict.fromkeys(cities, 0.0)
+slots = []
+for origin, dest, value in zip(df[ORIGIN], df[DESTINATION], df[MOVERS], strict=True):
+    arcs = []
+    for c in (origin, dest):
+        width = value / total_flow[c] * spans[c]
+        a0 = seg_start[c] - used[c]
+        used[c] += width
+        arcs.append((a0, a0 - width))
+    slots.append((origin, arcs[0], arcs[1]))
+
+
+def polar(radius, deg):
+    """Point on a circle, angle in degrees."""
+    rad = np.radians(deg)
+    return radius * np.cos(rad), radius * np.sin(rad)
+
+
+def ring_sector(ax, a0, a1, r_in, r_out, **kwargs):
+    """Filled annular sector between angles a0 > a1 (degrees)."""
+    deg = np.linspace(a0, a1, 60)
+    outer = np.array(polar(r_out, deg)).T
+    inner = np.array(polar(r_in, deg[::-1])).T
+    ax.fill(*np.vstack([outer, inner]).T, **kwargs)
+
+
+R_OUT, R_RING_IN = 1.0, 0.89
+R_TRACK_OUT, R_TRACK_IN = 0.85, 0.68
+R_RIBBON = 0.64
+
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.0, right=1.0, top=0.9, bottom=0.14)
 ax.set_aspect("equal")
+ax.set_xlim(-1.5, 1.5)
+ax.set_ylim(-1.35, 1.3)
+ax.axis("off")
 
-# Calculate segment positions (angles)
-total_size = segment_sizes.sum()
-gap_fraction = 0.02
-total_gap = gap_fraction * n_segments
-available_angle = 2 * np.pi * (1 - total_gap / (2 * np.pi))
+# Ribbons first, so the rings sit on top
+for origin, (a0, a1), (b0, b1) in slots:
+    p_a0, p_a1 = polar(R_RIBBON, a0), polar(R_RIBBON, a1)
+    p_b0, p_b1 = polar(R_RIBBON, b0), polar(R_RIBBON, b1)
+    arc_a = [polar(R_RIBBON, d) for d in np.linspace(a0, a1, 12)]
+    arc_b = [polar(R_RIBBON, d) for d in np.linspace(b0, b1, 12)]
+    verts = [arc_a[0], *arc_a[1:]]
+    codes = [Path.MOVETO] + [Path.LINETO] * (len(arc_a) - 1)
+    verts += [(0.0, 0.0), p_b0]  # quadratic bezier from the end of arc A to the start of arc B
+    codes += [Path.CURVE3, Path.CURVE3]
+    verts += arc_b[1:]
+    codes += [Path.LINETO] * (len(arc_b) - 1)
+    verts += [(0.0, 0.0), p_a0]  # and back to the start of arc A
+    codes += [Path.CURVE3, Path.CURVE3]
+    ax.add_patch(
+        mpatches.PathPatch(Path(verts, codes), facecolor=color_of[origin], edgecolor="none", alpha=0.45, zorder=1)
+    )
 
-angles = []
-current_angle = np.pi / 2
+for c in cities:
+    a0 = seg_start[c]
+    a1 = a0 - spans[c]
+    # Outer ring: one segment per city
+    ring_sector(ax, a0, a1, R_RING_IN, R_OUT, color=color_of[c], alpha=0.95, linewidth=0, zorder=3)
+    # Inner track: faint full-span base, bar height = median rent relative to the dearest city
+    ring_sector(ax, a0, a1, R_TRACK_IN, R_TRACK_OUT, color=INK_SOFT, alpha=0.12, linewidth=0, zorder=2)
+    bar_top = R_TRACK_IN + (R_TRACK_OUT - R_TRACK_IN) * rent_share[c]
+    ring_sector(ax, a0, a1, R_TRACK_IN, bar_top, color=color_of[c], alpha=0.85, linewidth=0, zorder=3)
 
-for size in segment_sizes:
-    segment_angle = (size / total_size) * available_angle
-    start_angle = current_angle
-    end_angle = current_angle - segment_angle
-    angles.append((start_angle, end_angle))
-    current_angle = end_angle - gap_fraction
-
-# Draw outer ring segments
-outer_radius = 1.0
-ring_width = 0.12
-
-for i, (start, end) in enumerate(angles):
-    theta = np.linspace(end, start, 50)
-    inner = outer_radius - ring_width
-    x_outer = outer_radius * np.cos(theta)
-    y_outer = outer_radius * np.sin(theta)
-    x_inner = inner * np.cos(theta[::-1])
-    y_inner = inner * np.sin(theta[::-1])
-    x = np.concatenate([x_outer, x_inner])
-    y = np.concatenate([y_outer, y_inner])
-    ax.fill(x, y, color=colors[i], alpha=0.85, edgecolor=PAGE_BG, linewidth=1.5)
-
-    # Add segment label
-    mid_angle = (start + end) / 2
-    label_radius = outer_radius + 0.14
-    label_x = label_radius * np.cos(mid_angle)
-    label_y = label_radius * np.sin(mid_angle)
-    rotation_deg = np.degrees(mid_angle)
-    norm_angle = rotation_deg % 360
-    if 90 < norm_angle < 270:
-        rotation = rotation_deg + 180
-        ha = "right"
-    else:
-        rotation = rotation_deg
-        ha = "left"
+    # Segment label, rotated along the radius and flipped on the left half to stay upright
+    mid = (a0 + a1) / 2
+    x, y = polar(R_OUT + 0.04, mid)
+    flip = np.cos(np.radians(mid)) < 0
     ax.text(
-        label_x,
-        label_y,
-        segments[i],
-        ha=ha,
+        x,
+        y,
+        c,
+        ha="right" if flip else "left",
         va="center",
-        fontsize=16,
-        fontweight="bold",
-        rotation=rotation,
+        rotation=mid + 180 if flip else mid,
         rotation_mode="anchor",
+        fontsize=10,
+        fontweight="bold",
         color=INK,
     )
 
-# Draw inner data track (code volume as bar heights)
-inner_track_outer = outer_radius - ring_width - 0.03
-inner_track_inner = inner_track_outer - 0.15
+fig.suptitle("circos-basic · python · seaborn · anyplot.ai", fontsize=13, fontweight="bold", color=INK, y=0.96)
 
-for i, (start, end) in enumerate(angles):
-    height_fraction = segment_sizes[i] / segment_sizes.max()
-    track_height = (inner_track_outer - inner_track_inner) * height_fraction
-    theta = np.linspace(end, start, 30)
-    inner = inner_track_outer - track_height
-    x_outer = inner_track_outer * np.cos(theta)
-    y_outer = inner_track_outer * np.sin(theta)
-    x_inner = inner * np.cos(theta[::-1])
-    y_inner = inner * np.sin(theta[::-1])
-    x = np.concatenate([x_outer, x_inner])
-    y = np.concatenate([y_outer, y_inner])
-    ax.fill(x, y, color=colors[i], alpha=0.5, edgecolor="none")
-
-# Draw ribbons (connections between modules)
-ribbon_radius = inner_track_inner - 0.05
-max_value = max(c[2] for c in connections)
-min_value = min(c[2] for c in connections)
-ctrl_radius = ribbon_radius * 0.1
-n_points = 50
-t = np.linspace(0, 1, n_points)
-
-for source, target, value in connections:
-    # Width calculation: map values to 0.25-0.7 range for better distinction
-    normalized_value = (value - min_value) / (max_value - min_value)
-    width_fraction = 0.25 + normalized_value * 0.45
-
-    start1, end1 = angles[source]
-    start2, end2 = angles[target]
-    seg1_span = (start1 - end1) * width_fraction * 0.4
-    seg2_span = (start2 - end2) * width_fraction * 0.4
-    mid1 = (start1 + end1) / 2
-    mid2 = (start2 + end2) / 2
-    ribbon_start1 = mid1 + seg1_span / 2
-    ribbon_end1 = mid1 - seg1_span / 2
-    ribbon_start2 = mid2 + seg2_span / 2
-    ribbon_end2 = mid2 - seg2_span / 2
-
-    # First bezier curve
-    p0 = np.array([ribbon_radius * np.cos(ribbon_start1), ribbon_radius * np.sin(ribbon_start1)])
-    p3 = np.array([ribbon_radius * np.cos(ribbon_start2), ribbon_radius * np.sin(ribbon_start2)])
-    p1 = ctrl_radius * np.array([np.cos(ribbon_start1), np.sin(ribbon_start1)])
-    p2 = ctrl_radius * np.array([np.cos(ribbon_start2), np.sin(ribbon_start2)])
-    curve1 = (
-        (1 - t)[:, None] ** 3 * p0
-        + 3 * (1 - t)[:, None] ** 2 * t[:, None] * p1
-        + 3 * (1 - t)[:, None] * t[:, None] ** 2 * p2
-        + t[:, None] ** 3 * p3
-    )
-
-    # Second bezier curve
-    p0 = np.array([ribbon_radius * np.cos(ribbon_end1), ribbon_radius * np.sin(ribbon_end1)])
-    p3 = np.array([ribbon_radius * np.cos(ribbon_end2), ribbon_radius * np.sin(ribbon_end2)])
-    p1 = ctrl_radius * np.array([np.cos(ribbon_end1), np.sin(ribbon_end1)])
-    p2 = ctrl_radius * np.array([np.cos(ribbon_end2), np.sin(ribbon_end2)])
-    curve2 = (
-        (1 - t)[:, None] ** 3 * p0
-        + 3 * (1 - t)[:, None] ** 2 * t[:, None] * p1
-        + 3 * (1 - t)[:, None] * t[:, None] ** 2 * p2
-        + t[:, None] ** 3 * p3
-    )
-
-    # Arcs at source and target segments
-    arc1_angles = np.linspace(ribbon_start1, ribbon_end1, 10)
-    arc1 = ribbon_radius * np.column_stack([np.cos(arc1_angles), np.sin(arc1_angles)])
-    arc2_angles = np.linspace(ribbon_end2, ribbon_start2, 10)
-    arc2 = ribbon_radius * np.column_stack([np.cos(arc2_angles), np.sin(arc2_angles)])
-
-    # Combine vertices and draw polygon with improved transparency
-    vertices = np.vstack([arc1, curve1, arc2, curve2[::-1]])
-    polygon = plt.Polygon(vertices, facecolor=colors[source], edgecolor="none", alpha=0.35, zorder=1)
-    ax.add_patch(polygon)
-
-# Configure axes
-ax.set_xlim(-1.7, 1.7)
-ax.set_ylim(-1.7, 1.7)
-ax.axis("off")
-
-# Title with correct format
-ax.set_title("circos-basic · seaborn · anyplot.ai", fontsize=26, fontweight="bold", pad=20, color=INK)
-
-# Add legend explaining the visualization
-legend_elements = [
-    mpatches.Patch(facecolor=IMPRINT[0], alpha=0.85, label="Outer ring: Module (arc size ∝ code volume)"),
-    mpatches.Patch(facecolor=IMPRINT[0], alpha=0.5, label="Inner track: Module size (bar height)"),
-    mpatches.Patch(facecolor=IMPRINT[0], alpha=0.35, label="Ribbons: Dependencies (width ∝ call count)"),
+legend_handles = [
+    mpatches.Patch(facecolor=INK_SOFT, alpha=0.95, label="Outer ring: city (arc length ∝ total moves in + out)"),
+    mpatches.Patch(facecolor=INK_SOFT, alpha=0.5, label="Inner track: median rent (bar height, EUR per m2)"),
+    mpatches.Patch(facecolor=INK_SOFT, alpha=0.3, label="Ribbons: moves, width ∝ movers, colored by origin"),
 ]
-ax.legend(
-    handles=legend_elements,
-    loc="lower center",
-    bbox_to_anchor=(0.5, -0.08),
-    ncol=1,
-    fontsize=14,
-    frameon=True,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
-)
+fig.legend(handles=legend_handles, loc="lower center", bbox_to_anchor=(0.5, 0.01), fontsize=8, frameon=True)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
