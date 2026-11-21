@@ -2,47 +2,61 @@ library: pygal
 language: python
 specification_id: cat-box-strip
 created: '2025-12-30T16:31:18Z'
-updated: '2026-05-13T05:45:46Z'
-generated_by: claude-haiku
-workflow_run: 25780645498
+updated: '2026-11-21T08:44:33Z'
+generated_by: claude-sonnet
+workflow_run: 44885826149
 issue: 2695
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/pygal/plot-dark.html
-quality_score: 92
+quality_score: 79
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing (28px title, 22px labels, 18px
-    ticks) and readable text in both light and dark themes
-  - Complete spec compliance with all box plot components (median, quartiles, whiskers,
-    caps) and strip overlay with jitter and transparency
-  - Excellent data quality showing education→test score correlation with visible distribution
-    variation (outliers, different spreads)
-  - 'Flawless theme implementation: identical data colors across themes, correct backgrounds
-    (#FAF8F1 light, #1A1A17 dark), theme-adaptive chrome (INK tokens)'
-  - Clean, reproducible code with np.random.seed() determinism and explicit styling
-    configuration
-  - Proper use of Okabe-Ito palette with brand green (#009E73) first series and CVD-safe
-    colors
-  weaknesses: []
+  - Canvas, fonts and title all on the pygal reference values (3200x1800, 66/56/44,
+    full mandated title)
+  - Value axis 44-100 is not forced to zero, so the boxes and point clouds compare
+    directly (C4)
+  - Points jittered only sideways within each box's band, with per-group seeds for
+    reproducibility
+  - 'Clean adaptable layout: column constants with roles, a Data block that binds
+    df, plot code reading only df'
+  - Native pygal HTML output keeps per-point tooltips in the interactive view
+  weaknesses:
+  - 'VQ-03, SC-02 (both): the median line (and the whiskers) are drawn as thin strokes
+    in the box''s own hue, so the median at e.g. ~65 in High School and ~87 in PhD
+    almost disappears inside the 0.7-opacity fill, against C1/C3 → a clearly visible
+    median, e.g. drawn in the INK token at about 6-8 px. Likely cause: the median
+    series takes its color from color_sequence (same hue as the box fill) and the
+    stroke_style width does not separate it from the fill.'
+  - 'VQ-03 (both): every box shows a stray vertical line from its lower-left corner
+    (x = center - 0.25) down to the x-axis, which reads like an extra whisker → no
+    mark below Q1 other than the whisker. Likely cause: fill=True on the quartile_box
+    series makes pygal close the filled area to the axis baseline; draw the box without
+    area fill to the baseline (e.g. fill only the closed polygon, or stroke-only box).'
+  - 'SC-02 (both): the strip points render fully opaque (solid dots inside the boxes,
+    most visible in the dark render), while the Notes and C3 ask for translucent points
+    → points at about 0.5-0.7 opacity. Likely cause: Style(opacity=0.7) applies to
+    fills only; the dots get no opacity setting.'
+  - 'Suggestion: dropping the vertical x-guides that run through every box center
+    would leave the whiskers as the only vertical lines.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme background
-      Chrome: Title "cat-box-strip · pygal · anyplot.ai" visible in dark text; axis labels "Education Level" and "Test Score" clearly readable; tick labels (High School, Bachelor's, Master's, PhD, and numeric values) in dark text with excellent contrast
-      Data: Four box plots in Okabe-Ito colors - green (#009E73, High School), orange (#D55E00, Bachelor's), blue (#0072B2, Master's), reddish-purple (#CC79A7, PhD); strip points overlaid with jitter and transparency revealing individual data distribution
-      Legibility verdict: PASS - All text is completely readable against light background with strong contrast; no light-on-light failures
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'cat-box-strip · python · pygal · anyplot.ai' in dark ink at the top; axis titles 'Education Level' and 'Test Score' and ticks (50-100, the four category names) dark and clearly readable; dashed guides on both axes subtle.
+      Data: four boxes in #009E73 (High School), #C475FD (Bachelor's), #4467A3 (Master's), #BD8233 (PhD) at 0.7 fill opacity with jittered solid dots of the same hue on top; whiskers and caps thin same-hue lines; median lines barely visible inside the boxes; a thin vertical line drops from each box's lower-left corner to the x-axis.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme background
-      Chrome: Title visible in light text; axis labels in light text (#F0EFE8); tick labels in light text with excellent contrast against dark surface; NO dark-on-dark failures
-      Data: Identical data colors to light render (green, orange, blue, purple); strip points visible with same transparency; gridlines subtle but visible
-      Legibility verdict: PASS - All text is clearly readable against dark background; theme-adaptive colors properly applied; no chrome issues
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, axis titles and ticks in light ink, all readable; no dark-on-dark text; guides subtle.
+      Data: identical hues to the light render (boxes darker only because the 0.7 fill blends with the dark page); dots solid; the same faint medians and stray box-corner lines.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -50,77 +64,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks);
-          perfectly readable in both light and dark themes
+        comment: Title 66, axis titles 56, ticks 44 (the pygal reference sizes); all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; category labels, title, and axis labels
-          properly spaced
+        comment: No text collisions; point overlap inside dense boxes is permitted
+          by C5
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: 175+ data points with 16px markers; jitter and transparency well-adapted
-          to density; boxes and whiskers clearly visible
+        passed: false
+        comment: Median line and whiskers are thin same-hue strokes that nearly vanish
+          inside the boxes, and a stray vertical fill edge runs from each box's lower-left
+          corner to the x-axis (defect lines)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety; excellent contrast on
-          light and dark backgrounds
+        comment: Four distinct Imprint hues, separated by position too; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of 4800×2700px canvas; balanced margins; title
-          and labels properly positioned
+        comment: 3200x1800 canvas, balanced margins, title ~55% of width, nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels; title in correct format
+        comment: '''Education Level'' and ''Test Score'' are reader text; scores are
+          unitless points'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green); multi-series follows Okabe-Ito
-          order; backgrounds correct (#FAF8F1 light, #1A1A17 dark); theme-adaptive
-          chrome in both renders'
+        comment: 'Imprint positions 1-4 in order starting at #009E73; #FAF8F1 / #1A1A17
+          backgrounds; chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom Okabe-Ito palette with explicit theme tokens; professional
-          color hierarchy; strong design but not publication-exceptional
+        passed: false
+        comment: Style-guide baseline type and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle gridlines, generous whitespace; good refinement with custom
-          style configuration
+        passed: false
+        comment: Default pygal guides on both axes, including vertical guides through
+          every box; no refinement beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear education→performance correlation visible; good visual hierarchy
-          from boxes to strip overlay
+        passed: false
+        comment: Data displayed in natural education order; no focal point chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,27 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box plot with strip overlay; all subtypes present (median,
-          Q1, Q3, whiskers, caps, jitter)
+        comment: Box plot with jittered strip overlay, as specified
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Strip overlay with jitter and transparency fully implemented; box
-          statistics complete
+        passed: false
+        comment: Boxes, whiskers, caps, jitter present and the value axis is not forced
+          to zero (C4), but the strip points render opaque rather than translucent
+          (C3, Notes; defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, values on y-axis; all data visible
+        comment: Categories on x, scores on y; points at their values with categorical
+          jitter only, kept inside each box's band (C2)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format perfect; no legend needed (categories labeled on axis)
+        comment: Title 'cat-box-strip · python · pygal · anyplot.ai' is correct; no
+          legend needed (categories on the axis) - N/A
     data_quality:
       score: 15
       max: 15
@@ -158,21 +173,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows distributions, outliers, different spreads across groups; all
-          aspects represented
+        comment: Different centers, spreads, sample sizes (47/52/40/44) and points
+          beyond the whiskers on several groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world plausible scenario: test scores across education levels'
+        comment: 'Test scores by education level: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 range appropriate; means 68→85 realistic; SDs decrease with
-          education correctly
+        comment: Scores clipped to 0-100, means 68-85; checked the axis 44-100 against
+          the data. No Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -182,59 +197,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward: imports → tokens → data → style → chart → save;
-          no functions or classes'
+        comment: Flat script; adaptation contract passes (Data block binds df, column
+          constants with roles)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); deterministic jitter per group
+        comment: np.random.seed(42) and per-group seeds for the jitter
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, pygal, Style'
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake functionality
+        comment: Box statistics via np.percentile; pygal.Box cannot overlay a strip,
+          so the hand-built XY box is the appropriate path
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html; current pygal API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of pygal.XY(), Style object with theme tokens, proper
-          rendering
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Leverages XY chart for manual box construction; uses Style for theme-adaptive
-          colors. Competent but straightforward.
+        passed: false
+        comment: 'pygal.XY with per-series stroke_style and a Style object: competent,
+          standard usage'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; the HTML tooltips
+          come by default
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T08:41:03Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - publication-ready
