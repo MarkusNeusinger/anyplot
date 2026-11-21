@@ -1,7 +1,7 @@
 """ anyplot.ai
 box-horizontal: Horizontal Box Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-12
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-21
 """
 
 import os
@@ -18,55 +18,36 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
 
-# Data - salary ranges by job title (with realistic distributions)
-np.random.seed(42)
+# Imprint palette: first series is always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-categories = ["Software Engineer", "Product Manager", "Data Scientist", "UX Designer", "DevOps Engineer"]
+# Columns: set these to your table's column names
+COURSE = "Course"  # role: categories
+SCORE = "Final exam score (points)"  # role: values
 
-data = []
-# Software Engineer - moderate spread
-data.extend(
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+rng = np.random.default_rng(42)
+course_profiles = {
+    # course: (mean, std, students)
+    "Introduction to Organic Chemistry": (68, 12, 90),
+    "Linear Algebra for Engineers": (72, 15, 85),
+    "Principles of Macroeconomics": (76, 9, 95),
+    "Modern European History": (81, 8, 80),
+    "Advanced Statistical Methods": (64, 17, 70),
+    "Creative Writing Workshop": (86, 6, 60),
+}
+df = pd.concat(
     [
-        {"Job Title": "Software Engineer", "Salary (USD)": v}
-        for v in np.concatenate(
-            [
-                np.random.normal(135000, 25000, 80),
-                np.random.normal(200000, 15000, 5),  # outliers (senior/staff)
-            ]
-        )
-    ]
+        pd.DataFrame({COURSE: course, SCORE: np.clip(rng.normal(mean, std, n), 0, 100).round(1)})
+        for course, (mean, std, n) in course_profiles.items()
+    ],
+    ignore_index=True,
 )
 
-# Product Manager - higher median with tight distribution
-data.extend([{"Job Title": "Product Manager", "Salary (USD)": v} for v in np.random.normal(155000, 22000, 85)])
+# Plot: reads only df and the constants above
+course_order = df.groupby(COURSE)[SCORE].median().sort_values().index.tolist()
 
-# Data Scientist - wide spread with high values
-data.extend(
-    [
-        {"Job Title": "Data Scientist", "Salary (USD)": v}
-        for v in np.concatenate(
-            [
-                np.random.normal(145000, 30000, 75),
-                np.random.normal(220000, 20000, 10),  # outliers
-            ]
-        )
-    ]
-)
-
-# UX Designer - moderate values
-data.extend([{"Job Title": "UX Designer", "Salary (USD)": v} for v in np.random.normal(120000, 20000, 85)])
-
-# DevOps Engineer - highest median, tight distribution
-data.extend([{"Job Title": "DevOps Engineer", "Salary (USD)": v} for v in np.random.normal(160000, 18000, 90)])
-
-df = pd.DataFrame(data)
-
-# Sort categories by median for easier comparison
-category_order = df.groupby("Job Title")["Salary (USD)"].median().sort_values().index.tolist()
-
-# Set theme-adaptive styling
 sns.set_theme(
     style="ticks",
     rc={
@@ -84,38 +65,35 @@ sns.set_theme(
     },
 )
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Horizontal box plot with single color
 sns.boxplot(
     data=df,
-    x="Salary (USD)",
-    y="Job Title",
-    order=category_order,
-    color=BRAND,
-    linewidth=2,
+    x=SCORE,
+    y=COURSE,
+    order=course_order,
+    color=IMPRINT_PALETTE[0],
+    linewidth=1.2,
     width=0.6,
-    flierprops={"marker": "o", "markersize": 8, "alpha": 0.6},
+    boxprops={"edgecolor": INK_SOFT},
+    whiskerprops={"color": INK_SOFT},
+    capprops={"color": INK_SOFT},
+    medianprops={"color": INK, "linewidth": 2.2},
+    flierprops={"marker": "o", "markersize": 4, "markerfacecolor": IMPRINT_PALETTE[0], "markeredgecolor": INK_SOFT},
     ax=ax,
 )
 
-# Labels and styling
-ax.set_xlabel("Salary (USD)", fontsize=20, color=INK)
-ax.set_ylabel("Job Title", fontsize=20, color=INK)
-ax.set_title("box-horizontal · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_title("box-horizontal · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(SCORE, fontsize=10, color=INK)
+ax.set_ylabel(COURSE, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Spine styling
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+sns.despine(ax=ax)
 for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 
-# Grid styling - subtle on x-axis only
-ax.xaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.xaxis.grid(True, alpha=0.10, linewidth=0.6, color=INK)
 ax.yaxis.grid(False)
 
-# Adjust layout
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.30, right=0.97, top=0.91, bottom=0.14)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
