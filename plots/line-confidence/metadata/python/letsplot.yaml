@@ -2,58 +2,63 @@ library: letsplot
 language: python
 specification_id: line-confidence
 created: '2025-12-26T16:14:16Z'
-updated: '2026-05-09T18:43:34Z'
-generated_by: claude-haiku
-workflow_run: 25601475860
+updated: '2026-11-21T00:17:18Z'
+generated_by: claude-sonnet
+workflow_run: 44841688979
 issue: 2007
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 79
 review:
   strengths:
-  - 'Perfect spec compliance: geom_ribbon + geom_line correctly implements a line-confidence
-    plot with semi-transparent CI band (alpha=0.25)'
-  - 'Flawless theme adaptation: PAGE_BG, INK, INK_SOFT tokens applied to all chrome
-    elements in both light (#FAF8F1) and dark (#1A1A17) renders'
-  - All font sizes explicitly set per guidelines (title=24pt, axis labels=20pt, tick
-    labels=16pt, legend=16pt) using theme-adaptive INK colors
-  - 'Excellent data quality: business forecast scenario with widening CI band naturally
-    communicates growing uncertainty over a 2-year horizon'
-  - 'Perfect code structure: KISS pattern with seed set, clean imports, and correct
-    ggsave output for both PNG and HTML'
+  - 'Canonical lets-plot layering: geom_ribbon(ymin/ymax) under a 1.5-wide geom_line,
+    so the central line is the strongest mark and sits on top of the band in both
+    renders'
+  - 'Band at alpha 0.25 in a lighter tone of the line''s own #009E73, so it reads
+    as the line''s uncertainty and not as a second series; gridlines stay visible
+    through it in both themes'
+  - Legend names both layers and says what the band is ('95% prediction interval'
+    / 'Forecast'), driven by scale_color_manual/scale_fill_manual on a mapped series
+    column
+  - Plausible, neutral 48-hour PM2.5 forecast with a diurnal cycle and an interval
+    that widens with the horizon; axis titles come from the column constants with
+    units (µg/m³)
+  - Correct canvas (ggsize(800, 450) + scale=4 = 3200x1800) and theme tokens threaded
+    through every chrome element; HTML export keeps lets-plot's native hover tooltips
   weaknesses:
-  - 'DE-01 moderate: design is clean but monochromatic — line and CI band both use
-    solid #009E73 with only alpha variation, which is related but lacks visual contrast
-    between the forecast line and uncertainty region'
-  - 'DE-02 partial: grid lines appear slightly more prominent than expected from rgba(26,26,23,0.10)
-    in the light render; no explicit spine removal from the code (relies on letsplot
-    defaults for L-shaped frame)'
-  - 'DE-03 limited storytelling: widening CI band is inherently narrative but no visual
-    emphasis highlights the increasing uncertainty — annotations or a focal callout
-    at the right side could guide the viewer'
-  - 'LM-02 not distinctive: geom_ribbon + geom_line is also available in plotnine
-    with nearly identical syntax; no uniquely letsplot feature beyond HTML export'
-  - 'VQ-03 minor: geom_point dots are the same BRAND color as the line and CI band,
-    slightly reducing their definition against the confidence band region'
+  - 'DE-02 (both): the panel is enclosed by all four spines (a full box frame around
+    the plot area), which a line chart does not require → keep only the left and bottom
+    axis lines (or none). Likely cause: the panel border is not set to element_blank();
+    add panel_border=element_blank() to theme() and keep axis_line for the L-shape.'
+  - 'VQ-03 (both): the ''95% prediction interval'' legend swatch is solid #009E73
+    at full opacity with an INK_SOFT outline, while the band itself is drawn at alpha
+    0.25 without outline, so the key does not match the mark it explains → swatch
+    at the band''s alpha 0.25, no outline. Likely cause: the fill guide inherits no
+    alpha; add guides(fill=guide_legend(override_aes={''alpha'': 0.25})) or set the
+    legend key styling.'
+  - 'Suggestion: limit the grid to y-axis lines only, as the style guide prefers for
+    line charts.'
+  - 'Suggestion: a tick at 48 h would close the x axis at the end of the forecast
+    horizon.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — no pure white visible.
-      Chrome: Title "line-confidence · letsplot · anyplot.ai" centered at top in dark ink, clearly readable. Axis label "Sales (thousands)" on Y-axis and "Month" on X-axis in dark text, both legible. Tick labels at 0,3,6,9,12,15,18,21,24 (X) and 50–125 (Y) rendered in INK_SOFT, fully readable. Legend at top center shows green swatch "95% CI" and line icon "Sales Forecast" in readable secondary text.
-      Data: CI ribbon in #009E73 at alpha=0.25 — renders as pale mint-green shaded band that widens toward month 24. Central trend line in solid #009E73 clearly visible above the band. Green dots at each data point reinforce the trend line. Grid lines are subtle horizontal and vertical rules.
-      Legibility verdict: PASS — all text elements are readable against the warm off-white background, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 across canvas and panel; 3200x1800 landscape.
+      Chrome: Title "line-confidence · python · letsplot · anyplot.ai" top-left in dark ink (~45% width). Y axis "PM2.5 forecast (µg/m³)" with ticks 5–40, x axis "Hour from now" with ticks 0–42 every 6 h, all dark-grey text, readable. Subtle grid on both axes. Legend on top in an elevated off-white box: "95% prediction interval" (solid green square swatch with grey outline) and "Forecast" (green line). The panel is framed by all four spines.
+      Data: Solid #009E73 line (48 hourly points) with a diurnal cycle peaking around hour 13 and hour 35, over a pale mint band (#009E73 at alpha 0.25) that widens from ±1.6 at hour 0 to about ±8 at hour 47. Line on top of band; band encloses the line at every x.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black consistent with #1A1A17 — warm dark surface, not pure black.
-      Chrome: Title appears at top-left in light text (#F0EFE8), clearly readable. Axis labels and tick labels are rendered in light-colored INK_SOFT (#B8B7B0), fully legible against the dark background. Legend at top shows green swatch and line icon with light text.
-      Data: CI ribbon in #009E73 at alpha=0.25 on dark background renders as a medium dark-green band — more prominent than in the light render due to the dark background, still clearly distinguishable. Central trend line appears as bright green (#009E73) standing out vividly against the dark CI band. Data colors identical to light render (only chrome flipped). Subtle grid lines visible as faint light rules.
-      Legibility verdict: PASS — all text is light-colored against the near-black background, no dark-on-dark issues detected. The #009E73 brand green is highly visible on the dark surface.
+      Background: Warm near-black #1A1A17, not pure black.
+      Chrome: Title, axis titles in light #F0EFE8; tick labels and legend text in light grey #B8B7B0, all readable, no dark-on-dark. Grid faint light rules; four-spine frame in light grey. Legend box on #242420 elevated surface.
+      Data: Same #009E73 line and #009E73 band at alpha 0.25 (reads as deep green on the dark page) — data colors identical to light render, only chrome flipped. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -61,52 +66,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, axis labels=20pt, tick
-          labels=16pt, legend=16pt; all readable in both themes'
+        comment: Explicit sizes (title 16, axis titles 12, ticks/legend 10); all text
+          readable in both themes at full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements in either render; legend at top avoids
-          data overlap
+        comment: No text collisions; legend sits above the panel
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line and CI band clearly visible; dots same color as line reduces
-          definition slightly against CI band
+        comment: Line and band clearly visible; band legend swatch is solid full-opacity
+          green with outline, not matching the alpha 0.25 band (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series Okabe-Ito #009E73; luminance contrast between solid
-          line and alpha band is sufficient'
+        comment: Single hue, line vs band distinguished by luminance; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70% of canvas with balanced margins; legend at top is
-          well-placed
+        comment: 3200x1800 canonical canvas, balanced margins, no overflow; canvas
+          gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units 'Sales (thousands)'; title in correct format 'line-confidence
-          · letsplot · anyplot.ai'
+        comment: '''Hour from now'' and ''PM2.5 forecast (µg/m³)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 for both line and fill; backgrounds #FAF8F1/#1A1A17;
-          all chrome uses theme-adaptive tokens'
+        comment: '#009E73 for line and band; #FAF8F1/#1A1A17 backgrounds; chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 11
+      score: 6
       max: 20
       items:
       - id: DE-01
@@ -114,22 +117,20 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Clean and professional, well-configured defaults with correct Okabe-Ito;
-          monochromatic green palette is coherent but not sophisticated
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: Minor grid removed, major grid at 10% opacity, legend background
-          set, axis lines defined, L-shaped frame in renders; some room for more polish
+        passed: false
+        comment: All four spines frame the panel where nothing requires them — short
+          of the baseline (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Widening CI band naturally communicates growing forecast uncertainty
-          — a clear temporal narrative; no explicit visual emphasis or annotation
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: geom_line + geom_ribbon implements line-with-confidence-interval
-          exactly'
+        comment: 'geom_ribbon + geom_line: line with confidence band'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Solid central line, semi-transparent band (alpha=0.25 within spec
-          0.2-0.4), legend identifying both, grid lines present
+        comment: 'C1 solid prominent line on top: yes; C2 band lower–upper enclosing
+          line: yes; C3 alpha 0.25 with grid visible: yes; C4 legend names both and
+          says ''prediction interval'': yes; C5 lighter tone of line color: yes; grid
+          present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Month on X, Sales on Y, Lower/Upper bounds correctly mapped to ymin/ymax
-          in geom_ribbon
+        comment: Hour on x, forecast on y, bounds to ymin/ymax; all data within axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-confidence · letsplot · anyplot.ai' correct format; legend
-          labels '95% Confidence Interval' and 'Sales Forecast' are descriptive
+        comment: Title in mandated format with python segment; legend labels readable
     data_quality:
       score: 15
       max: 15
@@ -171,22 +171,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows trend line, widening CI band, seasonal variation in the trend,
-          and 24 data points across 2 years
+        comment: Central line with noise, band widening along x, 48 points in range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales forecast is a real, neutral, business-appropriate scenario
-          with plausible values
+        comment: Hourly PM2.5 air-quality forecast — neutral, real-world
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales 50–125 thousand over 24 months with growing uncertainty is
-          factually plausible for a business forecast
+        comment: PM2.5 about 12–32 µg/m³ with a 95% interval widening with horizon
+          — plausible urban values; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -196,61 +194,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, theme tokens, data, plot, save — no functions
-          or classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os for getenv, shutil for move, numpy/pandas/lets_plot
-          for core functionality'
+        comment: os, numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; shutil.move pattern is a valid letsplot workaround
-          for ggsave output path
+        comment: Compact; ggsave(path='.') avoids file moves
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly using current
-          ggsave API
+        comment: plot-{THEME}.png at scale=4 and plot-{THEME}.html, current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Excellent grammar-of-graphics usage: aes() mappings, scale_*_manual,
-          theme() with element_* functions, ggsize(), ggsave()'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML export leverages letsplot's interactive capability; however,
-          geom_ribbon + geom_line pattern is also available in plotnine
+        comment: Standard grammar-of-graphics layering and manual scales; nothing
+          beyond the library prompt
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T00:13:49Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - manual-ticks
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
   - alpha-blending
+  - grid-styling
