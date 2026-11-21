@@ -61,7 +61,19 @@ def _same_language(language: str) -> ColumnElement[bool]:
 # This prevents accidental modification of internal fields like 'id'.
 
 SPEC_UPDATABLE_FIELDS = frozenset(
-    {"title", "description", "applications", "data", "notes", "created", "updated", "issue", "suggested", "tags"}
+    {
+        "title",
+        "description",
+        "applications",
+        "data",
+        "notes",
+        "created",
+        "updated",
+        "issue",
+        "suggested",
+        "tags",
+        "sources",
+    }
 )
 
 LIBRARY_UPDATABLE_FIELDS = frozenset({"name", "version", "documentation_url", "description"})
