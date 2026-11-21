@@ -2,46 +2,42 @@ library: matplotlib
 language: python
 specification_id: point-basic
 created: '2025-12-30T09:32:00Z'
-updated: '2026-05-11T17:15:38Z'
-generated_by: claude-haiku
-workflow_run: 25684882767
+updated: '2026-11-21T03:04:47Z'
+generated_by: claude-sonnet
+workflow_run: 44858763150
 issue: 2551
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 82
 review:
   strengths:
-  - Perfect visual quality across both theme renders with zero legibility issues
-  - 'Flawless spec compliance: correct chart type, all features implemented, proper
-    data mapping'
-  - 'Excellent code quality: clean structure, reproducible, proper API usage'
-  - Realistic clinical context with plausible data proportions
-  - Professional theme adaptation with proper color tokens and readability in both
-    light and dark modes
+  - Clean ax.errorbar() with asymmetric xerr, caps and a page-coloured marker edge
+    that keeps every marker distinct on its interval line in both themes
+  - Rows sorted by estimate, x-limits derived from the bounds, and the one zero reference
+    line the Notes allow
+  - Hedonic housing-model coefficients with real predictor names and units read as
+    a believable analysis
+  - Theme tokens threaded through title, labels, ticks, spines and grid; both renders
+    legible
   weaknesses:
-  - 'Design Excellence moderate (12/20): Plot is well-configured but lacks custom
-    aesthetic sophistication or distinctive design thinking; feels like a refined
-    default rather than intentional design'
-  - 'Limited visual storytelling (DE-03 = 3/6): Data displayed clearly but without
-    visual hierarchy, emphasis, or focal points to guide viewer interpretation'
-  - 'No distinctive matplotlib features: Uses standard errorbar() but doesn''t leverage
-    library-specific capabilities'
+  - 'Suggestion: a light ''Predictor'' axis title is redundant beside self-describing
+    predictor names; dropping it would free horizontal space for the labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title, axis labels (Effect Size, Treatment Group), and tick labels all in dark/gray tones, clearly visible against light background
-      Data: Brand green (#009E73) markers with horizontal asymmetric error bars, caps visible, six treatment groups displayed
-      Legibility verdict: PASS - All text readable, no overlaps, proper contrast
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'point-basic · python · matplotlib · anyplot.ai' in dark ink, x-axis title 'Effect on sale price (thousand USD)', y-axis title 'Predictor', eight predictor tick labels and value ticks -40..40 in INK_SOFT; subtle vertical grid; dashed grey zero line. All readable.
+      Data: eight #009E73 circular markers with horizontal 95 % interval lines and caps, sorted by estimate from Busy road frontage (-21.7) at the bottom to Renovated kitchen (27.4) at the top.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title and all labels rendered in light gray/off-white, fully legible against dark background; no dark-on-dark failures
-      Data: Brand green (#009E73) markers and error bars - identical to light render, confirming proper theme-independent data color handling
-      Legibility verdict: PASS - All text readable in both renders, proper theme adaptation, good contrast
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light grey; grid and dashed zero line subtle but visible; no dark-on-dark text.
+      Data: identical #009E73 markers, intervals and caps; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,51 +48,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly set: title 24pt, labels 20pt, ticks 16-18pt;
-          perfectly readable at 4800×2700px'
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt as the style guide sets
+          them; INK/INK_SOFT text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All category labels, ticks, and axis labels fully visible with no
-          collisions
+        comment: Long predictor labels sit clear of the axis; no text collides with
+          text or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers 14pt and error bars 2.5pt width perfectly sized for 6 data
-          points
+        comment: Eight sparse rows with 7 pt markers, 1.8 pt interval lines and visible
+          caps in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito green #009E73 has excellent contrast on both light and
-          dark backgrounds'
+        comment: Single green series on both surfaces; no colour-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins at 4800×2700px
+        comment: 3200x1800 canvas; title ~57 % of width; balanced axis titles; nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; labels descriptive (Effect Size, Treatment
-          Group)
+        comment: Value axis 'Effect on sale price (thousand USD)' with unit; category
+          axis 'Predictor'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; theme-adaptive
-          chrome correct in both renders'
+        comment: 'Single series #009E73; backgrounds #FAF8F1 / #1A1A17; chrome flips
+          correctly'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -104,21 +100,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with professional polish; lacks custom
-          design thought
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: L-shaped spines, subtle grid, generous whitespace; very polished
-          appearance
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but with minimal visual hierarchy or emphasis
+        comment: The spine and grid rules met (x-only grid at alpha 0.15), nothing
+          beyond
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed sorted by estimate as the spec asks; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -128,51 +124,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal point estimate chart with error bars
+        comment: Horizontal point-estimate plot; the single dashed zero reference
+          line is the one the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: point estimates, asymmetric confidence intervals,
-          category labels'
+        comment: Distinct markers, 95 % intervals, caps at both ends, reference line,
+          every category named, sorted by estimate (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis effect size, Y-axis treatment groups; all data visible with
-          padding
+        comment: Markers at their estimates; x-limits derived from the bounds so every
+          interval shows in full
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend omitted appropriately for single series
+        comment: Title 'point-basic · python · matplotlib · anyplot.ai' correct; single
+          series, no legend needed (N/A)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows variation in effect sizes, asymmetric CIs, reference group,
-          multiple treatments
+        comment: Positive, negative and zero-crossing intervals of very different
+          width show every aspect of the type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real clinical trial scenario with standardized mean differences and
-          95% CIs
+        comment: Hedonic housing-price regression coefficients with real predictor
+          names; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Effect sizes 0.0–0.71 and CI widths are factually plausible
+        comment: 'Checked: every estimate lies inside its bounds (e.g. Busy road -21.7
+          in [-38.4, -5.0]); coefficient magnitudes in thousand USD plausible; no
+          Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -182,55 +182,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save; no functions/classes'
+        comment: Imports -> tokens -> constants -> Data block (df) -> Plot -> Save,
+          no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Fully deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib.pyplot, numpy'
+        comment: os, matplotlib.pyplot, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, no over-engineering or fake UI
+        comment: Appropriate complexity; limits and errors derived from df
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current matplotlib Axes API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Proper Axes API, theme-adaptive tokens, standard matplotlib best
-          practices
+        passed: false
+        comment: Correct Axes API with errorbar(); standard patterns
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses standard errorbar() with asymmetric errors; no distinctive library-specific
-          features
+        comment: Generic errorbar usage, nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-21T03:01:31Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - manual-ticks
   patterns:
-  - data-generation
+  - explicit-figure
   dataprep: []
   styling:
+  - edge-highlighting
   - grid-styling
