@@ -12,91 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 70
 review:
   strengths:
-  - Perfect visual quality with all text readable in both themes using proper Okabe-Ito
-    palette colors
-  - Flawless spec compliance with all 4 decomposition components shown correctly
-  - Clean, reproducible code with proper theme token separation (light/dark)
-  - Effective use of shared x_range for linked axis panning across subplots
-  - Proper Okabe-Ito palette order (positions 1-4) with consistent application across
-    themes
+  - Decomposition computed with statsmodels seasonal_decompose (additive, period 12)
+  - Shared x_range links all four panels for synchronized pan and zoom in the HTML
+  - Each panel labelled with its component name and drawn on its own y scale
+  - Imprint positions 1-4 in canonical order with theme-correct text in both renders
   weaknesses:
-  - Generic design using default styling without custom visual refinement or sophistication
-  - No visual hierarchy or emphasis among components - all treated equally
-  - Missing data annotations or callouts to guide interpretation and highlight key
-    patterns
-  - Could leverage HoverTool for interactive value exploration at each timestamp
+  - 'VQ-05 (both): the canvas is 4800x2561 instead of the canonical 3200x1800 (+1600
+    x +761 px) → 3200x1800. Likely cause: total_width = 4800, panel_height = 650 and
+    W, H = 4800, 2700 without the CDP Emulation.setDeviceMetricsOverride that pins
+    the viewport.'
+  - 'VQ-01 (both): tick labels at 16 pt and axis titles at 20 pt on a 4800 px canvas
+    read small beside the 26 pt panel titles (reference 34 pt ticks, 42 pt axis titles
+    at 3200 px) → about 22-24 pt ticks on a 3200 px canvas. Likely cause: major_label_text_font_size
+    = ''16pt'' with an oversized canvas.'
+  - 'VQ-06 (both): the y titles of panels 2-4 read ''Trend'', ''Seasonal'', ''Residual''
+    without a unit → ''Passengers (thousands)'' or a component title with the unit.
+    Likely cause: y_label arguments in the create_themed_figure calls.'
+  - 'VQ-07 (both): 1 px seams in an off-theme color run between the panels and along
+    the top/left canvas edge, light gray on the dark page → the page color. Likely
+    cause: the browser-default document background showing through the column layout
+    gaps.'
+  - 'CQ-01 (code): lines 60-113 define a helper create_themed_figure, and the file
+    has no Data/Plot zone markers or column constants → a flat loop over the panels
+    with DATE/VALUE constants above a single Data block. Likely cause: helper-function
+    structure.'
+  - 'CQ-04 (code): line 25 defines ELEVATED_BG, never used, and the comment on line
+    29 calls the Imprint hexes ''Okabe-Ito'' → remove the constant and correct the
+    comment. Likely cause: leftovers from an older palette.'
+  - 'Suggestion: a HoverTool showing date and component value would add value to the
+    HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white ✓
-      Chrome: All titles, axis labels, and tick labels clearly visible in dark text (INK #1A1A17 for titles, INK_SOFT #4A4A44 for ticks) ✓
-      Data colors: Original Series #009E73 (brand green, position 1), Trend #D55E00 (position 2), Seasonal #0072B2 (position 3), Residual #CC79A7 (position 4) - all Okabe-Ito correct ✓
-      Grid: Subtle, low alpha (0.12 y-axis, 0.08 x-axis), doesn't compete with data ✓
-      Layout: Generous spacing, clear Y-axis labels per component, readable Y-axis ranges ✓
-      Legibility verdict: PASS - excellent readability with proper contrast and color precision
+      Background: warm off-white #FAF8F1; canvas 4800x2561.
+      Chrome: four stacked framed panels titled 'Original Series', 'Trend Component', 'Seasonal Component', 'Residual Component' in bold; italic y titles 'Passengers (thousands)', 'Trend', 'Seasonal', 'Residual'; a shared date axis 2018-2028 under the bottom panel only, without a visible axis title. Tick labels are small for the large canvas. Light grids in every panel. Thin near-white seams between panels and at the top/left edge. All text dark and readable.
+      Data: Original #009E73, Trend #C475FD, Seasonal #4467A3, Residual #BD8233, thin 3 px lines; trend smooth and slow, seasonal a repeating annual wave, residual irregular.
+      Legibility verdict: PASS (text small but readable)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black ✓
-      Chrome: All titles, labels, and ticks clearly visible in light text (INK #F0EFE8 for titles, INK_SOFT #B8B7B0 for ticks) ✓
-      Data colors: Identical to light render - green, vermillion, blue, reddish purple in same positions (only chrome flips theme, not data) ✓
-      Grid: Subtle low-alpha lines, appropriately visible without competing with data ✓
-      Layout: Matches light render perfectly with proper spacing and alignment ✓
-      Dark-on-dark check: PASS - no dark text on dark background; all text uses appropriate light colors ✓
-      Brand green (#009E73) visibility: PASS - maintains visibility on both surfaces ✓
-      Legibility verdict: PASS - excellent theme adaptation with no readability failures; light text readable on dark surface
+      Background: warm near-black #1A1A17.
+      Chrome: same layout; titles and labels in light ink, ticks soft gray; no dark-on-dark text. The seams between panels and at the top/left edge are visible light-gray lines on the dark page.
+      Data: colors identical to the light render; brand green clearly visible.
+      Legibility verdict: PASS (text small but readable)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 4
         max: 8
-        passed: true
-        comment: All font sizes explicitly set; readable in both themes with proper
-          INK tokens
+        passed: false
+        comment: Sizes set explicitly, but 16 pt ticks and 20 pt axis titles on a
+          4800 px wide canvas read small beside the 26 pt panel titles (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; proper spacing; all elements have breathing room
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines well-sized; all data distinguishable from backgrounds
+        comment: Lines visible in every panel
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; adequate contrast; no red-green sole signal
+        comment: One series per panel, good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Good proportions; nothing cut off; proper margins
+        passed: false
+        comment: Canvas is 4800x2561, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clear titles; labels with units; X-axis labeled
+        passed: false
+        comment: Panels 2-4 y titles 'Trend', 'Seasonal', 'Residual' carry no unit
+          (defect line)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73; Okabe-Ito order 1-4; backgrounds correct;
-          both renders theme-correct'
+        passed: false
+        comment: Imprint positions 1-4 and correct backgrounds; off-theme 1 px seams
+          between panels and at the canvas edge (defect line)
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -104,19 +115,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Functional but lacks custom visual flourishes
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grids and outlines, but could use more refinement
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Logical arrangement but no emphasis or focal points
+        comment: Data displayed, no hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -126,25 +137,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decomposition with 4 stacked subplots
+        comment: Four stacked decomposition panels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Original, Trend, Seasonal, Residual all shown
+        comment: Order, panel names, shared axis, own y scales, light grids all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X-axis; components on Y; all visible
+        comment: Date on x, components on y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Clear subplot titles; single series per panel
+        comment: Legend N/A; panel titles name the components
     data_quality:
       score: 15
       max: 15
@@ -154,35 +165,38 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 components shown; complete decomposition
+        comment: Trend, repeating seasonal and irregular residual all visible over
+          10 cycles
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Airline passengers (classic); 10 years; realistic trend and seasonality
+        comment: Monthly airline passengers
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible timeframe and values; appropriate seasonal amplitude
+        comment: 'Checked: seasonal amplitude about +/-30 matches 30*sin; trend 110-243
+          inside the 100-250 linspace'
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Helper function justified; no unnecessary classes
+        passed: false
+        comment: Helper function create_themed_figure, no Data/Plot zones, no column
+          constants (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set; deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -191,35 +205,35 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI; appropriate complexity
+        passed: false
+        comment: Unused ELEVATED_BG and four copy-pasted panel blocks (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and .html; current API
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Recommended patterns: figure(), ColumnDataSource, column(), datetime
-          axis, shared x_range'
+        comment: figure, ColumnDataSource, column; correct but basic
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Theme-adaptive styling, Selenium integration, shared x_range; could
-          explore HoverTool
+        comment: x_range shared from p1 links pan and zoom across panels in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
 impl_tags:
   dependencies:
   - statsmodels
