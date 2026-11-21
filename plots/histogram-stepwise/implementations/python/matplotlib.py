@@ -1,19 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-stepwise: Step Histogram
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-12
 """
 
 import os
-import sys
 
-
-# Remove script directory from path to avoid matplotlib.py shadowing the matplotlib package
-script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir and p not in ("", ".")]
-
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 
 # Theme tokens
@@ -23,50 +18,58 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # Position 1
-ACCENT = "#C475FD"  # Position 2
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Two distributions with distinct shapes
-np.random.seed(42)
-mc_scores = np.random.normal(loc=72, scale=8, size=250)  # Multiple Choice: symmetric
-essay_scores = np.random.beta(a=3, b=1.5, size=250) * 100  # Essay: right-skewed
-essay_scores = np.clip(essay_scores, 0, 100)
+# Constants
+LINE_STYLES = ["-", "--", ":", "-."]  # outlines told apart by style as well as color
+N_BINS = 24
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Columns: set these to your table's column names
+VALUES = ["Brown trout", "Rainbow trout"]  # role: values
+
+# Data: replace this block with your own table, for example df = pd.read_csv("fish.csv")
+rng = np.random.default_rng(42)
+df = pd.DataFrame({VALUES[0]: rng.normal(34, 4.5, 400), VALUES[1]: rng.gamma(shape=9, scale=3.2, size=400) + 8})
+
+# Plot: reads only df and the constants above
+edges = np.histogram_bin_edges(np.concatenate([df[c].dropna() for c in VALUES]), bins=N_BINS)
+title = "histogram-stepwise · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
+for i, column in enumerate(VALUES):
+    ax.hist(
+        df[column].dropna(),
+        bins=edges,
+        histtype="step",
+        linewidth=2.5,
+        color=IMPRINT_PALETTE[i],
+        linestyle=LINE_STYLES[i % len(LINE_STYLES)],
+        label=column,
+    )
 
-# Step histograms (outline only, no fill)
-ax.hist(mc_scores, bins=30, histtype="step", linewidth=3, color=BRAND, label="Multiple Choice")
-ax.hist(essay_scores, bins=30, histtype="step", linewidth=3, color=ACCENT, label="Essay Exam", linestyle="--")
+# Style
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax.set_xlabel("Body length (cm)", fontsize=10, color=INK)
+ax.set_ylabel("Number of fish", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.set_ylim(bottom=0)
+ax.margins(x=0.02)
 
-# Labels and styling
-ax.set_xlabel("Score (%)", fontsize=20, color=INK)
-ax.set_ylabel("Number of Students", fontsize=20, color=INK)
-ax.set_title("histogram-stepwise · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+for spine in ("top", "right"):
+    ax.spines[spine].set_visible(False)
 for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.set_axisbelow(True)
 
-# Grid
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+leg = ax.legend(fontsize=8, loc="upper right")
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
+leg.get_title().set_color(INK_SOFT)
 
-# Legend with theme-adaptive styling
-leg = ax.legend(fontsize=16, loc="upper left", framealpha=0.95)
-if leg:
-    leg.get_frame().set_facecolor(ELEVATED_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    leg.get_frame().set_linewidth(1)
-    for text in leg.get_texts():
-        text.set_color(INK_SOFT)
-
-plt.tight_layout()
-
-# Save in the script's directory
-output_dir = os.path.dirname(os.path.abspath(__file__))
-plt.savefig(os.path.join(output_dir, f"plot-{THEME}.png"), dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
