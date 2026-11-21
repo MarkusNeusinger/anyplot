@@ -9,6 +9,1774 @@ only a release folds them in. How entries and releases get here is in
 
 ## [Unreleased]
 
+## [4.2.0] — 2026-11-21 — Ask first
+
+### Added
+
+- **A "Sources" section on the spec page.** A spec that names a work shows
+  it at the end of the Specification tab, under "inspired by" and
+  "references": each title links to the work, a DOI links to its
+  resolver, an ISBN is plain text. Every other spec page stays as it was.
+  The same entries reach machines: `GET /specs/{spec_id}` and the MCP
+  tool `get_spec_detail` carry `sources`, and the prerendered hub and
+  implementation pages list them and name them in their JSON-LD
+  (`isBasedOn` for the works that gave the idea, `citation` for the
+  references) on the page node, never on the code. (#13523)
+- **A spec can name its sources.** An optional `sources` block in
+  `specification.yaml` lists the works that gave the idea for a plot
+  (`inspired_by`) and the literature whose values it follows
+  (`references`), each with a title, an address and an optional DOI or
+  ISBN, plus where the example data comes from (`data`: invented,
+  computed or real). Two relations only: the catalogue takes ideas from
+  other works and never their code, so every implementation stays under
+  the MIT License. `core/spec_sources.py` checks the block, a unit test
+  runs the check over every spec file, and a pull request that changes
+  only `specification.yaml` files now runs the unit tests too. The
+  Postgres sync stores the block in a new column `specs.sources`
+  (migration `21d93eb1afd4`), NULL for a spec that names none. No spec
+  names a source yet; existing specs get theirs in later passes. (#13386)
+- **The data card names every plot axis a chat turn reassigned.** In the chat
+  of "Use with my data", a turn that changes the table can also put other
+  columns on the plot's axes, and the page used to take the new bindings
+  silently. Such a turn's change lines now end with one line per axis in the
+  server's own words, such as `x takes the new column 'Day no' instead of
+  'Air temp'`, `y lost its column 'Rel humidity' and holds none now`, or
+  `y takes 'Rel humidity'` for an empty axis the turn filled. A turn that only
+  re-binds, a turn whose formula or code replaced the table, the server's own
+  conversions of a paste and a renamed column get no line, and nothing is
+  blocked. The assistant never reads these lines. The usage telemetry counts
+  the marks by their closed codes, never by a role or a column. (#13229)
+- **A promoted feedback case replays only where its sender was told it would
+  go.** Until the deploy of 2026-11-18 the consent line under the chat's
+  feedback form named no AI recipient besides Claude by Anthropic on Vertex AI
+  in the EU, yet `python -m agents.evals.matrix --provider gemini` or
+  `--location global` replayed such a case's data elsewhere without a word. A
+  promoted case sent before 2026-11-19T00:00:00Z now replays only on Claude
+  through Vertex AI in location `eu` (any Claude model there), and so does a
+  case that corrects one sent before then, one step deep, because a session
+  lives in one page load. A later case, a case from the admin lane, a case
+  marked with `import_case.py --owner-chat` as holding the operator's own data,
+  and every committed fixture replay anywhere; the admin lane says who held
+  the admin door, not whose data was pasted. `import_case.py` and
+  `sync_cases.py` record in `case.json` the manifest's `created_at` as
+  `sent_at`, the lane its `user_hash` names (`admin` or `public`, by the exact
+  form the BFF gives each lane's ids; the value itself is never copied), and
+  a closed code for what it corrects (`earlier_case`: `none`, `before_cutoff`,
+  `after_cutoff` or `unknown`, never the earlier case's id or send second, read
+  against the cut-off at import); the sync never sets the owner mark. The check fails closed: a case without
+  those fields (every case imported before, every saved session), with a send
+  time later than now, or with a `user_hash` of neither form is pinned, and a
+  case under the fixtures that carries them is refused. It sits in
+  `cases.select_cases`, so every tool that selects eval cases names the routes
+  of every model it calls, resolved from the settings after flags, environment
+  and defaults (root, adapter, reviewer and judge; on `claude-cli` the root's
+  chat goes to Vertex AI and the others do not; an `ANTHROPIC_VERTEX_BASE_URL`
+  takes every Claude call elsewhere), and matched against the agents as they
+  were built. A run that would leave the pin ends with exit code 2 before the
+  preflight and names each pinned case, the pinned route and each of the
+  run's routes with what takes it off the pin; `--skip-pinned` runs the rest,
+  prints the left-out ids to stderr and records only their count, and such a
+  run is never saved as a baseline. Each run record now carries the fields the
+  rule reads, so `score.py` applies the same rule to the renders
+  `--keep-attempts` kept, also for a case that has left `.cases/` since, pins
+  the promoted runs of an older report, and reads only the cases its admitted
+  runs name. A test in the API's tree holds the two lane forms to the routes
+  that write them. (#13200)
+- **No test reaches the promoted cases by accident any more.** Four eval
+  tests (two static runs of `matrix.main`, its no-match exit and a
+  preflight's smoke pick) called `load_cases()` with its default, which was
+  bound at import to the
+  real `agents/evals/.cases/`, so in a checkout that holds promoted cases a
+  test run read a visitor's data into memory, and four tests outside the eval
+  folder walked all of `agents/` with `rglob` and so listed its entries. The
+  default is now read on each call (`import_case.promoted_cases_dir`), an
+  autouse fixture points it at an empty temporary directory for every eval
+  test, and `import_case.guard_promoted_dir` refuses the real directory
+  wherever a tool takes the directory of the promoted cases (the loader's
+  default or a directory a caller names, the import and the sync), in any
+  spelling (relative, with `..`, a string, a symbolic link, a path inside
+  it), in any process that has imported pytest or that a test started
+  (`PYTEST_CURRENT_TEST`), before that tool reads it. The guard sits at those
+  entrances, not at the reader of a single case: a test that hands
+  `cases.load_case` one case directory by name is not refused. The four walks
+  read the tracked files from `git ls-files` instead. (#13200)
+- **A decision log.** `docs/decisions/` holds one small file per decision
+  of the owner that someone asking how this project was shaped would look
+  for. Each has the date, what was proposed, what he decided and why, and
+  its source: the pull request, or the file that records it. The code here
+  is written by AI agents; what he contributes is direction, standards and
+  push-back, which no diff shows. A rule in `CLAUDE.md` has every agent add
+  the file in the pull request that carries such a decision out and keeps
+  the folder from flooding, and `tests/unit/test_decision_log.py` holds the
+  form: a dated name, the four lines once and in order, and a source that
+  exists. One file per decision keeps open pull requests from editing the
+  same lines. It starts with 88 decisions from 2025-11-18 to 2026-11-18:
+  those a public text names as his, and those he confirmed on 2026-11-19,
+  each checked clause by clause against its sources by an independent
+  reviewer. (#13186)
+- **A private list of the gallery searches that found nothing.** A search
+  that finds nothing in the whole catalogue (not in the filtered plots, not
+  in all of them, in no category) goes to the new `search_misses` table, and
+  the "search misses" section on `/debug` lists the texts of the last 180 days,
+  most searched or most recently searched first and in pages, with a
+  `.delete()` per text; it names the days that reached the day's cap and
+  deletes such a day whole. The gallery sends only the finished text: after
+  two seconds without a keystroke, or when the search loses focus, once per
+  text and page load, so a fragment typed on within two seconds is never
+  kept; the clear cross, Escape and "← back" throw a pending text away, and
+  leaving the gallery within the two seconds drops it too. Both the app and
+  the API fold the text (compatibility forms, typographic apostrophes,
+  hyphens and dashes, soft hyphens), judge the whole of it, and keep it only
+  when it reads as a search for a plot and shows something (letters and marks
+  of any script, at most six digits, spaces and a few signs, among them those
+  some scripts spell words with, no character that shows as nothing); only a
+  text that passed is cut to 40 characters. So an e-mail address, a phone
+  number or a link with its scheme never leaves the browser, also when it
+  stands past the 40th character. A row is the text, the UTC day and a
+  count, with no address, no user agent, no time of day and no session; it is
+  pseudonymous, since the 30-day request log could match it by its day. The
+  text travels in the body of `POST /search/miss`, which reads at most 1 KiB
+  before it parses anything, answers `204` whatever happened, never logs the
+  text, and gives a validation error without the body; the API normalises it
+  again with the app's rule, held to it by shared test cases. A network (an
+  address, or its /64 for IPv6) may send 20 requests a minute, a day takes at
+  most 1,000 new texts, and rows are deleted after 180 days, every text alike,
+  also when no miss comes in. It is a best-effort counter, and the list shows
+  what the catalogue lacks and which words the search doesn't know. The
+  privacy policy names the list in a row of its own, with its 180 days, and
+  says that search texts sent to the public dashboard before the change still
+  show there. The row says what the rule keeps out, that anything else typed
+  may be kept, and asks for no personal data; the crawler copy of the page
+  carries it too. A hand-made database snapshot leaves the table's rows out
+  (`pg_dump --exclude-table-data=search_misses`, now part of the snapshot
+  rule), so a text cannot outlive its period in a file that is never deleted.
+  (#13181)
+- **A script audits a branch's merge commits for dropped content.**
+  `.claude/skills/open-pr/scripts/merge_audit.py` redoes every merge
+  commit of a branch mechanically and reports what one side added and
+  the committed merge no longer has: a line dropped outside a conflict,
+  which is the mark of a whole file taken with `git checkout --ours`,
+  or a file without any conflict that still differs. `CLAUDE.md` and
+  Copilot's guide now say to resolve a conflict inside its markers and
+  to run the audit after a merge that had one; `/open-pr` carries the
+  step, and the guardrails hold the incident behind it. (#13176)
+- **The about page says who built the site and how.** Under its lede, "who
+  built it" names Markus Neusinger with his photo, links to LinkedIn, GitHub
+  and his own site neusinger.com, and his other projects, and introduces him
+  in his own words: a chart nerd, physicist by training and senior data
+  analyst by trade, who built and ran a platform for blockchain market data
+  from 2022 to 2024, largely without AI, and has built anyplot alone and in
+  his own time in Visp since November 2025, with AI agents writing the code
+  while he decides, tests and sends back. "how it is built" says that AI
+  models write the code of the site, the API, and the agents, that he decides
+  what gets built, cuts the work into tasks and tests what comes back, and
+  that outside the plot pipeline the agents merge nothing without his OK; it
+  links the README's "How I build anyplot" and "Engineering highlights" and
+  the AI workflow page. `test_readme_claims.py` checks that those files and
+  headings exist, so a renamed heading fails a test instead of a link on the
+  site, holds "since November 2025" to the README, and holds "senior" and the
+  platform's years to the AI workflow page. One person builds the site, so
+  the whole page and its crawler copy speak in the first person singular, "I"
+  and never "we" or "humans". The author in the structured data names
+  neusinger.com too. (#13177)
+- **The about page says who sets the rubric and how the chat's agents
+  work.** The review section adds that what counts as a good plot is the
+  builder's call, that AI helped turn it into 24 criteria and their points,
+  and that the rubric has changed more than thirty times since November 2025,
+  for example after a review passed a plot whose title was cut off. "use with
+  my data" gets a second paragraph: one agent talks to you, an adapter writes
+  the code changes and a reviewer scores the render, plain code runs the loop,
+  a validator reads the code before anything runs, and a run makes one repair
+  and two reviews at most; it names the builder's rules (open to everyone, no
+  login, hosted in the EU, what you paste or write kept only if you send
+  feedback) and links the agent design document, which records his decisions
+  with their dates. The palette section says it took four rounds.
+  `test_readme_claims.py` holds the 24 to the criteria registry, the repair
+  and the reviews to the agents' settings, and the four rounds to
+  `docs/reference/palette-variants/`. The crawler copy follows, except for
+  the palette, which it has no section for. (#13177)
+- **The README shows three push-back cases.** Under "I know when to push
+  back", nested cases tell how real weather downloads broke the import of
+  pasted data, and that pasted data has had to work with notes, metadata or
+  total rows around the table since then; how a review scored a parliament
+  chart drawn with the real European Parliament groups 5 of 5 while three
+  libraries dodged the topic, which led to invented parties and seats and a
+  rubric that no longer marks a fictional chamber down; and how an audit
+  found pasted values rounded or dropped without a word, which led to the
+  rule that what you paste is what the data holds, or a line says what
+  changed and how often. They replace the abstract sentence on security.
+  `test_readme_claims.py` holds the first rule to the agents' parser. (#13177)
+- **The landing hero names its builder.** From 900 px the eyebrow above the
+  headline reads "by Markus Neusinger", since the masthead shows "the open
+  plot catalogue" at those widths; on narrower screens, where the masthead
+  hides it, "the open plot catalogue" stands on a line of its own above the
+  name. Only the name is a link, to the about page: it never breaks across
+  lines, has no underline at rest and shows the site's green with a dotted
+  underline on hover, is the hero's first link for the keyboard, has a 44 px
+  touch target on phones, and counts its clicks as `nav_click` with the
+  source `hero_about`. The intro adds "I approve new specs and set the
+  rules." The masthead, the OG image and the crawler copy
+  keep "the open plot catalogue" alone. (#13177)
+- **The about page's stack table lists the checks.** A "checks" row names
+  tests and lint on every pull request that changes Python or frontend code
+  outside the plot catalogue, the 80 % patch-coverage target of `codecov.yml`,
+  CodeQL, every migration run on a throwaway PostgreSQL, and the check of the
+  live site after a merge, which the merging agent runs by rule.
+  `test_readme_claims.py` holds the target to `codecov.yml`. (#13177)
+- **The about page draws its pipeline, rubric, palette and origin.** The
+  pipeline's ASCII list becomes a flow of its five steps with what AI does in
+  each, and the builder's own steps, "I approve" and "I set and change them",
+  stand in the site's green text shade, a use the style guide now lists among
+  the places green may appear. Under the review text, one bar splits the
+  rubric's 100 points into its six parts, from visual quality 30 to library
+  mastery 10. Eight chips show the palette's hues with their names and hex
+  values, and under the origin a timeline runs from pyplots.ai in November
+  2025 through the first GitHub release (1.0.0), anyplot.ai (2.0.0), R
+  (2.4.0), Julia and JavaScript (3.0.0) and, its last point before today, the
+  4.0.0 release, whose notes open with the public "use with my data" page.
+  The page gives months, not days: a timeline label reads
+  "apr 2026 · 1.0.0", and the chat section has been open to everyone
+  "since November 2026". Each figure is a list that a screen reader reads in
+  order, the chips and the timeline named by the headings of their sections,
+  and on a phone each one stacks. `test_readme_claims.py` holds the rubric's
+  points to `prompts/quality-criteria.md` and each release on the timeline to
+  its `CHANGELOG.md` heading by its exact date; it holds the chat section's
+  month, on the page and in the crawler copy, to the opening day of the agent
+  design document, and checks that the 4.0.0 release follows that day. A test
+  holds the chips to the palette tokens. (#13177)
+- **A review's log names the tool calls it was refused.** The new step "Name
+  the denied tool calls" in `impl-review.yml` prints `claude_denials … count=N`
+  and one warning per refused call, with the tool and, for a file tool, its
+  path. Until now the log gave the count alone. (#13160)
+- **The chat checks the figures in the assistant's own reply before it goes
+  out.** A figure the reply writes in digits must stand in a tool result, the
+  session's facts, your own messages, a limit the service states, the plot
+  memory, or a plot's notes, code or drawn texts. A reply may round a figure
+  to fewer decimals, and may write the value of a tool result, the session,
+  your messages or a limit with more zeros (`12.50` for `12.5`); a minus or
+  plus it writes before a figure, also in an equation it restates, must match
+  the source's. The check reads number shapes only (the marks of every
+  language the service writes, numbers beside Chinese, Japanese, Korean, Thai,
+  Lao, Khmer and Myanmar text without spaces, full-width digits, percent
+  signs, dates, times and scientific notation), so it works for any model. A
+  figure spelled out in words is not read, and a token whose marks fit no
+  number, such as a version `3.10.1`, stands where a source holds the same
+  token and is otherwise only counted. The check ships counting only
+  (`AGENT_NUMBER_PROVENANCE=log`, the default): each reply that states a
+  figure leaves a line with the verdict and counts, never a figure or a word,
+  and no reply is changed, asked for again or withheld. That shows on real
+  replies what the stricter mode would do before it is switched on. With
+  `enforce`, when a turn ran no tool and its reply states a figure no source
+  holds, the assistant is asked once more to compute it with a tool, give it
+  as its source writes it, or say it is not known; a reply that still states
+  such a figure is withheld, and the page says so with a next step
+  (`error{code:"unverified_figure"}`). A turn that ran a tool and was not
+  asked again is only logged, and the new replies of the language and length
+  re-asks may add no unsourced figure where the check enforces. `off` switches
+  the check off, and the turn record names it as `number_provenance`. The prep eval counts the check's verdicts and has nine
+  new cases for it, which run only when you name their tag
+  (`--tags figures`); both eval harnesses count a withheld reply as the
+  model's miss, never as an outage. (#13145)
+- **A feedback case's turn record keeps the shape of each tool call's
+  arguments.** The record named the tool, the guards' verdict and the
+  answer's code, but nothing of what a call asked for, so a triage had to
+  infer a stored filter's condition from the user's words. Each call now
+  carries closed codes of its typed arguments: per data operation its name
+  and codes (an `aggregate`'s function and period, a `sort`'s direction),
+  for a condition of a `keep_rows`, `drop_rows` or `blank` its test, the
+  shape of its value (`iso_date`, `year_month`, `number`, `list`) and its
+  column's kind in the current table, and for a plot run or a kept request
+  whether a change request came, and counts. Never a value of the data, a
+  column name, a bound, a text or an id: the record's models admit closed
+  codes, booleans and bounded counts only, and a call's shape small counts
+  only, which a test checks field by field. The case detail on `/debug`
+  lists the shape under each call. (#13144)
+- **A question gets a grand total and a straight-line fit from the server.**
+  In the chat of "Use with my data", a question about the data can now total,
+  average or count every row in one step, and fit a straight line to two
+  number columns by least squares: the answer is one row with the slope, the
+  intercept, r squared and the number of rows, at full precision, which a
+  formula in the same question can use. What a figure leaves out is
+  counted: for a fit, the rows that lack either value; for a total, the
+  empty cells of each column. Before, a total took two steps and a fit had
+  no operation at all, so the chat worked such figures out itself and
+  could state them wrong. Both stay questions: a change of the data never
+  totals your table without a key or fits a line to it. (#13141)
+- **The chat's page says which rows a plot draws, and `.show_all()` brings
+  the rest back.** In "Use with my data", a plot that shows only some of
+  your rows ("only 2024", "the top 10 by revenue") now says so on its card
+  (`draws 10 of 248 rows · Jahr = 2024 · top 10 by Umsatz`), and the data
+  card says under its bindings that the plot draws 10 of its 248 rows, so
+  the table and the plot no longer seem to disagree. `.show_all()` on the
+  newest plot clears the view and draws every row again, without a new
+  data version and without typing; the result names the rows that are
+  back. Before, the view stood only in the plot's list of changes. (#13112)
+- **A view of the plot can be put into the table in one step.** In the chat
+  of "Use with my data", "make that permanent" or "sum these per month"
+  after "only 2024" now works on the rows the plot shows: the table takes
+  the view's rows as a new version you check, and the change builds on
+  them. Before, a change of the table read every row, so the sum added the
+  rows the view had left out, and the view was dropped without a word.
+  (#13101)
+- **An answer says which rows it read.** While a view is set, a question
+  about the data ("what do these add up to?") can be asked of the rows the
+  plot shows, and the answer says whether it covers those rows or the
+  whole table. (#13101)
+- **A twelfth event measures who stays ten seconds (`stayed_10s`).** Plausible
+  counts a visit as bounced unless it has a second page or a custom event, so
+  a reader who lands on a plot, reads for a minute, and leaves counts like a
+  crawler farm's page load. Google Analytics 4 also calls a session engaged
+  when it lasts longer than ten seconds, counted while the page is in focus.
+  The tracker now keeps that clock: once per visit, when the site has been
+  visible and in focus for ten seconds, it sends `stayed_10s` with `input`
+  (`yes` or `no`: whether a pointer, a finger, or a key was used). For about
+  a week the event only measures: it goes out with `interactive: false`, so
+  the bounce rate and every public number stay as they are. Whether a visit
+  of more than ten seconds then counts as engaged is the owner's decision
+  once the share is known for the farm and for readers. (#13100)
+- **A selection or a top N is a view of the plot now, and your table stays
+  as you pasted it.** In the chat of "Use with my data", "only 2024", "just
+  Bern and Zürich" or "the top 10 by revenue" used to cut the data table:
+  every tweak was a new data version to confirm, and "the top 15 after all"
+  meant going back to an earlier one. They now set which rows the plot
+  draws. The table keeps every row, nothing has to be confirmed again, and
+  the plot is redrawn in the same turn. A new top N replaces the old one, a
+  filter on the same column replaces that filter, other filters narrow
+  further, and "show everything again" clears the view. New data, pasted
+  or computed, starts without a view: after a paste the assistant names
+  the view the old data had and offers to set it again. The plot's notes
+  say how many rows it draws and by which view, and the data file you
+  download with a plot holds those rows, so the code runs on it as it ran
+  here. (#13089)
+- **Cleaning stays in the table, and your word decides.** Rows that are
+  wrong (a total row, test entries, duplicates) are still taken out of the
+  table itself, and "delete them from the table" sends a selection there
+  too. (#13089)
+- **Zooming into a plot counts as a use (`ui_feature`, `plot_zoom`).** The
+  zoom opens no page and sent nothing, so a visitor who landed on a plot,
+  looked closer, and left counted as one who did nothing. (#13088)
+- **"Only these rows" has a form of its own.** In the chat of "Use with my
+  data", a selection could only be said backwards: the assistant dropped
+  every row that was not wanted, so "only rent and electricity" had no form
+  at all, and one wrong negation was a silently wrong selection. The data
+  step now keeps the rows you name: some categories, a period from its
+  first to its last day, or everything at least or at most a value (`ge`
+  and `le` are new comparisons). The change line counts both sides and says
+  how many of the dropped rows had no value to test, which the count alone
+  would hide. This is the engine step before views of the plot. (#13086)
+- **Parallel's crawlers have a name in the machine-read numbers.** ShapBot,
+  which indexes pages for Parallel's web APIs, and Shap-User, which fetches a
+  page for a person's agent, are in the vendor table as `parallel`. ShapBot
+  made 8,878 reads on 2026-11-10 that Cloudflare verified as `AI Search` and
+  that counted under `other`, because the table didn't know it. It runs a
+  browser, so it reads a page through the app and needs no prerendered copy.
+  (#13070)
+- **`ui_feature`: one event for "is this feature used at all".** Twelve single
+  events (tab toggle, view mode, grid size, filter removal, random filter,
+  plot rotation, library filter, theme toggle, feedback button, and three map
+  interactions) are now one event with a `feature` property, sent once per
+  feature and visit. A visitor who toggles a tab forty times weighs as much as
+  one who did it once. (#13060)
+- **Every pageview names the kind of page.** The `page` property (`home`,
+  `plots`, `spec_overview`, `spec_detail`, `agent_chat`, `other`) is the one
+  `copy_code` and `download_image` already send, so the dashboard and its
+  funnels can group pages by kind. (#13060)
+
+### Changed
+
+- **A regeneration keeps its data source.** The generator no longer brings a
+  built-in dataset (`sklearn.datasets`, `sns.load_dataset`) into a regenerated
+  file whose previous version did not load one, so a regeneration cannot turn
+  a file the site's chat adapts into one its validator refuses for that reason
+  alone; a dataset the previous file already loads stays. (#13377)
+- **The generating and the repairing session check their own Python file with
+  the agent chat's validator before they commit.** Until now the readiness
+  scan ran only after the session, so a regeneration that added a construct
+  the chat refuses was found out when the tokens were spent, and the gate kept
+  the live file (`readiness_regression`). Between the gate going live on
+  2026-11-16 and the nightly run of 2026-11-19 that hit 2 of about 22 Python
+  regenerations; in the extra batch of 2026-11-19/20 it hit 6 of 48, four of
+  them on one spec (`bar-stacked`), and judges read three of those six as
+  better pictures than the plot that stayed. A new step, "Prepare the
+  readiness self-check", copies the validator from the workflow's ref to
+  `/tmp/anyplot-readiness` before the session in `impl-generate.yml` and
+  `impl-repair.yml`. The session runs `readiness_scan.py check` on its file
+  and gets every refusal in the validator's own words, with its hint and with
+  the line of its own file, also inside an import guard the chat's normaliser
+  hoists. Inside the existing three attempts of the adaptability self-check it
+  removes every refusal it can without making the plot worse, keeps the ones
+  the spec needs (a WebGL trace for a 3D plot) and the ones that name a
+  built-in example dataset the prompts allow, and names the verdict in a `Readiness self-check:` line of
+  the commit body. The check decides nothing: the record-only scan still makes
+  its own copy after the session and never reads the session's, and the regen
+  gate stays the only thing that decides. `line_map` moves from
+  `core/smoke_run.py` to `core/utils.py` and maps a line the tool only
+  re-indented inside a replaced region to that line, for the smoke run's
+  error lines too. (#13279)
+- **The chat reads four more date forms, the ones widely used tools write.**
+  In the chat of "Use with my data", the paste types these as dates, and a
+  conversion to dates without a format reads them too: a time followed by
+  `UTC`, as BigQuery exports write it (`2026-03-01 10:00:00 UTC`), the same
+  moment as `Z`; a UTC offset after a space, as git and Ruby write it
+  (`2026-03-01 10:00:00 +0100`, also `+01:00`); a 12-hour clock with AM or
+  PM, as US Excel writes it (`3/15/2026 10:00:00 AM`), where `12:00 AM` is
+  midnight; and a date with the year first and slashes (`2026/03/01`), also
+  with a time. The zone, the clock and the year-first date are read exactly
+  as written, and an offset still counts only from −12:00 to +14:00. Plain
+  slash dates whose days are all 12 or less keep an older rule and are read
+  day first, with a note that says it is a guess; a column of slash dates
+  with a 12-hour clock is not read by a guess: the chat asks which order is
+  meant, and a format of `MM/DD/YYYY` or `DD/MM/YYYY` reads it. Before, the
+  paste kept a column in any of the four forms as text, and for an axis that
+  takes dates the chat asked whether to number the rows instead. Zone names such as `GMT`, a comma after the year,
+  weekdays and ordinals stay outside the list. (#13278)
+- **The visitors tile will count the visitors who stayed ten seconds and did
+  something, from 2026-12-12.** This replaces the visits with a second page
+  or an interaction that it was to draw from 2026-12-07. A visitor counts
+  when they had the site in front of them for ten seconds of a visit and used
+  a pointer, a finger, or a key in it, before the ten seconds or after them:
+  someone who opens a page, fetches a coffee, and then clicks around counts;
+  someone who copies code in five seconds and leaves doesn't. `stayed_10s`
+  now goes out once more, with `input` `yes`, at the first input after ten
+  seconds without one, and `GET /insights/visitors` counts the unique
+  visitors with `input=yes` per day from 2026-11-15, the event's first full
+  day, in a second Plausible query. On 2026-11-15 to 2026-11-19 the
+  crawler-farm pattern stayed ten seconds in 14 of 679 visits, all without
+  input; Google visitors stayed in 181 of 256, 176 of them with input. The
+  line under the strip shows all unique visitors, and Plausible's bounce rate
+  stays as it was. A click or a mousedown counts as input, for screen
+  readers and voice control that send no pointer events, and a pointer move
+  only once the pointer has travelled 4 px. The clock checks that the page is
+  still in front of the visitor before the ten seconds count, and an input
+  brings it up to date. The query filters by the event's name instead of
+  its goal, so renaming the goal can't break the tile, and its days are the
+  Plausible site's (Europe/Zurich) instead of UTC days, so the last bar is
+  today also just after midnight. A zone that can't be resolved shows the
+  tile's placeholder instead of an error. A `yes` now carries the property
+  `actions`, the kinds of input that made it count (`move`, `press`,
+  `click`, `touch`, `key`, `wheel`, each once, joined with `+`), so a kind
+  that starts to fire by itself can be seen and left out of the count.
+  `docs/reference/plausible.md` names the early warnings with their
+  baselines and the readers the rule misses. (#13277)
+- **The privacy page says the old search texts are stored, not shown.** The
+  gallery's search texts sent to Plausible up to and including November 2026
+  are hidden from the public dashboard now that the property `query` is no
+  longer an allowed property; Plausible still stores them, so the analytics
+  row on `/legal` and its crawler copy say "still stored by Plausible, no
+  longer shown" instead of "still show there". (#13203)
+- **The canvas gate checks the dark render too.** "Canvas dimension gate" in
+  `impl-review.yml` measured only `plot-light.png`, so a dark render that
+  didn't open or sat on another canvas than the light one passed unseen. A
+  missing one never got that far: "Verify both theme renders exist" stops the
+  job first, as before. The gate now requires both theme renders on a
+  canonical canvas and on the same one. A miss writes one VQ-05 defect line
+  per render that missed, tagged `(light)` or `(dark)` (`(both)` when the two
+  drifted alike, the line of before). A line for a drift names the actual
+  size, the signed delta, and the likely cause, including a size set inside a
+  theme branch; when the dark render sits on a canonical canvas, the light
+  line aims at that canvas. A first generation goes to repair, and a
+  regeneration is kept as `canvas_failed`. A dark render that doesn't open
+  fails the gate without failing the job. The notice line keeps its fields and
+  adds the light and dark verdicts and the dark render's size after
+  `attempt=`, and `canvas_gate_report.py` reads them. The audit skill's local
+  render check applies the same one-canvas rule. On 2026-11-20 no live pair
+  had a light render on the canvas and a dark render off it, so no pair that
+  passes today fails the new check. (#13241)
+- **Every pull request opens with a short section in plain words.** The
+  `/pull_request` command, its body template, Gemini's hand-over template and
+  `.github/pull_request_template.md` put `## In plain words` before
+  `## Summary`, for every kind of change: as few sentences as the change
+  allows, 150 words at most, for a reader who does not know the code, on what
+  was wrong or missing and for whom, what happens now and how it is solved,
+  then a fixed line on who would notice what, and where. A reader must be able
+  to tell from it alone what the change is for, and an author who cannot say
+  that plainly looks at the change again before writing around it. The section
+  says what the merge hangs on, claims no more than the technical sections
+  back and names no file or setting. The owner merges every ordinary pull
+  request himself, and the technical sections stay for the reviewer.
+  `/open-pr` checks the section, the title and the fragment against the final
+  diff before a pull request is reported ready, and the Gemini take-over
+  checks the section again after its review, since Gemini writes it before
+  the review rounds. Catalogue-only, pipeline and Dependabot pull requests
+  are exempt. (#13202)
+- **Dates are read in a short list of forms, the same at the paste and on
+  request.** In the chat of "Use with my data", a conversion of a text column
+  to dates without a format now reads only the forms the paste reads:
+  `2026-03-01`, also with a time, seconds, a fraction and a UTC offset;
+  `01.03.2026`; `03/15/2026` or `15/03/2026`, with the order of day and month
+  decided once for the whole column; a day with a month name and a year
+  (`8 Nov 2026`, `1. März 2026`, `March 1, 2026`), each also with a time; and
+  months such as `2026-03` or `Mar 2026`. Each cell reads in its own form, so
+  ISO dates beside `11 Mar 2026` all convert; a slash date beside other forms
+  reads only in an order the column's slash dates settle, never by guess. A
+  cell in any other form is not read, and the chat says why: a day that does
+  not exist, slash dates that settle no single order of day and month, or,
+  for a form outside the list, the forms it reads ("the chat reads
+  2026-03-01, 01.03.2026, 03/15/2026, 8 Nov 2026, each also with a time, and
+  months such as 2026-03 or Mar 2026"). A format such as `YYYYMMDD` or
+  `MM/YYYY` still reads its own
+  form on request, and a form no format names, such as `1st March 2026` or
+  `2026.03.01`, is read by no conversion now. Before, a general reader
+  guessed the format cell by cell: it read a range of days as its first day,
+  hour labels `T00` to `T03` as one day four times, `-05:00` after a space as
+  05:00, and month-first dates in one column partly day first, and the chat
+  made such conversions without asking. (#13199)
+- **A pasted column of days with a month name is a date column.** `8 Nov 2026`,
+  `1. März 2026` or `March 1, 2026` (also `Mar 1 2026`), the month a name
+  written as one word, are typed as dates at the paste, with a note that
+  counts them, and so is an ISO time with a lowercase `t` or `z`
+  (`2026-03-01t10:00z`); a headerless list of such dates is one date column,
+  and a no-break space inside a date reads as a plain one. Before, such a
+  column stayed text, and for an open date role the chat made a conversion
+  into a new column first. A month written with its number and a marker
+  (`3月`, `tháng 3`) is no such name: it reads as a month of a year
+  (`2026年3月`, `tháng 3 năm 2026`), not as part of a day. (#13199)
+- **The chat's record of a plot's drawn texts names what it leaves out, adds
+  measured axis ranges for matplotlib and seaborn plots, and captures Chart.js
+  canvas annotations.** In "Use with my data", each role of `PlotShows.texts`
+  used to be a plain head slice (up to 8 tick labels or annotations) with no
+  marker, so a 12-month axis reached the assistant as 8 labels that looked like
+  the whole axis, and axis ranges were read from tick labels rather than axis
+  limits. Each drawn role now ships as a record (`ShownRole`) with `count` (the
+  number of distinct texts recorded in that role) and either `texts` (every text
+  in drawing order, up to 20 for x and y tick labels and 16 for annotations) or
+  `first` and `last` (the two ends of a longer run), `PlotShows.texts_complete`
+  marks when the probe stopped before every drawn text (omitted when `true` or
+  when `texts` is absent or empty, which `fence_pipeline_notes` drops),
+  `requested_not_found` still checks the full probe output, and the reply figure
+  check ignores `count` as a number source. For matplotlib and seaborn plots
+  (plotnine maps its scales before matplotlib and reports none),
+  `PlotShows.axes` reports the measured `min`, `max`, and `scale` (`linear`,
+  `log`, or `date` as ISO 8601) of the first two non-empty rectilinear
+  non-colorbar axes with `axison` on (`x`, `y`, and `z` for 3D axes, skipping
+  hidden axes, axes with no visible tick label, `matplotlib.category`
+  converters/formatters/locators, hand-set tick labels, non-finite limits, and
+  `other`-scaled axes), credited as `drawn_text` in the figure check, and the
+  assistant states axis ranges only from `axes`. In sandbox mode, the
+  JavaScript text probe also wraps `fillText` and `strokeText` for Chart.js,
+  keeping each chart's last complete draw and subtracting model-reported texts
+  by count so plugin-drawn value labels and doughnut center numbers reach the
+  assistant as `annotations`; fully transparent text and text of size 0 are
+  not recorded, and a render run records through the page the browser loads
+  while the `plot-<theme>.html` it writes carries no recorder. (#13175)
+- **The `verify-api` skill says how to check the deployed agent chat through the admin lane.** A scripted
+  check after a deploy calls `api.anyplot.ai/debug/agent` with production's admin token and the page's client
+  header, confirms the data before the first plot, and sends feedback on a plot's version. The section names
+  the two refusals a first try runs into (the local token, the missing header), so the next check starts with
+  neither. (#13196)
+- **The Dependabot command carries the check an ADK upgrade needs.** The release notes alone
+  did not name what could break here: the 2.14.1 upgrade was checked by diffing the ADK files
+  `VertexClaude` builds on, the rule that decides when a request carries `response_schema`, and
+  the session invariant `agents/main.py` relies on, then running the real-flow service test with
+  the new tree-sitter grammars. The steps now stand in the command's exact-pins rule. (#13197)
+- **CI's test job runs the JavaScript render tests.** "Run Tests" now sets up Node, the lock's `node_modules` and Chromium with the `setup-node` action and sets `ANYPLOT_REQUIRE_JS_RUNTIME=1`, so a missing piece fails the tests instead of skipping them, as `ANYPLOT_REQUIRE_LIBRARIES` does for the plotting libraries. Before, 123 tests skipped there, so the render harness, its sandbox limits and the page a visitor downloads were tested only on a developer's machine. (#13195)
+- **The Dependabot command covers what the 2026-11-18 batch ran into.** `--auto` is refused on
+  a PR that is already clean, so such a PR merges directly after a check review; an unanswered
+  `@dependabot rebase` is replaced by a local merge check (`uv lock --check`, or CI's full
+  frontend gate for `app/`); a PR red only in the non-required renderer image check is
+  never armed; a `claude-code-action` bump also moves `ACTION_SHA` in `review-retest.yml`; exact
+  ADK and tree-sitter pins in `python-minor` go to the owner; and the run ends with `main`'s CI on
+  the last merge, since each merge cancels the runs before it. (#13194)
+- **The privacy policy says that a telemetry line can be matched to its
+  request for 30 days.** A telemetry line of the data assistant holds no
+  request id, but while the request's own log lines are kept it can be
+  matched to them: by its time, and exactly by its token counts, which are
+  the sums of that request's lines. The "logs" row on `/legal` and its
+  crawler copy now say so in one sentence; the telemetry reference describes
+  the match in detail. (#13185)
+- **A feedback case no longer records a hash of its session that a log
+  could reproduce.** Each stored case keeps a 16-digit value for its chat
+  session, so that a corrected submission replaces the earlier one and the
+  debug page lists a session's cases together. That value was the plain
+  SHA-256 of the session id, and the agents service's request log holds the
+  session id for 30 days, so the value could be made again from the log and
+  tied a case to that session's requests. It is now a key the agents
+  service makes under its per-process salt, in a domain of its own, so it
+  matches neither the log lines' session hash nor the telemetry's. The
+  service sends it only when the feedback route asks (`with_case_key`): a
+  session saved to a file never carries it, and the stored case holds it
+  once, as its session hash. A session never outlives that salt, so every
+  case of a session still gets the same key, and once the process is gone
+  the key cannot be made again from a session id. An agents service from
+  before the change sends no key; the API then keys the case under its own
+  per-process salt and logs that it did. Stored rows are left as they are;
+  theirs can be made again only while a log still holds the session id.
+  Once, at the deploy, a correction does not replace its case: a case
+  stored before it has the old value, so a correction sent after it stays
+  beside it in the list. A case can still be matched to its session by
+  time, which the telemetry reference now says. (#13179)
+- **Each route of the agent chat takes only the body it needs.** The bound
+  on request bodies gave every route of the two chat lanes the cap of the
+  largest one, the file conversion. Now the paste takes about 2 MB (its
+  1 MB of text as JSON writes it), the file conversion keeps its 6.7 MB,
+  and every other chat route takes the API's default of 64 KiB, answered
+  with the `too_long` code the page already reads. The two routes that
+  carry data must declare a `Content-Length` (`411 length_required`
+  otherwise, as the conversion already answered). Their bodies above
+  64 KiB are taken a few at a time (`503 capacity` for one more, which the
+  page words as busy) and have to arrive in time (`408 upload_timeout`
+  for a body that stalls or takes too long). The bound itself gained
+  rules for single routes, looked at before the prefixes, and the places
+  for large bodies with their time limits; both are general, and the
+  chat's table lives beside its routes. No limit on what a visitor may
+  paste or upload changes. One test holds the table against the app's
+  routes by endpoint, and two build the largest body each data route
+  accepts and check that it fits its bound. (#13178)
+- **The privacy policy puts periods and places beside their data.** On `/legal`, the
+  periods and places of the separate "how long it stays" and "where it runs" tables now
+  stand in the rows of the data they belong to, most of them on a closing line of their own,
+  so the server logs' 30 days stand beside the IP addresses they hold instead of a screen
+  further down. On a phone, each item of that line takes a line of its own. The two tables
+  are gone; the row that holds for the whole site, the hosting on Google Cloud, stays as a
+  sentence under the first table. The crawler copy of the page (`/seo-proxy/legal`) now
+  says what the page says, row by row: it gains the shared links it lacked, and the right
+  to object gets back its condition. (#13182)
+- **The privacy policy speaks in plain words, without article numbers.** On `/legal`, the
+  table of GDPR article numbers is gone: three points under "why this is allowed" name each
+  legal basis in words beside what it covers, a legitimate interest, your request and your
+  consent. The other terms of legal texts give way to everyday words: "who is responsible"
+  replaces "controller", the right to object keeps its condition without the statute's
+  phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
+  check's signals "on its own behalf"; its legal role is no longer named. The three points
+  that were headed "what we do not do" stand under "in short": each starts with "no", and a
+  heading that negates as well read as the opposite. The crawler copy says the same, and now
+  also names who is responsible. (#13182)
+- **The privacy policy is set more compactly.** On `/legal`, the privacy section is 6859 px
+  high on a phone (390 px) where it was 7328, and 3421 px on a desktop (1440 px) where it was
+  4009. Its word count stays about the same (1128 to 1120, counted at 390 px), because the
+  page also says more than it did: who reads feedback and under which terms, and how long
+  backups keep a deleted entry. The data assistant's status, its limits and the terms for
+  your code now stand on its explainer page, `/agent`, which the assistant's first row
+  links; what the limits count on, your tab id and your IP address, stays on the legal page.
+  The machine readers and the shared links share one row, under both anchors the
+  stats page links: it says what each counts, that neither holds an IP address or a
+  user-agent, and how long each is kept, beside its own store, and where; the fields of a
+  line and of a counter stay in the docs, and with them that a line is content-free and says
+  nothing about anyone's browsing, and that a counter holds no time of day and nothing about
+  who shared. The edge and the bot check are one Cloudflare row whose place stands once.
+  Explanations go: why an unverified share is no verdict (the stats tile's hint already says
+  it), that browsing never reaches a model because the catalogue is written at build time,
+  the sentence that repeated the assistant's heading, that the assistant is open to
+  everyone, the comparison of your code with the catalogue's MIT License, and the sentence
+  naming the laws. Every kind of data, its period, place and recipients, the bases and the
+  rights stay. The list of what the site does not do speaks as its one operator, "what I do
+  not do", and stands right after "who is responsible": three short points, with what the
+  browser's storage keeps and the operator's own Cloudflare Access sign-in in a paragraph
+  below them. Long sentences are split without adding or dropping a claim: the legal bases
+  are three points, and the bot check, the ids row and the assistant's feedback row each
+  read as shorter sentences. (#13182)
+- **The privacy policy says who reads feedback.** The site's feedback row no longer says that
+  only the operator reads an entry: he reads them, and when he works on one, its message, page
+  and reaction can go to an AI coding assistant such as Claude Code by Anthropic. The data
+  assistant's feedback row adds that he reads the cases to fix what went wrong, also with AI
+  coding assistants and in test runs on other AI models: the visitor's reaction and message,
+  the conversation, the data sample or file, the plot and its code, the run's details and the
+  two hashes. Both rows name the terms: those tools process the data under their providers'
+  own terms, outside the EU hosting and the EU route the page names, with training on what the
+  operator sends switched off. The consent line under the chat's feedback form says who reads
+  a case in the same words, and names both periods: 180 days for the chat, its plots and the
+  data sample, and the message and the reaction until their deletion is asked. The crawler
+  copy says the same as the page, and names the operator, not
+  admins, as the holder of the Cloudflare Access login cookie. (#13182)
+- **The chat's hint for a table that is too large no longer points at a way that ends in the
+  same refusal.** It recommended opening an Excel or Parquet file, which may be 5 MB, but the
+  table inside such a file has to fit the same 20,000 rows and 1 MB of text. The hint now
+  says so. (#13182)
+- **The feedback widget speaks as the operator, and the copied prompt asks not to quote the
+  visitor's message.** The widget's thank-you line now reads "I read every note.", as the
+  site's feedback row says "I read them". The prompt that the admin page copies for the coding
+  assistant asks it not to quote the visitor's message in a commit, a pull request or an
+  issue, because the repository is public. (#13182)
+- **The legal notice links the About page.** Its disclaimer says the plot examples are
+  generated and maintained by AI workflows and links the About page for how that works and
+  the operator's part in it. (#13182)
+- **The privacy policy says how to find your entry, and what stays.** The rights paragraph
+  on `/legal` now asks for what you sent and roughly when, or the contact you typed, so the
+  operator can find the entry, and says that log lines cannot be deleted one by one: they
+  expire after 30 days (server logs) or 180 days (machine reads, assistant telemetry), the
+  periods their own rows give, and that the database's automatic backups keep a deleted entry
+  for about 30 days. The GitHub row adds that the operator removes a credited username from
+  its spec on request, while the public history keeps it. The crawler copy says the same.
+  (#13182)
+- **The search events no longer carry what a visitor typed.** `search` and
+  `search_no_results` sent the search text as `query` to Plausible, whose
+  dashboard is public. `search` now carries only the `category` of the pick
+  and `search_no_results` no property at all; the texts that found nothing
+  are in the private list instead. `search_no_results` also fires only for a
+  finished search that finds nothing in the whole catalogue, at the moment
+  and from the same decision as its report to the list, never for a fragment
+  or a thrown-away text, so its count is smaller from then on and not
+  comparable with earlier months. (#13181)
+- **About takes the place of mcp in the main navigation, and mcp the place of
+  report in the footer.** The bar keeps seven entries. The MCP page stays one
+  click away from the footer, the about page and the landing page. The footer
+  reads github, mcp, the builder's name, about, legal: issues are filed on
+  GitHub or from a spec page's "report issue" link, and the name stays in the
+  middle of the row and now shows on phones and tablets too. From 720 px, or
+  wider with a larger browser font size, the footer is one row; below that
+  the four links share a centred line and the name takes the line below it.
+  With a larger browser font size on a narrow phone the links break as github
+  and mcp over about and legal, so no line ends on a separator. Keyboard and
+  screen readers follow the order each layout shows, and with a browser font
+  size up to 24 px every line keeps at least 8 px from the feedback and
+  scroll-to-top buttons. (#13177)
+- **The stack and the running costs moved from the legal page to the about
+  page.** The legal page keeps the legal notice and the privacy policy; a link
+  to `/legal#transparency` leads to `/about#transparency`, which a fresh load
+  now scrolls to. The crawler bodies of both pages and `llms.txt` follow. The
+  cost table now shows the operation at three-year commitment prices, before
+  credits and without development use: about $75 a month, where it showed
+  about $60 after credits. (#13177)
+- **The about page's description names its builder and what the page
+  covers.** Search results and link previews read "About anyplot.ai: built by
+  Markus Neusinger with AI agents he directs. How the catalogue is written
+  and reviewed, the stack, and what it costs to run." on the page, in its
+  link preview and in its crawler copy, in place of three different
+  descriptions, one of them an "AI-powered" slogan the style guide rules out.
+  The crawler copy now lists the stack too, one sentence per row of the
+  page's table, so each part of the description has its section there. (#13177)
+- **The about page tells the pipeline in the first person.** The lede says
+  that plot ideas come in as GitHub issues and that the builder approves new
+  specs. The pipeline paragraph opens with "the pipeline runs on its own
+  schedule, by rules I set" in place of "humans curate; ai executes" and "the
+  catalogue maintains itself", and the diagram names what AI does (drafts,
+  writes, scores against the 24 criteria, repairs up to four times) and what
+  the builder does (approves the specs, sets the rules); a test reads its
+  steps in order, and `test_readme_claims.py` holds its two numbers to their
+  sources. The origin adds where pyplots.ai came from,
+  showing colleagues a chart in everyday work, what they and later people who
+  found it online wanted from it, and what it covers today, fifteen libraries
+  in four languages, counted from the library registry. The "use with my data"
+  section says, as the chat's explainer does, that `.use_my_data()` sits on a
+  plot's page. The crawler copy follows each change. (#13177)
+- **The builder's photo hangs beside the about page's text on wide
+  screens.** A larger photo stands 216 px wide in the margin left of the
+  760 px column wherever that margin holds it with its gap, so the bio keeps
+  the column's full width; narrower, it stays 110 px wide beside the name,
+  above it on phones. The picture comes in two files, 360 and 684 px wide,
+  and the browser takes the smaller one (41 kB against 93 kB) wherever the
+  small slot or a screen of normal density is enough. (#13177)
+- **The about page's palette section drops the penguin example.** The two
+  sentences after it, "the palette travels with you across libraries.
+  switching tools doesn't mean re-learning your colour grammar.", carry the
+  point alone, in the style guide's library-agnostic story too. (#13177)
+- **The landing page's description drops "human ideas, ai builds the
+  rest."** and keeps the hero block, the library count, colorblind-safe and
+  open source; a test now pins it. (#13177)
+- **The style guide follows the about page.** It drops the slogans the page
+  no longer carries ("human ideas. ai builds the rest.", "AI-built,
+  human-shaped", "Humans curate; AI executes", "a catalogue that maintains
+  itself") and the old diagram for the page's own sentences, and its voice
+  section says that the site speaks as its single builder, in the first
+  person singular, that meta descriptions describe the site in the third
+  person, and that a crawler copy that mirrors a page keeps the page's voice.
+  Its pipeline line, its example of a spec and its positioning no longer speak
+  of "humans" or "we", and its positioning assumes you know how to run code
+  in your language, not Python alone. (#13177)
+- **The README counts the releases and names the approvals.** "How I build
+  anyplot" introduces a physicist and data analyst and adds that 16 releases
+  have shipped, a count `test_readme_claims.py` holds to the version
+  headings of `CHANGELOG.md`, so every release raises it (release procedure,
+  step 4); it adds that a new spec needs the owner's approval and that
+  outside the plot pipeline the agents merge nothing without his OK. The
+  pipeline's step 2 says that since September 2026 the merge job ignores an
+  `approved` label from any other account, and `test_readme_claims.py` holds
+  that to the merge job's condition in `spec-create.yml`. Its contribution
+  steps say "I review and approve it" in place of "The maintainer". (#13177)
+- **The README's engineering highlights are six decisions, each with its
+  reason.** The review loop says why pipeline reviews run on Opus: on the
+  same plots it scored about 8 points below Sonnet, and its before-and-after
+  gaps spread far less across repeated runs. The regen gate tells the
+  experiment behind it, in which 39 of 75 regenerations merged after repairs
+  at the lowered bar, and the rule that a regeneration never makes an
+  implementation worse. New highlights tie a score to the code that drew it
+  through the render hash and say that a check counts before it blocks: the
+  figure check ships counting only, and every release runs the chat's evals
+  first. The privacy highlight states the telemetry rule and the feedback
+  exception, and the blank site of 2026-10-22 became a browser check after
+  every merge. The chat's architecture leaves the list; its sentence on one
+  repair round and two reviews now opens the README's "Use with my data"
+  section, and the next bullet there says that the assistant never hands
+  the server data rows but picks from a closed set of typed operations.
+  "How I build anyplot" opens with the decisions the builder makes and the
+  records that keep them, and counts six of them below.
+  `test_readme_claims.py` holds each new claim to its source: the review
+  model's default and fallback in `impl-review.yml`, the gate's one-point
+  tolerance and adapt route in every text that states the gate, the
+  render-hash steps and keep codes, the figure check's `log` default, the
+  release procedure's eval step, the data layer's union of typed operations,
+  and the count of decisions to the highlights' bullets. (#13177)
+- **The month the chat opened keeps its capital.** `/agent`, the about page
+  and the crawler copy of each say "open to everyone since November 2026",
+  as a month is a name in the site's lowercase voice too; the timeline's
+  labels stay lowercase. `test_readme_claims.py` holds the month with its
+  case on all three, against the opening day in the agent design document. (#13177)
+- **The site spells the colour-blindness words in British English.** The
+  pages and their descriptions, the crawler copies, `llms.txt`, and the
+  keywords and structured data of the page shell say "colourblind-safe", as
+  the palette sections of the about and landing pages already did, and the
+  palette page's sort button reads "max ΔE under colour blindness". The
+  about page says "colour grammar" in its two sentences on it. The
+  style guide follows in its sample copy and its own sentences, and its voice
+  section adds the rule: British English on the site, while proper names,
+  citations, code and library or API names keep their own spelling.
+  `test_site_spelling.py` keeps the American forms of these words out of
+  those surfaces and out of the style guide's own text. Other words are not
+  swept yet. (#13177)
+- **The landing page names "Use with my data" in plain words, and `/agent`
+  without a plot explains it.** While the chat's public lane is open, the
+  hero's entry below `plots.browse()` reads `.use_my_data() →` over "an ai
+  agent adapts a catalogue plot to your data" and leads to `/agent`, in place
+  of the muted `# new: pick any plot, then .use_my_data()` line that led to
+  `/plots`. Until the lane answers, the entry's box stands there invisible, so
+  the answer moves neither the plot of the day nor anything below it; only a
+  closed lane removes the box. `/agent` without a catalogue pair is now an
+  explainer: the about page's description of the chat, a sentence that names
+  the model (Claude by Anthropic, served through Google Cloud Vertex AI in the
+  EU), three example pairs in Python, R, and JavaScript that open the chat,
+  and the way on to the catalogue, under a title, a description, and an
+  `og:title` and `og:description` of its own. The explainer's paragraph says
+  that `.use_my_data()` is chosen on the plot's own page. Below the way on,
+  one line says how the chat is built, and its "on GitHub" links to the
+  README's section on the chat. Then the assistant's terms of use stand under
+  the heading "ground rules" in four quiet labelled lines: `your code`;
+  `privacy`, which links to the legal page's section on what the assistant
+  stores; `limits`; and `status`. The same heading and four lines stand under
+  the "closed right now" notice while the public lane is closed, so the terms
+  stand at `/agent` also while the operator has paused the assistant. The
+  explainer opens no
+  session: of the agent routes, a visitor's browser asks only the lane's
+  door, which the API answers without the agents service. The site's
+  feedback button stands on the explainer: the layout, which hid it on all of
+  `/agent`, now hides it only where the query names a catalogue pair, by the
+  rule the page uses to pick the chat, and the closed notice shows it there
+  itself, since no chat is open. The page reads the lane only once, at load,
+  so a chat opened after the operator paused the assistant met the refusal
+  as an error in the chat's frame, without the terms or the button; it now
+  shows the same closed notice with both.
+  In Plausible, `nav_click{source: hero_use_my_data}` now targets `/agent`,
+  and `agent_open` gains the source `agent_intro` for the explainer's
+  examples. Each chat opened there counts as one open, also after the visitor
+  goes back to the explainer and picks another example. A unit test checks
+  that each example names an implementation under `plots/`, and CI now also
+  runs the Python tests on a pull request that changes only `AgentIntro.tsx`,
+  `README.md`, or `LegalPage.tsx`, which the explainer's tests read, or only
+  `AboutPage.tsx`, `docs/concepts/ai-workflow.md`, or
+  `docs/concepts/agent-network.md`, which the test of the README's claims
+  reads along with the README, or only `app/nginx.conf`,
+  `origin-gate.conf.template`, `security-headers.conf`, the app's
+  `Dockerfile`, or `vite.config.ts`, which the tests of the origin gate, the
+  content security policy, the analytics proxy, and the machine-read lines
+  read. The filter is a workflow change with no local run: a unit test sends
+  the path of each of these five files through its pattern, and only a pull
+  request on GitHub shows that the job starts. (#13163)
+- **The retest's harness version is 2.** A regen cell's session now reads the
+  predecessor's files with the Read tool and no longer finds the predecessor's
+  metadata beside them. A resume doesn't reuse a cell recorded on version 1,
+  and a comparison with a version 1 arm is flagged "harness changed": record
+  the baseline again before you compare. (#13160)
+- **Only a matching render hash lets a review run.** A staged `render.sha256`
+  that is missing, holds no hash, or has no code hash and doesn't fit now
+  stops `impl-review.yml` like a mismatch does, and so does an implementation
+  that can't be read at the PR head: nothing is scored and no header is
+  committed. A first generation is parked with the label
+  `ai-render-unverified`, the one label for every such stop, and a gated
+  regeneration is kept with the new returning code `render_unverified`. A hash
+  that couldn't be downloaded after three attempts isn't a finding about the
+  renders: a first generation then ends as a failed review, which the watchdog
+  starts again once unless it already rescued that PR, and a regeneration is
+  kept. The check also reads the gcloud storage wording of a missing object as
+  "no hash", and its PR comment prints a command only for a spec ID and a
+  library name of the expected shape. The weekly regeneration review doesn't
+  count a render-hash keep as a missing pair artifact: no review ran, so
+  there is no pair to stage. (#13129)
+- **A run that can't stage `render.sha256` fails.** The hash write is its own
+  step in `impl-generate.yml` and `impl-repair.yml`, last and fatal, with five
+  upload attempts, so a run that can't stage the hash never hands its PR to
+  the review. In impl-generate the failure counts as an infrastructure
+  failure: the pair is generated again without spending one of its three
+  attempts. In impl-repair it takes the repair's crash path, and the comment
+  names it. (#13129)
+- **Second opinions run on Gemini 4 Carbon.** `/zweitmeinung` now defaults to
+  `gemini-4-carbon` when the owner asks for a second opinion; Gemini 4 Argon was
+  the default until 2026-11-16. Google describes Carbon as its strongest
+  reasoning model and Argon as the efficient one, at the same price per token,
+  so a second opinion, which runs only on request, gets the stronger reader.
+  Argon stays one flag away (`--model gemini-4-argon`) for the case that Carbon
+  is not reachable, and the report names the model that ran. The Flash check
+  before a code pull request opens is unchanged. (#13146)
+- **A review no longer scores renders that were made from other code.** When
+  the staged `render.sha256` doesn't match the implementation at the PR head,
+  `impl-review.yml` stops before the review: nothing is scored and no header
+  is committed. A first generation, and a forced or adopted regeneration, gets
+  the label `ai-render-unverified` and stays open until the pair is generated
+  again; its review run ends as failed, and the watchdog skips the PR and
+  reports it. A gated regeneration is kept by the regen gate with the new code
+  `render_mismatch`, a returning keep. (#13122)
+- **`render.sha256` holds a second hash, of the code without its header.** The
+  review's own header commit rewrites the whole generated header, so a manual
+  re-review used to read a mismatch although no line of code had changed. The
+  code hash leaves out exactly the block the header writer replaces, in all
+  four languages, ignores the score like the first hash does, and keeps a
+  JavaScript file's `//#` directives, which the render harness reads. A file
+  staged before this change has one hash only. (#13122)
+- **`/audit` covers the agent network and the public surfaces, and says who
+  meets each finding.** No auditor read `agents/`, the largest code area of
+  the repository, and the live site was judged from the code alone. Six
+  auditors join the sixteen: `agents-auditor` (the data and orchestration
+  layer), `sandbox-auditor` (the code validator and the render sandbox),
+  `public-lane-auditor` (limits, authentication, and privacy of the public
+  chat), `chat-frontend-auditor`, `site-auditor` (the rendered pages in a
+  headless browser of its own, through the new helper `site-shots.mjs`), and
+  `landing-auditor` (the repository page as a stranger reads it). Every
+  finding now carries `SEEN_BY` (a visitor of the site, a visitor of the
+  repository page, a reader of the code, or nobody outside) and its primary
+  `EVIDENCE`, and the report lists what an outside reader meets in a section
+  of its own, because severity alone ranks a typo on the landing page below a
+  rare race in a script nobody opens. Cross-validation now also checks a
+  medium finding that a visitor meets. The auditors that read code lose their
+  cap of thirty tool calls, which could not read a module of four thousand
+  lines, and report what they read and what they did not reach. Each auditor
+  runs on the model its roster row names (Fable for the three high-risk
+  reviews), passed explicitly instead of inherited from the session. The
+  shared rules gain the limits for the live site: no agent runs, at most two
+  loads of `/agent`, no shared browser. (#13114)
+- **A persisted audit report says that it is a snapshot.** A report opens
+  with a status line and describes an incident in the past tense of its own
+  date. The report of 2026-07-15, still the newest one, headlined a Health
+  Score of 30 and a retry loop "still going" that was fixed the next day; it
+  now says so. (#13114)
+- **A regeneration that the agent chat would newly refuse no longer replaces
+  the live implementation.** The regen gate keeps the live version with the
+  code `readiness_regression` when the chat's validator refuses the new file
+  for something it did not refuse the predecessor for. In the first 24
+  scanned regenerations three were such regressions, and two of them merged,
+  so the chat now refuses two pairs it could adapt before. `impl-review.yml`
+  gains the step "Readiness check"
+  (`automation/scripts/readiness_record.py`): it reads the staged record of
+  the readiness scan only when the record names the hash of the
+  implementation at the PR head and of the one on `main`, and it recomputes
+  the regression from the record's refusal keys. A missing, stale, or
+  malformed record never keeps anything, and outside the regen gate (first
+  generations, forced regenerations, repairs) the status is a record only. The
+  scan's record now carries the two hashes (record version 2). The keep is a
+  returning one: the pair comes back after the attempt window, not behind the
+  whole catalogue. (#13113)
+- **The review judges text size in the full-size render, against the style
+  guide's own sizes.** VQ-01 asked for text that stays legible when the image
+  is scaled down to about 400 px. The style guide's tick labels (8 pt, about
+  44 px of 3200) are about 5 px there, so the two rules contradicted each
+  other. The rubric now says where to judge (the full-size render, in both
+  themes; a reduced view is never the test) and what is too small: text
+  below the size the style guide's "Text Sizes" and the library's prompt give
+  it, when it reads small beside the plot's other text or for what it
+  carries. Text at or above its reference is never too small. The review
+  prompt's example defect lines no longer argue with the thumbnail, and the
+  style guide's own test names the full-size render. Its text sizes get a
+  heading of their own, with ggplot2, Makie and MUI X, which the table left
+  out. Its "Common Mistake" note no longer gives matplotlib `fontsize=10` as
+  a size that is too small: that is the table's own axis-title size, and in
+  an earlier measurement 27 of 29 VQ-01 lines of the chat's reviewer followed
+  the note. In the catalogue 26 of the 536 reviews since
+  2026-10-15 lose a point on VQ-01; 23 of them cite the thumbnail, about 16
+  for text below its reference (still a defect) and 5 for text at it.
+  (#13102)
+- **Month names out of calendar order stay as you pasted them.** In the
+  chat of "Use with my data", the plot now draws a column of month names
+  in calendar order by itself and says so in one line: an alphabetical
+  list from January on, and the newest months first turned round. A
+  fiscal year or a winter that already runs along the calendar stays as
+  it is. Before, the chat offered to sort your table for it. (#13111)
+- **A table that lists its dates newest first stays as you pasted it.** In
+  the chat of "Use with my data", the plot now draws such a time series
+  oldest first by itself and says so in one line. Before, the chat sorted
+  your table for it, which made a new data version to check and added a
+  sentence about a change you never asked for. (#13103)
+- **Rows that share a key are combined for the plot alone while a view is
+  set.** Without a view they still become a data version you can undo.
+  Under a view that version would be made of the whole table and add up
+  rows the plot never draws, so the view's rows are combined for the
+  picture only, after the same question whether to sum or to average.
+  (#13089)
+- **The visitors tile will draw the visits with a second page or an
+  interaction, from 2026-12-07.** Its bars are Plausible's unique visitors,
+  and on 2026-11-13 a crawler farm made up 488 of the day's 598. A farm
+  loads one page per visit, so the bars will show the visits Plausible
+  doesn't count as bounced (61 to 80 a day from 2026-11-10 to 2026-11-13),
+  with the number of all visits of the same days under the strip and a hint
+  on the word "all" that says what else is in it. That count starts on
+  2026-11-10: before it, web-vitals events kept every visit from bouncing.
+  The owner didn't want a strip that is empty for most of its days, so the
+  tile keeps drawing the unique visitors until every day of the 28-day
+  window is counted, and switches by itself on 2026-12-07. `GET
+  /insights/visitors` gives each day its `visits` and `engaged` visits from
+  now on. (#13088)
+- **A top N says when its cut falls among equal values.** "The top 2 by
+  revenue" used to cut silently through three cities with the same
+  revenue: which of them stayed was the order they had before the sort.
+  The cut still falls at N, and the change line now names the tied rows on
+  each side, so the assistant can say so and offer more rows. (#13086)
+- **A date without a time means the whole day.** "Until 31 January" now
+  takes in every row of the 31st whatever its time, and "after 31 January"
+  none of them. Before, "after" took the day's rows past midnight in.
+  (#13086)
+- **The crawler farm is challenged at the edge by its Chrome version.** The
+  Cloudflare challenge for four hosting networks left the farm's residential
+  share alone, and that share grew from about 25 to 30 dashboard visitors a
+  day to 488 of the 598 counted on 2026-11-13. A second Managed Challenge now
+  answers a desktop user agent with Chrome 151 or older on the site hosts,
+  with verified bots, phones, self-declared headless clients, and browsers
+  that name themselves (Edge, Opera, Vivaldi, Yandex) left out. A person on
+  an old Chrome sees the challenge and passes it; of the 880 challenges the
+  hosting-network rule issued in a day, 15 were solved. The cut-off is the
+  owner's "most used version minus five": of 208 desktop Chrome visitors who
+  came from a search engine in a week, nine were on 151 or older. The rule
+  lives in Cloudflare; `infra/cloudflare/README.md` is its written record,
+  and `docs/reference/plausible.md` says how to read the dashboard around a
+  farm. (#13087)
+- **Sum or mean is your choice, not a silent mean.** In the chat of "Use
+  with my data", rows that share the plot's key (several amounts per month,
+  several scores per hour) were combined into one value each by the mean
+  for most plot types, and a line said so afterwards. Two of three test
+  users with such data meant the sum, and each needed one more data step
+  and one more plot. Where the plot type leaves it open, the assistant now
+  asks once, before any plot is made, and the answer decides. Nothing is
+  combined or drawn until then, and a wish sent with the plot request is
+  kept for that plot. Plot types whose marks add up by what they are, such
+  as a pie or a stacked bar, are summed without a question, as before.
+  (#13085)
+- **An off-topic question no longer brings a chat closer to closing.** In
+  the chat of "Use with my data", every refusal by the scope check counted
+  toward closing the session, and the third closed it. In a test round a
+  wrongly refused question was a user's second refusal and came with the
+  warning that one more would close the chat. Now only a message the check
+  reads as an attempt to misuse the service counts: an off-topic question
+  is refused and nothing else happens. Three such attempts still close a
+  session, the warning before the last one stays, and the per-user strikes
+  with their lock-out for the day are unchanged. The session stores such a
+  message under a marker of its own for the count; the scope check's own
+  context reads it as before. (#13082)
+- **The shared links tile says which shares Cloudflare verified.** The
+  platform line on `/stats` listed every platform with one sum, although a
+  platform's name is read from a user agent anyone can write. It's two lines
+  now, worded like the machine readers tile's: "cloudflare verified" names
+  the platforms with the shares whose fetch Cloudflare verified as a bot it
+  knows, and "unverified shares" is one number for the rest, under no
+  platform's name. Unverified is no verdict on a share: WhatsApp and Signal
+  fetch the preview from the sender's own phone, which nobody can verify. The
+  word "unverified" carries that as a hint a pointer, a keyboard and a tap
+  open, and the legal page says it too. `GET /insights/shared-links` gives
+  each platform its `verified` part; in `GET /debug/shared-links` that
+  replaces the `verified` object, and `other_verified` is the verified part
+  of `other`. (#13074)
+- **A crawler Cloudflare verified gets the prerendered page without a token in
+  nginx's list.** Until now only a user agent the `$is_bot` map names was
+  served the page; every other crawler got the app's empty shell. In the
+  seven days to 2026-11-12 that was 13,525 page fetches by verified bots:
+  ExaSearchBot (7,971) runs no JavaScript and read nothing, Parallel's ShapBot
+  (3,954) rendered the app itself at about 1.7 API reads per page. nginx's
+  new `$prerender` is "a token, or a verified bot of a category that reads
+  content": Search Engine Crawler, AI Search, AI Crawler, Page Preview,
+  Archiver, Aggregator, Feed Fetcher and Academic Research. Cloudflare keeps
+  the members of each, so a new crawler is served the day it is verified.
+  Every other category keeps the app, because "verified" is not "never a
+  person": Cloudflare's signed agents are remote browsers a person directs,
+  its Search Engine Optimization category holds Google Lighthouse, GTmetrix
+  and Pingdom, and monitors, security and accessibility scanners exist to
+  test what people get. The crawlers of the SEO tools (Semrush, Ahrefs,
+  DataForSEO, Majestic, Moz, Haloscan) join the token list instead. The
+  analytics shield on `/api/event` keeps reading the user agent alone. The
+  daily bot serving check and the deploy smoke probe both sides of the
+  verdict at the origin. (#13073)
+- **The crawler path is bounded before more crawlers use it.** The hop from
+  the site's nginx to the API for a prerendered page connects within 3
+  seconds and waits 10 seconds for the answer, where nginx's default of 60
+  seconds let a slow API hold the request slots people share (a crawler page
+  takes 40 ms at the median and took 2.3 seconds at the slowest of 3,718).
+  The prerendered pages have a cache of their own (`prerender_cache_maxsize`,
+  1,000 pages), so a crawler reading the catalogue no longer pushes filters,
+  the sitemap and the stats out of the API's shared cache. A path that can't
+  be a spec id, and a library that doesn't exist or belongs to another
+  language, are a 404 without a database query. (#13072)
+- **The debug page's machine readers matrix counts prerendered pages and
+  shell reads apart.** `pages` was the sum of both, which hid a crawler that
+  was answered with the app's empty shell; `shell` is a column of its own, in
+  `GET /debug/machine-readers` and in the table. (#13072)
+- **The machine readers and shared links tiles on the stats page are plainer.**
+  Both draw one bar per day in the green of the visitors strip: the day's sum
+  of verified requests, and the day's sum of shares. The machine readers tile
+  loses its three-colour split, its legend and its footnote sentence; under
+  the bars it gives the 28-day sums in three lines: the verified requests by
+  audience, the MCP requests, and the unverified requests. The shared links
+  tile gives the platforms' 28-day sums in one line, without its explanatory
+  paragraph, which the legal page it links holds. The shared links bars were
+  a brighter green than the other strips. (#13071)
+- **The shared links tile names the most shared specs and the most shared
+  libraries, not single pages.** A spec's sum holds its hub and all of its
+  implementation pages, a library's sum its implementation pages across
+  specs; a spec links to its hub, a library to the gallery filtered by it.
+  `GET /insights/shared-links` answers `top_specs` and `top_libraries` in
+  place of `top`; the page-by-page list stays on the debug page. (#13071)
+- **The app sends eleven custom events, and the compiler refuses any other.**
+  The set is the type `AnalyticsEvent`, and every component receives the
+  sender as that type. Before, the app sent 42 event names, 23 of them without
+  a goal on the public dashboard. (#13060)
+- **Search queries are normalised before they are sent.** `query` is the one
+  property a visitor writes, and the public dashboard lists it: it is now
+  lowercase, with single spaces, and cut at 40 characters. (#13060)
+- **`nav_click` is about the landing page only.** The menu bar, the logo, the
+  breadcrumb and the gallery's compare link no longer send it: 76 % of its
+  events were menu clicks, which the pageview that follows already records.
+  (#13060)
+- **`open_interactive` is named `interactive_open`**, and `feedback_submitted`
+  carries where it was sent from (`source`) and the plot, not the reaction or
+  whether a contact was given. (#13060)
+- **Dependencies:** 11 Dependabot PRs. The python-minor group (#13137) moves
+  three exact pins of the `agents` extra, checked against their release notes
+  and the source diff before the merge: `google-adk` 2.13.0 → 2.14.1,
+  `tree-sitter` 0.26.1 and `tree-sitter-language-pack` 1.25.0, with the pin
+  tests' constants, one code comment and one doc line moved in the same PR. It
+  also takes `anthropic` 2.8.0, `fastapi` 0.162.7, `fastmcp` 4.2.0,
+  `pydantic-settings` 2.16.3, `pytest-asyncio` 1.5.0, `ruff` 0.17.5 and
+  `kaleido` 1.5.1. `cachetools` 7.3.0 → 8.0.0, a major version (#13138),
+  `tornado` 6.6.1 (#13099), `dnspython` 2.9.2 (#13098) and `types-pyyaml`
+  (#13139). In `app/` `vite-plugin-checker` 0.14.5 → 1.0.0, a major version
+  (#13135), `@mui/x-data-grid` 9.18.0 (#13130), and the npm-minor group
+  (#13132: `prettier` 3.10.1, `jsdom` 31.0.1, `typescript-eslint` 8.72.2 and
+  `@testing-library/user-event`). For the JavaScript renderers `@mui/x-charts`
+  9.17.0 → 9.18.0 (#13134), the agents renderer's `python` base image
+  (#13133), and `anthropics/claude-code-action` 1.0.275 in the actions group
+  (#13136).
+
+### Removed
+
+- **The `/update` command.** Its ship phase uploaded a `plot.png` that nothing
+  produces, to a staging path the review doesn't read, and expected a repair
+  loop its PR never got. A locally written implementation goes through the
+  pipeline's adopt mode instead, as the catalogue audit already does.
+  (#13129)
+- **Ten agent chat events left the public dashboard.** Pastes, files,
+  confirmations, data changes, refusals, saves, feedback and cut streams are
+  lines of the server's usage telemetry; the browser repeated part of them to
+  Plausible, mostly from the owner's own sessions. `agent_open` and
+  `agent_plot_rendered` stay. (#13060)
+- **Link and click events that a pageview or the tracker script already
+  records**: `external_link` (the script's `Outbound Link: Click` records the
+  same click), `internal_link`, `tag_click`, `library_click`,
+  `stats_top_impl_click`, `suggest_spec`, `report_issue`, and
+  `page_not_found` (a missing page is a pageview under the path that was asked
+  for since the pageview moved to the navigation). (#13060)
+
+### Fixed
+
+- **When you say your dates are month first, the chat re-reads them.** In
+  the chat of "Use with my data", a pasted date column such as `03/04/2024`
+  whose every day is at most 12 reads both ways, and the paste reads it day
+  first. When you then say the dates are month first, the chat now re-reads
+  the column that way instead of saying that it already is. The assistant
+  never saw the paste's note about that guess, only the dates as ISO dates
+  (`2024-04-03`). Now the column's profile says which order its cells were
+  read in, the field changes when the column is re-read, and the assistant's
+  instructions point to that field instead of the note. (#13627)
+- **The chat's validator reads column names unpacked in one line.** plotnine
+  code that names its columns as `POS_X, POS_Y = "x", "y"` and then passes them
+  to `aes()` was refused as if the names hid code, while `POS_X = "x"` on its own
+  line passed; a regeneration of venn-basic in plotnine was kept for that alone.
+  A top-level unpacking of literals now counts as the one binding the rule
+  needs, and a starred item, a nested target or a value the walk cannot read
+  is still refused. (#13480)
+- **A regeneration puts an equal-aspect plot on the square canvas.** Old
+  matplotlib files often drew a Venn diagram or an equal-axes plot on a
+  landscape figure and let a tight crop cut the empty sides away. The
+  generator drops that crop, as the library rules require, but kept the
+  landscape figure, so three regenerations shrank the plot to the middle of
+  the canvas with empty bands at both sides, and two of them merged as
+  judged worse. The orientation now follows what the plot draws: a plot with
+  a 1:1 aspect takes the square canvas, and the square list names Venn
+  diagrams, circle packing, polar charts and equal-axes plots. (#13474)
+- **After a paste that replaced data, the chat answers from the new table and
+  still knows what was said.** In the chat of "Use with my data", the turn that
+  summarizes a second table no longer shows the assistant what it read or
+  changed in the first table, nor its thinking about it. Every message of the
+  visitor and every reply stays, and a fixed line marks where the new paste
+  came in. Before, the note "Convert the column day to dates." sent with a
+  table whose `day` held text got the answer that the column already held
+  dates, taken from the first table. A visitor who adjusts the data and says
+  "try again" is still understood. (#13348)
+- **Dates the chat does not read no longer turn into row numbers unasked.** In
+  the chat of "Use with my data", a pasted table whose day column is in a
+  form the chat does not read, such as `2026.03.01`, `1st March 2026` or
+  `2026-03-01 10:00:00 CET`, got the row numbers 1 to n on the axis of a line
+  plot, made without a question and without a word about the dates. Now the
+  chat asks first: it names the column, says why its dates do not read, and
+  lists the forms it reads. The same holds for a column with a day that does
+  not exist, with slash dates whose order of day and month is not settled, or
+  with times with and without a UTC offset in one column. A list of values
+  without such a column still gets its row numbers as before. (#13224)
+- **The chat's first reply to a paste describes the table that just arrived.**
+  In the chat of "Use with my data", the server now puts the new table's
+  columns, types, ranges, a few cells and the bindings in front of the
+  assistant itself on the first turn after a paste, the data summary or the
+  note typed with the data, as the profile tool returns them and fenced as
+  data, so that turn describes this table also when the assistant does not
+  call the tool. When the paste replaced earlier data, the assistant is also
+  told that nothing said before that turn describes the new table. Before,
+  only a call of the tool showed it the table, and the call was sometimes
+  skipped: with a second table whose `day` column held text where the first
+  had dates, the assistant answered a note from its summary of the first
+  table and said the column already read as dates. (#13207)
+- **Four axis tests of the drawn-text record skip where seaborn or plotnine
+  is missing, and fail where CI requires them.** Two imported seaborn
+  directly and so failed, instead of skipping, in an environment without the
+  plotting libraries; the other two used `pytest.importorskip`, which would
+  have skipped silently in CI's test job as well. All four now go through
+  `tests.libraries.import_library`, as the other library tests do. (#13201)
+- **A UTC offset counts only from −12:00 to +14:00.** A pasted
+  `2026-03-01 08:00-16:30` is no longer typed as a time at an offset of
+  −16:30, and a date followed by `-17:00` is no date with an offset, at the
+  paste, in a conversion and as a filter bound. (#13199)
+- **The chat no longer fills an emptied plot axis with a column nobody asked
+  for.** After a change of the data that took the column of a required role
+  (the daily mean per sensor drops the humidity of a scatter plot's y), the
+  assistant added the timestamps as days since the first date and put them on
+  the chart. In such a turn the server now refuses to turn a date into numbers
+  or to make row numbers, or to bind such a column, whichever call tries it,
+  and the refusal costs none of the turn's two data steps. A multi-series
+  plot's series count as one role, taken only when the last one is gone, and an
+  optional role such as a series grouping never counts. The table keeps only what was asked
+  for, the reply names the axis that lost its column, the plot waits, and the
+  next turn lists what the server can compute for it. The axis's own dates
+  turned into numbers in their place ("the days since the start on x instead
+  of the dates") still take it, and a column the request derives or converts
+  from text itself still takes the axis it names. (#13198)
+- **A plot selection that hides no row any more is cleared.** After "keep only
+  these rows in the table", the old selection stayed in force on the plot. A
+  change of the table now clears every selection that keeps all of its rows,
+  however the change was written, with a line that says so; a top N stays, as
+  it still orders the rows. (#13198)
+- **An undo also takes back what the step did to the plot's view.** Undoing
+  "keep only these rows in the table" or an `apply_view` brought the table back
+  but drew every row. The view from before the step now comes back with it, as
+  long as the view in force is still the one the step left. (#13198)
+- **Two prep eval cases no longer fail correct answers.**
+  `en-code-strip-plot-calls` adds seeded noise, so it needs the code tool
+  again; `de-klasse-aus-vorzeichen` accepts the labels `1` and `2` beside
+  `Klasse 1` and `Klasse 2`, through a new `also_accepted` field for a request
+  with two fair readings. (#13198)
+- **A rule credited to the owner that no source gave as his.** The AI
+  workflow page's first example of his recorded decisions named a fail-closed
+  rule of 2026-10-11; the design document's parenthesis behind it had moved
+  when the sentence grew. Both now give the rule of that day, the data
+  confirmed in a first step. (#13186)
+- **The vision document's voice and the chat's inputs.** It no longer calls
+  anyplot "AI-powered", which the style guide rules out, and it says that the
+  chat reads dropped files as well as pasted text. (#13186)
+- **A personal address in public files.** A test constant and an audit report
+  held a real account address; they use a placeholder now. (#13186)
+- **A date with a UTC offset and no time stays as written.** In the chat of
+  "Use with my data", a pasted column such as `2026-03-01-05:00` or
+  `2026-03-01+01:00` now stays text with a note that names its shape. On
+  request the days go into a new column, and the change line counts the
+  dropped offsets ("3 dates had the UTC offset -05:00, which was dropped; the
+  days are as written"); for an open date role the chat asks first. Before,
+  an offset west of UTC was read as a time of day (`-05:00` as 05:00) and the
+  conversion was made without asking, an offset east of UTC failed without a
+  reason, and as a filter bound `2026-03-01+01:00` meant 01:00 and left rows of
+  1 March out; such a bound now means the whole day. A filter by date on the
+  pasted column itself, which would compare the text and cut the rows of one
+  day in two, is refused with the way out: the converted column. (#13184)
+- **Hour labels written `YYYY-MM-DD-HH` are no longer read as dates.** A date
+  followed by a sign and digits in no offset form is refused, with the form
+  the column needs, when it is converted or used as a filter bound. Before,
+  four hour labels became four equal dates, and the chat made that conversion
+  without asking. (#13184)
+- **A telemetry line's idempotency key could be recomputed from the debug lines.** The key was a plain hash of the
+  line's session hash, turn, event and an attempt label that often holds the request id, and the attribution
+  lines carry that id as well: with both logs, a key could be recomputed per request id and a telemetry row
+  joined to its debug lines by the key. The key is now an HMAC under the per-process salt of the session
+  hashes, in a domain of its own (`agents/anyplot/telemetry.py` `idempotency_key`). Deduplication is unchanged:
+  a line that Cloud Logging delivers twice or a pipeline node that ADK runs again keeps its key. Lines written
+  before the change keep their plain keys, so for them, and through the session hash for the other lines of
+  their sessions, the join stays possible while someone holds the request id; the debug lines hold it for 30
+  days. `docs/reference/agent-telemetry.md` now also names the join by token counts, which this change does
+  not close. (#13183)
+- **A total of a group with no values is empty, not 0.** In the agent chat,
+  a sum per group returned 0 for a group whose cells were all empty, as if
+  its values had added up to nothing. That 0 stood in the answer to a
+  question, in the stored data of a data step and in a chart that sums
+  repeated keys, beside the zeros a table really held. A group with no
+  value now has no total, as it already had no mean, minimum or first
+  value, for whole numbers and decimals alike; a count of it stays 0, and a
+  total over rows that all lack the value is empty too. The step's line now
+  says what it left out for a grouped figure as well, per value column: the
+  rows without a value and the groups left empty, for example `summed units
+  by shop: 3 rows, 1 group without a value in units left empty, 3 rows
+  without a value in units left out`. Until now only a figure over all rows
+  counted the rows it skipped. Data versions already stored keep their 0.
+  (#13180)
+- **The privacy policy names the session hash a feedback case keeps.** The data assistant's
+  feedback row said that a case's triage row keeps a hash of your tab id; it also keeps a
+  hash of the session id. The row and its crawler copy now name both. (#13182)
+- **The database reference no longer contradicts the privacy policy.** The "Data privacy"
+  list in `docs/reference/database.md` promised anonymous session ids, usage data deleted
+  after 90 days and no personal data, and its first item broke off mid-sentence. It now
+  names what each store holds, with the file that shows it, and points to the privacy
+  section of the legal page for how long data is kept and where it runs. Its storage
+  overview no longer has only an admin send a feedback case of the agent chat, and it says
+  that a case keeps the conversation and up to 5 sample rows of the data even when the data
+  file is left out, and it names the case bucket's region, the Netherlands (europe-west4), as
+  the privacy section does. (#13182)
+- **The database reference gives the real backup settings.** Its "Automated backups" list in
+  `docs/reference/database.md` said the backups start at 3:00 AM UTC and are kept for 7 days.
+  They start at 19:00 UTC, and the 30 most recent are kept, about 30 days, with
+  point-in-time recovery over 7 days of transaction logs, in the EU multi-region. The section
+  now says so and names the read-only command that shows the settings. (#13182)
+- **The origin gives its dates, not a weekend.** The about page and the
+  style guide's origin story said pyplots.ai was built in a weekend. It
+  started in November 2025, and after a few months it became anyplot.ai in
+  April 2026, as the repository's first commit and the 2.0.0 relaunch in
+  `CHANGELOG.md` show. The crawler copy now tells the origin too, after
+  transparency, as on the page. On the page and in its crawler copy,
+  `test_readme_claims.py` holds the month of the rename to that release and
+  the start month to the README's "Since November 2025". (#13177)
+- **The masthead fits at every width.** With MonoLisa the last menu entry ran
+  into the right margin on phones narrower than about 344 px, and the screen
+  cut it off below about 327 px. From 600 to about 700 px and from 900 to
+  about 925 px the logo broke onto two lines; from 600 to about 640 px the
+  search also ran into the right margin, and below about 609 px past the
+  screen's edge. The single row now starts at 720 px, the labels on a phone
+  keep at least 8 px apart, phones narrower than 360 px mark the active page
+  with a small dot that stays clear of the label before it, and from 900 to
+  1199 px the labels keep 20 px apart. (#13177)
+- **The about page no longer overstates the review and the upkeep of the
+  catalogue.** It says that the bar drops 10 points per repair, to 50 at the
+  last review, and that a nightly job regenerates the oldest implementations,
+  instead of promising a re-run whenever a library ships a release, which no
+  workflow does. Among the automated checks before the review it names only
+  the ones a workflow runs, so the blank-image check is gone, from the
+  README's pipeline step too. The crawler body says the same, and
+  `test_readme_claims.py` pins the floor, the step, the nightly schedule and
+  the checks, and keeps the blank-image check out of the README's step. (#13177)
+- **Four sentences no longer say more than holds.** The about page and the
+  README said that no generated plot is ever patched by hand, though the
+  palette swap of May 2026 edited the plots' code catalogue-wide; they now
+  state the rule: a wrong plot is fixed in its spec or a rule and
+  regenerated. The README's highlight said the session id never appears in a
+  URL; that holds for the public chat, whose id travels in a header, while
+  the admin chat's routes carry it in the path. The AI workflow page said the
+  same of every URL and now says the public chat's session id left its URLs.
+  The AI workflow page, the guardrails and the Dependabot command say the
+  site was blank for about 45 minutes on 2026-10-22, as `CLAUDE.md` and the
+  README do, instead of when it was noticed. `test_readme_claims.py` holds
+  the header to the public chat's routes and the minutes to the README's,
+  and fails if one of the old sentences returns to the README, the workflow
+  page, the guardrails or the Dependabot command. (#13177)
+- **Back leaves a redirected address in one step.** A fresh load of the old
+  chat address `/debug/agent` or of a language address `/{spec}/{language}`
+  left the old address one step back in the history, so Back landed on it and
+  was sent forward again; the destination now takes over the old address's
+  history entry, as the about page does for `/legal#transparency`. (#13177)
+- **The README's pipeline puts each check where it runs.** Its review step
+  listed "the code parses and runs" and "the image exists" among the
+  automated checks of `impl-review.yml`, but the code runs in generation. The
+  generation step now says that `impl-generate.yml` runs the implementation
+  and stops without both theme renders, and the review step's checks read
+  "both renders exist and the canvas has its target size".
+  `test_readme_claims.py` pins both sentences and the review's step that
+  checks for both renders. (#13177)
+- **The README and the about page no longer overstate the review and the
+  gate.** They said the reviewer scores "blind to any earlier score", but
+  only its working tree and its prompt are kept free of the stored score,
+  while the branch history and the pull request stay reachable. The README's
+  review step, the about page and its crawler copy now say "with the stored
+  score kept out of its working tree and its prompt", and a test holds them
+  to the step that hides the stored review before the reviewer runs. A fix
+  to a prompt, a spec or a rule reaches a plot when that plot is next
+  regenerated, not at once, as the README's highlight, the about page, its
+  crawler copy and the style guide now say. The gate was said to replace the
+  live version only on a visible fix (the README's highlight) or only when
+  a review finds a fixed defect and no regression (the README's nightly
+  section, the about page, its crawler copy and the style guide). All five
+  now say the same: only with no regression, a score at most a point lower
+  and a fix the review can verify, while a code conversion for the chat
+  passes on an unchanged render instead. The nightly regeneration names
+  "the oldest single implementations" in place of a count the schedule no
+  longer uses. (#13177)
+- **The debug page ignores a status answer that comes after it is gone.**
+  Its first request set the page's state whenever it settled, also after
+  the admin had moved on: a request that then failed forced a reload of the
+  page they were on, and in a test run the late update was an unhandled
+  error that failed a run in which every test had passed. The request's
+  answer is now dropped once the page is gone or a newer request replaced
+  it. (#13174)
+- **The API bounds a request body before the application takes it.** A
+  route with a body model has its body read and parsed by the framework
+  before the route or any of its checks runs, so a size check inside a
+  route came after the bytes were already in memory. A middleware in front
+  of the router now refuses a request that declares more than the cap of
+  its path, and counts a body that declares no length as it arrives: once
+  it passes the cap, the refusal goes out and the application is handed no
+  more of it. The middleware sends that `413` itself, so it is the same on
+  every route and on the mounted MCP server: in the standard error format,
+  and on the agent lanes with the `too_long` code those routes answer with
+  themselves. The agent lanes keep the cap their routes already declare;
+  every other path takes a default of 64 KiB, far above the largest body
+  those routes accept. Tests send through the real app and check what the
+  application was handed, not only the status, and one test holds the
+  table of caps against the app's own routes. (#13172)
+- **A crawler or an AI assistant that follows a link to `/agent` reads the
+  page, not a 404.** `llms.txt` links the address, but nginx sends a
+  recognised crawler to `/seo-proxy/agent`, which had no route and fell into
+  the spec route as an unknown spec. The API now serves a copy of the
+  explainer there, `noindex` as the page is: the title, the description, the
+  paragraph, the example pairs, the line on how the chat is built, and the
+  terms of use word for word under their heading and in their order, which a
+  test pins to `AgentIntro.tsx`. The machine-read log names the page `agent_page` instead
+  of a spec hub for a spec called `agent`. (#13163)
+- **The back button asks before it leaves a chat for the explainer.** The
+  chat's leave warning compared only the path, so going back from a chat with
+  data or a plot to `/agent` without a plot, or to another chat, ended the
+  session without asking. It now asks for any move away from the chat's
+  catalogue plot, as a link off the page always did; a library switch inside
+  the chat still passes without a prompt. (#13163)
+- **The palette strip on the landing page fits a phone.** At 320 to 390 px,
+  all eight swatches now show and each name sits centred under its own
+  swatch. Before, the hidden hex label gave every swatch a minimum width of
+  about 70 px, so the last three or four swatches were clipped and the names
+  drifted under the wrong colours. Each name now moves with its colour when
+  one expands; while a colour is expanded, only its name shows. Keyboard
+  focus now expands a colour and shows its hex as a hover does, and the
+  strip no longer animates when reduced motion is turned on. (#13155)
+- **The swatch labels on the palette page use the ink with the higher
+  contrast.** The helper now compares the WCAG contrast ratio of both inks
+  against each swatch instead of cutting at a luminance of 0.5. Every
+  categorical hue now reaches at least 4.5:1, where five of them had 1.99 to
+  2.97:1. Brand green, cyan, lime, lavender and ochre, and the dark-theme
+  muted anchor, now take the dark ink. The hex line no longer fades to
+  0.85 opacity, which put it under 4.5:1 again. (#13155)
+- **The library cards on the libraries page line up.** The cards in a row
+  are now the same height, so their version and docs lines sit at the same
+  height. Before, they were up to 42 px apart on desktop. (#13155)
+- **The Highcharts card notes its licence.** The card reads
+  `free for non-commercial use` on the libraries page and the landing page.
+  A licence note now has its own line above `.explore()`, and MUI X's
+  `MIT · community` moved there from beside it. The Highcharts note stays
+  on one line at every width from 320 px, and `.explore()` stays level with
+  the cards beside it. This adds a 19 px line to both cards. (#13155)
+- **The landing page no longer jumps when the plot of the day arrives.** The
+  terminal frame is reserved, empty, while the plot loads, and keeps its
+  height when the plot arrives and when `.use_my_data()` joins its header
+  after the plot. The header and the footer have a number of rows
+  that depends only on the card's width: below 560 px, on a phone and in the
+  narrow two-column card from 900 px, the header's actions and the footer's
+  library each take a second row in every state. A filename or title too
+  long for its row is cut with an ellipsis instead of wrapping. With the
+  plot-of-the-day answer delayed by 1.5 s, the layout shift on a tablet
+  (820 px) drops from 0.18 to under 0.001. On a phone (390 px) with the card
+  in view, the late `.use_my_data()` shifted the page by 0.18 and now by
+  under 0.001. If the request fails, the frame stays and says
+  `plot of the day did not load`, with `.retry()`. The request, with its
+  retries, stops when the visitor leaves the page or asks again. (#13155)
+- **A failed load on the plots page clears and can be retried.** The error
+  banner is cleared when the next fetch starts. It says `plots did not load`
+  instead of the raw exception with status and URL, and offers `.retry()`.
+  While it shows, the page shows no plots of an earlier filter and no longer
+  claims that no plots match, and the search menu offers no counts of an
+  earlier filter. The banner sits 16 px below the masthead's rule instead of
+  on it. The page also saves a filter only together with the plots fetched
+  for it: a filter whose load failed, or that the visitor left while it
+  loaded, used to be saved beside the plots of the filter before it, and a
+  return to the page showed those as its result without loading. (#13155)
+- **A regeneration's review can read the predecessor's files.** The review
+  re-scores the live implementation from files that `impl-review.yml` puts
+  under `/tmp`, and the permission rule meant to allow that read,
+  `Read(/tmp/*)`, never covered them: a path with one leading slash is
+  anchored at the settings source (the project, or the directory of a file
+  passed with `--settings`), not at the filesystem root. The rule is now
+  `Read(//tmp/anyplot-*)`, in `.claude/settings.json` and in the retest's
+  settings: the absolute form, and only the pipeline's own file names. With
+  the old form the read was refused. Most reviews found another way to the
+  files. One that treated them as missing wrote no before/after file, and the
+  gate kept the live implementation with `regen_json_missing`: 4 of the 58
+  gated regenerations from 2026-11-10 to 2026-11-17. Every session that loads
+  `.claude/settings.json` gets the rule: the Claude steps of `impl-generate`,
+  `impl-repair`, `spec-create`, `daily-regen`, `util-claude`, and
+  `report-validate`, and local sessions, now read a file named `anyplot-*`
+  directly under `/tmp` without asking. (#13160)
+- **The files that carry the stored score stay out of `/tmp`.** With a
+  working rule, two files there would have put the stored score one read away
+  from a review that scores blind: the copy of main's metadata, and the
+  predecessor's source before its header is cleaned (left behind when the
+  cleaning fails). Both now stay under `$RUNNER_TEMP`, and so does the PR's
+  JSON, whose body records the previous quality. The retest removes its
+  metadata copy once the context is built. This isn't a boundary: the session can
+  still run Bash and `gh`, and the previous review it's handed can quote a
+  score in its own wording. (#13160)
+- **The generation retry cap holds when the failure count can't be read.**
+  "Handle generation failure" piped `gh api` into `awk` and relied on a shell
+  option that GitHub Actions doesn't set by default, so a failed count read
+  as zero earlier failures and bought another full generation. The call's own
+  exit status now decides, after three attempts, and the handler's tests also
+  run under plain `bash -e`. (#13129)
+- **The watchdog's review rescue can no longer remove a fresh failure
+  label.** After it re-dispatched a failed review, the watchdog removed
+  `ai-review-failed` itself. A replacement review that failed again within
+  that moment had its new label taken away, and the PR was left with the
+  rescue marker alone, which no rescue case sees. The rescue now only adds
+  `ai-review-rescued`; the review it dispatched removes the old label when
+  it starts, as every review does. (#13129)
+- **The plot of the day returns its code for every language.** When the day's
+  pick was one of the seven R, Julia, or JavaScript libraries,
+  `GET /insights/plot-of-the-day` answered `code`, `image_description`,
+  `library_version`, and `language_version` as null, because the
+  implementation was looked up under Python. The implementation repository
+  now requires the language when it looks up or upserts one implementation,
+  with no default, so a call that leaves it out fails instead of looking
+  under Python; the plot of the day passes its pick's own language. The
+  agent case detail on the debug page had the same gap and now finds the
+  catalogue code of a non-Python case. Its diff therefore runs on R, Julia,
+  and JavaScript code for the first time: it drops the `//` attribution
+  header of a JavaScript export as it drops the `#` header, and both diff
+  labels carry the library's file extension instead of `.py`. A JavaScript
+  case whose version names no library is now filed under the library its
+  exported code names, as the other languages' cases already were, and the
+  regression importer (`agents/evals/import_case.py`) reads the header the
+  same way, so it replays such a case under that library. (#13123)
+- **The models that write and review a plot hear which rows a view
+  draws.** In "Use with my data", a plot that draws only some of your rows
+  ("only the first quarter") computes its figures from those rows, but a
+  total or a mean in its title, an annotation or the legend could read as
+  the whole table's, and the chat described it that way. The model that
+  writes the plot code is now told how many of the table's rows the plot
+  draws and which selection, and is asked to name that selection in the
+  label of such a figure ("Total of the first quarter") and to stop naming
+  that selection once you show every row again, except in words you wrote
+  yourself. The model that reviews the render is told the same and asked
+  to count such a figure whose label reads as the whole table's as a
+  defect. The chat is told that a total, a mean or a count the plot draws
+  covers only the rows it draws, and asking for a version's code also says
+  how many rows its `data.csv` (and a JavaScript plot's `plot.html`) holds
+  and which view it drew. (#13142)
+- **A cell with a line break counts as one row.** In "Use with my data",
+  the render check that compares the points a plot draws with its rows
+  counted the lines of `data.csv`, so a quoted cell over two lines, as a
+  cell pasted from a spreadsheet can hold, counted as two rows. That check
+  now counts the table's rows, and so do the same check when you switch
+  the theme of a plot and the row count the chat reports for a version's
+  data. (#13142)
+- **A title you replace no longer comes back.** In the chat of "Use with my
+  data", the plot memory kept a remembered title after you set a new one
+  that the plot drew, and the card still listed the old title as kept. A
+  later change could draw the old title again. Now, when a plot draws a
+  title or axis label you wrote as that part's whole text and no longer
+  draws the remembered text whole anywhere, the new text replaces the
+  remembered entry, also when it only lengthens the remembered one. A
+  subtitle is replaced only in libraries whose text check reports a
+  subtitle, which matplotlib and seaborn don't. In plotnine, whose text
+  check reports none of these parts, nothing is replaced. Under a figure
+  title above an axes title, or on a figure of several panels, only a
+  figure title you wrote replaces the title. An x or y axis label is never
+  replaced where the plot draws several different labels for that axis, as
+  on panels with labels of their own or with a second y axis. This never
+  adds an entry to an empty memory. A title filed with the target `plot`
+  and one filed without are now one title. (#13143)
+- **The plot card says which remembered decisions the plot did not use.**
+  A remembered decision whose text the plot does not draw now ends the
+  card's decisions line as `not used: …` instead of standing under
+  `kept:`. It stays in the memory, since only you remove a decision. A
+  decision without a text, one written before the plot language changed,
+  and every decision in a library whose reviewer checks the texts in the
+  image still count as kept, so `not used:` appears on matplotlib, seaborn
+  and plotnine plots only. (#13143)
+- **A date range on a month key no longer drops the first month.** In the
+  chat of "Use with my data", a sum or mean by month, quarter or year writes
+  its key as text labels such as `2024-01`, which compare as text, so a range
+  from `2024-01-01` on such a key left January out without an error. A
+  condition with a value of another date or period shape on such labels is
+  now refused with the labels' form and an example, so the assistant can give
+  the bound again in that form. A column of four-digit codes kept as text
+  compares as before. (#13140)
+- **The data lines name the form of a period key and the lowest and highest
+  value that stayed.** The line of a sum or mean by month, quarter or year
+  says that the key is now text labels and in which form
+  (`month, as text labels YYYY-MM`), as the line of a week says each week is
+  its Monday. The line of "keep only the rows where" names the lowest and the
+  highest kept value of each tested column of dates or period labels, so a
+  selection that starts a month late shows in the result. The two values say
+  nothing about the values between them. (#13140)
+- **The auditor prompts name paths, routes, and services that exist, and a
+  test keeps it so.** The PageSpeed auditor pointed at `/catalog` and
+  `/spec/…`, routes that are gone, and called its API key optional although
+  every anonymous call of six audits was refused; the Cloud auditor named two
+  Cloud Run services that were renamed; the catalogue auditor counted nine
+  Python libraries where the catalogue holds fifteen in four languages; the
+  quality auditor asked for community files the repository has had for
+  months. `tests/unit/test_agent_instructions.py` now fails when an auditor
+  file names a path that does not exist, when the roster, the prompt index,
+  and the auditor files disagree, when a roster row names no model, or when
+  a tracked top-level directory has neither an auditor nor a stated reason
+  to have none. (#13114)
+- **The agent chat's reviewer reads the style guide's text sizes.** A review
+  line under VQ-01 sends a plot to a second round at any score, about 45
+  seconds. The reviewer read the rubric's 400 px test without the sizes the
+  rubric points to, so 8 pt tick labels, the size the catalogue plot already
+  had, could count as too small. Of the 46 live plot runs from 2026-11-09 to
+  2026-11-13, a visible-defect line forced a second round in 12; VQ-01 was
+  among the lines in 9 of them and the only one in 3, and it was still there
+  after the repair in 4. The reviewer and the offline scorer now get the
+  style guide's "Text Sizes" behind the rubric, cut verbatim like the rubric
+  itself, so text at the house size is no defect by what they read. The
+  adapter already had the whole style guide. (#13102)
+- **"Which 3 are largest" names a tie.** When the cut of an answer falls
+  among rows with the same value, the chat names the rows it left out
+  instead of presenting the first three as the only ones. (#13101)
+- **A colour you name stays your choice.** In the chat of "Use with my
+  data", "make the bars orange" came out in the nearest colour of the house
+  palette, an ochre, without a word, and there was no way to the orange
+  itself. A colour word is still drawn as the palette's nearest colour, but
+  the reply now says which one and asks whether that is fine. Say that you
+  want the colour itself ("no, a real orange") and the plot draws it, as
+  the value the name has in CSS, so the same word gives the same colour in
+  every library. A value such as `#FF8800` is drawn exactly as given, with
+  no question. (#13084)
+- **A plot draws each value as it is.** A plot had shown negative amounts
+  as positive bars, and no line said so. The plot rules protected the rows
+  and not the values. A bound value is now drawn as it is in the data: no
+  absolute value, no flipped sign, no clipped or converted value, unless
+  the plot type computes its marks or places them by its own geometry, or
+  the user asks for it, and a change the user asks for is named in the
+  plot's notes. (#13084)
+- **"Sort biggest first" reorders the plot, not the table.** In the chat of
+  "Use with my data", a wish for an order of the bars or categories was
+  carried out as a sort of the user's table: a new data version, and a
+  second tap on the plot button before the plot showed it. The assistant's
+  rules named ordering a change of the plot in one place and `sort` a change
+  of the data in another. An order is now a change of the plot, and the
+  table keeps its rows as pasted; so is a figure shown with the plot, such
+  as a total in the title or the sum of each category in the legend, which
+  the plot code computes from the data. A sort of the table stays for a
+  user who names the table or its rows, for a top N, and for a date column
+  that runs newest first. The prep eval scores where such a wish went
+  (`plot_request`), with thirteen cases for it and three that name the
+  table. The rule names no word of any language: three of the cases are
+  French, a language the rules hold no example of. (#13083)
+- **"Please answer in German" before the first plot gives a German plot.**
+  In the chat of "Use with my data", a request for the replies in another
+  language also fixed the plot's text to the language it had resolved to,
+  English in a new session, even when no plot existed yet. A user who then
+  typed a German title got it back translated into English. While the
+  session has no plot, such a request now leaves the plot's language open,
+  so the first plot follows the reply language. With a plot on the page
+  nothing changes: the plot keeps its language until the user asks for its
+  text in another one, and a plot language the user chose by itself stays.
+  (#13081)
+- **The chat no longer refuses a question about getting the plot out of the
+  page.** The scope check refused "how do I get this into my PowerPoint" and
+  "how do I get the picture onto my phone" as out of scope, and a question
+  whether a value is right, asked with the user's own figure from their
+  spreadsheet beside it, as a request for data to fetch. Its rubric now names
+  saving, downloading, copying, printing and sharing the finished plot as in
+  scope, also where the message names other software or a device, and a
+  figure the user states themselves as nothing to fetch. A question how the
+  other software works, text to send with the plot, and a figure the message
+  only points at stay refused. The scope eval set gains 22 cases for it, 12
+  of them in German. (#13059)
+- **Five small fixes in the chat, from the persona round of 2026-11-11.**
+  Dropping rows now says when a number column is below 0 only in the rows
+  that went, so its total over the rest is higher than before (cancelled
+  invoices with negative quantities raised a total unnoticed). A condition
+  `not_missing` finds the cells that have a value. A question about the data
+  that answered an error no longer uses up the turn's three questions, and
+  the refusal after them no longer names a tool or a limit, which the
+  assistant had passed on. Text between two pairs of asterisks in a reply
+  shows as strong text instead of asterisks, never inside a word or code.
+  After the user rebinds a role by hand, the assistant reads that binding
+  as the user's choice instead of calling its earlier words a mistake.
+  (#13062)
+- **A plot change asked for together with a data change reaches the plot.**
+  One message could change the data and ask for a change of the plot ("drop
+  these rows and use a log scale"). The data changed, the assistant wrote
+  that the log scale was noted, and the plot of the new data came without
+  it: a change of an existing plot was never kept, and the plot button
+  brings no request. The chat now keeps such a change while the data or the
+  bindings wait for the user's check, and "plot the new data" draws it on
+  the latest plot together with the new data. A note for a first plot
+  behaves as before. (#13061)
+- **The chat no longer repeats a refusal for the next, valid message.** After a
+  refused message, the refusal text stayed in the assistant's own context,
+  joined to the next message, and the assistant sent the same fixed text
+  again for a question the scope check had passed (two of the six typed turns
+  right after a refusal in a persona round). The refused turns are now taken
+  out of the assistant's request; the session keeps them, so the scope check
+  and the count of refusals read what they read before. Behind it, a reply
+  check asks the assistant once more when it still answers a passed message
+  with a fixed refusal. The turn record names the new check as `root_refusal`
+  (`reasked` or `kept`). (#13057)
+- **A data conversion in the chat no longer loses a digit.** A count written
+  with thousands dots and a footnote mark (`38.790*`) came out as 3879: taking
+  the mark off made a new column that was typed at once as the number 38.79,
+  and removing the dot from that number's stored text dropped the zero. A new
+  column of `strip`, `replace` or `split` whose decimal mark could as well
+  separate thousands now stays text until `set_type` reads it with the mark
+  the user names. A text operation reads a pasted number column from its cells
+  as pasted, and is refused on the `.` or `,` of any other number column.
+  `set_type` with a decimal comma on a number column it cannot read again is
+  refused, where it answered "nothing changed" and the call went on to compute
+  with the wrong reading and store it. Without a named mark, `set_type` says
+  in its change line which mark it took when the cells read with either.
+  (#13056)
+- **A person in Snapchat's in-app browser is no longer treated as a crawler.**
+  nginx's crawler map matched the word `snapchat`, which the app's in-app
+  browser carries in its user agent as well as Snap's link-preview fetcher: a
+  person opening a link inside Snapchat would have got the prerendered page
+  instead of the app, and their analytics events would have been dropped. The
+  entry now names the fetcher (`Snap URL Preview Service`). The entry `signal`
+  is gone: Signal's fetcher signs as WhatsApp, so the word matched no fetcher.
+  The site's request log held no such request in the 30 days before, so nobody
+  was served the wrong page. The share counter reads Snapchat the same way.
+  (#13069)
+
+### Security
+
+- **The pipeline acts only on its own pull requests.** The pipeline's workflows
+  act only on pull requests it opened itself, from this repository's own
+  `implementation/<spec-id>/<library>` branches with a registered library and
+  targeting `main`. Review, repair, merge and the review retry check each pull
+  request with one checker, staged from the workflow's own commit (from `main`
+  on a pull-request event), before they check out or write anything; the
+  watchdog, impl-generate's existing-PR lookup and daily-regen's pair pick skip
+  any other pull request in their listings. A refused pull request gets no
+  label, comment or dispatch, only a fixed reason code in the run log, and
+  anything the checker cannot read is refused. impl-merge merges only the head
+  commit it checked or GitHub's own merges of `main` into it, and treats a pull
+  request found merged as merged only at such a head; review and repair write
+  only onto the commit that was checked and never over a branch that moved
+  meanwhile; the review's write-back
+  cleanup closes only the pipeline's own write-back pull requests; repair takes
+  its review feedback from the reviewer's own comment only, and the automatic
+  retries count only the workflows' own comments. (#13280)
+- **Workflow inputs reach no run script as text.** In the pipeline's workflows,
+  dispatch inputs and event values go through `env:` and are checked for their
+  shape before their first use, and the watchdog takes a spec ID from an issue
+  title only in the catalogue's shape. (#13280)
+- **No auditor prints a secret or connects to production.** The Plausible
+  auditor read its API key with a command that wrote the key to the
+  transcript and fell back to reading it from Secret Manager; it now reads
+  the key into a variable and reports `blocked` without one. The database
+  auditor was allowed `alembic check`, which loads `.env` and so connects to
+  the shared production database; drift is read from the `Verify Migrations`
+  job instead, and only `alembic heads`, which reads the revision files,
+  stays allowed. (#13114)
+
+*Catalog: no new specs and no new implementations; 405 regenerations replaced
+their implementation (#13063 to #13685; the first six merged after v4.1.0's
+section was cut): `bokeh` 55, `plotly` 53, `seaborn` 52, `altair` 51,
+`matplotlib` 50, `letsplot` 49, `plotnine` 47, `pygal` 44, `makie` 2 and
+`ggplot2` 2. For 63 more the regen gate kept the live implementation, and each
+stored its re-score as that implementation's review (#13092 to #13680). One
+spec PR replaced real people and parties in the examples of `alluvial-basic`
+and `venn-labeled-items` with invented ones (#13350).*
+
 ## [4.1.0] — 2026-11-11 — Fine-tuning
 
 ### Added
@@ -8000,7 +9768,8 @@ interactive HTML previews.
   Actions workflows (spec creation, impl generation, AI review, auto-merge); Cloud Run +
   Cloud SQL + GCS; 1,081 unit tests.
 
-[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v4.1.0...HEAD
+[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v4.2.0...HEAD
+[4.2.0]: https://github.com/MarkusNeusinger/anyplot/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/MarkusNeusinger/anyplot/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.6.0...v4.0.0
 [3.6.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.5.0...v3.6.0
