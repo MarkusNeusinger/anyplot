@@ -1,7 +1,7 @@
 """ anyplot.ai
 circlepacking-basic: Circle Packing Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-11
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 78/100 | Updated: 2026-11-21
 """
 
 import math
@@ -34,212 +34,170 @@ LetsPlot.setup_html()
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per top-level group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Hierarchical data - File system storage breakdown (GB)
-np.random.seed(42)
-hierarchy = [
-    # Level 1: Main folders
-    {"id": "Documents", "parent": "root", "value": None, "label": "Documents"},
-    {"id": "Media", "parent": "root", "value": None, "label": "Media"},
-    {"id": "Code", "parent": "root", "value": None, "label": "Code"},
-    # Level 2: Subfolders under Documents
-    {"id": "Work", "parent": "Documents", "value": 25, "label": "Work"},
-    {"id": "Personal", "parent": "Documents", "value": 18, "label": "Personal"},
-    {"id": "Archive", "parent": "Documents", "value": 12, "label": "Archive"},
-    # Level 2: Subfolders under Media
-    {"id": "Photos", "parent": "Media", "value": 45, "label": "Photos"},
-    {"id": "Videos", "parent": "Media", "value": 65, "label": "Videos"},
-    {"id": "Music", "parent": "Media", "value": 22, "label": "Music"},
-    # Level 2: Subfolders under Code
-    {"id": "Projects", "parent": "Code", "value": 35, "label": "Projects"},
-    {"id": "Libraries", "parent": "Code", "value": 15, "label": "Libraries"},
-    {"id": "Backups", "parent": "Code", "value": 8, "label": "Backups"},
-]
+# Constants
+ROOT_RADIUS = 90  # layout units of the outermost circle
+LABEL_MIN_SHARE = 0.09  # leaves with a radius below this share of the root radius stay unlabeled
 
-# Data preparation
-df = pd.DataFrame(hierarchy)
-for idx, row in df[df["value"].isna()].iterrows():
-    children = df[df["parent"] == row["id"]]
-    df.loc[idx, "value"] = children["value"].sum()
+# Columns: set these to your table's column names
+NODE = "id"  # role: id
+PARENT = "parent"  # role: parent
+SIZE = "value"  # role: value
+NAME = "label"  # role: label
 
-root_radius = 90
-root_cx, root_cy = 0, 0
-total_value = df[df["parent"] == "root"]["value"].sum()
+# Data: replace this block with your own table, for example df = pd.read_csv("folders.csv")
+# Top-level nodes have a parent that is not an id; only leaves carry a value (file system sizes in GB).
+df = pd.DataFrame(
+    {
+        NODE: [
+            "Documents",
+            "Media",
+            "Code",
+            "Work",
+            "Personal",
+            "Archive",
+            "Photos",
+            "Videos",
+            "Music",
+            "Projects",
+            "Libraries",
+            "Backups",
+        ],
+        PARENT: [None, None, None] + ["Documents"] * 3 + ["Media"] * 3 + ["Code"] * 3,
+        SIZE: [None, None, None, 25, 18, 12, 45, 65, 22, 35, 15, 8],
+        NAME: [
+            "Documents",
+            "Media",
+            "Code",
+            "Work",
+            "Personal",
+            "Archive",
+            "Photos",
+            "Videos",
+            "Music",
+            "Projects",
+            "Libraries",
+            "Backups",
+        ],
+    }
+)
 
-polygon_rows = []
-label_rows = []
-circle_id = 0
-
-# Root circle
-angles = np.linspace(0, 2 * np.pi, 60, endpoint=False)
-x_root = root_cx + root_radius * np.cos(angles)
-y_root = root_cy + root_radius * np.sin(angles)
-for x, y in zip(x_root, y_root, strict=True):
-    polygon_rows.append({"x": x, "y": y, "circle_id": circle_id, "depth": 0, "color": "root"})
-circle_id += 1
-
-# Level 1 circles
-level1 = df[df["parent"] == "root"].copy()
-level1["radius"] = np.sqrt(level1["value"] / total_value) * root_radius * 0.95
-level1 = level1.sort_values("radius", ascending=False).reset_index(drop=True)
-
-# Pack level 1 circles with force simulation
-level1_radii = level1["radius"].tolist()
-n = len(level1_radii)
-radii = np.array(level1_radii)
-angles_init = np.linspace(0, 2 * np.pi, n, endpoint=False)
-level1_x = root_cx + root_radius * 0.4 * np.cos(angles_init)
-level1_y = root_cy + root_radius * 0.4 * np.sin(angles_init)
-
-for _iteration in range(800):
-    # Repulsion between pairs
-    for i in range(n):
-        for j in range(i + 1, n):
-            dx = level1_x[j] - level1_x[i]
-            dy = level1_y[j] - level1_y[i]
-            dist = math.sqrt(dx * dx + dy * dy)
-            min_dist = radii[i] + radii[j] + 1.0
-            if dist < min_dist and dist > 0.001:
-                overlap = (min_dist - dist) / 2
-                norm_x = dx / dist
-                norm_y = dy / dist
-                level1_x[i] -= norm_x * overlap * 0.5
-                level1_y[i] -= norm_y * overlap * 0.5
-                level1_x[j] += norm_x * overlap * 0.5
-                level1_y[j] += norm_y * overlap * 0.5
-    # Boundary constraint
-    for i in range(n):
-        dx = level1_x[i] - root_cx
-        dy = level1_y[i] - root_cy
-        dist = math.sqrt(dx * dx + dy * dy)
-        max_dist = root_radius - radii[i] - 1.0
-        if dist > max_dist and dist > 0.001:
-            scale = max_dist / dist
-            level1_x[i] = root_cx + dx * scale
-            level1_y[i] = root_cy + dy * scale
-    # Gentle center attraction
-    level1_x = root_cx + (level1_x - root_cx) * 0.998
-    level1_y = root_cy + (level1_y - root_cy) * 0.998
-
-# Draw level 1 circles
-level1_positions = {}
-for i, (_, row) in enumerate(level1.iterrows()):
-    level1_positions[row["id"]] = {"x": level1_x[i], "y": level1_y[i], "radius": row["radius"]}
-    # Circle polygon
-    angles = np.linspace(0, 2 * np.pi, 60, endpoint=False)
-    x_circ = level1_x[i] + row["radius"] * np.cos(angles)
-    y_circ = level1_y[i] + row["radius"] * np.sin(angles)
-    for x, y in zip(x_circ, y_circ, strict=True):
-        polygon_rows.append({"x": x, "y": y, "circle_id": circle_id, "depth": 1, "color": row["id"]})
-    # Label
-    label_rows.append(
-        {"x": level1_x[i], "y": level1_y[i] + row["radius"] * 0.65, "label": row["label"], "depth": 1, "size": 14}
-    )
-    circle_id += 1
-
-# Level 2 circles
-for parent_id, pos in level1_positions.items():
-    children = df[df["parent"] == parent_id].copy()
-    if children.empty:
-        continue
-    parent_value = children["value"].sum()
-    children["radius"] = np.sqrt(children["value"] / parent_value) * pos["radius"] * 0.75
-    children = children.sort_values("radius", ascending=False).reset_index(drop=True)
-
-    # Pack children with force simulation
-    children_radii = children["radius"].tolist()
-    n_c = len(children_radii)
-    radii_c = np.array(children_radii)
-    angles_init = np.linspace(0, 2 * np.pi, n_c, endpoint=False)
-    children_x = pos["x"] + pos["radius"] * 0.4 * np.cos(angles_init)
-    children_y = pos["y"] + pos["radius"] * 0.4 * np.sin(angles_init)
-
-    for _iteration in range(600):
-        for i in range(n_c):
-            for j in range(i + 1, n_c):
-                dx = children_x[j] - children_x[i]
-                dy = children_y[j] - children_y[i]
-                dist = math.sqrt(dx * dx + dy * dy)
-                min_dist = radii_c[i] + radii_c[j] + 1.0
-                if dist < min_dist and dist > 0.001:
-                    overlap = (min_dist - dist) / 2
-                    norm_x = dx / dist
-                    norm_y = dy / dist
-                    children_x[i] -= norm_x * overlap * 0.5
-                    children_y[i] -= norm_y * overlap * 0.5
-                    children_x[j] += norm_x * overlap * 0.5
-                    children_y[j] += norm_y * overlap * 0.5
-        for i in range(n_c):
-            dx = children_x[i] - pos["x"]
-            dy = children_y[i] - pos["y"]
-            dist = math.sqrt(dx * dx + dy * dy)
-            max_dist = pos["radius"] * 0.92 - radii_c[i] - 1.0
-            if dist > max_dist and dist > 0.001:
-                scale = max_dist / dist
-                children_x[i] = pos["x"] + dx * scale
-                children_y[i] = pos["y"] + dy * scale
-        children_x = pos["x"] + (children_x - pos["x"]) * 0.998
-        children_y = pos["y"] + (children_y - pos["y"]) * 0.998
-
-    # Draw children circles
-    for i, (_, row) in enumerate(children.iterrows()):
-        angles = np.linspace(0, 2 * np.pi, 60, endpoint=False)
-        x_circ = children_x[i] + row["radius"] * np.cos(angles)
-        y_circ = children_y[i] + row["radius"] * np.sin(angles)
-        for x, y in zip(x_circ, y_circ, strict=True):
-            polygon_rows.append({"x": x, "y": y, "circle_id": circle_id, "depth": 2, "color": row["id"]})
-        # Label (if circle large enough)
-        if row["radius"] > 6:
-            label_rows.append({"x": children_x[i], "y": children_y[i], "label": row["label"], "depth": 2, "size": 11})
-        circle_id += 1
-
-polygon_df = pd.DataFrame(polygon_rows)
-label_df = pd.DataFrame(label_rows)
-
-# Color mapping: depth-based with Okabe-Ito
-color_map = {
-    "root": INK_SOFT,
-    "Documents": IMPRINT[0],
-    "Media": IMPRINT[1],
-    "Code": IMPRINT[2],
-    "Work": IMPRINT[0],
-    "Personal": IMPRINT[0],
-    "Archive": IMPRINT[0],
-    "Photos": IMPRINT[1],
-    "Videos": IMPRINT[1],
-    "Music": IMPRINT[1],
-    "Projects": IMPRINT[2],
-    "Libraries": IMPRINT[2],
-    "Backups": IMPRINT[2],
-}
-
-unique_colors = polygon_df["color"].unique()
-color_values = [color_map.get(c, INK_SOFT) for c in unique_colors]
 
 # Plot
+def circle_rows(cx, cy, radius, circle_id, depth, fill):
+    angles = np.linspace(0, 2 * np.pi, 60, endpoint=False)
+    return [
+        {
+            "x": cx + radius * np.cos(a),
+            "y": cy + radius * np.sin(a),
+            "circle_id": circle_id,
+            "depth": depth,
+            "fill": fill,
+        }
+        for a in angles
+    ]
+
+
+def pack(radii, iterations=400, gap=0.03):
+    """Pack circles around the origin with a simple force simulation: pull to the center, push apart."""
+    n = len(radii)
+    gap = gap * max(radii, default=1.0)
+    start = np.linspace(0, 2 * np.pi, n, endpoint=False)
+    xs = max(radii, default=1.0) * np.cos(start) * (n > 1)
+    ys = max(radii, default=1.0) * np.sin(start) * (n > 1)
+    for step in range(iterations + 60):
+        if step < iterations:
+            xs, ys = xs * 0.97, ys * 0.97
+        for i in range(n):
+            for j in range(i + 1, n):
+                dx, dy = xs[j] - xs[i], ys[j] - ys[i]
+                dist = math.hypot(dx, dy)
+                min_dist = radii[i] + radii[j] + gap
+                if dist < min_dist:
+                    dx, dy, dist = (dx, dy, dist) if dist > 1e-9 else (1.0, 0.0, 1.0)
+                    push = (min_dist - dist) / 2
+                    xs[i] -= dx / dist * push
+                    ys[i] -= dy / dist * push
+                    xs[j] += dx / dist * push
+                    ys[j] += dy / dist * push
+    return xs, ys
+
+
+# Leaf area is proportional to its value; a parent circle encloses its packed children with padding
+size = df.groupby(NODE)[SIZE].sum()
+names = df.set_index(NODE)[NAME]
+children = df.groupby(PARENT, sort=False)[NODE].apply(list).to_dict()
+ROOT = "(root)"
+children[ROOT] = df.loc[~df[PARENT].isin(df[NODE]), NODE].tolist()
+radius, offset = {}, {}
+
+
+def layout(node):
+    if node not in children:
+        radius[node] = math.sqrt(size[node])
+        return
+    # a row without a value and without children has nothing to draw
+    kids = [k for k in children[node] if k in children or size[k] > 0]
+    for kid in kids:
+        layout(kid)
+    kids = sorted(kids, key=lambda k: radius[k], reverse=True)
+    children[node] = kids
+    kid_radii = [radius[k] for k in kids]
+    xs, ys = pack(kid_radii)
+    if not kids:
+        radius[node] = 1.0
+        return
+    offset.update({k: (x, y) for k, x, y in zip(kids, xs, ys, strict=True)})
+    radius[node] = max(math.hypot(x, y) + r for x, y, r in zip(xs, ys, kid_radii, strict=True)) * 1.06
+
+
+layout(ROOT)
+scale = ROOT_RADIUS / radius.get(ROOT, ROOT_RADIUS)
+group_color = {"root": INK_SOFT}
+polygon_rows, group_labels, leaf_labels = [], [], []
+
+
+def place(node, cx, cy, depth, color):
+    r = radius[node] * scale
+    polygon_rows.extend(circle_rows(cx, cy, r, len(polygon_rows) // 60, depth, node))
+    group_color[node] = color
+    if node in children:
+        if depth > 0:
+            group_labels.append({"x": cx, "y": cy + (r + 5) * (1 if cy >= 0 else -1), "text": names[node]})
+        for i, kid in enumerate(children[node]):
+            kid_color = IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] if depth == 0 else color
+            place(kid, cx + offset[kid][0] * scale, cy + offset[kid][1] * scale, depth + 1, kid_color)
+    elif r > LABEL_MIN_SHARE * ROOT_RADIUS:
+        leaf_labels.append({"x": cx, "y": cy, "text": names[node]})
+
+
+place(ROOT, 0, 0, 0, INK_SOFT)
+group_color[ROOT] = INK_SOFT
+
+polygon_df = pd.DataFrame(polygon_rows, columns=["x", "y", "circle_id", "depth", "fill"])
+group_label_df = pd.DataFrame(group_labels, columns=["x", "y", "text"])
+leaf_label_df = pd.DataFrame(leaf_labels, columns=["x", "y", "text"])
+fills = [group_color[f] for f in polygon_df["fill"].unique()]
+extent = ROOT_RADIUS * 1.12
+
 plot = (
     ggplot(polygon_df)
-    + geom_polygon(aes(x="x", y="y", fill="color", group="circle_id"), color="white", size=0.8, alpha=0.92)
-    + geom_text(
-        aes(x="x", y="y", label="label"), data=label_df[label_df["depth"] == 1], size=14, color="white", fontface="bold"
-    )
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df[label_df["depth"] == 2], size=11, color=INK)
-    + scale_fill_manual(values=color_values)
+    + geom_polygon(aes(x="x", y="y", fill="fill", group="circle_id"), color=PAGE_BG, size=0.4, alpha=0.92)
+    + scale_fill_manual(values=fills)
     + coord_fixed(ratio=1)
-    + scale_x_continuous(limits=(-105, 105))
-    + scale_y_continuous(limits=(-105, 105))
-    + labs(title="circlepacking-basic · letsplot · anyplot.ai")
-    + ggsize(1200, 1200)
+    + scale_x_continuous(limits=(-extent, extent))
+    + scale_y_continuous(limits=(-extent, extent))
+    + labs(title="circlepacking-basic · python · letsplot · anyplot.ai")
+    + ggsize(600, 600)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=24, hjust=0.5, color=INK),
+        plot_title=element_text(size=14, hjust=0.5, color=INK),
         legend_position="none",
         axis_title=element_blank(),
         axis_text=element_blank(),
@@ -249,6 +207,12 @@ plot = (
     )
 )
 
+# Labels are layers of their own, drawn only when there is something to label
+if len(group_label_df):
+    plot += geom_text(aes(x="x", y="y", label="text"), data=group_label_df, size=7, color=PAGE_BG, fontface="bold")
+if len(leaf_label_df):
+    plot += geom_text(aes(x="x", y="y", label="text"), data=leaf_label_df, size=5, color=INK)
+
 # Save
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
