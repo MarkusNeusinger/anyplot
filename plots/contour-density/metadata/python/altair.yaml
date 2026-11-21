@@ -2,43 +2,69 @@ library: altair
 language: python
 specification_id: contour-density
 created: '2025-12-30T09:33:23Z'
-updated: '2026-05-16T03:31:01Z'
-generated_by: claude-haiku
-workflow_run: 25951539663
+updated: '2026-11-21T21:37:40Z'
+generated_by: claude-sonnet
+workflow_run: 44951930652
 issue: 2552
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 73
 review:
   strengths:
-  - Perfect visual quality with all text legible in both light and dark themes
-  - Correct viridis colormap for continuous density data
-  - Realistic multi-cluster climate dataset showing all KDE features
-  - Explicit font sizing optimized for high-resolution readability
-  - Idiomatic Altair declarative API usage with clean linear code structure
-  - Perfect spec compliance with proper title format and legend
+  - 'imprint_seq two-stop range #009E73→#4467A3 with blue at the highest density,
+    per the altair prompt''s continuous-color pattern'
+  - 'Theme tokens thread through title, axis, tick and legend colors: chrome is correct
+    and readable in both renders'
+  - KDE via scipy gaussian_kde with a smoothing that keeps the three climate clusters
+    apart without islands
+  - Pads the vl-convert PNG to the canonical 3200x1800 canvas without cropping
   weaknesses:
-  - Design sophistication is competent but not exceptional—appears as well-configured
-    defaults rather than publication-ready polish
+  - 'SC-01, SC-02 (both): the density is drawn as a continuous 80x80 binned heatmap
+    with no contour lines or contour bands, so there are no nested rings around each
+    cluster (C1) and no discrete density levels (C2) → draw contours of the KDE: compute
+    iso-lines or filled level bands (e.g. matplotlib.contour/contourpy levels on z)
+    and render them as mark_line paths or mark_geoshape polygons, 6-8 levels in imprint_seq
+    steps. Likely cause: mark_rect over the raw grid instead of contour levels.'
+  - 'VQ-02 (both): the legend title ''Density'' sits on the legend frame''s top-left
+    stroke and ''0.0010'' touches its right edge → give the legend padding of about
+    8 px or drop the frame. Likely cause: alt.Legend fillColor/strokeColor without
+    padding.'
+  - 'VQ-03 (both): hairline seams between the rect cells draw a visible lattice over
+    the density field (light lines on the light render, dark on the dark) → seamless
+    cells. Likely cause: mark_rect cells sized by bin step with antialiased edges;
+    set mark_rect(strokeWidth=0) and x2/y2 cell edges, or replace the rects with contour
+    bands.'
+  - 'VQ-05 (both): every bin edge carries a tick and the labels land on non-round
+    values (2.7, 5.3, 8.0 … on x; −6, 0, 6, 11, 17 … on y) → round ticks every 5 °C
+    / 10 % without minor ticks. Likely cause: alt.Bin(step=...) on the axes drives
+    the ticks; use x/x2 on unbinned fields with axis values or tickCount on a plain
+    quantitative scale.'
+  - 'DQ-03 (both): the humidity axis runs from −6 % to 105 %, outside the physical
+    0–100 % range → clamp the y domain to 0–100 (−6 / +5 points). Likely cause: GRID_MARGIN
+    extending the grid 10 % beyond the data without bounds.'
+  - 'CQ-04 (code): IMPRINT_PALETTE on line 31 is defined and never used → delete it.
+    Likely cause: leftover template constant.'
+  - 'Suggestion: a faint scatter overlay of the 500 points (Notes allow it) would
+    let the contours be checked against the data.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as required
-      Chrome: Title "contour-density · altair · anyplot.ai" clearly visible in dark text; axis labels "Temperature (°C)" and "Humidity (%)" with units readable; tick labels distinct from background
-      Data: Viridis colormap gradient from purple (low density) to yellow (high density) showing three distinct climate clusters clearly; legend on right displays "Density" scale
-      Legibility verdict: PASS - All text and data elements perfectly readable, no overlaps
+      Background: warm off-white #FAF8F1 page, 3200x1800
+      Chrome: title 'contour-density · python · altair · anyplot.ai' in dark ink, centered; axis titles 'Temperature (°C)' and 'Humidity (%)' bold dark; tick labels INK_SOFT gray, dense ticks at every bin edge with non-round values (2.7, 5.3 …); framed Density legend on the right, its title touching the frame
+      Data: continuous KDE heatmap of 80x80 rect cells, brand green #009E73 at low density ramping to blue #4467A3 at the three cluster peaks (~15 °C/32 %, ~25 °C/53 %, ~37 °C/75 %); no contour lines; faint light seams between cells
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as required
-      Chrome: Title, axis labels, tick labels all clearly visible with light text (INK_SOFT #B8B7B0); no dark-on-dark failures
-      Data: Viridis colormap identical to light render (purple→yellow gradient); colors prove theme independence—only chrome adapted for dark surface
-      Legibility verdict: PASS - All text readable against dark background; density gradient equally clear; no contrast failures
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks in light gray INK_SOFT, legend frame on #242420 with light text; no dark-on-dark text
+      Data: identical green-to-blue field and cluster positions as the light render; seams between cells show dark
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -46,47 +72,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (18px, 22px); all text perfectly readable
+        comment: Explicit 10/12/16 sizes per the altair prompt; all text readable
           in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping text despite dense axis labels
+        passed: false
+        comment: Legend title 'Density' sits on the legend frame's left/top stroke
+          (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Density heatmap optimally adapted; gradient clearly visible
+        passed: false
+        comment: Hairline seams between the 80x80 rect cells show as a lattice over
+          the density field (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe
+        comment: Green-to-blue ramp, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Excellent canvas utilization with balanced margins
+        passed: false
+        comment: 3200x1800 canvas OK; every bin edge carries a tick and labels fall
+          on non-round values (2.7, 5.3, 6, 11, 17) (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Temperature (°C), Humidity (%) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous data; backgrounds #FAF8F1/#1A1A17 correct;
-          theme-adaptive chrome properly applied; identical data colors in both renders'
+        comment: 'imprint_seq two-stop range #009E73→#4467A3; #FAF8F1/#1A1A17 backgrounds;
+          theme-correct chrome'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -94,50 +123,53 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but not exceptional; competent rather than
-          publication-ready
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid disabled, clean axes, good whitespace
+        passed: false
+        comment: 'Grid off, view stroke off: the baseline, nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Three clusters visible; viewer sees patterns through color gradient
+        passed: false
+        comment: Density displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct 2D density contour with KDE
+        passed: false
+        comment: 'A continuous binned KDE heatmap, a related but different form: no
+          contour lines or contour bands (defect line)'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: All KDE features present
+        passed: false
+        comment: 'C1 missed (no nested contour rings) and C2 missed (no discrete density
+          levels, a continuous gradient instead) (defect line); C3 met: three clusters
+          stay apart'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature (X), Humidity (Y) correctly mapped
+        comment: Temperature on x, humidity on y; grid covers all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows Density gradient
+        comment: Title 'contour-density · python · altair · anyplot.ai'; color legend
+          titled Density
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -145,21 +177,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: clusters, gradients, distribution'
+        comment: Three separate concentrations with gradients between them
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Climate data is realistic and neutral
+        comment: Temperature vs humidity climate readings, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Temperature and humidity ranges are plausible
+        passed: false
+        comment: Humidity axis runs from -6 % to 105 %, outside the physical 0-100
+          % range (defect line); temperatures 0-53 °C plausible. Spec has no Check
+          values
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -167,13 +201,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no unnecessary functions
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -182,43 +216,46 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean and Pythonic
+        passed: false
+        comment: IMPRINT_PALETTE (line 31) is defined and never used (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png and .html, pads to canvas
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert declarative API usage
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses binned encoding and theme-aware configure; Altair-specific but
-          not cutting-edge
+        passed: false
+        comment: Declarative encodings with bin + mean aggregate; default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T21:33:52Z'
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
   - colorbar
-  - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep:
   - kde
-  styling: []
+  styling:
+  - gradient-fill
