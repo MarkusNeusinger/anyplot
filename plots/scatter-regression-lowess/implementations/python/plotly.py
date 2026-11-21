@@ -1,112 +1,104 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-lowess: Scatter Plot with LOWESS Regression
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-14
 """
 
 import os
+
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
+
 # Theme tokens
-THEME       = os.getenv("ANYPLOT_THEME", "light")
-PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
-INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID        = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND       = "#009E73"  # Okabe-Ito position 1
-ACCENT      = "#C475FD"  # Okabe-Ito position 2
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Data - Enzyme kinetics: realistic biological dose-response relationship
-# Different structure than seaborn: exponential saturation curve with noise
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+SMOOTHING_FRAC = 0.35  # LOWESS bandwidth: share of points in each local fit (spec: 0.3-0.5)
+
+# Columns: set these to your table's column names
+SUBSTRATE = "Substrate Concentration (µM)"  # role: x
+ACTIVITY = "Enzyme Activity (V/V_max)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("measurements.csv")
+# Enzyme kinetics: Michaelis-Menten saturation with measurement noise and a slow ripple
 np.random.seed(42)
-n_points = 150
-# Substrate concentration (biological domain)
-x = np.linspace(0.1, 50, n_points)
-# Michaelis-Menten style response: complex saturation with local variations
-y = (100 * x) / (10 + x) + np.random.normal(0, 3, n_points) + 5 * np.sin(x / 5)
+substrate = np.linspace(0.1, 50, 150)
+activity = (100 * substrate) / (10 + substrate) + np.random.normal(0, 3, substrate.size) + 5 * np.sin(substrate / 5)
+df = pd.DataFrame({SUBSTRATE: substrate, ACTIVITY: activity})
 
-# Apply LOWESS smoothing using statsmodels
-lowess_result = lowess(y, x, frac=0.35, it=3)
-x_lowess = lowess_result[:, 0]
-y_lowess = lowess_result[:, 1]
+# Plot: reads only df and the constants above
+valid = df.dropna(subset=[SUBSTRATE, ACTIVITY])
+smoothed = lowess(valid[ACTIVITY], valid[SUBSTRATE], frac=SMOOTHING_FRAC, it=3)
 
-# Create figure
+title = "scatter-regression-lowess · python · plotly · anyplot.ai"
+
 fig = go.Figure()
-
-# Add scatter points
 fig.add_trace(
     go.Scatter(
-        x=x,
-        y=y,
+        x=df[SUBSTRATE],
+        y=df[ACTIVITY],
         mode="markers",
-        name="Measured Values",
-        marker=dict(
-            size=11,
-            color=BRAND,
-            opacity=0.6,
-            line=dict(color=PAGE_BG, width=0.5),
-        ),
+        name="Measured values",
+        marker={"size": 7, "color": IMPRINT_PALETTE[0], "opacity": 0.6, "line": {"color": PAGE_BG, "width": 0.5}},
     )
 )
-
-# Add LOWESS curve
 fig.add_trace(
     go.Scatter(
-        x=x_lowess,
-        y=y_lowess,
+        x=smoothed[:, 0],
+        y=smoothed[:, 1],
         mode="lines",
-        name="LOWESS Smooth",
-        line=dict(
-            color=ACCENT,
-            width=4,
-        ),
+        name="LOWESS smooth",
+        line={"color": IMPRINT_PALETTE[1], "width": 3},
     )
 )
 
-# Update layout for large canvas with theme-adaptive styling
+# Style
 fig.update_layout(
-    title=dict(
-        text="scatter-regression-lowess · plotly · anyplot.ai",
-        font=dict(size=28, color=INK),
-        x=0.5,
-        xanchor="center",
-    ),
-    xaxis=dict(
-        title=dict(text="Substrate Concentration (µM)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-    ),
-    yaxis=dict(
-        title=dict(text="Enzyme Activity (V/V_max)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-    ),
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 80, "r": 40, "t": 70, "b": 65},
+    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
+    xaxis={
+        "title": {"text": SUBSTRATE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": ACTIVITY, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    font=dict(color=INK),
-    legend=dict(
-        font=dict(size=18, color=INK_SOFT),
-        x=0.02,
-        y=0.98,
-        xanchor="left",
-        yanchor="top",
-        bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
-    ),
-    margin=dict(l=100, r=60, t=100, b=100),
+    font={"color": INK},
+    legend={
+        "font": {"size": 10, "color": INK_SOFT},
+        "x": 0.02,
+        "y": 0.98,
+        "xanchor": "left",
+        "yanchor": "top",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
     showlegend=True,
 )
 
-# Save as PNG (4800 x 2700 px)
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
