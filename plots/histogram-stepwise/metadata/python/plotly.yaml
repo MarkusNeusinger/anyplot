@@ -2,42 +2,59 @@ library: plotly
 language: python
 specification_id: histogram-stepwise
 created: '2026-05-12T09:16:25Z'
-updated: '2026-05-12T09:24:40Z'
-generated_by: claude-haiku
-workflow_run: 25725045000
+updated: '2026-11-21T05:22:03Z'
+generated_by: claude-sonnet
+workflow_run: 44870033394
 issue: 2645
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/plotly/plot-dark.html
-quality_score: 80
+quality_score: 75
 review:
   strengths:
-  - Perfect visual quality and theme compliance
-  - All text elements explicitly sized and readable in both themes
-  - Correct histogram-stepwise implementation with clean step line design
-  - Proper theme-adaptive colors and backgrounds throughout
-  - Excellent data quality demonstrating normal distribution clearly
+  - Theme tokens threaded through title, axis titles, ticks, grid and axis lines;
+    both renders read cleanly
+  - 'Outline-only rendering in #009E73 at 3 px carries the distribution without a
+    fill, on a count axis anchored at zero (rangemode=''tozero'')'
+  - Column constant and a Data block that ends in df keep the plot code reusable with
+    other tables
+  - Native hovertemplate gives value and frequency in the HTML view
   weaknesses:
-  - Design Excellence could be elevated beyond library defaults
-  - No visual hierarchy or emphasis techniques beyond basic rendering
+  - 'SC-01, SC-02 (both): every bin is drawn as a closed bar outline that drops to
+    the baseline at each interior edge, so the plot reads as unfilled bars, not a
+    step outline (C1) → one continuous staircase whose vertical segments join neighbouring
+    counts, dropping to zero only at the outer edges. Likely cause: the 4-point-per-bin
+    coordinate arrays (lines 39-45) that return to y=0 after every bin.'
+  - 'CQ-04 (code): lines 39-45 interleave four coordinates per bin by hand where plotly
+    draws the step itself → go.Scatter(x=edges, y=np.append(counts, counts[-1]), line_shape=''hv'')
+    (pad with zeros at both ends for the closing drops). Likely cause: hand-built
+    coordinate arrays.'
+  - 'VQ-06 (both): x-axis titled ''Value'' names no quantity or unit → a descriptive
+    title with its unit, e.g. ''Reaction time (ms)''. Likely cause: VALUES = [''Value''].'
+  - 'DQ-02 (both): the data is an abstract ''Value'' around 100 with no real-world
+    context → a named measurement (e.g. reaction times in ms, heights in cm) with
+    matching values. Likely cause: the column name and the generic normal(100, 18)
+    draw.'
+  - 'Suggestion: overlaying a second distribution on the same bin edges would show
+    the step histogram''s main use case (C4).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "histogram-stepwise · plotly · anyplot.ai" clearly readable in dark text (28pt); X-axis label "Value" (22pt) and Y-axis label "Frequency" (22pt) both visible and well-positioned; tick labels (18pt) on both axes are clear and properly spaced; grid lines are subtle and non-intrusive
-      Data: Green step histogram (#009E73, brand color) is the primary visual element; step function correctly represents bins as connected horizontal and vertical line segments with 3px width; distribution shape is clear from approximately 45 to 170 on X-axis, with peak frequency around 120
-      Legibility verdict: PASS - all elements are crisp and readable; no overlap or clarity issues
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'histogram-stepwise · python · plotly · anyplot.ai' top left in dark ink; axis titles 'Value' and 'Frequency' and grey tick labels (60-160, 0-100) all readable; subtle grid both directions; left and bottom axis lines.
+      Data: a single #009E73 3 px outline of 32 bins of a normal distribution peaking ~110 near 100; each bin is a closed bar outline whose sides drop to the baseline, empty bins near 150-165 lie on the baseline. y axis starts at 0.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title, axis labels, and tick labels are all rendered in light text (#F0EFE8 primary, #B8B7B0 secondary) and are clearly readable against the dark surface; no dark-on-dark failures; grid lines appropriately adapted with light opacity
-      Data: Step histogram color is identical to light render (#009E73) - the Okabe-Ito brand green is preserved exactly as required; no color shift between themes
-      Legibility verdict: PASS - both text and data are fully readable; theme adaptation is flawless with no legibility issues; data visibility matches light render
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels light grey, grid subtle; no dark-on-dark text.
+      Data: identical #009E73 outline and geometry to the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -45,49 +62,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28pt, labels 22pt, ticks 18pt - all explicitly set and perfectly
-          readable in both themes
+        comment: Title 16, axis titles 12, ticks 10 (library-prompt sizes at scale
+          4); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements properly positioned with no overlap or collision
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line width 3px optimal for visibility; 32 bins clearly distinguishable;
-          distribution shape evident
+        comment: 3 px green outline carries the plot clearly in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito brand green (#009E73) provides excellent contrast on both
-          light and dark backgrounds; CVD-safe
+        comment: Single green series, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot utilizes 60-70% of canvas with balanced margins; no cramping
-          or wasted space
+        comment: 3200x1800 landscape, balanced margins, title ~45% width, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Descriptive labels: ''Value'' on X-axis, ''Frequency'' on Y-axis;
-          title follows specification'
+        passed: false
+        comment: x-axis titled 'Value' with no quantity or unit (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Primary series #009E73 (Okabe-Ito pos 1); backgrounds #FAF8F1 (light)/#1A1A17
-          (dark); text colors theme-adaptive; data colors identical between renders'
+        comment: '#009E73 first series, #FAF8F1 / #1A1A17 backgrounds, theme-correct
+          chrome'
     design_excellence:
       score: 8
       max: 20
@@ -97,53 +111,49 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults without distinctive design choices
-          or custom refinements
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond defaults; library-default styling maintained
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy or emphasis techniques
-          applied
+        comment: Distribution displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Correct histogram-stepwise: step lines only (no fill), vertical/horizontal
-          segments'
+        passed: false
+        comment: 'Drawn as unfilled bar outlines: every interior edge drops to the
+          baseline, a related but different form from a step outline (defect line)'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec requirements met: outline only, bins as horizontal segments,
-          vertical connectors'
+        passed: false
+        comment: 'C1 missed: the vertical segments run to zero instead of joining
+          neighbouring counts (defect line); C2 and C3 met; C4 optional (single distribution)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (values) and Y-axis (frequency) correctly mapped; full data
-          range visible
+        comment: Bins at their counts, full range shown, y from zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''histogram-stepwise · plotly · anyplot.ai'';
-          legend appropriately omitted for single series'
+        comment: Title in mandated format; single series, legend N/A
     data_quality:
       score: 13
       max: 15
@@ -153,24 +163,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Normal distribution demonstrates full feature set: central peak,
-          symmetric tails, clear shape'
+        comment: 1200 normal values over 32 bins show a full distribution with tails
+          and an empty bin
       - id: DQ-02
         name: Realistic Context
         score: 3
         max: 5
-        passed: true
-        comment: Plausible normal distribution (loc=100, scale=18); generic/neutral
-          but lacks real-world context
+        passed: false
+        comment: Generic 'Value' around 100 with no real-world quantity (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values range ~45-170 appropriate for N(100,18); proportions factually
-          correct
+        comment: Counts up to ~110 for 1200 samples over 32 bins are consistent; no
+          Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -178,34 +187,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → histogram computation →
-          coordinate construction → plot → save; no functions/classes'
+        comment: Flat script, column constant, data block binds df
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducible data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, numpy, plotly.graph_objects; all used'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean Pythonic code with appropriate complexity; no over-engineering
-          or fake functionality
+        passed: false
+        comment: Hand-interleaved 4-point coordinate arrays (lines 39-45) where go.Scatter
+          line_shape='hv' does the step (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct outputs: plot-{THEME}.png and plot-{THEME}.html with current
-          API'
+        comment: plot-{THEME}.png + .html, current API
     library_mastery:
       score: 4
       max: 10
@@ -214,21 +221,23 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: 'Correct high-level API: go.Figure(), go.Scatter with mode=''lines'',
-          update_layout(); idiomatic but not exceptional'
+        passed: false
+        comment: go.Figure/go.Scatter/update_layout, idiomatic baseline
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic plotly usage; hovertemplate and HTML export present but not
-          leveraging distinctive plotly features
-    score_caps_applied: None
+        comment: Hovertemplate and HTML export only, nothing beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T05:18:47Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
