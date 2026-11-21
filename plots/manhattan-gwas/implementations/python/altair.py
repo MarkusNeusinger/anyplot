@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-15
@@ -9,26 +9,31 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Theme configuration
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
-
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette for alternating chromosomes
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data generation
+# Constants
+GENOME_WIDE = 5e-8  # conventional genome-wide significance level
+SUGGESTIVE = 1e-5  # conventional suggestive significance level
+
+# Columns: set these to your table's column names
+CHROMOSOME = "Chromosome"  # role: chromosome
+POSITION = "Position (bp)"  # role: position
+P_VALUE = "P-value"  # role: p_value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("gwas.csv")
 np.random.seed(42)
-
-# Chromosome lengths (approximate human chromosome sizes in Mb)
-chrom_lengths = {
+chrom_mb = {  # approximate human chromosome sizes in Mb
     "1": 249,
     "2": 243,
     "3": 198,
@@ -52,149 +57,144 @@ chrom_lengths = {
     "21": 47,
     "22": 51,
 }
-
-# Generate SNPs for each chromosome
-data = []
-cumulative_pos = 0
-chrom_centers = {}
-
-for chrom, length in chrom_lengths.items():
-    # Number of SNPs proportional to chromosome length
-    n_snps = int(length * 20)  # ~20 SNPs per Mb
-    positions = np.sort(np.random.randint(1, length * 1_000_000, n_snps))
-
-    # Base p-values (mostly non-significant)
+frames = []
+for chrom, mb in chrom_mb.items():
+    n_snps = mb * 20  # about 20 variants per Mb
+    positions = np.sort(np.random.randint(1, mb * 1_000_000, n_snps))
     pvalues = np.random.uniform(0.001, 1.0, n_snps)
+    if chrom in ("2", "6", "8", "15"):  # associated loci
+        hits = np.random.choice(n_snps, np.random.randint(5, 15), replace=False)
+        pvalues[hits] = 10 ** np.random.uniform(-10, -7, len(hits))
+    if chrom in ("3", "11", "19"):  # suggestive signals
+        hits = np.random.choice(n_snps, np.random.randint(3, 8), replace=False)
+        pvalues[hits] = 10 ** np.random.uniform(-6, -5, len(hits))
+    frames.append(pd.DataFrame({CHROMOSOME: chrom, POSITION: positions, P_VALUE: pvalues}))
+df = pd.concat(frames, ignore_index=True)
 
-    # Add some significant peaks on specific chromosomes
-    if chrom in ["2", "6", "8", "15"]:
-        n_sig = np.random.randint(5, 15)
-        sig_indices = np.random.choice(n_snps, n_sig, replace=False)
-        pvalues[sig_indices] = 10 ** np.random.uniform(-10, -7, n_sig)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+CUM_POS = "Cumulative position (bp)"
+NEG_LOG_P = "-log₁₀(p-value)"
+ALTERNATE = "Alternating color"
+SIGNIFICANT = "Genome-wide significant"
 
-    # Add suggestive hits on other chromosomes
-    if chrom in ["3", "11", "19"]:
-        n_sug = np.random.randint(3, 8)
-        sug_indices = np.random.choice(n_snps, n_sug, replace=False)
-        pvalues[sug_indices] = 10 ** np.random.uniform(-6, -5, n_sug)
+# Chromosomes laid end to end, in the data's order
+extent = df.groupby(CHROMOSOME, sort=False)[POSITION].max()
+offset = extent.cumsum() - extent
+df[CUM_POS] = df[POSITION] + df[CHROMOSOME].map(offset)
+df[NEG_LOG_P] = -np.log10(df[P_VALUE])
+df[ALTERNATE] = df[CHROMOSOME].map({c: i % 2 for i, c in enumerate(extent.index)})
+gw_line_y = -np.log10(GENOME_WIDE)
+sug_line_y = -np.log10(SUGGESTIVE)
+df[SIGNIFICANT] = df[NEG_LOG_P] > gw_line_y
 
-    # Calculate cumulative positions
-    cum_positions = positions + cumulative_pos
-    chrom_centers[chrom] = cumulative_pos + (length * 1_000_000) / 2
+genome_end = float(extent.sum())
+x_scale = alt.Scale(domain=[0, genome_end], nice=False)
+y_low = min(0.0, float(df[NEG_LOG_P].min()))
+y_high = float(df[NEG_LOG_P].max())
+y_top = y_high + 0.05 * (y_high - y_low)
+labels = pd.DataFrame({CHROMOSOME: extent.index, CUM_POS: offset.to_numpy() + extent.to_numpy() / 2})
 
-    for pos, cum_pos, pval in zip(positions, cum_positions, pvalues, strict=True):
-        data.append(
-            {
-                "chromosome": chrom,
-                "position": pos,
-                "cumulative_position": cum_pos,
-                "p_value": pval,
-                "neg_log_p": -np.log10(pval),
-            }
-        )
-
-    cumulative_pos += length * 1_000_000
-
-df = pd.DataFrame(data)
-
-# Threshold values
-genome_wide_threshold = -np.log10(5e-8)  # ~7.3
-suggestive_threshold = -np.log10(1e-5)  # 5.0
-
-# Create chromosome label data
-chrom_label_df = pd.DataFrame([{"chrom_label": chrom, "center": center} for chrom, center in chrom_centers.items()])
-
-# Create alternating color mapping with Okabe-Ito palette
-chrom_list = list(chrom_lengths.keys())
-color_mapping = {}
-for i, chrom in enumerate(chrom_list):
-    color_mapping[chrom] = IMPRINT[i % len(IMPRINT)]
-
-color_scale = alt.Scale(domain=chrom_list, range=[color_mapping[chrom] for chrom in chrom_list])
-
-# Main scatter plot
 points = (
     alt.Chart(df)
-    .mark_circle(opacity=0.7, size=80)
+    .mark_circle(opacity=0.65)
     .encode(
         x=alt.X(
-            "cumulative_position:Q",
-            axis=alt.Axis(title="Genomic Position", labels=False, ticks=False, titleFontSize=22, titleColor=INK),
-            scale=alt.Scale(domain=[0, cumulative_pos]),
+            CUM_POS.translate(ESCAPE),
+            type="quantitative",
+            title=None,
+            scale=x_scale,
+            axis=alt.Axis(labels=False, ticks=False, grid=False),
         ),
         y=alt.Y(
-            "neg_log_p:Q",
-            title="-log₁₀(p-value)",
-            axis=alt.Axis(
-                titleFontSize=22,
-                labelFontSize=18,
-                titleColor=INK,
-                labelColor=INK_SOFT,
-                domainColor=INK_SOFT,
-                tickColor=INK_SOFT,
-                gridColor=INK,
-                gridOpacity=0.10,
-            ),
-            scale=alt.Scale(domain=[0, max(df["neg_log_p"]) + 1]),
+            NEG_LOG_P.translate(ESCAPE),
+            type="quantitative",
+            title=NEG_LOG_P,
+            scale=alt.Scale(domain=[y_low, y_top], nice=False),
         ),
-        color=alt.Color("chromosome:N", scale=color_scale, legend=None),
+        color=alt.Color(
+            ALTERNATE.translate(ESCAPE),
+            type="nominal",
+            scale=alt.Scale(domain=[0, 1], range=[IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]]),
+            legend=None,
+        ),
         size=alt.condition(
-            alt.datum.neg_log_p > genome_wide_threshold,
-            alt.value(100),  # Larger for significant hits
-            alt.value(60),  # Smaller for others
+            alt.datum[SIGNIFICANT] == True,  # noqa: E712 - Vega-Lite expression, not a Python comparison
+            alt.value(34),
+            alt.value(7),
         ),
         tooltip=[
-            "chromosome:N",
-            alt.Tooltip("position:Q", format=","),
-            alt.Tooltip("p_value:Q", format=".2e"),
-            "neg_log_p:Q",
+            alt.Tooltip(CHROMOSOME.translate(ESCAPE), type="nominal", title=CHROMOSOME),
+            alt.Tooltip(POSITION.translate(ESCAPE), type="quantitative", title=POSITION, format=","),
+            alt.Tooltip(P_VALUE.translate(ESCAPE), type="quantitative", title=P_VALUE, format=".2e"),
         ],
     )
 )
 
-# Genome-wide significance threshold line
+rules = pd.DataFrame({"y": [gw_line_y, sug_line_y], "label": ["genome-wide 5×10⁻⁸", "suggestive 1×10⁻⁵"]})
 gw_line = (
-    alt.Chart(pd.DataFrame({"y": [genome_wide_threshold]}))
-    .mark_rule(strokeDash=[8, 4], color=INK_MUTED, size=2, opacity=0.8)
-    .encode(y="y:Q")
+    alt.Chart(rules.iloc[[0]])
+    .mark_rule(strokeDash=[10, 5], color=INK, strokeWidth=1.4)
+    .encode(y=alt.Y("y:Q", scale=alt.Scale(domain=[y_low, y_top], nice=False)))
 )
-
-# Suggestive threshold line
 sug_line = (
-    alt.Chart(pd.DataFrame({"y": [suggestive_threshold]}))
-    .mark_rule(strokeDash=[4, 4], color=INK_MUTED, size=1.5, opacity=0.6)
-    .encode(y="y:Q")
+    alt.Chart(rules.iloc[[1]])
+    .mark_rule(strokeDash=[3, 4], color=INK_MUTED, strokeWidth=1.0)
+    .encode(y=alt.Y("y:Q", scale=alt.Scale(domain=[y_low, y_top], nice=False)))
+)
+rule_text = (
+    alt.Chart(rules)
+    .mark_text(align="left", baseline="bottom", dx=4, dy=-2, fontSize=9, color=INK_SOFT)
+    .encode(x=alt.value(0), y=alt.Y("y:Q", scale=alt.Scale(domain=[y_low, y_top], nice=False)), text="label:N")
 )
 
-# Chromosome labels at bottom
+main = alt.layer(points, gw_line, sug_line, rule_text).properties(width=620, height=300)
+
 chrom_text = (
-    alt.Chart(chrom_label_df)
-    .mark_text(fontSize=16, baseline="top", dy=10, color=INK_SOFT, fontWeight="normal")
-    .encode(x=alt.X("center:Q", axis=None, scale=alt.Scale(domain=[0, cumulative_pos])), text="chrom_label:N")
+    alt.Chart(labels)
+    .mark_text(fontSize=9, baseline="top", color=INK_SOFT)
+    .encode(
+        x=alt.X(CUM_POS.translate(ESCAPE), type="quantitative", scale=x_scale, axis=None),
+        text=alt.Text(CHROMOSOME.translate(ESCAPE), type="nominal"),
+    )
+    .properties(width=620, height=14)
 )
 
-# Combine layers
-main_chart = alt.layer(points, gw_line, sug_line).properties(width=1600, height=850)
-
-# Final chart with labels
 chart = (
-    alt.vconcat(main_chart, chrom_text.properties(width=1600, height=40), spacing=5)
+    alt.vconcat(main, chrom_text, spacing=2)
     .properties(
         title=alt.Title(
-            "Manhattan Plot: GWAS Results",
-            fontSize=28,
+            "manhattan-gwas · python · altair · anyplot.ai",
+            subtitle="Simulated GWAS: variants ordered by chromosome, 22 autosomes",
             anchor="middle",
-            color=INK,
-            subtitle="Genome-wide association study with significance thresholds",
         ),
         background=PAGE_BG,
+        padding={"left": 8, "right": 8, "top": 6, "bottom": 6},
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=1)
-    .configure_axis(labelFontSize=18, titleFontSize=22, labelColor=INK_SOFT, titleColor=INK)
-    .configure_title(fontSize=28, color=INK, subtitleFontSize=16, subtitleColor=INK_SOFT)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
+    )
+    .configure_title(fontSize=16, color=INK, subtitleFontSize=11, subtitleColor=INK_SOFT)
 )
 
-# Save with theme-specific filenames
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save, then pad (never crop) to the 3200 x 1800 target
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TW}x{TH}; shrink width/height")
+if (w, h) != (TW, TH):
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
