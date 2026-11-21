@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 90/100 | Created: 2026-05-14
@@ -8,15 +8,27 @@ import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data — US states tile grid positions (row 0 = north) and renewable energy share (%)
+# Imprint palette: sequential ramp (brand green -> blue) for the unipolar renewable share
+IMPRINT_SEQ = ["#009E73", "#4467A3"]
+
+# Columns: set these to your table's column names
+REGION = "State"  # role: region
+VALUE = "Renewable share (%)"  # role: value
+ROW = "Grid row"  # role: row
+COL = "Grid column"  # role: col
+
+# Data: US states tile grid positions (row 0 = north) and renewable energy share (%).
+# Replace this block with your own table, for example df = pd.read_csv("regions.csv")
 state_grid = [
     ("ME", 0, 11),
     ("NH", 1, 10),
@@ -125,12 +137,16 @@ renewable_share = {
     "WY": 18,
 }
 
-df = pd.DataFrame(state_grid, columns=["state", "row", "col"])
-df["value"] = df["state"].map(renewable_share)
+df = pd.DataFrame(state_grid, columns=[REGION, ROW, COL])
+df[VALUE] = df[REGION].map(renewable_share)
 
-# Plot
-x_enc = alt.X("col:O", scale=alt.Scale(paddingInner=0.04, paddingOuter=0), axis=None)
-y_enc = alt.Y("row:O", scale=alt.Scale(paddingInner=0.04, paddingOuter=0), axis=None)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+TILE = 38  # square tile edge in view pixels
+n_cols, n_rows = df[COL].nunique(), df[ROW].nunique()
+
+x_enc = alt.X(COL.translate(ESCAPE), type="ordinal", scale=alt.Scale(paddingInner=0.04, paddingOuter=0), axis=None)
+y_enc = alt.Y(ROW.translate(ESCAPE), type="ordinal", scale=alt.Scale(paddingInner=0.04, paddingOuter=0), axis=None)
 
 base = alt.Chart(df)
 
@@ -138,35 +154,47 @@ tiles = base.mark_rect().encode(
     x=x_enc,
     y=y_enc,
     color=alt.Color(
-        "value:Q",
-        scale=alt.Scale(scheme="viridis"),
-        legend=alt.Legend(
-            title="Renewables %", titleFontSize=18, labelFontSize=16, gradientLength=280, gradientThickness=18
-        ),
+        VALUE.translate(ESCAPE),
+        type="quantitative",
+        title=VALUE,
+        scale=alt.Scale(range=IMPRINT_SEQ),
+        legend=alt.Legend(titleFontSize=12, labelFontSize=11, gradientLength=150, gradientThickness=14),
     ),
-    tooltip=[alt.Tooltip("state:N", title="State"), alt.Tooltip("value:Q", title="Renewable %", format=".0f")],
+    tooltip=[
+        alt.Tooltip(REGION.translate(ESCAPE), type="nominal", title=REGION),
+        alt.Tooltip(VALUE.translate(ESCAPE), type="quantitative", title=VALUE, format=".0f"),
+    ],
 )
 
-labels = base.mark_text(fontSize=22, fontWeight="bold").encode(
+# Label ink flips at the midpoint of the data range: dark on the green end, light on the blue end
+midpoint = (df[VALUE].min() + df[VALUE].max()) / 2
+labels = base.mark_text(fontSize=13, fontWeight="bold").encode(
     x=x_enc,
     y=y_enc,
-    text="state:N",
-    color=alt.condition("datum.value > 50", alt.value("#1A1A17"), alt.value("#F0EFE8")),
+    text=alt.Text(REGION.translate(ESCAPE), type="nominal"),
+    color=alt.condition(f"datum[{VALUE!r}] > {midpoint}", alt.value("#FAF8F1"), alt.value("#1A1A17")),
 )
+
+title = "US Renewable Energy Share · map-tilegrid · python · altair · anyplot.ai"
+title_size = max(11, round(16 * min(1.0, 67 / len(title))))
 
 chart = (
     alt.layer(tiles, labels)
     .properties(
-        width=1600,
-        height=900,
-        title="US Renewable Energy Share · map-tilegrid · altair · anyplot.ai",
-        background=PAGE_BG,
+        width=TILE * n_cols, height=TILE * n_rows, title=alt.Title(title, fontSize=title_size), background=PAGE_BG
     )
-    .configure_title(color=INK, fontSize=28, anchor="middle", offset=16)
+    .configure_title(color=INK, anchor="middle", offset=12)
     .configure_view(fill=PAGE_BG, stroke=None)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=8)
 )
 
-# Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save: pad (never crop) to the 3200 x 1800 landscape target
+TARGET_W, TARGET_H = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_W or img.height > TARGET_H:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, exceeds {TARGET_W}x{TARGET_H}")
+canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
 chart.save(f"plot-{THEME}.html")
