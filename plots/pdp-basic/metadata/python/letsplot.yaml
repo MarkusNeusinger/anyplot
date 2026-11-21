@@ -2,49 +2,60 @@ library: letsplot
 language: python
 specification_id: pdp-basic
 created: '2025-12-31T05:36:21Z'
-updated: '2026-05-15T23:12:39Z'
-generated_by: claude-haiku
-workflow_run: 25944957901
+updated: '2026-11-21T00:00:58Z'
+generated_by: claude-sonnet
+workflow_run: 44839938304
 issue: 2922
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/letsplot/plot-dark.html
-quality_score: 94
+quality_score: 78
 review:
   strengths:
-  - Perfect theme-adaptive implementation with explicit color tokens (PAGE_BG, ELEVATED_BG,
-    INK, INK_SOFT) applied consistently across all elements
-  - 'Comprehensive PDP visualization demonstrating advanced technique: main prediction
-    line + confidence band + ICE lines + data distribution rug plot in single coordinated
-    view'
-  - 'Correct Okabe-Ito palette usage (#009E73 for main series, #D55E00 for secondary)
-    with identical data colors in both light and dark renders'
-  - 'Excellent visual hierarchy through layer composition: prominent main line (2.5pt),
-    secondary ICE lines (faint, 0.2 alpha), tertiary distribution rug (0.6 alpha)'
-  - Proper reproducibility with np.random.seed(42) and sklearn RandomState parameters
-  - Realistic, neutral domain (weather features → model predictions) with plausible
-    scales and meaningful scientific visualization
+  - The partial dependence line is computed from the ICE curves at all 80 grid values
+    and drawn unsmoothed, showing the gradient-boosting steps honestly
+  - 'The 10-90th percentile ICE band in Imprint #C475FD at alpha 0.3 stays lighter
+    than and behind the #009E73 line in both themes'
+  - The rug sits as short ticks along the bottom at the observed feature values, clear
+    of the band and the curve
+  - 'Theme tokens thread through every chrome element; both renders read cleanly on
+    #FAF8F1 and #1A1A17'
+  - Tidy data block with column constants, so the plot reads only df; lets-plot HTML
+    export adds hover inspection
   weaknesses:
-  - Top and right spines not removed per style guide recommendation — consider removing
-    via theme(axis_line=element_blank()) for minimal aesthetic
+  - 'VQ-03 (both): the band''s legend swatch is an opaque #C475FD square with an ink
+    outline, while the band is #C475FD at alpha 0.3 without outline, so the swatch
+    does not match its mark → swatch at the band''s alpha 0.3 without outline. Likely
+    cause: geom_ribbon legend key; set guides(fill=guide_legend(override_aes={''alpha'':
+    0.3})) and drop the key outline.'
+  - 'DE-02 (both): all four panel spines are drawn (a grey frame on top and right
+    too), where the style guide keeps only left and bottom → remove the top and right
+    spines (or all). Likely cause: the default panel_border is not set to element_blank().'
+  - 'DQ-02 (both): the y quantity is an unnamed ''predicted outcome'' in raw make_regression
+    units (about -170 to 165) → name the predicted quantity (for example ''Predicted
+    energy demand (kWh)'') with values in its range. Likely cause: the ICE column
+    label and make_regression''s raw target.'
+  - 'Suggestion: the legend keys behind the line glyphs sit on a slightly different
+    fill than the legend box (visible in the light render); setting legend_key to
+    the legend fill would unify the box.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), perfectly themed
-      Chrome: Title "pdp-basic · letsplot · anyplot.ai" in dark ink is prominent; axis labels "Temperature (standardized)" and "Partial Dependence (predicted outcome)" are clearly readable; tick labels and legend text all render in appropriate secondary ink (#4A4A44) with good contrast
-      Data: Main PDP line rendered in brand green (#009E73, Okabe-Ito position 1) with prominent 2.5pt thickness; confidence band shows in tan (accent #D55E00) with 25% alpha; 50 individual ICE lines in orange with low alpha (20%) show prediction variability; rug plot (data distribution) rendered as orange segments with 60% alpha along x-axis
-      Legibility verdict: PASS — all text readable at full resolution, color contrast excellent
+      Background: warm off-white #FAF8F1, panel the same
+      Chrome: bold title 'pdp-basic · python · letsplot · anyplot.ai' top left in dark ink; axis titles 'Temperature (standardized)' and 'Partial dependence (predicted outcome)' in dark ink; grey tick labels; subtle grid; horizontal legend on top in a light elevated box; a grey frame on all four sides of the panel
+      Data: #009E73 partial dependence line rising stepwise from about -15 to 45 over -1.6 to 1.3; lavender (#C475FD, alpha 0.3) 10-90th percentile band from about -170 to 165 behind it; 100 grey rug ticks along the bottom at -230; legend swatch of the band is opaque purple with an ink outline
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), perfectly themed
-      Chrome: Title and axis labels render in light ink (#F0EFE8); secondary text in light soft ink (#B8B7B0) — no dark-on-dark failures; legend box has elevated background (#242420) with light border; all text clearly visible against dark surface
-      Data: Main PDP line still renders in identical brand green (#009E73) — data colors unchanged between themes as required; confidence band and ICE lines in same colors as light render; rug plot distinguishable
-      Legibility verdict: PASS — all elements readable, proper theme adaptation with data color consistency
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels light grey, legend box on #242420 with light text; no dark-on-dark text
+      Data: identical green line and #C475FD band (reads as muted purple on dark), rug in light grey; data colors unchanged from light
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,76 +63,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (Title 24pt, Labels 20pt, Ticks 16pt),
-          perfectly readable in both themes
+        comment: Title 16 pt, axis titles 12 pt, ticks and legend 10 pt (style-guide
+          values); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: No text collisions; legend sits above the panel, rug ticks clear
+          of the band
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All elements optimally visible: main line prominent, confidence
-          band clear, ICE lines appropriately faint for density, rug marks distinguishable'
+        comment: Line, band and rug all visible; the band's legend swatch is opaque
+          and outlined while the band is alpha 0.3 (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast, CVD-safe, no red-green dependency
+        comment: 'Green line on a lavender/purple band, ink rug: CVD-safe, good contrast
+          in both themes'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas with balanced margins, legend positioned
-          at top without overlap
+        comment: 3200x1800 canvas, balanced margins, nothing overflows; title about
+          50 % of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: ''Temperature (standardized)''
-          and ''Partial Dependence (predicted outcome)'''
+        comment: '''Temperature (standardized)'' and ''Partial dependence (predicted
+          outcome)'': descriptive, reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect compliance: first series #009E73 (BRAND), secondary #D55E00
-          (Okabe-Ito pos 2), backgrounds #FAF8F1/#1A1A17, theme-adaptive text/grid/legend-box
-          colors in both renders'
+        comment: 'PD line #009E73, band #C475FD (Imprint 2), rug in INK_SOFT; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 15
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Sophisticated theme-token system, intentional hierarchy, scientific
-          polish. Below publication-ready (6) due to generic grid styling, not FiveThirtyEight-level
-          (8)
+        comment: 'The style-guide baseline: theme tokens, explicit sizes, Imprint
+          colors; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: Custom theme with element_rect/element_text/element_line. Good refinement
-          but spines not removed per style guide, grid size moderate (0.2pt)
+        passed: false
+        comment: All four panel spines drawn where nothing requires them, short of
+          the spine baseline (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear visual hierarchy: main prediction prominent, uncertainty via
-          confidence band and faint ICE lines, data distribution via rug. Tells story
-          of ML model behavior with minimal annotations'
+        passed: false
+        comment: Data displayed; the line-over-band hierarchy is what C2 prescribes,
+          no hierarchy chosen beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -131,30 +141,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct partial dependence plot with all subtypes present
+        comment: Partial dependence line with a percentile band and a rug; no unasked
+          layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: main PDP, confidence band, ICE lines, rug
-          plot showing data distribution'
+        comment: C1 line at every one of the 80 grid values, unsmoothed; C2 band lighter
+          and behind the line in both themes; C3 y axis reads 'Partial dependence
+          (predicted outcome)'; C4 rug as short ticks along the x axis, clear of the
+          curve; C5 one feature, one model
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Feature values on x-axis, partial dependence on y-axis, all data
-          visible
+        comment: Feature on x, mean of the ICE curves on y; band = 10th-90th percentile
+          of the ICE curves; rug at the observed values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''pdp-basic · letsplot · anyplot.ai''; legend
-          labels match: Elements, Main PDP, Individual, Data Distribution'
+        comment: Title 'pdp-basic · python · letsplot · anyplot.ai'; legend entries
+          are reader text, no raw identifiers
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -162,23 +175,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all PDP aspects: main curve, confidence band, individual predictions
-          (ICE), data distribution'
+        comment: Shows the PD curve with tree-model steps, the ICE spread as a band
+          and the training distribution as a rug
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Real ML scenario (GradientBoostingRegressor), realistic weather features
-          (Temperature, Humidity, Pressure, WindSpeed, Altitude), neutral domain
+        comment: Real GradientBoostingRegressor PDP, neutral; the predicted quantity
+          is an unnamed 'predicted outcome' (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible data generation (make_regression 500 samples, 5 features,
-          noise=20), standardized feature values typical of normalized input, output
-          values appropriate for regression
+        comment: Standardized feature from -1.9 to 1.6, PD rising from about -15 to
+          45 within a band of about -170 to 165; consistent with make_regression;
+          spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -188,56 +201,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme tokens → model training → PDP
-          computation → plotting → save'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and random_state=42 on model
+        comment: random_state=42 and default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (env), numpy (arrays), pandas (dataframes),
-          lets_plot (plotting), sklearn (model/data/inspection)'
+        comment: All imports used; star import is the library prompt's mandated form
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, clear variable names, appropriate complexity, no over-engineering
-          or fake UI
+        comment: groupby mean/quantile from the tidy df as the data-block contract
+          asks; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current ggsave
-          API with w/h/unit/path parameters
+        comment: Saves plot-{THEME}.png (ggsize 800x450, scale=4) and plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Perfect idiomatic ggplot() + geom_*() composition; proper aes() mappings;
-          scale_color_manual/scale_fill_manual for palettes; theme() for customization;
-          ggsize() for sizing; ggsave() for export
+        comment: Idiomatic ggplot layer composition with named-dict manual scales
+          and theme(); what the library prompt mandates
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses geom_ribbon() for confidence band, geom_segment() for rug plot,
-          layer composition to integrate multiple geoms, custom theme with element_*
-          functions. Shows library expertise but not exclusively unique to letsplot
+        passed: false
+        comment: geom_ribbon/geom_segment and the HTML export are standard; nothing
+          distinctive beyond the mandate
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-20T23:56:41Z'
 impl_tags:
   dependencies:
   - sklearn
@@ -246,6 +257,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - groupby-aggregation
   dataprep: []
   styling:
   - alpha-blending
