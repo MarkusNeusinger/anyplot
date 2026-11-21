@@ -2,46 +2,70 @@ library: pygal
 language: python
 specification_id: streamline-basic
 created: '2025-12-31T00:16:07Z'
-updated: '2026-05-14T07:37:54Z'
-generated_by: claude-haiku
-workflow_run: 25847656942
+updated: '2026-11-21T14:56:30Z'
+generated_by: claude-sonnet
+workflow_run: 44915885140
 issue: 2861
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 75
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and theme-adaptive colors in
-    both renders
-  - 'Excellent theme adaptation: data colors identical across light/dark, chrome properly
-    flips'
-  - Clean, deterministic code with proper import management
-  - Strong data representation with clear storytelling through orbital visualization
-  - All spec requirements met with high fidelity
+  - Eight smooth, closed, non-crossing streamlines evenly spaced from core to edge
+    trace the vortex cleanly in both themes
+  - 'Theme threaded through a single pygal Style object: warm backgrounds, light/dark
+    ink, identical data colors'
+  - Native pygal interactive HTML output alongside the PNG (hover and legend toggling
+    per streamline)
+  - Data block ends in a tidy df and the field is interpolated with scipy RegularGridInterpolator,
+    so any u/v table drops in
   weaknesses:
-  - Design polish lacks publication-ready sophistication; styling is competent but
-    follows library defaults closely
-  - Visual refinement could improve through custom grid styling or spine removal
-  - Library mastery is adequate but doesn't leverage pygal's unique capabilities
+  - 'VQ-07 (both): the eight seed radii (r = 0.4 … 3.2, an ordered quantity) are drawn
+    in the categorical Imprint palette as if unrelated groups, so green → purple →
+    blue → ochre → red jumps around the radius order → ordered steps of one Imprint
+    ramp (imprint_seq, #009E73 → #4467A3) in radius order. Likely cause: Style(colors=tuple(IMPRINT_PALETTE))
+    with one series per ring.'
+  - 'SC-02 (both): color encodes a scalar (the seed radius) but the legend only reads
+    ''r = 0.4'' … ''r = 3.2'' and never names the quantity or its unit, which C4 asks
+    of a color encoding → name it in the legend entries (e.g. ''Seed radius 0.4 m'')
+    or encode speed with a named legend. Likely cause: series name f"r = {radius:.1f}".'
+  - 'VQ-05 (both): the circular vortex streamlines render as flat ellipses because
+    equal x/y ranges (-4..4) are stretched over a 16:9 plot area (about 225 px per
+    x unit vs 107 px per y unit) → equal scaling, e.g. the 2400×2400 square canvas.
+    Likely cause: width=3200, height=1800 with xrange == range.'
+  - 'VQ-06 (both): axis titles ''X Position'' and ''Y Position'' carry no unit → add
+    one (e.g. ''X position (m)''). Likely cause: the X and Y column constants.'
+  - 'DQ-02 (both): the field is labelled only ''X Position'', ''Y Position'', ''Horizontal
+    velocity'', ''Vertical velocity'' with no physical context, so the vortex reads
+    as an abstract math example → rename to a real scenario (e.g. ''Distance east
+    of vortex core (m)''). Likely cause: the column constants.'
+  - 'CQ-01 (code): a trace() helper with a nested direction() function (lines 64–86)
+    breaks the flat Imports → Data → Plot → Save structure → inline the integration
+    in the seed loop. Likely cause: the trace() definition.'
+  - 'CQ-04 (code): lines 64–86 write out a fixed-step midpoint integrator that scipy.integrate.solve_ivp
+    computes (with a terminal event for the edge stop) → solve_ivp with a lambda right-hand
+    side. Likely cause: the hand-rolled trace loop.'
+  - 'Suggestion: sparse direction arrows along the loops would show the counter-clockwise
+    circulation.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white. Correct light theme surface.
-      Chrome: Title "streamline-basic · pygal · anyplot.ai" clearly visible in dark text at top. Axis labels "X Position" and "Y Position" readable. Tick labels at -4, -2, 0, 2, 4 are distinct and legible. Legend at bottom with four orbital radius labels is readable.
-      Data: Four concentric elliptical streamline patterns in Okabe-Ito colors—green (#009E73) innermost, orange (#D55E00), blue (#0072B2), reddish purple (#CC79A7) outermost. Streamlines clearly distinguish each orbital group.
-      Legibility verdict: PASS - All text is highly readable with excellent contrast against light background. No illegible elements.
+      Background: warm off-white #FAF8F1, no grid guides, a thin muted zero axis line at x = 0.
+      Chrome: title 'streamline-basic · python · pygal · anyplot.ai' centred at top, axis titles 'X Position' / 'Y Position', ticks -4..4 on both axes, a 4-column bottom legend 'r = 0.4' … 'r = 3.2'; all dark text clearly readable.
+      Data: eight concentric closed loops (vortex streamlines) in Imprint order, innermost #009E73 green, then purple, blue, ochre, red, cyan, plum, olive; drawn as flat ellipses because of the 16:9 stretch.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black. Correct dark theme surface.
-      Chrome: Title visible in light text. Axis labels and tick labels are light-colored and clearly readable against dark background. No dark-on-dark failures. Legend text is light and legible.
-      Data: Streamline colors are identical to light render—green, orange, blue, and reddish purple remain in exact same hex values. Orbital grouping is equally clear in dark mode.
-      Legibility verdict: PASS - All text is readable in dark theme. No dark-on-dark failures detected. Data colors maintain identity across both renders.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text; zero axis line light grey.
+      Data: same eight loops with the identical Imprint hex colors as the light render; brand green inner loop visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -49,69 +73,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes
+        comment: Title 66, axis titles 56, ticks 44, legend 44 px; all readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; clean layout
+        comment: No text collisions; the eight closed loops never touch
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Streamlines clearly visible and distinguishable
+        comment: 4 px strokes clearly visible on both surfaces; legend swatches match
+          the lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Distinct hues, adjacent rings differ in lightness; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Excellent proportions with balanced margins
+        passed: false
+        comment: 'Circular vortex drawn as flat ellipses: equal x/y ranges stretched
+          over a 16:9 plot area (defect line)'
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels and proper title format
+        passed: false
+        comment: Axis titles 'X Position' / 'Y Position' carry no unit (defect line)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Okabe-Ito order followed; theme-correct backgrounds and text colors
+        passed: false
+        comment: Backgrounds and chrome theme-correct; but the ordered seed radii
+          use the categorical palette instead of an ordered ramp (defect line)
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Thoughtful style configuration but follows library defaults; lacks
-          exceptional polish
+        comment: 'Style-guide baseline: Imprint palette, theme tokens, explicit sizes;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and balanced whitespace; minimal customization beyond
-          defaults
+        comment: Guides off, pygal's zero axis line kept; baseline only
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clear orbital hierarchy with visual focus; good but could be stronger
+        comment: Data displayed as nested loops; no hierarchy chosen beyond the spec
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -119,27 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY streamline chart
+        comment: Correct streamline chart of a single vortex field; no unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: All spec features present
+        passed: false
+        comment: 'C1 smooth non-crossing curves and C2 seeds across the field met;
+          C4 not met: color encodes seed radius but the legend ''r = 0.4'' does not
+          name the quantity (defect line). C3 arrows optional, not drawn'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned with appropriate range
+        comment: Traced paths lie at their computed positions; x and y ranges cover
+          the grid -4..4
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend labels correct
+        comment: Title in mandated format; legend entries are readable values
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -147,75 +178,88 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of streamline visualization
+        comment: Vortex closed loops from the core to near the edge; the field's single
+          structure is traced
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Plausible vortex field with neutral physics context
+        passed: false
+        comment: Plausible vortex field but generic labels with no physical context
+          (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible coordinate ranges and orbital spacing
+        comment: 'Checked: u=-y/(1+0.1r), v=x/(1+0.1r) on a 41x41 grid (lines 46-49);
+          seeds at r=0.4..3.2 close after 1.03 laps'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear structure with no unnecessary complexity
+        passed: false
+        comment: A trace() helper with a nested direction() function, lines 64-86
+          (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic streamline tracing
+        comment: Deterministic field and seeds
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only essential imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity and clean implementation
+        passed: false
+        comment: Lines 64-86 write out a midpoint integrator that scipy.integrate.solve_ivp
+          computes (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal 3 API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Good use of pygal.XY and Style object
+        passed: false
+        comment: pygal.XY with Style object and legend_at_bottom_columns; default
+          level
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses standard features; doesn't leverage unique pygal capabilities
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T14:52:08Z'
 impl_tags:
-  dependencies: []
-  techniques: []
+  dependencies:
+  - scipy
+  techniques:
+  - html-export
   patterns:
   - data-generation
+  - groupby-aggregation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - interpolation
   styling: []

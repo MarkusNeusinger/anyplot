@@ -1,12 +1,13 @@
 """ anyplot.ai
 streamline-basic: Basic Streamline Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-14
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-21
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from scipy.integrate import solve_ivp
 
@@ -17,100 +18,64 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"
+BRAND = "#009E73"  # Imprint palette position 1
 
-# Data - Vortex flow field: u = -y, v = x (circular streamlines)
+# Columns: set these to your table's column names
+STREAMLINE = "Streamline"  # role: extra
+X = "X position (dimensionless)"  # role: x
+Y = "Y position (dimensionless)"  # role: y
+U = "Horizontal velocity u"  # role: u
+V = "Vertical velocity v"  # role: v
+
+# Data: replace this block with your own table, for example df = pd.read_csv("streamlines.csv")
+# Vortex flow u = -y, v = x, integrated from seeds spread over the whole domain.
+rows = []
+for line_id, radius in enumerate(np.linspace(0.4, 3.6, 10)):
+    sol = solve_ivp(
+        lambda t, s: [-s[1], s[0]], (0, 2 * np.pi), [radius, 0.0], t_eval=np.linspace(0, 2 * np.pi, 200), rtol=1e-9
+    )
+    rows.append(pd.DataFrame({STREAMLINE: line_id, X: sol.y[0], Y: sol.y[1], U: -sol.y[1], V: sol.y[0]}))
+df = pd.concat(rows, ignore_index=True)
+
+# Plot: reads only df and the constants above
+extent = np.ceil(max(df[X].abs().max(), df[Y].abs().max()) * 1.1)
+title = "streamline-basic · python · plotly · anyplot.ai"
+
 fig = go.Figure()
-
-
-# Function to compute velocity at any point
-def velocity_field(t, state):
-    x, y = state
-    dx = -y
-    dy = x
-    return [dx, dy]
-
-
-# Create streamlines from starting points on a circle
-num_streamlines = 18
-for angle in np.linspace(0, 2 * np.pi, num_streamlines, endpoint=False):
-    start_x = 2.5 * np.cos(angle)
-    start_y = 2.5 * np.sin(angle)
-
-    # Integrate forward
-    sol_forward = solve_ivp(
-        velocity_field, (0, 5), [start_x, start_y], t_eval=np.linspace(0, 5, 150), dense_output=True
+for _, line in df.groupby(STREAMLINE, sort=False):
+    fig.add_trace(
+        go.Scatter(
+            x=line[X],
+            y=line[Y],
+            mode="lines",
+            line={"color": BRAND, "width": 2.5, "simplify": False},
+            customdata=line[[U, V]],
+            hovertemplate="x=%{x:.2f}, y=%{y:.2f}<br>u=%{customdata[0]:.2f}, v=%{customdata[1]:.2f}<extra></extra>",
+        )
     )
 
-    # Integrate backward
-    sol_backward = solve_ivp(
-        velocity_field, (0, -5), [start_x, start_y], t_eval=np.linspace(0, -5, 150), dense_output=True
-    )
-
-    # Plot forward streamline
-    if sol_forward.t.size > 0:
-        fig.add_trace(
-            go.Scatter(
-                x=sol_forward.y[0],
-                y=sol_forward.y[1],
-                mode="lines",
-                line={"color": BRAND, "width": 3},
-                hoverinfo="none",
-                showlegend=False,
-            )
-        )
-
-    # Plot backward streamline
-    if sol_backward.t.size > 0:
-        fig.add_trace(
-            go.Scatter(
-                x=sol_backward.y[0],
-                y=sol_backward.y[1],
-                mode="lines",
-                line={"color": BRAND, "width": 3},
-                hoverinfo="none",
-                showlegend=False,
-            )
-        )
-
-# Update layout for large canvas with theme support
+axis = {
+    "tickfont": {"size": 11, "color": INK_SOFT},
+    "showgrid": True,
+    "gridcolor": GRID,
+    "zeroline": False,
+    "linecolor": INK_SOFT,
+    "range": [-extent, extent],
+}
 fig.update_layout(
-    title={"text": "streamline-basic · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
-    xaxis={
-        "title": {"text": "X Position (dimensionless)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
-        "showgrid": True,
-        "gridwidth": 1,
-        "gridcolor": GRID,
-        "zeroline": True,
-        "zerolinewidth": 2,
-        "zerolinecolor": INK_SOFT,
-        "range": [-4, 4],
-        "autorange": False,
-        "linecolor": INK_SOFT,
-    },
-    yaxis={
-        "title": {"text": "Y Position (dimensionless)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
-        "showgrid": True,
-        "gridwidth": 1,
-        "gridcolor": GRID,
-        "zeroline": True,
-        "zerolinewidth": 2,
-        "zerolinecolor": INK_SOFT,
-        "range": [-4, 4],
-        "autorange": False,
-        "scaleanchor": "x",
-        "scaleratio": 1,
-        "linecolor": INK_SOFT,
-    },
+    autosize=False,
+    width=600,
+    height=600,
+    title={"text": title, "font": {"size": 15, "color": INK}, "x": 0.5, "xanchor": "center"},
+    xaxis={**axis, "title": {"text": X, "font": {"size": 13, "color": INK}}},
+    yaxis={**axis, "title": {"text": Y, "font": {"size": 13, "color": INK}}, "scaleanchor": "x", "scaleratio": 1},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"l": 120, "r": 50, "t": 100, "b": 100},
+    margin={"l": 80, "r": 40, "t": 70, "b": 70},
     showlegend=False,
 )
 
-# Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Output
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
