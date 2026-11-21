@@ -1,19 +1,14 @@
 """ anyplot.ai
 histogram-cumulative: Cumulative Histogram
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-11
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-21
 """
 
-import sys
+import os
 
-
-sys.path = [p for p in sys.path if p and not p.endswith("/python")]
-
-import os  # noqa: E402
-
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-from plotnine import (  # noqa: E402
+import numpy as np
+import pandas as pd
+from plotnine import (
     aes,
     element_blank,
     element_line,
@@ -33,70 +28,74 @@ from plotnine import (  # noqa: E402
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
 
-# Data - Product shelf life measurements (days until expiration)
+# Imprint palette: first series is always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+N_BINS = 25  # number of histogram bins
+QUARTILES = (0.25, 0.50, 0.75)  # cumulative shares marked with reference lines
+
+# Columns: set these to your table's column names
+SHELF_LIFE = "Shelf Life (days)"  # role: numeric
+
+# Data: replace this block with your own table, for example df = pd.read_csv("shelf_life.csv")
 np.random.seed(42)
-shelf_life = np.concatenate([np.random.normal(45, 8, 300), np.random.normal(65, 5, 150)])
+df = pd.DataFrame({SHELF_LIFE: np.concatenate([np.random.normal(45, 8, 300), np.random.normal(65, 5, 150)])})
 
-# Calculate cumulative histogram
-n_bins = 25
-hist, bin_edges = np.histogram(shelf_life, bins=n_bins)
-cumulative_counts = np.cumsum(hist)
+# Plot: reads only df and the constants above
+CUMULATIVE = "Cumulative Count"
+BIN_CENTER = "bin_center"
+
+counts, bin_edges = np.histogram(df[SHELF_LIFE].dropna(), bins=N_BINS)
+cumulative_counts = np.cumsum(counts)
 bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 bin_width = bin_edges[1] - bin_edges[0]
+total = int(cumulative_counts[-1])
 
-# Create DataFrame with cumulative counts
-df_hist = pd.DataFrame({"bin_center": bin_centers, "cumulative_count": cumulative_counts})
+df_hist = pd.DataFrame({BIN_CENTER: bin_centers, CUMULATIVE: cumulative_counts})
 
-total = len(shelf_life)
+# Quartile positions: first bin whose running total reaches each share
+quartile_x = [bin_centers[min(np.searchsorted(cumulative_counts, total * q), len(bin_centers) - 1)] for q in QUARTILES]
 
-# Theme - L-shaped spine (remove top and right), improve visual hierarchy
+# Y ticks: round steps up to the total, which marks the full sample size
+step = 10 ** int(np.floor(np.log10(total)))
+y_breaks = [*np.arange(0, total, step), total]
+
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_grid_major=element_line(color=INK, size=0.25, alpha=0.08),
     panel_grid_minor=element_blank(),
     panel_border=element_blank(),
-    axis_title=element_text(color=INK, size=20, margin={"b": 10, "l": 10}),
-    axis_text=element_text(color=INK_SOFT, size=16),
-    axis_line=element_line(color=INK_SOFT, size=0.5),
-    axis_ticks=element_line(color=INK_SOFT, size=0.5),
-    plot_title=element_text(color=INK, size=24, margin={"b": 15}),
-    figure_size=(16, 9),
+    axis_title=element_text(color=INK, size=10),
+    axis_text=element_text(color=INK_SOFT, size=8),
+    axis_line=element_line(color=INK_SOFT, size=0.3),
+    axis_ticks=element_line(color=INK_SOFT, size=0.3),
+    plot_title=element_text(color=INK, size=12),
+    plot_subtitle=element_text(color=INK_SOFT, size=9),
+    figure_size=(8, 4.5),
 )
 
-# Calculate quartile positions for visual reference
-q1_idx = np.searchsorted(cumulative_counts, total * 0.25)
-q2_idx = np.searchsorted(cumulative_counts, total * 0.50)
-q3_idx = np.searchsorted(cumulative_counts, total * 0.75)
-
-q1_x = bin_centers[q1_idx] if q1_idx < len(bin_centers) else bin_centers[-1]
-q2_x = bin_centers[q2_idx] if q2_idx < len(bin_centers) else bin_centers[-1]
-q3_x = bin_centers[q3_idx] if q3_idx < len(bin_centers) else bin_centers[-1]
-
-# Plot - with visual emphasis on quartile positions
 plot = (
-    ggplot(df_hist, aes(x="bin_center", y="cumulative_count"))
-    + geom_bar(stat="identity", width=bin_width * 0.95, fill=BRAND, color=INK_SOFT, alpha=0.85, size=0.3)
-    + geom_vline(xintercept=q1_x, linetype="dashed", color=INK_SOFT, size=0.4, alpha=0.4)
-    + geom_vline(xintercept=q2_x, linetype="dashed", color=INK_SOFT, size=0.5, alpha=0.6)
-    + geom_vline(xintercept=q3_x, linetype="dashed", color=INK_SOFT, size=0.4, alpha=0.4)
+    ggplot(df_hist, aes(x=BIN_CENTER, y=CUMULATIVE))
+    + geom_bar(stat="identity", width=bin_width * 0.95, fill=IMPRINT_PALETTE[0], color=INK_SOFT, alpha=0.85, size=0.2)
+    + geom_vline(xintercept=quartile_x[0], linetype="dashed", color=INK_SOFT, size=0.3, alpha=0.5)
+    + geom_vline(xintercept=quartile_x[1], linetype="dashed", color=INK_SOFT, size=0.4, alpha=0.7)
+    + geom_vline(xintercept=quartile_x[2], linetype="dashed", color=INK_SOFT, size=0.3, alpha=0.5)
     + labs(
-        x="Shelf Life (days)",
-        y="Cumulative Count",
-        title="histogram-cumulative · plotnine · anyplot.ai",
-        subtitle="Quartile positions shown as reference lines",
+        x=SHELF_LIFE,
+        y=CUMULATIVE,
+        title="histogram-cumulative · python · plotnine · anyplot.ai",
+        subtitle="Dashed lines mark the quartile positions",
     )
-    + scale_y_continuous(breaks=[0, 100, 200, 300, 400, total], limits=(0, total + 20))
+    + scale_y_continuous(breaks=y_breaks, limits=(0, total * 1.04))
     + theme_minimal()
     + anyplot_theme
 )
 
 # Save
 script_dir = os.path.dirname(os.path.abspath(__file__))
-output_file = os.path.join(script_dir, f"plot-{THEME}.png")
-ggsave(plot, filename=output_file, dpi=300, width=16, height=9, verbose=False)
+ggsave(plot, filename=os.path.join(script_dir, f"plot-{THEME}.png"), dpi=400, width=8, height=4.5, verbose=False)
