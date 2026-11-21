@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-11
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -18,154 +19,125 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Clinical trial with two treatment groups
+# Constants
+Z_95 = 1.96  # normal quantile for the 95% confidence interval
+SURVIVAL = "Survival Probability"  # derived by the Kaplan-Meier estimate below
+
+# Columns: set these to your table's column names
+TIME = "Time (Months)"  # role: time
+EVENT = "Event observed"  # role: event
+GROUP = "Treatment group"  # role: group
+
+# Data: replace this block with your own table, for example df = pd.read_csv("trial.csv")
+# (EVENT: 1 = event occurred, 0 = censored)
 np.random.seed(42)
-
 n_per_group = 80
 
 # Treatment A (better survival)
-time_a = np.random.exponential(scale=24, size=n_per_group)
-time_a = np.clip(time_a, 1, 36)
+time_a = np.clip(np.random.exponential(scale=24, size=n_per_group), 1, 36)
 event_a = np.random.binomial(1, 0.65, size=n_per_group)
 
 # Treatment B (standard)
-time_b = np.random.exponential(scale=16, size=n_per_group)
-time_b = np.clip(time_b, 1, 36)
+time_b = np.clip(np.random.exponential(scale=16, size=n_per_group), 1, 36)
 event_b = np.random.binomial(1, 0.75, size=n_per_group)
 
-# Combine into dataframe
 df = pd.DataFrame(
     {
-        "time": np.concatenate([time_a, time_b]),
-        "event": np.concatenate([event_a, event_b]),
-        "group": ["Treatment A"] * n_per_group + ["Treatment B"] * n_per_group,
+        TIME: np.concatenate([time_a, time_b]),
+        EVENT: np.concatenate([event_a, event_b]),
+        GROUP: ["Treatment A"] * n_per_group + ["Treatment B"] * n_per_group,
     }
 )
 
-# Kaplan-Meier estimation (inline - no functions)
-km_data = []
+# Plot: reads only df and the constants above
+LOWER, UPPER = "CI lower", "CI upper"
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+groups = list(df[GROUP].unique())
 
-for group_name in ["Treatment A", "Treatment B"]:
-    mask = df["group"] == group_name
-    time = df.loc[mask, "time"].values
-    event = df.loc[mask, "event"].values
+# Kaplan-Meier estimate per group, with Greenwood confidence bands
+km_rows = []
+censor_rows = []
+for group_name in groups:
+    sub = df[df[GROUP] == group_name].dropna(subset=[TIME, EVENT])
+    order = np.argsort(sub[TIME].to_numpy())
+    time = sub[TIME].to_numpy()[order]
+    event = sub[EVENT].to_numpy()[order]
 
-    # Sort by time
-    order = np.argsort(time)
-    time = time[order]
-    event = event[order]
-
-    # Get unique event times
-    unique_times = np.unique(time[event == 1])
-
-    # Calculate survival at each time point
     survival = 1.0
-    times = [0]
-    survivals = [1.0]
-    ci_lower = [1.0]
-    ci_upper = [1.0]
-    var_sum = 0
-
-    for t in unique_times:
+    var_sum = 0.0
+    steps = [(0.0, 1.0, 1.0, 1.0)]
+    for t in np.unique(time[event == 1]):
         at_risk = np.sum(time >= t)
         events = np.sum((time == t) & (event == 1))
+        survival *= (at_risk - events) / at_risk
+        if at_risk > events:
+            var_sum += events / (at_risk * (at_risk - events))
+        se = survival * np.sqrt(var_sum)
+        steps.append((t, survival, max(0.0, survival - Z_95 * se), min(1.0, survival + Z_95 * se)))
+    # Extend the last step to the end of follow-up
+    steps.append((time.max(), *steps[-1][1:]))
 
-        if at_risk > 0:
-            survival *= (at_risk - events) / at_risk
-            if at_risk > events:
-                var_sum += events / (at_risk * (at_risk - events))
+    for t, s, lo, hi in steps:
+        km_rows.append({TIME: t, SURVIVAL: s, LOWER: lo, UPPER: hi, GROUP: group_name})
 
-        times.append(t)
-        survivals.append(survival)
-
-        se = survival * np.sqrt(var_sum) if var_sum > 0 else 0
-        ci_lower.append(max(0, survival - 1.96 * se))
-        ci_upper.append(min(1, survival + 1.96 * se))
-
-    # Extend to max time
-    max_time = time.max()
-    times.append(max_time)
-    survivals.append(survival)
-    ci_lower.append(ci_lower[-1])
-    ci_upper.append(ci_upper[-1])
-
-    for i in range(len(times)):
-        km_data.append(
-            {
-                "Time (Months)": times[i],
-                "Survival Probability": survivals[i],
-                "CI Lower": ci_lower[i],
-                "CI Upper": ci_upper[i],
-                "Group": group_name,
-            }
+    # Censored observations sit on the curve at their censoring time
+    step_times = np.array([s[0] for s in steps])
+    step_surv = np.array([s[1] for s in steps])
+    for t in time[event == 0]:
+        censor_rows.append(
+            {TIME: t, SURVIVAL: step_surv[np.searchsorted(step_times, t, side="right") - 1], GROUP: group_name}
         )
 
-km_df = pd.DataFrame(km_data)
+km_df = pd.DataFrame(km_rows)
+censored_df = pd.DataFrame(censor_rows, columns=[TIME, SURVIVAL, GROUP])
 
-# Get censored observations for tick marks
-censored = df[df["event"] == 0].copy()
-censored_marks = []
-for _, row in censored.iterrows():
-    mask = (km_df["Group"] == row["group"]) & (km_df["Time (Months)"] <= row["time"])
-    if mask.any():
-        surv_at_censor = km_df.loc[mask, "Survival Probability"].iloc[-1]
-        censored_marks.append(
-            {"Time (Months)": row["time"], "Survival Probability": surv_at_censor, "Group": row["group"]}
-        )
-
-censored_df = pd.DataFrame(censored_marks) if censored_marks else pd.DataFrame()
-
-# Define colors using Okabe-Ito palette
-color_scale = alt.Scale(domain=["Treatment A", "Treatment B"], range=[IMPRINT[0], IMPRINT[1]])
-
-# Step line for survival curves
-survival_line = (
-    alt.Chart(km_df)
-    .mark_line(interpolate="step-after", strokeWidth=4)
-    .encode(
-        x=alt.X("Time (Months):Q", scale=alt.Scale(domain=[0, 38]), title="Time (Months)"),
-        y=alt.Y("Survival Probability:Q", scale=alt.Scale(domain=[0, 1.0]), title="Survival Probability"),
-        color=alt.Color("Group:N", scale=color_scale),
-    )
+group_scale = alt.Scale(domain=groups, range=IMPRINT_PALETTE)
+color = alt.Color(GROUP.translate(ESCAPE), type="nominal", title=GROUP, sort=None, scale=group_scale)
+x_axis = alt.X(
+    TIME.translate(ESCAPE),
+    type="quantitative",
+    title=TIME,
+    scale=alt.Scale(domain=[0, df[TIME].max() * 1.05], nice=False),
 )
 
-# Confidence interval bands
+# Confidence interval bands, stepping with their curves
 ci_band = (
     alt.Chart(km_df)
     .mark_area(interpolate="step-after", opacity=0.25)
+    .encode(x=x_axis, y=alt.Y(LOWER.translate(ESCAPE), type="quantitative", title=SURVIVAL), y2=UPPER, color=color)
+)
+
+# Survival step curves
+survival_line = (
+    alt.Chart(km_df)
+    .mark_line(interpolate="step-after", strokeWidth=3)
     .encode(
-        x=alt.X("Time (Months):Q"),
-        y=alt.Y("CI Lower:Q", title=""),
-        y2=alt.Y2("CI Upper:Q"),
-        color=alt.Color("Group:N", scale=color_scale, legend=None),
+        x=x_axis,
+        y=alt.Y(SURVIVAL.translate(ESCAPE), type="quantitative", title=SURVIVAL, scale=alt.Scale(domain=[0, 1])),
+        color=color,
     )
 )
 
-# Censored observation marks
-if not censored_df.empty:
-    censor_marks = (
-        alt.Chart(censored_df)
-        .mark_tick(thickness=3, size=25)
-        .encode(
-            x=alt.X("Time (Months):Q"),
-            y=alt.Y("Survival Probability:Q", title=""),
-            color=alt.Color("Group:N", scale=color_scale, legend=None),
-        )
-    )
-    chart_layers = ci_band + survival_line + censor_marks
-else:
-    chart_layers = ci_band + survival_line
+# Censored observations as tick marks on the curve
+censor_marks = (
+    alt.Chart(censored_df)
+    .mark_tick(thickness=2, size=12)
+    .encode(x=x_axis, y=alt.Y(SURVIVAL.translate(ESCAPE), type="quantitative", title=SURVIVAL), color=color)
+)
 
-# Create final chart with theme-adaptive styling
+# Style
 chart = (
-    chart_layers.properties(
-        width=1600,
-        height=900,
+    (ci_band + survival_line + censor_marks)
+    .properties(
+        width=555,
+        height=360,
         background=PAGE_BG,
-        title=alt.Title("survival-kaplan-meier · altair · anyplot.ai", fontSize=28, anchor="middle", offset=20),
+        title=alt.Title(
+            "survival-kaplan-meier · python · altair · anyplot.ai", fontSize=18, anchor="middle", offset=12
+        ),
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
@@ -173,8 +145,8 @@ chart = (
         tickColor=INK_SOFT,
         gridColor=INK,
         gridOpacity=0.10,
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=12,
+        titleFontSize=14,
         labelColor=INK_SOFT,
         titleColor=INK,
     )
@@ -184,12 +156,23 @@ chart = (
         strokeColor=INK_SOFT,
         labelColor=INK_SOFT,
         titleColor=INK,
-        titleFontSize=20,
-        labelFontSize=18,
+        titleFontSize=13,
+        labelFontSize=12,
         strokeWidth=1,
+        padding=8,
     )
 )
 
-# Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Output: render, then pad (never crop) to the 3200 x 1800 target canvas
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TARGET_W, TARGET_H = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TARGET_W or h > TARGET_H:
+    raise SystemExit(f"altair rendered {w}x{h}, exceeds {TARGET_W}x{TARGET_H}; shrink width/height")
+if (w, h) != (TARGET_W, TARGET_H):
+    canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+    canvas.paste(img, ((TARGET_W - w) // 2, (TARGET_H - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
