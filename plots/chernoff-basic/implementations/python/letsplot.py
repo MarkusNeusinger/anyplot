@@ -1,7 +1,7 @@
 """ anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-15
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 77/100 | Updated: 2026-11-21
 """
 
 import os
@@ -36,165 +36,120 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Iris dataset
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+GRID_COLS = 4  # faces per row in the grid layout
+
+# Columns: set these to your table's column names
+OBSERVATION = "Flower"  # role: observation_id
+SPECIES = "Species"  # role: extra
+VARIABLES = ["Sepal length (cm)", "Sepal width (cm)", "Petal length (cm)", "Petal width (cm)"]  # role: variable_
+
+# Data: replace this block with your own table, for example df = pd.read_csv("flowers.csv")
 np.random.seed(42)
 iris = load_iris()
-df = pd.DataFrame(iris.data, columns=["sepal_length", "sepal_width", "petal_length", "petal_width"])
-df["species"] = [iris.target_names[i] for i in iris.target]
+iris_df = pd.DataFrame(iris.data, columns=VARIABLES)
+iris_df[SPECIES] = [iris.target_names[i] for i in iris.target]
+picked = [np.random.choice(np.flatnonzero(iris.target == k), 4, replace=False) for k in range(len(iris.target_names))]
+df = iris_df.iloc[np.concatenate(picked)].reset_index(drop=True)
+df[SPECIES] = df[SPECIES].str.title()
+df.insert(0, OBSERVATION, [f"Flower {i + 1}" for i in range(len(df))])
 
-# Sample 12 flowers (4 per species)
-sample_idx = []
-for species in range(3):
-    species_idx = np.where(iris.target == species)[0]
-    sample_idx.extend(np.random.choice(species_idx, 4, replace=False))
-df_sample = df.iloc[sample_idx].reset_index(drop=True)
+# Plot: reads only df and the constants above
+features = VARIABLES
+span = (df[features].max() - df[features].min()).replace(0, 1)
+norm = (df[features] - df[features].min()) / span  # every variable on a common 0-1 scale
 
-# Normalize data to 0-1 range
-features = ["sepal_length", "sepal_width", "petal_length", "petal_width"]
-for col in features:
-    min_val = df_sample[col].min()
-    max_val = df_sample[col].max()
-    df_sample[col + "_norm"] = (df_sample[col] - min_val) / (max_val - min_val)
+groups = list(dict.fromkeys(df[SPECIES]))
+species_colors = {g: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, g in enumerate(groups)}
+grid_rows = int(np.ceil(len(df) / GRID_COLS))
+scale = 0.42
+theta = np.linspace(0, 2 * np.pi, 50)
+theta_eye = np.linspace(0, 2 * np.pi, 20)
 
-# Generate faces in a grid
-grid_rows = 3
-grid_cols = 4
-all_face_data = []
-label_data = []
-species_colors = {"setosa": "#009E73", "versicolor": "#C475FD", "virginica": "#4467A3"}
+LAYER_OF = {"face": "face", "eye": "eyes", "pupil": "pupils", "mouth": "mouth", "brow": "brows", "nose": "nose"}
+parts = []
+label_rows = []
+for idx in range(len(df)):
+    cx = idx % GRID_COLS + 0.5
+    cy = (grid_rows - 1 - idx // GRID_COLS) + 0.5
+    sepal_len, sepal_wid, petal_len, petal_wid = norm.iloc[idx][features].to_numpy()
 
-for idx, row in df_sample.iterrows():
-    col = idx % grid_cols
-    row_pos = idx // grid_cols
-    center_x = col + 0.5
-    center_y = (grid_rows - 1 - row_pos) + 0.5
+    def add(part, xs, ys, face_id=idx):
+        parts.append(
+            pd.DataFrame(
+                {
+                    "x": xs,
+                    "y": ys,
+                    "part": part,
+                    "layer": LAYER_OF[part.split("_")[-1]],
+                    "face_id": face_id,
+                    "order": range(len(xs)),
+                }
+            )
+        )
 
-    sepal_len = row["sepal_length_norm"]
-    sepal_wid = row["sepal_width_norm"]
-    petal_len = row["petal_length_norm"]
-    petal_wid = row["petal_width_norm"]
-
-    scale = 0.42
-    face_data = []
-
-    # Face outline (ellipse)
+    # Face outline: width follows sepal length
     face_width = 0.35 + 0.2 * sepal_len
-    face_height = 0.45
-    theta = np.linspace(0, 2 * np.pi, 50)
-    face_x = center_x + scale * face_width * np.cos(theta)
-    face_y = center_y + scale * face_height * np.sin(theta)
-    for i in range(len(theta)):
-        face_data.append({"x": face_x[i], "y": face_y[i], "part": "face", "order": i})
+    add("face", cx + scale * face_width * np.cos(theta), cy + scale * 0.45 * np.sin(theta))
 
-    # Eyes
+    # Eyes and pupils: size follows sepal width
     eye_size = 0.03 + 0.04 * sepal_wid
-    eye_y = center_y + scale * 0.12
     eye_spacing = 0.12
+    eye_y = cy + scale * 0.12
+    for side, sign in (("left", -1), ("right", 1)):
+        ex = cx + sign * scale * eye_spacing
+        add(f"{side}_eye", ex + scale * eye_size * np.cos(theta_eye), eye_y + scale * eye_size * np.sin(theta_eye))
+        pupil = eye_size * 0.4
+        add(f"{side}_pupil", ex + scale * pupil * np.cos(theta_eye), eye_y + scale * pupil * np.sin(theta_eye))
 
-    # Left eye
-    theta_eye = np.linspace(0, 2 * np.pi, 20)
-    left_eye_x = center_x - scale * eye_spacing + scale * eye_size * np.cos(theta_eye)
-    left_eye_y = eye_y + scale * eye_size * np.sin(theta_eye)
-    for i in range(len(theta_eye)):
-        face_data.append({"x": left_eye_x[i], "y": left_eye_y[i], "part": "left_eye", "order": i})
-
-    # Right eye
-    right_eye_x = center_x + scale * eye_spacing + scale * eye_size * np.cos(theta_eye)
-    right_eye_y = eye_y + scale * eye_size * np.sin(theta_eye)
-    for i in range(len(theta_eye)):
-        face_data.append({"x": right_eye_x[i], "y": right_eye_y[i], "part": "right_eye", "order": i})
-
-    # Pupils
-    pupil_size = eye_size * 0.4
-    left_pupil_x = center_x - scale * eye_spacing + scale * pupil_size * np.cos(theta_eye)
-    left_pupil_y = eye_y + scale * pupil_size * np.sin(theta_eye)
-    for i in range(len(theta_eye)):
-        face_data.append({"x": left_pupil_x[i], "y": left_pupil_y[i], "part": "left_pupil", "order": i})
-
-    right_pupil_x = center_x + scale * eye_spacing + scale * pupil_size * np.cos(theta_eye)
-    right_pupil_y = eye_y + scale * pupil_size * np.sin(theta_eye)
-    for i in range(len(theta_eye)):
-        face_data.append({"x": right_pupil_x[i], "y": right_pupil_y[i], "part": "right_pupil", "order": i})
-
-    # Mouth
-    mouth_y = center_y - scale * 0.15
+    # Mouth: curvature follows petal length
     mouth_width = 0.12
     curvature = -0.08 + 0.16 * petal_len
-    mouth_x = np.linspace(-mouth_width, mouth_width, 20)
-    mouth_curve_y = mouth_y + scale * curvature * (1 - (mouth_x / mouth_width) ** 2)
-    mouth_curve_x = center_x + scale * mouth_x
-    for i in range(len(mouth_x)):
-        face_data.append({"x": mouth_curve_x[i], "y": mouth_curve_y[i], "part": "mouth", "order": i})
+    mx = np.linspace(-mouth_width, mouth_width, 20)
+    add("mouth", cx + scale * mx, cy - scale * 0.15 + scale * curvature * (1 - (mx / mouth_width) ** 2))
 
-    # Eyebrows
-    brow_y = center_y + scale * 0.22
-    brow_slant = -0.03 + 0.06 * petal_wid
+    # Eyebrows: slant follows petal width
+    brow_y = cy + scale * 0.22
+    slant = -0.03 + 0.06 * petal_wid
     brow_length = 0.06
-
-    # Left eyebrow
-    face_data.append(
-        {
-            "x": center_x - scale * (eye_spacing + brow_length),
-            "y": brow_y - scale * brow_slant,
-            "part": "left_brow",
-            "order": 0,
-        }
+    add(
+        "left_brow",
+        [cx - scale * (eye_spacing + brow_length), cx - scale * (eye_spacing - brow_length)],
+        [brow_y - scale * slant, brow_y + scale * slant],
     )
-    face_data.append(
-        {
-            "x": center_x - scale * (eye_spacing - brow_length),
-            "y": brow_y + scale * brow_slant,
-            "part": "left_brow",
-            "order": 1,
-        }
-    )
-
-    # Right eyebrow
-    face_data.append(
-        {
-            "x": center_x + scale * (eye_spacing - brow_length),
-            "y": brow_y + scale * brow_slant,
-            "part": "right_brow",
-            "order": 0,
-        }
-    )
-    face_data.append(
-        {
-            "x": center_x + scale * (eye_spacing + brow_length),
-            "y": brow_y - scale * brow_slant,
-            "part": "right_brow",
-            "order": 1,
-        }
+    add(
+        "right_brow",
+        [cx + scale * (eye_spacing - brow_length), cx + scale * (eye_spacing + brow_length)],
+        [brow_y + scale * slant, brow_y - scale * slant],
     )
 
     # Nose
-    nose_top = center_y + scale * 0.02
-    nose_bottom = center_y - scale * 0.08
-    face_data.append({"x": center_x, "y": nose_top, "part": "nose", "order": 0})
-    face_data.append({"x": center_x, "y": nose_bottom, "part": "nose", "order": 1})
+    add("nose", [cx, cx], [cy + scale * 0.02, cy - scale * 0.08])
 
-    # Convert to DataFrame and add metadata
-    face_df = pd.DataFrame(face_data)
-    face_df["face_id"] = idx
-    face_df["species"] = row["species"]
-    all_face_data.append(face_df)
+    label_rows.append(
+        {"x": cx, "y": cy - 0.45, "label": str(df[SPECIES].iloc[idx]).title(), SPECIES: df[SPECIES].iloc[idx]}
+    )
 
-    # Add species label
-    label_data.append({"x": center_x, "y": center_y - 0.45, "label": row["species"].title(), "species": row["species"]})
+faces_df = pd.concat(parts, ignore_index=True)
+faces_df = faces_df.merge(
+    pd.DataFrame({"face_id": range(len(df)), SPECIES: df[SPECIES].to_numpy()}), on="face_id", how="left"
+)
+labels_df = pd.DataFrame(label_rows)
 
-# Combine all face data
-faces_df = pd.concat(all_face_data, ignore_index=True)
-labels_df = pd.DataFrame(label_data)
+layers = dict(list(faces_df.groupby("layer")))
+face_outline, eyes, pupils = layers["face"], layers["eyes"], layers["pupils"]
+mouth, brows, nose = layers["mouth"], layers["brows"], layers["nose"]
 
-# Separate face parts for layering
-face_outline = faces_df[faces_df["part"] == "face"]
-eyes = faces_df[faces_df["part"].isin(["left_eye", "right_eye"])]
-pupils = faces_df[faces_df["part"].isin(["left_pupil", "right_pupil"])]
-mouth = faces_df[faces_df["part"] == "mouth"]
-brows = faces_df[faces_df["part"].isin(["left_brow", "right_brow"])]
-nose = faces_df[faces_df["part"] == "nose"]
+# Key: which variable drives which facial feature
+key = (
+    f"Face width: {VARIABLES[0]}   ·   Eye size: {VARIABLES[1]}\n"
+    f"Mouth curvature: {VARIABLES[2]}   ·   Eyebrow slant: {VARIABLES[3]}"
+)
 
-# Create plot with theme-adaptive styling
+# Style
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -202,31 +157,32 @@ anyplot_theme = theme(
     axis_title=element_blank(),
     axis_text=element_blank(),
     axis_ticks=element_blank(),
-    plot_title=element_text(size=24, face="bold", color=INK),
+    plot_title=element_text(size=16, face="bold", color=INK),
+    plot_caption=element_text(size=11, color=INK_SOFT),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_title=element_text(size=18, color=INK),
-    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=12, color=INK),
+    legend_text=element_text(size=11, color=INK_SOFT),
     legend_position="right",
-    plot_margin=[40, 20, 20, 20],
+    plot_margin=[20, 10, 10, 10],
 )
 
 plot = (
     ggplot()
     + geom_polygon(
-        aes(x="x", y="y", group="face_id", fill="species"), data=face_outline, color=INK_SOFT, size=1.5, alpha=0.3
+        aes(x="x", y="y", group="face_id", fill=SPECIES), data=face_outline, color=INK_SOFT, size=0.8, alpha=0.3
     )
-    + geom_polygon(aes(x="x", y="y", group=["face_id", "part"]), data=eyes, fill="white", color=INK_SOFT, size=1.0)
-    + geom_polygon(aes(x="x", y="y", group=["face_id", "part"]), data=pupils, fill=INK, color=INK, size=0.5)
-    + geom_path(aes(x="x", y="y", group="face_id"), data=mouth, color=INK, size=2.0)
-    + geom_path(aes(x="x", y="y", group=["face_id", "part"]), data=brows, color=INK, size=2.5)
-    + geom_path(aes(x="x", y="y", group="face_id"), data=nose, color=INK, size=1.5)
-    + geom_text(aes(x="x", y="y", label="label"), data=labels_df, color=INK_SOFT, size=12, fontface="bold")
+    + geom_polygon(aes(x="x", y="y", group=["face_id", "part"]), data=eyes, fill="white", color=INK_SOFT, size=0.5)
+    + geom_polygon(aes(x="x", y="y", group=["face_id", "part"]), data=pupils, fill=INK, color=INK, size=0.3)
+    + geom_path(aes(x="x", y="y", group="face_id"), data=mouth, color=INK, size=1.0)
+    + geom_path(aes(x="x", y="y", group=["face_id", "part"]), data=brows, color=INK, size=1.2)
+    + geom_path(aes(x="x", y="y", group="face_id"), data=nose, color=INK, size=0.8)
+    + geom_text(aes(x="x", y="y", label="label"), data=labels_df, color=INK_SOFT, size=4, fontface="bold")
     + scale_fill_manual(values=species_colors)
-    + labs(title="chernoff-basic · letsplot · anyplot.ai", fill="Species")
+    + labs(title="chernoff-basic · python · letsplot · anyplot.ai", fill=SPECIES, caption=key)
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save outputs
-ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
 ggsave(plot, f"plot-{THEME}.html", path=".")
