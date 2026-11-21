@@ -2,125 +2,144 @@ library: pygal
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T10:57:45Z'
-updated: '2026-05-14T17:17:08Z'
-generated_by: claude-haiku
-workflow_run: 25873635002
+updated: '2026-11-21T17:29:27Z'
+generated_by: claude-sonnet
+workflow_run: 44929730294
 issue: 3002
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 77
 review:
   strengths:
-  - 'Perfect visual quality across both themes: text legible, colors compliant, layout
-    pristine'
-  - 'Excellent spec adherence: implements the AAB;AAC;DDF mosaic pattern exactly with
-    multiple chart types and clear hierarchy'
-  - Realistic, neutral data that demonstrates the feature well; deterministic with
-    seed(42)
-  - 'Theme tokens properly applied: backgrounds, text, and grid all adapt correctly
-    to light and dark; data colors stay constant'
-  - Clean, straightforward code with no unnecessary complexity; manual image composition
-    is justified
+  - Builds the mosaic geometry from the layout string itself ('AAB;AAC;DDF' → bounding
+    box per letter), so spanning panels A and D are flush and gaps are a uniform 24
+    px
+  - 'Clear hierarchy: the primary revenue-vs-costs line chart fills the 2x2 cell,
+    supporting bar, donut and scatter panels fill the single cells, and the unused
+    cell stays a blank gap'
+  - 'Theme tokens threaded through one pygal Style: chrome flips cleanly between #FAF8F1
+    and #1A1A17 while the Imprint data colors stay identical'
+  - HTML output reuses the same layout string as CSS grid-template-areas, keeping
+    pygal's native SVG tooltips per panel
   weaknesses:
-  - 'Design Excellence not maxed: layout is solid but lacks inventive visual polish
-    (e.g., per-chart spine customization, color emphasis, or subtle refinements)'
-  - 'Library Mastery score is modest: relies on PIL/cairosvg for mosaic composition
-    rather than showcasing pygal''s native strengths; interactive HTML output is minimal
-    (static grid of embedded SVGs)'
-  - 'No data annotation or callout: missing explicit emphasis on insights (e.g., peak
-    month, strongest category, highest ROI spike)'
+  - 'SC-02, VQ-06 (both): Sales by Category draws five bars with no category names
+    (show_legend=False and no y labels), so the panel cannot say which bar is Electronics
+    or Books, and its value axis has no title or unit → name each bar (x_labels of
+    the categories on the category axis) and give the value axis a title with unit,
+    e.g. ''Sales ($K)''. Likely cause: one series per category with show_legend=False
+    and no x_labels/x_title on the HorizontalBar.'
+  - 'VQ-01 (both): tick and legend labels at 28 px and bar value labels at 26 px sit
+    below the pygal reference (44 px / 36 px) and read small beside the 44 px panel
+    titles → about 36–40 px ticks/legend (+8 to +12 px) and 32 px values (+6 px).
+    Likely cause: major_label_font_size=28, legend_font_size=28, value_font_size=26
+    in Style.'
+  - 'VQ-01 (dark): the near-black bar value labels (''450'', ''320'', …) sit on the
+    darkened bar fills with low contrast → light ink on the dark render, or values
+    outside the bar ends. Likely cause: print_values_position=''center'' with pygal''s
+    default value colour.'
+  - 'CQ-01 (code): three helper functions panel_size, panel_origin and sub → inline
+    the box arithmetic into a dict of sizes/origins computed in the layout loop and
+    filter df directly. Likely cause: helper-function structure for the grid geometry.'
+  - 'Suggestion: the empty cell could use the conventional ''.'' placeholder in the
+    layout string instead of an unused letter F.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title clearly visible in dark text at 56pt; axis labels and tick labels readable at 22pt and 18pt respectively
-      Data: Brand green (#009E73) for Revenue line; orange for Costs; Okabe-Ito palette for categorical bars (blue, purple, yellow); scatter points in cyan; gauge colors match palette
-      Legibility verdict: PASS - all elements readable, no light-on-light conflicts
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas
+      Chrome: bold title 'subplot-mosaic · python · pygal · anyplot.ai' centred on top; panel titles, axis titles and ticks in dark ink, all readable; dashed grid subtle
+      Data: Panel A (2x2) Revenue line in #009E73 and Costs in #C475FD with dots; Panel B horizontal bars in Imprint order with centred values (no category names); Panel C donut North/South/East/West with bottom legend; Panel D (2x1) scatter of marketing spend vs sales in #009E73; bottom-right cell is a blank gap
+      Legibility verdict: PASS (ticks and legend somewhat small)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title clearly visible in light text; axis labels and tick labels readable in light color (no dark-on-dark failures); grid lines subtle but visible
-      Data: Colors identical to light render - brand green, orange, blue, purple, yellow all clearly distinguishable; brand green visible and readable against dark background
-      Legibility verdict: PASS - all elements readable, theme adaptation flawless
+      Background: warm near-black #1A1A17
+      Chrome: title, panel titles, axis titles and ticks in light ink, all readable; no dark-on-dark chrome
+      Data: same Imprint colors as light; bar fills appear darker over the dark page and their near-black value labels have low contrast
+      Legibility verdict: PASS (bar value labels low-contrast)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
-        passed: true
-        comment: Title 56pt, axis labels 22pt, tick labels 18pt, all readable in both
-          themes
+        passed: false
+        comment: Panel tick and legend labels at 28 px and bar value labels at 26
+          px sit below the pygal reference (44/36 px) and read small beside the 44
+          px panel titles; in the dark render the near-black bar value labels sit
+          on darkened bar fills with low contrast (defect lines)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text has adequate spacing; no collisions; clear panel separation
+        comment: No text collisions in either render; panel D's eleven y ticks are
+          tight but separate
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, bars clearly visible; appropriate sizing for
-          4800x2700px
+        comment: Lines, dots, bars and donut wedges clearly visible; legend swatches
+          match their marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; adequate contrast; no red-green as sole
-          signal
+        comment: Imprint palette, CVD-safe; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3x3 grid well-balanced; nothing cut off; generous margins
+        comment: Canvas 3200x1800; title ~43% of width; grid with uniform 24 px gaps;
+          spanning panels A and D flush with each other; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels with units; titles clear and follow spec format
+        passed: false
+        comment: Sales by Category has no category labels and no value-axis title
+          or unit (defect line); other panels carry titles and axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order; backgrounds correct; theme-adaptive'
+        comment: 'First series #009E73, Imprint order, backgrounds #FAF8F1/#1A1A17,
+          chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Custom Style with theme tokens; good visual hierarchy; lacks bespoke
-          polish
+        comment: 'Style-guide baseline: theme tokens, explicit font sizes, Imprint
+          palette; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Theme-aware styling; generous spacing; could be more refined
+        passed: false
+        comment: Consistent gaps and flush spanning edges are spec requirements; no
+          refinement beyond them
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy; layout guides viewer; missing explicit insight
-          emphasis
+        passed: false
+        comment: Hierarchy comes from the layout the spec prescribes; no focal point
+          chosen beyond it
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,26 +147,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mosaic layout with AAB;AAC;DDF pattern
+        comment: Correct mosaic layout AAB;AAC;DDF with mixed plot types
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: patterns, varying sizes, multiple chart types,
-          spacing'
+        passed: false
+        comment: 'Spanning panels, hierarchy, consistent spacing and a blank empty
+          cell are present; C4 missed for Sales by Category: the five bars carry no
+          category names (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct; axes show full data range
+        comment: All marks at their data values; axes show the full data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec format; descriptive subtitles; appropriate legends
+        comment: Title 'subplot-mosaic · python · pygal · anyplot.ai' correct; legends
+          of panels A and C match their series
     data_quality:
       score: 15
       max: 15
@@ -157,81 +178,87 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple chart types demonstrate mosaic capability
+        comment: Line, bar, donut and scatter panels plus an empty cell show every
+          aspect of the mosaic
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Dashboard context realistic; data plausible; neutral domain
+        comment: Neutral, plausible sales dashboard with real category and region
+          names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible ranges; proportions realistic; correlations plausible
+        comment: Revenue 120–218 $K, costs below revenue, category sales 165–450,
+          shares summing to 100; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Straightforward procedural code; PIL composition justified
+        passed: false
+        comment: Three helper functions panel_size, panel_origin and sub (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); deterministic output
+        comment: default_rng(42), deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; token-based theme handling clean
+        comment: Layout boxes derived from the layout string in one loop; composition
+          via cairosvg+PIL is the needed route for a pygal mosaic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct filenames and API usage
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses pygal patterns; Style object idiomatic; could explore more features
+        comment: 'Style object, per-series add, chart classes per panel: the mandated
+          baseline'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: SolidGauge used but underutilized; PIL composition bypasses pygal
-          strengths
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T17:25:43Z'
 impl_tags:
   dependencies:
-  - cairosvg
   - pillow
   techniques:
   - subplots
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - dark-theme
+  styling: []
