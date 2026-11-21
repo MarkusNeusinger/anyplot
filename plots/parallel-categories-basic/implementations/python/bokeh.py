@@ -1,7 +1,7 @@
 """ anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 96/100 | Updated: 2026-05-13
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-21
 """
 
 import os
@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, Label
+from bokeh.models import ColumnDataSource, LabelSet
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -24,265 +24,195 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series always #009E73
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Product purchase journey: Channel -> Category -> Outcome
-np.random.seed(42)
+# Columns: set these to your table's column names, in axis order
+DIMENSIONS = ["Channel", "Category", "Outcome"]  # role: dimension_
+CHANNEL, PRODUCT, OUTCOME = DIMENSIONS
 
-channels = ["Online", "Store", "Mobile"]
-categories = ["Electronics", "Clothing", "Home"]
-outcomes = ["Purchased", "Returned", "Exchanged"]
+# Data: replace this block with your own table, one row per observation,
+# for example df = pd.read_csv("purchases.csv")
+rng = np.random.default_rng(42)
+channel_names = ["Online", "Store", "Mobile"]
+product_names = ["Electronics", "Clothing", "Home"]
+outcome_names = ["Purchased", "Returned", "Exchanged"]
+product_given_channel = {"Online": [0.5, 0.3, 0.2], "Store": [0.2, 0.5, 0.3], "Mobile": [0.6, 0.25, 0.15]}
+outcome_given_product = {"Electronics": [0.7, 0.2, 0.1], "Clothing": [0.6, 0.25, 0.15], "Home": [0.85, 0.1, 0.05]}
+rows = []
+for channel in rng.choice(channel_names, size=500, p=[0.45, 0.35, 0.20]):
+    product = rng.choice(product_names, p=product_given_channel[channel])
+    outcome = rng.choice(outcome_names, p=outcome_given_product[product])
+    rows.append((channel, product, outcome))
+df = pd.DataFrame(rows, columns=DIMENSIONS)
 
-# Generate data with realistic patterns
-data = []
-for _ in range(500):
-    channel = np.random.choice(channels, p=[0.45, 0.35, 0.20])
-    if channel == "Online":
-        category = np.random.choice(categories, p=[0.5, 0.3, 0.2])
-    elif channel == "Store":
-        category = np.random.choice(categories, p=[0.2, 0.5, 0.3])
-    else:
-        category = np.random.choice(categories, p=[0.6, 0.25, 0.15])
-    if category == "Electronics":
-        outcome = np.random.choice(outcomes, p=[0.7, 0.2, 0.1])
-    elif category == "Clothing":
-        outcome = np.random.choice(outcomes, p=[0.6, 0.25, 0.15])
-    else:
-        outcome = np.random.choice(outcomes, p=[0.85, 0.1, 0.05])
-    data.append({"Channel": channel, "Category": category, "Outcome": outcome})
+# Plot: reads only df and the constants above
+total = len(df)
+x_positions = {dim: i * 1.5 for i, dim in enumerate(DIMENSIONS)}
+box_half = 0.06
 
-df = pd.DataFrame(data)
-
-# Aggregate data to get counts for each path
-path_counts = df.groupby(["Channel", "Category", "Outcome"]).size().reset_index(name="count")
-
-# Define dimensions and their unique values
-dimensions = ["Channel", "Category", "Outcome"]
-dim_values = {"Channel": channels, "Category": categories, "Outcome": outcomes}
-
-# Calculate x positions for each dimension
-x_positions = {dim: i * 1.5 for i, dim in enumerate(dimensions)}
-
-# Total count for normalization
-total_count = len(df)
-
-# Build category positions for each dimension
-dim_cat_positions = {}
-for dim in dimensions:
+# Layout: categories of each axis ordered by size, stacked from the bottom
+segments = {}
+for dim in DIMENSIONS:
     counts = df[dim].value_counts()
-    positions = {}
-    y_current = 0
-    for cat in dim_values[dim]:
-        count = counts.get(cat, 0)
-        height = count / total_count
-        positions[cat] = {"y_start": y_current, "height": height, "y_end": y_current + height}
-        y_current += height
-    dim_cat_positions[dim] = positions
+    top = 0.0
+    for cat, count in counts.items():
+        segments[(dim, cat)] = {"bottom": top, "top": top + count / total}
+        top += count / total
 
-# Create ribbons connecting categories between adjacent dimensions
-ribbon_patches_x = []
-ribbon_patches_y = []
-ribbon_colors = []
+# Ribbon colors follow the categories of the first dimension
+first_cats = list(df[CHANNEL].value_counts().index)
+color_of = {cat: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, cat in enumerate(first_cats)}
 
-# Color by first dimension (Channel) - using Okabe-Ito palette
-channel_colors = {
-    "Online": IMPRINT[0],  # #009E73
-    "Store": IMPRINT[1],  # #C475FD
-    "Mobile": IMPRINT[2],  # #4467A3
-}
 
-# Track running position within each category box
-running_positions = {dim: dict.fromkeys(dim_values[dim], 0) for dim in dimensions}
+def bezier(t, a, b, c1, c2):
+    """Cubic bezier from a to b with control points c1 and c2."""
+    return a * (1 - t) ** 3 + 3 * c1 * t * (1 - t) ** 2 + 3 * c2 * t**2 * (1 - t) + b * t**3
 
-# Process each unique path
-for _, row in path_counts.iterrows():
-    count = row["count"]
-    ribbon_height = count / total_count
 
-    # Get color based on first dimension
-    color = channel_colors[row["Channel"]]
+t = np.linspace(0, 1, 30)
+ribbons = {cat: {"xs": [], "ys": []} for cat in first_cats}
+for left_dim, right_dim in zip(DIMENSIONS[:-1], DIMENSIONS[1:], strict=True):
+    flows = (
+        df.groupby(list(dict.fromkeys([CHANNEL, left_dim, right_dim]))).size().reset_index(name="n").to_dict("records")
+    )
+    # Stack ribbons in each segment ordered by the category at the other end, which limits crossings
+    left_start, left_fill, right_fill = {}, {}, {}
+    for flow in sorted(flows, key=lambda f: (f[right_dim], f[CHANNEL])):
+        left_cat = flow[left_dim]
+        start = left_fill.get(left_cat, segments[(left_dim, left_cat)]["bottom"])
+        left_fill[left_cat] = start + flow["n"] / total
+        left_start[(flow[CHANNEL], left_cat, flow[right_dim])] = start
+    for flow in sorted(flows, key=lambda f: (f[left_dim], f[CHANNEL])):
+        right_cat, height = flow[right_dim], flow["n"] / total
+        start = right_fill.get(right_cat, segments[(right_dim, right_cat)]["bottom"])
+        right_fill[right_cat] = start + height
+        begin = left_start[(flow[CHANNEL], flow[left_dim], right_cat)]
+        x1, x2 = x_positions[left_dim], x_positions[right_dim]
+        xm = (x1 + x2) / 2
+        curve_x = bezier(t, x1, x2, xm, xm)
+        top_edge = bezier(t, begin + height, start + height, begin + height, start + height)
+        bottom_edge = bezier(t, begin, start, begin, start)
+        ribbons[flow[CHANNEL]]["xs"].append(np.concatenate([curve_x, curve_x[::-1]]).tolist())
+        ribbons[flow[CHANNEL]]["ys"].append(np.concatenate([top_edge, bottom_edge[::-1]]).tolist())
 
-    # Create ribbons between each pair of adjacent dimensions
-    for i in range(len(dimensions) - 1):
-        dim1 = dimensions[i]
-        dim2 = dimensions[i + 1]
-        cat1 = row[dim1]
-        cat2 = row[dim2]
-
-        # Get x positions
-        x1 = x_positions[dim1]
-        x2 = x_positions[dim2]
-
-        # Get y positions
-        y1_base = dim_cat_positions[dim1][cat1]["y_start"]
-        y1_start = y1_base + running_positions[dim1][cat1]
-        y1_end = y1_start + ribbon_height
-
-        y2_base = dim_cat_positions[dim2][cat2]["y_start"]
-        y2_start = y2_base + running_positions[dim2][cat2]
-        y2_end = y2_start + ribbon_height
-
-        # Create smooth ribbon using bezier-like path
-        x_mid = (x1 + x2) / 2
-        num_curve_points = 20
-        t = np.linspace(0, 1, num_curve_points)
-
-        # Top edge: bezier from (x1, y1_end) to (x2, y2_end)
-        top_x = x1 * (1 - t) ** 3 + 3 * x_mid * t * (1 - t) ** 2 + 3 * x_mid * t**2 * (1 - t) + x2 * t**3
-        top_y = y1_end * (1 - t) ** 3 + 3 * y1_end * t * (1 - t) ** 2 + 3 * y2_end * t**2 * (1 - t) + y2_end * t**3
-
-        # Bottom edge: bezier from (x2, y2_start) to (x1, y1_start) (reversed)
-        bottom_x = x2 * (1 - t) ** 3 + 3 * x_mid * t * (1 - t) ** 2 + 3 * x_mid * t**2 * (1 - t) + x1 * t**3
-        bottom_y = (
-            y2_start * (1 - t) ** 3 + 3 * y2_start * t * (1 - t) ** 2 + 3 * y1_start * t**2 * (1 - t) + y1_start * t**3
-        )
-
-        # Combine to form closed polygon
-        patch_x = np.concatenate([top_x, bottom_x])
-        patch_y = np.concatenate([top_y, bottom_y])
-
-        ribbon_patches_x.append(patch_x.tolist())
-        ribbon_patches_y.append(patch_y.tolist())
-        ribbon_colors.append(color)
-
-        # Update running positions after processing
-        if i == len(dimensions) - 2:
-            for j in range(len(dimensions)):
-                dim = dimensions[j]
-                cat = row[dim]
-                running_positions[dim][cat] += ribbon_height
-
-# Reset running positions for proper tracking
-running_positions = {dim: dict.fromkeys(dim_values[dim], 0) for dim in dimensions}
-
-# Process each path again to correctly update positions
-for _, row in path_counts.iterrows():
-    count = row["count"]
-    ribbon_height = count / total_count
-    for dim in dimensions:
-        cat = row[dim]
-        running_positions[dim][cat] += ribbon_height
-
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="parallel-categories-basic · bokeh · anyplot.ai",
-    x_range=(-0.7, 4.0),
-    y_range=(-0.05, 1.15),
+    width=3200,
+    height=1800,
+    title="parallel-categories-basic · python · bokeh · anyplot.ai",
+    x_range=(-0.85, 3.85),
+    y_range=(-0.13, 1.14),
     tools="",
     toolbar_location=None,
+    min_border_left=40,
+    min_border_right=40,
+    min_border_top=110,
+    min_border_bottom=40,
 )
 
-# Draw ribbons
-for i in range(len(ribbon_patches_x)):
-    source = ColumnDataSource(data={"x": [ribbon_patches_x[i]], "y": [ribbon_patches_y[i]]})
+for cat in first_cats:
     p.patches(
-        xs="x",
-        ys="y",
-        source=source,
-        fill_color=ribbon_colors[i],
+        xs="xs",
+        ys="ys",
+        source=ColumnDataSource(ribbons[cat]),
+        fill_color=color_of[cat],
         fill_alpha=0.7,
-        line_color=ribbon_colors[i],
+        line_color=color_of[cat],
         line_alpha=0.9,
         line_width=1,
+        legend_label=str(cat),
     )
 
-# Draw category boxes (rectangles for each category in each dimension)
-box_width = 0.12
-for dim in dimensions:
-    x = x_positions[dim]
-    for cat in dim_values[dim]:
-        pos = dim_cat_positions[dim][cat]
-        source = ColumnDataSource(
-            data={
-                "x": [[x - box_width / 2, x + box_width / 2, x + box_width / 2, x - box_width / 2]],
-                "y": [[pos["y_start"], pos["y_start"], pos["y_end"], pos["y_end"]]],
-            }
-        )
-        p.patches(xs="x", ys="y", source=source, fill_color=INK_SOFT, fill_alpha=0.3, line_color=INK_SOFT, line_width=2)
-
-        # Add category label
-        y_mid = (pos["y_start"] + pos["y_end"]) / 2
-        if dim == dimensions[-1]:
-            label_x = x + box_width / 2 + 0.05
-            align = "left"
-        else:
-            label_x = x - box_width / 2 - 0.05
-            align = "right"
-        label = Label(
-            x=label_x,
-            y=y_mid,
-            text=cat,
-            text_font_size="28pt",
+# Category segments with labels: left of each axis, right of the last one
+seg = pd.DataFrame(
+    [
+        {
+            "dim": dim,
+            "cat": cat,
+            "left": x_positions[dim] - box_half,
+            "right": x_positions[dim] + box_half,
+            "bottom": s["bottom"],
+            "top": s["top"],
+            "mid": (s["bottom"] + s["top"]) / 2,
+        }
+        for (dim, cat), s in segments.items()
+    ]
+)
+seg["label_x"] = np.where(seg["dim"] == DIMENSIONS[-1], seg["right"] + 0.05, seg["left"] - 0.05)
+seg_source = ColumnDataSource(seg)
+p.quad(
+    left="left",
+    right="right",
+    bottom="bottom",
+    top="top",
+    source=seg_source,
+    fill_color=INK_SOFT,
+    fill_alpha=0.3,
+    line_color=INK_SOFT,
+    line_width=2,
+)
+for side, align in (("left", "right"), ("right", "left")):
+    mask = (seg["dim"] == DIMENSIONS[-1]) == (side == "right")
+    p.add_layout(
+        LabelSet(
+            x="label_x",
+            y="mid",
+            text="cat",
+            source=ColumnDataSource(seg[mask]),
+            text_font_size="30pt",
             text_color=INK,
             text_align=align,
             text_baseline="middle",
         )
-        p.add_layout(label)
+    )
 
-# Add dimension labels at the top
-for dim in dimensions:
-    x = x_positions[dim]
-    label = Label(
-        x=x,
-        y=1.08,
-        text=dim,
-        text_font_size="36pt",
-        text_color=INK,
+# Dimension names above the axes
+dim_source = ColumnDataSource({"x": list(x_positions.values()), "text": DIMENSIONS, "y": [1.03] * len(DIMENSIONS)})
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="text",
+        source=dim_source,
+        text_font_size="38pt",
         text_font_style="bold",
+        text_color=INK,
         text_align="center",
         text_baseline="bottom",
     )
-    p.add_layout(label)
+)
 
-# Add legend - centered bottom for better balance
-legend_items = [("Online", IMPRINT[0]), ("Store", IMPRINT[1]), ("Mobile", IMPRINT[2])]
-legend_x_start = 0.8
-legend_y = -0.02
-for i, (name, color) in enumerate(legend_items):
-    lx = legend_x_start + i * 0.5
-    ly = legend_y
-    # Legend box
-    source = ColumnDataSource(
-        data={"x": [[lx - 0.05, lx + 0.05, lx + 0.05, lx - 0.05]], "y": [[ly - 0.03, ly - 0.03, ly + 0.03, ly + 0.03]]}
-    )
-    p.patches(xs="x", ys="y", source=source, fill_color=color, fill_alpha=0.85, line_color=INK_SOFT, line_width=2)
-    # Legend label
-    label = Label(
-        x=lx + 0.1,
-        y=ly,
-        text=name,
-        text_font_size="24pt",
-        text_color=INK_SOFT,
-        text_align="left",
-        text_baseline="middle",
-    )
-    p.add_layout(label)
-
-# Style the figure
-p.title.text_font_size = "48pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
 p.title.align = "center"
-
-# Hide axes and grid
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.outline_line_color = None
-
-# Theme-adaptive background
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 
-# Save as HTML
+p.legend.title = f"Ribbon color: {CHANNEL}"
+p.legend.location = "bottom_center"
+p.legend.orientation = "horizontal"
+p.legend.label_text_font_size = "30pt"
+p.legend.title_text_font_size = "30pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.title_text_color = INK_SOFT
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.glyph_width = 50
+p.legend.glyph_height = 40
+p.legend.spacing = 20
+p.legend.padding = 18
+
+# Save HTML, then screenshot it with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome using Selenium
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -296,6 +226,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
