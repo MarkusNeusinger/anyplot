@@ -2,47 +2,53 @@ library: altair
 language: python
 specification_id: scatter-categorical
 created: '2025-12-30T10:38:39Z'
-updated: '2026-05-12T13:08:18Z'
-generated_by: claude-haiku
-workflow_run: 25736162766
+updated: '2026-11-21T06:36:37Z'
+generated_by: claude-sonnet
+workflow_run: 44875761070
 issue: 2597
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - Perfect Visual Quality with explicit font sizing in both themes
-  - Exemplary theme-adaptive implementation with light/dark renders both beautiful
-    and readable
-  - Complete spec compliance with correct data mapping and title/legend format
-  - Realistic iris dataset demonstrating the plot type comprehensively
-  - Idiomatic Altair code with clean method chaining and proper encoding patterns
+  - Color and shape share field, title and domain, so Vega-Lite merges them into one
+    legend whose glyphs match the circle/square/triangle marks in both themes
+  - Page-colored marker outline plus opacity 0.75 keeps overlapping points distinguishable
+    without moving any mark
+  - Exact 3200x1800 canvas via the pad-only step, with balanced margins and the legend
+    beside the plot
+  - 'Theme tokens threaded through title, axes, grid and legend: readable in both
+    renders with identical Imprint data colors'
+  - Native Vega-Lite tooltips with readable titles in the HTML output
   weaknesses:
-  - Design Excellence (DE-01) scores only 4/8 - follows configured defaults without
-    custom design sophistication
-  - Visual Refinement (DE-02) could be improved by removing top/right spines for cleaner
-    appearance
-  - Library Mastery (LM-02) uses standard Altair patterns without exceptionally distinctive
-    or creative choices
+  - 'DE-02 (both): the plot area is boxed by a four-sided INK_SOFT frame although
+    nothing in a categorical scatter requires it → remove the top and right spines
+    (L-shaped frame) or the frame entirely. Likely cause: configure_view(stroke=INK_SOFT).'
+  - 'DQ-03 (both): two Setosa points show a petal width at or below 0 cm (lowest about
+    −0.06 cm), which no flower has → keep every petal width positive (lowest real
+    Setosa width is 0.1 cm). Likely cause: np.random.normal(0.2, 0.1) for Setosa widths
+    without clipping or a log-normal draw.'
+  - 'Suggestion: the overshoot branch resizes the PNG silently; the library prompt
+    asks for a loud failure (SystemExit) so a too-large chart is fixed in the chart
+    definition instead.'
+  - 'Suggestion: a slightly lower marker opacity (about 0.6) would let the densest
+    Setosa core read more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "scatter-categorical · altair · anyplot.ai" clearly visible in dark text (INK color); axis labels "Petal Length (cm)" and "Petal Width (cm)" readable; tick labels properly sized and spaced
-      Data: Green circles (Setosa, #009E73), orange squares (Versicolor, #D55E00), blue triangles (Virginica, #0072B2) - correct Okabe-Ito positions 1-3; distinct clustering visible
-      Legend: "Species" title with three entries, positioned on right side with light background (ELEVATED_BG)
-      Legibility verdict: PASS - All text fully readable, no overlaps, excellent contrast
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas, including the padded margins.
+      Chrome: bold dark title "scatter-categorical · python · altair · anyplot.ai" centred above the plot; bold axis titles "Petal Length (cm)" and "Petal Width (cm)"; dark-grey tick labels 1.0–8.0 and 0.0–2.5 in 0.5 steps; subtle grid on both axes; four-sided grey frame around the plot area; legend "Species" in a framed elevated box at the right.
+      Data: 150 points — Setosa green #009E73 circles clustered at length ~1–1.8, width ~0–0.35; Versicolor lavender #C475FD squares around 3.2–5.4 / 0.9–2.0; Virginica blue #4467A3 triangles around 4.3–7.8 / 1.0–2.6, partly overlapping Versicolor. Thin page-colored outlines separate overlapping points. Legend glyphs show the matching shapes and colors.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title clearly visible in light text (INK color #F0EFE8); axis labels and tick labels in appropriate light secondary text (INK_SOFT #B8B7B0) - no dark-on-dark failures
-      Data: Green (#009E73), orange (#D55E00), blue (#0072B2) - identical to light render, confirming consistent category identity
-      Grid: Subtle and visible, properly colored for dark theme
-      Legend: Light text on elevated dark surface (#242420) with light stroke (INK_SOFT) - all readable
-      Legibility verdict: PASS - All text fully readable, proper theme adaptation, no dark-on-dark issues, chrome colors correct
+      Background: warm near-black #1A1A17, padded margins included.
+      Chrome: title and axis titles in light ink, tick labels in light grey, grid subtle but visible, frame and legend border light grey on the #242420 legend box; no dark-on-dark text.
+      Data: same three Imprint colors and shapes as in the light render; outlines now in the dark page color; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,49 +59,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: All sizes set explicitly (title 16, axis titles 13, ticks 11, legend
+          11/13 at scale 4), all at or above the scale-based references; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend properly positioned
+        comment: No text collisions; the dense Setosa cloud stays legible through
+          opacity 0.75 and a page-colored outline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 markers with size=200, opacity=0.7; shape encoding adds distinction;
-          optimal visibility
+        comment: 150 points at size 90 / opacity 0.75 suit the density; legend glyphs
+          show the matching circle/square/triangle in the series colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; color + shape encodings provide multiple
-          accessibility signals
+        comment: Color plus shape double-encode the species; no reliance on hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700px composition; 60-70% plot area utilization; balanced margins
+        comment: Exact 3200x1800 canvas; chart fills most of it with balanced margins;
+          legend sits next to the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct title format
+        comment: Petal Length (cm) / Petal Width (cm) carry units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, third #0072B2 correct; backgrounds
-          proper (#FAF8F1 light, #1A1A17 dark); theme chrome perfect both renders'
+        comment: 'Imprint #009E73, #C475FD, #4467A3 in canonical order, identical
+          across themes; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 7
       max: 20
       items:
       - id: DE-01
@@ -103,20 +111,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-polished defaults; lacks custom design sophistication beyond
-          library configuration
+        comment: The style-guide baseline (Imprint palette, theme tokens, explicit
+          sizes) and nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
         passed: false
-        comment: Good grid/legend styling; could improve by removing top/right spines
+        comment: Full four-sided view frame where the style guide asks for top/right
+          spines removed (defect line); grid subtle
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy; iris clustering demonstrates species relationships
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,28 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct categorical scatter plot
+        comment: Categorical scatter, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: X/Y variables, category variable, legend,
-          shape encoding'
+        comment: Colorblind-safe colors, legend naming every species, shapes varied
+          by group and merged into the same legend (C2), translucency plus thin outline
+          (C3)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct mapping; all data visible in axes range
+        comment: Points at their exact values, no jitter; all data within the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format; legend labels match data
+        comment: Title 'scatter-categorical · python · altair · anyplot.ai'; legend
+          title 'Species' and readable entries
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -155,19 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three species with distinct clustering patterns
+        comment: Three groups of different spread, partial Versicolor/Virginica overlap
+          and a well-separated cluster
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset; real, well-known, neutral context
+        comment: Iris petal measurements, neutral and well known
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Petal measurements factually correct and proportional
+        passed: false
+        comment: Means match the real iris data, but two Setosa petal widths sit at
+          or below 0 cm (defect line); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -177,58 +190,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow; no functions or classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: os, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; theme-token pattern clean and maintainable
+        comment: Column constants, escaped fields with explicit type/title, no dead
+          code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming (plot-{THEME}.png/html); proper scale_factor=3.0
+        comment: plot-{THEME}.png padded to 3200x1800 plus plot-{THEME}.html; Altair
+          6 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert method chaining; proper encoding (alt.Color, alt.Shape); correct
-          configure_* patterns
+        comment: Color and shape share field, title and domain so Vega-Lite merges
+          them into one legend; configure_* chain for chrome
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses shape encoding and configure methods well, but standard Altair
-          patterns without exceptional creativity
+        comment: Native Vega-Lite tooltips with readable titles in the HTML output;
+          otherwise generic
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T06:32:15Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
-  - custom-legend
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
