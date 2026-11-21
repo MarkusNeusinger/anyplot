@@ -3101,8 +3101,8 @@ class _Scan:
     def _check_expression_argument(self, node: ast.expr, name: str) -> None:
         """One argument plotnine evaluates: a literal (a string walked as code, a number, None), a list or tuple of
         them (`facet_wrap(["a", "b"])`), a call of another expression function (`aes(y=after_stat("count"))`), or a
-        name bound once at module level to a string literal (`col = "x"`, then `aes(x=col)`); anything else may
-        carry a string the walk cannot read."""
+        name bound once at module level to a string literal (`col = "x"` or `col, row = "x", "y"`, then
+        `aes(x=col)`); anything else may carry a string the walk cannot read."""
         if isinstance(node, ast.Constant):
             if isinstance(node.value, str):
                 self._check_expression(node.value, name, node)
@@ -3123,9 +3123,33 @@ class _Scan:
         self.add("banned-call", f"{name} takes its column names as string literals, not as an expression", node)
 
     def _module_string(self, variable: str) -> ast.Constant | None:
-        """The string literal a module-level `variable = "..."` binds, when nothing else binds `variable`."""
+        """The string literal a module-level `variable = "..."` binds, or the item a module-level unpacking
+        `variable, other = "...", "..."` hands it, when nothing else binds `variable`."""
         value = self._module_value(variable)
+        if value is None:
+            value = self._unpacked_module_item(variable)
         return value if isinstance(value, ast.Constant) and isinstance(value.value, str) else None
+
+    def _unpacked_module_item(self, variable: str) -> ast.expr | None:
+        """The item a module-level `a, b = x, y` binds to `variable`, when nothing else in the file binds it: one
+        target, a tuple or list of plain names on the left, a tuple or list of the same length on the right, and no
+        starred item on either side, so the position alone says which item the name gets."""
+        if self._bindings(variable) != 1:
+            return None
+        for statement in self.tree.body:
+            if not isinstance(statement, ast.Assign) or len(statement.targets) != 1:
+                continue
+            names, items = statement.targets[0], statement.value
+            if not isinstance(names, ast.Tuple | ast.List) or not isinstance(items, ast.Tuple | ast.List):
+                continue
+            if len(names.elts) != len(items.elts) or not all(isinstance(name, ast.Name) for name in names.elts):
+                continue
+            if any(isinstance(item, ast.Starred) for item in items.elts):
+                continue
+            for name, item in zip(names.elts, items.elts, strict=True):
+                if isinstance(name, ast.Name) and name.id == variable:
+                    return item
+        return None
 
     def _module_value(self, variable: str, read: Callable[[ast.Name], bool] | None = None) -> ast.expr | None:
         """The value a module-level `variable = value` binds, when nothing else in the file binds `variable`; with
