@@ -1,19 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 network-bipartite: Bipartite Network Graph
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 84/100 | Created: 2026-05-14
+Quality: 84/100 | Updated: 2026-11-21
 """
 
 import os
-import sys
 
-
-# Workaround for module/filename conflict: remove current dir from path persistently
-sys.path = [p for p in sys.path if not p.startswith(os.path.dirname(os.path.abspath(__file__)))]
-
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-from plotnine import (  # noqa: E402
+import numpy as np
+import pandas as pd
+from plotnine import (
     aes,
     element_blank,
     element_line,
@@ -23,6 +18,8 @@ from plotnine import (  # noqa: E402
     geom_segment,
     geom_text,
     ggplot,
+    guide_legend,
+    guides,
     labs,
     scale_color_manual,
     scale_size_continuous,
@@ -32,121 +29,113 @@ from plotnine import (  # noqa: E402
 )
 
 
-np.random.seed(42)
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-COLOR_GENE = "#009E73"  # Okabe-Ito position 1
-COLOR_DISEASE = "#4467A3"  # Okabe-Ito position 3
+# Imprint palette: all eight positions, one per node set in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: gene–disease association network in bioinformatics
-genes = ["BRCA1", "TP53", "PTEN", "EGFR", "KRAS", "PIK3CA", "APC", "RB1", "VHL", "CDKN2A", "MLH1", "ERBB2"]
-diseases = [
-    "Breast Cancer",
-    "Lung Cancer",
-    "Colorectal Cancer",
-    "Prostate Cancer",
-    "Glioblastoma",
-    "Melanoma",
-    "Ovarian Cancer",
-    "Leukemia",
-]
+# Columns: set these to your table's column names
+AIRLINE = "Airline"  # role: source
+AIRPORT = "Airport"  # role: target
 
-# (gene_index, disease_index) edges
-connections = [
-    (0, 0),
-    (0, 6),
-    (1, 0),
-    (1, 1),
-    (1, 2),
-    (1, 4),
-    (2, 0),
-    (2, 3),
-    (3, 1),
-    (3, 4),
-    (4, 1),
-    (4, 2),
-    (5, 0),
-    (5, 2),
-    (5, 3),
-    (6, 2),
-    (7, 0),
-    (7, 7),
-    (8, 5),
-    (9, 1),
-    (9, 5),
-    (10, 2),
-    (10, 7),
-    (11, 0),
-    (11, 1),
-]
+# Data: replace this block with your own edge list, for example df = pd.read_csv("routes.csv")
+routes = {
+    "Delta": ["ATL", "JFK", "LAX", "SEA", "BOS", "MIA"],
+    "United": ["ORD", "DEN", "SFO", "LAX", "JFK", "FRA"],
+    "American": ["DFW", "ORD", "MIA", "JFK", "LAX"],
+    "Southwest": ["DEN", "LAX", "ORD", "ATL"],
+    "JetBlue": ["JFK", "BOS", "MIA"],
+    "Alaska": ["SEA", "SFO", "LAX"],
+    "Lufthansa": ["FRA", "JFK", "ORD", "SFO"],
+    "Emirates": ["DXB", "JFK", "LAX"],
+}
+df = pd.DataFrame(
+    [(airline, airport) for airline, airports in routes.items() for airport in airports], columns=[AIRLINE, AIRPORT]
+)
 
-gene_y = np.linspace(0.05, 0.95, len(genes))
-disease_y = np.linspace(0.10, 0.90, len(diseases))
+# Plot: reads only df and the constants above
+sources = df[AIRLINE].unique().tolist()
+targets = df[AIRPORT].unique().tolist()
+node_sets = [AIRLINE, AIRPORT]
 
-gene_df = pd.DataFrame(
+# Layout: one column per set, first node of each set at the top
+source_nodes = pd.DataFrame(
     {
-        "label": genes,
+        "label": sources,
         "x": 0.0,
-        "y": gene_y,
-        "node_set": "Gene",
-        "degree": [sum(1 for g, _ in connections if g == i) for i in range(len(genes))],
+        "y": np.linspace(1, 0, len(sources)),
+        "node_set": AIRLINE,
+        "degree": df[AIRLINE].value_counts().reindex(sources).to_numpy(),
     }
 )
-disease_df = pd.DataFrame(
+target_nodes = pd.DataFrame(
     {
-        "label": diseases,
+        "label": targets,
         "x": 1.0,
-        "y": disease_y,
-        "node_set": "Disease",
-        "degree": [sum(1 for _, d in connections if d == i) for i in range(len(diseases))],
+        "y": np.linspace(1, 0, len(targets)),
+        "node_set": AIRPORT,
+        "degree": df[AIRPORT].value_counts().reindex(targets).to_numpy(),
     }
 )
-nodes = pd.concat([gene_df, disease_df], ignore_index=True)
+nodes = pd.concat([source_nodes, target_nodes], ignore_index=True)
 
-edges = pd.DataFrame(
-    {
-        "x": [gene_df.iloc[g]["x"] for g, _ in connections],
-        "y": [gene_df.iloc[g]["y"] for g, _ in connections],
-        "xend": [disease_df.iloc[d]["x"] for _, d in connections],
-        "yend": [disease_df.iloc[d]["y"] for _, d in connections],
-    }
-)
+src_pos = source_nodes.set_index("label")["y"]
+tgt_pos = target_nodes.set_index("label")["y"]
+edges = pd.DataFrame({"x": 0.0, "y": df[AIRLINE].map(src_pos), "xend": 1.0, "yend": df[AIRPORT].map(tgt_pos)})
 
-# Plot
+title = "network-bipartite · python · plotnine · anyplot.ai"
+
 plot = (
     ggplot()
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=edges, color=INK_SOFT, alpha=0.30, size=0.6)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=edges, color=INK_SOFT, alpha=0.35, size=0.4)
     + geom_point(aes(x="x", y="y", color="node_set", size="degree"), data=nodes)
-    + geom_text(aes(x="x", y="y", label="label", color="node_set"), data=gene_df, ha="right", nudge_x=-0.04, size=10)
-    + geom_text(aes(x="x", y="y", label="label", color="node_set"), data=disease_df, ha="left", nudge_x=0.04, size=10)
-    + scale_color_manual(values={"Gene": COLOR_GENE, "Disease": COLOR_DISEASE}, name="Node Type")
-    + scale_size_continuous(range=(4, 14), name="Degree")
-    + scale_x_continuous(limits=(-0.55, 1.55), breaks=[0, 1], labels=["Genes", "Diseases"])
-    + scale_y_continuous(limits=(-0.05, 1.05))
-    + labs(title="network-bipartite · plotnine · anyplot.ai", x="", y="")
+    + geom_text(
+        aes(x="x", y="y", label="label", color="node_set"),
+        data=source_nodes,
+        ha="right",
+        nudge_x=-0.06,
+        size=11,
+        show_legend=False,
+    )
+    + geom_text(
+        aes(x="x", y="y", label="label", color="node_set"),
+        data=target_nodes,
+        ha="left",
+        nudge_x=0.07,
+        size=11,
+        show_legend=False,
+    )
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=node_sets, name="Node set")
+    + scale_size_continuous(range=(3, 9), name="Routes")
+    + guides(size=guide_legend(override_aes={"color": INK_SOFT}))
+    + scale_x_continuous(limits=(-0.5, 1.5), breaks=[0, 1], labels=node_sets)
+    + scale_y_continuous(limits=(-0.06, 1.06))
+    + labs(title=title, x="", y="")
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
         panel_border=element_blank(),
         axis_title=element_blank(),
-        axis_text_x=element_text(color=INK, size=22, face="bold"),
+        axis_text_x=element_text(color=INK, size=11, face="bold"),
         axis_text_y=element_blank(),
         axis_ticks_major_y=element_blank(),
         axis_ticks_minor_y=element_blank(),
+        axis_ticks_major_x=element_blank(),
         axis_line_x=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(color=INK, size=24),
+        plot_title=element_text(color=INK, size=12),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(color=INK_SOFT, size=16),
-        legend_title=element_text(color=INK, size=16),
+        legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
+        legend_text=element_text(color=INK_SOFT, size=9),
+        legend_title=element_text(color=INK, size=9),
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
