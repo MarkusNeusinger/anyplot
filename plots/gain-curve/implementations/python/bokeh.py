@@ -1,7 +1,7 @@
 """ anyplot.ai
 gain-curve: Cumulative Gains Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-11
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-21
 """
 
 import os
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.plotting import figure
@@ -23,156 +24,128 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # First series
-SECONDARY = "#4467A3"  # imprint blue — perfect-model reference (red reserved for semantic bad)
-NEUTRAL = "#888888"  # Adaptive gray for reference
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulated customer response model
-np.random.seed(42)
+# Columns: set these to your table's column names
+RESPONDED = "Responded (1 = yes)"  # role: y_true
+SCORE = "Model score (probability)"  # role: y_score
+
+# Data: replace this block with your own table, for example df = pd.read_csv("responses.csv")
+# Simulated customer response model: 15% responders, scores from a classifier
+rng = np.random.default_rng(42)
 n_samples = 1000
-
-# Generate realistic probability scores from a classification model
-positive_ratio = 0.15
-n_positive = int(n_samples * positive_ratio)
+n_positive = int(n_samples * 0.15)
 n_negative = n_samples - n_positive
+df = pd.DataFrame(
+    {
+        RESPONDED: np.concatenate([np.ones(n_positive), np.zeros(n_negative)]),
+        SCORE: np.concatenate([rng.beta(5, 2, n_positive), rng.beta(2, 5, n_negative)]),
+    }
+)
 
-# Scores for positive cases (skewed towards higher probabilities)
-positive_scores = np.random.beta(5, 2, n_positive)
-# Scores for negative cases (skewed towards lower probabilities)
-negative_scores = np.random.beta(2, 5, n_negative)
+# Plot: reads only df and the constants above
+X_LABEL = "Percentage of Population Targeted (%)"
+Y_LABEL = "Percentage of Positive Cases Captured (%)"
 
-y_true = np.concatenate([np.ones(n_positive), np.zeros(n_negative)])
-y_score = np.concatenate([positive_scores, negative_scores])
+# Rank the population by score (descending) and accumulate the positives captured
+ranked = df.sort_values(SCORE, ascending=False)[RESPONDED].to_numpy()
+n_total = len(ranked)
+positive_rate = ranked.mean()
+model = pd.DataFrame(
+    {
+        X_LABEL: np.arange(0, n_total + 1) / n_total * 100,
+        Y_LABEL: np.concatenate([[0.0], np.cumsum(ranked) / ranked.sum() * 100]),
+    }
+)
+# Random selection: the diagonal; perfect model: full capture at the positive rate, flat after
+baseline = pd.DataFrame({X_LABEL: [0, 100], Y_LABEL: [0, 100]})
+perfect = pd.DataFrame({X_LABEL: [0, positive_rate * 100, 100], Y_LABEL: [0, 100, 100]})
 
-# Shuffle to mix positives and negatives
-shuffle_idx = np.random.permutation(n_samples)
-y_true = y_true[shuffle_idx]
-y_score = y_score[shuffle_idx]
-
-# Calculate cumulative gains curve
-# Sort by predicted probability (descending)
-sorted_idx = np.argsort(y_score)[::-1]
-y_true_sorted = y_true[sorted_idx]
-
-# Cumulative gains
-cumulative_positives = np.cumsum(y_true_sorted)
-total_positives = np.sum(y_true)
-
-# Percentages for axes
-pct_population = np.arange(1, n_samples + 1) / n_samples * 100
-pct_captured = cumulative_positives / total_positives * 100
-
-# Add origin point for complete curve
-pct_population = np.insert(pct_population, 0, 0)
-pct_captured = np.insert(pct_captured, 0, 0)
-
-# Random baseline (diagonal line)
-baseline = np.array([0, 100])
-
-# Perfect model curve
-positive_pct = positive_ratio * 100
-perfect_x = np.array([0, positive_pct, 100])
-perfect_y = np.array([0, 100, 100])
-
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="gain-curve · bokeh · anyplot.ai",
-    x_axis_label="Percentage of Population Targeted (%)",
-    y_axis_label="Percentage of Positive Cases Captured (%)",
+    width=3200,
+    height=1800,
+    title="gain-curve · python · bokeh · anyplot.ai",
+    x_axis_label=X_LABEL,
+    y_axis_label=Y_LABEL,
     x_range=(0, 100),
     y_range=(0, 105),
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Create data sources
-source_model = ColumnDataSource(data={"x": pct_population, "y": pct_captured})
-source_baseline = ColumnDataSource(data={"x": baseline, "y": baseline})
-source_perfect = ColumnDataSource(data={"x": perfect_x, "y": perfect_y})
+curves = [
+    ("Model Gain Curve", model, IMPRINT_PALETTE[0], 8, "solid", 1.0),
+    ("Random Baseline", baseline, INK_SOFT, 6, "dashed", 0.8),
+    ("Perfect Model", perfect, IMPRINT_PALETTE[2], 6, "dotted", 1.0),
+]
+renderers = []
+for label, curve, color, width, dash, alpha in curves:
+    line = p.line(
+        x=X_LABEL,
+        y=Y_LABEL,
+        source=ColumnDataSource(curve),
+        line_color=color,
+        line_width=width,
+        line_dash=dash,
+        line_alpha=alpha,
+        legend_label=label,
+    )
+    renderers.append(line)
+    p.add_tools(
+        HoverTool(
+            renderers=[line],
+            tooltips=[
+                (label, ""),
+                ("Population %", f"@{{{X_LABEL}}}{{0.0}}"),
+                ("Captured %", f"@{{{Y_LABEL}}}{{0.0}}"),
+            ],
+        )
+    )
 
-# Plot the curves
-# Model gain curve (brand green - primary series)
-model_line = p.line(
-    x="x", y="y", source=source_model, line_color=BRAND, line_width=4, line_alpha=0.9, legend_label="Model Gain Curve"
-)
-
-# Random baseline (neutral gray)
-baseline_line = p.line(
-    x="x",
-    y="y",
-    source=source_baseline,
-    line_color=INK_SOFT,
-    line_width=3,
-    line_dash="dashed",
-    line_alpha=0.6,
-    legend_label="Random Baseline",
-)
-
-# Perfect model (secondary color)
-perfect_line = p.line(
-    x="x",
-    y="y",
-    source=source_perfect,
-    line_color=SECONDARY,
-    line_width=3,
-    line_dash="dotted",
-    line_alpha=0.8,
-    legend_label="Perfect Model",
-)
-
-# Add hover tool for interactivity
-hover_model = HoverTool(renderers=[model_line], tooltips=[("Population %", "@x{0.0}"), ("Captured %", "@y{0.0}")])
-hover_baseline = HoverTool(renderers=[baseline_line], tooltips=[("Population %", "@x{0.0}"), ("Baseline %", "@y{0.0}")])
-hover_perfect = HoverTool(renderers=[perfect_line], tooltips=[("Population %", "@x{0.0}"), ("Perfect %", "@y{0.0}")])
-p.add_tools(hover_model, hover_baseline, hover_perfect)
-
-# Style legend
-if p.legend:
-    p.legend.background_fill_color = ELEVATED_BG
-    p.legend.border_line_color = INK_SOFT
-    p.legend.border_line_width = 1
-    p.legend.label_text_color = INK_SOFT
-    p.legend.label_text_font_size = "18pt"
-    p.legend.glyph_height = 30
-    p.legend.glyph_width = 50
-    p.legend.spacing = 15
-    p.legend.padding = 20
-    p.legend.location = "center"
-
-# Styling
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-
-# Grid styling
-p.xgrid.grid_line_alpha = 0.10
-p.ygrid.grid_line_alpha = 0.10
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-
-# Background
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
-# Save HTML and screenshot with Selenium
+p.legend.location = "bottom_right"
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.border_line_width = 2
+p.legend.label_text_color = INK_SOFT
+p.legend.label_text_font_size = "34pt"
+p.legend.glyph_height = 50
+p.legend.glyph_width = 90
+p.legend.spacing = 14
+p.legend.padding = 24
+p.legend.margin = 40
+
+# Save HTML and screenshot with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -186,6 +159,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
