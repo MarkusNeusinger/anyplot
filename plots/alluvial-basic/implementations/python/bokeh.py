@@ -1,7 +1,7 @@
 """anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 49/100 | Updated: 2026-11-20
+Quality: pending | Updated: 2026-11-20
 """
 
 import os
