@@ -2,48 +2,46 @@ library: bokeh
 language: python
 specification_id: point-basic
 created: '2025-12-30T09:33:27Z'
-updated: '2026-05-11T17:16:01Z'
-generated_by: claude-haiku
-workflow_run: 25685200015
+updated: '2026-11-21T03:09:28Z'
+generated_by: claude-sonnet
+workflow_run: 44859028303
 issue: 2551
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 83
 review:
   strengths:
-  - Perfect text legibility in both themes with explicit font sizing and proper theme-adaptive
-    colors
-  - Flawless spec compliance with all required features (points, whiskers, labels,
-    reference line) correctly implemented
-  - Excellent code quality with clean KISS structure, proper seeding (np.random.seed(42)),
-    and reproducibility
-  - Idiomatic bokeh usage with proper Whisker glyph with tee caps, Span for reference
-    lines, and theme-token pattern
-  - Correct theme adaptation ensuring data colors (#009E73) remain identical across
-    light and dark renders while chrome adapts
-  - Well-chosen realistic data example showing treatment effects with confidence intervals
-    and variation across categories
+  - Bokeh's native Whisker annotation with TeeHead heads draws capped intervals at
+    both ends of every row straight from ColumnDataSource(df)
+  - x_range computed with Range1d from the bounds and the null value, so every interval
+    and cap fits inside the plot area
+  - 'Theme tokens threaded through every chrome element; #009E73 data identical in
+    both renders, page-colored marker outline keeps points distinct on their lines'
+  - Faint value-axis grid only, with the categorical-axis grid dropped
+  - 'Clean adaptable-code layout: column-name constants drive the axis titles and
+    every glyph'
   weaknesses:
-  - 'Design Excellence could be elevated beyond library defaults with custom aesthetic
-    choices (DE-01: 6/8 instead of 8/8)'
-  - No visual hierarchy or emphasis to guide viewer attention to key insights such
-    as Treatment D crossing zero or Treatment C having highest effect
+  - 'DQ-02 (both): the arms are labelled Treatment A–E with a generic ''Effect Size'',
+    which reads as abstract → named interventions (for example drug or therapy names).
+    Likely cause: the TREATMENT values in the data block.'
+  - 'Suggestion: ordering the treatments by estimate would make the ranking easier
+    to read, with Control kept at the bottom.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly styled for light theme
-      Chrome: Title "point-basic · bokeh · anyplot.ai" clearly visible in dark text (28pt); Y-axis label "Treatment Group" and category names (Treatment A-E, Control) in dark gray; X-axis label "Effect Size" descriptive; all text readable with no overlap
-      Data: Six green (#009E73) circular markers with horizontal whiskers extending to confidence interval bounds; tee caps at endpoints; dashed reference line at effect size = 0 for context
-      Legibility verdict: PASS - All text elements readable; proper contrast; no dark-on-dark or light-on-light failures
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: bold title 'point-basic · python · bokeh · anyplot.ai' in dark ink at top left; italic axis titles 'Effect Size' (x) and 'Treatment Group' (y); x ticks -1 to 4 and category labels Treatment A-E and Control in dark gray; faint vertical grid only; thin frame. All readable.
+      Data: six #009E73 circular markers with a page-colored outline, each on a green horizontal interval line with tee caps at both ends; dashed INK_SOFT reference line at zero; every interval fully inside the plot area.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly styled for dark theme
-      Chrome: Title visible in light text; Y-axis label and category names in light gray; X-axis label in light color; all text readable with proper contrast
-      Data: Green (#009E73) markers and whiskers identical to light render - confirming data colors remain constant across themes; tee caps visible; reference line at zero maintains visibility
-      Legibility verdict: PASS - All text elements readable in light colors; no dark-on-dark failures (no black text on dark background); theme adaptation correct
+      Background: warm near-black #1A1A17, 3200x1800.
+      Chrome: title in light ink, axis titles light, tick and category labels light gray; no dark-on-dark text; faint grid visible.
+      Data: identical #009E73 markers, whiskers and caps as the light render; dashed reference line in light gray, clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,75 +52,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly sized (title 28pt, labels 22pt, ticks 18pt);
-          perfectly readable in both themes
+        comment: 'Title 50pt, axis titles 42pt, ticks 34pt (library-prompt sizes);
+          dark text on #FAF8F1 and light text on #1A1A17, all readable'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; y-axis labels well-spaced; all elements fully
-          readable
+        comment: No text collisions; category labels well spaced; the Control marker
+          sits on the null line by its data value
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points and whiskers clearly visible; tee caps at endpoints visible;
-          sizing optimal for 6 categories
+        comment: Six 34 px markers with a page-colored outline sit clearly on 7 px
+          interval lines; 44 px tee caps visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) strong contrast on both surfaces; white edges provide
-          definition; CVD-safe
+        comment: 'Single series in #009E73, strong contrast on both surfaces; no color-only
+          encoding'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas; balanced margins; no cut-off; excellent
-          proportions
+        comment: 3200x1800 canvas (gate passed); plot area fills the canvas with balanced
+          margins; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (Treatment Group, Effect Size); correct title
-          format
+        comment: '''Effect Size'' and ''Treatment Group'' read as text for a reader;
+          effect size is unitless'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; backgrounds #FAF8F1/#1A1A17 ✓; text colors
-          theme-adaptive ✓; reference line uses INK_SOFT ✓'
+        comment: 'First series #009E73; backgrounds #FAF8F1 / #1A1A17; chrome from
+          INK / INK_SOFT tokens; data color identical across themes'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Uses Okabe-Ito palette; reference line shows intentionality; follows
-          configured defaults rather than novel choices
+        comment: 'The style-guide baseline: theme tokens, explicit type hierarchy;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Reference line is thoughtful; toolbar removed; minimal grid on x-axis
-          only; some refinement visible
+        comment: 'Grid chosen for this chart: the horizontal grid on the categorical
+          axis is dropped, only a faint value-axis grid remains; range padded from
+          the data so caps never touch the frame'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Plot displays data but lacks visual hierarchy; no emphasis on key
-          comparisons or insights
+        passed: true
+        comment: Data displayed with the reference line the Notes suggest; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +131,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal point estimate plot with confidence intervals
+        comment: Horizontal point estimate plot; only the one null reference line
+          the Notes allow; no additions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Points, whiskers, category labels, reference line all present
+        comment: Distinct markers, caps at both ends of every interval, horizontal
+          layout, reference line at zero; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Effect Size (numeric); Y: Treatment Group (categorical); all
-          data visible'
+        comment: Estimate on x, category on y; x range computed from the bounds and
+          the null value spans every interval in full; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; legend not needed for single series
+        comment: Title 'point-basic · python · bokeh · anyplot.ai'; legend N/A for
+          a single series
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -161,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows estimates, intervals, negative effects, varying widths, control
-          baseline
+        comment: Different interval widths, a negative estimate, intervals crossing
+          zero, a control at the null
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Real-world plausible treatment effect scenario; neutral; comprehensible
+        passed: false
+        comment: Plausible treatment-effect scenario but the arms are labelled Treatment
+          A-E (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Effect sizes -0.5 to 3.2 realistic; intervals proportional; values
-          sensible
+        comment: Effect sizes -0.5 to 3.2 with half-widths 0.4-1.5 are sensible; no
+          Check values in the Notes; bounds computed as estimate +/- half-width
     code_quality:
       score: 10
       max: 10
@@ -185,57 +188,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure; no functions or classes; no over-engineering
+        comment: Linear script in the adaptable-code zones; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic data generation
+        comment: Fully deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no redundant dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; theme-token pattern elegant; no fake functionality
+        comment: Appropriate complexity; native Whisker instead of hand-drawn segments;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium with the
+          CDP viewport pin; current Bokeh 3 API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: figure(), ColumnDataSource, scatter(), Whisker with TeeHead, Span,
-          headless Chrome per bokeh.md
+        comment: ColumnDataSource(df) with column-name constants, Range1d from the
+          data, Span and Whisker as layout annotations
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
         passed: true
-        comment: Whisker glyph (bokeh-specific), Span for reference line, ColumnDataSource
-          pattern
+        comment: Bokeh's Whisker annotation with TeeHead arrow heads draws the capped
+          intervals natively from the source
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T03:05:48Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
   patterns:
-  - data-generation
+  - columndatasource
+  - explicit-figure
   dataprep: []
   styling:
-  - theme-adaptive
+  - minimal-chrome
+  - grid-styling
