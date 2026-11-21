@@ -2,44 +2,51 @@ library: pygal
 language: python
 specification_id: forest-basic
 created: '2025-12-27T19:25:07Z'
-updated: '2026-05-11T01:18:48Z'
-generated_by: claude-haiku
-workflow_run: 25645130934
+updated: '2026-11-21T00:34:27Z'
+generated_by: claude-sonnet
+workflow_run: 44843971554
 issue: 2378
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/pygal/plot-dark.html
-quality_score: 92
+quality_score: 83
 review:
   strengths:
-  - Perfect theme-adaptive implementation with identical data colors across light
-    and dark renders
-  - All text explicitly sized and perfectly readable in both themes
-  - Clean, Pythonic code with appropriate complexity for forest plot
-  - Realistic, comprehensive meta-analysis data showing heterogeneity across studies
-  - Professional typography hierarchy and visual structure achieved through custom
-    Style object
+  - Pooled estimate and interval computed by inverse-variance weighting from the study
+    CIs (-0.42 [-0.54, -0.29]) and drawn as a filled Imprint-blue diamond set apart
+    from the green study markers
+  - Per-value pygal node config sizes each effect marker by study weight (area proportional),
+    keeping the smallest visible and the largest inside its row
+  - Row labels built through pygal's dict y_labels carry the study name and its CI
+    bounds, readable in both themes
+  - Dashed null line at 0 spans every study row and the pooled row; HTML output keeps
+    pygal's native tooltips
   weaknesses:
-  - Design Excellence could reach higher with additional custom polish such as refined
-    color accents or specialized markers
+  - 'VQ-07 (both): the vertical x guide lines render near-black (about #1A1A19 on
+    light, #010101 on dark) instead of a theme-adaptive muted tone, so they sit heavy
+    on the light page and disappear on the dark page → draw them in INK_MUTED / a
+    soft ink token so they are subtle but visible in both themes. Likely cause: Style
+    guide_stroke_color / major_guide_stroke_color left at pygal''s default black.'
+  - 'Suggestion: the gap between the pooled row and the x-axis could be tightened
+    slightly by reducing the lower y padding (-0.7).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title "forest-basic · pygal · anyplot.ai" clearly visible in dark text (28px); X-axis label "Mean Difference (95% CI)" descriptive with units; all study names with CI bounds [ci_lower, ci_upper] readable in dark text (18px); vertical grid subtle but visible
-      Data: Brand green (#009E73) whisker lines for confidence intervals, circular dots for effect estimates, vertical dashed reference line at null effect (x=0), diamond shape for pooled estimate at bottom
-      Legibility verdict: PASS - All text has excellent contrast against light background, no dark-on-dark issues, all data elements clearly distinguishable
+      Background: warm off-white #FAF8F1 (sampled 250,248,241).
+      Chrome: title 'forest-basic · python · pygal · anyplot.ai' in dark ink at the top centre; ten study rows (Smith 2023 ... Anderson 2020, chronological) plus 'Pooled' row labelled on the left with CI bounds in brackets; x ticks -1.2 to 0.2; x title 'Mean Difference (95% CI)'. All dark text readable. Vertical dotted guide lines render near-black and fairly heavy.
+      Data: #009E73 green CI lines and weight-sized green dots per row; filled Imprint-blue (#4467A3) diamond in the bottom row spanning about -0.54 to -0.29, centred at -0.42; gray dashed null line at 0 through all rows.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title in light text (#F0EFE8) clearly visible; X-axis label readable; all study names in light text with no dark-on-dark failures; grid subtle and visible
-      Data: Brand green (#009E73) whiskers, dots, and diamond - identical to light render, confirming perfect theme-adaptive implementation where only chrome flips
-      Legibility verdict: PASS - All text has excellent contrast against dark background, no dark-on-dark text issues, data colors unchanged from light render ensuring consistency
+      Background: warm near-black #1A1A17 (sampled 26,26,23).
+      Chrome: title, row labels, ticks and x title in light ink, all readable; no dark-on-dark text. The vertical guide lines render near-black and are essentially invisible on the dark page.
+      Data: identical green CI lines and dots and the same blue diamond as the light render; null line light gray dashed. Brand green clearly visible.
+      Legibility verdict: PASS (guide lines invisible, scored under VQ-07)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,74 +54,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, labels 22px, ticks 18px - all explicitly set and perfectly
-          readable in both themes
+        comment: Title 66 px, row labels and ticks 40 px, x-axis title larger; all
+          explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All study names and CI values fully readable, no overlapping text
+        comment: No text collisions; row labels sit left of the plot area, diamond
+          in its own row
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Whiskers (width 6), dots (size 14), diamond (width 4), reference
-          line (width 3) all optimally visible
+        comment: Weight-scaled markers (r about 16-22 px) clearly visible; CI strokes
+          and the filled diamond visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast with brand green (#009E73) against both light and dark
-          backgrounds; dashed reference line easily distinguishable
+        comment: Green studies vs blue diamond plus gray dashed null line; distinct
+          by shape as well as hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px landscape format with 120px margins, plot fills ~65%
-          of canvas, balanced whitespace
+        comment: 3200x1800 canvas, balanced margins, title well inside the width,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Mean Difference (95% CI)' descriptive with context; title
-          format correct
+        comment: x-axis 'Mean Difference (95% CI)' names the measure and interval;
+          rows carry study names
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Brand green (#009E73) for data; backgrounds #FAF8F1 (light) / #1A1A17
-          (dark); all text colors theme-adaptive; both renders perfect'
+        passed: false
+        comment: Imprint green first, pooled diamond Imprint blue, backgrounds correct;
+          but the x guide lines render near-black in both themes instead of a theme
+          token (defect line)
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Well-designed custom style with professional typography hierarchy;
-          could explore additional polish beyond library defaults
+        comment: 'Style-guide baseline: explicit sizes, theme tokens; CI bounds appended
+          to row labels are a standard forest-plot table cue, nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid, minimal visual weight, generous margins, attention to
-          stroke styling; solid refinement without exceptional polish
+        comment: Vertical guides only, no y guides; nothing refined beyond the grid
+          rules
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: false
-        comment: Forest plot clearly communicates meta-analysis results; reference
-          line and pooled estimate create clear visual hierarchy
+        comment: Data displayed as the spec asks; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,28 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct forest plot with all essential elements
+        comment: 'Correct forest plot, basic variant: no extra layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: effect sizes, CIs, reference line, pooled
-          estimate, study labels'
+        comment: Rows named and chronologically ordered (C1), filled pooled diamond
+          in its own bottom row with tips at the pooled CI (C2), dashed null line
+          at 0 through all rows incl. the diamond row (C3), marker area proportional
+          to weight (C4), no extra layers (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (effect size), Y-axis (study ordering), all data visible with
-          appropriate range
+        comment: x = effect size, row = study; every interval inside the axis range;
+          markers at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'forest-basic · pygal · anyplot.ai' correct; legend disabled
-          appropriately for single-series
+        comment: Title 'forest-basic · python · pygal · anyplot.ai' correct; legend
+          hidden (N/A for a single analysis)
     data_quality:
       score: 15
       max: 15
@@ -155,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple studies with varying CIs, both positive
-          and negative effects, pooled estimate, heterogeneity evident'
+        comment: 'Intervals of varied width, three crossing the null, pooled diamond
+          far narrower: shows every aspect'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real study names (Smith, Johnson, Williams, etc.), years 2020-2023,
-          plausible medical meta-analysis scenario
+        comment: Plausible RCT mean-difference meta-analysis, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Effect sizes (-0.72 to 0.22) and CIs factually plausible for clinical
-          trial meta-analysis
+        comment: 'Pooled estimate computed by inverse-variance weighting from the
+          study CIs: -0.42 [-0.54, -0.29], checked by recomputation and on the axis;
+          values plausible'
     code_quality:
       score: 10
       max: 10
@@ -180,34 +190,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme → data → chart → render; no unnecessary
-          functions'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, fully reproducible
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pygal, Style imported; all used
+        comment: os, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, clear, no over-engineering or fake functionality
+        comment: Appropriate complexity; pooled estimate computed with vectorized
+          pandas
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -215,22 +225,28 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: Correct use of XY chart, custom Style, .add() series, render methods;
-          solid idiomatic patterns
+        comment: pygal.XY with dict y_labels carrying custom row labels, per-series
+          stroke_style and fill; idiomatic beyond the mandated Style
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: false
-        comment: Custom Style with theme-adaptive colors, manual forest plot construction,
-          custom y-axis labels with CI values
+        comment: 'Per-value node config ({''node'': {''r'': ...}}) sizes each dot
+          individually, a pygal-specific feature; HTML output keeps tooltips'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T00:30:25Z'
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
