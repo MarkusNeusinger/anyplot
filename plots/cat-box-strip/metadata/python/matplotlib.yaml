@@ -2,49 +2,52 @@ library: matplotlib
 language: python
 specification_id: cat-box-strip
 created: '2025-12-30T16:29:49Z'
-updated: '2026-05-13T05:33:17Z'
-generated_by: claude-haiku
-workflow_run: 25780220870
+updated: '2026-11-21T08:35:02Z'
+generated_by: claude-sonnet
+workflow_run: 44885110197
 issue: 2695
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 80
 review:
   strengths:
-  - Perfect theme-adaptive rendering with both light and dark renders passing legibility
-    checks
-  - 'Correct palette compliance: brand green #009E73 for all data elements, orange
-    #E69F00 for median accent'
-  - 'Excellent data visualization: varied distributions (normal, bimodal with outliers,
-    moderate) showcase boxplot capabilities'
-  - Clean code structure using proper matplotlib idioms with theme tokens applied
-    to all chrome elements
-  - 'Strong visual hierarchy: jittered strip points with transparency and semi-transparent
-    boxes make distribution readable'
-  - 'All spec requirements met: box summaries (median, quartiles, whiskers), individual
-    points with jitter, clear labels'
+  - Box plot and strip overlay share one data-driven value axis (padded min/max),
+    so boxes and point clouds compare directly without a forced zero
+  - 'Theme tokens threaded through every chrome element: title, labels, ticks, spines,
+    grid and box outlines flip cleanly between #FAF8F1 and #1A1A17'
+  - Translucent small points with a page-colored edge keep the boxes, red median lines
+    and whiskers readable through the strip in both themes
+  - Example data shows different centres, spreads, sample sizes and two-sided outliers
+    in Treatment B
   weaknesses:
-  - 'Library Mastery score moderate: standard matplotlib patterns without distinctive
-    library-specific features'
-  - 'Design Excellence could be elevated: median line orange accent is nice but design
-    is fairly conventional; consider more sophisticated visual refinement in future
-    iterations'
+  - 'SC-03 (both): every outlier appears twice, once as a boxplot flier at the category
+    centre (dark-edged marks at 15, 35, 80 and 82 in Treatment B) and once as a jittered
+    strip point, so those observations are over-counted → each observation drawn once.
+    Likely cause: ax.boxplot with flierprops while the strip scatter already draws
+    all values; pass showfliers=False.'
+  - 'DQ-02 (both): the groups are labelled ''Control'', ''Treatment A''–''Treatment
+    C'' and the measure ''Response value (score)'', which read as generic placeholders
+    → name the treatments and the measured outcome (for example a pain score on a
+    0–100 scale under named dosing regimens). Likely cause: the GROUP/RESPONSE constants
+    and the label list.'
+  - 'Suggestion: MEDIAN_COLOR could reference IMPRINT_PALETTE[4] instead of repeating
+    the hex.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) providing soft, readable surface
-      Chrome: Title "cat-box-strip · matplotlib · anyplot.ai" in dark ink clearly visible at top; x-axis labeled "Treatment Group" with four category names (Control, Treatment A/B/C) legible; y-axis labeled "Response Value (score)" with tick marks from 0-100 all readable; subtitle grid (y-axis only) subtle and non-competing
-      Data: Four box plots with overlaid jittered strip points using brand green (#009E73); median lines in orange (#E69F00) clearly accent each distribution; whiskers and caps in soft gray (#4A4A44); outliers distinctly marked; individual points range approximately 15-85 on response scale
-      Legibility verdict: PASS - All text readable in light theme; data colors pop against warm off-white surface; treatment distributions clearly differentiated with higher values in Treatment A
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'cat-box-strip · python · matplotlib · anyplot.ai' in dark ink at top; x-axis 'Treatment group' with Control, Treatment A, B, C; y-axis 'Response value (score)' with ticks 20-80; subtle horizontal grid; left/bottom spines in ink-soft. All text readable.
+      Data: four translucent #009E73 boxes with ink-soft outlines, whiskers and caps, #AE3030 median lines; ~150 small translucent green points jittered within each band; y range ~11-88 from the data. Treatment B outliers at 15, 35, 80, 82 appear twice (flier at centre plus jittered point).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) providing cohesive dark surface
-      Chrome: Title, axis labels, and tick labels all rendered in light text (#F0EFE8 and #B8B7B0) against dark background with excellent contrast; no dark-on-dark conflicts; grid lines subtle yet visible
-      Data: Data colors identical to light render—brand green (#009E73) boxes and strip points maintain consistency, orange median lines (#E69F00) equally visible; whiskers and caps in light gray (#B8B7B0); visual structure preserved across theme flip
-      Legibility verdict: PASS - All text readable in dark theme; data elements stand out clearly against dark surface; theme adaptation is flawless with no legibility degradation
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, whiskers/caps/spines in light grey, grid faint but visible; no dark-on-dark text.
+      Data: identical #009E73 points and box fill (darker-looking over the dark page at alpha 0.4) and #AE3030 medians; layout identical to light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,74 +58,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both themes with
-          correct color adaptation
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, all set explicitly; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No problematic overlaps; jitter and transparency manage point density
-          well
+        comment: No text collisions; point overlap in the dense Treatment B core is
+          permitted by C5
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boxes, points, whiskers, and outliers all clearly visible and distinguishable
+        comment: '150 points at s=22, alpha 0.6 with a page-colored edge: visible
+          yet light enough for the boxes to read through (C3)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety; adequate contrast throughout
+        comment: Green marks, ink-soft box chrome and a red median line differ in
+          luminance as well as hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape well-proportioned; margins generous; all data within
-          view
+        comment: 3200x1800, axes fill most of the canvas, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive with units
+        comment: '''Treatment group'', ''Response value (score)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for all data elements; background colors correct
-          for both themes; theme adaptation flawless'
+        comment: 'Imprint #009E73 for all data, #AE3030 median accent identical in
+          both renders; #FAF8F1 / #1A1A17 backgrounds, theme-correct chrome'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful use of orange accent for median lines adds visual hierarchy;
-          semi-transparent boxes with borders show intentional design
+        passed: false
+        comment: The style-guide baseline, nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed (top/right); grid subtle; whitespace generous; clean
-          overall appearance
+        passed: false
+        comment: 'Top/right spines removed, subtle y grid: the baseline'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Varied distributions showcase boxplot range; Treatment A visually
-          prominent; distribution comparison clear
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -130,28 +131,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box plot with strip overlay; both components functional
+        comment: Box plot with jittered strip overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median, quartiles, whiskers, individual points with jitter all present
+        comment: C1 boxes, medians, whiskers with points over them; C2 jitter inside
+          each band; C3 translucent points; C4 data-driven shared y-axis not forced
+          to zero
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Categories on x-axis, response values on y-axis; range accommodates
-          all data
+        passed: false
+        comment: 'Every outlier is drawn twice: once as a boxplot flier at the category
+          centre and once as a jittered strip point (defect line)'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend omitted appropriately for single-series
+        comment: Title 'cat-box-strip · python · matplotlib · anyplot.ai'; legend
+          N/A for a single series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -159,22 +163,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All plot type features shown: median, quartiles, whiskers, points,
-          outliers, distribution shape'
+        comment: Different spreads, centres, sample sizes (30-45) and outliers on
+          both sides in Treatment B
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Clinical treatment comparison plausible; response scores 0-100 realistic;
-          group sizes 30-45 observations; distributions realistic
+        passed: false
+        comment: Clinical response scores are plausible, but the groups are 'Treatment
+          A-C' and the measure a generic 'Response value' (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range 0-100 sensible for score data; accommodates outliers
-          without clipping
+        comment: 'Checked: medians ~48/64/44/55 off the axis match the generator means
+          50/65/45/55; outliers at 15, 80, 82 as in line 36; scores inside 0-100.
+          No check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -184,51 +189,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; direct, linear code
+        comment: Linear, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib.pyplot, numpy'
+        comment: os, pyplot, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No unnecessary complexity; proper matplotlib API usage; no fake UI
+        comment: Appropriate complexity; quartiles computed by ax.boxplot
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses tick_labels parameter (correct for
-          3.9+)
+        comment: plot-{THEME}.png at dpi=400 without bbox_inches='tight'; tick_labels
+          (3.9+ API)
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Good use of boxplot(), scatter(), and axes pattern; theme tokens
-          properly applied
+        passed: false
+        comment: Correct Axes API, boxplot prop dicts; standard patterns
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Standard matplotlib patterns; box-strip combination is conventional;
-          no distinctive library-specific features
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T08:31:28Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -236,6 +242,8 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
