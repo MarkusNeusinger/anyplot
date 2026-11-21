@@ -101,9 +101,11 @@ class TestTheEvalRuns:
 
         bound, columns = await outcome(runtime, sid)
         # The change the user asked for is stored; the column nobody asked for is not, and the bindings stay.
+        assert before == {"x": "orders"}  # the paste's own binding: the one number column on x, y open
         assert columns == ["period", "orders"] and bound == before
-        message = DATE_OFFER_FILLED_MESSAGE if "x" in before else DATE_OFFER_MESSAGE
-        assert message.format(roles="x") in answers(fake, 2)
+        # x holds a column, so the refusal says nothing about a role that waits.
+        assert DATE_OFFER_FILLED_MESSAGE.format(roles="x") in answers(fake, 2)
+        assert DATE_OFFER_MESSAGE.format(roles="x") not in answers(fake, 2)
         held = answers(fake, 3)
         assert (
             OFFER_HELD_MESSAGE.format(roles="x") in held and MADE_NOW_LINE.format(name="period (decimal year)") in held
@@ -136,6 +138,24 @@ class TestTheEvalRuns:
         # x holds a column, so the refusal says nothing about a role that waits.
         assert DATE_OFFER_FILLED_MESSAGE.format(roles="x") in answers(fake, 2)
         assert OFFER_HELD_MESSAGE.format(roles="x") in answers(fake, 3)
+
+    async def test_a_date_refused_on_an_open_required_role_says_that_role_waits(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """y holds no column after the paste, so the refusal of the dates on y names the role that waits and what the
+        next turn lists for it."""
+        script = default_script()
+        script["root"] = [prepare_call(READ_MONTHS), bindings_call(x="orders", y="period"), REPLY]
+        fake = swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime, MONTHS)
+
+        await say(client, sid, {"text": "period is month and year (MM/YYYY); read it as dates."})
+
+        refused = answers(fake, 2)
+        assert DATE_OFFER_MESSAGE.format(roles="y") in refused
+        assert DATE_OFFER_FILLED_MESSAGE.format(roles="y") not in refused
+        bound, _ = await outcome(runtime, sid)
+        assert bound == {"x": "orders"}
 
 
 class TestTheBoundary:
