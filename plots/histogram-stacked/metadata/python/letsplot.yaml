@@ -2,51 +2,49 @@ library: letsplot
 language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:42:26Z'
-updated: '2026-05-12T05:44:09Z'
-generated_by: claude-haiku
-workflow_run: 25715718736
+updated: '2026-11-21T04:58:43Z'
+generated_by: claude-sonnet
+workflow_run: 44868090272
 issue: 2601
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - Perfect text legibility in both themes with no dark-on-dark or light-on-light
-    failures
-  - Correct Okabe-Ito color palette with first series as brand green (#009E73)
-  - Clean, professional appearance with appropriate use of theme_minimal() and subtle
-    grid
-  - Excellent data representation showing group distributions and composition clearly
-  - Proper stacking with white bin edges for visual separation and definition
-  - All required specification features implemented correctly (binning, stacking,
-    legend, labels)
-  - Deterministic random seed (42) ensures reproducible results
-  - Correct output format with both PNG (3x scale for 4800x2700) and interactive HTML
+  - Native geom_histogram(binwidth=5, position='stack') computes shared bin boundaries
+    and stacking for all groups in one call
+  - Theme tokens threaded through every chrome element; both renders read cleanly
+    with no dark-on-dark text
+  - Page-colored segment separators keep stacked segments distinct in both themes
+  - Full eight-position Imprint palette with column constants, so the code adapts
+    to other group counts
+  - Correct 3200x1800 canvas via ggsize(800, 450) and scale=4, plus native interactive
+    HTML export with hover tooltips
   weaknesses:
-  - Design excellence is minimal - uses default styling without distinctive visual
-    refinement or advanced techniques
-  - No custom visual hierarchy or emphasis to guide viewer attention beyond color
-    differentiation
-  - Could benefit from refined color customization or additional styling elements
-    to elevate aesthetic sophistication
+  - 'DQ-02 (both): the three groups are labelled ''Class A'', ''Class B'', ''Class
+    C'', which read as generic placeholders → named classes or sections a school would
+    use (e.g. ''10a'', ''10b'', ''10c'' or the course names). Likely cause: the CLASS
+    label list in the Data block.'
+  - 'Suggestion: anchor the bins on round score boundaries (e.g. boundary=0 or center=2.5)
+    so the bars line up with the 40/50/60 ticks instead of starting at 39.'
+  - 'Suggestion: a y-only grid at the style guide''s 15 % opacity would quiet the
+    vertical lines that cross every bar.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, clean and inviting
-      Chrome: Title "histogram-stacked · letsplot · anyplot.ai" clearly visible in dark text. Axis labels "Test Score (points)" and "Number of Students" prominently displayed. Tick labels (40-105 on x-axis, 0-75 on y-axis) all readable in secondary text color. Grid lines subtle and non-competing.
-      Data: Three stacked segments per bin - Class A in green (#009E73, position 1), Class B in orange (#D55E00, position 2), Class C in blue (#0072B2, position 3). All colors distinct and clearly visible. Bars properly stacked with white separators for definition.
-      Legend: "Class" title with three labels positioned right side, clearly legible
-      Legibility verdict: PASS - all text readable at full resolution, excellent contrast
+      Background: warm off-white #FAF8F1 across canvas and panel, 3200x1800.
+      Chrome: title 'histogram-stacked · python · letsplot · anyplot.ai' top left in dark ink; axis titles 'Test Score (points)' and 'Number of Students'; tick labels 40-100 and 0-70 in soft dark grey; mid-grey major grid on both axes, no minor grid; legend 'Class' on the right on a #FFFDF6 box. All readable.
+      Data: 13 stacked 5-point bins from about 39 to 104; Class A #009E73 at the bottom, Class B #C475FD in the middle, Class C #4467A3 on top, separated by thin off-white outlines; peak total 76 in the 69-74 bin; thin segments in the tails.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, professional and refined
-      Chrome: Title and axis labels rendered in light text, all clearly readable against dark surface. No dark-on-dark issues. Tick labels visible. Grid lines subtle but present.
-      Data: Colors identical to light render - Class A green, Class B orange, Class C blue. Stacking composition clear. Bars well-defined.
-      Legend: Clear and readable on right side
-      Legibility verdict: PASS - perfect theme adaptation, all elements visible, no legibility failures
+      Background: warm near-black #1A1A17, 3200x1800.
+      Chrome: title, axis titles and ticks in light ink; light-grey grid; legend box #242420 with light text. No dark-on-dark text.
+      Data: identical fills and stacking to the light render; separators flip to the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,49 +55,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (24pt), axis labels (20pt), ticks (16pt), legend (16pt) all
-          explicitly sized and fully readable in both themes
+        comment: Title 16, axis titles 14, ticks and legend 12 (above the library
+          prompt's starting sizes); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text collisions, legend positioned clearly, all elements well-spaced
+        comment: No text collisions; legend sits clear of the bars on the right
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All three histogram segments visible and distinct, white bin edges
-          provide clear definition
+        comment: All three segments visible in every bin; thin page-colored separators
+          keep stacked segments distinct; legend swatches match the fills in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety, high contrast maintained
+        comment: Green, purple and blue Imprint positions are CVD-distinguishable
+          and contrast well with both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 (ggsize 1600x900 scaled 3x), proper proportions, nothing
-          clipped
+        comment: 3200x1800 canvas (gate passed); balanced axis titles, legend fits,
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, axes have descriptive labels with units
+        comment: '''Test Score (points)'' and ''Number of Students'' are descriptive,
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, follows Okabe-Ito positions 1-3, backgrounds
-          correct, both themes render properly'
+        comment: 'Class A = #009E73, then #C475FD, #4467A3 in canonical order; full
+          eight-position palette listed; backgrounds #FAF8F1 / #1A1A17; chrome flips
+          correctly'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -107,22 +109,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses standard Okabe-Ito palette with no custom design choices or
-          advanced styling techniques beyond defaults
+        comment: Style-guide baseline with theme tokens and explicit font sizes; nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: theme_minimal() removes unnecessary elements, subtle grid present,
-          good whitespace, but minimal additional refinement
+        passed: false
+        comment: Minor grid removed and page-colored bar separators, which is the
+          baseline; nothing beyond it
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through color, peak at score ~70 is focal
-          point, distribution comparison visible but no advanced emphasis techniques
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -132,30 +133,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked histogram with proper binning and group composition
+        comment: Correct stacked histogram with geom_histogram(position='stack')
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: stacking, distinct colors, legend, same bin
-          boundaries'
+        comment: Shared bin boundaries (binwidth=5 for all groups), distinct colors,
+          legend, total height = combined frequency; C1-C4 all met (one fixed A/B/C
+          order in every bin)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=test scores, Y=frequency, fill=class, all data visible in axis
-          ranges
+        comment: x = score, y = count, fill = class; y axis starts at 0 and reaches
+          past the tallest total (76)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'histogram-stacked · letsplot · anyplot.ai' correct,
-          legend labels match
+        comment: Title 'histogram-stacked · python · letsplot · anyplot.ai' matches
+          the format; legend 'Class' with entries Class A-C
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -163,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all aspects of stacked histogram: stacking, distributions,
-          group composition, frequency'
+        comment: Three overlapping, shifted distributions show composition changing
+          across bins and lumpy tails
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Test scores from three classes with realistic distributions (Class
-          A: 72±10, B: 78±8, C: 68±12), neutral and plausible'
+        comment: Exam scores by class are plausible and neutral, but the groups are
+          labelled with the generic Class A/B/C (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores clipped to [0,100], three groups, ~400 samples, binwidth=5
-          all appropriate
+        comment: '400 students, scores clipped to 0-100, means 68-78, 5-point bins:
+          sensible for exam scores; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -188,57 +190,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple script with no unnecessary functions or classes
+        comment: Flat script, column constants with role comments, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, numpy, pandas, lets_plot'
+        comment: os, numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, appropriate complexity, clean ggplot2-style
-          composition
+        comment: Concise; binning left to geom_histogram, no hand-rolled computation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly, uses current
-          API
+        comment: Saves plot-{THEME}.png at scale=4 and plot-{THEME}.html with the
+          current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Perfect ggplot2-style composition with + chaining, proper use of
-          aes(), high-level API, appropriate theme usage
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Solid core implementation but lacks letsplot-specific advanced features
-          like interactive callbacks or unique styling techniques
+        comment: Idiomatic grammar-of-graphics composition; nothing beyond the library
+          prompt's pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; HTML export has
+          native lets-plot tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T04:55:16Z'
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - binning
+  styling:
+  - edge-highlighting
+  - grid-styling
