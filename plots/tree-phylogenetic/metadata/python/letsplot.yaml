@@ -2,51 +2,49 @@ library: letsplot
 language: python
 specification_id: tree-phylogenetic
 created: '2025-12-31T13:55:48Z'
-updated: '2026-05-15T01:18:45Z'
-generated_by: claude-haiku
-workflow_run: 25894790203
+updated: '2026-11-21T18:41:25Z'
+generated_by: claude-sonnet
+workflow_run: 44936308498
 issue: 3070
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 85
 review:
   strengths:
-  - Perfect visual quality with excellent text legibility and theme adaptation in
-    both light and dark renders
-  - Correct phylogenetic tree implementation with expert Newick parsing and proportional
-    branch length encoding
-  - Thoughtful clade-based color encoding that enhances understanding of evolutionary
-    relationships
-  - Expert-level use of letsplot's grammar of graphics API and theme customization
-    system
-  - Comprehensive spec compliance with all required features implemented and working
-    correctly
-  - Real-world, scientifically accurate example data (primate mitochondrial evolution)
+  - Every branch, internal and terminal, carries its clade color via a computed node_clade
+    map, with the shared backbone in neutral ink and a 'Clade' legend explaining it
+  - Branch lengths drawn proportionally from a root at 0, readable against a labeled
+    'Branch length (substitutions per site)' axis
+  - scale_color_manual with limits fixes the legend order to the clade order plus
+    the neutral entry
+  - Theme tokens threaded through every chrome element; both renders fully readable
+  - Data block parses a real Newick string into a node table that a user can swap
+    for their own
   weaknesses:
-  - 'DE-02: Visual refinement could be enhanced with more explicit grid styling and
-    explicit spine control in theme'
-  - 'LM-02: Could leverage more advanced letsplot interactive features if expanded
-    to support interactivity'
-  - 'DE-03: Visual storytelling could be amplified with annotations highlighting a
-    specific evolutionary pattern or clade significance'
+  - 'CQ-01 (code): two helper functions, parse_newick (with a nested read) and the
+    recursive place, structure the script → an inline loop over the parsed rows (an
+    explicit stack for the parse and a reversed-preorder pass for the layout). Likely
+    cause: recursion written as functions.'
+  - 'Suggestion: a short label at each clade''s crown node could reinforce the legend
+    without the eye travelling to the right.'
+  - 'Suggestion: the x range stops at 1.3 × the deepest tip; a tighter limit just
+    past the longest label would give the tree a little more width.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title and axis labels in dark text (INK #1A1A17), tick labels in soft gray (INK_SOFT #4A4A44) - all clearly readable
-      Data: Green (#009E73) tree segments, colored species labels by clade (green, orange #D55E00, blue #0072B2), proportional branch lengths
-      Grid: Subtle vertical gridlines appropriate for tree visualization
-      Legibility verdict: PASS - All text has excellent contrast against light background
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: bold dark title 'tree-phylogenetic · python · letsplot · anyplot.ai' top-left; x-axis 'Branch length (substitutions per site)' with ticks 0-0.7 in soft gray; y axis removed; subtle vertical gridlines; legend 'Clade' on an elevated panel right-centre. All readable.
+      Data: rectangular phylogram, root at 0; Hominines (Human, Chimpanzee, Gorilla) in #009E73, Orangutan and gibbon in #C475FD, Old World monkeys (Macaque, Baboon, Mandrill) in #4467A3 on every branch of their clade; the root-to-ape-ancestor backbone in neutral dark gray labeled 'Shared ancestry'. Node dots at every split and tip; tip names in soft gray just right of each tip.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title and axis labels in light text (F0EFE8), tick labels in light gray (B8B7B0) - all clearly readable, no dark-on-dark failures
-      Data: Tree segments, nodes, and species label colors identical to light render (#009E73 green, #D55E00 orange, #0072B2 blue)
-      Grid: Subtle vertical gridlines with theme-adaptive opacity
-      Legibility verdict: PASS - All text has excellent contrast against dark background, theme adaptation is perfect
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis title in light ink, ticks and tip names in light gray, gridlines faint, legend on a slightly elevated dark panel; no dark-on-dark text.
+      Data: clade colors identical to the light render (#009E73, #C475FD, #4467A3); only the 'Shared ancestry' neutral flips to light gray as theme chrome should.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,66 +55,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and perfectly readable in both themes
+        comment: 'Title 16, axis title 12, ticks and legend 10, tip labels 5.5 mm:
+          at the library-prompt reference, readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all fully readable
+        comment: No collisions; tip labels sit clear of their branch-end dots
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tree segments, nodes, and labels optimally sized for data density
+        comment: 1.1 lines and 2.5 node dots suit 8 tips; legend line samples match
+          the branch colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe with good contrast
+        comment: Green, lilac and blue clades plus neutral backbone separate by lightness
+          as well as hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with 60-70% canvas fill and balanced margins
+        comment: 3200x1800 canvas; tree fills about 70 % of the width, legend balanced
+          on the right, title about 55 % of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive X-axis label with units
+        comment: x-axis 'Branch length (substitutions per site)' carries the unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct; theme-adaptive chrome
-          perfect'
+        comment: 'First clade #009E73, then #C475FD, #4467A3 in canonical order; shared
+          backbone in the theme-adaptive neutral; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Strong design with thoughtful clade coloring; well above defaults
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid and minimal spines; could be more explicit
+        comment: 'Grid density chosen for the chart: only vertical distance gridlines,
+          the meaningless y axis fully removed'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Visual hierarchy guides viewer; clade coloring adds semantic meaning
+        comment: The shared-ancestry backbone in neutral ink lets the three colored
+          clades read as the focal groups
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rectangular cladogram with proportional branch lengths
+        comment: Rectangular phylogram with right-angled branches
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: Newick parsing, proportional distances,
-          labels, clade visualization'
+        comment: 'All Notes and C1-C5 met: proportional branches, rectangular layout,
+          tip labels at branch ends, labeled branch-length axis, clade colors on all
+          clade branches with a legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; tree structure accurate
+        comment: Node x = cumulative branch length from root at 0 (Human 0.53, Gibbon
+          0.58); tips evenly spaced in preorder
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; implicit legend through coloring
+        comment: Title 'tree-phylogenetic · python · letsplot · anyplot.ai'; legend
+          'Clade' with readable entries
     data_quality:
       score: 15
       max: 15
@@ -155,82 +162,85 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all phylogenetic tree features: multiple clades, varying branch
-          lengths, nested hierarchies'
+        comment: Nested clades, unequal tip depths, short and long internal branches
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world primate evolution scenario; scientifically plausible and
-          neutral
+        comment: Primate mitochondrial tree with correct relationships; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Branch lengths plausible; species relationships factually correct
+        comment: Branch lengths 0.05-0.35 substitutions per site are plausible; no
+          Check values in the spec; checked Human tip at 0.53 = 0.2+0.15+0.08+0.1
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme → parser → calculations → plot → save'
+        comment: Two helper functions (parse_newick with nested read, place); defect
+          line
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic Newick string; fully reproducible
+        comment: Deterministic Newick string
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary dependencies
+        comment: os, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering
+        comment: Compact single-pass parser and layout; no available call replaces
+          them
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format with PNG and HTML
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ggplot() API, geoms, and theme customization
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses ggsize() and ggsave() with advanced theme system
+        comment: Grammar layers (geom_segment, geom_point, geom_text), scale_color_manual
+          with limits fixing the legend order, theme_minimal + theme override
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Native HTML export with default lets-plot tooltips on the segments;
+          nothing else beyond the prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T18:37:35Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - layer-composition
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
   - grid-styling
