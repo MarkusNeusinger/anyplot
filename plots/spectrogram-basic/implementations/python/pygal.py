@@ -1,7 +1,7 @@
 """anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-15
+Quality: pending | Updated: 2026-05-15
 """
 
 import os
