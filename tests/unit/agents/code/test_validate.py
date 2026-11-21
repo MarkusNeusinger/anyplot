@@ -2249,6 +2249,14 @@ PLOTNINE_OPAQUE_ARGUMENTS = [
     pytest.param("aes(x=FROM_NAME)", id="a name unpacked from another name"),
     pytest.param("aes(x=NESTED)", id="a name of a nested unpacking"),
     pytest.param("aes(x=INSIDE)", id="an unpacking below the top level"),
+    pytest.param("aes(x=TWICE)", id="a name twice in one unpacking"),
+    pytest.param("aes(x=SHORT)", id="an unpacking of unequal length"),
+    pytest.param("aes(x=NUMBER)", id="a name unpacked from a number"),
+    pytest.param("aes(x=CHAINED)", id="a chained unpacking"),
+    pytest.param("aes(x=SHIFTED)", id="two starred items that shift a literal"),
+    pytest.param("aes(x=FROM_SET)", id="a name unpacked from a set"),
+    pytest.param("aes(x=SAME_LENGTH)", id="a starred target of the same length"),
+    pytest.param("aes(x=BESIDE)", id="a subscript target beside the name"),
 ]
 EXPRESSION_BINDINGS = (
     'COLUMN = \'open("/etc/passwd").read()\'\ncolumns = ["a"]\nmapping = {"x": "a"}\nLATER = "a"\nLATER = "b"\n'
@@ -2259,6 +2267,14 @@ EXPRESSION_BINDINGS = (
     'PAIR = ("a", "b")\nFROM_NAME, FROM_NAME_B = PAIR\n'
     '(NESTED, NESTED_B), NESTED_C = ("a", "b"), "c"\n'
     'if THEME:\n    INSIDE, INSIDE_B = "a", "b"\n'
+    'TWICE, TWICE = "a", \'open("x").read()\'\n'
+    'SHORT, SHORT_B = ("a",)\n'
+    'NUMBER_A, NUMBER = "a", 1\n'
+    'CHAINED, CHAINED_B = CHAINED_C, CHAINED_D = "a", "b"\n'
+    'HEAD = ["a", \'open("x")\']\nTAIL = []\nSHIFT_A, SHIFTED, SHIFT_B = *HEAD, "safe", *TAIL\n'
+    'FROM_SET, FROM_SET_B = {"a", \'open("x")\'}\n'
+    'SAME_LENGTH, *SAME_LENGTH_REST = "a", "b"\n'
+    'BESIDE, columns[0] = "a", "b"\n'
 )
 
 
@@ -2391,6 +2407,8 @@ class TestPlotnineProfile:
             pytest.param("for COLUMN in ['open(\"x\").read()']:\n    pass\n", id="loop target"),
             pytest.param("from textwrap import dedent as COLUMN\n", id="import"),
             pytest.param("def COLUMN():\n    return 1\n", id="function name"),
+            pytest.param("COLUMN += 'open(\"x\").read()'\n", id="augmented assignment"),
+            pytest.param("n = (COLUMN := 'open(\"x\").read()')\n", id="walrus"),
         ],
     )
     @pytest.mark.parametrize(
