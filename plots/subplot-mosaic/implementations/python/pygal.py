@@ -1,157 +1,163 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-14
 """
 
 import os
-import sys
 from io import BytesIO
 
-
-# Avoid shadowing the pygal package by this script
-sys.dont_write_bytecode = True
-_this_file = os.path.abspath(__file__)
-_this_dir = os.path.dirname(_this_file)
-if _this_dir in sys.path:
-    sys.path.remove(_this_dir)
-
-import cairosvg  # noqa: E402
-import numpy as np  # noqa: E402
-import pygal  # noqa: E402
-from PIL import Image, ImageDraw, ImageFont  # noqa: E402
-from pygal.style import Style  # noqa: E402
+import cairosvg
+import numpy as np
+import pandas as pd
+import pygal
+from PIL import Image, ImageDraw, ImageFont
+from pygal.style import Style
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = (
-    "#009E73",  # brand green (first series)
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-    "#BD8233",  # reddish purple
-    "#AE3030",  # orange
-    "#2ABCCD",  # sky blue
-    "#954477",  # yellow
-)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Dashboard showing sales performance across different dimensions
-np.random.seed(42)
+# Constants
+LAYOUT = "AAB;AAC;DDF"  # mosaic pattern: repeated letters span cells, an unused letter (F) stays blank
+CANVAS_W, CANVAS_H = 3200, 1800
+TITLE_H = 110  # band above the grid for the figure title
+PAD = 30  # outer margin
+GAP = 24  # spacing between neighbouring panels
 
-# Time series data for main overview chart (Panel A - wide)
+# Columns: set these to your table's column names
+PANEL = "Panel"  # role: extra
+SERIES = "Series"  # role: extra
+X = "x"  # role: x
+Y = "y"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("panels.csv")
+# One long table: each row belongs to the layout letter in PANEL
+#   A = revenue and costs by month, B = sales by category, C = share by region, D = marketing spend vs sales
+rng = np.random.default_rng(42)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 revenue = [120, 135, 142, 138, 155, 168, 172, 185, 178, 192, 205, 218]
 costs = [85, 88, 92, 90, 98, 105, 108, 115, 112, 120, 128, 135]
-
-# Category data for bar chart (Panel B)
 categories = ["Electronics", "Clothing", "Home", "Sports", "Books"]
 category_sales = [450, 320, 280, 195, 165]
-
-# Pie chart data for market share (Panel C)
 regions = ["North", "South", "East", "West"]
 region_shares = [35, 28, 22, 15]
+marketing_spend = rng.uniform(10, 100, 40)
+sales_response = marketing_spend * 2.5 + rng.normal(0, 25, 40)
 
-# Scatter data for correlation (Panel D)
-n_points = 40
-marketing_spend = np.random.uniform(10, 100, n_points)
-sales_response = marketing_spend * 2.5 + np.random.normal(0, 25, n_points)
+df = pd.concat(
+    [
+        pd.DataFrame({PANEL: "A", SERIES: "Revenue", X: months, Y: revenue}),
+        pd.DataFrame({PANEL: "A", SERIES: "Costs", X: months, Y: costs}),
+        pd.DataFrame({PANEL: "B", SERIES: categories, X: categories, Y: category_sales}),
+        pd.DataFrame({PANEL: "C", SERIES: regions, X: regions, Y: region_shares}),
+        pd.DataFrame({PANEL: "D", SERIES: "Accounts", X: marketing_spend, Y: sales_response}),
+    ],
+    ignore_index=True,
+)
 
-# Gauge data for KPI (Panel E)
-current_target_pct = 78
-
-# Custom style for theme
-custom_style = Style(
+# Plot
+style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
+    colors=tuple(IMPRINT_PALETTE),
     font_family="sans-serif",
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    title_font_size=44,
+    label_font_size=32,
+    major_label_font_size=28,
+    legend_font_size=28,
+    value_font_size=26,
+    stroke_width=4,
 )
 
-# Mosaic layout pattern: "AAB;AAC;DDF"
-# A = large chart (2x2), B = medium chart (1x1), C = medium chart (1x1)
-# D = medium chart (2x1), F = placeholder (empty cell)
+# Grid geometry from the layout string: bounding box of every letter in cells
+grid = LAYOUT.split(";")
+n_rows, n_cols = len(grid), len(grid[0])
+cell_w = (CANVAS_W - 2 * PAD + GAP) / n_cols
+cell_h = (CANVAS_H - TITLE_H - PAD + GAP) / n_rows
+boxes = {}
+for r, row in enumerate(grid):
+    for c, letter in enumerate(row):
+        r0, c0, r1, c1 = boxes.get(letter, (r, c, r, c))
+        boxes[letter] = (min(r0, r), min(c0, c), max(r1, r), max(c1, c))
 
-total_width = 4800
-total_height = 2700
-title_height = 120
-padding = 20
 
-# Calculate cell sizes for 3-column, 3-row grid
-grid_width = total_width - 2 * padding
-grid_height = total_height - title_height - 2 * padding
-col_width = grid_width // 3
-row_height = grid_height // 3
+def panel_size(letter):
+    r0, c0, r1, c1 = boxes[letter]
+    return round((c1 - c0 + 1) * cell_w - GAP), round((r1 - r0 + 1) * cell_h - GAP)
 
-# Panel A: Line chart (spans 2 cols, 2 rows) - Revenue & Costs over time
-chart_a = pygal.Line(
-    width=int(col_width * 2),
-    height=int(row_height * 2),
-    style=custom_style,
-    show_legend=True,
+
+def panel_origin(letter):
+    r0, c0, _, _ = boxes[letter]
+    return round(PAD + c0 * cell_w), round(TITLE_H + r0 * cell_h)
+
+
+def sub(letter):
+    return df[df[PANEL] == letter]
+
+
+# Panel A: the largest cell holds the primary series, revenue against costs over time
+panel_a = pygal.Line(
+    width=panel_size("A")[0],
+    height=panel_size("A")[1],
+    style=style,
+    truncate_label=-1,
     legend_at_bottom=True,
     show_y_guides=True,
     show_x_guides=False,
     x_title="Month",
     y_title="Amount ($K)",
     title="Monthly Revenue vs Costs",
-    show_dots=True,
-    dots_size=8,
-    stroke_style={"width": 3},
-    truncate_label=-1,
+    dots_size=9,
 )
-chart_a.x_labels = months
-chart_a.add("Revenue", revenue)
-chart_a.add("Costs", costs)
+series_a = sub("A")
+panel_a.x_labels = list(dict.fromkeys(series_a[X]))
+for name, part in series_a.groupby(SERIES, sort=False):
+    panel_a.add(str(name), part[Y].tolist())
 
-# Panel B: Horizontal bar chart (1 col, 1 row) - Category sales
-chart_b = pygal.HorizontalBar(
-    width=int(col_width),
-    height=int(row_height),
-    style=custom_style,
+# Panel B: sales by category as horizontal bars
+panel_b = pygal.HorizontalBar(
+    width=panel_size("B")[0],
+    height=panel_size("B")[1],
+    style=style,
+    truncate_label=-1,
     show_legend=False,
     show_y_guides=True,
     title="Sales by Category",
-    truncate_label=-1,
     print_values=True,
     print_values_position="center",
-    value_font_size=14,
 )
-for cat, val in zip(categories, category_sales, strict=True):
-    chart_b.add(cat, val)
+for _, row in sub("B").iterrows():
+    panel_b.add(str(row[SERIES]), row[Y])
 
-# Panel C: Pie chart (1 col, 1 row) - Regional distribution
-chart_c = pygal.Pie(
-    width=int(col_width),
-    height=int(row_height),
-    style=custom_style,
-    show_legend=True,
+# Panel C: regional share as a donut
+panel_c = pygal.Pie(
+    width=panel_size("C")[0],
+    height=panel_size("C")[1],
+    style=style,
+    truncate_label=-1,
     legend_at_bottom=True,
     title="Regional Share",
     inner_radius=0.4,
-    truncate_label=-1,
 )
-for region, share in zip(regions, region_shares, strict=True):
-    chart_c.add(region, share)
+for _, row in sub("C").iterrows():
+    panel_c.add(str(row[SERIES]), row[Y])
 
-# Panel D: XY scatter chart (2 cols, 1 row) - Marketing vs Sales
-chart_d = pygal.XY(
-    width=int(col_width * 2),
-    height=int(row_height),
-    style=custom_style,
+# Panel D: marketing spend against sales response
+panel_d = pygal.XY(
+    width=panel_size("D")[0],
+    height=panel_size("D")[1],
+    style=style,
+    truncate_label=-1,
     show_legend=False,
     show_y_guides=True,
     x_title="Marketing Spend ($K)",
@@ -159,125 +165,53 @@ chart_d = pygal.XY(
     title="Marketing ROI Correlation",
     stroke=False,
     dots_size=10,
-    truncate_label=-1,
 )
-scatter_data = [(float(x), float(y)) for x, y in zip(marketing_spend, sales_response, strict=True)]
-chart_d.add("Correlation", scatter_data)
+scatter = sub("D")
+panel_d.add("Accounts", list(zip(scatter[X].astype(float), scatter[Y].astype(float), strict=True)))
 
-# Panel E: Gauge chart (1 col, 1 row) - Target achievement
-chart_e = pygal.SolidGauge(
-    width=int(col_width),
-    height=int(row_height),
-    style=custom_style,
-    show_legend=False,
-    title="Target Achievement",
-    inner_radius=0.6,
-    half_pie=True,
-)
-chart_e.add("Progress", [{"value": current_target_pct, "max_value": 100}])
+panels = {"A": panel_a, "B": panel_b, "C": panel_c, "D": panel_d}
 
-# Render charts to PNG via SVG+Cairo
-svg_a = chart_a.render()
-png_a = cairosvg.svg2png(bytestring=svg_a, output_width=int(col_width * 2), output_height=int(row_height * 2))
-img_a = Image.open(BytesIO(png_a))
+# Compose: rasterize each pygal SVG and paste it at its place in the grid
+combined = Image.new("RGB", (CANVAS_W, CANVAS_H), PAGE_BG)
+for letter, chart in panels.items():
+    w, h = panel_size(letter)
+    png = cairosvg.svg2png(bytestring=chart.render(), output_width=w, output_height=h)
+    combined.paste(Image.open(BytesIO(png)).convert("RGB"), panel_origin(letter))
 
-svg_b = chart_b.render()
-png_b = cairosvg.svg2png(bytestring=svg_b, output_width=int(col_width), output_height=int(row_height))
-img_b = Image.open(BytesIO(png_b))
-
-svg_c = chart_c.render()
-png_c = cairosvg.svg2png(bytestring=svg_c, output_width=int(col_width), output_height=int(row_height))
-img_c = Image.open(BytesIO(png_c))
-
-svg_d = chart_d.render()
-png_d = cairosvg.svg2png(bytestring=svg_d, output_width=int(col_width * 2), output_height=int(row_height))
-img_d = Image.open(BytesIO(png_d))
-
-svg_e = chart_e.render()
-png_e = cairosvg.svg2png(bytestring=svg_e, output_width=int(col_width), output_height=int(row_height))
-img_e = Image.open(BytesIO(png_e))
-
-# Create placeholder image (empty cell) with theme-adaptive background
-placeholder = Image.new("RGB", (int(col_width), int(row_height)), PAGE_BG)
-
-# Create combined image
-combined = Image.new("RGB", (total_width, total_height), PAGE_BG)
-
-# Place charts according to mosaic pattern: "AAB;AAC;DDF"
-# Row 0: A (cols 0-1), B (col 2)
-# Row 1: A (cols 0-1), C (col 2)
-# Row 2: D (cols 0-1), F (col 2, empty)
-
-x_offset = padding
-y_offset = title_height + padding
-
-combined.paste(img_a, (x_offset, y_offset))
-combined.paste(img_b, (x_offset + int(col_width * 2), y_offset))
-combined.paste(img_c, (x_offset + int(col_width * 2), y_offset + int(row_height)))
-combined.paste(img_d, (x_offset, y_offset + int(row_height * 2)))
-combined.paste(placeholder, (x_offset + int(col_width * 2), y_offset + int(row_height * 2)))
-
-# Add main title
-draw = ImageDraw.Draw(combined)
-
+TITLE = "subplot-mosaic · python · pygal · anyplot.ai"
 try:
     title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 56)
 except OSError:
     title_font = ImageFont.load_default()
+draw = ImageDraw.Draw(combined)
+left, _, right, _ = draw.textbbox((0, 0), TITLE, font=title_font)
+draw.text(((CANVAS_W - (right - left)) // 2, 28), TITLE, fill=INK, font=title_font)
 
-title_text = "subplot-mosaic · pygal · anyplot.ai"
-bbox = draw.textbbox((0, 0), title_text, font=title_font)
-title_width = bbox[2] - bbox[0]
-title_x = (total_width - title_width) // 2
-draw.text((title_x, 30), title_text, fill=INK, font=title_font)
+combined.save(f"plot-{THEME}.png")
 
-# Save final image
-combined.save(f"plot-{THEME}.png", dpi=(300, 300))
-
-# Save as HTML with interactive SVG grid
-html_content = f"""<!DOCTYPE html>
+# Interactive HTML: the same grid in CSS, with each pygal SVG inlined
+areas = "".join(f'"{" ".join(row)}" ' for row in grid)
+cells = "".join(
+    f'<div style="grid-area: {letter}">{chart.render(is_unicode=True).split("?>", 1)[-1]}</div>'
+    for letter, chart in panels.items()
+)
+html = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>subplot-mosaic · pygal · anyplot.ai</title>
-    <style>
-        body {{ font-family: sans-serif; background: {PAGE_BG}; margin: 20px; }}
-        h1 {{ text-align: center; color: {INK}; font-size: 32px; margin-bottom: 20px; }}
-        .mosaic {{
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr 1fr;
-            gap: 10px;
-            max-width: 1600px;
-            margin: 0 auto;
-            height: 900px;
-        }}
-        .panel-a {{ grid-column: 1 / 3; grid-row: 1 / 3; }}
-        .panel-b {{ grid-column: 3; grid-row: 1; }}
-        .panel-c {{ grid-column: 3; grid-row: 2; }}
-        .panel-d {{ grid-column: 1 / 3; grid-row: 3; }}
-        .panel-f {{ grid-column: 3; grid-row: 3; background: {PAGE_BG}; }}
-        .panel svg {{ width: 100%; height: 100%; }}
-    </style>
+<meta charset="utf-8">
+<title>{TITLE}</title>
+<style>
+body {{ font-family: sans-serif; background: {PAGE_BG}; margin: 20px; }}
+h1 {{ text-align: center; color: {INK}; font-size: 32px; }}
+.mosaic {{ display: grid; grid-template-areas: {areas}; gap: {GAP // 2}px; max-width: 1600px;
+  margin: 0 auto; aspect-ratio: {CANVAS_W} / {CANVAS_H - TITLE_H}; }}
+.mosaic svg {{ width: 100%; height: 100%; }}
+</style>
 </head>
 <body>
-    <h1>subplot-mosaic · pygal · anyplot.ai</h1>
-    <div class="mosaic">
-"""
-
-svg_a_str = chart_a.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
-svg_b_str = chart_b.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
-svg_c_str = chart_c.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
-svg_d_str = chart_d.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
-svg_e_str = chart_e.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
-
-html_content += f'        <div class="panel panel-a">{svg_a_str}</div>\n'
-html_content += f'        <div class="panel panel-b">{svg_b_str}</div>\n'
-html_content += f'        <div class="panel panel-c">{svg_c_str}</div>\n'
-html_content += f'        <div class="panel panel-d">{svg_d_str}</div>\n'
-html_content += '        <div class="panel panel-f"></div>\n'
-html_content += """    </div>
+<h1>{TITLE}</h1>
+<div class="mosaic">{cells}</div>
 </body>
 </html>"""
-
-with open(f"plot-{THEME}.html", "w") as f:
-    f.write(html_content)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html)
