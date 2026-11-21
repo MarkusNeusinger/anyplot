@@ -2,12 +2,12 @@ library: plotly
 language: python
 specification_id: line-styled
 created: '2025-12-30T10:37:58Z'
-updated: '2026-05-12T07:26:25Z'
-generated_by: claude-haiku
-workflow_run: 25719487845
+updated: '2026-11-21T05:13:09Z'
+generated_by: claude-sonnet
+workflow_run: 44869095110
 issue: 2598
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/plotly/plot-light.html
@@ -15,31 +15,35 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styl
 quality_score: 85
 review:
   strengths:
-  - Perfect Visual Quality (30/30) - all text explicitly sized and readable in both
-    themes
-  - Perfect Spec Compliance (15/15) - implements all required line styles with correct
-    title format
-  - Perfect Data Quality (15/15) - realistic temperature scenario with good feature
-    coverage
-  - Perfect Code Quality (10/10) - clean, reproducible, no unnecessary imports
-  - 'Correct palette: Okabe-Ito order perfectly applied with proper theme adaptation'
+  - Four standard styles (solid, dash, dot, dashdot) at one 2.5 px width; each pattern
+    stays recognizable along the whole line in both themes
+  - Horizontal legend strip with a 'Sensor' title and itemwidth-lengthened swatches
+    shows every full pattern
+  - 'Clean theme-token chrome: readable text, subtle grid and correct backgrounds
+    in light and dark'
+  - 'Native plotly interactivity: per-trace hovertemplate with x-unified hover in
+    the HTML output'
+  - 'Adaptable structure: column constants and one loop over SENSORS drive the plot'
   weaknesses:
-  - Design Excellence (9/20) - design follows defaults rather than creating visual
-    hierarchy or intentional aesthetics. Lacks publication-ready sophistication.
-  - Library Mastery (6/10) - uses plotly competently for basic tasks but misses distinctive
-    features like callbacks, advanced interactivity, or unique layout patterns
+  - 'DQ-01 (both): each series has 24 points, below the spec''s recommended 50-500
+    → at least 50 samples (for example 30-minute readings over 24 h, +24 or more).
+    Likely cause: hours = np.arange(0, 24).'
+  - 'Suggestion: align the ''Sensor'' legend title vertically with the entries (title
+    side ''left'' centered) for a tidier strip.'
+  - 'Suggestion: a 4 h dtick with a 6 h alternative (0, 6, 12, 18, 24) would match
+    how daily cycles are usually read.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly implemented per style guide
-      Chrome: Title "line-styled · plotly · anyplot.ai" (28px dark), axis labels (22px), tick labels (18px) - all readable. Legend in top-left with light background and border. No text legibility issues.
-      Data: Four lines with Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2, reddish purple #CC79A7). Line styles (solid, dashed, dotted, dash-dot) are clearly visible. 4px line width provides good visibility.
-      Legibility verdict: PASS - All text readable, no contrast issues
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: centered title 'line-styled · python · plotly · anyplot.ai'; dark axis titles 'Hour of day' and 'Temperature (°C)'; soft-ink ticks 0-20 step 4 and 10-25; subtle grid; framed horizontal legend strip under the title with 'Sensor' title. All readable.
+      Data: Outdoor solid #009E73, Indoor dashed #C475FD, Greenhouse dotted #4467A3, Storage dash-dot #BD8233, one width; patterns crisp; lines converge and cross near noon.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly implemented per style guide
-      Chrome: Title and all labels are light-colored text. Tick labels (#B8B7B0) readable on dark background. No dark-on-dark issues. Legend has dark background with light border.
-      Data: Colors are identical to light render (green #009E73, orange #D55E00, blue #0072B2, reddish purple #CC79A7 remain constant). Line styles remain distinct.
-      Legibility verdict: PASS - All text readable, proper contrast, no theme-adaptation failures
+      Background: warm near-black #1A1A17.
+      Chrome: light title, axis titles and ticks, legend on elevated #242420 with light border; no dark-on-dark text.
+      Data: identical colors and dash styles to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,71 +54,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px.
-          All readable at full resolution in both themes.'
+        comment: Title 16, axis titles 12, ticks 10 explicitly set; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. All content fully readable.
+        comment: No text collisions; legend strip sits above the plot area, clear
+          of the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Four lines with 4px width, 24 data points each. All markers/lines
-          perfectly adapted to density.
+        comment: 2.5 px lines with clearly visible patterns; legend swatches show
+          each full pattern in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides excellent contrast. Line styles provide
-          additional CVD-safe distinction.
+        comment: Style carries the distinction; colors CVD-safe Imprint positions,
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas. Balanced margins. No content cut-off.
+        comment: 3200x1800 canvas; balanced margins, title ~35% width, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Temperature (°C)''.'
+        comment: '''Hour of day'' and ''Temperature (°C)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito order correct. Backgrounds #FAF8F1 (light) / #1A1A17 (dark).
-          Both renders theme-correct.'
+        comment: 'Imprint positions 1-4 in canonical order, first series #009E73;
+          backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured defaults with theme support, but not exceptional.
-          Lacks custom design flourishes.
+        comment: Legend set as a centered header strip under the title with its own
+          'Sensor' title, giving a clear title > key > chart hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Some refinement visible. Could remove more spines or add more polish.
+        comment: Zero line disabled, x range padded half an hour on each side so line
+          ends do not touch the axis, legend moved out of the data area
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed functionally but no visual hierarchy. All lines treated
-          equally.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,48 +130,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with styled lines (solid, dashed, dotted, dash-dot).
+        comment: Multi-series line plot distinguished by line style
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: standard line styles, legend with series names,
-          consistent line width.'
+        comment: Solid, dash, dot, dashdot; one width; legend with long swatches;
+          patterns readable along the lines (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned. All data visible. Ranges appropriate.
+        comment: Hours on x, temperature on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data.
+        comment: Title 'line-styled · python · plotly · anyplot.ai'; legend entries
+          are reader names under a 'Sensor' title
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 'Shows all aspects: 4 sensors with distinct temperature patterns.'
+        passed: false
+        comment: Four styles shown with crossings; but only 24 points per series,
+          below the spec's 50-500 (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world temperature monitoring scenario. Neutral and plausible.
+        comment: 'Daily temperature at four sensor locations: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 6-24°C align with real-world expectations. Factually correct.
+        comment: '6-24 °C with outdoor swinging most and indoor/storage damped: sensible;
+          no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -175,31 +184,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → figure → traces → layout → save.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42. Deterministic data.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly. All used.
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering.
+        comment: Single loop over the series with style/color constants
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-light.png, plot-dark.png, HTML exports.'
+        comment: plot-{THEME}.png and .html via write_image/write_html, current API
     library_mastery:
       score: 6
       max: 10
@@ -208,22 +217,29 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Proper use of go.Figure(), go.Scatter(), add_trace(), update_layout().
-          Leverages theme-adaptive tokens.
+        passed: false
+        comment: go.Scatter loop with plotly's native dash names, update_layout dicts,
+          hovertemplate per trace
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses standard features competently but misses unique plotly capabilities
-          like callbacks or advanced layouts.
+        comment: hovermode='x unified' and legend itemwidth to lengthen swatches;
+          modest beyond defaults
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T05:09:47Z'
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
+  - publication-ready
