@@ -2,58 +2,44 @@ library: seaborn
 language: python
 specification_id: histogram-stepwise
 created: '2025-12-30T11:22:58Z'
-updated: '2026-05-12T09:27:40Z'
-generated_by: claude-haiku
-workflow_run: 25725066203
+updated: '2026-11-21T05:23:53Z'
+generated_by: claude-sonnet
+workflow_run: 44870272274
 issue: 2645
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 82
 review:
   strengths:
-  - 'Perfect palette compliance: Service A uses brand green #009E73 (position 1),
-    Service B uses #D55E00 (position 2) — ideal Okabe-Ito application'
-  - 'Excellent theme-adaptive chrome: Both renders have correct backgrounds (#FAF8F1
-    light, #1A1A17 dark) and all text colors switch properly (dark text on light,
-    light text on dark)'
-  - 'Text legibility: All font sizes explicitly set (24pt title, 20pt labels, 16pt
-    ticks) and perfectly readable at full resolution in both themes'
-  - 'Spec compliance: Implements step histogram correctly with fill=False, no bars,
-    clean outline visualization ideal for overlaying distributions'
-  - 'Data quality: Two realistic exponential distributions (service response times)
-    demonstrate different latency profiles with clear visual separation'
-  - 'Code elegance: Simple KISS structure (imports → data → plot → save), uses np.random.seed(42)
-    for reproducibility, idiomatic seaborn API with sns.histplot()'
+  - Single sns.histplot call with hue on a tidy DataFrame, so both services share
+    the same 30 bin edges and step heights compare directly
+  - Outline-only steps (element='step', fill=False) at 1.8 pt carry the plot in both
+    themes without fill
+  - Exact 3200x1800 canvas with theme-correct chrome; Imprint green and lavender identical
+    across renders
+  - sns.move_legend and sns.despine used for legend and spine styling
   weaknesses:
-  - 'Design Excellence: Implementation uses well-configured library defaults but lacks
-    distinctive aesthetic sophistication — could benefit from color harmony refinement
-    or intentional visual emphasis'
-  - 'Visual storytelling: Plot displays two distributions side-by-side but doesn''t
-    emphasize a particular insight — viewers must discover the comparison themselves
-    rather than being guided to a focal point'
-  - 'Library distinctiveness: While sns.histplot() with element=''step'' is used correctly,
-    implementation doesn''t leverage library-specific features beyond basics (e.g.,
-    could use sns.color_palette context or more advanced styling patterns)'
+  - 'DQ-02 (both): the groups are labelled ''Service A'' and ''Service B'', which
+    reads as generic placeholders → named services such as ''Checkout API'' and ''Search
+    API''. Likely cause: the SERVICE label lists in the data block.'
+  - 'Suggestion: a light alpha or a dashed style on one outline would separate the
+    two staircases where they run together near 40-140 ms.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "histogram-stepwise · seaborn · anyplot.ai" in dark text (#1A1A17), axis labels "Response Time (ms)" and "Count" clearly readable with units, tick labels (0, 100, 200... for x-axis; 0, 20, 40... for y-axis) in secondary color (#4A4A44), all text explicitly sized (title 24pt, labels 20pt, ticks 16pt)
-      Data: Two overlaid step histograms showing response time distributions for Service A (green #009E73, peak ~20ms) and Service B (orange #D55E00, peak ~40ms), clean step visualization without fill, legend positioned upper right with clear labels
-      Grid: Y-axis only, subtle and non-dominant (alpha=0.10, linewidth=0.8)
-      Spines: Top and right removed (L-shaped frame)
-      Legibility verdict: PASS - all text is readable, excellent contrast, no overlaps
+      Background: warm off-white #FAF8F1 across canvas and axes
+      Chrome: title 'histogram-stepwise · python · seaborn · anyplot.ai' in dark ink, ~53% of width; axis titles 'Response time (ms)' and 'Count' dark; tick labels in INK_SOFT; subtle horizontal grid; top/right spines removed; framed legend upper right
+      Data: two outline-only step histograms on shared bins - Service A in #009E73 peaking at ~183 in the first bin, Service B in #C475FD peaking ~113 in the second bin with a longer tail to ~640 ms; empty tail bins lie on the baseline
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title in light text (#F0EFE8), axis labels and tick labels in secondary light color (#B8B7B0), all readable against dark background, same explicit font sizing
-      Data: Service A (green #009E73) and Service B (orange #D55E00) colors are IDENTICAL to light render - only chrome flipped, no color shift, both distributions clearly visible
-      Grid: Subtle y-axis grid visible at correct opacity
-      No dark-on-dark text failures - all text is light-colored
-      Legibility verdict: PASS - excellent readability on dark surface, all elements work perfectly, brand green visible and reads well
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks in light INK_SOFT, grid subtle but visible, legend on #242420 with light text; no dark-on-dark text
+      Data: identical green and lavender steps to the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -64,52 +50,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly set: title 24pt, labels 20pt, ticks 16pt —
-          perfectly readable in both themes'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt as the seaborn
+          prompt sets; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend, labels, and data all clearly
-          separated
+        comment: No text collisions; legend sits clear of the steps in the upper right
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Two overlaid step histograms with 30 bins each, 3pt linewidth perfectly
-          adapted to 500 points per distribution, both clearly visible
+        comment: 1.8 pt outlines carry the plot without fill in both themes; legend
+          line samples match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette ensures CVD safety; good contrast between #009E73
-          and #D55E00'
+        comment: Green and lavender differ in hue and lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16x9 @ 300dpi fills 60-70% of canvas; balanced margins; tight_layout()
-          prevents wasted space
+        comment: 3200x1800 canvas, title ~53% of width, balanced margins, nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in spec format; x-axis 'Response Time (ms)' with units; y-axis
-          'Count' descriptive
+        comment: '''Response time (ms)'' with unit, ''Count'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito 1-2); backgrounds
-          #FAF8F1/#1A1A17 correct; all chrome theme-adaptive'
+        comment: 'First series #009E73, second #C475FD (Imprint 1-2); backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -117,22 +100,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults with correct palette application;
-          no custom design thought or distinctive hierarchy
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Spines removed, grid customized (alpha=0.10), whitespace generous
-          — some refinement visible but mostly defaults
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Two distributions compared but no visual emphasis or focal point
-          — viewer must interpret the story
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -142,30 +122,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Step histogram implemented correctly (element='step', fill=False)
+        comment: Step histogram, element='step', fill=False
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: outline only, step visualization, suitable
-          for overlaying'
+        comment: C1 outline only with horizontal and vertical segments; C2 count axis
+          from zero; C3 strong outline; C4 shared bin edges (one hue call), color
+          + legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis response times, Y-axis counts; axes show all data (0-700ms,
-          0-130)
+        comment: x response time, y count; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''histogram-stepwise · seaborn · anyplot.ai''; legend: Service
-          A/B labels correct'
+        comment: Title 'histogram-stepwise · python · seaborn · anyplot.ai'; legend
+          Service A/B
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -173,21 +153,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two exponential distributions show different scales, peaks, and tail
-          behavior — all aspects of step histogram represented
+        comment: Two overlaid skewed distributions with differing peaks and tails,
+          empty tail bins on the baseline
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Response times for two services — real, neutral, technical scenario
+        passed: false
+        comment: Service latency is plausible, but the groups are labelled 'Service
+          A'/'Service B' (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times 20-700ms plausible for service latency; counts 0-130
-          correct for 500-point distributions
+        comment: 20-640 ms latencies, counts up to ~183 for 500 samples per group;
+          no Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -197,56 +178,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → theme tokens → config → data → plot
-          → save; no functions/classes'
+        comment: Linear six-zone script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic data generation
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy, seaborn — all used
+        comment: os, plt, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering, no fake functionality
+        comment: Single histplot call with hue; no hand-rolled binning
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with 300dpi, facecolor theme-aware
+        comment: plot-{THEME}.png at dpi=400, no bbox_inches; current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: sns.histplot() with element='step' is idiomatic; sns.set_theme()
-          with rc dict is recommended pattern; uses ax parameter correctly
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses sns.histplot(element='step') and theme system, but doesn't leverage
-          more advanced seaborn-specific features
+        comment: Tidy long df with hue= so seaborn computes common bins across groups;
+          sns.move_legend and sns.despine instead of raw matplotlib legend/spine edits
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-21T05:21:02Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - overlay
+  - legend
   patterns:
   - data-generation
-  dataprep: []
+  - long-format
+  dataprep:
+  - binning
   styling:
-  - grid-styling
+  - minimal-chrome
