@@ -1,7 +1,7 @@
 """anyplot.ai
 network-bipartite: Bipartite Network Graph
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-11-21
+Quality: pending | Updated: 2026-11-21
 """
 
 import os
