@@ -2,50 +2,50 @@ library: matplotlib
 language: python
 specification_id: spectrum-basic
 created: '2025-12-31T05:33:30Z'
-updated: '2026-05-14T09:17:49Z'
-generated_by: claude-haiku
-workflow_run: 25851701772
+updated: '2026-11-21T15:10:46Z'
+generated_by: claude-sonnet
+workflow_run: 44917249202
 issue: 2926
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 82
 review:
   strengths:
-  - Perfect theme adaptation with identical data colors across light and dark renders
-    and correct chrome flipping
-  - Excellent visual hierarchy with intentional use of brand green for main signal
-    and orange accents for peak highlighting
-  - All text explicitly sized and perfectly legible in both themes with no contrast
-    issues
-  - Clean, idiomatic matplotlib code following style guide precisely with proper theme
-    tokens throughout
-  - Realistic signal processing example (FFT of multi-component synthetic signal)
-    with educational value
-  - Intentional annotation design with rounded boxes, proper offset positioning, and
-    theme-aware colors
-  - Full spec compliance across all features with correct plot type and complete data
-    mapping
+  - Spectrum drawn as a filled line with every FFT bin at its own frequency and dB
+    value; the fill is anchored to the axis floor so it reads as amplitude
+  - Peak labels are found from the data (largest local maxima) and sit at their peaks,
+    kept to the three dominant components
+  - All chrome threaded through theme tokens, including annotation boxes on the elevated
+    surface token; both renders read cleanly
+  - Exact 3200x1800 canvas from figsize (8, 4.5) at 400 dpi with style-guide text
+    sizes
   weaknesses:
-  - Design Excellence could be elevated with more sophisticated annotation techniques
-    or gradient styling
-  - Data storytelling could deepen with subtle visual cues about signal-to-noise ratio
-    or harmonic relationships
+  - 'SC-03 (both): the x axis stops at about 299 Hz, hiding the 300-499 Hz bins, 40
+    % of the computed spectrum → show the full 0-500 Hz range (+200 Hz). Likely cause:
+    ax.set_xlim(0, np.nanmax(x) * 0.6).'
+  - 'CQ-04 (code): lines 41-46 compute the two-sided np.fft.fft and fftfreq and then
+    mask the positive half, and lines 53-55 write out a local-maximum search → np.fft.rfft
+    / np.fft.rfftfreq and scipy.signal.find_peaks. Likely cause: hand-rolled steps
+    an available call computes.'
+  - 'Suggestion: matplotlib''s own ax.magnitude_spectrum(signal, Fs=sample_rate, scale=''dB'')
+    would show a distinctive library feature.'
+  - 'Suggestion: peak labels at 7 pt could go to 8 pt to match the tick labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with correct tone and temperature
-      Chrome: Title "spectrum-basic · matplotlib · anyplot.ai" in dark text (#1A1A17), axis labels "Frequency (Hz)" and "Amplitude (dB)" clearly visible, tick labels readable
-      Data: Green spectrum line (#009E73) and orange peak markers (#D55E00) clearly distinguishable from light background, fill under curve visible, grid subtle
-      Legibility verdict: PASS - All text readable, no contrast issues, all elements clearly visible
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title "spectrum-basic · python · matplotlib · anyplot.ai" in dark ink, axis titles "Frequency (Hz)" and "Amplitude (dB)", grey tick labels, subtle grid, top/right spines removed; all readable
+      Data: #009E73 spectrum line with a light green fill to the -60 dB floor; noise floor around -40 to -60 dB; three narrow peaks at 50 Hz (0 dB), 120 Hz (-6 dB), 200 Hz (-10.5 dB) marked by purple #C475FD dots and framed bold labels "50 Hz", "120 Hz", "200 Hz"; x axis 0 to about 300 Hz
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with correct tone and temperature
-      Chrome: Title and axis labels in light text (#F0EFE8), tick labels in soft light (#B8B7B0), all clearly readable. Annotation boxes use darker background (#242420) with light text. No dark-on-dark text issues detected.
-      Data: Green spectrum line (#009E73) identical to light render, orange peak markers (#D55E00) identical, confirming data color consistency across themes
-      Legibility verdict: PASS - All text readable, perfect theme adaptation, no contrast failures, brand green remains visible and vibrant
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels light grey, grid subtle, annotation boxes on dark elevated surface with light text and light frame; no dark-on-dark text
+      Data: same #009E73 line and fill (darker-looking fill from alpha over dark page), same purple peak markers; data colors identical to light
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,74 +56,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt),
-          perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt per the style guide; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Annotation boxes offset with xytext, all elements clearly separated
+        comment: Peak labels sit clear of the spectrum line and of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Spectrum line (linewidth=3), scatter markers (s=200), fill (alpha=0.25)
-          all optimally visible
+        comment: 1.5 pt line over a 0.25-alpha fill, peak markers with a page-colored
+          ring visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00), good contrast, CVD-safe'
+        comment: Green spectrum and purple peak markers differ in hue and lightness;
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape (4800×2700px), plot fills 60-70%, balanced margins,
-          tight_layout
+        comment: 3200x1800, balanced margins, title about 50 % of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include units (Hz, dB); title format correct
+        comment: Frequency (Hz), Amplitude (dB)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, accent #D55E00, backgrounds #FAF8F1/#1A1A17,
-          all chrome correctly theme-adaptive'
+        comment: 'Spectrum #009E73, peaks Imprint position 2 #C475FD; backgrounds
+          #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Intentional color choices, clear visual hierarchy emphasizing peaks,
-          clean typography
+        comment: Annotation boxes on the elevated surface token with an INK_SOFT frame
+          and bold labels; peak markers ringed in the page color
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, generous whitespace, rounded annotation
-          boxes
+        comment: Fill anchored to the axis floor rather than 0 dB, y range derived
+          from the peak with 10 dB headroom
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Peak frequencies highlighted and annotated; visual hierarchy emphasizes
-          signal components
+        comment: Peak annotation is what the Notes suggest; no hierarchy chosen beyond
+          it
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,26 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency spectrum plot; FFT-based amplitude vs frequency
+        comment: Single filled-line spectrum with peak annotations only
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: frequency X-axis, amplitude Y-axis, peak highlighting,
-          fill under curve'
+        comment: C1 line with every bin, C2 units on both axes (linear axis fine for
+          0-500 Hz), C3 peaks over the floor, C4 three labels at their peaks, C5 single
+          spectrum
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Correct mapping: X 0-300 Hz, Y -60 to +10 dB; all data visible'
+        passed: false
+        comment: x limit at 0.6 x max hides the 300-499 Hz bins (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend appropriately omitted
+        comment: Title spectrum-basic · python · matplotlib · anyplot.ai; legend N/A
+          for a single series
     data_quality:
       score: 15
       max: 15
@@ -160,22 +162,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows fundamental, harmonics, noise floor, multiple components
+        comment: Three components of different strength, noise floor, narrow peaks
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic sampling rate, standard FFT, plausible frequencies, neutral
-          educational scenario
+        comment: FFT of a 1 kHz-sampled synthetic signal with 50/120/200 Hz tones,
+          the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All proportions factually correct and realistic for signal processing
+        comment: 'Checked: peaks at 0, -6.0 and -10.5 dB match amplitudes 1.0, 0.5,
+          0.3 (20log10); floor near -45 dB fits sigma 0.1 noise over 1000 samples'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -183,55 +186,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions/classes
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, matplotlib, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Pythonic, clean, appropriate complexity
+        passed: false
+        comment: Two-sided fft plus positive mask instead of np.fft.rfft; hand-rolled
+          local-max instead of scipy.signal.find_peaks (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, current API
+        comment: plot-{THEME}.png, no bbox_inches='tight'
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of Axes methods, proper theme token application throughout
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom annotation styling, scatter edge colors from tokens, FFT computation
+        comment: 'Axes API, fill_between, annotate with offset points: the standard
+          pattern'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T15:07:16Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - fill-between
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - fft
   styling:
-  - publication-ready
   - alpha-blending
+  - minimal-chrome

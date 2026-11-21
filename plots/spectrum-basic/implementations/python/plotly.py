@@ -1,55 +1,60 @@
 """ anyplot.ai
 spectrum-basic: Frequency Spectrum Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-14
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"
 
-# Data - Generate synthetic signal with multiple frequency components
+# Imprint palette: first position is the single series
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+N_PEAKS = 3  # the dominant components that get a label
+
+# Columns: set these to your table's column names
+FREQUENCY = "Frequency (Hz)"  # role: frequency
+AMPLITUDE = "Amplitude (dB)"  # role: amplitude
+
+# Data: replace this block with your own table, for example df = pd.read_csv("spectrum.csv")
 np.random.seed(42)
-
-# Signal parameters
 sample_rate = 1000  # Hz
-duration = 1.0  # seconds
-n_samples = int(sample_rate * duration)
-t = np.linspace(0, duration, n_samples, endpoint=False)
-
-# Create synthetic signal: sum of sinusoids at 50, 120, and 300 Hz
+n_samples = 1000  # one second of signal
+t = np.arange(n_samples) / sample_rate
 signal = (
-    1.0 * np.sin(2 * np.pi * 50 * t)  # 50 Hz fundamental
-    + 0.5 * np.sin(2 * np.pi * 120 * t)  # 120 Hz component
-    + 0.3 * np.sin(2 * np.pi * 300 * t)  # 300 Hz component
-    + 0.1 * np.random.randn(n_samples)  # Noise
+    1.0 * np.sin(2 * np.pi * 50 * t)
+    + 0.5 * np.sin(2 * np.pi * 120 * t)
+    + 0.3 * np.sin(2 * np.pi * 300 * t)
+    + 0.1 * np.random.randn(n_samples)
+)
+fft_result = np.fft.rfft(signal)
+df = pd.DataFrame(
+    {
+        FREQUENCY: np.fft.rfftfreq(n_samples, 1 / sample_rate),
+        AMPLITUDE: 20 * np.log10(np.abs(fft_result) / n_samples + 1e-10),
+    }
 )
 
-# Compute FFT
-fft_result = np.fft.rfft(signal)
-frequency = np.fft.rfftfreq(n_samples, 1 / sample_rate)
-amplitude_db = 20 * np.log10(np.abs(fft_result) / n_samples + 1e-10)
-
-# Plot
+# Plot: reads only df and the constants above
 fig = go.Figure()
-
 fig.add_trace(
     go.Scatter(
-        x=frequency,
-        y=amplitude_db,
+        x=df[FREQUENCY],
+        y=df[AMPLITUDE],
         mode="lines",
-        line=dict(color=BRAND, width=3),
+        line={"color": IMPRINT_PALETTE[0], "width": 2.5},
         fill="tozeroy",
         fillcolor="rgba(0, 158, 115, 0.15)",
         name="Spectrum",
@@ -57,52 +62,57 @@ fig.add_trace(
     )
 )
 
-# Layout with theme-adaptive colors
-fig.update_layout(
-    title=dict(text="spectrum-basic · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Frequency (Hz)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        range=[0, 500],
-        gridcolor=GRID,
-        gridwidth=0.8,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-    ),
-    yaxis=dict(
-        title=dict(text="Amplitude (dB)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
-        gridwidth=0.8,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-    ),
-    paper_bgcolor=PAGE_BG,
-    plot_bgcolor=PAGE_BG,
-    font=dict(color=INK),
-    showlegend=False,
-    hovermode="x unified",
-    margin=dict(l=100, r=60, t=100, b=80),
-)
-
-# Add annotations for peak frequencies
-peak_freqs = [50, 120, 300]
-for freq in peak_freqs:
-    idx = np.argmin(np.abs(frequency - freq))
+# Label the strongest bins, found by rule
+for idx in df[AMPLITUDE].nlargest(N_PEAKS).index:
     fig.add_annotation(
-        x=frequency[idx],
-        y=amplitude_db[idx],
-        text=f"{freq} Hz",
+        x=df.loc[idx, FREQUENCY],
+        y=df.loc[idx, AMPLITUDE],
+        text=f"{df.loc[idx, FREQUENCY]:.0f} Hz",
         showarrow=True,
         arrowhead=2,
-        arrowsize=1.5,
-        arrowwidth=2,
+        arrowsize=1.2,
+        arrowwidth=1.5,
         arrowcolor=INK_SOFT,
-        font=dict(size=16, color=INK),
+        font={"size": 11, "color": INK},
         ax=0,
-        ay=-50,
+        ay=-30,
     )
 
+fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    title={
+        "text": "spectrum-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "title": {"text": FREQUENCY, "font": {"size": 13, "color": INK}},
+        "tickfont": {"size": 11, "color": INK_SOFT},
+        "range": [0, df[FREQUENCY].max()],
+        "gridcolor": GRID,
+        "gridwidth": 0.8,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": AMPLITUDE, "font": {"size": 13, "color": INK}},
+        "tickfont": {"size": 11, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "gridwidth": 0.8,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    showlegend=False,
+    hovermode="x unified",
+)
+
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
