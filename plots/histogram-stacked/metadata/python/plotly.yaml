@@ -2,44 +2,48 @@ library: plotly
 language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:37:26Z'
-updated: '2026-05-12T05:35:20Z'
-generated_by: claude-haiku
-workflow_run: 25715287098
+updated: '2026-11-21T04:43:18Z'
+generated_by: claude-sonnet
+workflow_run: 44866906989
 issue: 2601
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 83
 review:
   strengths:
-  - Perfect visual quality with excellent text legibility and element visibility
-  - Flawless palette compliance with Okabe-Ito colors and theme-correct chrome in
-    both renders
-  - Clean, idiomatic Plotly code with proper theme tokenization and reproducibility
-  - All spec requirements met - correct stacked histogram type with proper composition
-    showing
-  - Strong data storytelling - stacking naturally creates visual hierarchy showing
-    contribution of each line
+  - Contiguous stacked bins (bargap=0) on one shared set of np.histogram_bin_edges,
+    with thin PAGE_BG segment outlines that keep neighboring segments separable in
+    both themes
+  - Legend titled 'Production line' with entries in stack order (Line C on top), so
+    the reader maps segments to groups without searching
+  - 'Full theme-token threading: every title, tick, grid line and legend frame flips
+    correctly between #FAF8F1 and #1A1A17 while the Imprint data colors stay identical'
+  - Per-trace hovertemplate shows the group, bin center and frequency in the HTML
+    output
+  - Canvas contract met exactly (800x450 at scale 4, autosize=False, pinned margins)
+    and the mandated title format is complete
   weaknesses:
-  - Design excellence is competent but follows standard patterns - could benefit from
-    more sophisticated aesthetic customization
-  - Library mastery uses standard Plotly features effectively but doesn't leverage
-    distinctive library-specific capabilities (e.g., animation, advanced interactivity)
+  - 'Suggestion: px.histogram(df, x=WEIGHT, color=LINE, barmode=''stack'', nbins=N_BINS)
+    or go.Histogram with a shared xbins would let plotly compute the bins natively
+    instead of pre-binning with np.histogram and go.Bar.'
+  - 'Suggestion: the gap between the legend swatches and their labels is wide; a tighter
+    legend itemwidth would make the box more compact.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title, axis labels, tick labels all dark (#1A1A17, #4A4A44) and clearly readable against light background
-      Data: Three-series stacked histogram with Okabe-Ito colors - green (#009E73), orange (#D55E00), blue (#0072B2). All bars clearly visible with good separation.
-      Legibility verdict: PASS - All text is explicit-sized (28px title, 22px labels, 18px ticks) and perfectly readable
+      Background: warm off-white #FAF8F1 on both paper and plot area.
+      Chrome: centered title "histogram-stacked · python · plotly · anyplot.ai" in dark ink at about 40 % of the width; axis titles "Product weight (g)" and "Frequency" in INK, tick labels 200–350 and 0–70 in INK_SOFT, subtle grid; framed legend top right on the elevated fill titled "Production line" (Line C, Line B, Line A). All readable.
+      Data: 20 contiguous stacked bins from about 170 g to 375 g; Line A #009E73 at the base, Line B #C475FD in the middle, Line C #4467A3 on top, separated by thin page-colored outlines; tallest total 67 at about 258 g, y axis to 70; empty bin near 360 g, single Line B count in the last bin.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title and labels are light-colored (#F0EFE8, #B8B7B0) with excellent contrast on dark background. No dark-on-dark failures.
-      Data: Identical data colors to light render (green, orange, blue) - only chrome flips for theme adaptation. All bars equally visible.
-      Legibility verdict: PASS - Theme adaptation is flawless with light text on dark surface, maintaining readability
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light INK, tick labels and legend text in INK_SOFT, grid subtle but visible, legend frame on #242420 with a light border. No dark-on-dark text.
+      Data: identical green/purple/blue segments and counts to the light render; segment outlines now dark page color; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,47 +54,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks);
-          perfectly readable in both themes
+        comment: All sizes set (title 16, axis titles 12, ticks and legend 10 at scale
+          4); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all elements properly spaced
+        comment: No text collisions; legend sits in empty upper-right space
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible; stacking well-defined; colors vivid
+        comment: Bars and segments clear; legend swatches visible and matching in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; colorblind-safe; good contrast
+        comment: Green/purple/blue are CVD-distinguishable; outlines separate segments
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout; balanced margins; generous whitespace
+        comment: 3200x1800, balanced margins, plot fills the canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive with units
+        comment: '''Product weight (g)'' with unit, ''Frequency'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito order (1=#009E73, 2=#D55E00, 3=#0072B2); backgrounds correct
-          (#FAF8F1 light, #1A1A17 dark); theme-correct chrome in both renders'
+        comment: 'Imprint in canonical order starting #009E73; correct backgrounds
+          in both themes'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -98,21 +103,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults; clean layout; no custom palette or exceptional
-          design
+        comment: Style-guide baseline typography and hierarchy, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Subtle grid; generous whitespace; clean styling; good execution
+        comment: Page-colored segment outlines on contiguous bins give crisp separation
+          between stacked segments, a choice made for this chart
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Stacking creates clear visual hierarchy; focal point visible at 250g
-          peak; color contrast guides viewer
+        passed: false
+        comment: Data displayed clearly; no focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,26 +126,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked histogram; barmode='stack' properly configured
+        comment: Stacked histogram with barmode='stack'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: stacking, distinct colors, legend, same bins
-          for all groups'
+        comment: Shared bins, contiguous bars, zero baseline, untruncated axis past
+          67, distinct colors with legend, one segment order kept (C1–C4 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible; composition properly stacked
+        comment: Bin centers on x, counts on y, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Mandated title format; legend title 'Production line' and entries
+          readable
     data_quality:
       score: 15
       max: 15
@@ -151,20 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple groups, clear stacking, composition
-          changes across bins'
+        comment: Three groups with shifted means show composition changing across
+          bins
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing scenario is plausible and neutral; weight values realistic
+        comment: Product weights from three production lines, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible; proportions logical; scale appropriate for domain
+        comment: 'Checked: weights ~250–280 g with 25–35 g spread, 450 points within
+          50–5000; no check values in spec'
     code_quality:
       score: 10
       max: 10
@@ -174,53 +180,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward flow
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set; deterministic data
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (os, sys, numpy, plotly)
+        comment: os, numpy, pandas, plotly all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; appropriate complexity; no fake UI
+        comment: Binning via np.histogram_bin_edges/np.histogram; one loop over groups
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format (plot-{THEME}.png and .html)
+        comment: plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expertly idiomatic: go.Figure, go.Bar, dict configuration, proper
-          hovertemplate'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Good use of native stacking and hover templates; could leverage more
-          distinctive Plotly features
-    score_caps: []
-    total: 91
-    max: 100
+        comment: go.Figure loop over df.groupby as the library prompt shows; pre-binned
+          go.Bar instead of native histogram traces
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; hovertemplate is
+          standard
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T04:39:58Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -228,6 +234,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - binning
-  styling: []
+  styling:
+  - edge-highlighting
