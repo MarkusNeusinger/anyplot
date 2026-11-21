@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-line: Polar Line Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-12
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
@@ -19,6 +19,7 @@ if script_dir in sys.path:
 import altair as alt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402
 
 
 # Theme tokens
@@ -28,153 +29,162 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (positions 1-2 for two series)
-IMPRINT = ["#009E73", "#C475FD"]
+# Imprint palette: all eight positions, one per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Seasonal temperature pattern (cyclical)
-np.random.seed(42)
-months = np.arange(0, 360, 30)  # 12 months as degrees
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: extra
+THETA = "Angle (degrees)"  # role: theta
+RADII = ["Northern City", "Southern City"]  # role: radius
+
+# Data: replace this block with your own table, for example df = pd.read_csv("temperatures.csv")
 month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-# Two cities with different seasonal patterns
-city_a_temp = np.array([5, 7, 12, 18, 24, 28, 30, 29, 24, 17, 10, 6])
-city_b_temp = np.array([28, 27, 24, 18, 12, 8, 7, 9, 14, 20, 24, 27])
-
-# Normalize temperatures to 0-1 range for polar visualization
-city_a_norm = (city_a_temp - city_a_temp.min()) / (city_a_temp.max() - city_a_temp.min()) * 0.4 + 0.3
-city_b_norm = (city_b_temp - city_b_temp.min()) / (city_b_temp.max() - city_b_temp.min()) * 0.4 + 0.3
-
-# Convert polar to cartesian for Altair
-theta_rad_months = np.radians(months)
-theta_rad_closed = np.append(theta_rad_months, theta_rad_months[0])
-
-city_a_closed = np.append(city_a_norm, city_a_norm[0])
-city_b_closed = np.append(city_b_norm, city_b_norm[0])
-
-x_a = city_a_closed * np.cos(theta_rad_closed)
-y_a = city_a_closed * np.sin(theta_rad_closed)
-x_b = city_b_closed * np.cos(theta_rad_closed)
-y_b = city_b_closed * np.sin(theta_rad_closed)
-
+north_temp = [5, 7, 12, 18, 24, 28, 30, 29, 24, 17, 10, 6]
+south_temp = [28, 27, 24, 18, 12, 8, 7, 9, 14, 20, 24, 27]
 df = pd.DataFrame(
     {
-        "x": np.concatenate([x_a, x_b]),
-        "y": np.concatenate([y_a, y_b]),
-        "order": list(range(len(x_a))) + list(range(len(x_b))),
-        "city": ["Northern City"] * len(x_a) + ["Southern City"] * len(x_b),
+        MONTH: month_names,
+        THETA: np.arange(len(month_names)) * 360 / len(month_names),
+        RADII[0]: north_temp,
+        RADII[1]: south_temp,
     }
 )
 
-# Create polar grid - concentric circles
-grid_circles = []
-for r in [0.2, 0.4, 0.6, 0.8]:
-    theta_circle = np.linspace(0, 2 * np.pi, 100)
-    x_c = r * np.cos(theta_circle)
-    y_c = r * np.sin(theta_circle)
-    for i in range(len(x_c)):
-        grid_circles.append({"x": x_c[i], "y": y_c[i], "r": str(r), "order": i})
-grid_df = pd.DataFrame(grid_circles)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+SIZE = 460  # inner view in px, square so the circles stay round
 
-# Create radial lines
-radials = []
-for angle in months:
-    angle_rad = np.radians(angle)
-    radials.append({"x": 0, "y": 0, "x2": 0.85 * np.cos(angle_rad), "y2": 0.85 * np.sin(angle_rad)})
-radials_df = pd.DataFrame(radials)
 
-# Month labels
-labels = []
-for angle, name in zip(months, month_names, strict=True):
-    angle_rad = np.radians(angle)
-    labels.append({"x": 0.95 * np.cos(angle_rad), "y": 0.95 * np.sin(angle_rad), "label": name})
-labels_df = pd.DataFrame(labels)
+def to_xy(theta_deg, radius):
+    """January at the top, months running clockwise."""
+    rad = np.radians(theta_deg)
+    return radius * np.sin(rad), radius * np.cos(rad)
 
-# Concentric grid circles
-circles_chart = (
-    alt.Chart(grid_df)
-    .mark_line(strokeWidth=1.5, opacity=0.5)
+
+# Close each series into a loop (cyclic data) and project to the plane
+CITY = "City"
+RADIUS = "Temperature (°C)"
+long = df.melt(id_vars=[MONTH, THETA], value_vars=RADII, var_name=CITY, value_name=RADIUS)
+series = [g.sort_values(THETA) for _, g in long.groupby(CITY, sort=False)]
+lines = pd.concat([pd.concat([g, g.iloc[:1]]).assign(order=lambda t: np.arange(len(t))) for g in series])
+lines["x"], lines["y"] = to_xy(lines[THETA], lines[RADIUS])
+
+# Radius scale: round ring values derived from the data
+step = 10 ** np.floor(np.log10(long[RADIUS].max()))
+ring_values = np.arange(step, np.ceil(long[RADIUS].max() / step) * step + step / 2, step)
+r_max = ring_values[-1]
+lim = r_max * 1.28
+dom = alt.Scale(domain=[-lim, lim], nice=False)
+
+# Concentric rings
+sweep = np.linspace(0, 360, 181)
+rings = pd.concat(
+    [
+        pd.DataFrame(
+            {"ring": f"{r:g}", "order": np.arange(len(sweep)), "x": to_xy(sweep, r)[0], "y": to_xy(sweep, r)[1]}
+        )
+        for r in ring_values
+    ]
+)
+
+# Radial spokes and month labels
+angles = long.drop_duplicates(THETA)[[THETA, MONTH]]
+spoke_end = to_xy(angles[THETA], r_max)
+spokes = pd.DataFrame({"x": 0.0, "y": 0.0, "x2": spoke_end[0], "y2": spoke_end[1]})
+label_pos = to_xy(angles[THETA], r_max * 1.12)
+month_labels = pd.DataFrame({"x": label_pos[0], "y": label_pos[1], "text": angles[MONTH]})
+
+# Radius labels along the spoke halfway between the first two angles
+tick_angle = angles[THETA].iloc[:2].mean()
+tick_pos = to_xy(tick_angle, ring_values)
+ring_labels = pd.DataFrame({"x": tick_pos[0], "y": tick_pos[1], "text": [f"{r:g}" for r in ring_values]})
+unit = RADIUS[RADIUS.find("(") :] if "(" in RADIUS else ""
+ring_labels.loc[ring_labels.index[-1], "text"] += f" {unit}".rstrip()
+
+ring_layer = (
+    alt.Chart(rings)
+    .mark_line(strokeWidth=1, opacity=0.35, color=INK_SOFT)
     .encode(
-        x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-1.1, 1.1])),
-        y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-1.1, 1.1])),
-        detail="r:N",
-        order="order:O",
-        color=alt.value(INK_SOFT),
+        x=alt.X("x:Q", axis=None, scale=dom), y=alt.Y("y:Q", axis=None, scale=dom), detail="ring:N", order="order:Q"
     )
 )
-
-# Radial grid lines
-radials_chart = (
-    alt.Chart(radials_df)
-    .mark_rule(strokeWidth=1.5, opacity=0.5)
-    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value(INK_SOFT))
+spoke_layer = (
+    alt.Chart(spokes)
+    .mark_rule(strokeWidth=1, opacity=0.3, color=INK_SOFT)
+    .encode(x=alt.X("x:Q", scale=dom), y=alt.Y("y:Q", scale=dom), x2="x2:Q", y2="y2:Q")
+)
+month_layer = (
+    alt.Chart(month_labels)
+    .mark_text(fontSize=13, fontWeight="bold", color=INK)
+    .encode(x=alt.X("x:Q", scale=dom), y=alt.Y("y:Q", scale=dom), text="text:N")
+)
+ring_label_layer = (
+    alt.Chart(ring_labels)
+    .mark_text(fontSize=11, color=INK_SOFT, align="left", dx=3, dy=-3)
+    .encode(x=alt.X("x:Q", scale=dom), y=alt.Y("y:Q", scale=dom), text="text:N")
 )
 
-# Month labels
-labels_chart = (
-    alt.Chart(labels_df)
-    .mark_text(fontSize=22, fontWeight="bold")
-    .encode(x="x:Q", y="y:Q", text="label:N", color=alt.value(INK))
+color = alt.Color(
+    CITY.translate(ESCAPE),
+    type="nominal",
+    title=CITY,
+    sort=None,
+    scale=alt.Scale(range=IMPRINT_PALETTE),
+    legend=alt.Legend(
+        orient="bottom",
+        direction="horizontal",
+        titleFontSize=13,
+        labelFontSize=12,
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        titleColor=INK,
+        labelColor=INK_SOFT,
+        padding=6,
+        symbolType="stroke",
+        symbolStrokeWidth=3,
+    ),
 )
+data_encoding = {
+    "x": alt.X("x:Q", scale=dom),
+    "y": alt.Y("y:Q", scale=dom),
+    "color": color,
+    "order": alt.Order("order:Q"),
+    "tooltip": [
+        alt.Tooltip(CITY.translate(ESCAPE), type="nominal", title=CITY),
+        alt.Tooltip(MONTH.translate(ESCAPE), type="nominal", title=MONTH),
+        alt.Tooltip(RADIUS.translate(ESCAPE), type="quantitative", title=RADIUS),
+    ],
+}
+line_layer = alt.Chart(lines).mark_line(strokeWidth=3).encode(**data_encoding)
+point_layer = alt.Chart(lines).mark_point(size=55, filled=True, opacity=1).encode(**data_encoding)
 
-# Data lines
-lines_chart = (
-    alt.Chart(df)
-    .mark_line(strokeWidth=4, opacity=0.9)
-    .encode(
-        x="x:Q",
-        y="y:Q",
-        color=alt.Color(
-            "city:N",
-            scale=alt.Scale(domain=["Northern City", "Southern City"], range=IMPRINT),
-            legend=alt.Legend(
-                title="City",
-                titleFontSize=20,
-                labelFontSize=18,
-                orient="bottom",
-                direction="horizontal",
-                fillColor=ELEVATED_BG,
-                strokeColor=INK_SOFT,
-                titleColor=INK,
-                labelColor=INK_SOFT,
-            ),
-        ),
-        order="order:O",
-    )
-)
-
-# Data points
-points_chart = (
-    alt.Chart(df)
-    .mark_point(size=250, filled=True, opacity=0.9)
-    .encode(
-        x="x:Q",
-        y="y:Q",
-        color=alt.Color(
-            "city:N", scale=alt.Scale(domain=["Northern City", "Southern City"], range=IMPRINT), legend=None
-        ),
-    )
-)
-
-# Combine all layers
 chart = (
-    alt.layer(circles_chart, radials_chart, labels_chart, lines_chart, points_chart)
+    alt.layer(ring_layer, spoke_layer, ring_label_layer, line_layer, point_layer, month_layer)
     .properties(
-        width=1200,
-        height=1200,
+        width=SIZE,
+        height=SIZE,
+        background=PAGE_BG,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         title=alt.Title(
-            text="polar-line · altair · anyplot.ai",
-            subtitle="Monthly Temperature Patterns",
-            fontSize=28,
-            subtitleFontSize=22,
+            text="Monthly Temperature · polar-line · python · altair · anyplot.ai",
+            fontSize=16,
             anchor="middle",
             color=INK,
-            subtitleColor=INK_SOFT,
         ),
-        background=PAGE_BG,
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
 )
 
-# Save (1200 * 3 = 3600 for square format)
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save, then pad (never crop) to the 2400 x 2400 square canvas
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TW, TH = 2400, 2400
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair vl-convert produced {w}×{h}, exceeds target {TW}×{TH}")
+if w < TW or h < TH:
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
