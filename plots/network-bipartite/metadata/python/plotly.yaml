@@ -2,12 +2,12 @@ library: plotly
 language: python
 specification_id: network-bipartite
 created: '2026-05-14T21:10:30Z'
-updated: '2026-05-14T21:28:26Z'
+updated: '2026-11-21T17:46:58Z'
 generated_by: claude-sonnet
-workflow_run: 25885513056
+workflow_run: 44931192574
 issue: 5247
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotly/plot-light.html
@@ -15,105 +15,119 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-b
 quality_score: 85
 review:
   strengths:
-  - Full spec compliance — all required bipartite features implemented (two node sets,
-    degree-based sizing, weight-encoded edge widths, set-colored nodes)
-  - Clean dual-theme adaptation with correct background colors and all chrome tokens
-    properly applied in both renders
-  - Effective data storytelling via node size and edge width dual encoding
-  - Perfect code quality — seed, clean imports, flat script, correct output files
+  - Clean two-column bipartite layout with labels on the outer side of each column,
+    so no label touches an edge in either theme
+  - Column headings typeset in their set's Imprint color tie the heading, legend and
+    nodes into one encoding
+  - Edge width by sets played and node size by degree both read at a glance; theme-tuned
+    edge alpha keeps the bundle lighter than the nodes in both renders
+  - 'Idiomatic plotly: None-separated segments give one go.Scatter trace per weight
+    class, and hovertemplate with customdata exposes each node''s degree in the HTML
+    view'
   weaknesses:
-  - Node labels at 16px are below the 18px minimum for pixel-based libraries at the
-    4800x2700px canvas; increase textfont size to 18px for student and course labels
-  - The edge weight encoding is visually present but not self-documenting; consider
-    adding a small reference key showing thin/medium/thick edge = weight 2/3/4
+  - 'CQ-01 (code): a helper function node_sizes() at lines 79–81 breaks the flat Imports
+    → Data → Plot → Save structure → compute the two size lists inline (e.g. one list
+    expression per column) and drop the def. Likely cause: the size scaling factored
+    into a function to reuse it for both sets.'
+  - 'Suggestion: the nodes render translucent, so the edge ends show as dark stubs
+    inside every node circle; an explicit marker opacity of 1 would give solid nodes.'
+  - 'Suggestion: the legend repeats what the colored column headings already say;
+    dropping it would free the bottom band.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "Student-Course Enrollment · network-bipartite · plotly · anyplot.ai" in dark #1A1A17 at 28px — clearly readable. Column headers "Students" and "Courses" at 22px in respective data colors (green/orange) — readable. Node labels (student/course names) at 16px in #1A1A17 — readable but slightly small for 4800x2700px canvas. Legend text at 16px — readable.
-      Data: Students = #009E73 (Okabe-Ito position 1), Courses = #D55E00 (position 2). Node sizes vary by degree (Alice largest at 5 courses). Edge widths vary by weight (2-4), semi-transparent grey edges.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: title 'Festival Lineups · network-bipartite · python · plotly · anyplot.ai' in dark INK, centred, about 55% of the width; bold column headings 'Artists' (green) and 'Festivals' (purple); node labels in dark INK on the outer side of each column; bottom legend box (elevated fill, INK_SOFT border) with 'Artists' / 'Festivals'. All readable.
+      Data: 12 artist nodes in #009E73 on the left, 6 festival nodes in #C475FD on the right, sized by degree (Luna Vega and DJ Koral largest on the left, Sunrise Fields and Neon Desert on the right; Tiny Giants and Bass Garden smallest but visible); 31 straight grey edges, width by sets played. Nodes render slightly translucent, so edge ends show inside them.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light #F0EFE8 — clearly readable against dark background. Column headers in data colors (green/orange) — readable. Node labels in light text — readable, no dark-on-dark failures. Legend text in light color — readable.
-      Data: Student green (#009E73) and course orange (#D55E00) are identical to light render — only chrome tokens flipped. Node sizes and edge widths unchanged.
+      Background: warm near-black #1A1A17.
+      Chrome: title, node labels and legend text in light INK/INK_SOFT; headings in the same green and purple; legend box on #242420 with a light border. No dark-on-dark text.
+      Data: same node colors, sizes and positions as the light render; edges in lighter grey at lower alpha, all visible. Only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title (28px) and headers (22px) well-sized; node labels at 16px slightly
-          below 18px minimum for pixel-based libraries
+        comment: 'Title 16 px, column headers 14 px bold, node labels 11 px and legend
+          11 px all set explicitly; every text reads clearly at full size in both
+          themes (INK on #FAF8F1, light INK on #1A1A17)'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bipartite layout prevents overlap; edge crossings are expected and
-          handled well
+        comment: Labels sit on the outer side of each column, clear of edges and of
+          each other; edge crossings are permitted by the spec
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes and variable-width edges clearly visible; degree-based sizing
-          effective
+        comment: Smallest nodes (Tiny Giants, Bass Garden) stay visible in both themes;
+          edges 0.95–2.3 px at theme-tuned alpha are visible but lighter than the
+          nodes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2; CVD-safe
+        comment: 'Green #009E73 against purple #C475FD is CVD-safe; set membership
+          is also carried by column position and headings'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions and margins; vertical separator adds structure
+        comment: 3200×1800 canvas (no canvas gate file); the two columns fill the
+          width with balanced margins, title at about 55 % of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; column headers serve as effective axis labels
+        comment: No axes by design (layout-positioned type); title carries a descriptive
+          prefix, column headings name each set
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Students=#009E73, Courses=#D55E00; backgrounds #FAF8F1/#1A1A17;
-          both themes correct'
+        comment: 'Artists #009E73 (Imprint 1), Festivals #C475FD (Imprint 2), backgrounds
+          #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Node sizing by degree, variable edge widths by weight, colored column
-          headers, vertical separator — intentional design above defaults
+        comment: 'Beyond baseline: column headings typeset bold in their set color,
+          giving a clear three-level hierarchy (title, set heading, node label) tied
+          to the encoding'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Axes completely suppressed, no grid, clean whitespace, separator
-          adds structure
+        comment: 'Beyond baseline: the six-node festival column is inset (0.92–0.08)
+          so it centres against the twelve-node artist column; page-colored node outlines
+          separate nodes from the edge bundle'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Node size encodes degree (hubs visible), edge width encodes weight;
-          bipartite layout makes cross-category relationships clear
+        passed: false
+        comment: Hubs by degree and edge width by weight are what the Notes ask for;
+          no further focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -123,86 +137,93 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bipartite network layout
+        comment: Correct bipartite two-column network, no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two node sets in columns, color by set, degree-based node size, weight-encoded
-          edge widths
+        comment: Two separated columns (C1), color by set with legend and headings
+          (C2), size by degree (C3), straight edges with width by weight (C4), labels
+          on the outer side (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Students on left (x=0), Courses on right (x=1); all edges correctly
-          mapped
+        comment: Every edge runs artist→festival; no within-set edges; node positions
+          are layout, not data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend identifies both node sets
+        comment: Title 'Festival Lineups · network-bipartite · python · plotly · anyplot.ai'
+          matches the format; legend entries 'Artists' / 'Festivals' are reader text
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bipartite structure, hub nodes, degree variation, edge weight all
-          demonstrated
+        comment: Shows hubs (Luna Vega, DJ Koral at degree 4; Sunrise Fields, Neon
+          Desert at 6), a single-connection node (Tiny Giants), weights 1–4 and crossings
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Student-course enrollment is realistic, neutral, and domain-appropriate
+        comment: Fictional musician–festival lineup with plausible artist and festival
+          names; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 students, 8 courses, 37 edges — appropriate size
+        comment: 'Checked: 12 artists, 6 festivals, 31 edges, 1–4 sets played per
+          festival — plausible; no Check values in the spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Flat script, no functions or classes
+        passed: false
+        comment: A helper function node_sizes() (lines 79–81) breaks the flat Imports
+          → Data → Plot → Save structure (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: Fully deterministic hard-coded edge list
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: defaultdict for edge grouping is clean; linear sizing is readable
+        comment: 'Lean: value_counts for degree, groupby for weight classes, None-separated
+          segments'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and plot-{THEME}.html both generated
+        comment: Saves plot-{THEME}.png at 800×450×4 and plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -210,16 +231,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper go.Figure with multiple go.Scatter traces; add_annotation
-          and add_shape for extras; customdata for hover
+        comment: 'Beyond default: None-separated segment arrays so each weight class
+          is one go.Scatter trace instead of one trace per edge'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: false
-        comment: Uses hovertemplate with customdata, write_html, grouped traces for
-          edge weights; solid but not exceptional use of plotly-specific features
+        passed: true
+        comment: 'Beyond default: hovertemplate with customdata gives per-node degree
+          in the HTML view (library-native interactivity)'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T17:42:26Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -227,10 +251,10 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep:
-  - normalization
+  - groupby-aggregation
   styling:
-  - edge-highlighting
   - alpha-blending
+  - minimal-chrome
