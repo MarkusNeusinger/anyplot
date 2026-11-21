@@ -2,43 +2,49 @@ library: letsplot
 language: python
 specification_id: roc-curve
 created: '2025-12-26T17:39:54Z'
-updated: '2026-05-09T22:45:06Z'
-generated_by: claude-haiku
-workflow_run: 25613620041
+updated: '2026-11-21T12:49:15Z'
+generated_by: claude-sonnet
+workflow_run: 44905058235
 issue: 2273
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-dark.html
-quality_score: 94
+quality_score: 86
 review:
   strengths:
-  - Perfect visual quality with all text legible in both themes and no overlap
-  - Correct theme adaptation with Okabe-Ito data colors identical across renders and
-    proper chrome flipping
-  - Strong spec compliance with all ROC curve requirements including reference line
-    and AUC display
-  - Professional code with deterministic data generation and clean theme token usage
-  - Clear data storytelling with visual hierarchy effectively communicating classifier
-    performance
+  - Draws sklearn's exact operating points with geom_path, so the curves keep their
+    honest stair-step shape (C1)
+  - Dashed theme-adaptive neutral diagonal reads as the reference at a glance in both
+    themes
+  - Square 600x600 canvas with coord_fixed gives a true 1:1 plot area spanning 0-1
+    on both axes
+  - Color and linetype scales share breaks and title, producing one merged legend
+    that carries each AUC
+  - Concrete credit-default scenario with named models (gradient boosting vs logistic
+    model)
   weaknesses:
-  - Design sophistication relies on library defaults without additional visual refinement
-    such as removed spines, grid-only styling, or custom legend styling
-  - Library distinctiveness uses idiomatic letsplot but lacks uniquely distinctive
-    features beyond standard grammar of graphics approach
+  - 'Suggestion: the grid is drawn in opaque INK at size 0.2; a lighter grid (the
+    15 % grid token) would recede further behind the curves, especially in the light
+    render.'
+  - 'Suggestion: the legend key column shows a slightly different background patch
+    than the elevated legend card; setting legend_key to the card fill would make
+    it seamless.'
+  - 'Suggestion: the panel is framed on all four sides; dropping the top and right
+    edges would match the style guide''s L-shaped default.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly set
-      Chrome: Title "roc-curve · letsplot · anyplot.ai" in dark ink (#1A1A17) is clearly visible. Axis labels "False Positive Rate" and "True Positive Rate" are readable in dark text. Tick labels (0, 0.1, 0.2, ... 1.0) are in soft gray ink and fully legible.
-      Data: Three curves shown - Model A in green (#009E73, first Okabe-Ito position), Model B in orange (#D55E00, second position), Random in adaptive gray. All lines are clearly distinguishable.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: title 'Credit Default Risk · roc-curve · python · letsplot · anyplot.ai' in dark ink top-left; axis titles 'False positive rate' / 'True positive rate' dark; tick labels 0-1 in steps of 0.1 in soft dark grey; thin dark grid; elevated legend card bottom-right titled 'Classifier'. All readable.
+      Data: Gradient boosting stair-step curve in #009E73 hugging the top-left corner (AUC 0.96), Logistic model in #C475FD (AUC 0.80), dashed grey random diagonal (AUC 0.50) corner to corner.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly set
-      Chrome: Title, axis labels, and tick labels rendered in light text (#F0EFE8 and #B8B7B0) with excellent contrast against dark background. All text is fully readable. No dark-on-dark failures detected.
-      Data: Data colors are identical to light render - Model A green (#009E73), Model B orange (#D55E00), Random gray. Chrome has properly adapted to dark theme while data colors remain constant.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light grey, thin light grid, legend card #242420 with light text. No dark-on-dark text.
+      Data: identical green and purple curves; dashed reference flips to light grey and stays visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -50,74 +56,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, axis labels 20pt, ticks
-          16pt), perfectly readable in both themes
+        comment: Title 14, axis titles 12, ticks and legend 10 pt, all above the lets-plot
+          references; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements clearly separated with no overlapping labels or
-          collisions
+        comment: Legend sits in the empty bottom-right corner below the diagonal;
+          no text collides with text or curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Three data lines optimally visible with appropriate line width for
-          canvas size
+        comment: Stair-step curves at size 1.6 clearly visible; legend line samples
+          match the curves, the dashed sample matches the reference
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with no red-green-only signal
+        comment: Green vs purple plus dashed neutral reference; distinguishable under
+          CVD
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins and well-proportioned
-          16:9 aspect ratio
+        comment: 2400x2400 square canvas, square panel fills it, balanced axis titles,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes descriptively labeled with domain context (False Positive Rate,
-          True Positive Rate)
+        comment: '''False positive rate'' / ''True positive rate'' taken from readable
+          column names'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, follows Okabe-Ito order, backgrounds are
-          correct (#FAF8F1 light, #1A1A17 dark), both renders theme-correct'
+        comment: '#009E73 first, #C475FD second, theme-adaptive neutral reference;
+          #FAF8F1 / #1A1A17 backgrounds, chrome flips correctly'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Theme-adaptive styling with intentional color hierarchy; professional
-          polish but lacks some refinement beyond defaults
+        passed: false
+        comment: Descriptive domain title prefix and a single merged color+linetype
+          legend with an elevated card; beyond baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Uses theme_minimal() with theme-adaptive legend; grid is appropriately
-          subtle but could be further customized
+        passed: false
+        comment: Legend moved inside the empty corner under the diagonal and expand
+          trimmed to 1 % so the panel uses the full square
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy effectively guides viewer; color-coded performance
-          levels with clear focal points
+        passed: false
+        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ROC curve with two classifiers and reference line
+        comment: ROC curves of two classifiers with random diagonal
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: ROC curves for multiple models, diagonal reference line, AUC scores
-          in legend
+        comment: C1 stair-step operating points via geom_path, C2 dashed diagonal,
+          C3 AUC per legend entry, C4 coord_fixed square 0-1 axes, C5 colors + legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis FPR, Y-axis TPR, both [0,1] with equal aspect ratio
+        comment: FPR on x, TPR on y, sklearn operating points drawn in order, no smoothing
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend with AUC values displayed
+        comment: '''Credit Default Risk · roc-curve · python · letsplot · anyplot.ai'';
+          legend ''Classifier'' with readable entries'
     data_quality:
       score: 15
       max: 15
@@ -156,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates full range of classifier performance from excellent
-          to random
+        comment: Strong and moderate classifier against random baseline, multi-model
+          comparison
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible synthetic data with realistic AUC values, neutral non-controversial
-          domain
+        comment: Credit-default scoring with gradient boosting vs logistic model;
+          neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Data correctly ranges [0,1], AUC values are factually sound
+        comment: Rates in [0,1]; AUC computed by sklearn.metrics.auc from the curve
+          (0.96, 0.80), not typed
     code_quality:
       score: 10
       max: 10
@@ -180,55 +188,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple procedural code with clear flow
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic behavior
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Straightforward implementation with no over-engineering or fake functionality
+        comment: Uses sklearn roc_curve and auc instead of a hand-rolled threshold
+          loop
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and plot-{THEME}.html output
+        comment: plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Expert ggplot2-style grammar with proper ggsize(), theme_minimal(),
-          and theme tokens
+        passed: false
+        comment: geom_path for ordered operating points, coord_fixed, manual color
+          and linetype scales sharing breaks and title so they merge into one legend
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses coord_fixed() and theme-adaptive styling appropriately but lacks
-          highly distinctive advanced features
+        passed: false
+        comment: Inside legend via legend_position/justification fractions; HTML export
+          with native tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T12:45:36Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - sklearn
   techniques:
+  - layer-composition
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
