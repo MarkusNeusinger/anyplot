@@ -12,111 +12,135 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 61
 review:
   strengths:
-  - Perfect theme adaptation with no dark-on-dark or light-on-light readability failures
-  - Data colors follow Okabe-Ito palette with correct brand green as first series
-  - Clear decomposition storytelling with intuitive stacked subplot layout
-  - Proper statsmodels implementation with scientifically sound additive decomposition
-  - Clean, reproducible code with deterministic seed and proper output format
+  - statsmodels seasonal_decompose (additive, period 12) drives all four components
+    in the required order, each panel labelled
+  - Each panel's y scale fits its component, with readable 'Temperature (°C)' titles
+    and several ticks per panel
+  - gggrid() composes the panels natively; HTML output keeps lets-plot tooltips
+  - Imprint palette in canonical order, identical in both themes
   weaknesses:
-  - Design could be more sophisticated with distinctive visual refinements beyond
-    defaults
-  - Limited exploration of letsplot-specific features like interactive tooltips or
-    advanced aesthetics
+  - 'VQ-05 (both): the canvas is 4800x2700 instead of 3200x1800 → 3200x1800 (−1600
+    × −900). Likely cause: ggsize(1600, 900) with ggsave(scale=3) instead of ggsize(800,
+    450) with scale=4.'
+  - 'VQ-01, VQ-07 (dark): the main title is drawn in #F0EFE8 on a pure #FFFFFF title
+    band and is nearly unreadable → title on the #1A1A17 page surface. Likely cause:
+    the final gggrid theme sets only plot_title; add plot_background=element_rect(fill=PAGE_BG,
+    color=PAGE_BG).'
+  - 'VQ-07, DE-01 (both): outer canvas, title band, margins and gaps between panels
+    are pure #FFFFFF instead of #FAF8F1 / #1A1A17 → PAGE_BG everywhere. Likely cause:
+    anyplot_theme reaches only the sub-plots; the gggrid container keeps the default
+    white background.'
+  - 'SC-02 (both): C2 broken — Trend and Residual cover only Jul 2019–Jun 2023 but
+    are stretched to the same width as Original and Seasonal (Jan 2019–Dec 2023),
+    so a date does not line up vertically, and the only x labels are month names without
+    years → one shared date range in every panel and year labels. Likely cause: no
+    shared scale_x_datetime(limits=...), dropna() per panel, default month-only date
+    format.'
+  - 'SC-04 (both): the title ''timeseries-decomposition · letsplot · anyplot.ai''
+    lacks the language segment → ''timeseries-decomposition · python · letsplot ·
+    anyplot.ai''. Likely cause: the ggtitle string.'
+  - 'DQ-03 (code): the trend rises from 15 to 18 °C over 60 months (0.6 °C per year),
+    tens of times faster than real climate warming, while the comment calls it gradual
+    → a slope plausible for the domain. Likely cause: np.linspace(15, 18, n_months).'
+  - 'CQ-04 (code): four near-identical ggplot blocks (lines 74–112) differ only in
+    data, color and title, and the comment ''Okabe-Ito palette'' sits over Imprint
+    hexes → one loop over the components and a correct comment. Likely cause: copy-pasted
+    panel blocks.'
+  - 'DE-02 (both): every panel has a four-sided frame and a dense major+minor grid
+    at size 0.5 → L-shaped axes and a lighter major-only grid. Likely cause: default
+    panel border and minor grid kept.'
+  - 'Suggestion: 60 monthly points sit below the spec''s 100–1000 size; ten years
+    of months would give the trend more to show.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 with excellent contrast
-      Chrome: Bold 24pt title, dark gray axis labels and ticks — all clearly readable against light surface
-      Data: Four lines (teal #009E73, orange #D55E00, blue #0072B2, reddish-purple #CC79A7) clearly visible with subtle grid
-      Layout: Four balanced subplots stacked vertically with "Temperature (°C)" y-label and rotated date labels on final subplot
-      Legibility verdict: PASS — no unreadable elements, no color conflicts, proper contrast throughout
+      Background: panels #FAF8F1; outer canvas, title band and the gaps between panels pure white #FFFFFF. Canvas 4800x2700.
+      Chrome: bold title 'timeseries-decomposition · letsplot · anyplot.ai' (no language segment); bold panel titles Original Series, Trend, Seasonal, Residual; y titles 'Temperature (°C)' with 3–5 ticks each; only the Residual panel has x labels, rotated month names (Jul, Oct, Jan…) without years, x title 'Date'. Text readable. Dense dark grid with minor lines; four-sided frames.
+      Data: Original #009E73, Trend #C475FD, Seasonal #4467A3, Residual #BD8233. Trend and Residual are stretched over the full width although they cover Jul 2019–Jun 2023 only, so their dates do not line up with Original and Seasonal (Jan 2019–Dec 2023).
+      Legibility verdict: PASS (white canvas fails VQ-07)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 with proper dark theme surface
-      Chrome: White/cream titles and labels, light gray ticks — all clearly readable. NO dark-on-dark failures detected.
-      Data: Colors identical to light render (teal, orange, blue, reddish-purple) — only chrome has flipped as expected
-      Layout: Same subplot arrangement with light text on dark background, grid visible and appropriately subtle
-      Legibility verdict: PASS — all text readable, no dark-on-dark issues, proper theme-adaptive handling
+      Background: panels #1A1A17; outer canvas, title band and gaps pure white.
+      Chrome: panel and axis text light and readable; main title #F0EFE8 on the white band, nearly invisible.
+      Data: colors identical to the light render.
+      Legibility verdict: FAIL (main title light-on-white)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 16
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 16pt, ticks 14pt;
-          perfectly readable in both themes'
+        passed: false
+        comment: 'Sizes set (title 24, axis 16, ticks 14), but the dark render''s
+          main title is #F0EFE8 on a pure white band and nearly unreadable (defect
+          line)'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; date labels angled on final plot to prevent
-          collision
+        comment: Rotated month ticks clear each other; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines sized at 1.2; optimal for 60 monthly data points; clearly distinguishable
-          in both themes
+        comment: Lines at size 1.2 clear in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; colorblind-safe; no red-green-only signal
+        comment: Four distinct Imprint hues, one per panel
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Perfect proportions; four subplots fill canvas with balanced margins
+        passed: false
+        comment: Canvas 4800x2700 instead of 3200x1800 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels descriptive with units; subplot titles clear
+        comment: Every y title 'Temperature (°C)', x title 'Date'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Okabe-Ito correct; backgrounds #FAF8F1 and #1A1A17; theme-adapted
-          text in both renders'
+        passed: false
+        comment: 'Imprint palette, panels on #FAF8F1/#1A1A17, but outer canvas, title
+          band and panel gaps pure #FFFFFF in both renders (defect line)'
     design_excellence:
-      score: 10
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Well-configured defaults; lacks distinctive design touches or custom
-          refinement
+        comment: 'Baseline short: white outer canvas breaks the theme surface'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
-        passed: true
-        comment: 'Some refinement: hidden axis labels on repeated plots, angled labels,
-          subtle grid; minimal customization'
+        passed: false
+        comment: Four-sided frame on every panel and a dense major+minor grid at size
+          0.5 (defect line)
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but components given equal treatment; no visual
-          hierarchy or emphasis
+        comment: Components displayed with equal weight
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -124,29 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Four vertically stacked subplots: Original, Trend, Seasonal, Residual'
+        comment: Four stacked decomposition panels
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: 'All features: consistent time axis, clear labels, statsmodels decomposition,
-          grid lines'
+        passed: false
+        comment: 'C2 broken: Trend/Residual span Jul 2019–Jun 2023 while Original/Seasonal
+          span Jan 2019–Dec 2023, all stretched to the same width, and the only tick
+          labels are month names without years (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, temperature on y-axis; all data visible across 60-month
-          span
+        comment: Date on x, value on y; marks at their values
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; component labels clearly identify subplots
+        passed: false
+        comment: Title lacks the 'python' language segment (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -154,24 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all decomposition aspects: trend, seasonality, residual
-          noise'
+        comment: Trend, seasonal cycle and residual exhibited
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world scenario: monthly temperature data; neutral, scientific
-          domain'
+        comment: Monthly temperatures, a real neutral scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Temperature range 15-18°C realistic; seasonal amplitude and trend
-          plausible
+        passed: false
+        comment: 'Checked: seasonal amplitude ~±12 °C plausible; trend 15→18 °C over
+          5 years implausibly fast (defect line)'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -179,48 +201,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, decomposition, plots, save'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake functionality
+        passed: false
+        comment: Four near-identical panel blocks and an 'Okabe-Ito palette' comment
+          over Imprint hexes (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; correct naming
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ggplot + geom + theme pattern; proper ggsave with scale
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses gggrid() for subplot arrangement; somewhat distinctive to letsplot
+        comment: Standard ggplot grammar; default
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: gggrid() composition of separate panels, a lets-plot-specific layout
+          API
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
 impl_tags:
   dependencies:
   - statsmodels
