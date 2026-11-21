@@ -107,6 +107,22 @@ class TestSpecRepository:
             assert impl.code is not None
             assert isinstance(impl.code, str)
 
+    async def test_the_loaders_by_id_load_the_deferred_sources(self, test_db_with_data):
+        """`Spec.sources` is deferred; both loaders by id undefer it, so reading it never lazy-loads (MissingGreenlet).
+
+        The MCP tool and the chat read it through get_by_id_with_code, whose own tests mock the repository.
+        """
+        repo = SpecRepository(test_db_with_data)
+        for loader in (repo.get_by_id, repo.get_by_id_with_code):
+            spec = await loader("scatter-basic")
+            assert spec is not None
+            assert spec.sources["data"] == "computed"
+            assert spec.sources["inspired_by"][0]["url"] == "https://example.org/project"
+            without = await loader("bar-grouped")
+            assert without is not None
+            assert without.sources is None
+            test_db_with_data.expire_all()
+
     async def test_get_by_id_with_code_not_found(self, test_db_with_data):
         """Should return None for non-existent spec."""
         repo = SpecRepository(test_db_with_data)

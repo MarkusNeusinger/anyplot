@@ -470,12 +470,39 @@ Per-page body content:
 | Page | Body | JSON-LD |
 |------|------|---------|
 | Static pages (`/`, `/plots`, …) | `<h1>` + description + nav | — |
-| Spec hub `/{spec_id}` | lead paragraph naming every library by language, description, preview `<img>`, one link per implementation page | `BreadcrumbList` + `ItemList` + `CollectionPage` (`primaryImageOfPage`, `mainEntity` → the `ItemList`) |
-| Implementation `/{spec_id}/{language}/{library}` | lead paragraph naming the sibling libraries and linking the hub, description, preview `<img>`, full source in `<pre><code>` (noqa-stripped, HTML-escaped), hub link, sibling-implementation links | `BreadcrumbList` + `SoftwareSourceCode` (`mainEntityOfPage`) + `WebPage` (`primaryImageOfPage`, `mainEntity` → the code) |
+| Spec hub `/{spec_id}` | lead paragraph naming every library by language, description, preview `<img>`, one link per implementation page, the spec's sources if it names any | `BreadcrumbList` + `ItemList` + `CollectionPage` (`primaryImageOfPage`, `mainEntity` → the `ItemList`, and `isBasedOn` + `citation` for the sources) |
+| Implementation `/{spec_id}/{language}/{library}` | lead paragraph naming the sibling libraries and linking the hub, description, preview `<img>`, full source in `<pre><code>` (noqa-stripped, HTML-escaped), hub link, the spec's sources if it names any, sibling-implementation links | `BreadcrumbList` + `SoftwareSourceCode` (`mainEntityOfPage`) + `WebPage` (`primaryImageOfPage`, `mainEntity` → the code, and `isBasedOn` + `citation` for the sources) |
 
 Display names (Matplotlib, Makie.jl, Apache ECharts, …) are derived from
 `core/constants.py` (`LANGUAGES_METADATA` / `LIBRARIES_METADATA`) — never
 hand-maintained in the router.
+
+### A spec's sources
+
+A spec can name the works that gave the idea for the plot and the literature its values
+follow, in the `sources` block of its `specification.yaml`
+([repository reference](repository.md#plotsspecification-idspecificationyaml)). For a
+spec that names at least one work, both page types show them under a "Sources" heading,
+in the groups "Inspired by" and "References": each title links to the work's address, a
+DOI links to `https://doi.org/<doi>` as `doi:<doi>`, and an ISBN is plain text. A spec
+without entries gets neither the section nor the properties below. The section is in the
+body as well as in the JSON-LD, because the HTML-to-Markdown converters that assistants
+read pages through drop `<script>`.
+
+In the JSON-LD, the entries go on the page's node: `CollectionPage` on the hub, `WebPage`
+on an implementation page. Each entry is a `CreativeWork` with `name`, `url`, and, for a
+DOI or an ISBN, an `identifier` list of `PropertyValue` nodes (`propertyID` `DOI` or
+`ISBN`).
+
+- `isBasedOn` holds the works under "Inspired by". schema.org defines it as a resource
+  the work is derived from; the page presents the spec, whose idea comes from these
+  works.
+- `citation` holds the works under "References".
+
+The `SoftwareSourceCode` node of an implementation page keeps `isBasedOn` pointing at the
+hub alone and carries no `citation`: the catalog takes ideas from other works and never
+their code, so the code derives from the spec only. The SPA builds the same nodes in
+`app/src/pages/SpecPage.tsx` (`app/src/utils/specSources.ts`) for clients that run it.
 
 ### Titles, headings, and snippets
 

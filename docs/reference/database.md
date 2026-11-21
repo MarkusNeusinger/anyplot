@@ -292,9 +292,9 @@ CREATE TABLE search_misses (
 - `sources` - The `sources` block of `specification.yaml` as `core/spec_sources.py` normalizes it: `data`
   (`invented`, `computed`, or `real`), `inspired_by`, and `references`, each entry with `title`, `url`, and an
   optional `doi` or `isbn`; empty lists are left out. SQL NULL when the spec names none, so `sources IS NULL` finds
-  those specs. The sync skips a block that fails the check, with a warning. The column is deferred in the model, so
-  a query names it only when it asks for it with `undefer`. Added by migration `21d93eb1afd4`. The block's rules are
-  in
+  those specs. The sync skips a block that fails the check, with a warning. The column is deferred in the model:
+  only the loaders by id (`SpecRepository.get_by_id` and `get_by_id_with_code`) read it. Added by migration
+  `21d93eb1afd4`. The block's rules are in
   [`specification.yaml`](repository.md#plotsspecification-idspecificationyaml)
 
 **Example Row**:
