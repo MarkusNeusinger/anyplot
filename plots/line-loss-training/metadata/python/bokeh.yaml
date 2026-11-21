@@ -2,42 +2,56 @@ library: bokeh
 language: python
 specification_id: line-loss-training
 created: '2026-05-14T05:36:32Z'
-updated: '2026-05-14T05:45:57Z'
-generated_by: claude-haiku
-workflow_run: 25843704791
+updated: '2026-11-21T14:32:51Z'
+generated_by: claude-sonnet
+workflow_run: 44913736528
 issue: 2860
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/bokeh/plot-dark.html
-quality_score: 95
+quality_score: 83
 review:
   strengths:
-  - Excellent theme support with perfect legibility in both light and dark renders
-  - Perfect Okabe-Ito palette compliance with identical data colors across themes
-  - Smart visual design with shaded overfitting region and optimal epoch annotation
-  - Interactive features (HoverTool, mutable legend, hover states) enhance usability
-  - All text explicitly sized for high-resolution canvas (4800×2700 px)
-  - Realistic synthetic data with proper exponential decay, noise, and overfitting
-    effect
-  weaknesses: []
+  - 'Correct theme-adaptive chrome: all text readable on both #FAF8F1 and #1A1A17,
+    Imprint colors identical across themes'
+  - Optimal epoch marked by a large outlined marker exactly at the lowest validation
+    point with a readable value label
+  - Linear loss axis from 0 keeps the late-epoch gap between the curves readable
+  - 'Native bokeh interactivity in the HTML: muting legend (click_policy=''mute'')
+    and vline HoverTool'
+  - 'Adaptable-code layout: column constants, tidy df, ColumnDataSource, ranges from
+    the data'
+  weaknesses:
+  - 'VQ-03 (both): the legend glyphs are about 20 px line stubs and dots beside 34
+    pt labels, and the ''Optimal epoch'' glyph reads as a tiny ink dot instead of
+    the purple outlined marker it explains → glyphs scaled to the label size (about
+    50-60 px). Likely cause: p.legend.glyph_width / glyph_height left at the 20 px
+    defaults.'
+  - 'DQ-03 (code): the comment on line 41 says ''overfitting drift in late epochs'',
+    but the render shows validation loss still falling, with its minimum at epoch
+    146 of 150 → describe the data as it is, or make the drift outweigh the decay.
+    Likely cause: the +0.08 drift is smaller than the exponential decay over epochs
+    80-150.'
+  - 'Suggestion: a drift that makes validation loss turn upward before the end would
+    place the optimum mid-run, where early stopping reads as a decision.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "line-loss-training · bokeh · anyplot.ai" in bold dark text; X-axis "Epoch" and Y-axis "Loss (Cross-Entropy)" clearly readable; tick labels visible; legend in top right with "Training Loss", "Validation Loss", "Optimal epoch: 82" — all readable in 16pt text
-      Data: Two distinct lines — training loss (green #009E73) and validation loss (orange #D55E00) declining over 150 epochs; shaded beige region from epoch 80 onward highlights overfitting area; marker and label at epoch 82 show optimal stopping point; grid lines subtle
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: warm off-white #FAF8F1 page and plot area, thin INK_SOFT outline.
+      Chrome: bold title 'line-loss-training · python · bokeh · anyplot.ai' top-left in dark ink; 'Epoch' and 'Loss (Cross-Entropy)' axis titles in italic dark ink; tick labels 0-2.5 and 20-140 in soft dark grey; very faint grid; legend box top-right (Training Loss, Validation Loss, Optimal epoch: 146) with tiny glyphs. All readable.
+      Data: green #009E73 training line and purple #C475FD validation line with small translucent point markers, both falling from ~2.7 to 0.42 / 0.72 over 150 epochs; large purple marker with dark outline at epoch 146, loss 0.690, labelled 'Epoch 146, loss 0.690' to its lower left.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: All text rendered in light colors; title and axis labels clearly visible against dark background; tick labels readable; legend text light-colored and clear; no dark-on-dark failures detected
-      Data: Same two lines with identical colors to light render (#009E73 green, #D55E00 orange); shaded overfitting region visible as darker overlay; marker and label at epoch 82 clearly visible
-      Legibility verdict: PASS — all text readable against dark background; data colors identical to light render; only chrome is theme-adapted
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, tick labels in light grey, legend on #242420 with light text; no dark-on-dark text. Optimal marker outline flips to light ink.
+      Data: same green and purple lines, identical to light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -45,74 +59,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28pt, labels 22pt, ticks 18pt,
-          legend 16pt, annotation 14pt
+        comment: All sizes explicitly set (title 50pt, axis titles 42pt, ticks 34pt,
+          legend 34pt, annotation 30pt); everything readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; legend positioned away from data; annotation
-          well-placed
+        comment: No text collisions; annotation sits clear of both curves, legend
+          clear of data
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Lines (width=4) and markers (size=5, optimal=20) optimally scaled
-          for 150-point dataset
+        passed: false
+        comment: Lines (width 5) and markers (size 9, alpha 0.6) suit 150 points,
+          but the legend glyphs are tiny and the optimal-epoch glyph does not show
+          the marker's purple fill (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; strong luminance contrast between
-          series
+        comment: Green vs purple differ in hue and luminance; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins; plot fills 60% of canvas; whitespace
-          generous
+        comment: 3200x1800 canvas, plot fills most of the canvas, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Loss (Cross-Entropy)'' and ''Epoch'''
+        comment: '''Epoch'' and ''Loss (Cross-Entropy)'' name the loss function'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito pos. 1–2); backgrounds
-          #FAF8F1/#1A1A17 correct; data colors identical across themes'
+        comment: '#009E73 training, #C475FD validation (Imprint 1-2); backgrounds
+          #FAF8F1/#1A1A17; data colors identical across themes'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: false
-        comment: Intentional choices (shaded region, optimal epoch annotation); professional;
-          clear above defaults but not exceptional
+        comment: The style-guide baseline, nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: false
-        comment: Clean layout, subtle grid, generous whitespace, well-styled legend;
-          could be more minimal
+        comment: Spine and grid rules met; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: false
-        comment: Clear hierarchy, color contrast guides viewer, shaded region directs
-          to overfitting zone, optimal epoch is focal point
+        comment: The optional optimum marker is the Notes' suggestion; no hierarchy
+          chosen beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -122,29 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with dual series
+        comment: Correct dual-line loss chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Training/validation curves, distinct colors, legend, epochs, loss
-          label, optimal point marked
+        comment: Distinct colors, legend, x axis 1-150, loss-function label, optimum
+          marked at the lowest validation point (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis epoch, Y-axis loss; axes span all data
+        comment: Epoch on x, loss on y; marks at their values; full range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-loss-training · bokeh · anyplot.ai' correct; legend labels
-          accurate
+        comment: Title in mandated format; legend labels readable
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -152,21 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows training, validation, overfitting, stopping point, 150 epochs
+        comment: Noisy validation curve, gap between curves, steep early drop
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neural network training is realistic; exponential decay; validation
-          > training; overfitting effect
+        comment: Neural-network training history with cross-entropy loss, a real scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Loss 0.15–2.5 sensible for cross-entropy; 150 epochs typical; scale
-          makes all features visible
+        passed: false
+        comment: 'Checked: loss starts ~2.7, ends 0.42/0.72, minimum 0.690 at epoch
+          146 read off the axis and matching the label; but the ''overfitting drift''
+          comment misstates the data (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -176,50 +186,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; linear flow
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures determinism
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake UI or over-engineering
+        comment: Clean, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png + plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png and .html; current Bokeh 3 API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ColumnDataSource, figure API, proper theme handling, idiomatic color
-          application
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: false
-        comment: Uses HoverTool, legend muting, Label annotations, Quad shading, hover
-          states; strong use of distinctive features
+        comment: ColumnDataSource built from the tidy df with column-name constants,
+          legend_label on glyphs, Range1d from data, Label model for the annotation
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Legend click_policy='mute' with muted_alpha and a vline-mode HoverTool
+          for epoch-wise inspection in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T14:28:54Z'
 impl_tags:
   dependencies:
   - selenium
@@ -227,9 +240,13 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
+  - edge-highlighting
   - grid-styling
