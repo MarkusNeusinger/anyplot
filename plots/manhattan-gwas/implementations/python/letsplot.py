@@ -1,7 +1,7 @@
 """ anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-15
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-21
 """
 
 import os
@@ -13,100 +13,73 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
-# Theme-adaptive colors
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette for alternating chromosomes
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Set seed for reproducibility
+# Constants
+GENOME_WIDE_P = 5e-8  # conventional genome-wide significance
+SUGGESTIVE_P = 1e-5  # conventional suggestive threshold
+
+# Columns: set these to your table's column names
+CHROMOSOME = "Chromosome"  # role: chromosome
+POSITION = "Position (bp)"  # role: position
+P_VALUE = "p-value"  # role: p_value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("gwas.csv")
 np.random.seed(42)
-
-# Generate simulated GWAS data
 n_snps_per_chrom = 2000
-chromosomes = [str(i) for i in range(1, 23)]
-
-data = []
-cumulative_pos = 0
-chrom_centers = {}
-
-for i, chrom in enumerate(chromosomes):
-    # Random positions within chromosome (scaled by chromosome "size")
+frames = []
+for i in range(22):
+    chrom = str(i + 1)
     chrom_size = 250_000_000 - i * 5_000_000
     positions = np.sort(np.random.randint(1, chrom_size, n_snps_per_chrom))
-
-    # Generate p-values - mostly non-significant with some peaks
     p_values = np.random.uniform(0, 1, n_snps_per_chrom)
-
-    # Add some significant peaks (simulate real GWAS signals)
     if chrom in ["2", "6", "11", "17"]:
         peak_idx = np.random.choice(n_snps_per_chrom, size=15, replace=False)
         p_values[peak_idx] = 10 ** (-np.random.uniform(6, 12, 15))
-
-    # Add suggestive signals to more chromosomes
     if chrom in ["1", "5", "8", "14", "19"]:
         suggestive_idx = np.random.choice(n_snps_per_chrom, size=10, replace=False)
         p_values[suggestive_idx] = 10 ** (-np.random.uniform(4.5, 7, 10))
+    frames.append(pd.DataFrame({CHROMOSOME: chrom, POSITION: positions, P_VALUE: p_values}))
+df = pd.concat(frames, ignore_index=True)
 
-    # Calculate cumulative position for x-axis
-    cumulative_positions = positions + cumulative_pos
+# Plot: reads only df and the constants above
+NEG_LOG_P = f"-log₁₀({P_VALUE})"
+df[NEG_LOG_P] = -np.log10(df[P_VALUE])
 
-    # Store chromosome center for labeling
-    chrom_centers[chrom] = cumulative_pos + chrom_size / 2
+# Lay chromosomes end to end, in the order they appear in the data
+chromosomes = list(dict.fromkeys(df[CHROMOSOME]))
+extent = df.groupby(CHROMOSOME, sort=False)[POSITION].max()
+offset = extent.cumsum() - extent
+df["cumulative"] = df[POSITION] + df[CHROMOSOME].map(offset)
+tick_positions = (offset + extent / 2).tolist()
 
-    for pos, cum_pos, pval in zip(positions, cumulative_positions, p_values):
-        data.append(
-            {
-                "chromosome": chrom,
-                "position": pos,
-                "cumulative_pos": cum_pos,
-                "p_value": pval,
-                "neg_log10_p": -np.log10(pval),
-            }
-        )
+# Alternate colors between adjacent chromosomes
+chrom_rank = df[CHROMOSOME].map({c: i for i, c in enumerate(chromosomes)})
+df["band"] = np.where(chrom_rank % 2 == 0, IMPRINT_PALETTE[0], IMPRINT_PALETTE[1])
 
-    cumulative_pos += chrom_size
+genome_wide_threshold = -np.log10(GENOME_WIDE_P)
+suggestive_threshold = -np.log10(SUGGESTIVE_P)
+significant = df[df[NEG_LOG_P] >= genome_wide_threshold]
 
-df = pd.DataFrame(data)
-
-# Assign alternating colors using Okabe-Ito palette
-df["chrom_idx"] = df["chromosome"].astype(int) % 2
-df["color_group"] = df["chrom_idx"].map({0: IMPRINT[0], 1: IMPRINT[1]})
-
-# Significance thresholds
-genome_wide_threshold = -np.log10(5e-8)  # ~7.3
-suggestive_threshold = -np.log10(1e-5)  # 5
-
-# Mark significant SNPs
-df["significant"] = df["neg_log10_p"] >= genome_wide_threshold
-
-# Create x-axis tick positions and labels
-tick_positions = [chrom_centers[c] for c in chromosomes]
-
-# Create the Manhattan plot
 plot = (
-    ggplot(df, aes(x="cumulative_pos", y="neg_log10_p", color="color_group"))
-    + geom_point(size=2, alpha=0.7)
+    ggplot(df, aes(x="cumulative", y=NEG_LOG_P, color="band"))
+    + geom_point(size=1.0, alpha=0.7)
     + scale_color_identity()
-    # Highlight significant points
     + geom_point(
-        data=df[df["significant"]],
-        mapping=aes(x="cumulative_pos", y="neg_log10_p"),
-        color=IMPRINT[4],
-        size=3.5,
-        alpha=0.9,
+        data=significant, mapping=aes(x="cumulative", y=NEG_LOG_P), color=IMPRINT_PALETTE[4], size=1.8, alpha=0.9
     )
-    # Genome-wide significance threshold line
-    + geom_hline(yintercept=genome_wide_threshold, linetype="dashed", color=IMPRINT[4], size=1)
-    # Suggestive threshold line
-    + geom_hline(yintercept=suggestive_threshold, linetype="dotted", color=INK_MUTED, size=0.7)
-    + labs(title="manhattan-gwas · letsplot · anyplot.ai", x="Chromosome", y="-log₁₀(p-value)")
+    + geom_hline(yintercept=genome_wide_threshold, linetype="dashed", color=IMPRINT_PALETTE[4], size=0.6)
+    + geom_hline(yintercept=suggestive_threshold, linetype="dotted", color=INK_MUTED, size=0.5)
+    + labs(title="manhattan-gwas · python · letsplot · anyplot.ai", x=CHROMOSOME, y=NEG_LOG_P)
     + scale_x_continuous(breaks=tick_positions, labels=chromosomes)
     + theme_minimal()
     + theme(
@@ -115,17 +88,13 @@ plot = (
         panel_grid_major_y=element_line(color=RULE, size=0.3),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        plot_title=element_text(size=28, face="bold", color=INK),
-        axis_title_x=element_text(size=22, color=INK),
-        axis_title_y=element_text(size=22, color=INK),
-        axis_text_x=element_text(size=16, color=INK_SOFT),
-        axis_text_y=element_text(size=16, color=INK_SOFT),
-        axis_line_x=element_line(color=INK_SOFT, size=0.6),
-        axis_line_y=element_line(color=INK_SOFT, size=0.6),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG and HTML with theme suffix
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
