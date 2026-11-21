@@ -2,112 +2,130 @@ library: altair
 language: python
 specification_id: facet-grid
 created: '2025-12-30T16:30:41Z'
-updated: '2026-05-13T03:36:57Z'
-generated_by: claude-haiku
-workflow_run: 25776543142
+updated: '2026-11-21T08:20:57Z'
+generated_by: claude-sonnet
+workflow_run: 44883862283
 issue: 2696
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 81
 review:
   strengths:
-  - 'Perfect visual quality: explicit font sizing, readable in both themes, no overlaps'
-  - Proper Okabe-Ito palette with correct color ordering; theme-adaptive chrome flips
-    correctly
-  - Idiomatic Altair usage with .facet(), .encode(), and configure methods
-  - Clean code structure and reproducible data generation
-  - Faceted layout effectively demonstrates the plot type
+  - Idiomatic Altair .facet(row=alt.Row, column=alt.Column) with alt.Header styled
+    from theme tokens, readable headers in both themes
+  - Shared scales across all nine panels (Vega-Lite default), so positions compare
+    directly; one legend for the whole figure
+  - 'Imprint palette in canonical order with Wheat on #009E73; data colors identical
+    across light and dark'
+  - Pad-only resize to the exact 3200x1800 canvas with panel sizes derived from the
+    facet counts
+  - Escaped-field tooltips with readable titles for all five columns in the HTML output
   weaknesses:
-  - 'Design Excellence is modest: well-configured defaults but lacks custom aesthetic
-    sophistication'
-  - 'Library Mastery could be deeper: doesn''t explore Altair-specific features like
-    interactive selection'
+  - 'VQ-01 (both): axis tick labels at labelFontSize=9 and axis titles at titleFontSize=11
+    sit below the library reference (10 pt / 12 pt) and read small beside the 3200
+    px canvas → 10 pt ticks and 12 pt axis titles (+1 pt each). Likely cause: configure_axis(labelFontSize=9,
+    titleFontSize=11).'
+  - 'DQ-03 (both): water usage of 40-90 mm per growing season is about a tenth of
+    real seasonal crop water use (roughly 400-900 mm) → scale the water values by
+    about x10 (+360 to +810 mm), or relabel as a weekly figure. Likely cause: np.random.normal(50
+    + crop_base * 5, 8, 20).'
+  - 'Suggestion: a legend-bound point selection highlighting one crop across all panels
+    would showcase Altair''s selections in the HTML view.'
+  - 'Suggestion: the y-axis title repeats on every row and the x-axis title under
+    every column; a single shared axis title per side would lighten the grid.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) — correct theme surface
-      Chrome: Title "facet-grid · altair · anyplot.ai" is prominent and dark. Row headers (Sandy, Clay, Loam) and column headers (Spring, Summer, Fall) are well-sized and easily readable. Axes labeled "Water Usage (mm)" and "Yield (tons/ha)" with units. Tick labels clear. Legend frame with elevated background.
-      Data: Three colors (teal #009E73, orange #D55E00, blue #0072B2) in Okabe-Ito order. Grid lines subtle (~10% opacity). Scatter markers clearly visible.
-      Legibility verdict: PASS — all text readable against light background, no legibility issues.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: title 'facet-grid · python · altair · anyplot.ai' top left in dark bold text; column header title 'Season' with Spring/Summer/Fall and rotated row header title 'Soil Type' with Sandy/Clay/Loam, all dark and readable; axis titles 'Yield (tons/ha)' per row and 'Water Usage (mm)' per column, tick labels 40-90 and 6-12 in INK_SOFT, readable; subtle grid; legend 'Crop' in an elevated framed box to the right of the grid.
+      Data: 3x3 grid of equal-size scatter panels with shared axes, circles (size 28, alpha 0.7) in Wheat #009E73, Corn #C475FD, Soybean #4467A3.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) — correct dark theme surface
-      Chrome: Title, headers, axis labels, and tick labels all rendered in light tones (INK=#F0EFE8, INK_SOFT=#B8B7B0) and fully readable. Legend frame uses dark elevated background (#242420) with light text.
-      Data: Colors identical to light render—teal, orange, blue in identical positions. Only chrome differs (background and text colors adapt; data stays the same).
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures. Brand green #009E73 visible and clear.
+      Background: warm near-black #1A1A17.
+      Chrome: title, Season/Soil Type headers, facet labels, axis titles and tick labels all render in light INK / INK_SOFT tones and are readable; no dark-on-dark text; legend frame on the dark elevated surface with light text.
+      Data: colors identical to the light render; brand green stays visible, Soybean blue reads with slightly lower contrast but distinguishable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicitly set and readable in both themes
+        passed: false
+        comment: All text readable in both themes; axis tick labels (9 pt) and axis
+          titles (11 pt) sit below the library reference (10/12 pt) and read small
+          on the 3200 px canvas (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text collisions; panel gaps keep tick labels, headers and axis
+          titles apart
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-adapted to 540-point data density
+        comment: 60 points per panel at size 28 with opacity 0.7 — visible, overlap
+          stays legible; legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Okabe-Ito colors with good contrast
+        comment: Green/purple/blue are CVD-distinguishable; contrast adequate on both
+          surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced margins, legend well-positioned
+        comment: 3200x1800 canvas, balanced margins, equal panels, legend clear of
+          the grid; small title is expected, no deduction
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled with units
+        comment: Water Usage (mm) and Yield (tons/ha) are descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct theme chrome, data colors identical
-          across themes'
+        comment: 'Wheat #009E73 first, then #C475FD, #4467A3 in Imprint order; #FAF8F1
+          / #1A1A17 surfaces; data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured defaults, lacks custom design thought
+        passed: true
+        comment: Style-guide baseline (theme tokens, elevated legend frame); nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Subtle grid, explicit sizing, generous whitespace
+        comment: Spine/grid rules met; nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: false
-        comment: Faceting creates hierarchy but no explicit visual emphasis
+        passed: true
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -117,27 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct faceted grid with scatter plots
+        comment: Correct faceted grid of scatter plots
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: Shared scales, row and column facets, headers on every row/column,
+          one legend for the figure (C1-C5 all present)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes and encodings correctly assigned
+        comment: Marks at their data values; shared axes cover all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match
+        comment: Title 'facet-grid · python · altair · anyplot.ai' correct; legend
+          'Crop' with Wheat/Corn/Soybean
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -145,19 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows variation across all dimensions
+        comment: Shows both row and column faceting, varying patterns across 9 panels,
+          color by crop
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic agricultural scenario
+        comment: Plausible agronomy scenario (soil x season x crop), neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Plausible values for domain
+        passed: false
+        comment: Yields 5-12 t/ha plausible; seasonal water use 40-90 mm is about
+          a tenth of real seasonal crop water use (defect line)
     code_quality:
       score: 10
       max: 10
@@ -167,54 +189,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure, no functions/classes
+        comment: Imports -> tokens -> column constants -> Data -> Plot -> Save; no
+          functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used (PIL for pad-to-canvas)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake functionality
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file output format
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses .facet(), .encode(), configure methods appropriately
+        comment: Idiomatic .facet(row=alt.Row, column=alt.Column) with alt.Header
+          styling and Vega-Lite's shared-scale default; data-driven facet sort
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: false
-        comment: Uses faceting but could explore selections or cross-filtering
+        passed: true
+        comment: Tooltips only, which the library prompt already shows; nothing distinctive
+          beyond
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T08:17:08Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - faceting
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - minimal-chrome
