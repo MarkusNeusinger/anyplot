@@ -1,22 +1,15 @@
 """ anyplot.ai
 andrews-curves: Andrews Curves for Multivariate Data
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-15
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 88/100 | Updated: 2026-11-21
 """
 
 import os
-import sys
 
-
-# Handle import shadowing: remove current directory from path to avoid
-# importing local matplotlib.py or seaborn.py instead of the real libraries
-cwd = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if not (p == cwd or p.startswith(cwd + os.sep))]
-
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import seaborn as sns  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 
 
 # Theme tokens
@@ -26,44 +19,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always #009E73)
-IMPRINT = [
-    "#009E73",  # bluish green (brand)
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-]
+# Imprint palette, canonical order (first series always #009E73)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
-df = sns.load_dataset("iris")
-
-# Normalize variables to similar scales
-features = ["sepal_length", "sepal_width", "petal_length", "petal_width"]
-for col in features:
-    df[col + "_norm"] = (df[col] - df[col].mean()) / df[col].std()
-
-norm_features = [f + "_norm" for f in features]
-
-# Generate t values from -π to π
-t = np.linspace(-np.pi, np.pi, 200)
-
-# Compute Andrews curves for all observations
-curves_data = []
-for idx, row in df.iterrows():
-    values = row[norm_features].values.astype(float)
-    # Andrews curve: f(t) = x1/sqrt(2) + x2*sin(t) + x3*cos(t) + x4*sin(2t) + ...
-    curve_vals = np.full_like(t, values[0] / np.sqrt(2))
-    for i in range(1, len(values)):
-        if i % 2 == 1:
-            curve_vals = curve_vals + values[i] * np.sin((i + 1) // 2 * t)
-        else:
-            curve_vals = curve_vals + values[i] * np.cos(i // 2 * t)
-
-    for t_val, y_val in zip(t, curve_vals, strict=True):
-        curves_data.append({"t": t_val, "f(t)": y_val, "species": row["species"], "obs_id": idx})
-
-curves_df = pd.DataFrame(curves_data)
-
-# Theme-adaptive seaborn styling
 sns.set_theme(
     style="ticks",
     rc={
@@ -81,40 +39,65 @@ sns.set_theme(
     },
 )
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Column constants
+VARIABLES = ["sepal_length", "sepal_width", "petal_length", "petal_width"]  # role: variable_
+SPECIES = "species"  # role: category
+T = "t"  # role: extra
+CURVE = "f(t)"  # role: extra
 
-# Plot Andrews curves using lineplot with grouped data
+# Data: replace this block with your own table, for example df = pd.read_csv("measurements.csv")
+df = sns.load_dataset("iris")[[*VARIABLES, SPECIES]]
+
+# Plot
+# Normalize variables to similar scales so no single variable dominates
+z = (df[VARIABLES] - df[VARIABLES].mean()) / df[VARIABLES].std()
+
+# Andrews basis: 1/sqrt(2), sin(t), cos(t), sin(2t), cos(2t), ...
+t = np.linspace(-np.pi, np.pi, 400)
+basis = np.vstack(
+    [np.full_like(t, 1 / np.sqrt(2))]
+    + [np.sin((i + 1) // 2 * t) if i % 2 else np.cos(i // 2 * t) for i in range(1, len(VARIABLES))]
+)
+values = z.to_numpy() @ basis  # one row per observation, one column per t
+
+curves = pd.DataFrame(values, index=df.index, columns=t).rename_axis(columns=T)
+curves[SPECIES] = df[SPECIES]
+curves["obs"] = df.index
+curves = curves.melt(id_vars=[SPECIES, "obs"], var_name=T, value_name=CURVE)
+
+groups = df[SPECIES].unique()
+palette = dict(zip(groups, IMPRINT_PALETTE[: len(groups)], strict=False))
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+
+# Individual curves: faint, so bundles read as darker bands
 sns.lineplot(
-    data=curves_df,
-    x="t",
-    y="f(t)",
-    hue="species",
-    palette=IMPRINT,
-    alpha=0.4,
-    linewidth=2.5,
-    units="obs_id",
+    data=curves,
+    x=T,
+    y=CURVE,
+    hue=SPECIES,
+    palette=palette,
+    units="obs",
     estimator=None,
+    alpha=0.3,
+    linewidth=0.9,
+    legend=False,
     ax=ax,
 )
+# Bold per-species mean curve over the faint bundle
+sns.lineplot(
+    data=curves, x=T, y=CURVE, hue=SPECIES, palette=palette, estimator="mean", errorbar=None, linewidth=3.2, ax=ax
+)
 
-# Style
-ax.set_xlabel("t", fontsize=20, color=INK)
-ax.set_ylabel("f(t)", fontsize=20, color=INK)
-ax.set_title("andrews-curves · seaborn · anyplot.ai", fontsize=24, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_xlabel(T, fontsize=10)
+ax.set_ylabel(CURVE, fontsize=10)
+ax.set_title("andrews-curves · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.set_xlim(-np.pi, np.pi)
+ax.set_xticks([-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi], ["-π", "-π/2", "0", "π/2", "π"])
+ax.legend(title="Species (bold = mean)", fontsize=8, title_fontsize=9, loc="upper right", framealpha=0.95)
+ax.grid(True, linewidth=0.5)
+sns.despine(ax=ax)
 
-# Set x-axis ticks to show π values
-ax.set_xticks([-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi])
-ax.set_xticklabels(["-π", "-π/2", "0", "π/2", "π"], fontsize=16)
-
-# Legend
-ax.legend(title="Species", fontsize=16, title_fontsize=18, loc="upper right", framealpha=0.95)
-
-# Grid (subtle, solid lines)
-ax.grid(True, alpha=0.10, linewidth=0.8, linestyle="-")
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

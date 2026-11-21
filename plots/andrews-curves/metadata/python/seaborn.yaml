@@ -2,50 +2,50 @@ library: seaborn
 language: python
 specification_id: andrews-curves
 created: '2025-12-30T23:57:52Z'
-updated: '2026-05-15T13:07:06Z'
-generated_by: claude-haiku
-workflow_run: 25918744692
+updated: '2026-11-21T20:48:08Z'
+generated_by: claude-sonnet
+workflow_run: 44947513213
 issue: 2859
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 88
 review:
   strengths:
-  - Excellent theme adaptation with zero dark-on-dark or light-on-light issues; data
-    colors preserved perfectly across light and dark renders
-  - Proper Andrews curve implementation with mathematically correct Fourier expansion
-    and normalization
-  - Comprehensive seaborn theming demonstrating advanced library mastery with detailed
-    rc parameters
-  - Clean, readable code with sensible structure and good import handling practices
-  - Appropriate use of transparency (alpha=0.4) to show curve density while maintaining
-    clarity and visual hierarchy
-  - All required features from specification implemented correctly; visualization
-    fulfills the intent and applications
+  - 'Correct, vectorized Andrews transform: z-score normalization, the 1/√2, sin t,
+    cos t, sin 2t basis evaluated at 400 points, applied with one matrix product'
+  - 'Seaborn-native layering: units= with estimator=None draws every observation,
+    estimator=''mean'' with errorbar=None draws the per-species mean curve from the
+    same long-form table'
+  - Two-tier line hierarchy (faint 0.9 lw observations under 3.2 lw means) makes the
+    three species read as separate bundles at a glance
+  - Exact 3200×1800 canvas, style-guide text sizes, and theme tokens threaded through
+    every chrome element in both renders
   weaknesses:
-  - Design excellence is strong but not exceptional—limited by mandated Okabe-Ito
-    palette, standard presentation approach
+  - 'VQ-02 (both): the legend box at upper right (framealpha 0.95) covers the peaks
+    of the setosa bundle near t≈2.5, f(t)≈3–4 → a legend clear of every curve, for
+    example outside the axes on the right (bbox_to_anchor=(1.01, 1), loc=''upper left'').
+    Likely cause: ax.legend(loc=''upper right'') inside the data area.'
+  - 'Suggestion: a dataset other than Iris (wine cultivars, penguin species) would
+    set this version apart from the other libraries'' renders.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "andrews-curves · seaborn · anyplot.ai" (24pt, dark, readable); axis labels "t" and "f(t)" (20pt, dark, readable); x-axis ticks show π notation in 16pt gray with proper spacing; y-axis ticks in numeric values in gray; legend titled "Species" in upper right with framealpha=0.95
-      Data: 150 curves color-coded by iris species — setosa in #009E73 (bluish green), versicolor in #D55E00 (vermillion), virginica in #0072B2 (blue); curves rendered with alpha=0.4 and linewidth 2.5 showing density; grid subtle at alpha=0.10
-      Spines: Top and right removed (L-shaped frame)
-      Legibility verdict: PASS — all text clearly readable, no overlap, proper contrast
+      Background: warm off-white #FAF8F1, 3200×1800.
+      Chrome: title 'andrews-curves · python · seaborn · anyplot.ai' in dark ink, axis labels 't' and 'f(t)', π-labelled x ticks (-π … π) and numeric y ticks in INK_SOFT, subtle grid, top/right spines removed, legend 'Species (bold = mean)' on an elevated panel at upper right. All readable.
+      Data: 150 faint Andrews curves (lw 0.9, alpha 0.3) colored setosa #009E73, versicolor #C475FD, virginica #4467A3, with a bold 3.2 lw mean curve per species. Setosa separates clearly below zero for t<π/2 and peaks near t≈2.5; versicolor and virginica overlap, virginica swinging higher mid-range. The legend box covers the top of the setosa peaks.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: All text adapted to light colors (off-white/gray on dark bg); title, labels, ticks all readable; legend frame elevated (#242420) for contrast; grid adapted to light theme
-      Data: Identical data colors to light render — #009E73, #D55E00, #0072B2 preserved perfectly; only chrome has flipped between themes
-      Spines: L-shaped frame maintained
-      Legibility verdict: PASS — no dark-on-dark issues, all text clearly visible, brand green (#009E73) visible and readable on dark surface
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels and ticks in light ink, legend on a #242420 panel with light text; no dark-on-dark text.
+      Data: identical colors to the light render; faint curves are dimmer against the dark page but the bundles and the bold mean curves read clearly; brand green visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,50 +53,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 24pt, axes 20pt, ticks 16pt;
-          all readable in both themes
+        comment: Title 12 pt, axis labels 10 pt, ticks and legend 8 pt (style-guide
+          sizes), all set explicitly; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text; legend positioned clear of data; axis labels
-          well-spaced
+        comment: No text collisions, but the legend box covers the peaks of the setosa
+          bundle near t≈2.5 (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 curves with alpha=0.4 perfectly adapted for density; all three
-          species clearly distinguishable
+        comment: Faint individual curves (lw 0.9, alpha 0.3) read as bundles in both
+          themes; legend glyphs match the bold mean curves
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; strong contrast; no red-green dependence
+        comment: Green/lilac/blue are CVD-distinguishable; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of 4800×2700 canvas; balanced margins; nothing cut
-          off
+        comment: 3200×1800 canvas (gate passed); balanced margins, title ~50% width,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with notation; title in correct format
+        comment: t and f(t) are the conventional Andrews-curve axis names; y without
+          unit is permitted (C6)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; follows Okabe-Ito order; backgrounds correct;
-          both renders theme-correct'
+        comment: 'Imprint positions 1–3 in canonical order from #009E73; #FAF8F1 /
+          #1A1A17 backgrounds; data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -104,21 +105,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional polish with intentional hierarchy; mandated palette
-          limits custom design choices
+        comment: 'Raised one: a deliberate two-tier line hierarchy (0.9 lw faint observations
+          under 3.2 lw mean curves) beyond the baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, generous whitespace, legend styling
+        comment: 'Raised one: x range fitted exactly to one period with π-labelled
+          ticks; legend title documents the bold encoding'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Species clustering evident through curve patterns; color hierarchy
-          guides interpretation
+        comment: 'Raised two: bold per-species mean curves give a focal shape per
+          group that makes the setosa/versicolor/virginica separation immediate'
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Andrews curves with proper Fourier expansion
+        comment: Correct Andrews curves; mean curves are fine on this non-basic spec
+          and were asked for by the change request
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: multivariate data, normalization, grouping,
-          proper t range'
+        comment: 'All Notes and C1–C5 met: 400-point smooth curves, -π..π, z-score
+          normalization, alpha 0.3, color by species with legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=t values, Y=f(t) values, all 150 observations visible
+        comment: t on x, f(t) on y; every curve at its computed values; full range
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match iris species
+        comment: Title 'andrews-curves · python · seaborn · anyplot.ai' correct; legend
+          names the species
     data_quality:
       score: 15
       max: 15
@@ -157,21 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Uses all 4 iris features; shows all 3 species; demonstrates separation
-          patterns
+        comment: Shows tight setosa bundle, overlapping versicolor/virginica, merging
+          near t=-π and separating mid-range, and stray curves
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset is real, scientifically valid, neutral
+        comment: Real Iris dataset, neutral science context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normalized variables correct; t range -π to π standard; proportions
-          accurate
+        comment: No Check values in the spec; z-scores give f(t) within about ±5,
+          plausible for 4 standardized variables (checked range on the axis)
     code_quality:
       score: 10
       max: 10
@@ -181,13 +186,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean, direct flow: load → normalize → compute → plot → save'
+        comment: Linear tokens → constants → data → plot → save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic (iris dataset), no randomness
+        comment: Deterministic (bundled Iris dataset)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -199,40 +204,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        comment: Fourier basis built once and applied by a matrix product; concise
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expertly uses sns.lineplot, sns.set_theme, sns.load_dataset
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses seaborn's units parameter + estimator=None for individual curves
+        comment: 'Raised one: long-form melt into sns.lineplot with hue/palette dict,
+          sns.load_dataset, sns.despine'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Raised two: units= with estimator=None for per-observation lines
+          and seaborn''s own estimator=''mean'', errorbar=None aggregation for the
+          mean curves'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T20:44:01Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - manual-ticks
   patterns:
   - dataset-loading
-  - data-generation
-  - iteration-over-groups
+  - wide-to-long
+  - matrix-construction
   dataprep:
   - normalization
   styling:
   - alpha-blending
-  - grid-styling
