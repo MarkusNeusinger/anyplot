@@ -220,7 +220,10 @@ mosaic = (
 mosaic.save(f"plot-{THEME}.png", scale_factor=4.0)
 img = Image.open(f"plot-{THEME}.png").convert("RGB")
 if img.width > TARGET or img.height > TARGET:
-    img.thumbnail((TARGET, TARGET), Image.LANCZOS)  # other data can widen the axes: scale down, never crop
+    fit = min(TARGET / img.width, TARGET / img.height)
+    img = img.resize(
+        (int(img.width * fit), int(img.height * fit)), Image.LANCZOS
+    )  # other data can widen the axes: scale down, never crop
 canvas = Image.new("RGB", (TARGET, TARGET), PAGE_BG)
 canvas.paste(img, ((TARGET - img.width) // 2, (TARGET - img.height) // 2))
 canvas.save(f"plot-{THEME}.png")
