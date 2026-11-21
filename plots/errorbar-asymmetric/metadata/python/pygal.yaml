@@ -2,115 +2,129 @@ library: pygal
 language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:48:43Z'
-updated: '2026-05-13T07:42:51Z'
-generated_by: claude-haiku
-workflow_run: 25784991106
+updated: '2026-11-21T09:08:59Z'
+generated_by: claude-sonnet
+workflow_run: 44887743595
 issue: 2781
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 78
 review:
   strengths:
-  - Perfect text legibility with explicitly sized fonts across all themes
-  - Correct implementation of asymmetric error bars with visible caps
-  - 'Proper theme-adaptive colors and backgrounds (#FAF8F1 light, #1A1A17 dark)'
-  - Realistic data context (material strength testing with non-symmetric confidence
-    intervals)
-  - 'All required features present: central values, error bounds, legend, proper title
-    format'
+  - 'Correct asymmetric error bars on pygal.XY: each arm built from its own error
+    value, caps at both ends, round markers distinct from the bars'
+  - Legend states the bounds ('Median (10th-90th percentile)') and the title follows
+    the mandated format
+  - 'Theme tokens threaded through Style: correct backgrounds and readable chrome
+    in both renders, one brand green for every mark'
+  - Value range computed from the bounds, so every error bar fits with padding
   weaknesses:
-  - Error bar implementation uses multiple chart.add(None, ...) calls which is functional
-    but slightly inelegant
-  - Design could be elevated with more visual hierarchy or refinement to legend styling
+  - 'VQ-03 (both): whiskers and caps render at about 2.5 px on the 3200 px canvas,
+    thin beside the 16 px markers, and the caps are not thicker than the bars as intended
+    → about 5 px bars and 7-8 px caps (+3 to +5 px). Likely cause: the per-series
+    stroke_style widths lose to the Style stroke_width=2.5 rule on the .line.reactive
+    paths; raise Style stroke_width or set the widths where they take effect.'
+  - 'VQ-03 (both): the legend glyph is a tiny square about 10 px wide that does not
+    match the round 16 px markers → a glyph sized and shaped like the marks. Likely
+    cause: pygal''s default legend box size with legend_font_size=44; set legend_box_size.'
+  - 'VQ-01 (both): the 500 y tick is drawn smaller (44 px) than 400/300/200 (56 px),
+    so the tick column reads uneven → one size for all y ticks. Likely cause: pygal
+    treats 500 as a major label; label_font_size=56 vs major_label_font_size=44.'
+  - 'VQ-05 (both): the single legend entry at the bottom leaves an empty band of about
+    10 % of the canvas height below it → reclaim the band for the plot area. Likely
+    cause: legend_at_bottom=True with the default legend row height.'
+  - 'Suggestion: a subtitle or annotation naming the test standard would anchor the
+    10th-90th percentile claim.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "errorbar-asymmetric · pygal · anyplot.ai" in dark text, axis labels "Material" and "Tensile Strength (MPa)" clearly readable, material names and tick values (100-600 MPa) all visible
-      Data: Green data points (#009E73 brand color) with asymmetric error bars extending above and below, horizontal caps at error bounds, legend shows "Median (10th-90th percentile)"
-      Legibility verdict: PASS - all text is readable and properly sized for the 4800×2700 canvas
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'errorbar-asymmetric · python · pygal · anyplot.ai' in dark ink at the top; y title 'Tensile Strength (MPa)' rotated, x title 'Material'; y ticks 200-500 with dotted guides (500 drawn smaller than the others); x ticks Steel, Aluminum, Titanium, Copper, Brass, Bronze; legend 'Median (10th-90th percentile)' bottom left with a tiny green square. All text readable.
+      Data: six #009E73 round markers at the medians, thin green vertical whiskers and caps at both bounds; arms visibly unequal (Steel longer below, Titanium longer above).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title and axis labels in light text (INK #F0EFE8), all text clearly visible against dark background, no dark-on-dark failures
-      Data: Green data points are identical to light render (#009E73), error bars and caps are visible and properly rendered
-      Legibility verdict: PASS - excellent readability in dark theme, proper theme adaptation with no text legibility issues
+      Background: warm near-black #1A1A17
+      Chrome: same layout with light ink text; ticks, titles, legend all readable; no dark-on-dark text. Guides faint but visible.
+      Data: identical #009E73 markers, whiskers and caps; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All fonts explicitly sized (title=28, labels=22, major=18, legend=16,
-          value=14), readable in both themes
+        passed: false
+        comment: Fonts explicitly sized and readable in both themes; the 500 y tick
+          is drawn smaller than 400/300/200 (major vs minor label size) (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, proper spacing throughout
+        comment: No text collisions; markers, whiskers and caps clear of all labels
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Error bars, caps, dots, grid lines all visible and appropriately
-          sized
+        passed: false
+        comment: Whiskers and caps render at the 2.5 px style stroke, thin on the
+          3200 px canvas; legend glyph is a tiny square unlike the round markers (defect
+          line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito green #009E73 is CVD-safe'
+        comment: Single CVD-safe brand green with good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Perfect proportions, generous margins (80px), nothing cut off
+        passed: false
+        comment: Canvas 3200x1800 correct; legend at the bottom leaves an empty band
+          of about 10% of the height below it (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format, axis labels include units
+        comment: Axis titles 'Material' and 'Tensile Strength (MPa)' with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds correct, theme adaptation flawless'
+        comment: 'All marks #009E73; backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional clean style with custom theme tokens, but straightforward
-          without visual flourish
+        comment: 'Style-guide baseline: theme tokens, explicit font sizes, nothing
+          beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clean grid and generous spacing, but minimal customization
+        comment: Spine and grid rules met (y guides only), nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Asymmetric error bars tell story of different material properties,
-          meaningful data choice
+        comment: Data displayed with no chosen focal point beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,19 +140,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bars, caps, central values, legend'
+        comment: Caps at both ends, markers distinct from bars (C2), legend names
+          the 10th-90th percentile bounds (C3)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis materials, Y-axis strength, error bounds correct
+        comment: Materials on x, strength on y, arms from own error values; range
+          spans every bar (C1)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend explains plot
+        comment: Title 'errorbar-asymmetric · python · pygal · anyplot.ai' correct;
+          legend entry readable
     data_quality:
       score: 15
       max: 15
@@ -148,21 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of asymmetric error bars
+        comment: Unequal arms in differing ratios, near-symmetric Bronze/Copper, Brass
+          point near one end
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Material strength testing is realistic and neutral
+        comment: Material tensile strength testing, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MPa values appropriate for tensile strength
+        comment: MPa values sensible for these metals; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,54 +188,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed data arrays, deterministic
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and pygal imported
+        comment: os, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Multiple chart.add(None, ...) calls for error bars functional but
-          inelegant
+        passed: true
+        comment: Appropriate complexity; pygal has no native error bars, so line series
+          per bar is the available route
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and .html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: Uses pygal.XY and Style correctly, but error bar approach could be
-          more elegant
+        comment: pygal.XY with Style and per-series options; default level
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Interactive HTML export used, but mostly straightforward
+        comment: Native HTML tooltips only; nothing beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T09:05:40Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
