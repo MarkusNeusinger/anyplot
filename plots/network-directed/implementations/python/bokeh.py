@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-directed: Directed Network Graph
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-14
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import Arrow, ColumnDataSource, LabelSet, NormalHead
 from bokeh.plotting import figure
@@ -22,181 +23,169 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
 
-# Data: Software module dependencies
-np.random.seed(42)
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Define nodes (software modules)
-nodes = {
-    "api": {"label": "API", "group": "core"},
-    "auth": {"label": "Auth", "group": "core"},
-    "database": {"label": "Database", "group": "core"},
-    "cache": {"label": "Cache", "group": "infra"},
-    "logger": {"label": "Logger", "group": "infra"},
-    "config": {"label": "Config", "group": "infra"},
-    "utils": {"label": "Utils", "group": "shared"},
-    "models": {"label": "Models", "group": "core"},
-    "routes": {"label": "Routes", "group": "core"},
-    "middleware": {"label": "Middleware", "group": "core"},
-    "validators": {"label": "Validators", "group": "shared"},
-    "tests": {"label": "Tests", "group": "dev"},
+# Columns: set these to your table's column names
+SOURCE = "Importing module"  # role: edges
+TARGET = "Imported module"  # role: extra
+SOURCE_GROUP = "Importing group"  # role: extra
+TARGET_GROUP = "Imported group"  # role: extra
+
+# Data: replace this block with your own edge list, for example df = pd.read_csv("edges.csv")
+core, infra, shared, dev = "Core Modules", "Infrastructure", "Shared Utils", "Development"
+group_of = {
+    "API": core,
+    "Auth": core,
+    "Database": core,
+    "Models": core,
+    "Routes": core,
+    "Middleware": core,
+    "Cache": infra,
+    "Logger": infra,
+    "Config": infra,
+    "Utils": shared,
+    "Validators": shared,
+    "Tests": dev,
 }
-
-# Define directed edges (dependencies: source imports target)
 edges = [
-    ("api", "routes"),
-    ("api", "middleware"),
-    ("api", "config"),
-    ("routes", "auth"),
-    ("routes", "database"),
-    ("routes", "models"),
-    ("routes", "validators"),
-    ("middleware", "auth"),
-    ("middleware", "logger"),
-    ("auth", "database"),
-    ("auth", "cache"),
-    ("auth", "config"),
-    ("database", "config"),
-    ("database", "logger"),
-    ("cache", "config"),
-    ("cache", "logger"),
-    ("models", "database"),
-    ("models", "validators"),
-    ("validators", "utils"),
-    ("tests", "api"),
-    ("tests", "models"),
-    ("tests", "utils"),
+    ("API", "Routes"),
+    ("API", "Middleware"),
+    ("API", "Config"),
+    ("Routes", "Auth"),
+    ("Routes", "Database"),
+    ("Routes", "Models"),
+    ("Routes", "Validators"),
+    ("Middleware", "Auth"),
+    ("Middleware", "Logger"),
+    ("Auth", "Database"),
+    ("Auth", "Cache"),
+    ("Auth", "Config"),
+    ("Database", "Config"),
+    ("Database", "Logger"),
+    ("Cache", "Config"),
+    ("Cache", "Logger"),
+    ("Models", "Database"),
+    ("Models", "Validators"),
+    ("Validators", "Utils"),
+    ("Tests", "API"),
+    ("Tests", "Models"),
+    ("Tests", "Utils"),
 ]
-
-# Use circular layout for clear visualization - scaled for 4800x2700 canvas
-n_nodes = len(nodes)
-node_ids = list(nodes.keys())
-angles = np.linspace(0, 2 * np.pi, n_nodes, endpoint=False)
-
-# Position nodes in a circle - use larger scale for canvas
-radius = 900
-center_x, center_y = 2400, 1350
-
-positions = {}
-for i, node_id in enumerate(node_ids):
-    # Offset angle to have 'api' at the top
-    angle = angles[i] - np.pi / 2
-    positions[node_id] = {"x": center_x + radius * np.cos(angle), "y": center_y + radius * np.sin(angle)}
-
-# Okabe-Ito color palette for groups
-group_colors = {
-    "core": BRAND,  # #009E73 - bluish green (Okabe-Ito position 1)
-    "infra": "#C475FD",  # vermillion
-    "shared": "#4467A3",  # blue
-    "dev": "#BD8233",  # reddish purple
-}
-
-# Prepare node data
-node_x = [positions[n]["x"] for n in node_ids]
-node_y = [positions[n]["y"] for n in node_ids]
-node_labels = [nodes[n]["label"] for n in node_ids]
-node_colors = [group_colors[nodes[n]["group"]] for n in node_ids]
-
-node_source = ColumnDataSource(data={"x": node_x, "y": node_y, "label": node_labels, "color": node_colors})
-
-# Create figure with proper canvas size
-p = figure(
-    width=4800,
-    height=2700,
-    title="network-directed · bokeh · anyplot.ai",
-    x_range=(0, 4800),
-    y_range=(0, 2700),
-    tools="",
-    toolbar_location=None,
+df = pd.DataFrame(
+    {
+        SOURCE: [s for s, _ in edges],
+        TARGET: [t for _, t in edges],
+        SOURCE_GROUP: [group_of[s] for s, _ in edges],
+        TARGET_GROUP: [group_of[t] for _, t in edges],
+    }
 )
 
-# Theme styling
+# Plot: reads only df and the constants above
+# Nodes come from the edge list; groups keep their order of first appearance and sit side by side on the ring
+node_group = {
+    **dict(zip(df[TARGET], df[TARGET_GROUP], strict=True)),
+    **dict(zip(df[SOURCE], df[SOURCE_GROUP], strict=True)),
+}
+groups = list(dict.fromkeys(node_group.values()))
+node_ids = sorted(node_group, key=lambda n: groups.index(node_group[n]))
+
+# Canvas 3200 x 1800 with fixed borders, so one data unit is one screen pixel
+W, H = 3200, 1800
+BORDER_SIDE, BORDER_TOP, BORDER_BOTTOM = 40, 120, 40
+frame_w, frame_h = W - 2 * BORDER_SIDE, H - BORDER_TOP - BORDER_BOTTOM
+
+# Elliptical ring layout, groups clustered, first node at the top
+angles = np.linspace(0, 2 * np.pi, len(node_ids), endpoint=False) - np.pi / 2
+center = np.array([frame_w * 0.44, frame_h * 0.50])
+radii = np.array([frame_w * 0.33, frame_h * 0.36])
+pos = {n: center + radii * np.array([np.cos(a), np.sin(a)]) for n, a in zip(node_ids, angles, strict=True)}
+
+NODE_SIZE = 170
+NODE_R = NODE_SIZE / 2 + 2  # border included: arrowheads stop exactly at the node edge
+
+p = figure(
+    width=W,
+    height=H,
+    title="network-directed · python · bokeh · anyplot.ai",
+    x_range=(0, frame_w),
+    y_range=(0, frame_h),
+    tools="",
+    toolbar_location=None,
+    min_border_left=BORDER_SIDE,
+    min_border_right=BORDER_SIDE,
+    min_border_top=BORDER_TOP,
+    min_border_bottom=BORDER_BOTTOM,
+)
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = None
+p.outline_line_alpha = 0
 p.axis.visible = False
 p.grid.visible = False
-
-# Style title
-p.title.text_font_size = "28pt"
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
 p.title.align = "center"
 
-# Draw edges with arrows
-arrow_color = INK_SOFT
-for source_node, target_node in edges:
-    sx, sy = positions[source_node]["x"], positions[source_node]["y"]
-    tx, ty = positions[target_node]["x"], positions[target_node]["y"]
-
-    # Calculate direction vector
-    dx = tx - sx
-    dy = ty - sy
-    length = np.sqrt(dx**2 + dy**2)
-
-    # Shorten edges to not overlap with nodes
-    node_radius = 100  # Visual node radius scaled for canvas
-    start_offset = node_radius / length
-    end_offset = (node_radius + 35) / length  # Extra space for arrow head
-
-    # Adjusted start and end points
-    start_x = sx + dx * start_offset
-    start_y = sy + dy * start_offset
-    end_x = tx - dx * end_offset
-    end_y = ty - dy * end_offset
-
-    # Add arrow
+# Edges: thin, soft lines with one filled arrowhead whose tip touches the target's border
+for src, dst in zip(df[SOURCE], df[TARGET], strict=True):
+    vec = pos[dst] - pos[src]
+    unit = vec / np.hypot(*vec)
+    start = pos[src] + unit * NODE_R
+    end = pos[dst] - unit * NODE_R
     p.add_layout(
         Arrow(
-            end=NormalHead(size=30, fill_color=arrow_color, line_color=arrow_color),
-            x_start=start_x,
-            y_start=start_y,
-            x_end=end_x,
-            y_end=end_y,
-            line_color=arrow_color,
-            line_width=4,
-            line_alpha=0.7,
+            end=NormalHead(size=34, fill_color=INK_SOFT, line_color=INK_SOFT, fill_alpha=0.85, line_alpha=0.85),
+            x_start=start[0],
+            y_start=start[1],
+            x_end=end[0],
+            y_end=end[1],
+            line_color=INK_SOFT,
+            line_width=3,
+            line_alpha=0.6,
         )
     )
 
-# Draw nodes - larger size for visibility
-p.scatter(x="x", y="y", source=node_source, size=200, fill_color="color", line_color=INK_SOFT, line_width=4, alpha=0.9)
-
-# Add labels on nodes
-labels = LabelSet(
-    x="x",
-    y="y",
-    text="label",
-    source=node_source,
-    text_font_size="22pt",
-    text_color=INK,
-    text_align="center",
-    text_baseline="middle",
-    text_font_style="bold",
-)
-p.add_layout(labels)
-
-# Add legend in upper right
-legend_x = 4100
-legend_y = 2450
-legend_items = [
-    ("Core Modules", group_colors["core"]),
-    ("Infrastructure", group_colors["infra"]),
-    ("Shared Utils", group_colors["shared"]),
-    ("Development", group_colors["dev"]),
-]
-
-# Legend background
-p.rect(
-    x=4250, y=2300, width=500, height=400, fill_color=ELEVATED_BG, fill_alpha=0.95, line_color=INK_SOFT, line_width=2
-)
-
-for i, (label, color) in enumerate(legend_items):
-    y_pos = legend_y - i * 80
-    p.scatter(x=[legend_x], y=[y_pos], size=50, fill_color=color, line_color=INK_SOFT, line_width=2)
-    p.text(
-        x=[legend_x + 60], y=[y_pos], text=[label], text_font_size="22pt", text_baseline="middle", text_color=INK_SOFT
+# Nodes: one scatter per group so the legend comes from the data
+for i, group in enumerate(groups):
+    members = [n for n in node_ids if node_group[n] == group]
+    source = ColumnDataSource({"x": [pos[n][0] for n in members], "y": [pos[n][1] for n in members], "label": members})
+    p.scatter(
+        x="x",
+        y="y",
+        source=source,
+        size=NODE_SIZE,
+        fill_color=IMPRINT_PALETTE[i],
+        line_color=INK_SOFT,
+        line_width=4,
+        legend_label=group,
     )
+    p.add_layout(
+        LabelSet(
+            x="x",
+            y="y",
+            text="label",
+            source=source,
+            text_font_size="20pt",
+            text_font_style="bold",
+            text_color="#FFFFFF",
+            text_align="center",
+            text_baseline="middle",
+        )
+    )
+
+# Legend
+p.legend.location = "top_right"
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.label_text_color = INK_SOFT
+p.legend.label_text_font_size = "28pt"
+p.legend.glyph_width = 50
+p.legend.glyph_height = 50
+p.legend.spacing = 14
+p.legend.padding = 24
+p.legend.margin = 30
 
 # Write the interactive HTML (also a required catalog artifact)
 output_file(f"plot-{THEME}.html")
@@ -204,7 +193,6 @@ save(p)
 
 # Screenshot it with headless Chrome — Selenium 4 / Selenium Manager
 # auto-resolves a working driver for the system Chrome.
-W, H = 4800, 2700
 opts = Options()
 for arg in (
     "--headless=new",
@@ -218,6 +206,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)  # let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
