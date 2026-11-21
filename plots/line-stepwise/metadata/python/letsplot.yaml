@@ -2,48 +2,58 @@ library: letsplot
 language: python
 specification_id: line-stepwise
 created: '2025-12-30T10:43:40Z'
-updated: '2026-05-13T15:41:11Z'
-generated_by: claude-haiku
-workflow_run: 25809014115
+updated: '2026-11-21T10:40:34Z'
+generated_by: claude-sonnet
+workflow_run: 44894963744
 issue: 2600
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 79
 review:
   strengths:
-  - Perfect text legibility with explicit font sizing in both themes
-  - Flawless theme-adaptive styling—both renders equally readable with correct chrome
-    adaptation
-  - 'Correct palette compliance (brand green #009E73) with perfect background colors
-    (#FAF8F1 light / #1A1A17 dark)'
-  - Excellent data choice demonstrating real-world server monitoring step function
-    use case
-  - Clean, reproducible code with no unnecessary imports or over-engineering
-  - Strong spec compliance—correct plot type with all required features (discrete
-    changes, value persistence, instantaneous transitions)
+  - 'Native geom_step(direction="hv") draws a clean post-aligned staircase: every
+    plateau reads as one flat segment and every change as a vertical jump at its hour,
+    in both renders'
+  - Markers are drawn only at the six change points, derived from the data with df[RESPONSE].diff()
+    instead of hard-coded hours, so they mark exactly where the state changes and
+    stay small next to the 1.0 line
+  - 'Theme tokens carried through title, axis titles, ticks, axis lines and background:
+    both renders are fully readable on #FAF8F1 and #1A1A17 with identical #009E73
+    data'
+  - Canonical 3200x1800 canvas (ggsize(800, 450), scale=4) and library-prompt font
+    sizes (16/12/10) give a balanced layout; axis titles come straight from the column
+    constants
+  - Plausible, neutral server response-time scenario with deterministic seed and values
+    within 50-150 ms
   weaknesses:
-  - Design Excellence moderate (9/20)—looks like a configured library default rather
-    than custom, polished design
-  - Limited distinctive library features—straightforward implementation that doesn't
-    leverage letsplot's advanced capabilities
-  - No visual storytelling or emphasis—data clearly displayed but no visual hierarchy
-    or focal points to guide viewer attention
+  - 'DE-02 (both): the grid is drawn in solid INK_SOFT on both axes and the panel
+    keeps a frame on all four sides, so the grid competes with the step line on a
+    simple 24-point line chart → y-axis-only grid at about 10-15 % ink opacity and
+    only the left and bottom axis lines (or none). Likely cause: panel_grid_major=element_line(color=INK_SOFT,
+    size=0.3) applied to both axes on top of theme_minimal''s panel border.'
+  - 'DQ-01 (both): the series has 24 hourly points, below the spec''s 50-500 point
+    range (-26 points) → at least 50 points, e.g. 30-minute sampling over 24 hours
+    or several days of hourly data. Likely cause: np.arange(0, 24).'
+  - 'Suggestion: drop the unused ELEVATED_BG token and the no-op theme(legend_position="none")
+    for a leaner script.'
+  - 'Suggestion: a lets-plot tooltip layout (layer_tooltips) on the step line would
+    make the HTML view show the hour and response time on hover.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "line-stepwise · letsplot · anyplot.ai" is dark (#1A1A17) and clearly visible; axis labels "Hour of Day" and "Response Time (ms)" are dark and readable; tick labels (0, 3, 6...24 on x-axis; 50, 60...150 on y-axis) are dark and legible; grid is subtle gray
-      Data: Step line is brand green (#009E73) with size=2; transition points marked with green circles (size=5); horizontal segments show value persistence, vertical segments show instantaneous changes
-      Legibility verdict: PASS (all elements clearly readable, no light-on-light issues)
+      Background: warm off-white #FAF8F1, not pure white; canvas 3200x1800.
+      Chrome: title "line-stepwise · python · letsplot · anyplot.ai" in dark ink top-left, about 47 % of the width; axis titles "Hour of Day" and "Response Time (ms)" dark and readable; ticks 0-24 every 3 h and 50-150 every 10 ms in INK_SOFT, readable. Grid is solid dark-grey on both axes and the panel has a frame on all four sides, fairly prominent.
+      Data: one #009E73 post-aligned step line (hv) at 50 → 70 (h6) → 100 (h9) → 110 (h12) → 140 (h15) → 150 (h18) → 140 (h21), ending at h23; six filled green circles at the change points. Plateaus read as single flat segments.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title, axis labels, tick labels are all light-colored (#F0EFE8, #B8B7B0) and clearly visible on dark background; grid is subtle light gray; no dark-on-dark text issues
-      Data: Step line remains identical brand green (#009E73) as light render (only chrome flipped); points marked the same; step visualization equally clear
-      Legibility verdict: PASS (all text light on dark background, no contrast issues, brand green clearly visible on both surfaces)
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis titles in light ink #F0EFE8, ticks in #B8B7B0, all clearly readable; grid and panel frame light grey, no dark-on-dark text anywhere.
+      Data: identical #009E73 step line and markers as the light render; only chrome flipped; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,48 +64,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: Title 16, axis titles 12, ticks 10 pt explicitly set; readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text overlap, all elements clearly spaced
+        comment: No text collisions; markers sit on the line without hiding it
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Data line (size=2) and points (size=5) optimally adapted to sparse
-          data (24 points)
+        comment: Line size 1.0 and 2.5 markers prominent for 24 sparse points; no
+          legend needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green (#009E73) excellent contrast on both backgrounds; CVD-safe
+        comment: 'Single #009E73 series with strong contrast on both surfaces'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, balanced margins, efficient canvas use
+        comment: Canvas 3200x1800; title ~47 % width; balanced axis labels; no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Hour of Day'' and ''Response Time (ms)'''
+        comment: '''Hour of Day'' and ''Response Time (ms)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; perfect theme
-          chrome adaptation'
+        comment: '#009E73 first series; #FAF8F1/#1A1A17 backgrounds; chrome theme-correct'
     design_excellence:
-      score: 9
+      score: 6
       max: 20
       items:
       - id: DE-01
@@ -103,20 +112,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default, no exceptional design choices
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 0
         max: 6
         passed: false
-        comment: Uses theme_minimal() plus custom layer, mostly standard customization
+        comment: 'Solid INK_SOFT grid on both axes plus a four-sided panel frame:
+          short of the baseline (defect line)'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Realistic scenario but no visual hierarchy or emphasis beyond plot
-          type
+        comment: Data displayed; change-point markers are the only emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -126,48 +135,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step plot with geom_step(direction='hv')
+        comment: geom_step direction='hv' step line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: discrete changes, value persistence, instantaneous
-          transitions'
+        comment: 'C1-C4 met: only horizontal/vertical segments, one post alignment,
+          single-segment plateaus, small markers on data points'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: Hour on x, response time on y; all data visible; marks at data values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend appropriately omitted for single series
+        comment: Title in mandated format; legend N/A for single series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 'All aspects shown: transitions, persistence, discrete behavior'
+        passed: false
+        comment: Rises, a drop, long and short plateaus shown, but 24 points is below
+          the spec's 50-500 range (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral scenario (24-hour server monitoring)
+        comment: Neutral server response-time monitoring
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values (20-150 ms), plausible changes, sensible timespan
+        comment: 'Checked axis: 50-150 ms, 0-23 h, plausible step sizes of 10-30 ms;
+          no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -177,13 +188,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports → data → plot → save'
+        comment: 'Flat script: tokens, constants, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -195,36 +206,42 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        comment: Change points derived with diff(); appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct format: plot-{THEME}.png/html with scale=3'
+        comment: plot-{THEME}.png at scale=4 and plot-{THEME}.html via ggsave
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct ggplot2 grammar-of-graphics patterns, high-level API
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses direction control and ggsize(), but relatively basic
+        comment: Grammar-of-graphics layering with geom_step + geom_point subset layer;
+          standard usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T10:37:29Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
+  - manual-ticks
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - theme-adaptive
+  - grid-styling
