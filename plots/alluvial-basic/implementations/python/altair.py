@@ -218,7 +218,8 @@ chart.save(f"plot-{THEME}.html")
 # Pad (never crop) the saved PNG to the canonical landscape canvas
 TARGET_W, TARGET_H = 3200, 1800
 img = Image.open(f"plot-{THEME}.png").convert("RGB")
-img.thumbnail((TARGET_W, TARGET_H))  # only shrinks, when other data makes the legend or view larger
+shrink = min(1, TARGET_W / img.width, TARGET_H / img.height)  # only shrinks, when other data enlarges the chart
+img = img.resize((round(img.width * shrink), round(img.height * shrink)))
 canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
 canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
 canvas.save(f"plot-{THEME}.png")
