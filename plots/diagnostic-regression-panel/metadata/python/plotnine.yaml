@@ -2,104 +2,117 @@ library: plotnine
 language: python
 specification_id: diagnostic-regression-panel
 created: '2026-05-13T16:14:13Z'
-updated: '2026-05-13T16:38:00Z'
+updated: '2026-11-21T11:00:26Z'
 generated_by: claude-sonnet
-workflow_run: 25809989108
+workflow_run: 44896426658
 issue: 5242
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 82
 review:
   strengths:
-  - All four diagnostic panels correctly implemented with statistically correct computations
-    (hat matrix, internally studentized residuals, Cook's distance, LOWESS, Q-Q reference
-    line)
-  - 'Excellent data engineering: heteroscedastic errors + response outliers + high-leverage
-    extreme observations makes all four panels visually informative'
-  - Both light and dark renders are fully theme-correct with no dark-on-dark or light-on-light
-    failures
-  - Color storytelling via Okabe-Ito green (normal) vs orange (influential) creates
-    immediate visual hierarchy
-  - Idiomatic grammar-of-graphics facet approach with multiple per-panel DataFrames
-    is a distinctive plotnine strength
+  - All four classic diagnostic panels computed correctly, with the top-3 Cook's distance
+    observations labelled in every panel including the Q-Q panel
+  - Cook's distance contours mirrored around zero and labelled by level (D = 0.5,
+    D = 1)
+  - Q-Q quantiles mapped back to each observation by rank, so highlighted points and
+    labels sit on their own points
+  - Both renders theme-correct with Imprint colours identical between light and dark
+  - Idiomatic facet_wrap(scales='free') composition with per-layer panel-routed data
+    frames
   weaknesses:
-  - 'Font sizes below canvas guidelines: title=20pt (need >=24pt), axis_title=16pt
-    (need >=20pt), axis_text=13pt (need >=16pt)'
-  - Normal Q-Q panel (panel 2) missing observation index labels on top influential
-    points; spec requires labels in each subplot
-  - Global x=\"\" y=\"\" means no per-panel axis descriptions for Fitted values, Theoretical
-    quantiles, Leverage, etc.
+  - 'VQ-06 (both): labs(x='''', y='''') leaves all four panels without axis titles
+    (Fitted values, Residuals, Theoretical quantiles, Standardized residuals, sqrt(|Standardized
+    residuals|), Leverage) → a per-panel x and y description. Likely cause: the empty
+    labs() with facet_wrap; put the axis names into the strip text or use per-panel
+    labels.'
+  - 'VQ-02 (both): in the Normal Q-Q panel the ''99'' label sits on top of the dense
+    point band near (-1.2, -0.9), and each Cook''s dotted contour starts on the ''D''
+    of its own ''D = 0.5''/''D = 1'' label → labels clear of points and lines by a
+    few px. Likely cause: va=''bottom'', ha=''left'' with no offset for the obs labels;
+    contour label x at h_grid[keep][0], exactly the curve start.'
+  - 'VQ-01 (both): the Cook''s contour labels at geom_text size 5 read noticeably
+    smaller than the 8 pt tick labels → about the tick size (+1 to +2). Likely cause:
+    geom_text(data=df_cook_labels, size=5).'
+  - 'CQ-01 (code): an on_panel() helper function wraps a one-line assign → inline
+    the panel column. Likely cause: def on_panel(frame, name).'
+  - 'CQ-04 (code): lines 72-87 hand-roll the OLS fit, hat matrix, standardized residuals
+    and Cook''s distance that statsmodels, already imported, computes → sm.OLS(strength,
+    design).fit().get_influence() (hat_matrix_diag, resid_studentized_internal, cooks_distance[0]).
+    Likely cause: manual linear algebra.'
+  - 'Suggestion: the LOWESS smoothers share the purple of the highlighted influential
+    points; a neutral ink smoother would keep purple meaning ''influential'' only.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "diagnostic-regression-panel · plotnine · anyplot.ai" in dark ink (#1A1A17), readable. Strip headers in elevated-bg (#FFFDF6) with dark text. Tick labels in INK_SOFT (#4A4A44), visible but on the small side (13pt). No global axis labels (x="", y=""). Grid lines extremely subtle (alpha=0.10).
-      Data: Normal observations in #009E73 (brand green), top-3 influential in #D55E00 (orange). LOWESS curves in orange on panels 1 and 3. Dashed Q-Q reference line in light gray on panel 2. Dotted Cook's distance contours on panel 4. Observation index labels in INK_SOFT on influential points in panels 1, 3, 4.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues. Tick labels slightly small but legible.
+      Background: warm off-white #FAF8F1; strip headers on the #FFFDF6 elevated surface.
+      Chrome: title 'diagnostic-regression-panel · python · plotnine · anyplot.ai' in dark ink centred on top; strips 'Residuals vs Fitted', 'Normal Q-Q', 'Scale-Location', 'Residuals vs Leverage'; dark-grey tick labels readable; no axis titles; subtle grid.
+      Data: normal points #009E73, the three most influential (55, 97, 99) #C475FD with bold dark index labels in all four panels; purple LOWESS lines in panels 1 and 3; dashed zero lines and dashed Q-Q reference; dotted mirrored Cook's contours labelled D = 0.5 / D = 1 (small).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct theme surface, not pure black.
-      Chrome: Title and strip text in #F0EFE8 (light ink), clearly visible. Tick labels in #B8B7B0 (INK_SOFT dark), readable against dark background. Panel borders in INK_SOFT dark. Grid lines subtle.
-      Data: Colors IDENTICAL to light render — #009E73 green for normal points, #D55E00 orange for influential points and LOWESS curves. Cook's distance contours and Q-Q reference line remain distinguishable against dark background.
-      Legibility verdict: PASS — no dark-on-dark failures. All text elements adapt correctly to dark surface. Brand green #009E73 remains well-visible on dark background.
+      Background: warm near-black #1A1A17; strips on #242420.
+      Chrome: title, strip text and tick labels in light ink, all readable; no dark-on-dark.
+      Data: same #009E73 / #C475FD colours as the light render; index labels in light ink; dashed and dotted reference lines in light grey visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: 'Sizes explicitly set but below guidelines: title=20pt (need >=24),
-          axis_title=16pt (need >=20), axis_text=13pt (need >=16). Text readable but
-          undersized for 4800x2700 canvas.'
+        comment: Theme sizes at the library-prompt baseline (title 12, axis text 8,
+          strips 10); readable in both themes; the 'D = 0.5'/'D = 1' contour labels
+          at geom_text size 5 read small beside the 8 pt ticks (defect line)
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Q-Q label '99' sits on the dense point band; each Cook's contour
+          starts on the 'D' of its own label (defect lines)
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No significant overlap across all four panels. Influential-point
-          labels spaced cleanly.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Points size=2.5 alpha=0.7 visible for ~100 observations across 4
-          panels. Slightly small for canvas but functional.
+        comment: 100 points at size 1.6, alpha 0.75 visible in all panels and both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green/orange are CVD-safe with good luminance contrast.
+        comment: Green vs purple plus index labels; not a sole colour signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 2x2 panel grid fills 16:9 canvas reasonably well. Minor wasted space
-          around panel borders.
+        comment: 3200x1800 canvas, balanced 2x2 grid, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: true
-        comment: Title format correct. Global x='', y='' means no per-panel axis descriptions.
+        comment: Title correct but labs(x='', y='') leaves every panel without axis
+          titles (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 — correct Okabe-Ito order.
-          Light bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
+        comment: '#009E73 first, #C475FD second Imprint position; #FAF8F1 / #1A1A17
+          backgrounds; both renders theme-correct'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -107,26 +120,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Good professional design with theme-adaptive tokens and elevated-bg
-          strip headers. Above default but not exceptional — uniform panel borders,
-          no typography weight variation.
+        comment: Elevated-surface strip headers and bold INK index labels against
+          INK_SOFT contour labels give a type hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid (alpha=0.10), no minor grid, INK_SOFT panel borders.
-          Good refinement, L-shaped spines would be cleaner than full panel borders.
+        comment: Contour labels placed at the low-leverage end where the two levels
+          are farthest apart; panel spacing tuned
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual narrative: green vs orange color coding identifies
-          influential observations. LOWESS guides trend reading. Cook''s contours
-          quantify influence.'
+        comment: Influential observations coloured purple consistently in all four
+          panels, so the eye tracks 55/97/99 across diagnostics
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,29 +145,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: All four classic regression diagnostic panels correctly implemented
-          in 2x2 layout.
+        comment: Correct four-panel regression diagnostic display
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'LOWESS, Q-Q reference, zero lines, Cook''s contours all present.
-          Missing: Normal Q-Q panel has no observation index labels (spec requires
-          labels in each subplot).'
+        comment: Zero lines, both LOWESS smoothers, Q-Q reference line, mirrored Cook's
+          contours labelled by level, top-3 Cook's labels in every panel (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All four panels use correct x/y variable assignments.
+        comment: Q-Q quantiles assigned per observation by rank; labels sit at their
+          points; all data in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'diagnostic-regression-panel · plotnine · anyplot.ai' exact.
-          No legend appropriate for this diagnostic plot design.
+        comment: Title 'diagnostic-regression-panel · python · plotnine · anyplot.ai';
+          legend N/A (hidden, labels carry identity)
     data_quality:
       score: 15
       max: 15
@@ -166,89 +176,94 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Heteroscedastic errors, response outliers (+25/-28), high-leverage
-          extreme-temperature points — all diagnostic features visible.
+        comment: Heteroscedastic errors, two response outliers, three high-leverage
+          runs exercise every panel
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Materials testing: tensile strength vs temperature and load. Neutral,
-          scientifically plausible, real-world engineering scenario.'
+        comment: 'Materials testing: tensile strength vs temperature and load'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 20-210C, load ~Normal(50,10), strength ~100-130, leverage
-          up to ~0.3 — all physically reasonable.
+        comment: 'Checked: residuals ±30 around fitted 105-172, std residuals within
+          ±5, leverages up to ~0.28, Cook''s contours at D=0.5/1 follow sqrt(D·p·(1-h)/h)'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Imports → data generation → plot construction → save. No functions
-          or classes.
+        comment: Defines an on_panel() helper function (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: scipy, sklearn, statsmodels, and all plotnine elements are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: No fake UI elements. Complexity (hat matrix, Cook's distance) is
-          appropriate for multi-panel diagnostic plot.
+        comment: Lines 72-87 hand-roll OLS, hat matrix, standardized residuals and
+          Cook's distance that statsmodels (already a dependency) computes via OLS(...).fit().get_influence()
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', dpi=300) correct.
+        comment: plot.save plot-{THEME}.png at dpi=400, 8x4.5 in
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of facet_wrap with free scales, pd.Categorical with ordered
-          categories, scale_color_manual, per-panel DataFrames — textbook grammar-of-graphics.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Multi-DataFrame layer approach with categorical panel filtering is
-          distinctively idiomatic to plotnine/ggplot2.
+        comment: Grammar-of-graphics layering with per-layer data frames routed to
+          facets by an ordered categorical panel column
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: facet_wrap(scales='free') gives each diagnostic its own axes in one
+          plot object
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T10:56:36Z'
 impl_tags:
   dependencies:
   - scipy
-  - sklearn
   - statsmodels
   techniques:
   - faceting
-  - layer-composition
   - annotations
+  - reference-lines
   patterns:
   - data-generation
+  - long-format-reshape
   dataprep:
   - regression
+  - lowess
+  - quantile-computation
   styling:
   - alpha-blending
+  - theme-adaptive
