@@ -2,43 +2,42 @@ library: matplotlib
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:21:39Z'
-updated: '2026-05-12T11:03:41Z'
-generated_by: claude-haiku
-workflow_run: 25730003968
+updated: '2026-11-21T06:12:56Z'
+generated_by: claude-sonnet
+workflow_run: 44874040641
 issue: 2647
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 86
 review:
   strengths:
-  - 'Flawless theme adaptation: both light and dark renders pass legibility checks
-    with perfect text contrast'
-  - Correct Okabe-Ito palette order (Solar → Wind → Hydro → Natural Gas → Coal)
-  - 'Clean data narrative: renewable growth vs. fossil fuel decline is visually obvious'
-  - Well-proportioned layout with generous whitespace and proper legend placement
-  - Proper use of matplotlib's high-level stackplot API
-  - Grid styling is subtle and supports rather than competes with data
+  - Native ax.stackplot fed by pivot_table and a per-year normalization, so every
+    layer starts where the one below ends and the stack is flat at 100%
+  - PercentFormatter on a 0-100% axis reads as share of the total
+  - Legend reversed via get_legend_handles_labels so its rows run top-to-bottom in
+    stack order, with a 'Source' title
+  - 'Theme tokens threaded through title, ticks, spines, grid and legend: both renders
+    read cleanly'
+  - Exact 3200x1800 canvas through figsize x dpi with subplots_adjust instead of bbox_inches='tight'
   weaknesses:
-  - Design excellence is competent but not exceptional—follows template conventions
-    without adding custom visual sophistication
-  - Library Mastery could showcase more distinctive matplotlib techniques (not required
-    for this spec, but opportunity exists)
+  - 'Suggestion: direct labels at the right edge of the thicker layers could replace
+    the legend lookup'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "area-stacked-percent · matplotlib · anyplot.ai", axis labels "Year (2014–2024)" and "Electricity Generation (%)", and all tick labels (2014-2024, 0%-100%) are clearly readable in dark text (#1A1A17 and #4A4A44)
-      Data: Okabe-Ito palette with Solar (#009E73 at bottom), Wind (#D55E00), Hydro (#0072B2), Natural Gas (#CC79A7), Coal (#E69F00 at top). All areas clearly distinguishable.
-      Legibility verdict: PASS - all text is readable, no overlaps, excellent contrast
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'area-stacked-percent · python · matplotlib · anyplot.ai' in dark ink at ~57% width; x-axis 'Year' with ticks 2014-2024, y-axis 'Share of electricity generation' with 0%-100% ticks in 20% steps; subtle horizontal grid; top/right spines removed; legend titled 'Source' outside right on an elevated frame. All text dark and readable.
+      Data: five stacked layers from bottom: Solar #009E73, Wind #C475FD, Hydro #4467A3, Natural Gas #BD8233, Coal #AE3030, alpha 0.85 with page-colored separators; flat top at 100%. Legend lists Coal..Solar top-to-bottom, matching the stack.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title, axis labels, and all tick labels clearly visible in light text (#F0EFE8 and #B8B7B0) against dark background. No dark-on-dark failures observed.
-      Data: Colors identical to light render - Solar (#009E73), Wind (#D55E00), Hydro (#0072B2), Natural Gas (#CC79A7), Coal (#E69F00). Theme separation confirmed (only chrome flips).
-      Legibility verdict: PASS - all text is readable with excellent contrast, proper theme adaptation demonstrated
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks and legend entries in soft light gray, legend frame on #242420; no dark-on-dark text.
+      Data: identical layer colors and order; separators now in the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,71 +48,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, labels=20, ticks=16). Readable
-          in both light and dark themes.
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, legend 8/9 pt, all explicitly
+          set; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend positioned outside plot area. No colliding elements.
+        comment: Legend outside the axes; no text collides with text or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All stacked areas clearly distinguishable by color.
+        comment: Five filled layers at alpha 0.85 with page-colored separators; legend
+          swatches match the fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe. Good contrast.
+        comment: Green (Solar) and red (Coal) are at opposite ends of the stack, never
+          adjacent; neighbors differ in hue and lightness
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio, tight_layout, nothing cut off.
+        comment: 3200x1800 canvas, title ~57% of width, balanced axis titles, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format with spec-id, library, anyplot.ai. Descriptive
-          axis labels with units.
+        comment: '''Year'' and ''Share of electricity generation'' with percent ticks;
+          title of the legend ''Source'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (brand green). Okabe-Ito order respected.
-          Backgrounds correct (#FAF8F1 light / #1A1A17 dark).'
+        comment: 'All eight Imprint positions listed, first series #009E73, canonical
+          order; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Well-executed Okabe-Ito palette with clean styling. Data domain is
-          relevant. Professional but not highly custom.
+        comment: Style-guide baseline typography and palette; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed. Subtle y-axis-only grid. Generous whitespace.
-          Legend frame styled appropriately.
+        comment: '+1: layer separators in the page color and a legend reversed to
+          read top-to-bottom in stack order, so legend rows line up with the layers'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Clear narrative: renewable growth vs. fossil fuel decline. Visual
-          hierarchy present through area ordering.'
+        comment: '+1: the growing renewables sit on the flat zero baseline, so their
+          rising share reads directly off the axis against the shrinking fossil layers'
     spec_compliance:
       score: 15
       max: 15
@@ -123,27 +124,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 100% stacked area chart correctly implemented.
+        comment: Correct 100% stacked area chart via stackplot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All areas stack to 100%, proportional changes shown, appropriate
-          categorical data.
+        comment: 'Normalization per time point, stack to 100%, C1-C4 all shown: layers
+          start where the one below ends, flat top at 100%, axis 0-100%, consistent
+          order and colors with a legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: time (years 2014-2024), Y-axis: percentage (0-100%), categories
-          correctly stacked.'
+        comment: Year on x, share on y from 0 to 100%, all 11 years shown; marks at
+          their computed shares
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data.
+        comment: Title 'area-stacked-percent · python · matplotlib · anyplot.ai' correct;
+          legend entries match the sources
     data_quality:
       score: 15
       max: 15
@@ -153,22 +156,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of 100% stacked area with multiple categories and
-          clear proportional representation.
+        comment: Five categories with growing, shrinking and near-constant shares;
+          all aspects of the type visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Renewable energy data 2014-2024 with plausible values. Realistic
-          energy mix evolution. Neutral domain.
+        comment: Plausible national electricity mix 2014-2024, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values span 0-100% (mandatory). Individual percentages realistic
-          for electricity generation.
+        comment: 'Checked: 2014 Coal share 39.8% (top layer from 60.2% to 100%) and
+          2024 Solar 11.5% read off the axis match the data; each year''s raw values
+          total 100 TWh'
     code_quality:
       score: 10
       max: 10
@@ -178,31 +181,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Straightforward linear implementation.
+        comment: Imports, constants, Data block binding df, Plot block; no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed numpy arrays, deterministic, reproducible.
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy. All used.
+        comment: os, pyplot, numpy, pandas, PercentFormatter all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI. Idiomatic matplotlib.
+        comment: pivot_table + div for normalization; no written-out algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct naming.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
       score: 6
       max: 10
@@ -212,24 +217,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax.stackplot() correctly (proper high-level API). Theme tokens
-          properly applied. Spine removal standard practice.
+        comment: '+1: pivot_table to wide form feeding stackplot(labels=...), PercentFormatter
+          on the y axis, get_legend_handles_labels to reorder the legend'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Theme-adaptive implementation is competent but follows boilerplate.
-          No distinctive matplotlib features leveraged.
+        passed: true
+        comment: '+1: matplotlib.ticker.PercentFormatter for the share axis'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-21T06:09:41Z'
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - custom-legend
   patterns:
-  - data-generation
+  - long-to-wide
+  - explicit-figure
   dataprep:
   - normalization
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
