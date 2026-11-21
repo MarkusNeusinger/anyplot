@@ -12,92 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mark
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 0
 review:
   strengths:
-  - Correct Okabe-Ito palette usage with first series as brand green (#009E73)
-  - Excellent theme-adaptive styling with proper contrast in both light and dark renders
-  - Clear visual distinction between three series using different marker shapes (circle,
-    square, triangle)
-  - Realistic, well-chosen data example with proper seasonal temperature patterns
-  - Proper legend implementation using Bokeh's Legend class with all styling details
-  - Explicit font sizing appropriate for 4800×2700 canvas
-  - Proper data mapping with axis labels including units
-  - Idiomatic Bokeh usage with ColumnDataSource and proper API patterns
+  - Distinct marker shape per series with Imprint colors
+  - Legend entries combine line and marker renderers so each glyph matches its series
+  - Theme tokens applied to chrome; no dark-on-dark text
   weaknesses:
-  - Top and right spines not removed - could improve visual refinement (DE-02)
-  - No visual hierarchy or emphasis through color contrast or size variation (DE-03)
-  - Design is well-executed but follows defaults rather than showing aesthetic sophistication
-    (DE-01)
-  - Legend styling while correct, doesn't demonstrate distinctive Bokeh features (LM-02)
+  - 'AR-09 (both): the x-axis tick labels and the ''Month'' axis title are chopped
+    off at the bottom canvas edge → the full axis inside the PNG. Likely cause: figure
+    4800x2700 with a screenshot window that does not match, plus the default toolbar.'
+  - 'VQ-05 (both): canvas is 4800x2561 and the bokeh toolbar shows on the right edge
+    → 3200x1800 (−1600 × −761) without toolbar. Likely cause: width=4800, height=2700
+    and no toolbar_location=None.'
+  - 'VQ-01 (both): 22pt axis title and 18pt tick labels read small on the canvas →
+    the bokeh prompt''s 42pt / 34pt. Likely cause: font sizes set for an outdated
+    scale.'
+  - 'VQ-06 (both): the x-axis title ''Month'' is not visible → show it inside the
+    canvas. Likely cause: the bottom clipping.'
+  - 'SC-03 (both): the x-axis and the lowest Station C triangles at about -1 °C sit
+    at or past the bottom edge → all data and the axis inside the canvas. Likely cause:
+    the bottom clipping.'
+  - 'SC-04 (both): title ''line-markers · bokeh · anyplot.ai'' lacks the language
+    segment → ''line-markers · python · bokeh · anyplot.ai''. Likely cause: the title
+    string.'
+  - 'VQ-03 (both): size-18 markers in the line''s own color at alpha 0.85 with no
+    outline barely stand out from the 4 px lines → larger markers with a contrasting
+    outline. Likely cause: scatter size=18, color equal to the line color.'
+  - 'DQ-02 (both): stations labelled Station A–C read generic → named stations. Likely
+    cause: the legend labels.'
+  - 'CQ-04 (code): sys.path filtering with noqa imports (lines 17–28) and three copy-pasted
+    ColumnDataSource/line/scatter blocks → plain imports and one loop over the series.
+    Likely cause: an import-shadowing workaround the bokeh prompt does not need.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as required - clearly visible and not pure white
-      Chrome: Title "line-markers · bokeh · anyplot.ai" (28pt) is bold and prominent in dark text (#1A1A17). Axis labels "Month" and "Temperature (°C)" (22pt) are clearly readable. Tick labels (18pt) in secondary color (#4A4A44) are distinct and readable. Grid lines at 10% opacity are visible but appropriately subtle. Legend box with proper background (#FFFDF6) and border is positioned top-left with clear labels
-      Data: Three line plots with markers - Station A (green #009E73 circles), Station B (orange #D55E00 squares), Station C (blue #0072B2 triangles). Lines (width=4) and markers (size=18) are clearly visible. Data shows realistic seasonal temperature variation from ~2°C to ~26°C across 12 months
-      Legibility verdict: PASS - All text is easily readable at full resolution. High contrast between text and light background
+      Background: warm off-white #FAF8F1, canvas 4800x2561.
+      Chrome: small bold title 'line-markers · bokeh · anyplot.ai' top-left; small y-axis title 'Temperature (°C)' and y ticks; the x-axis, its tick labels and its 'Month' title are cut off at the bottom edge; bokeh toolbar icons on the right edge; framed legend top-left.
+      Data: Station A #009E73 circles, Station B #C475FD squares, Station C #4467A3 triangles, markers in the line color at alpha 0.85; lowest triangles at the bottom edge.
+      Legibility verdict: FAIL (x-axis clipped off the canvas, text small)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as required - clearly distinct from pure black, maintaining the warm tone
-      Chrome: Title remains bold and prominent in light text (#F0EFE8) against dark background. Axis labels (#F0EFE8) are clearly visible. Tick labels (#B8B7B0 - soft secondary) are readable though more subtle than light render, which is appropriate for secondary elements. Grid lines at 10% opacity are subtly visible. Legend text in secondary color (#B8B7B0) on elevated background (#242420) is readable with proper contrast. X-axis month labels are visible
-      Data: Identical data colors to light render (green, orange, blue maintained) - only the chrome elements adapt to theme, not the data colors. All three series remain clearly distinguishable. Lines and markers have same visual weight as light render
-      Legibility verdict: PASS - All elements are readable in dark theme. Text-on-dark contrast is maintained appropriately. No "dark-on-dark" failures. Data colors provide excellent contrast against dark background
+      Background: warm near-black #1A1A17.
+      Chrome: light title and labels, readable but small; same bottom clipping and toolbar.
+      Data: identical colors and shapes to the light render.
+      Legibility verdict: FAIL (x-axis clipped off the canvas)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: All text readable; dark theme secondary colors are subtle but clear.
-          Explicit font sizing applied throughout (28pt title, 22pt labels, 18pt ticks)
+        passed: false
+        comment: 22pt axis title and 18pt ticks read small on the 4800-wide canvas
+          (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend properly positioned top-left, no text overlap, clear spacing
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Three marker shapes (circle, square, triangle) clearly visible and
-          distinguishable; line thickness (4px) and marker size (18) well-proportioned
+        passed: false
+        comment: Size-18 markers in the line color at alpha 0.85, no outline, barely
+          stand out from the 4 px lines (defect line); legend shows line and marker
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette highly CVD-safe; excellent contrast and luminance
-          differences between series
+        comment: Imprint colors plus marker shapes
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 4800x2700 canvas well-utilized; plot fills ~50-70% of canvas with
-          balanced margins; nothing cut-off
+        passed: false
+        comment: 4800x2561 canvas, bottom chopped off, toolbar visible on the right
+          (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Y-axis includes units '(°C)'; title follows correct format 'line-markers
-          · bokeh · anyplot.ai'
+        passed: false
+        comment: Y title with unit, but the x-axis title is cut off the canvas (defect
+          line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green), multi-series follow Okabe-Ito
-          order; backgrounds #FAF8F1 (light) and #1A1A17 (dark); chrome colors theme-adaptive;
-          data colors identical between themes'
+        comment: '#009E73, #C475FD, #4467A3 in order; correct backgrounds'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -105,24 +116,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults; professional polish but no exceptional
-          or innovative design choices
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Grid appropriately subtle (10% alpha); legend styling is clean; spines
-          not removed (could improve polish)
+        comment: Grid and spine rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly with realistic seasonal patterns, but no visual
-          emphasis or focal point through hierarchy
+        comment: Data displayed, no hierarchy
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -130,31 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with markers; all spec requirements met (distinct
-          marker shapes, visible markers, proportional sizing)
+        comment: Line plot with markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Lines, markers, multiple series, legend, proper title and axis labels
-          all present
+        comment: Distinct shapes per series, marker on every point
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X-axis (months 1-12), Y-axis (temperatures); all data points visible
-          and correctly mapped
+        passed: false
+        comment: The x-axis and the lowest triangles at about -1 °C are cut off (defect
+          line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; legend labels 'Station A/B/C' are clear and
-          descriptive
+        passed: false
+        comment: Title lacks the language segment (defect line); legend labels match
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -162,24 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple series, seasonal patterns, variation
-          within each station, full annual cycle'
+        comment: Three series with crossings
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Real-world plausible scenario (weather station data); neutral topic
-          (nature/climate); comprehensible and relatable
+        passed: false
+        comment: Plausible temperatures, generic Station A–C labels (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature values realistic for Earth (2-26°C range); seasonal pattern
-          correct; random variation (±1.5°C) plausible
+        comment: -1 to 26 °C, plausible
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -187,55 +189,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → sources → figure → plot → styling
-          → save; no functions/classes'
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic results
+        comment: Seed 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy (data), selenium (screenshot), bokeh (plotting),
-          stdlib (system)'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, appropriate complexity; no over-engineering or fake
-          functionality
+        passed: false
+        comment: sys.path manipulation with noqa imports and three copy-pasted series
+          blocks (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-{THEME}.png and plot-{THEME}.html; using
-          current Bokeh 3.9.0 API'
+        comment: plot-{THEME}.png/html, current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of Bokeh patterns: figure(), ColumnDataSource, line/scatter
-          plot methods, Legend class, theme-adaptive styling, proper save workflow'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Legend class (Bokeh-specific), but mostly standard techniques.
-          Could leverage more Bokeh-distinctive features like callbacks or interactive
-          tools
+        comment: figure, ColumnDataSource, line/scatter, Legend
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Legend items combining line and scatter renderers, nothing beyond
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
 impl_tags:
   dependencies:
   - selenium
