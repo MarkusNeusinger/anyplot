@@ -1,14 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 upset-basic: UpSet Plot for Multi-Set Intersection Analysis
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 82/100 | Created: 2026-05-13
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
-from collections import Counter
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -19,7 +19,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"
+
+# Imprint palette: first position is the single-series brand color
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
 
 sns.set_theme(
     style="ticks",
@@ -38,126 +41,121 @@ sns.set_theme(
     },
 )
 
-# Data: customer segments across marketing channels
-np.random.seed(42)
-n_customers = 1200
+# Constants
+MAX_INTERSECTIONS = 14  # show only the largest combinations
+
+# Columns: set these to your table's column names
+ELEMENT = "Customer"  # role: element
+SET_NAME = "Channel"  # role: sets
+
+# Data: replace this block with your own table, for example df = pd.read_csv("memberships.csv")
+# One row per (element, set) membership: customer segments across marketing channels
+rng = np.random.default_rng(42)
 channel_names = ["Email", "Mobile", "Social", "Premium", "Loyalty"]
 channel_probs = [0.62, 0.51, 0.39, 0.27, 0.21]
+member = rng.random((1200, len(channel_names))) < np.array(channel_probs)
+customer_idx, channel_idx = np.nonzero(member)
+df = pd.DataFrame({ELEMENT: [f"C{i:04d}" for i in customer_idx], SET_NAME: [channel_names[j] for j in channel_idx]})
 
-membership = np.column_stack([np.random.random(n_customers) < p for p in channel_probs])
-membership = membership[membership.any(axis=1)]
-n_sets = len(channel_names)
+# Plot: reads only df and the constants above
+set_order = list(df[SET_NAME].unique())
+n_sets = len(set_order)
+membership = pd.crosstab(df[ELEMENT], df[SET_NAME]).reindex(columns=set_order).gt(0)
+combo_counts = membership.value_counts().head(MAX_INTERSECTIONS)  # sorted by size, descending
+n_ints = len(combo_counts)
+set_sizes = membership.sum().reindex(set_order)
 
-intersection_counts = Counter(tuple(row) for row in membership)
-sorted_ints = sorted(intersection_counts.items(), key=lambda x: -x[1])
-top_n = min(14, len(sorted_ints))
-top_keys = [k for k, _ in sorted_ints[:top_n]]
-top_counts = [v for _, v in sorted_ints[:top_n]]
-n_ints = len(top_keys)
-set_sizes = membership.sum(axis=0)
+# Long table of matrix cells: one row per (intersection, set)
+cells = pd.DataFrame(
+    [
+        {"col": c, "row": r, "active": bool(flag)}
+        for c, combo in enumerate(combo_counts.index)
+        for r, flag in enumerate(combo)
+    ]
+)
 
-# Figure layout
-fig = plt.figure(figsize=(16, 9), facecolor=PAGE_BG)
+fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 gs = fig.add_gridspec(
     2,
-    2,
-    width_ratios=[1.4, 5],
+    3,
+    width_ratios=[1.5, 0.9, 5],
     height_ratios=[3, 2],
     hspace=0.0,
     wspace=0.0,
-    left=0.07,
-    right=0.97,
-    top=0.88,
-    bottom=0.05,
+    left=0.05,
+    right=0.98,
+    top=0.89,
+    bottom=0.13,
 )
-
-ax_corner = fig.add_subplot(gs[0, 0])
-ax_intbar = fig.add_subplot(gs[0, 1])
+ax_intbar = fig.add_subplot(gs[0, 2])
 ax_setbar = fig.add_subplot(gs[1, 0])
-ax_matrix = fig.add_subplot(gs[1, 1])
+ax_matrix = fig.add_subplot(gs[1, 2])
 
+# Intersection bars (top)
 x_cols = np.arange(n_ints)
-y_rows = np.arange(n_sets)
-
-# Intersection bar chart (top right)
-ax_intbar.set_facecolor(PAGE_BG)
+sns.barplot(x=x_cols, y=combo_counts.to_numpy(), color=BRAND, saturation=1, linewidth=0, width=0.55, ax=ax_intbar)
+ax_intbar.yaxis.grid(True)
 ax_intbar.set_axisbelow(True)
-ax_intbar.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
-ax_intbar.bar(x_cols, top_counts, color=BRAND, width=0.55, zorder=2)
-for i, cnt in enumerate(top_counts):
-    ax_intbar.text(i, cnt + max(top_counts) * 0.015, str(cnt), ha="center", va="bottom", fontsize=10, color=INK_SOFT)
+for i, cnt in enumerate(combo_counts):
+    ax_intbar.text(i, cnt + combo_counts.max() * 0.015, str(cnt), ha="center", va="bottom", fontsize=7, color=INK_SOFT)
+ax_intbar.set_ylim(0, combo_counts.max() * 1.12)
 ax_intbar.set_xlim(-0.5, n_ints - 0.5)
-ax_intbar.set_ylabel("Intersection Size", fontsize=17, color=INK, labelpad=8)
-ax_intbar.tick_params(axis="y", labelsize=13, colors=INK_SOFT)
+ax_intbar.set_ylabel("Intersection size", fontsize=10)
+ax_intbar.tick_params(axis="y", labelsize=8)
 ax_intbar.tick_params(axis="x", bottom=False, labelbottom=False)
-ax_intbar.spines["top"].set_visible(False)
-ax_intbar.spines["right"].set_visible(False)
-ax_intbar.spines["bottom"].set_visible(False)
-ax_intbar.spines["left"].set_color(INK_SOFT)
+sns.despine(ax=ax_intbar, bottom=True)
 
-# Dot matrix (bottom right)
-ax_matrix.set_facecolor(PAGE_BG)
-for row_idx in range(n_sets):
-    ax_matrix.axhline(row_idx, color=INK, alpha=0.06, linewidth=0.8, zorder=1)
-for col_idx, key in enumerate(top_keys):
-    active_rows = [r for r, active in enumerate(key) if active]
-    for row_idx, is_active in enumerate(key):
-        if is_active:
-            ax_matrix.scatter(col_idx, row_idx, s=200, color=BRAND, zorder=4, linewidths=0)
-        else:
-            ax_matrix.scatter(col_idx, row_idx, s=55, color=INK_MUTED, alpha=0.28, zorder=3, linewidths=0)
-    if len(active_rows) > 1:
-        ax_matrix.plot(
-            [col_idx, col_idx],
-            [min(active_rows), max(active_rows)],
-            color=BRAND,
-            linewidth=3.5,
-            zorder=3,
-            solid_capstyle="round",
-        )
+# Dot matrix (bottom right): active dots filled and joined, inactive dots muted
+for row in range(n_sets):
+    ax_matrix.axhline(row, color=INK, alpha=0.06, linewidth=0.6, zorder=1)
+for col, group in cells[cells["active"]].groupby("col"):
+    if len(group) > 1:
+        ax_matrix.plot([col, col], [group["row"].min(), group["row"].max()], color=BRAND, linewidth=2.2, zorder=3)
+sns.scatterplot(
+    data=cells[~cells["active"]],
+    x="col",
+    y="row",
+    color=INK_MUTED,
+    alpha=0.3,
+    s=30,
+    linewidth=0,
+    zorder=2,
+    legend=False,
+    ax=ax_matrix,
+)
+sns.scatterplot(
+    data=cells[cells["active"]], x="col", y="row", color=BRAND, s=85, linewidth=0, zorder=4, legend=False, ax=ax_matrix
+)
 ax_matrix.set_xlim(-0.5, n_ints - 0.5)
-ax_matrix.set_ylim(-0.5, n_sets - 0.5)
-ax_matrix.set_yticks(y_rows)
-ax_matrix.set_yticklabels(channel_names, fontsize=14, color=INK)
+ax_matrix.set_ylim(n_sets - 0.5, -0.5)  # first set on top, matching the set-size bars
+ax_matrix.set_xlabel("")
+ax_matrix.set_ylabel("")
+ax_matrix.set_yticks(range(n_sets), set_order)
+ax_matrix.tick_params(axis="y", left=False, labelsize=8, labelcolor=INK)
 ax_matrix.tick_params(axis="x", bottom=False, labelbottom=False)
-ax_matrix.tick_params(axis="y", left=False)
-for spine in ax_matrix.spines.values():
-    spine.set_visible(False)
+sns.despine(ax=ax_matrix, left=True, bottom=True)
 
-# Set size bars (bottom left, bars extend left toward margin)
-ax_setbar.set_facecolor(PAGE_BG)
+# Set-size bars (bottom left): zero at the right edge, bars extend left
+sns.barplot(
+    x=set_sizes.to_numpy(), y=set_order, color=BRAND, saturation=1, linewidth=0, width=0.45, orient="h", ax=ax_setbar
+)
+ax_setbar.xaxis.grid(True)
 ax_setbar.set_axisbelow(True)
-ax_setbar.xaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
-for row_idx in range(n_sets):
-    ax_setbar.axhline(row_idx, color=INK, alpha=0.06, linewidth=0.8, zorder=1)
-ax_setbar.barh(y_rows, set_sizes, color=BRAND, height=0.45, zorder=2)
-ax_setbar.set_ylim(-0.5, n_sets - 0.5)
 ax_setbar.invert_xaxis()
-ax_setbar.set_xlabel("Set Size", fontsize=15, color=INK, labelpad=6)
-ax_setbar.tick_params(axis="x", labelsize=12, colors=INK_SOFT)
+ax_setbar.set_xlabel("Set size", fontsize=10)
+ax_setbar.tick_params(axis="x", labelsize=8)
 ax_setbar.tick_params(axis="y", left=False, labelleft=False)
-ax_setbar.spines["top"].set_visible(False)
-ax_setbar.spines["left"].set_visible(False)
-ax_setbar.spines["right"].set_visible(False)
-ax_setbar.spines["bottom"].set_color(INK_SOFT)
+sns.despine(ax=ax_setbar, left=True)
 
-# Empty corner
-ax_corner.set_facecolor(PAGE_BG)
-ax_corner.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
-for spine in ax_corner.spines.values():
-    spine.set_visible(False)
-
-# Title
 fig.text(
     0.5,
-    0.93,
-    "Customer Segments · upset-basic · seaborn · anyplot.ai",
+    0.95,
+    "Customer Segments · upset-basic · python · seaborn · anyplot.ai",
     ha="center",
     va="center",
-    fontsize=21,
+    fontsize=12,
     fontweight="medium",
     color=INK,
 )
 
-# Save
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
