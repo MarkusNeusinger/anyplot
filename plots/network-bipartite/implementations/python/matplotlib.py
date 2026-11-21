@@ -53,8 +53,8 @@ author_degree = df.groupby(AUTHOR)[PAPER].count().reindex(authors).to_numpy()
 paper_degree = df.groupby(PAPER)[AUTHOR].count().reindex(papers).to_numpy()
 
 # Layout: two columns, nodes evenly spaced from top to bottom
-author_y = dict(zip(authors, np.linspace(0.90, 0.05, len(authors))))
-paper_y = dict(zip(papers, np.linspace(0.90, 0.05, len(papers))))
+author_y = dict(zip(authors, np.linspace(0.90, 0.05, len(authors)), strict=True))
+paper_y = dict(zip(papers, np.linspace(0.90, 0.05, len(papers)), strict=True))
 top = max(max(author_y.values()), max(paper_y.values()))
 bottom = min(min(author_y.values()), min(paper_y.values()))
 
@@ -62,7 +62,7 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Edges: straight, thin and light
-for author, paper in zip(df[AUTHOR], df[PAPER]):
+for author, paper in zip(df[AUTHOR], df[PAPER], strict=True):
     ax.plot([0.0, 1.0], [author_y[author], paper_y[paper]], color=INK_SOFT, alpha=0.3, linewidth=0.5, zorder=1)
 
 # Nodes: size grows with degree
