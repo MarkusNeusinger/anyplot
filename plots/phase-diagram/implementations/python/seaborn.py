@@ -1,7 +1,7 @@
 """anyplot.ai
 phase-diagram: Phase Diagram (State Space Plot)
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-14
+Quality: pending | Updated: 2026-05-14
 """
 
 import os
