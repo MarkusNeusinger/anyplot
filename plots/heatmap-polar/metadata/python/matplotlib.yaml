@@ -2,124 +2,130 @@ library: matplotlib
 language: python
 specification_id: heatmap-polar
 created: '2026-05-13T19:50:54Z'
-updated: '2026-05-13T19:56:37Z'
+updated: '2026-11-21T11:25:49Z'
 generated_by: claude-sonnet
-workflow_run: 25822030151
+workflow_run: 44898485108
 issue: 5244
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 86
 review:
   strengths:
-  - Clock metaphor (midnight at top, clockwise) is immediately legible and elegant
-  - Weekday vs. weekend traffic pattern tells a clear story at first glance — dual
-    commute peaks vs. afternoon leisure peak
-  - 'Complete theme adaptation: all chrome tokens flip correctly, viridis data colors
-    stay constant across both renders'
-  - Cell borders using background-colored lines are a polished, refined technique
-  - Perfect spec compliance — all required polar heatmap features present
-  - Realistic, neutral dataset with well-calibrated hourly visit values
+  - Clock-face orientation (set_theta_zero_location('N'), set_theta_direction(-1))
+    makes the hour axis read like a clock, with 12am at the top and a seamless wrap
+    across midnight
+  - pcolormesh with theta/r edges and page-colored edgecolors tiles every ring in
+    equal segments with borders that stay subordinate to the cell colors
+  - imprint_seq on single-sign visit counts with a matching colorbar, identical in
+    both themes; all chrome threaded through theme tokens
+  - Tidy DataFrame with role-named column constants, pivoted with pivot_table(sort=False)
+    so ring order and labels come from the data
+  - Data shows weekday twin peaks (9am, 7pm) against a broad weekend 2pm peak, so
+    the inner/outer ring contrast tells the story without annotation
   weaknesses:
-  - Day label font size (14pt) is below the 16pt minimum for tick-level text; title
-    is 22pt instead of the recommended 24pt
-  - Day labels at the ~1:30am position cluster in the inner rings (Mon-Wed boxes touch/overlap),
-    creating visual clutter
-  - All day labels are on one angular side of the ring, creating slight spatial asymmetry
+  - 'VQ-02 (both): the seven boxed day labels sit on the 1am column at alpha 0.9 and
+    hide most of that column''s cell colors in every ring → the label boxes leave
+    the cells'' colors readable (smaller pad or a lower box alpha, so the hour-1 values
+    can still be read). Likely cause: ax.text bbox with alpha=0.9 and pad=0.2 placed
+    at label_angle = theta_edges[1] * 1.5 (lines 85–104).'
+  - 'Suggestion: an hour tick every 3 hours (12am, 3am, 6am, …) would make the 9am
+    and 7pm peaks easier to locate on the clock face.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct surface color, not pure white
-      Chrome: Title "Website Traffic · heatmap-polar · matplotlib · anyplot.ai" in dark ink, clearly readable. Angular tick labels (12am/6am/12pm/6pm) in INK_SOFT, readable. Day labels (Mon-Sun) in dark INK on ELEVATED_BG (#FFFDF6) rounded boxes — readable though inner boxes (Mon-Wed) slightly touch each other. Colorbar "Hourly Visits" label and tick values in dark ink, readable.
-      Data: viridis colormap — deep purple for low-traffic night hours, yellow-green for peak hours. Weekday rings (Mon-Fri) show clear dual-peak pattern (9am morning + 7pm evening). Weekend rings (Sat-Sun) show broad single afternoon peak (~2pm). White cell borders visible between cells.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas.
+      Chrome: title 'Website Traffic · heatmap-polar · python · matplotlib · anyplot.ai' in dark ink at the top (~78% width); angular labels 12am (top), 6am (right), 12pm (bottom), 6pm (left) in INK_SOFT; day labels Mon (innermost) to Sun (outermost) in light rounded boxes along the 1am column; vertical colorbar on the right titled 'Hourly Visits' with ticks 100-800. All readable.
+      Data: 7 rings x 24 hour segments around a hollow center, imprint_seq from #009E73 (low) to #4467A3 (high), thin off-white borders between cells. Inner five rings show blue peaks at ~9am and ~7pm; outer two rings peak blue around 1-4pm; nights are green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct surface color, not pure black
-      Chrome: Title in light cream (#F0EFE8), clearly readable against dark surface. Angular tick labels in INK_SOFT (#B8B7B0), readable. Day labels in light INK (#F0EFE8) on dark ELEVATED_BG (#242420) boxes — correct dark-mode contrast, no dark-on-dark failures. Colorbar label and ticks in light tones, readable.
-      Data: viridis colormap colors are visually identical to the light render — only chrome flips. The same dual-peak weekday pattern and afternoon weekend peak are visible. Cell borders use dark background color.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected
+      Background: warm near-black #1A1A17.
+      Chrome: title and colorbar label in light ink, hour labels and colorbar ticks in light grey INK_SOFT; day labels light text in dark elevated boxes; colorbar outline light grey. No dark-on-dark text.
+      Data: cell colors identical to the light render (same green-to-blue ramp); cell borders flip to the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Sizes explicitly set but title (22pt) below 24pt minimum and day
-          labels/colorbar ticks at 14pt below 16pt minimum; all text readable in both
-          themes
+        comment: All sizes set explicitly (title 14 pt, hour labels 15 pt, day labels
+          12 pt, colorbar 14/12 pt at dpi 300); everything readable in both themes;
+          title ~78% of width, expected for the mandated title
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Day labels at ~1:30am position stack radially; inner ring boxes (Mon-Wed)
-          touch/slightly overlap; labels remain legible
+        comment: The boxed day labels sit on top of the 1am cells of every ring and
+          hide most of that column's colors (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible; viridis provides excellent perceptual
-          separation; cell borders aid differentiation
+        comment: 168 cells clearly visible; thin page-colored borders keep cells distinct
+          without competing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is perceptually uniform and CVD-safe
+        comment: imprint_seq green-to-blue ramp is CVD-safe; cells distinguishable
+          against both backgrounds
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Circular plot fills canvas well; slight asymmetry from all day labels
-          clustered on one angular side
+        comment: 2400x2400 canvas, ring fills ~65% of the width, colorbar close to
+          the plot, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar labelled 'Hourly Visits'; angular ticks use human-readable
-          time labels
+        comment: Colorbar titled 'Hourly Visits' (count unit implied by the label);
+          clock-time angular labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'viridis for continuous data (correct); light bg #FAF8F1, dark bg
-          #1A1A17; all chrome tokens theme-adaptive'
+        comment: 'Continuous single-sign data on imprint_seq (#009E73 -> #4467A3);
+          backgrounds #FAF8F1/#1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: clock orientation, hollow center, cell borders, well-proportioned
-          colorbar. Clearly above defaults.'
+        comment: 'Beyond baseline: clock orientation (midnight top, clockwise), hollow
+          center giving the inner rings room, day labels in elevated rounded boxes'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Grid disabled, polar spine removed, custom cell borders, generous
-          whitespace. Highly polished.
+        comment: Polar spine and grid removed, cell borders drawn by pcolormesh in
+          the page color so they read as gaps; generous ring proportions
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Weekday dual-peak vs weekend single-peak immediately visible; clock
-          metaphor frames the data perfectly
+        comment: Data chosen so weekday twin peaks (9am, 7pm) contrast with a broad
+          weekend 2pm peak in the outer rings; readable without annotation
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct polar heatmap: angular=hour, radial=day, color=traffic value'
+        comment: 'Correct polar heatmap: hour -> angle, day -> ring, visits -> color'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cyclic angular axis, radial extension, sequential colormap, readable
-          angular labels, colorbar, cell borders — all present
+        comment: C1 rings concentric with Mon innermost and labelled; C2 angle closes
+          without a seam, quadrant labels in cyclic order; C3 sequential cmap with
+          colorbar; C4 equal angular widths with subordinate borders
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hours to theta, days to r, traffic to color. All 168 cells rendered.
+        comment: All 168 cells at their hour/day positions; colorbar covers the data
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains spec-id, library, anyplot.ai. Colorbar serves as legend.
+        comment: Title 'Website Traffic · heatmap-polar · python · matplotlib · anyplot.ai'
+          correct; colorbar label readable
     data_quality:
       score: 15
       max: 15
@@ -158,21 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Weekday dual-peak, weekend single-peak, night low-traffic, cyclic
-          continuity all visible
+        comment: Shows bimodal weekdays, unimodal weekends, night lows and continuity
+          across midnight
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic by hour and day-of-week is real, neutral, comprehensible
+        comment: 'Hourly website visits by day of week: real, neutral scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weekday peaks ~700-800/hr, weekend ~850, night floor ~50+; dual commute
-          peaks (9am,7pm) and leisure (2pm) factually plausible
+        comment: 'Checked: weekday peaks ~700-860 at 9am/7pm, weekend ~850 at 2pm,
+          floor 50 (np.maximum, line 50) - all plausible; no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -182,65 +191,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data -> plot -> labels -> styling -> save; no
-          functions or classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, matplotlib.pyplot, numpy — all used
+        comment: os, sys, plt, np, pd, LinearSegmentedColormap all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; cell border loops necessarily verbose for matplotlib
-          polar; no fake interactivity
+        comment: Clean; pivot_table feeds pcolormesh directly; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300; current API used
+        comment: Saves plot-{THEME}.png without bbox_inches='tight'; current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: projection='polar', pcolormesh with theta/r edges, set_theta_zero_location/direction
-          — idiomatic matplotlib
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Polar pcolormesh, clock-face orientation, custom radial gridlines
-          as polar plot calls — distinctly matplotlib-native; minor deduction for
-          verbose cell-border approach
+        comment: Tidy df -> pivot_table(sort=False) -> pcolormesh with theta/r edges
+          and native edgecolors instead of overplotted borders
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Polar projection with set_theta_zero_location('N') / set_theta_direction(-1)
+          to make a clock face - matplotlib polar-axes features
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T11:21:38Z'
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
   - colorbar
-  - annotations
-  - manual-ticks
+  - polar-projection
   patterns:
   - data-generation
-  - matrix-construction
-  - iteration-over-groups
+  - long-to-wide
+  - explicit-figure
   dataprep: []
   styling:
+  - publication-ready
   - custom-colormap
-  - alpha-blending

@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Created: 2026-05-13
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-21
 """
 
 import os
@@ -12,6 +12,8 @@ sys.path.pop(0)  # prevent shadowing the matplotlib library with this file
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
 
 
 # Theme tokens
@@ -20,34 +22,40 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — sequential colormap for single-sign data
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Columns
+DAY = "Day"  # role: radial
+HOUR = "Hour of day"  # role: angular
+VISITS = "Hourly Visits"  # role: value
 
 # Data — hourly website visits by day of week
 np.random.seed(42)
 days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-n_days = 7
-n_hours = 24
-h = np.arange(n_hours, dtype=float)
-
-# Weekday pattern: morning surge (9am) + evening surge (7pm) + late-night tail
+hours = np.arange(24)
+h = hours.astype(float)
 wd_factors = [0.92, 0.98, 1.05, 1.02, 1.08]
-traffic = np.zeros((n_days, n_hours))
-for i in range(5):
-    f = wd_factors[i]
-    base = (
-        700 * np.exp(-0.5 * ((h - 9) / 1.5) ** 2)
-        + 800 * np.exp(-0.5 * ((h - 19) / 2.0) ** 2)
-        + 90 * np.exp(-0.5 * ((h - 3) / 2.5) ** 2)
-    )
-    traffic[i] = np.maximum(50, base * f + np.random.normal(0, 25, n_hours))
-
-# Weekend pattern: broad afternoon peak (2pm), quieter mornings
-for i in range(5, 7):
-    base = 850 * np.exp(-0.5 * ((h - 14) / 3.5) ** 2) + 70 * np.exp(-0.5 * ((h - 2) / 2.0) ** 2)
-    traffic[i] = np.maximum(50, base + np.random.normal(0, 25, n_hours))
+rows = []
+for i, day in enumerate(days):
+    if i < 5:  # weekday: morning surge (9am) + evening surge (7pm) + late-night tail
+        base = (
+            700 * np.exp(-0.5 * ((h - 9) / 1.5) ** 2)
+            + 800 * np.exp(-0.5 * ((h - 19) / 2.0) ** 2)
+            + 90 * np.exp(-0.5 * ((h - 3) / 2.5) ** 2)
+        ) * wd_factors[i]
+    else:  # weekend: broad afternoon peak (2pm), quieter mornings
+        base = 850 * np.exp(-0.5 * ((h - 14) / 3.5) ** 2) + 70 * np.exp(-0.5 * ((h - 2) / 2.0) ** 2)
+    visits = np.maximum(50, base + np.random.normal(0, 25, len(hours)))
+    rows.append(pd.DataFrame({DAY: day, HOUR: hours, VISITS: visits}))
+df = pd.concat(rows, ignore_index=True)
 
 # Plot
-fig = plt.figure(figsize=(12, 12), facecolor=PAGE_BG)
+table = df.pivot_table(index=DAY, columns=HOUR, values=VISITS, sort=False)
+n_days, n_hours = table.shape
+
+fig = plt.figure(figsize=(8, 8), dpi=300, facecolor=PAGE_BG)
 ax = fig.add_subplot(111, projection="polar")
 ax.set_facecolor(PAGE_BG)
 
@@ -56,45 +64,41 @@ ax.set_theta_zero_location("N")
 ax.set_theta_direction(-1)
 
 r_inner, r_outer = 2.0, 9.0
-theta_edges = np.linspace(0, 2 * np.pi, n_hours + 1)  # 25 edges for 24 hour cells
-r_edges = np.linspace(r_inner, r_outer, n_days + 1)  # 8 edges for 7 day rings
+theta_edges = np.linspace(0, 2 * np.pi, n_hours + 1)
+r_edges = np.linspace(r_inner, r_outer, n_days + 1)
 r_centers = (r_edges[:-1] + r_edges[1:]) / 2
 
-mesh = ax.pcolormesh(theta_edges, r_edges, traffic, cmap="viridis", shading="flat")
-
-# Cell borders — background-colored lines separate angular and radial cells
-circle_theta = np.linspace(0, 2 * np.pi, 300)
-for r in r_edges:
-    ax.plot(circle_theta, [r] * 300, color=PAGE_BG, linewidth=1.2, zorder=5)
-for theta in theta_edges:
-    ax.plot([theta, theta], [r_inner, r_outer], color=PAGE_BG, linewidth=0.7, zorder=5)
+mesh = ax.pcolormesh(
+    theta_edges, r_edges, table.to_numpy(), cmap=imprint_seq, shading="flat", edgecolors=PAGE_BG, linewidth=0.8
+)
 
 # Angular axis: label at clock quadrants only
-ax.set_xticks([0, np.pi / 2, np.pi, 3 * np.pi / 2])
-ax.set_xticklabels(["12am", "6am", "12pm", "6pm"], fontsize=18, color=INK_SOFT)
-ax.tick_params(axis="x", pad=15, colors=INK_SOFT)
+quarter_idx = [round(n_hours * k / 4) for k in range(4)]
+ax.set_xticks(theta_edges[quarter_idx])
+quarter_labels = [f"{(int(table.columns[i]) % 12) or 12}{'am' if table.columns[i] < 12 else 'pm'}" for i in quarter_idx]
+ax.set_xticklabels(quarter_labels, fontsize=15, color=INK_SOFT)
+ax.tick_params(axis="x", pad=12, colors=INK_SOFT)
 
-# Radial axis: day-of-week labels with background box for contrast against dark viridis cells
+# Radial axis: day labels in boxes for contrast against the cells
 ax.set_yticks([])
-ax.set_yticklabels([])
 ax.set_ylim(0, r_outer + 0.3)
-label_angle = 2 * np.pi * 1.5 / 24  # 1:30am clockwise from midnight
-for r, day in zip(r_centers, days, strict=False):
+label_angle = theta_edges[1] * 1.5
+for r, day in zip(r_centers, table.index, strict=True):
     ax.text(
         label_angle,
         r,
         day,
         ha="center",
         va="center",
-        fontsize=14,
+        fontsize=12,
         color=INK,
         fontweight="medium",
         zorder=10,
         bbox={
             "facecolor": ELEVATED_BG,
             "edgecolor": INK_SOFT,
-            "alpha": 0.88,
-            "boxstyle": "round,pad=0.25",
+            "alpha": 0.9,
+            "boxstyle": "round,pad=0.2",
             "linewidth": 0.5,
         },
     )
@@ -104,14 +108,18 @@ ax.spines["polar"].set_visible(False)
 
 # Title
 ax.set_title(
-    "Website Traffic · heatmap-polar · matplotlib · anyplot.ai", fontsize=22, fontweight="medium", color=INK, pad=30
+    "Website Traffic · heatmap-polar · python · matplotlib · anyplot.ai",
+    fontsize=14,
+    fontweight="medium",
+    color=INK,
+    pad=24,
 )
 
 # Colorbar
 cbar = fig.colorbar(mesh, ax=ax, fraction=0.04, pad=0.1, shrink=0.72, aspect=22)
-cbar.set_label("Hourly Visits", fontsize=18, color=INK)
-cbar.ax.tick_params(labelsize=14, labelcolor=INK_SOFT, color=INK_SOFT)
+cbar.set_label(VISITS, fontsize=14, color=INK)
+cbar.ax.tick_params(labelsize=12, labelcolor=INK_SOFT, color=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
 # Save
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=300, facecolor=PAGE_BG)
