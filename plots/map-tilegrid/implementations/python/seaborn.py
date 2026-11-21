@@ -1,27 +1,26 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Created: 2026-05-14
+Quality: 86/100 | Updated: 2026-11-21
 """
 
 import os
-import sys
 
-
-sys.path.insert(0, "/home/runner/work/anyplot/anyplot/.venv/lib/python3.13/site-packages")
-
-import matplotlib.colors as mcolors
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 sns.set_theme(
     style="ticks",
@@ -40,171 +39,101 @@ sns.set_theme(
     },
 )
 
-# US state tile grid positions: (row, col), row 0 = top
-state_grid = {
-    "ME": (0, 9),
-    "VT": (1, 9),
-    "NH": (1, 10),
-    "WA": (2, 0),
-    "ID": (2, 1),
-    "MT": (2, 2),
-    "ND": (2, 3),
-    "MN": (2, 4),
-    "WI": (2, 5),
-    "MI": (2, 7),
-    "NY": (2, 8),
-    "MA": (2, 9),
-    "RI": (2, 10),
-    "OR": (3, 0),
-    "WY": (3, 1),
-    "SD": (3, 2),
-    "IA": (3, 3),
-    "IL": (3, 4),
-    "IN": (3, 5),
-    "OH": (3, 6),
-    "PA": (3, 7),
-    "NJ": (3, 8),
-    "CT": (3, 9),
-    "NV": (4, 0),
-    "UT": (4, 1),
-    "CO": (4, 2),
-    "NE": (4, 3),
-    "MO": (4, 4),
-    "KY": (4, 5),
-    "WV": (4, 6),
-    "VA": (4, 7),
-    "MD": (4, 8),
-    "DE": (4, 9),
-    "CA": (5, 0),
-    "AZ": (5, 1),
-    "NM": (5, 2),
-    "KS": (5, 3),
-    "TN": (5, 4),
-    "NC": (5, 5),
-    "SC": (5, 7),
-    "OK": (6, 2),
-    "AR": (6, 3),
-    "MS": (6, 4),
-    "AL": (6, 5),
-    "GA": (6, 6),
-    "TX": (7, 2),
-    "LA": (7, 4),
-    "FL": (7, 7),
-    "AK": (8, 0),
-    "HI": (8, 1),
-}
+# Columns: set these to your table's column names
+REGION = "State"  # role: region
+GRAD_RATE = "Graduation rate (%)"  # role: value
+ROW = "Grid row"  # role: row
+COL = "Grid column"  # role: col
 
-# Renewable energy adoption (%) — structured synthetic data by US state
-regional_base = {
-    "WA": 74,
-    "OR": 66,
-    "CA": 58,
-    "ID": 54,
-    "MT": 48,
-    "WY": 28,
-    "NV": 36,
-    "UT": 30,
-    "CO": 42,
-    "AZ": 38,
-    "NM": 37,
-    "ND": 44,
-    "SD": 50,
-    "NE": 36,
-    "KS": 40,
-    "MN": 33,
-    "IA": 40,
-    "MO": 23,
-    "IL": 21,
-    "WI": 26,
-    "MI": 24,
-    "IN": 19,
-    "OH": 20,
-    "WV": 17,
-    "KY": 21,
-    "TN": 24,
-    "NC": 33,
-    "SC": 28,
-    "GA": 30,
-    "AL": 22,
-    "MS": 21,
-    "FL": 28,
-    "TX": 33,
-    "LA": 19,
-    "AR": 26,
-    "OK": 36,
-    "NY": 30,
-    "PA": 23,
-    "NJ": 27,
-    "CT": 28,
-    "MA": 30,
-    "VT": 53,
-    "NH": 40,
-    "ME": 56,
-    "MD": 28,
-    "DE": 26,
-    "VA": 26,
-    "RI": 18,
-    "HI": 45,
-    "AK": 32,
-}
+# Data: replace this block with your own table, for example df = pd.read_csv("graduation.csv")
+# Four-year high-school graduation rate by US state (illustrative values) on a tile grid, row 0 = top
+tiles = [
+    ("ME", 0, 9, 87),
+    ("VT", 1, 9, 87),
+    ("NH", 1, 10, 90),
+    ("WA", 2, 0, 84),
+    ("ID", 2, 1, 80),
+    ("MT", 2, 2, 87),
+    ("ND", 2, 3, 90),
+    ("MN", 2, 4, 83),
+    ("WI", 2, 5, 90),
+    ("MI", 2, 7, 81),
+    ("NY", 2, 8, 87),
+    ("MA", 2, 9, 90),
+    ("RI", 2, 10, 84),
+    ("OR", 3, 0, 82),
+    ("WY", 3, 1, 82),
+    ("SD", 3, 2, 84),
+    ("IA", 3, 3, 91),
+    ("IL", 3, 4, 87),
+    ("IN", 3, 5, 88),
+    ("OH", 3, 6, 86),
+    ("PA", 3, 7, 87),
+    ("NJ", 3, 8, 91),
+    ("CT", 3, 9, 89),
+    ("NV", 4, 0, 81),
+    ("UT", 4, 1, 88),
+    ("CO", 4, 2, 82),
+    ("NE", 4, 3, 89),
+    ("MO", 4, 4, 90),
+    ("KY", 4, 5, 91),
+    ("WV", 4, 6, 91),
+    ("VA", 4, 7, 92),
+    ("MD", 4, 8, 87),
+    ("DE", 4, 9, 88),
+    ("CA", 5, 0, 87),
+    ("AZ", 5, 1, 77),
+    ("NM", 5, 2, 77),
+    ("KS", 5, 3, 88),
+    ("TN", 5, 4, 90),
+    ("NC", 5, 5, 87),
+    ("SC", 5, 7, 83),
+    ("OK", 6, 2, 82),
+    ("AR", 6, 3, 88),
+    ("MS", 6, 4, 88),
+    ("AL", 6, 5, 91),
+    ("GA", 6, 6, 84),
+    ("TX", 7, 2, 90),
+    ("LA", 7, 4, 83),
+    ("FL", 7, 7, 90),
+    ("AK", 8, 0, 80),
+    ("HI", 8, 1, 85),
+]
+df = pd.DataFrame(tiles, columns=[REGION, ROW, COL, GRAD_RATE])
 
-np.random.seed(42)
-states = list(state_grid.keys())
-values = {s: float(np.clip(regional_base.get(s, 30) + np.random.normal(0, 2), 10, 80)) for s in states}
+# Plot: reads only df and the constants above
+n_rows, n_cols = df[ROW].max() + 1, df[COL].max() + 1
+grid = df.pivot(index=ROW, columns=COL, values=GRAD_RATE).reindex(index=range(n_rows), columns=range(n_cols))
+labels = df.pivot(index=ROW, columns=COL, values=REGION).reindex(index=range(n_rows), columns=range(n_cols))
 
-# Plot
-MAX_ROW = 8
-TILE = 0.86
+# Diverging Imprint colormap centred on the mean rate, symmetric around it so the midpoint stays neutral
+midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])
+centre = df[GRAD_RATE].mean()
+half_range = (df[GRAD_RATE] - centre).abs().max()
+norm = Normalize(vmin=centre - half_range, vmax=centre + half_range)
 
-fig = plt.figure(figsize=(12, 12), facecolor=PAGE_BG)
-ax = fig.add_axes([0.04, 0.12, 0.92, 0.78])
-ax.set_facecolor(PAGE_BG)
-
-cmap = plt.colormaps["viridis"]
-norm = mcolors.Normalize(vmin=10, vmax=80)
-
-for state, (gr, gc) in state_grid.items():
-    y = MAX_ROW - gr
-    rgba = cmap(norm(values[state]))
-    luma = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
-
-    offset = (1 - TILE) / 2
-    ax.add_patch(
-        mpatches.Rectangle(
-            (gc + offset, y + offset), TILE, TILE, facecolor=rgba, edgecolor=PAGE_BG, linewidth=2.5, zorder=2
-        )
-    )
-    ax.text(
-        gc + 0.5,
-        y + 0.5,
-        state,
-        ha="center",
-        va="center",
-        fontsize=15,
-        fontweight="bold",
-        color="#1A1A17" if luma > 0.40 else "#F0EFE8",
-        zorder=3,
-    )
-
-ax.set_xlim(-0.2, 11.2)
-ax.set_ylim(-0.8, 9.5)
-ax.set_aspect("equal")
-ax.axis("off")
-ax.set_title(
-    "Renewable Energy by State · map-tilegrid · seaborn · anyplot.ai",
-    fontsize=22,
-    fontweight="medium",
-    color=INK,
-    pad=16,
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+sns.heatmap(
+    grid,
+    ax=ax,
+    mask=grid.isna(),
+    cmap=imprint_div,
+    norm=norm,
+    annot=labels.fillna(""),
+    fmt="",
+    annot_kws={"fontsize": 8.5, "fontweight": "bold"},
+    linewidths=2.2,
+    linecolor=PAGE_BG,
+    square=True,
+    cbar_kws={"orientation": "horizontal", "shrink": 0.7, "pad": 0.03, "aspect": 35},
 )
+ax.axis("off")
 
-# Colorbar
-cax = fig.add_axes([0.15, 0.05, 0.70, 0.026])
-sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
-sm.set_array([])
-cbar = fig.colorbar(sm, cax=cax, orientation="horizontal")
-cbar.set_label("Renewable Energy Adoption (%)", fontsize=20, color=INK, labelpad=10)
-cbar.ax.tick_params(labelsize=16, colors=INK_SOFT)
+cbar = ax.collections[0].colorbar
+cbar.set_label(f"{GRAD_RATE} · midpoint = mean of states ({centre:.1f}%)", fontsize=9.5, color=INK, labelpad=6)
+cbar.ax.tick_params(labelsize=8.5, colors=INK_SOFT, length=3)
 cbar.outline.set_edgecolor(INK_SOFT)
 
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+ax.set_title("map-tilegrid · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
