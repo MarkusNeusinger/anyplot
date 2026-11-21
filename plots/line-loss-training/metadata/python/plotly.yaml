@@ -2,44 +2,44 @@ library: plotly
 language: python
 specification_id: line-loss-training
 created: '2025-12-31T00:05:54Z'
-updated: '2026-05-14T05:45:43Z'
-generated_by: claude-haiku
-workflow_run: 25843729734
+updated: '2026-11-21T14:27:55Z'
+generated_by: claude-sonnet
+workflow_run: 44913474101
 issue: 2860
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 83
 review:
   strengths:
-  - Excellent readability in both light and dark themes with zero legibility failures
-  - 'Perfect palette compliance: Okabe-Ito colors maintained across renders, theme-adaptive
-    chrome implemented correctly'
-  - Clean, professional implementation with explicit font sizing throughout
-  - 'Strong data presentation: training/validation divergence clearly visible, optimal
-    epoch marked effectively'
-  - Realistic neural network training data with appropriate loss curve patterns
-  - Proper plotly idioms and good use of interactive features (hover templates, custom
-    shapes)
+  - 'Training and validation losses share one epoch axis in Imprint #009E73 and #C475FD,
+    identical in both themes, with theme-correct chrome'
+  - The minimum-validation epoch is marked by a diamond on the curve plus a dashed
+    guide at that epoch, computed from the data with idxmin
+  - hovermode='x unified' with per-trace hovertemplates lets the HTML view compare
+    both losses at one epoch
+  - Correct 3200x1800 canvas with pinned margins and explicit font sizes
   weaknesses:
-  - 'Design Excellence could be higher: removing top/right spines would increase visual
-    refinement'
-  - Could leverage more distinctive plotly features for Library Mastery boost
+  - 'Suggestion: the divergence term (0.015*sqrt(epoch-45)) is too weak to make validation
+    loss turn upward, so the best epoch falls on the last epoch; a slightly stronger
+    late divergence would show an interior stopping point.'
+  - 'Suggestion: the style guide prefers a y-only grid for line charts; dropping the
+    vertical gridlines would quiet the background.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title, axis labels (Epoch, Cross-Entropy Loss), and tick labels all readable with dark text; legend positioned cleanly in upper right with light background
-      Data: Training loss in green (#009E73 - Okabe-Ito position 1), validation loss in orange (#D55E00 - Okabe-Ito position 2); lines are 4px wide and clearly distinguished; optimal epoch marker (diamond) visible at minimum validation loss point
-      Legibility verdict: PASS - all text readable, no overlaps, perfect contrast
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: centered title 'line-loss-training · python · plotly · anyplot.ai' in dark ink; axis titles 'Epoch' and 'Cross-Entropy Loss'; ticks 0-70 and 0-2 in INK_SOFT; subtle grid on both axes; L-shaped axis lines; legend box top right with Training Loss, Validation Loss, Best epoch (70). All readable.
+      Data: training loss green #009E73 falling from 2.0 to about 0.24; validation loss purple #C475FD, noisier, from 2.0 to about 0.63 with a widening gap; purple diamond with dark outline at epoch 70 on the validation curve plus a faint dashed purple vertical line at epoch 70.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title, axis labels, and tick labels all readable with light text (no dark-on-dark failures); legend has dark-themed background (#242420) with readable text; all elements properly lightened
-      Data: Training loss remains green (#009E73), validation loss remains orange (#D55E00) - identical colors to light render, proving theme-adaptive approach works; lines and markers clearly visible against dark background
-      Legibility verdict: PASS - all text light and readable, no dark-on-dark contrast failures, excellent theme adaptation
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light grey, grid subtle, legend on #242420 with light text and light border. No dark-on-dark text.
+      Data: identical green and purple curves and diamond (now with a light outline); dashed guide visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,70 +50,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: Title 16, axis titles 12, ticks 10 (library-prompt sizes) set explicitly;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend positioned cleanly
+        comment: No text collisions; legend sits in free space top right, clear of
+          both curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines 4px width and markers size 20 clearly visible; all data visible
+        comment: 3 px lines suit 70 points per series; legend line samples and the
+          diamond glyph match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between series; Okabe-Ito palette is CVD-safe
+        comment: Green vs purple differ strongly in hue and lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas; balanced margins and whitespace
+        comment: 3200x1800 canvas; plot fills most of the canvas with balanced margins;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Cross-Entropy Loss, Epoch)
+        comment: '''Epoch'' and ''Cross-Entropy Loss'' name the axes and the loss
+          function'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand), second #D55E00 (Okabe-Ito pos 2);
-          backgrounds correct; theme-adaptive chrome perfect'
+        comment: 'Training #009E73, validation #C475FD (Imprint 1 and 2); backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Strong professional design with intentional typography; publication-ready
-          but not exceptional
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good refinement: subtle grid, legend styling, clean margins; could
-          improve with spine removal'
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good visual hierarchy: divergence visible, optimal epoch marker
-          highlights key decision'
+        passed: false
+        comment: Data displayed; the best-epoch marker is the spec's optional Notes
+          feature, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -123,25 +125,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-series line chart
+        comment: Correct dual-line training-loss chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present including optional optimal epoch marker
+        comment: Distinct colors, legend, x axis from epoch 1 to 70, loss function
+          on the y label, optional best-epoch marker; C1-C5 all shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: Epoch on x, loss on y; full range in view; marker at the minimum
+          of the validation curve
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format and clear labels
+        comment: Title 'line-loss-training · python · plotly · anyplot.ai' correct;
+          legend labels match the series
     data_quality:
       score: 15
       max: 15
@@ -151,20 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: training decay, validation divergence, noise,
-          plateau, optimal point'
+        comment: Shows both curves, a noisy validation curve and a widening train/val
+          gap
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic neural network training scenario; realistic patterns
+        comment: Neural-network training history, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Loss values plausible for cross-entropy loss
+        comment: Cross-entropy from 2.0 down to about 0.24 (train) and 0.63 (val)
+          is plausible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -174,54 +180,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no unnecessary functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, all used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and appropriate complexity
+        comment: Compact; one loop over the two loss columns
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct format and dimensions
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper go.Figure() and update_layout() usage
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses hover templates and custom shapes; some distinctive features
+        comment: go.Figure with add_trace/add_shape/update_layout, the standard pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: hovermode='x unified' with per-trace hovertemplates compares both
+          losses at one epoch in the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T14:24:35Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
+  - grid-styling

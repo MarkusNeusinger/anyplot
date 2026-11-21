@@ -1,12 +1,13 @@
 """ anyplot.ai
 line-loss-training: Training Loss Curve
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-14
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-21
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -16,114 +17,104 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette
-TRAIN_COLOR = "#009E73"  # Position 1 - bluish green (brand)
-VAL_COLOR = "#C475FD"  # Position 2 - vermillion
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulated neural network training with different trajectory
+# Columns: set these to your table's column names
+EPOCH = "Epoch"  # role: epoch
+TRAIN_LOSS = "Training Loss"  # role: train_loss
+VAL_LOSS = "Validation Loss"  # role: val_loss
+LOSS_NAME = "Cross-Entropy Loss"  # extra: loss function shown as the y-axis title
+
+# Data: replace this block with your own table, for example df = pd.read_csv("history.csv")
 np.random.seed(42)
-epochs = np.arange(1, 71)  # 70 epochs (differentiate from 100-epoch letsplot)
-
-# Training loss: linear-like decay with small noise, flattens near end
+epochs = np.arange(1, 71)
 train_base = 2.0 - 0.025 * epochs + np.random.normal(0, 0.025, len(epochs))
-train_loss = np.maximum(train_base, 0.1)
-
-# Validation loss: similar pattern but with larger noise and divergence after epoch ~45
 val_base = 2.0 - 0.020 * epochs + np.random.normal(0, 0.04, len(epochs))
-# Add gentle divergence effect
-divergence_effect = np.where(epochs > 45, 0.015 * np.sqrt(np.maximum(epochs - 45, 0)), 0)
-val_loss = val_base + divergence_effect
-val_loss = np.maximum(val_loss, 0.15)
+divergence = np.where(epochs > 45, 0.015 * np.sqrt(np.maximum(epochs - 45, 0)), 0)
+df = pd.DataFrame(
+    {EPOCH: epochs, TRAIN_LOSS: np.maximum(train_base, 0.1), VAL_LOSS: np.maximum(val_base + divergence, 0.15)}
+)
 
-# Find minimum validation loss epoch
-min_val_idx = np.argmin(val_loss)
-min_val_epoch = epochs[min_val_idx]
-min_val_loss = val_loss[min_val_idx]
+# Plot: reads only df and the constants above
+best = df.loc[df[VAL_LOSS].idxmin()]
+best_epoch, best_loss = int(best[EPOCH]), best[VAL_LOSS]
+top = max(df[TRAIN_LOSS].max(), df[VAL_LOSS].max())
 
-# Create figure
 fig = go.Figure()
-
-# Training loss curve
-fig.add_trace(
-    go.Scatter(
-        x=epochs,
-        y=train_loss,
-        mode="lines",
-        name="Training Loss",
-        line=dict(color=TRAIN_COLOR, width=4),
-        hovertemplate="Epoch %{x}<br>Training Loss: %{y:.3f}<extra></extra>",
+for i, column in enumerate([TRAIN_LOSS, VAL_LOSS]):
+    fig.add_trace(
+        go.Scatter(
+            x=df[EPOCH],
+            y=df[column],
+            mode="lines",
+            name=column,
+            line={"color": IMPRINT_PALETTE[i], "width": 3},
+            hovertemplate=f"Epoch %{{x}}<br>{column}: %{{y:.3f}}<extra></extra>",
+        )
     )
-)
 
-# Validation loss curve
-fig.add_trace(
-    go.Scatter(
-        x=epochs,
-        y=val_loss,
-        mode="lines",
-        name="Validation Loss",
-        line=dict(color=VAL_COLOR, width=4),
-        hovertemplate="Epoch %{x}<br>Validation Loss: %{y:.3f}<extra></extra>",
-    )
-)
-
-# Optimal stopping point marker
-fig.add_trace(
-    go.Scatter(
-        x=[min_val_epoch],
-        y=[min_val_loss],
-        mode="markers",
-        name="Optimal Epoch",
-        marker=dict(color=VAL_COLOR, size=20, symbol="diamond", line=dict(color=INK, width=2)),
-        hovertemplate="Optimal Epoch: %{x}<br>Min Validation Loss: %{y:.3f}<extra></extra>",
-    )
-)
-
-# Add vertical line at optimal epoch using shape
+# Minimum validation loss: dashed guide plus a marker on the curve
 fig.add_shape(
     type="line",
-    x0=min_val_epoch,
-    x1=min_val_epoch,
+    x0=best_epoch,
+    x1=best_epoch,
     y0=0,
-    y1=max(train_loss.max(), val_loss.max()),
-    line=dict(color=VAL_COLOR, width=1.5, dash="dash"),
-    opacity=0.3,
+    y1=top,
+    line={"color": IMPRINT_PALETTE[1], "width": 1.5, "dash": "dash"},
+    opacity=0.5,
+)
+fig.add_trace(
+    go.Scatter(
+        x=[best_epoch],
+        y=[best_loss],
+        mode="markers",
+        name=f"Best epoch ({best_epoch})",
+        marker={"color": IMPRINT_PALETTE[1], "size": 11, "symbol": "diamond", "line": {"color": INK, "width": 1.5}},
+        hovertemplate="Best epoch: %{x}<br>Min validation loss: %{y:.3f}<extra></extra>",
+    )
 )
 
-# Update layout with theme-adaptive styling
+# Style
 fig.update_layout(
-    title=dict(text="line-loss-training · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Epoch", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
-        gridwidth=1,
-        linecolor=INK_SOFT,
-        linewidth=1.5,
-        zerolinecolor=INK_SOFT,
-        zerolinewidth=0,
-    ),
-    yaxis=dict(
-        title=dict(text="Cross-Entropy Loss", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
-        gridwidth=1,
-        linecolor=INK_SOFT,
-        linewidth=1.5,
-        zerolinecolor=INK_SOFT,
-        zerolinewidth=0,
-    ),
-    legend=dict(
-        font=dict(size=18, color=INK_SOFT), bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, borderwidth=1.5, x=0.72, y=0.97
-    ),
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 70, "r": 30, "t": 60, "b": 55},
+    title={"text": "line-loss-training · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}, "x": 0.5},
+    xaxis={
+        "title": {"text": EPOCH, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zeroline": False,
+        "range": [df[EPOCH].min() - 1, df[EPOCH].max() + 1],
+    },
+    yaxis={
+        "title": {"text": LOSS_NAME, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zeroline": False,
+        "range": [0, top * 1.05],
+    },
+    legend={
+        "font": {"size": 10, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "x": 0.98,
+        "y": 0.97,
+        "xanchor": "right",
+        "yanchor": "top",
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin=dict(l=120, r=100, t=110, b=110),
+    font={"color": INK},
     hovermode="x unified",
 )
 
-# Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
