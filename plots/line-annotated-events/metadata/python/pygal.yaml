@@ -2,46 +2,56 @@ library: pygal
 language: python
 specification_id: line-annotated-events
 created: '2025-12-31T21:33:49Z'
-updated: '2026-05-16T01:13:29Z'
-generated_by: claude-haiku
-workflow_run: 25948754139
+updated: '2026-11-21T21:28:29Z'
+generated_by: claude-sonnet
+workflow_run: 44951089062
 issue: 2997
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/pygal/plot-dark.html
-quality_score: 92
+quality_score: 88
 review:
   strengths:
-  - 'Excellent theme adaptation with correct warm backgrounds (#FAF8F1 light, #1A1A17
-    dark)'
-  - Perfect text legibility across both renders with explicitly sized fonts
-  - 'Clean spec compliance: correct title format, legend labels, and data mapping'
-  - Strong visual quality with no overlaps and well-proportioned layout
-  - Realistic and professional data example (stock prices with earnings annotations)
-  - Idiomatic pygal usage with custom Style object and smooth cubic interpolation
+  - Event labels are drawn natively through pygal's per-point value dicts and print_values,
+    each in its marker's color and placed beside the top dot of its dashed line
+  - Alternating label heights keep the close Mar/Apr pair (CDN migration, Cache rewrite)
+    apart
+  - pygal.DateTimeLine with real datetimes and month ticks via x_value_formatter;
+    no interpolation, so the line passes exactly through the daily values
+  - Data built so each deploy produces a readable step change in p95 latency, with
+    one no-change release
+  - Full theme adaptation through the Style object; Imprint colors identical in both
+    renders
+  - 'Clean adaptable structure: column constants with role comments, one Data block
+    binding df'
   weaknesses:
-  - Design Excellence is solid but not exceptional—could benefit from more distinctive
-    aesthetic choices beyond well-configured defaults
-  - DE-02 (Visual Refinement) could be elevated with more sophisticated grid and spine
-    handling
+  - 'VQ-02 (both): the ''v2.4 release'' label sits on the Feb–Mar peaks of the data
+    line (text baseline ~360 ms vs peaks at ~358 ms, a few px apart) → keep every
+    label clear of the line by at least one text height (≈ +20 ms of head room for
+    the lower label row). Likely cause: head_room = max * 1.04 places the lower label
+    row (label_heights[0] = 0.0) right on the series maximum.'
+  - 'Suggestion: the six-entry legend repeats the five on-chart event labels; a single
+    ''Deploy'' key entry (one event type) would be lighter.'
+  - 'Suggestion: the y range runs to ~465 ms while the highest label sits at ~415
+    ms; trimming y_high would give the data a little more height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface with subtle grid lines
-      Chrome: Title "line-annotated-events · pygal · anyplot.ai" rendered in dark ink. X-axis label "Trading Day (2024)" and Y-axis label "Stock Price (USD)" are clearly readable dark text on light background. Tick labels are small but visible.
-      Data: Stock price line rendered in brand green #009E73. Five event markers shown as dashed vertical lines in colors: orange (Q4 Earnings), blue (Q1 Earnings), magenta (Product Launch), orange (Q2 Earnings), sky-blue (Q3 Earnings). Legend at bottom clearly identifies all series.
-      Legibility verdict: PASS - all text is readable, no contrast issues, data is clearly distinguishable.
+      Background: warm off-white #FAF8F1, subtle dotted y guides, no x guides, left/bottom axis lines only.
+      Chrome: title 'Web Latency Around Deploys · line-annotated-events · python · pygal · anyplot.ai' in dark ink at top (~90% width, not clipped); y title 'p95 latency (ms)', x title 'Date (2024)', ticks 180–460 and Jan–Oct, all dark and readable. Legend at bottom in three columns: p95 latency, v2.4 release, CDN migration, Cache rewrite, DB index rollout, v3.0 release.
+      Data: one thin #009E73 daily line with a weekly cycle and step changes; five dashed vertical event lines in purple, blue, ochre, red, cyan with dots at the floor and the top; labels in matching colors at alternating heights (~415 and ~375 ms). 'v2.4 release' text sits on the Feb–Mar peaks.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface with subtle grid lines
-      Chrome: Title, axis labels, and tick labels are rendered in light ink, clearly visible against dark background. No dark-on-dark legibility issues.
-      Data: Stock price line remains #009E73 (identical to light render). Event markers are in same colors as light render (orange, blue, magenta, orange, sky-blue)—confirming data colors are theme-independent. Legend displays with light text.
-      Legibility verdict: PASS - all text is readable, data colors identical to light render, proper theme adaptation throughout.
+      Background: warm near-black #1A1A17, faint guides.
+      Chrome: title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text.
+      Data: identical colors to the light render (green line, same five event colors and labels); brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,79 +59,81 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set via Style object. Title 28px, labels
-          22px, ticks 18px. Perfectly readable in both themes.
+        comment: Sizes set explicitly in Style (title 60, axis titles 48, ticks 40,
+          legend 40, values 40); all text reads clearly in both themes, title ~90%
+          wide without clipping.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping text. Legend properly separated at bottom. All event
-          labels distinct and readable.
+        passed: false
+        comment: The 'v2.4 release' label sits directly on the Feb–Mar peaks of the
+          data line (defect line); all other labels clear of the line and of each
+          other.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stock line width 3, event lines width 8 with dashes. All elements
-          clearly visible. Data density (5 events across 250 days) is appropriate.
+        comment: 300-point line drawn without dots at a clear stroke; dashed event
+          lines and their end dots visible in both themes; legend swatches visible
+          and matching.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Good contrast between data and background
-          in both themes.
+        comment: Imprint hues are CVD-safe; each event is also named in text, so color
+          is never the only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 px landscape. Plot fills 60-70% of canvas. Generous margins
-          (120-200px). Well-balanced layout.
+        comment: 3200×1800 canvas, plot fills the frame, balanced axis titles and
+          ticks, legend in three tidy columns at the bottom, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Trading Day (2024)'', ''Stock Price
-          (USD)''. Spec-compliant title format.'
+        comment: '''Date (2024)'' and ''p95 latency (ms)'' are reader-facing with
+          units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73. Multi-series follows Okabe-Ito order. Backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark). Text colors theme-adaptive. No pure
-          white/black.'
+        comment: 'Data line #009E73, events in Imprint order 2–6, backgrounds #FAF8F1
+          / #1A1A17, chrome flips correctly, data colors identical across themes.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Thoughtful design with custom Style object and theme tokens. Uses
-          cubic interpolation for smooth curves. Well-executed but resembles well-configured
-          defaults rather than FiveThirtyEight-level custom design.
+        passed: false
+        comment: Each event label is typeset in its marker's own color so text and
+          line read as one unit, plus a descriptive title prefix; one step beyond
+          the baseline.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Clean design with subtle grid (y-guides only), generous whitespace,
-          proper margins. Could be more refined with explicit spine removal and advanced
-          grid styling.
+        passed: false
+        comment: Labels set beside the top dot of each dashed line, x guides off so
+          the event lines are the only verticals; deliberate placement beyond the
+          spine/grid rules.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: 'Clear visual hierarchy: main price line is focal point, events are
-          secondary. Stock price with earnings context is a classic, comprehensible
-          use case that tells a coherent story.'
+        passed: false
+        comment: The data is built so each deploy produces a visible step (CDN drop,
+          cache regression, DB index fix, v3.0 rise), so the chart tells a cause-and-effect
+          story the viewer can read without the legend.
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +143,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with event markers. All subtypes present.
+        comment: Annotated line plot with vertical event markers, as asked.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Main time series ✓, event vertical markers ✓, event text labels ✓.
-          All spec features implemented.
+        comment: C1 line + vertical lines at every event date ✓; C2 dashed and differently
+          colored ✓; C3 text label per event beside its marker ✓ (the near-collision
+          is scored in VQ-02); C4 alternating label heights ✓; C5 a legend key is
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Trading Day (0-250). Y: Stock Price (USD). Correct mapping, all
-          data visible, axes scaled appropriately.'
+        comment: No interpolation (interpolate=None), so the line passes exactly through
+          the daily values; event lines at their exact dates; all data inside the
+          axis range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-annotated-events · pygal · anyplot.ai'' ✓. Legend
-          identifies ''Stock Price'' and all event names correctly.'
+        comment: Title 'Web Latency Around Deploys · line-annotated-events · python
+          · pygal · anyplot.ai' matches the format; legend entries are readable names.
     data_quality:
       score: 15
       max: 15
@@ -162,23 +177,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows stock price trends (uptrends, downtrends, volatility), multiple
-          event types (earnings, product launch), realistic fluctuations. Data demonstrates
-          all plot type features.
+        comment: Shows a continuous 300-day series, five unevenly spaced events with
+          two close together (Mar/Apr), and both changes and a no-change event (v2.4).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock prices with quarterly earnings and product launch events. Real-world,
-          comprehensible, neutral scenario. Professional and appropriate.
+        comment: Website p95 latency with deploy events is a plausible, neutral engineering
+          scenario with concrete release names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base price $150, realistic returns (0.012 std dev), 250 trading days
-          (correct for one year). Event positions reasonable. Factually sound.
+        comment: Latency between ~190 and ~360 ms with a weekly cycle is realistic
+          for a web service p95.
     code_quality:
       score: 10
       max: 10
@@ -188,63 +202,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward flow: imports → constants/theme → data generation
-          → style definition → chart creation → output. No unnecessary functions or
-          classes.'
+        comment: Linear Imports → constants → Data block binding df → Plot → Output,
+          column constants with role comments, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation. Results
-          are reproducible.
+        comment: np.random.default_rng(7).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Imports: os, numpy, pygal, Style. All used. No extraneous dependencies.'
+        comment: os, numpy, pandas, pygal, Style all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. Appropriate complexity. No fake functionality.
-          Event loop is simple and clear.
+        comment: Appropriate complexity; one short loop for events, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current pygal API.
-          Correct naming convention.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Proper use of pygal.XY() for coordinate-based visualization. Custom
-          Style object for theming follows pygal conventions. Uses .add() method and
-          chart configuration idiomatically. Solid but not advanced.
+        passed: false
+        comment: pygal.DateTimeLine with real datetimes, x_value_formatter for month
+          ticks, per-series stroke_style dasharray, Style object carries every theme
+          token.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Uses cubic interpolation, custom stroke_style for event lines, dashed
-          line patterns, and manual vertical line creation via XY coordinates. These
-          are distinctive to pygal and not easily replicated. Theme-adaptive Style
-          object is powerful and well-leveraged.
+        passed: false
+        comment: Uses pygal's per-point value dicts with a per-series formatter and
+          print_values to draw the event labels natively, and per-series show_dots/print_values
+          overrides; interactive HTML tooltips come for free.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T21:24:18Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - time-series
   styling:
-  - publication-ready
+  - minimal-chrome
+  - grid-styling
