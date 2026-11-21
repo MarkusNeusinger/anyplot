@@ -2,75 +2,60 @@ library: altair
 language: python
 specification_id: venn-basic
 created: '2025-12-29T23:24:23Z'
-updated: '2026-05-11T11:34:50Z'
-generated_by: claude-haiku
-workflow_run: 25667336514
+updated: '2026-11-21T02:06:57Z'
+generated_by: claude-sonnet
+workflow_run: 44853335673
 issue: 2444
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 80
 review:
   strengths:
-  - Perfect Visual Quality score (30/30) with flawless text legibility and contrast
-    across both themes
-  - Perfect Spec Compliance (15/15) — correct Venn diagram with all required features
-  - Perfect Code Quality (10/10) — clean, deterministic, idiomatic altair code
-  - Excellent theme adaptation — both light and dark renders equally readable with
-    proper chrome switching
-  - Proportional circle sizing demonstrates mathematical sophistication
-  - Okabe-Ito palette used correctly; data colors identical across themes
+  - Circle radii follow the set sizes and center distances are solved by bisection
+    so each pairwise lens area matches its inclusive overlap; all seven regions appear
+    with the triple overlap in the middle
+  - Each exclusive count sits at the deepest interior point of its region, so no count
+    touches an outline in either render
+  - Theme tokens thread through title, counts and set labels; the Imprint colors are
+    identical across both renders
+  - One nominal alt.Scale drives both fill and stroke, so outline and fill colors
+    always stay paired per set
   weaknesses:
-  - 'DE-03 (Data Storytelling): Visualization displays data accurately but without
-    narrative emphasis or visual hierarchy — consider highlighting focal points to
-    guide viewer attention'
-  - 'LM-02 (Distinctive Features): Could leverage altair interactivity (hover tooltips,
-    cross-filtering) to showcase library capabilities beyond static rendering'
+  - 'VQ-05 (both): the diagram spans only about 38 % of the canvas width (x ≈ 620–1380
+    of 2000 in the displayed render) with wide empty bands on both sides and about
+    200 px empty below → scale the circle layout to about 60–70 % of the width (+25
+    to +30 %). Likely cause: scale = min(500 / width, 290 / height) inside the 760×400
+    view, which reserves far more room than the labels need.'
+  - 'CQ-01 (code): three helper functions lens_area, center_distance and pair_overlap
+    (lines 52–77) break the Imports → Data → Plot → Save flow → inline the bisection
+    as a plain loop per pair. Likely cause: the circle layout was written as reusable
+    helpers.'
+  - 'CQ-01 (code): line 26 assigns `SET_COLUMNS` the value `["Machine Learning", "Statistics",
+    "Data Engineering"]`, not a column-name string; 1 more at lines 29 → one string
+    constant per required column role above the Data block, each with a trailing #
+    role: <role> comment naming a spec role. Likely cause: the agent rewrites the
+    constant''s string from its bindings.'
+  - 'Suggestion: an Altair tooltip on the circles (set name and inclusive size) would
+    add value in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), properly theme-adapted per style guide
-      Chrome: Title "venn-basic · altair · anyplot.ai" in bold 28px dark text (#1A1A17), set labels "Machine Learning"/"Statistics"/"Data Engineering" at 28px bold, count numbers at 32px bold — all clearly readable against light background
-      Data: Three proportionally-sized circles in Okabe-Ito colors (#009E73, #D55E00, #0072B2), with 30% opacity fills and 5px strokes. All seven region counts visible (60, 35, 25, 20, 10, 15, 10)
-      Legibility verdict: PASS — excellent contrast, no text overlap, all elements readable
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: bold title 'venn-basic · python · altair · anyplot.ai' centered at top in dark ink; set labels 'Machine Learning' (lower left), 'Statistics' (lower right), 'Data Engineering' (top) in INK_SOFT bold, each outside its circle — all readable
+      Data: three translucent circles with solid outlines — Machine Learning #009E73 (largest), Statistics #C475FD, Data Engineering #4467A3 (smallest); seven dark bold counts 60, 35, 25, 20, 10, 15 and 10 (center) each inside its region; diagram occupies roughly the middle 38 % of the width
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), properly themed
-      Chrome: Title and set labels in light text (#F0EFE8), 100% readable with strong contrast against dark background — no "dark on dark" failures
-      Data: Data colors identical to light render (#009E73, #D55E00, #0072B2 unchanged). Chrome properly flips to light theme colors. Circle strokes clearly visible against dark background
-      Legibility verdict: PASS — both text and data elements fully readable; theme adaptation seamless
+      Background: warm near-black #1A1A17
+      Chrome: title in light ink, set labels in light grey INK_SOFT — no dark-on-dark text
+      Data: same three fill/outline colors as the light render; fills read as darker tinted blends on the dark page; counts in light ink are readable against every fill
+      Legibility verdict: PASS
   criteria_checklist:
-    auto_reject:
-      passed: true
-      checks:
-      - id: AR-01
-        name: Syntax Error
-        status: PASS
-      - id: AR-02
-        name: Runtime Error
-        status: PASS
-      - id: AR-03
-        name: No Output
-        status: PASS
-      - id: AR-04
-        name: Empty Plot
-        status: PASS
-      - id: AR-05
-        name: No Library
-        status: PASS
-      - id: AR-06
-        name: Not Feasible
-        status: PASS
-      - id: AR-07
-        name: Wrong Format
-        status: PASS
-      - id: AR-08
-        name: Fake Functionality
-        status: PASS
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -78,67 +63,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (28-32px); perfectly readable in both themes
+        comment: Title 16 px, region counts 15 px bold, set labels 14 px bold at scale
+          4; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text properly spaced; no collisions
+        comment: No text collides with text or outlines; every count sits clear inside
+          its region
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All seven regions visible; proportional sizing optimal
+        comment: Translucent fills (0.3) with 2.5 px solid outlines; all seven regions
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; colorblind-safe
+        comment: Green / purple / blue are CVD-distinguishable; dark counts on light
+          fills and light counts on dark fills keep contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Perfect 4800×2700px landscape; 55% canvas fill
+        comment: 3200x1800 canvas, but the diagram spans only about 38 % of the width
+          with wide empty bands (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; descriptive labels
+        comment: 'N/A: no axes on a Venn diagram; set labels are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Perfect Okabe-Ito; correct theme backgrounds; data colors identical
-          across themes
+        comment: 'Imprint positions 1-3 in canonical order (#009E73, #C475FD, #4467A3),
+          identical in both themes; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful Okabe-Ito palette; proportional sizing; well-composed
+        comment: 'Style-guide baseline: INK counts over INK_SOFT set labels, nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Good stroke styling and transparency; some library defaults visible
+        comment: Region counts placed at each region's deepest interior point and
+          set labels pushed outward clear of the circles by their text width
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed accurately but without narrative emphasis or focal
-          point
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -148,25 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct three-set Venn diagram
+        comment: Three-set proportional Venn, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: labels, sizes, counts'
+        comment: C1 labels outside circles and all seven regions present; C2 exclusive
+          counts inside their regions; C3 circle areas and lens areas solved from
+          the sizes; C4 translucent distinct colors with outlines; C5 basic variant
+          only
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Proportional sizing; correct positioning
+        comment: Circle areas follow 100/80/60; center distances solved so pairwise
+          lens areas follow the inclusive overlaps
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; labels integrated
+        comment: Title 'venn-basic · python · altair · anyplot.ai'; set names labelled
+          directly, no legend needed
     data_quality:
       score: 15
       max: 15
@@ -176,29 +172,33 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: three sets, seven regions'
+        comment: All three exclusive regions, three pairwise and the triple overlap
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Academic/tech scenario (research disciplines); plausible and neutral
+        comment: 'Skill overlap between Machine Learning, Statistics and Data Engineering:
+          plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually reasonable and consistent
+        comment: 'Checked against the spec example: 100-30-20+10=60, 80-30-25+10=35,
+          60-20-25+10=25, 20, 10, 15, 10; inclusive sizes 100/80/60 are summed back
+          from them (line 51)'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Clean flow; no over-engineering
+        passed: false
+        comment: Three helper functions (lens_area, center_distance, pair_overlap)
+          and the adaptability check's column-constant findings (defect lines)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,43 +210,53 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: math, os, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; appropriate complexity
+        comment: Circle layout and label placement are not provided by any available
+          call; complexity appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and .html
+        comment: Saves plot-{THEME}.png (padded, never cropped) and plot-{THEME}.html;
+          current Altair 6 API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of Chart, mark_point, encode, layer, configure_view
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layering and mark customization; could leverage interactivity
+        comment: Layered charts with shared quantitative scales and one nominal scale
+          for fill and stroke; the default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T02:02:55Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
+  - annotations
+  - html-export
   patterns:
-  - data-generation
+  - matrix-construction
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
   - alpha-blending
+  - edge-highlighting
