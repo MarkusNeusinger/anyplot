@@ -2,7 +2,17 @@
 
 from pydantic import TypeAdapter
 
-from agents.anyplot.data.emptied import held_columns, renamed, replaces, start_columns, taken, wrong_bindings
+from agents.anyplot.data.bindings import Misfit, check_bindings
+from agents.anyplot.data.emptied import (
+    date_misfits,
+    held_columns,
+    renamed,
+    replaces,
+    start_columns,
+    taken,
+    wrong_bindings,
+)
+from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation
 from agents.anyplot.schemas import Binding
 from core.spec_roles import DataRole
@@ -84,3 +94,34 @@ def test_a_member_is_judged_by_its_family_whatever_its_number() -> None:
     assert replaces("Tage", "y3", held, taken_roles, ROLES) and replaces("Tage", "y", held, taken_roles, ROLES)
     # An optional role is never taken, so a held column on it is no wrong binding either.
     assert wrong_bindings([Binding(role="series", column="Nr")], held, taken_roles, ROLES) == []
+
+
+def test_a_date_column_refused_on_a_number_role_is_a_date_misfit_and_nothing_else_is() -> None:
+    """The second trigger reads the typed record of the refusal, by the spec's role (`y2` is `y`), never its line."""
+    table = parse_dataset("Datum,Wert,Name\n2026-03-01,1.5,a\n2026-03-02,2.5,b\n").profile
+    bindings = [
+        Binding(role="x", column="Wert"),
+        Binding(role="y2", column="Datum"),
+        Binding(role="series", column="Wert"),
+    ]
+
+    check = check_bindings(bindings, ROLES, table)
+
+    assert check.misfits == [
+        Misfit("y2", "Datum", "datetime", ("numeric",)),
+        Misfit("series", "Wert", "number", ("categorical",)),
+    ]
+    assert len(check.errors) == 2
+    # A number column on a role that takes labels is a misfit too, but not a date on a number role.
+    assert date_misfits(check.misfits, ROLES) == {"y": "Datum"}
+
+
+def test_a_role_that_takes_dates_too_never_refuses_one() -> None:
+    table = parse_dataset("Datum,Wert\n2026-03-01,1.5\n2026-03-02,2.5\n").profile
+
+    check = check_bindings([Binding(role="x", column="Datum"), Binding(role="y1", column="Wert")], ROLES, table)
+
+    assert check.misfits == [] and date_misfits(check.misfits, ROLES) == {}
+    assert date_misfits(check_bindings([Binding(role="x", column="Datum")], SCATTER, table).misfits, SCATTER) == {
+        "x": "Datum"
+    }

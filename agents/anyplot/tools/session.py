@@ -27,7 +27,8 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   `AGENT_NARROWED_BINDINGS=keep`, since 2026-10-15), any other change drops it. A binding that puts a column of
   the turn holding a date turned into numbers or the row numbers on a member of a required role none of whose
   columns of the turn's start the turn left is refused, the whole call, with `invalid_bindings` and a fixed
-  `message` (`data/emptied.py`).
+  `message` (`data/emptied.py`). A call refused because it puts a date column on a role that takes numbers carries a
+  fixed `message` too (which numbers is the user's choice), and from then on the turn makes no such column.
 * `set_language(language, applies_to)`: the reply language (the session language,
   `session_state.LANGUAGE`, with the source `chosen`), the plot's text
   (`session_state.PLOT_LANGUAGE`) or both (the default), validated like the language
@@ -95,7 +96,8 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   and counts against none of the turn's caps, unless the date is one of the taken role's own columns (a
   replacement); a call whose carry alone would put such a column of an
   earlier call on a taken role is stored with that column kept off every role (`data/emptied.py`,
-  `_turn_columns`).
+  `_turn_columns`). After a `set_bindings` of the turn refused for a date column on a role that takes numbers, such a
+  call is refused the same way in any turn, a replacement too.
 * `query_data(operations, columns, limit, from_version)`: a question about the data answered from a copy
   (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, or of the two only a
   question takes (`prepare.QueryOperation`: an `aggregate` without `by`, a `fit`), then
@@ -139,6 +141,7 @@ from ..code.data_code import check_data_code
 from ..data.bindings import carry_bindings
 from ..data.emptied import (
     added_columns,
+    date_misfits,
     family_name,
     held_columns,
     renamed,
@@ -421,7 +424,17 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
     if not delta:
         # The errors quote column names from the user's dataset.
         errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))
-        return {"status": "error", "code": "invalid_bindings", "errors": errors}
+        refused: dict[str, Any] = {"status": "error", "code": "invalid_bindings", "errors": errors}
+        if misfits := date_misfits(check.misfits, roles):
+            # A date column on a role that takes numbers: from here the turn makes no held column (`data/emptied.py`).
+            ledger.date_misfits.update(misfits)
+            attribution("emptied_role", ledger, tool="set_bindings", outcome="misfit", roles=sorted(misfits))
+            required = {role.name for role in roles if role.required and not role.computed}
+            filled = {family_name(binding.role, roles) for binding in view.bindings}
+            waiting = any(role in required and role not in filled for role in misfits)
+            message = DATE_OFFER_MESSAGE if waiting else DATE_OFFER_FILLED_MESSAGE
+            refused["message"] = message.format(roles=", ".join(misfits))
+        return refused
     _note_taken(ledger, "set_bindings", view.bindings, parsed, ledger.taken_roles, ledger.added_columns, roles)
     # Other bindings than the user confirmed leave the confirmation's fingerprint behind and the panel asks again,
     # unless they only leave out confirmed number series (`narrowed_confirmation`, `AGENT_NARROWED_BINDINGS`).
@@ -651,6 +664,33 @@ MADE_NOW_LINE = "'{name}' holds a date turned into numbers or the row numbers, a
 MADE_BEFORE_LINE = "'{name}' holds a date turned into numbers or the row numbers, made earlier in this turn"
 """The `errors` lines of the guard's refusal, fenced since they name the user's columns: a role an earlier call of the
 turn took, a role this call would take, a column this call would make, a column an earlier call made."""
+DATE_OFFER_MESSAGE = (
+    "A date column goes on {roles} only as numbers, and which numbers is the user's choice (the calendar year, the "
+    "days since the earliest date, a decimal year or Unix seconds), so in this turn no date is turned into numbers and "
+    "no row numbers are made. Make the rest of the change. In the reply, name the role that still needs a column and "
+    "say that the next turn lists what the server can compute for it, if anything; if the user asked for such "
+    "numbers, say they can be made in the next turn."
+)
+"""The `message` of a `set_bindings` refused for a date column on a role that takes numbers (`emptied.date_misfits`,
+the second trigger in `data/emptied.py`) while a required such role holds no column: server text beside the fenced
+`errors`, the role names the spec's own. It says what the user chooses and names no operation, since the turn makes
+none of them."""
+DATE_OFFER_FILLED_MESSAGE = (
+    "A date column goes on {roles} only as numbers, and which numbers is the user's choice (the calendar year, the "
+    "days since the earliest date, a decimal year or Unix seconds), so in this turn no date is turned into numbers and "
+    "no row numbers are made, and the bindings stay as they are. Make the rest of the change; if the user asked for "
+    "such numbers, say in the reply that they can be made in the next turn."
+)
+"""The same `message` when no such role is a required one without a column: nothing about a role that waits, since
+the next turn lists conversions for an open required role only."""
+OFFER_HELD_MESSAGE = (
+    "Nothing changed. Earlier in this turn a date column was refused on a role that takes numbers ({roles}), and which "
+    "numbers a date becomes is the user's choice: in this turn no date is turned into numbers and no row numbers are "
+    "made. Make the rest of the change without the column held here; if the user asked for it, say in the reply that "
+    "it can be made in the next turn."
+)
+"""The refusal of a `prepare_data` call that would make a held column after such a `set_bindings`, with the
+`MADE_NOW_LINE` of each such column fenced under `errors`."""
 
 
 def _column_held(
@@ -685,9 +725,10 @@ def _note_held(
     ledger: RequestLedger, tool: str, roles: Iterable[str], kinds: Iterable[str], *, outcome: str = "refused"
 ) -> None:
     """The guard's log line (hook `emptied_role`) for a call it held a column from: the tool, the outcome (`refused`,
-    or `kept_off` for a change stored with an earlier call's fill kept off every role), the roles the turn's change
-    takes the column of, and the names of the operations that made the held columns. Content-free: the spec's role
-    names and closed operation names, never a column or a cell."""
+    `kept_off` for a change stored with an earlier call's fill kept off every role, or `offer_held` for a call refused
+    after a date misfit), the roles the turn's change takes the column of (for `offer_held`, the roles the date column
+    was refused on), and the names of the operations that made the held columns. Content-free: the spec's role names
+    and closed operation names, never a column or a cell."""
     attribution(
         "emptied_role",
         ledger,
@@ -769,6 +810,10 @@ def _turn_columns(
        and the role waits; when the carry without them still puts one there, the root bound it before the call, and
        the call is refused.
 
+    Before both, the second trigger: after a `set_bindings` of the turn refused for a date column on a role that takes
+    numbers (`RequestLedger.date_misfits`), a call that makes a held column is refused with `OFFER_HELD_MESSAGE`,
+    whether or not a role is taken.
+
     The refusal's sentence: `ROWS_REPLACE_MESSAGE` when row numbers are at issue (made by the call, or held by the role)
     and the call removes the taken role's column with `drop_columns`, in a turn that had taken none before; else
     `COLUMN_HELD_MESSAGE` when the call takes a role or a role taken before holds no column; else
@@ -796,6 +841,15 @@ def _turn_columns(
         for name, kind in {**earlier_added, **added_columns(operations, before, names, new)}.items()
         if name in names
     }
+    if ledger.date_misfits and new:
+        # Earlier in the turn a date column was refused on a role that takes numbers: the second trigger.
+        _note_held(
+            ledger, PREPARE_TOOL, ledger.date_misfits, [added.get(name, "") for name in new], outcome="offer_held"
+        )
+        text = OFFER_HELD_MESSAGE.format(roles=", ".join(ledger.date_misfits))
+        lines = [MADE_NOW_LINE.format(name=name) for name in new]
+        refusal = {"status": "error", "code": "invalid_operation", "message": text, "errors": _fenced_lines(lines)}
+        return _TurnColumns(first, dict(ledger.taken_roles), held, added, refusal)
     now = {role: columns for role, columns in taken(first, names).items() if role not in ledger.taken_roles}
     all_taken = {**ledger.taken_roles, **now}
     if not all_taken:
