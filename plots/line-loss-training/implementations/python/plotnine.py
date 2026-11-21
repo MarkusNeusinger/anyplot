@@ -1,19 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 line-loss-training: Training Loss Curve
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-14
 """
 
 import os
-import sys
 
-
-# Prevent this file from shadowing the plotnine library when run from its own directory
-sys.path = [p for p in sys.path if not p or os.path.abspath(p) != os.path.abspath(os.path.dirname(__file__))]
-
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-from plotnine import (  # noqa: E402
+import numpy as np
+import pandas as pd
+from plotnine import (
     aes,
     annotate,
     element_line,
@@ -25,6 +20,7 @@ from plotnine import (  # noqa: E402
     ggplot,
     labs,
     scale_color_manual,
+    scale_x_continuous,
     theme,
     theme_minimal,
 )
@@ -33,75 +29,75 @@ from plotnine import (  # noqa: E402
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette
-TRAINING_COLOR = "#009E73"  # bluish green
-VALIDATION_COLOR = "#C475FD"  # vermillion
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulated training history with typical loss curve behavior
+# Columns: set these to your table's column names
+EPOCH = "Epoch"  # role: epoch
+TRAIN_LOSS = "Training Loss"  # role: train_loss
+VAL_LOSS = "Validation Loss"  # role: val_loss
+
+# Data: replace this block with your own table, for example df = pd.read_csv("history.csv")
 np.random.seed(42)
-epochs = np.arange(1, 51)
-
+n_epochs = 50
+epochs = np.arange(1, n_epochs + 1)
 # Training loss: starts high, decreases with diminishing returns
-train_loss = 2.5 * np.exp(-0.08 * epochs) + 0.15 + np.random.normal(0, 0.02, len(epochs))
+train_loss = 2.5 * np.exp(-0.08 * epochs) + 0.15 + np.random.normal(0, 0.02, n_epochs)
+# Validation loss: follows training at first, then turns upward (overfitting)
+val_loss = 2.5 * np.exp(-0.06 * epochs) + 0.25 + np.random.normal(0, 0.03, n_epochs)
+val_loss[30:] += np.linspace(0, 0.25, n_epochs - 30)
+df = pd.DataFrame({EPOCH: epochs, TRAIN_LOSS: train_loss, VAL_LOSS: val_loss})
 
-# Validation loss: follows training initially, then diverges (overfitting)
-val_loss = 2.5 * np.exp(-0.06 * epochs) + 0.25 + np.random.normal(0, 0.03, len(epochs))
-# Add uptick after epoch 30 to show clear overfitting
-val_loss[30:] += np.linspace(0, 0.25, 20)
+# Plot: reads only df and the constants above
+series = [TRAIN_LOSS, VAL_LOSS]
+long_df = df.melt(id_vars=EPOCH, value_vars=series, var_name="Series", value_name="Loss")
 
-# Find optimal stopping point (minimum validation loss)
-optimal_epoch = epochs[np.argmin(val_loss)]
+best_row = df.loc[df[VAL_LOSS].idxmin()]
+best_epoch = best_row[EPOCH]
+loss_span = df[series].max().max() - df[series].min().min()
+x_span = df[EPOCH].max() - df[EPOCH].min()
 
-# Create long-format DataFrame for plotnine
-df = pd.DataFrame(
-    {
-        "Epoch": np.concatenate([epochs, epochs]),
-        "Loss": np.concatenate([train_loss, val_loss]),
-        "Type": ["Training Loss"] * len(epochs) + ["Validation Loss"] * len(epochs),
-    }
-)
-
-# Plot
 plot = (
-    ggplot(df, aes(x="Epoch", y="Loss", color="Type"))
-    + geom_line(size=1.5, alpha=0.9)
-    + geom_point(size=3, alpha=0.7)
-    + geom_vline(xintercept=optimal_epoch, linetype="dashed", color=INK_SOFT, size=0.8, alpha=0.6)
+    ggplot(long_df, aes(x=EPOCH, y="Loss", color="Series"))
+    + geom_line(size=1.0, alpha=0.9)
+    + geom_point(size=2.0, alpha=0.7)
+    + geom_vline(xintercept=best_epoch, linetype="dashed", color=INK_SOFT, size=0.5, alpha=0.7)
     + annotate(
         "text",
-        x=optimal_epoch + 1.5,
-        y=np.min(val_loss) + (np.max(val_loss) - np.min(val_loss)) * 0.1,
-        label=f"Best: {int(optimal_epoch)}",
-        size=14,
-        ha="left",
+        x=best_epoch - x_span * 0.015,
+        y=best_row[VAL_LOSS] + loss_span * 0.10,
+        label=f"Best: epoch {int(best_epoch)}",
+        size=9,
+        ha="right",
         color=INK_SOFT,
     )
-    + scale_color_manual(values={"Training Loss": TRAINING_COLOR, "Validation Loss": VALIDATION_COLOR})
-    + labs(title="line-loss-training · plotnine · anyplot.ai", x="Epoch", y="Cross-Entropy Loss", color="")
+    + scale_x_continuous(limits=(df[EPOCH].min(), df[EPOCH].max()), expand=(0.02, 0))
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=series)
+    + labs(title="line-loss-training · python · plotnine · anyplot.ai", y="Cross-Entropy Loss", color="")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
         panel_border=element_rect(color=INK_SOFT, fill=None),
-        text=element_text(size=14, color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        text=element_text(size=7, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT),
-        plot_title=element_text(size=24, weight="bold", color=INK),
+        plot_title=element_text(size=12, weight="bold", color=INK),
         legend_position="top",
         legend_direction="horizontal",
-        legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
+        legend_text=element_text(size=8, color=INK_SOFT),
     )
 )
 
 # Save
-script_dir = os.path.dirname(os.path.abspath(__file__))
-plot.save(os.path.join(script_dir, f"plot-{THEME}.png"), dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
