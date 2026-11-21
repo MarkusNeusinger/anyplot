@@ -1,12 +1,13 @@
 """ anyplot.ai
 polar-line: Polar Line Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-12
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -16,95 +17,115 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+# Imprint palette: all eight positions, one per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Average hourly temperature pattern (two seasons)
-np.random.seed(42)
-hours = np.arange(0, 360, 15)  # 24 hours mapped to 360 degrees (15 deg = 1 hour)
-hour_labels = [f"{h}:00" for h in range(24)]
+# Constants
+HOURS_PER_CYCLE = 24  # the angular axis is a 24-hour clock
 
-# Summer pattern: warmer during day (12-18h), cooler at night
-summer_base = 22 + 8 * np.sin(np.radians(hours - 90))  # Peak at 180 deg (noon)
-summer_temp = summer_base + np.random.normal(0, 0.5, len(hours))
+# Columns: set these to your table's column names
+HOUR = "Hour of day"  # role: theta
+SESSIONS = ["Weekday", "Weekend"]  # role: radius
 
-# Winter pattern: colder overall, less variation
-winter_base = 5 + 5 * np.sin(np.radians(hours - 90))  # Peak at 180 deg (noon)
-winter_temp = winter_base + np.random.normal(0, 0.3, len(hours))
+# Data: replace this block with your own table, for example df = pd.read_csv("traffic.csv")
+rng = np.random.default_rng(42)
+hours = np.arange(HOURS_PER_CYCLE)
 
-# Close the loop by appending the first value
-hours_closed = np.append(hours, hours[0])
-summer_closed = np.append(summer_temp, summer_temp[0])
-winter_closed = np.append(winter_temp, winter_temp[0])
 
-# Create figure
+def bump(center, width):
+    """Smooth daily peak on a 24-hour clock (wraps around midnight)."""
+    gap = (hours - center + 12) % 24 - 12
+    return np.exp(-(gap**2) / (2 * width**2))
+
+
+weekday = 6 + 30 * bump(10, 2.2) + 22 * bump(15, 2.5) + 14 * bump(21, 2.0) + rng.normal(0, 1.0, 24)
+weekend = 5 + 12 * bump(12, 3.0) + 26 * bump(21.5, 2.6) + rng.normal(0, 0.8, 24)
+df = pd.DataFrame({HOUR: hours, SESSIONS[0]: np.round(weekday, 1), SESSIONS[1]: np.round(weekend, 1)})
+
+# Plot: reads only df and the constants above
+DEG_PER_HOUR = 360 / HOURS_PER_CYCLE
+table = df.sort_values(HOUR)
+closed = pd.concat([table, table.iloc[[0]]], ignore_index=True)
+closed.loc[closed.index[-1], HOUR] = table[HOUR].iloc[0] + HOURS_PER_CYCLE
+theta = closed[HOUR] * DEG_PER_HOUR
+
 fig = go.Figure()
-
-# Summer line
-fig.add_trace(
-    go.Scatterpolar(
-        r=summer_closed,
-        theta=hours_closed,
-        mode="lines+markers",
-        name="Summer",
-        line=dict(color=IMPRINT[0], width=4),
-        marker=dict(size=10, color=IMPRINT[0]),
-        hovertemplate="Hour: %{theta}°<br>Temp: %{r:.1f}°C<extra>Summer</extra>",
+for i, name in enumerate(SESSIONS):
+    fig.add_trace(
+        go.Scatterpolar(
+            r=closed[name],
+            theta=theta,
+            mode="lines+markers",
+            name=name,
+            line=dict(color=IMPRINT_PALETTE[i], width=2.5),
+            marker=dict(size=5, color=IMPRINT_PALETTE[i]),
+            customdata=closed[HOUR] % HOURS_PER_CYCLE,
+            hovertemplate="%{customdata}:00<br>%{r:.1f}k sessions<extra>" + name + "</extra>",
+        )
     )
-)
 
-# Winter line
-fig.add_trace(
-    go.Scatterpolar(
-        r=winter_closed,
-        theta=hours_closed,
-        mode="lines+markers",
-        name="Winter",
-        line=dict(color=IMPRINT[1], width=4),
-        marker=dict(size=10, color=IMPRINT[1]),
-        hovertemplate="Hour: %{theta}°<br>Temp: %{r:.1f}°C<extra>Winter</extra>",
-    )
-)
+title = "Hourly Website Traffic · polar-line · python · plotly · anyplot.ai"
+title_size = round(16 * min(1.0, 67 / len(title)))
 
-# Layout
 fig.update_layout(
-    title=dict(
-        text="Hourly Temperature Pattern · polar-line · plotly · anyplot.ai",
-        font=dict(size=28, color=INK),
-        x=0.5,
-        xanchor="center",
-    ),
+    autosize=False,
+    title=dict(text=title, font=dict(size=title_size, color=INK), x=0.5, xanchor="center"),
+    font=dict(color=INK),
     polar=dict(
+        domain=dict(x=[0.1, 0.9], y=[0.1, 0.9]),
+        bgcolor=PAGE_BG,
         radialaxis=dict(
-            visible=True,
-            range=[0, 35],
-            tickfont=dict(size=18, color=INK_SOFT),
-            title=dict(text="Temperature (°C)", font=dict(size=22, color=INK)),
+            range=[0, df[SESSIONS].to_numpy().max() * 1.08],
+            angle=90,
+            tickangle=0,
+            tickfont=dict(size=10, color=INK_SOFT),
             gridcolor=GRID,
+            linecolor=INK_SOFT,
         ),
         angularaxis=dict(
-            tickfont=dict(size=16, color=INK_SOFT),
             direction="clockwise",
             rotation=90,
             tickmode="array",
-            tickvals=list(range(0, 360, 15)),
-            ticktext=hour_labels,
+            tickvals=[h * DEG_PER_HOUR for h in range(0, HOURS_PER_CYCLE, 3)],
+            ticktext=[f"{h}:00" for h in range(0, HOURS_PER_CYCLE, 3)],
+            tickfont=dict(size=11, color=INK_SOFT),
             gridcolor=GRID,
+            linecolor=INK_SOFT,
         ),
-        bgcolor=PAGE_BG,
     ),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     legend=dict(
-        font=dict(size=18, color=INK_SOFT), x=1.05, y=0.5, bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, borderwidth=1
+        font=dict(size=11, color=INK_SOFT),
+        x=0.98,
+        y=0.98,
+        xanchor="right",
+        yanchor="top",
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
     ),
-    margin=dict(l=80, r=150, t=100, b=80),
+    annotations=[
+        dict(
+            text="Radius: sessions (thousands per hour) · Angle: hour of day",
+            x=0.5,
+            y=-0.01,
+            xref="paper",
+            yref="paper",
+            yanchor="top",
+            showarrow=False,
+            font=dict(size=12, color=INK),
+        )
+    ],
+    width=600,
+    height=600,
+    margin=dict(l=60, r=60, t=70, b=60),
 )
 
 # Save outputs
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
