@@ -2,48 +2,56 @@ library: letsplot
 language: python
 specification_id: contour-filled
 created: '2025-12-30T00:07:14Z'
-updated: '2026-05-11T13:45:56Z'
-generated_by: claude-haiku
-workflow_run: 25673233448
+updated: '2026-11-21T02:39:27Z'
+generated_by: claude-sonnet
+workflow_run: 44856282925
 issue: 2500
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 80
 review:
   strengths:
-  - 'Perfect technical execution across all requirements: correct plot type, complete
-    feature set (filled contours, colorbar, overlay lines)'
-  - 'Flawless theme adaptation: both light and dark renders readable with correct
-    theme tokens (INK, INK_SOFT) and backgrounds (#FAF8F1 light, #1A1A17 dark)'
-  - 'Realistic and engaging data: topographic elevation model with multiple peaks,
-    valleys, and ridges creates clear visual hierarchy'
-  - 'Idiomatic lets-plot code: proper grammar of graphics composition with ggplot(),
-    geoms, and theme layering'
-  - 'Appropriate visualization choice: viridis/plasma colormap for continuous data
-    is perceptually uniform and CVD-safe'
+  - Uses imprint_seq correctly via scale_fill_gradient(low='#009E73', high='#4467A3')
+    on a single-signed elevation field, with identical data colors in both themes
+  - 'Native lets-plot layering: geom_contourf(aes(fill=''..level..''), bins=15) under
+    a matching geom_contour(bins=15) so the thin translucent lines run exactly along
+    the band boundaries'
+  - Smooth band boundaries from a 60x60 grid; two peaks, a saddle, a ridge and a basin
+    show narrow bands on steep slopes and broad bands on flat areas
+  - 'Theme tokens threaded through every chrome element; all text readable on #FAF8F1
+    and #1A1A17'
+  - Column constants with role comments and a clean Data block, so the code adapts
+    to a user's own table
   weaknesses:
-  - 'Design Excellence below median: relies on theme_minimal() defaults rather than
-    custom refinement (e.g., could adjust legend placement, enhance typography, or
-    add visual emphasis)'
-  - 'Limited distinctive library features: while layer composition (geom_contourf
-    + geom_contour) is shown, could push further with lets-plot-specific capabilities
-    like interactive tooltips or advanced theme customization'
+  - 'DE-02 (both): the panel is enclosed by a full four-sided INK_SOFT frame that
+    sits away from the data extent, leaving an empty page-colored gutter between the
+    bands and the frame on all sides → an L-shaped frame (or none) hugging the data,
+    per the style guide''s spine rule. Likely cause: theme_minimal() panel border
+    left on plus default axis expansion; set panel_border=element_blank() and scale_x/y_continuous(expand=[0,
+    0]).'
+  - 'SC-02 (both): the color bar is a continuous gradient with round-number ticks,
+    so it does not show the 15 band levels the fills use (C4) → a stepped color bar
+    with one swatch per level. Likely cause: the continuous scale_fill_gradient guide
+    on ..level.. rather than a binned guide (e.g. scale_fill_gradient(..., breaks=levels)
+    with guide_colorbar(nbin=15) or a binned scale).'
+  - 'Suggestion: a slightly darker or ink-colored contour line in the light theme
+    would separate the low-contrast green bands of the 500-1,500 m range more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: #FAF8F1 warm off-white, correct surface color.
-      Chrome: Title "contour-filled · letsplot · anyplot.ai" in dark text (INK token), clearly readable. Axis labels "Longitude (km)" and "Latitude (km)" in dark text with size 20pt. Tick labels in INK_SOFT token (secondary text) at size 16pt, all readable against the light background. Legend title "Elevation (m)" and scale values readable.
-      Data: Viridis/plasma colormap with smooth color bands from dark purple (low elevation) through blue, cyan, yellow-green (peaks at 2500m). White contour lines overlay with alpha=0.5, creating visual hierarchy. Three peaks and one valley clearly distinguished by color intensity.
-      Legibility verdict: PASS — all text is readable, no "light on light" failures, data colors are crisp and distinct.
+      Background: warm off-white #FAF8F1, correct; legend box on the elevated #FFFDF6 surface with a thin INK_SOFT outline.
+      Chrome: title "contour-filled · python · letsplot · anyplot.ai" in dark INK at 18 pt (~53 % of the width), axis titles "Longitude (km)" / "Latitude (km)" at 14 pt, tick labels 0–50 at 12 pt in INK_SOFT; full four-sided frame around the panel with a gutter between data and frame; no grid. All readable.
+      Data: 15 filled bands on a 60x60 grid from brand green #009E73 (basin at ~25,8) to Imprint blue #4467A3 (main peak at 15,20, secondary peak at 35,35), thin white contour lines at alpha 0.5 along every band boundary; continuous color bar "Elevation (m)" ticked 500–3,500. Smooth curves, no holes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: #1A1A17 warm near-black, correct surface color for dark theme.
-      Chrome: Title in light text (INK token #F0EFE8), clearly readable against dark background. Axis labels in light text at size 20pt. Tick labels in INK_SOFT token (#B8B7B0) at size 16pt, all readable. Grid lines visible as subtle lines (inherited from minimal theme). No "dark on dark" failures — all text has sufficient contrast.
-      Data: Viridis/plasma colormap identical to light render (only chrome flips per design specification). White contour lines remain visible. Three elevation peaks and valley depression clearly distinguished.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark text conflicts, data colors match light render perfectly (theme-adaptive chrome only).
+      Background: warm near-black #1A1A17, correct; legend box on #242420.
+      Chrome: title and axis titles in light INK #F0EFE8, ticks in INK_SOFT #B8B7B0, frame in INK_SOFT; no dark-on-dark text anywhere.
+      Data: band colors and contour lines identical to the light render; brand green stays vivid.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,71 +62,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes with proper size and color tokens
+        comment: Explicit sizes (title 18, axis titles 14, ticks 12, legend 12/14
+          pt); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, labels, ticks, legend, and data
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Contour bands and white overlay lines clearly visible and distinguishable
+        comment: Bands and thin contour lines visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis/plasma colormap is perceptually uniform and CVD-safe
+        comment: Green-to-blue ramp with lightness change; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 (4800x2700 scaled) with good proportions and generous margins
+        comment: 3200x1800; title ~53 % width; balanced labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title format correct per spec
+        comment: Longitude (km), Latitude (km), Elevation (m)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Background colors correct (#FAF8F1 light, #1A1A17 dark); continuous
-          colormap appropriate; chrome theme-adapted'
+        comment: 'imprint_seq #009E73 -> #4467A3; correct backgrounds'
     design_excellence:
-      score: 11
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Plasma colormap shows design intent; professional appearance with
-          clear color progression
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 1
         max: 6
-        passed: true
-        comment: Theme_minimal provides clean aesthetic; white contour overlay and
-          proper spacing add refinement
+        passed: false
+        comment: Full four-sided frame with empty gutter around the data (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Multiple peaks and valley create visual hierarchy; color intensity
-          guides viewer to significant features
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -126,27 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Filled contour plot correctly implemented with geom_contourf
+        comment: Filled contour with geom_contourf
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Filled contours, colorbar, overlay contour lines, smooth color transitions
-          all present
+        passed: false
+        comment: Color bar continuous, does not show the 15 levels (C4, defect line);
+          C1, C2, C3, C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y grid mapped correctly; Z values mapped to fill color; all data
-          displayed
+        comment: x/y/z mapped correctly, full grid shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend title and value range properly labeled
+        comment: Correct title format; legend titled Elevation (m)
     data_quality:
       score: 15
       max: 15
@@ -156,22 +160,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple peaks, valleys, ridges; demonstrates
-          contour plotting at its best'
+        comment: Peaks, saddle, ridge, basin; steep and flat areas
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Topographic elevation data is realistic, plausible, and neutral (not
-          controversial)
+        comment: Neutral terrain elevation map
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 60x60 grid resolution appropriate for smooth gradients; elevation
-          range sensible for terrain
+        comment: Elevations 100-~3,600 m over 50 km; plausible
     code_quality:
       score: 10
       max: 10
@@ -181,49 +182,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; simple procedural flow
+        comment: Flat script, column constants, Data and Plot zones
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seed (42) ensures reproducible data generation
+        comment: Deterministic analytic field
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports from lets_plot, numpy, pandas
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake functionality; clean and readable
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html per spec
+        comment: plot-{THEME}.png at scale=4 and .html
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Proper ggplot composition with aesthetics, geoms, scales, and theme
+        passed: false
+        comment: Standard grammar-of-graphics composition
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Demonstrates layer composition (geom_contourf + geom_contour), scale_fill_viridis,
-          HTML export, theme_minimal patterns
+        passed: false
+        comment: Nothing beyond what the spec and library prompt mandate
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T02:36:03Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -232,7 +235,10 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - column-constants
+  dataprep:
+  - meshgrid
   styling:
   - custom-colormap
+  - alpha-blending
+  - theme-adaptive
