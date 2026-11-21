@@ -2,45 +2,49 @@ library: seaborn
 language: python
 specification_id: shap-summary
 created: '2025-12-31T05:47:51Z'
-updated: '2026-05-14T12:57:57Z'
-generated_by: claude-haiku
-workflow_run: 25860974962
+updated: '2026-11-21T16:15:38Z'
+generated_by: claude-sonnet
+workflow_run: 44922848945
 issue: 2923
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 84
 review:
   strengths:
-  - Excellent theme adaptation with no dark-on-dark or light-on-light failures in
-    both renders
-  - Comprehensive use of theme tokens ensures chrome flips correctly while data colors
-    remain identical
-  - Proper SHAP visualization with vertical reference line, stripplot with jitter,
-    and appropriate diverging colormap
-  - Strong spec compliance with all required features correctly implemented
-  - Realistic data context (credit approval domain) with well-structured 200 samples
-    and 10 top features
-  - Clean, reproducible code using idiomatic seaborn patterns and proper random seeding
+  - Long table plotted directly with sns.stripplot(data=df, order=..., hue=..., hue_norm=(0,
+    1)) — continuous feature-value colour on a categorical strip with seaborn's built-in
+    jitter
+  - Blue-to-red imprint_div ramp with a neutral grey midpoint keeps mid-scale dots
+    visible on both backgrounds; colorbar ends labelled Low and High
+  - Zero line drawn behind the dots (zorder=0) separates negative and positive impact
+    without covering data
+  - Theme tokens threaded through chrome and colorbar; both renders fully legible
+    at the style-guide text sizes on an exact 3200x1800 canvas
   weaknesses:
-  - Left spine remains visible - consider removing for minimal aesthetic
-  - Design Excellence could be elevated with more aggressive spine removal and subtle
-    visual refinement
+  - 'DQ-03 (both): the feature names contradict the directions the data gives them:
+    high Annual Income sits at negative SHAP down to about -0.52 while low income
+    reaches +0.74, and high Previous Defaults and high Inquiries push approval up
+    (+0.1 to +0.6) → higher income, fewer defaults and fewer inquiries raise approval.
+    Likely cause: the 12 credit names are assigned in list order to make_classification''s
+    anonymous features, so each name inherits an arbitrary sign.'
+  - 'Suggestion: a muted rule under the top feature or a slightly heavier weight for
+    the top rows'' labels could make the importance ranking read faster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title, axis labels, tick labels, colorbar all in dark text (#1A1A17, #4A4A44) and clearly readable. Vertical reference line at x=0 visible in soft gray.
-      Data: Stripplot with jitter showing SHAP value distributions. Points colored by BrBG diverging colormap (teal=low feature values, orange/brown=high). All markers clearly distinguishable.
-      Legibility verdict: PASS - all text readable, no dark-on-light failures, excellent contrast
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'shap-summary · python · seaborn · anyplot.ai' dark ink; axis titles 'SHAP value (impact on approval)' and 'Feature', ticks -1.00..1.00 and ten feature names in soft dark ink; subtle vertical grid; left spine removed; colorbar right with Low/High ticks and rotated label 'Feature value (low to high)'. All readable.
+      Data: ten rows sorted by mean |SHAP| (Number of Accounts top, Employment Years bottom), 200 jittered dots each on a blue (#4467A3, low) - grey - red (#AE3030, high) ramp; grey mid-scale dots clearly visible; dark-grey zero line behind the dots.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, tick labels in light text (#F0EFE8, #B8B7B0) and clearly readable. No dark-on-dark failures. Vertical reference line visible. Colorbar readable.
-      Data: Identical colors to light render - BrBG colormap unchanged, confirming proper theme adaptation where only chrome flips
-      Legibility verdict: PASS - all text readable in dark theme, no dark-on-dark or light-on-light failures
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks and feature names in light soft ink, colorbar outline and tick labels light; no dark-on-dark text.
+      Data: dot colours identical to the light render; zero line light grey and visible behind the dots.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,69 +55,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, ticks explicit sized and readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and colorbar ticks 8 pt, all
+          explicit; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Stripplot with jitter; feature names and labels collision-free
+        comment: No text collisions; dense dots in the top rows are permitted overlap
+          (C5)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Point size 11px, alpha=0.7, vertical line and grid all visible
+        comment: 200 dots per row at size 4.5, alpha 0.75; grey mid-scale dots visible
+          on both pages
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: BrBG diverging colormap is CVD-safe and perceptually uniform
+        comment: Blue-grey-red ramp is CVD-safe and differs in lightness as well as
+          hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Figure 4800x2700px, well-proportioned, colorbar correctly positioned
+        comment: 3200x1800 canvas; plot fills the canvas, colorbar sits right next
+          to the axes
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive
+        comment: '''SHAP value (impact on approval)'' and ''Feature'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'BrBG for continuous; backgrounds #FAF8F1/#1A1A17; theme-correct
-          chrome'
+        comment: 'imprint_div endpoints #4467A3 (low) and #AE3030 (high) with a fixed
+          neutral midpoint so mid-scale dots stay visible; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: BrBG colormap chosen intentionally; theme tokens threaded through;
-          professional but could be more refined
+        comment: The style-guide baseline; the Low/High colorbar ticks and the neutral
+          midpoint are what C3 asks for
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Spines removed (left legend), subtle grid (alpha=0.15), generous
-          whitespace; could remove left spine for cleaner look
+        comment: 'Beyond the baseline: left spine removed so feature names float,
+          grid restricted to the value axis, zero line drawn behind the dots'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: 'Strong hierarchy: features by importance, vertical line at x=0 guides
-          viewer, color tells story'
+        comment: Data displayed sorted by importance as the Notes ask; no hierarchy
+          chosen beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -123,27 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SHAP summary stripplot
+        comment: SHAP summary (beeswarm-style strip) plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: x=0 line, importance sort, diverging colormap, jitter'
+        comment: 'Sorted by mean |SHAP|, top 10 shown, blue-to-red feature-value colour,
+          colorbar Low/High, zero line, vertical jitter: C1-C4 met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/hue correctly mapped; all data shown
+        comment: SHAP on x, features on y; jitter is the one the Notes ask for
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar properly labeled
+        comment: Title 'shap-summary · python · seaborn · anyplot.ai'; colorbar labelled
+          'Feature value (low to high)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -151,21 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All SHAP aspects: distribution, importance, direction, magnitude,
-          effect'
+        comment: Wide and tight rows, both signs, outliers, importance gradient
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit approval domain; GradientBoostingClassifier; plausible SHAP
-          approximation
+        comment: Credit-approval model, a real neutral scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: SHAP -1 to +1; features 0-1; 10 top features; 200 samples
+        passed: false
+        comment: 'Checked: SHAP range -0.97..+0.96 within the probability scale; feature
+          directions contradict their names (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -175,62 +186,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions; linear flow
+        comment: Constants, Data block, Plot block; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); GradientBoostingClassifier(random_state=42)
+        comment: np.random.seed(42), random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Long table built with np.tile/ravel; no written-out algorithm an
+          available call computes (shap is not installed)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; current API
+        comment: plot-{THEME}.png at dpi=400, no bbox_inches='tight'
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: High-level API; axes-level plotting; sns.set_theme; sns.despine
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ScalarMappable + colorbar; stripplot with hue/jitter; domain-specific
-          vertical line
+        comment: Reads the long df directly with data=, order= for the importance
+          sort and hue_norm for the continuous hue; no manual reshaping
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Continuous hue on a categorical stripplot via hue_norm + a colormap
+          palette, seaborn's built-in categorical jitter
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T16:11:03Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - colorbar
-  - annotations
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - normalization
   styling:
-  - theme-adaptive
+  - custom-colormap
   - alpha-blending
   - grid-styling
