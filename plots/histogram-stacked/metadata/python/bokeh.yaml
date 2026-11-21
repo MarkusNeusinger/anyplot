@@ -2,48 +2,49 @@ library: bokeh
 language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:40:06Z'
-updated: '2026-05-12T05:41:55Z'
-generated_by: claude-haiku
-workflow_run: 25715359488
+updated: '2026-11-21T04:52:55Z'
+generated_by: claude-sonnet
+workflow_run: 44867617381
 issue: 2601
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 82
 review:
   strengths:
-  - 'Perfect visual quality: all text explicitly sized and readable in both themes'
-  - Complete spec compliance with realistic, well-structured test score data
-  - Clean, reproducible code following Bokeh library patterns correctly
-  - Theme-adaptive chrome properly applied; no dark-on-dark or light-on-light failures
-  - Professional execution with no visual defects
+  - Uses bokeh's quad glyph with left/right bin edges from np.histogram_bin_edges,
+    so bars are contiguous and every group shares the same bins
+  - Segment separators are drawn in the page color, so stacked segments stay distinct
+    in both themes
+  - Groups stacked largest-first with one order kept in every bin, as the Notes suggest
+  - Theme tokens threaded through every chrome element; text readable in both renders
   weaknesses:
-  - Design Excellence limited to library defaults; no aesthetic sophistication or
-    visual refinement beyond standard configuration
-  - 'Stacking order (C, A, B from bottom-to-top) appears arbitrary; could be optimized
-    for visual narrative (e.g., alphabetical: A, B, C)'
-  - Library mastery uses required Bokeh patterns but no distinctive enhancements;
-    generic usage that could translate to other libraries
+  - 'VQ-03 (both): the legend glyphs are about 14 px squares beside 34pt (~45 px)
+    labels and read as dots → glyphs about the label height, 40-45 px (+26 to +31
+    px). Likely cause: p.legend.glyph_width / glyph_height left at the default 20.'
+  - 'DQ-02 (both): the study groups are labelled ''Group A'', ''Group B'', ''Group
+    C'', which read generic → named study methods such as ''Flashcards'', ''Practice
+    tests'', ''Re-reading''. Likely cause: the group_sizes keys.'
+  - 'Suggestion: a HoverTool showing group, bin range and count per segment would
+    add value in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1, matches specification
-      Chrome: Title (28pt), axis labels (22pt), and tick labels (18pt) all explicitly sized and readable in dark text (#1A1A17); legend positioned on right with clear labels
-      Data: Three stacked groups - blue (#0072B2) Group C at bottom, green (#009E73) Group A in middle, orange (#D55E00) Group B on top; white borders aid segment separation
-      Grid: Subtle at 10% alpha, supports readability
-      Legibility verdict: PASS - all text readable, no contrast issues
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: bold title 'histogram-stacked · python · bokeh · anyplot.ai' top-left; x 'Test score (points)', y 'Frequency (count)' in dark ink; tick labels 0-70 / 40-100 in INK_SOFT; subtle grid; framed legend 'Study group' top-left with Group A/B/C; all readable
+      Data: 15 contiguous bins from ~34 to 100; Group A #009E73 at the bottom, Group B #C475FD in the middle, Group C #4467A3 on top, separated by page-colored lines; tallest totals 65 near 70-82; Group C alone in the low tail, Group B dominant at 85-100
+      Legibility verdict: PASS (legend glyphs small)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17, matches specification
-      Chrome: Title and axis labels rendered in light text (#F0EFE8 primary, #B8B7B0 secondary); all elements remain clearly readable against dark background
-      Data: Identical colors to light render - blue, green, orange in same stacking order; confirms color consistency across themes
-      Grid: Subtle, properly visible
-      Legibility verdict: PASS - no dark-on-dark failures, all text is light-colored and readable, proper theme adaptation
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light #F0EFE8, ticks in #B8B7B0, legend on #242420 with light text; no dark-on-dark
+      Data: identical colors and stacking to the light render; separators now dark (page color)
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,48 +52,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28pt, labels 22pt, ticks 18pt;
-          perfectly readable in both themes
+        comment: Title 50pt, axis titles 42pt, ticks and legend 34pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; bars well-separated; legend clearly positioned
+        comment: No text collisions; legend sits top-left over empty low-count bins
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Bars clearly visible with white borders aiding distinction between
-          segments
+        passed: false
+        comment: Bars clear in both themes; legend glyphs are tiny squares beside
+          34pt labels (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with good contrast
+        comment: Green, purple and blue are CVD-distinguishable; page-colored separators
+          keep neighbors apart
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, legend properly positioned, nothing cut off
+        comment: 3200x1800 canvas, balanced margins, nothing cut off, no toolbar
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: '''Test score (points)'' and ''Frequency (count)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors correct; backgrounds correct; theme-adaptive chrome
-          applied correctly
+        comment: 'Imprint positions 1-3, Group A = #009E73; backgrounds #FAF8F1 /
+          #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -100,20 +102,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults; professional but no exceptional
-          design thought
+        comment: Style-guide baseline typography; nothing beyond
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Segment separators drawn in the page color so they flip with the
+          theme, contiguous bins and a 15% headroom above the tallest total
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Clear visual hierarchy through color and stacking
+        comment: Largest-group-at-bottom order is the Notes' suggestion; no further
+          focal point
     spec_compliance:
       score: 15
       max: 15
@@ -123,27 +126,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked histogram
+        comment: Correct stacked histogram via quad glyphs
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple groups, distinct colors, legend, stacking
+        comment: Shared bin edges, distinct colors, legend with title, totals = combined
+          frequency, one order in every bin (C1-C4 all met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: Bars span their bin edges from a zero baseline; y range covers the
+          tallest total
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels match
+        comment: Title 'histogram-stacked · python · bokeh · anyplot.ai'; legend 'Study
+          group' with entries matching
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -151,19 +157,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of stacked histogram type
+        comment: Overlapping, shifted group distributions show both the composition
+          and the totals
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Test score scenario is realistic and neutral
+        passed: false
+        comment: Test scores are plausible and neutral, but the groups are labelled
+          Group A-C (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Test scores 0-100 range; frequencies match sample sizes
+        comment: Scores 35-100 clipped to 0-100, 370 students; counts consistent with
+          group sizes
     code_quality:
       score: 10
       max: 10
@@ -173,48 +182,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plotting → save'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses seed(42) for deterministic output
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports utilized
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: np.histogram_bin_edges + cumsum stacking; one loop over groups
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: plot-{THEME}.png and .html via Selenium with CDP viewport pin
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: Correct ColumnDataSource pattern and figure API
+        passed: false
+        comment: ColumnDataSource per segment and quad(left/right/top/bottom) — bokeh's
+          idiomatic histogram glyph
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses required Bokeh patterns but no distinctive enhancement
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T04:49:12Z'
 impl_tags:
   dependencies:
   - selenium
@@ -222,9 +235,10 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   - columndatasource
   dataprep:
   - binning
+  - cumulative-sum
   styling:
-  - alpha-blending
   - edge-highlighting
