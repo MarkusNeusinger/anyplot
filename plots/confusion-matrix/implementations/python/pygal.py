@@ -1,51 +1,61 @@
 """ anyplot.ai
 confusion-matrix: Confusion Matrix Heatmap
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-09
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-21
 """
 
 import os
-import sys
 
 import numpy as np
+import pandas as pd
+from pygal.graph.graph import Graph
+from pygal.style import Style
 
 
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
-
-from pygal.graph.graph import Graph  # noqa: E402
-from pygal.style import Style  # noqa: E402
-
-
-sys.path.insert(0, _cwd)
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
+# Imprint sequential colormap (single polarity): brand green -> blue
+IMPRINT_SEQ = ["#009E73", "#4467A3"]
+
+# Columns: set these to your table's labels
+TRUE_LABEL = "True Label"  # role: true_labels
+PREDICTED_LABEL = "Predicted Label"  # role: predicted_labels
+CLASS_NAME = "Class"  # role: class_names
+COUNT = "Count"  # role: extra
+
+# Data: replace this block with your own matrix, for example df = pd.read_csv("matrix.csv", index_col=0)
+class_names = ["Positive", "Neutral", "Negative", "Mixed"]
+df = pd.DataFrame(
+    [[142, 12, 5, 8], [18, 98, 15, 22], [7, 9, 125, 11], [14, 28, 18, 89]],
+    index=pd.Index(class_names, name=CLASS_NAME),
+    columns=class_names,
+)
+
+
+# Plot: pygal has no heatmap, so a custom Graph subclass draws the cells; it reads only df and the constants
 class ConfusionMatrixChart(Graph):
     """Custom Confusion Matrix Chart for pygal - displays classification results."""
 
     def __init__(self, *args, **kwargs):
-        self.matrix_data = kwargs.pop("matrix_data", [])
-        self.class_labels = kwargs.pop("class_labels", [])
-        self.colormap = kwargs.pop("colormap", [])
-        self.show_values = kwargs.pop("show_values", True)
-        self.x_axis_title = kwargs.pop("x_axis_title", "Predicted Label")
-        self.y_axis_title = kwargs.pop("y_axis_title", "True Label")
+        self.matrix = kwargs.pop("matrix")
+        self.colormap = kwargs.pop("colormap")
+        self.x_axis_title = kwargs.pop("x_axis_title")
+        self.y_axis_title = kwargs.pop("y_axis_title")
+        self.value_title = kwargs.pop("value_title")
         super().__init__(*args, **kwargs)
 
     def _interpolate_color(self, value, min_val, max_val):
-        """Interpolate color for smooth gradient."""
-        if max_val == min_val:
-            return self.colormap[-1]
-
-        normalized = (value - min_val) / (max_val - min_val)
-        normalized = max(0, min(1, normalized))
+        """Interpolate the colormap stops for a value."""
+        normalized = 1.0 if max_val == min_val else (value - min_val) / (max_val - min_val)
+        normalized = max(0.0, min(1.0, normalized))
 
         pos = normalized * (len(self.colormap) - 1)
         idx1 = int(pos)
@@ -58,134 +68,118 @@ class ConfusionMatrixChart(Graph):
         r1, g1, b1 = int(c1[1:3], 16), int(c1[3:5], 16), int(c1[5:7], 16)
         r2, g2, b2 = int(c2[1:3], 16), int(c2[3:5], 16), int(c2[5:7], 16)
 
-        r = int(r1 + (r2 - r1) * frac)
-        g = int(g1 + (g2 - g1) * frac)
-        b = int(b1 + (b2 - b1) * frac)
+        r = round(r1 + (r2 - r1) * frac)
+        g = round(g1 + (g2 - g1) * frac)
+        b = round(b1 + (b2 - b1) * frac)
 
         return f"#{r:02x}{g:02x}{b:02x}"
 
-    def _get_text_color(self, bg_color):
-        """Get contrasting text color based on background brightness."""
-        r, g, b = int(bg_color[1:3], 16), int(bg_color[3:5], 16), int(bg_color[5:7], 16)
-        brightness = (r * 299 + g * 587 + b * 114) / 1000
-        return "#FFFFFF" if brightness < 140 else INK
+    def _text(self, parent, text, x, y, size, fill, anchor="start", weight="normal"):
+        node = self.svg.node(parent, "text", x=x, y=y)
+        node.set("text-anchor", anchor)
+        node.set("fill", fill)
+        node.set("style", f"font-size:{size}px;font-weight:{weight};font-family:sans-serif")
+        node.text = text
+        return node
 
     def _plot(self):
         """Draw the confusion matrix."""
-        if not self.matrix_data:
-            return
-
-        n_classes = len(self.matrix_data)
-
-        all_values = [v for row in self.matrix_data for v in row]
-        min_val = min(all_values)
-        max_val = max(all_values)
+        values = self.matrix.to_numpy(dtype=float, na_value=float("nan"))
+        n_rows, n_cols = values.shape
+        n_classes = max(n_rows, n_cols)
+        row_labels = [str(label) for label in self.matrix.index]
+        col_labels = [str(label) for label in self.matrix.columns]
+        min_val = float(np.nanmin(values))
+        max_val = float(np.nanmax(values))
 
         plot_width = self.view.width
         plot_height = self.view.height
 
-        label_margin_left = 400
-        label_margin_bottom = 350
-        label_margin_top = 80
-        label_margin_right = 280
+        label_margin_left = 270
+        label_margin_bottom = 235
+        label_margin_top = 50
+        label_margin_right = 190
 
         available_width = plot_width - label_margin_left - label_margin_right
         available_height = plot_height - label_margin_bottom - label_margin_top
 
         cell_size = min(available_width, available_height) / n_classes * 0.92
         gap = cell_size * 0.03
-
         grid_size = n_classes * (cell_size + gap) - gap
 
         x_offset = self.view.x(0) + label_margin_left + (available_width - grid_size) / 2
         y_offset = self.view.y(n_classes) + label_margin_top + (available_height - grid_size) / 2
 
-        plot_node = self.nodes["plot"]
-        cm_group = self.svg.node(plot_node, class_="confusion-matrix")
+        cm_group = self.svg.node(self.nodes["plot"], class_="confusion-matrix")
 
-        y_title_size = 48
-        y_title_x = x_offset - 320
+        # Axis titles
+        y_title_x = x_offset - 215
         y_title_y = y_offset + grid_size / 2
-        text_node = self.svg.node(cm_group, "text", x=y_title_x, y=y_title_y)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", INK)
-        text_node.set("style", f"font-size:{y_title_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.set("transform", f"rotate(-90, {y_title_x}, {y_title_y})")
-        text_node.text = self.y_axis_title
+        node = self._text(cm_group, self.y_axis_title, y_title_x, y_title_y, 40, INK, "middle", "bold")
+        node.set("transform", f"rotate(-90, {y_title_x}, {y_title_y})")
+        self._text(
+            cm_group, self.x_axis_title, x_offset + grid_size / 2, y_offset + grid_size + 200, 40, INK, "middle", "bold"
+        )
 
-        x_title_size = 48
-        x_title_x = x_offset + grid_size / 2
-        x_title_y = y_offset + grid_size + 280
-        text_node = self.svg.node(cm_group, "text", x=x_title_x, y=x_title_y)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", INK)
-        text_node.set("style", f"font-size:{x_title_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = self.x_axis_title
-
-        row_font_size = min(44, int(cell_size * 0.45))
-        for i, label in enumerate(self.class_labels):
+        # Class labels: rows on the left, columns rotated below the grid
+        tick_size = min(34, int(cell_size * 0.3))
+        for i, label in enumerate(row_labels):
             y = y_offset + i * (cell_size + gap) + cell_size / 2
-            text_node = self.svg.node(cm_group, "text", x=x_offset - 25, y=y + row_font_size * 0.35)
-            text_node.set("text-anchor", "end")
-            text_node.set("fill", INK)
-            text_node.set("style", f"font-size:{row_font_size}px;font-weight:600;font-family:sans-serif")
-            text_node.text = label
-
-        col_font_size = min(44, int(cell_size * 0.45))
-        for j, label in enumerate(self.class_labels):
+            self._text(cm_group, label, x_offset - 18, y + tick_size * 0.35, tick_size, INK, "end", "600")
+        for j, label in enumerate(col_labels):
             x = x_offset + j * (cell_size + gap) + cell_size / 2
-            y = y_offset + grid_size + 30
-            text_node = self.svg.node(cm_group, "text", x=x, y=y)
-            text_node.set("text-anchor", "start")
-            text_node.set("fill", INK)
-            text_node.set("style", f"font-size:{col_font_size}px;font-weight:600;font-family:sans-serif")
-            text_node.set("transform", f"rotate(45, {x}, {y})")
-            text_node.text = label
+            y = y_offset + grid_size + 28
+            node = self._text(cm_group, label, x, y, tick_size, INK, "start", "600")
+            node.set("transform", f"rotate(45, {x}, {y})")
 
-        value_font_size = min(46, int(cell_size * 0.35))
-        for i in range(n_classes):
-            for j in range(n_classes):
-                value = self.matrix_data[i][j]
+        # Cells with counts; the diagonal (correct predictions) gets a heavier outline
+        value_size = min(52, int(cell_size * 0.3))
+        for i in range(n_rows):
+            for j in range(n_cols):
+                value = values[i][j]
+                if np.isnan(value):
+                    continue
                 color = self._interpolate_color(value, min_val, max_val)
-                text_color = self._get_text_color(color)
 
                 x = x_offset + j * (cell_size + gap)
                 y = y_offset + i * (cell_size + gap)
-
-                stroke_color = "#4467A3" if i == j else INK_SOFT
-                stroke_width = "4" if i == j else "2"
+                on_diagonal = i == j
 
                 rect = self.svg.node(cm_group, "rect", x=x, y=y, width=cell_size, height=cell_size, rx=6, ry=6)
                 rect.set("fill", color)
-                rect.set("stroke", stroke_color)
-                rect.set("stroke-width", stroke_width)
+                rect.set("stroke", INK if on_diagonal else INK_SOFT)
+                rect.set("stroke-width", "5" if on_diagonal else "1.5")
 
-                if self.show_values:
-                    text_x = x + cell_size / 2
-                    text_y = y + cell_size / 2 + value_font_size * 0.35
+                self._text(
+                    cm_group,
+                    str(int(value)),
+                    x + cell_size / 2,
+                    y + cell_size / 2 + value_size * 0.35,
+                    value_size,
+                    "#FFFFFF",
+                    "middle",
+                    "bold",
+                )
 
-                    text_node = self.svg.node(cm_group, "text", x=text_x, y=text_y)
-                    text_node.set("text-anchor", "middle")
-                    text_node.set("fill", text_color)
-                    text_node.set("style", f"font-size:{value_font_size}px;font-weight:bold;font-family:sans-serif")
-                    text_node.text = str(int(value))
-
-        colorbar_width = 55
+        # Colorbar
+        colorbar_width = 40
         colorbar_height = grid_size * 0.85
-        colorbar_x = x_offset + grid_size + 90
+        colorbar_x = x_offset + grid_size + 60
         colorbar_y = y_offset + (grid_size - colorbar_height) / 2
 
         n_segments = 50
         segment_height = colorbar_height / n_segments
         for seg_i in range(n_segments):
             seg_value = min_val + (max_val - min_val) * (n_segments - 1 - seg_i) / (n_segments - 1)
-            seg_color = self._interpolate_color(seg_value, min_val, max_val)
-            seg_y = colorbar_y + seg_i * segment_height
-
             self.svg.node(
-                cm_group, "rect", x=colorbar_x, y=seg_y, width=colorbar_width, height=segment_height + 1, fill=seg_color
+                cm_group,
+                "rect",
+                x=colorbar_x,
+                y=colorbar_y + seg_i * segment_height,
+                width=colorbar_width,
+                height=segment_height + 1,
+                fill=self._interpolate_color(seg_value, min_val, max_val),
             )
-
         self.svg.node(
             cm_group,
             "rect",
@@ -195,92 +189,66 @@ class ConfusionMatrixChart(Graph):
             height=colorbar_height,
             fill="none",
             stroke=INK,
-            stroke_width="3",
+            stroke_width="2",
         )
 
-        cb_label_size = 38
-        text_node = self.svg.node(
-            cm_group, "text", x=colorbar_x + colorbar_width + 15, y=colorbar_y + cb_label_size * 0.35
+        cb_label_size = 30
+        tick_x = colorbar_x + colorbar_width + 10
+        for frac, value in ((0, max_val), (0.5, (min_val + max_val) / 2), (1, min_val)):
+            self._text(
+                cm_group,
+                str(int(value)),
+                tick_x,
+                colorbar_y + colorbar_height * frac + cb_label_size * 0.35,
+                cb_label_size,
+                INK,
+            )
+
+        self._text(
+            cm_group, self.value_title, colorbar_x + colorbar_width / 2, colorbar_y - 25, 34, INK, "middle", "bold"
         )
-        text_node.set("fill", INK)
-        text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
-        text_node.text = str(int(max_val))
-
-        mid_y = colorbar_y + colorbar_height / 2
-        text_node = self.svg.node(cm_group, "text", x=colorbar_x + colorbar_width + 15, y=mid_y + cb_label_size * 0.35)
-        text_node.set("fill", INK)
-        text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
-        text_node.text = str(int((min_val + max_val) / 2))
-
-        text_node = self.svg.node(
-            cm_group, "text", x=colorbar_x + colorbar_width + 15, y=colorbar_y + colorbar_height + cb_label_size * 0.35
-        )
-        text_node.set("fill", INK)
-        text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
-        text_node.text = str(int(min_val))
-
-        cb_title_size = 42
-        cb_title_x = colorbar_x + colorbar_width / 2
-        cb_title_y = colorbar_y - 35
-        text_node = self.svg.node(cm_group, "text", x=cb_title_x, y=cb_title_y)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", INK)
-        text_node.set("style", f"font-size:{cb_title_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = "Count"
 
     def _compute(self):
         """Compute the box for rendering."""
-        n_classes = len(self.matrix_data) if self.matrix_data else 1
+        n_classes = max(self.matrix.shape)
         self._box.xmin = 0
         self._box.xmax = n_classes
         self._box.ymin = 0
         self._box.ymax = n_classes
 
 
-np.random.seed(42)
-
-class_names = ["Positive", "Neutral", "Negative", "Mixed"]
-n_classes = len(class_names)
-
-confusion_matrix = [[142, 12, 5, 8], [18, 98, 15, 22], [7, 9, 125, 11], [14, 28, 18, 89]]
-
-blue_colormap = ["#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#08519c", "#08306b"]
-
-custom_style = Style(
-    background=PAGE_BG,
-    plot_background=PAGE_BG,
-    foreground=INK,
-    foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=("#009E73",),
-    title_font_size=72,
-    legend_font_size=48,
-    label_font_size=44,
-    value_font_size=38,
-    font_family="sans-serif",
-)
-
 chart = ConfusionMatrixChart(
-    width=3600,
-    height=3600,
-    style=custom_style,
-    title="confusion-matrix · pygal · anyplot.ai",
-    matrix_data=confusion_matrix,
-    class_labels=class_names,
-    colormap=blue_colormap,
-    show_values=True,
-    x_axis_title="Predicted Label",
-    y_axis_title="True Label",
+    width=2400,
+    height=2400,
+    style=Style(
+        background=PAGE_BG,
+        plot_background=PAGE_BG,
+        foreground=INK,
+        foreground_strong=INK,
+        foreground_subtle=INK_MUTED,
+        colors=tuple(IMPRINT_PALETTE),
+        title_font_size=52,
+        legend_font_size=34,
+        label_font_size=34,
+        value_font_size=28,
+        font_family="sans-serif",
+    ),
+    title="confusion-matrix · python · pygal · anyplot.ai",
+    matrix=df,
+    colormap=IMPRINT_SEQ,
+    x_axis_title=PREDICTED_LABEL,
+    y_axis_title=TRUE_LABEL,
+    value_title=COUNT,
     show_legend=False,
-    margin=120,
-    margin_top=200,
-    margin_bottom=100,
+    margin=80,
+    margin_top=130,
+    margin_bottom=70,
     show_x_labels=False,
     show_y_labels=False,
 )
-
 chart.add("", [0])
 
+# Save
 chart.render_to_file(f"plot-{THEME}.svg")
 chart.render_to_png(f"plot-{THEME}.png")
 

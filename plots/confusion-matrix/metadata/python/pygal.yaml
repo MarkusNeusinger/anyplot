@@ -2,116 +2,126 @@ library: pygal
 language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:37:36Z'
-updated: '2026-05-09T16:49:46Z'
-generated_by: claude-haiku
-workflow_run: 25606221068
+updated: '2026-11-21T12:21:37Z'
+generated_by: claude-sonnet
+workflow_run: 44902954383
 issue: 2272
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/pygal/plot-dark.html
-quality_score: 93
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and readable text in both themes
-  - Complete spec compliance with all required features
-  - Thoughtful diagonal highlighting for visual emphasis on correct predictions
-  - Professional theme-adaptive styling in both light and dark modes
-  - Custom implementation demonstrates strong understanding of pygal's architecture
+  - 'Sequential imprint_seq colormap (#009E73 → #4467A3) interpolated per cell and
+    repeated in a 50-segment color bar titled Count, with ticks at min, mid and max'
+  - Diagonal correct predictions outlined with a heavier INK stroke that flips with
+    the theme, leaving cell colors and white bold counts readable in both renders
+  - 'Theme tokens threaded through every custom SVG text node, so class names, axis
+    titles and color bar labels read correctly on #FAF8F1 and #1A1A17'
+  - Extends pygal's Graph class and draws through its own self.svg.node API, so the
+    chart keeps pygal's native SVG/HTML output
   weaknesses:
-  - Library Mastery could be higher - custom implementation works around pygal limitations
-    rather than leveraging built-in strengths
+  - 'VQ-01 (both): class-name tick labels at 34 px, color bar ticks at 30 px, axis
+    titles at 40 px and the title at 52 px sit below pygal''s reference sizes (ticks
+    44, axis titles 56, title 66), so the class names and color bar ticks read small
+    beside the 52 px cell counts → ticks and color bar labels 44 px (+10 / +14 px),
+    axis titles 56 px (+16 px), title 66 px (+14 px). Likely cause: tick_size = min(34,
+    …), cb_label_size = 30, the hard-coded 40 for the axis titles, title_font_size=52.'
+  - 'VQ-05 (both): an empty band of about 320 px sits between the title and the top
+    of the grid while the space under the Predicted Label title is about 160 px, so
+    the matrix block sits low on the canvas → balance the top and bottom whitespace
+    (about −150 px at the top). Likely cause: margin_top=130 plus label_margin_top=50
+    on top of the centering offset (available_height - grid_size) / 2.'
+  - 'Suggestion: the four short class names would fit horizontally under their columns,
+    which reads faster than the 45° rotation.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1
-      Chrome: Title "confusion-matrix · pygal · anyplot.ai" clearly visible in dark text; axis labels "True Label" (y-axis, rotated) and "Predicted Label" (x-axis, rotated 45°) fully readable; all tick labels and cell values are clear
-      Data: 4×4 confusion matrix with blue sequential colormap (light blue for low counts ~5, dark blue for high counts ~142); diagonal cells highlighted with thicker #0072B2 borders; all cell values displayed as white text
-      Legibility verdict: PASS - All text is fully readable against the light background; excellent contrast; no light-on-light issues
+      Background: warm off-white #FAF8F1, 2400×2400 square canvas.
+      Chrome: title "confusion-matrix · python · pygal · anyplot.ai" in dark ink at the top centre; bold "True Label" rotated on the left and "Predicted Label" under the grid; class names Positive, Neutral, Negative, Mixed on the rows and rotated 45° under the columns; color bar titled "Count" on the right with ticks 142, 73, 5. All text dark and readable.
+      Data: 4×4 grid of rounded cells with small gaps, colored on imprint_seq from brand green #009E73 (low counts) to blue #4467A3 (142); diagonal cells 142, 98, 125, 89 are the blue ones and carry a heavier dark outline; every cell shows its count in white bold text.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17
-      Chrome: Title, axis labels, and tick labels are all light-colored (#F0EFE8) and clearly visible; colorbar labels are readable; no dark-on-dark text issues
-      Data: Data colors are identical to light render (blue gradient from light to dark); diagonal highlighting with #0072B2 borders preserved; cell values remain white for contrast
-      Legibility verdict: PASS - All text is fully readable against the dark background; theme adaptation is correct; no legibility failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, class names and color bar labels flip to light ink #F0EFE8 and read clearly; no dark-on-dark text.
+      Data: cell colors and color bar identical to the light render; the diagonal outline flips to light ink; white counts stay readable on every cell.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (72px title, 48px labels); perfectly
-          readable in both themes
+        passed: false
+        comment: Readable in both themes, but class names (34 px), color bar ticks
+          (30 px), axis titles (40 px) and title (52 px) are below pygal's reference
+          sizes and read small (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels well-spaced; rotated x-axis labels don't collide; y-axis labels
-          positioned cleanly
+        comment: No text collisions; rotated column labels clear of the axis title
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cell sizes dynamically calculated; markers clearly visible; borders
-          distinct
+        comment: Large cells, clear outlines and counts in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential blue colormap provides good contrast; CVD-safe
+        comment: Green-to-blue ramp plus printed counts; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 3600×3600 square format ideal for symmetric heatmap; 60-70% canvas
-          utilization with balanced margins
+        passed: false
+        comment: 2400×2400 square; matrix sits low with an empty band under the title
+          (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''True Label'' and ''Predicted Label'''
+        comment: True Label / Predicted Label, color bar titled Count
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct backgrounds (#FAF8F1 light, #1A1A17 dark); theme-adaptive
-          chrome applied correctly; data colors identical in both renders'
+        comment: 'imprint_seq #009E73 → #4467A3; correct backgrounds and theme chrome'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom colormap and intentional diagonal highlighting show thoughtful
-          design; professional polish
+        passed: false
+        comment: Style-guide baseline with bold class labels; nothing further
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Rounded cell corners, clean grid, generous spacing; minimal additional
-          refinement
+        passed: false
+        comment: Rounded cells with even 3% gaps and an outlined color bar, beyond
+          the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Diagonal highlighting creates visual emphasis on correct predictions;
-          could benefit from additional techniques
+        passed: false
+        comment: Diagonal outline is the spec-allowed highlight; no further hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct confusion matrix heatmap
+        comment: Confusion matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: axes labeled, values annotated, colorbar shown,
-          diagonal emphasis'
+        comment: Axis titles, annotated cells, sequential colormap, color bar, diagonal
+          highlight; C1–C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: True labels on y-axis, predicted on x-axis; all data visible
+        comment: True on y, predicted on x, same class order, diagonal correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''confusion-matrix · pygal · anyplot.ai'''
+        comment: Mandated title format; color bar title Count
     data_quality:
       score: 15
       max: 15
@@ -150,21 +160,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: correct predictions, misclassifications, varying
-          magnitudes'
+        comment: Strong diagonal, uneven confusions (Mixed↔Neutral), imbalanced classes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sentiment classification scenario (Positive, Neutral, Negative, Mixed)
-          is realistic and neutral
+        comment: Sentiment classifier with Positive/Neutral/Negative/Mixed classes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 5–142 are plausible for classification results
+        comment: Counts 5–142 per class, plausible test-set sizes; no Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -174,60 +183,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → setup → custom class → data → render'
+        comment: The Graph subclass is the only route to a custom chart in pygal;
+          data and config flat
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set with np.random.seed(42)
+        comment: Fixed matrix, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, sys, numpy, pygal)
+        comment: os, numpy, pandas, Graph, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured custom implementation; no over-engineering
+        comment: Appropriate complexity; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output files: plot-{THEME}.svg, .png, .html'
+        comment: plot-{THEME}.png, .svg and .html
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper Graph subclass extension and Style object usage; idiomatic
-          pattern
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Leverages pygal's extensibility; custom implementation necessary
-          but shows library limitations
+        passed: false
+        comment: Style object carries the theme tokens; custom drawing via the subclass
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Extends pygal.graph.graph.Graph and draws with pygal's self.svg.node
+          SVG builder, keeping native SVG/HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T12:17:54Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - custom-legend
+  - patches
+  - html-export
   patterns:
-  - data-generation
   - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
   - edge-highlighting
+  - minimal-chrome
