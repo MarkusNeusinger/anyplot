@@ -2,122 +2,133 @@ library: matplotlib
 language: python
 specification_id: facet-grid
 created: '2025-12-30T16:30:15Z'
-updated: '2026-05-13T03:32:20Z'
-generated_by: claude-haiku
-workflow_run: 25776150899
+updated: '2026-11-21T08:20:00Z'
+generated_by: claude-sonnet
+workflow_run: 44883381918
 issue: 2696
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 96
+quality_score: 84
 review:
   strengths:
-  - Excellent text legibility with all font sizes explicitly set and readable in both
-    themes
-  - Perfect palette compliance — Okabe-Ito colors used correctly with region-to-color
-    mapping
-  - Sophisticated faceted grid layout with proper spacing and clear region/season
-    labels
-  - Polished visual design with theme-adaptive chrome that works flawlessly in both
-    light and dark
-  - Clean code structure with GridSpec for advanced layout control and scipy trend
-    line analysis
-  - Well-executed data storytelling through visual hierarchy and trend line emphasis
-  weaknesses: []
+  - plt.subplots(sharex=True, sharey=True, squeeze=False) gives all 12 panels one
+    shared temperature and energy scale, so positions compare directly across regions
+    and seasons, with tick labels drawn only on the outer panels
+  - fig.supxlabel / fig.supylabel set the shared axis titles once for the whole grid,
+    while the season column headers and region row headers name every facet in semibold
+    INK, readable in both themes
+  - Region color is constant along each row and is explained once by the row headers,
+    with no per-panel legend
+  - Theme tokens are threaded through every chrome element (ticks, spines, grid, titles);
+    the page-colored marker rings separate overlapping points on both surfaces
+  - The canvas is exactly 3200x1800 with default bbox_inches, and the layout uses
+    fig.subplots_adjust so nothing clips
+  weaknesses:
+  - 'VQ-01 (both): tick labels are set at 7 pt, below the style guide''s 8 pt tick
+    reference, and read small next to the 10 pt facet headers and axis titles → 8
+    pt (+1 pt). Likely cause: ax.tick_params(labelsize=7).'
+  - 'Suggestion: the per-panel linear fits are almost flat because the generated energy
+    is U-shaped around each panel''s own mean temperature; a demand curve centered
+    on one comfort temperature (about 18 °C) would make heating and cooling demand
+    differ visibly between the Winter and Summer columns, and the fits could then
+    be dropped or replaced.'
+  - 'Suggestion: the shared x-axis title sits about 100 px below the bottom tick labels;
+    raising it (for example supxlabel y≈0.04 with bottom≈0.12) would tighten the lower
+    margin.'
+  - 'Suggestion: a slightly larger marker (s≈40) would give the 25 points per panel
+    more presence in the small panels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), appropriate and never pure white
-      Chrome: Title "facet-grid · matplotlib · anyplot.ai" (26pt, semibold) is bold and prominent. Region labels (North, South, East) and season headers (Spring, Summer, Fall, Winter) are clearly visible at 20pt. X-axis label "Temperature (°C)" and Y-axis label "Energy Consumption (kWh)" are centered below and to the left at 22pt. All tick labels (14pt) are readable. Text colors are INK (#1A1A17) for primary, INK_SOFT (#4A4A44) for secondary
-      Data: Each of 12 facets shows scatter points with white edges (s=120, alpha=0.7) colored by region: North = #009E73 (Okabe-Ito green), South = #D55E00 (vermillion), East = #0072B2 (blue). Subtle trend lines (alpha=0.4) show temperature-energy relationships. Grid lines very subtle (alpha=0.10 y-axis, 0.08 x-axis)
-      Legibility verdict: PASS - all text is dark, high-contrast against light background
+      Background: warm off-white #FAF8F1 across the figure and all 12 panels; not pure white.
+      Chrome: title "facet-grid · python · matplotlib · anyplot.ai" centered at the top (about half the width); semibold column headers Spring / Summer / Fall / Winter and row headers North / South / East; shared "Temperature (°C)" x-title at the bottom and rotated "Energy Consumption (kWh)" y-title on the left; tick labels 0/20/40 and 100–180 in INK_SOFT on the outer panels only. All dark text is readable; grids are faint but visible.
+      Data: a 3x4 grid of scatter panels, 25 points each; North in #009E73, South in #C475FD, East in #4467A3, with thin page-colored rings; a grey linear fit line per panel. Shared scales: x from about -10 to 43 °C, y from about 100 to 188 kWh; the panels shift right from Winter to Summer and from North to South.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), never pure black, provides excellent contrast
-      Chrome: Title, labels, and tick labels are all light (INK #F0EFE8 for primary, INK_SOFT #B8B7B0 for secondary) and clearly readable against dark background. No dark-on-dark failures. Spine colors are appropriately adapted (INK_SOFT)
-      Data: Scatter colors are identical to light render — North #009E73, South #D55E00, East #0072B2. White edges on markers become even more prominent and well-defined on dark background. Trend lines remain subtle. Grid lines visible but appropriately dim
-      Legibility verdict: PASS - all text is light, high-contrast against dark background; perfect theme adaptation
+      Background: warm near-black #1A1A17; not pure black.
+      Chrome: title, facet headers and axis titles in light INK, ticks and spines in light INK_SOFT; no dark-on-dark text anywhere; grids subtle but visible.
+      Data: the same three hues as the light render (#009E73, #C475FD, #4467A3); only the marker rings flip to the dark page color; fit lines in muted grey stay visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 26pt, labels 20-22pt, ticks
-          14pt); readable at full resolution in both themes
+        passed: false
+        comment: All text readable in both themes; tick labels at 7 pt are below the
+          8 pt reference (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; x-labels only on bottom row, y-labels only on
-          left column
+        comment: No text collisions; facet headers, sup-labels and ticks all clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size (s=120) and alpha (0.7) optimal for ~25 points per facet;
-          trend lines clearly visible
+        comment: 25 points per panel at s=26 with page-colored rings are visible in
+          both themes; fits visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with white edges for definition; colorblind-safe
-          and high contrast
+        comment: Green, purple and blue are CVD-distinguishable and row position carries
+          the region too
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16x9 figure at 300dpi = 4800x2700px; plot fills 60-70% with balanced
-          whitespace; GridSpec spacing optimal
+        comment: 3200x1800; equal aligned panels; nothing cut off; title about half
+          the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: Temperature (°C), Energy Consumption (kWh);
-          title format correct'
+        comment: Temperature (°C), Energy Consumption (kWh) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Okabe-Ito pos 1), backgrounds #FAF8F1/#1A1A17,
-          chrome theme-correct in both renders'
+        comment: 'Imprint positions 1-3 in order, first #009E73; backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 17
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Strong design with theme-adaptive colors, white edges on markers,
-          refined trend line styling. More than configured defaults but not cutting-edge
+        passed: false
+        comment: 'Style-guide baseline: semibold facet headers over regular axis titles;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Spines removed (L-shape), grid very subtle, whitespace generous,
-          all details polished
+        passed: false
+        comment: Two-weight grid (y 0.12, x 0.08) and tight wspace that the shared
+          scales allow, page-colored marker rings
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Faceted layout guides viewer through regions and seasons; trend lines
-          highlight patterns; color consistency aids narrative
+        passed: false
+        comment: Data displayed; near-flat fits add no focal point
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Perfect 3x4 faceted scatter grid with trend lines
+        comment: Faceted scatter grid by row and column
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: shared axes, row/column faceting, labels identifying
-          categories'
+        comment: Shared scales (C2), row and column facets (C1), header per facet
+          (C3), equal aligned panels (C4), color explained once by the row headers
+          (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all data visible; axes appropriate
+        comment: Marks at their data values; shared axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend not needed (region colors identified
-          by row labels)
+        comment: Title format correct; no legend needed since row headers name the
+          colors
     data_quality:
       score: 15
       max: 15
@@ -157,21 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all dimensions: region variation, seasonal variation, temperature-energy
-          relationship'
+        comment: Two facet variables, 12 panels, shifting x distributions across facets
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: HVAC/energy scenario is realistic, neutral, and comprehensible
+        comment: Regional energy use against temperature by season; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature ranges plausible (0-30°C), energy consumption realistic
-          (100-180 kWh), U-shaped curve physically accurate
+        comment: 'Checked: temperatures about -10 to 40 °C and energy 100-185 kWh
+          are plausible; no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -181,62 +192,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → save; no functions/classes'
+        comment: Linear tokens → constants → data → plot → save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; scipy.stats used for linregress
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no over-engineering or fake functionality
+        comment: Appropriate complexity; shared axes come from subplots
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API; no deprecated functions
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of GridSpec, ax.scatter(), ax.plot(), ax.spines, fig.text(),
-          fig.suptitle(); all idiomatic
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses GridSpec for sophisticated layout, scipy.stats for trend lines,
-          color mapping dictionary; more than generic but not exceptionally creative
-  verdict: REJECTED
+        passed: false
+        comment: plt.subplots(sharex, sharey, squeeze=False) handles the outer-only
+          tick labels natively instead of hiding them by hand
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: fig.supxlabel / fig.supylabel figure-level axis titles
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T08:16:08Z'
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - subplots
   - faceting
+  - subplots
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - regression
   styling:
-  - publication-ready
+  - alpha-blending
   - edge-highlighting
   - grid-styling
+  - minimal-chrome
