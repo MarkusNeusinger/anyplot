@@ -1,34 +1,35 @@
 """ anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-14
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
-import sys
 
-
-# Workaround for module/filename conflict: remove current dir from path persistently
-sys.path = [p for p in sys.path if not p.startswith(os.path.dirname(__file__))]
-
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-from plotnine import (  # noqa: E402
+import numpy as np
+import pandas as pd
+from plotnine import (
     aes,
+    element_blank,
     element_line,
     element_rect,
     element_text,
-    geom_bar,
+    geom_col,
     geom_line,
     geom_point,
+    geom_text,
     geom_tile,
     ggplot,
     labs,
     scale_color_manual,
-    scale_fill_cmap,
+    scale_fill_gradient,
     scale_fill_manual,
+    scale_x_continuous,
+    scale_x_discrete,
+    scale_y_discrete,
     theme,
     theme_minimal,
+    theme_set,
 )
 
 
@@ -38,133 +39,177 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Product performance dashboard
-np.random.seed(42)
+theme_set(theme_minimal())
 
-# Daily metrics for overview chart (large top-left panel)
-n_days = 60
-days = np.arange(n_days)
+# Columns: set these to your table's column names
+PANEL = "Panel"  # role: extra
+X = "x"  # role: x
+Y = "y"  # role: y
+GROUP = "Group"  # role: z
+X_LABEL = "x label"  # role: extra
+Y_LABEL = "y label"  # role: extra
+
+# Data: one tidy table, one row per mark; the first panel is the primary view and drawn largest
+rng = np.random.default_rng(42)
+days = np.arange(60)
 products = ["Alpha", "Beta", "Gamma"]
-colors_panel_a = IMPRINT[:3]
-
-df_overview = pd.concat(
+trend = pd.concat(
     [
-        pd.DataFrame({"day": days, "sales": 100 + i * 15 + np.cumsum(np.random.randn(n_days) * 3), "product": name})
+        pd.DataFrame(
+            {
+                PANEL: "Sales Trend",
+                X: days,
+                Y: 100 + i * 15 + np.cumsum(rng.normal(0, 3, len(days))),
+                GROUP: name,
+                X_LABEL: "Day",
+                Y_LABEL: "Sales (units)",
+            }
+        )
         for i, name in enumerate(products)
-    ],
-    ignore_index=True,
-)
-
-# Category performance (medium right panel)
-categories = ["Q1", "Q2", "Q3", "Q4"]
-df_category = pd.DataFrame({"quarter": categories, "revenue": [48, 35, 42, 55]})
-df_category["quarter"] = pd.Categorical(df_category["quarter"], categories=categories, ordered=True)
-
-# Distribution data (bottom-left)
-df_scatter = pd.DataFrame({"units": np.random.uniform(50, 400, 80), "margin": 15 + np.random.randn(80) * 8})
-df_scatter["margin"] = df_scatter["margin"] + 0.03 * df_scatter["units"]
-
-# Heatmap data (bottom-middle)
-regions = ["North", "South", "East", "West"]
-metrics_list = ["Sales", "Profit", "Growth"]
-heatmap_vals = np.random.rand(len(metrics_list), len(regions)) * 100
-df_heat = pd.DataFrame(
-    [
-        {"region": regions[j], "metric": metrics_list[i], "value": heatmap_vals[i, j]}
-        for i in range(len(metrics_list))
-        for j in range(len(regions))
     ]
 )
-df_heat["region"] = pd.Categorical(df_heat["region"], categories=regions, ordered=True)
-df_heat["metric"] = pd.Categorical(df_heat["metric"], categories=metrics_list[::-1], ordered=True)
 
-# Small metric panel (bottom-right)
+quarters = ["Q1", "Q2", "Q3", "Q4"]
+quarterly = pd.DataFrame(
+    {
+        PANEL: "Quarterly Revenue",
+        X: quarters,
+        Y: [48, 35, 42, 55],
+        GROUP: quarters,
+        X_LABEL: "Quarter",
+        Y_LABEL: "Revenue (k$)",
+    }
+)
+
+units = rng.uniform(50, 400, 80)
+margin = pd.DataFrame(
+    {
+        PANEL: "Margin Analysis",
+        X: units,
+        Y: 15 + rng.normal(0, 8, 80) + 0.03 * units,
+        GROUP: "",
+        X_LABEL: "Units sold",
+        Y_LABEL: "Margin (%)",
+    }
+)
+
+regions = ["North", "South", "East", "West"]
+metrics = ["Sales", "Profit", "Growth"]
+heat = pd.DataFrame(
+    {
+        PANEL: "Regional Heat",
+        X: regions * len(metrics),
+        Y: rng.uniform(0, 100, len(regions) * len(metrics)),
+        GROUP: np.repeat(metrics, len(regions)),
+        X_LABEL: "Region",
+        Y_LABEL: "",
+    }
+)
+
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
-df_monthly = pd.DataFrame({"month": months, "score": [82, 78, 91, 88, 95, 92]})
-df_monthly["month"] = pd.Categorical(df_monthly["month"], categories=months, ordered=True)
+perf = pd.DataFrame(
+    {PANEL: "Performance", X: months, Y: [82, 78, 91, 88, 95, 92], GROUP: "", X_LABEL: "Month", Y_LABEL: "Score"}
+)
 
-# Theme configuration
+df = pd.concat([trend, quarterly, margin, heat, perf], ignore_index=True)
+
+# Plot: reads only df and the constants above
+parts = [sub.drop(columns=PANEL) for _, sub in df.groupby(PANEL, sort=False)]
+names = df[PANEL].unique().tolist()
+p_trend, p_quarter, p_margin, p_heat, p_perf = parts
+
+
+def axis_labels(sub, title):
+    return labs(x=sub[X_LABEL].iloc[0], y=sub[Y_LABEL].iloc[0], title=title)
+
+
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
-    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-    axis_title=element_text(size=20, color=INK, face="bold"),
-    axis_text=element_text(size=16, color=INK_SOFT),
-    plot_title=element_text(size=24, color=INK, face="bold"),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(size=9, color=INK),
+    axis_text=element_text(size=7.5, color=INK_SOFT),
+    plot_title=element_text(size=10, color=INK, face="bold"),
     legend_background=element_rect(fill=PAGE_BG, color="none"),
-    legend_text=element_text(size=16, color=INK_SOFT),
-    legend_title=element_text(size=18, color=INK, face="bold"),
+    legend_text=element_text(size=7.5, color=INK_SOFT),
+    legend_title=element_text(size=8.5, color=INK),
 )
 
-# Panel A: Sales Overview - line plot (large, 2/3 width)
-p_overview = (
-    ggplot(df_overview, aes(x="day", y="sales", color="product"))
-    + geom_line(size=1.2)
-    + geom_point(size=2.5, alpha=0.6)
-    + scale_color_manual(values=colors_panel_a)
-    + labs(x="Day", y="Sales (Units)", color="Product", title="Sales Trend")
-    + theme_minimal()
-    + anyplot_theme
-    + theme(figure_size=(10.5, 5.2))
+# Panel A: primary view, line plot with direct end labels instead of a legend
+trend_num = p_trend.astype({X: float})
+panel_a = (
+    ggplot(trend_num, aes(x=X, y=Y, color=GROUP))
+    + geom_line(size=1.0, show_legend=False)
+    + geom_point(size=1.5, alpha=0.6, show_legend=False)
+    + geom_text(
+        trend_num.groupby(GROUP, sort=False).tail(1),
+        aes(label=GROUP),
+        ha="left",
+        nudge_x=1.5,
+        size=8,
+        show_legend=False,
+    )
+    + scale_x_continuous(expand=(0.02, 0, 0.16, 0))
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=trend_num[GROUP].unique().tolist())
+    + axis_labels(p_trend, names[0])
 )
 
-# Panel B: Quarterly Revenue - bar plot (small, 1/3 width)
-p_category = (
-    ggplot(df_category, aes(x="quarter", y="revenue", fill="quarter"))
-    + geom_bar(stat="identity", width=0.7, show_legend=False)
-    + scale_fill_manual(values=IMPRINT[:4])
-    + labs(x="Quarter", y="Revenue (k$)", title="Q Revenue")
-    + theme_minimal()
-    + anyplot_theme
-    + theme(figure_size=(3.5, 5.2))
+# Panel B: supporting bar chart
+panel_b = (
+    ggplot(p_quarter, aes(x=X, y=Y, fill=GROUP))
+    + geom_col(width=0.7, show_legend=False)
+    + scale_x_discrete(limits=p_quarter[X].unique().tolist())
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=p_quarter[GROUP].unique().tolist())
+    + axis_labels(p_quarter, names[1])
 )
 
-# Panel C: Units vs Margin - scatter (bottom-left)
-p_scatter = (
-    ggplot(df_scatter, aes(x="units", y="margin"))
-    + geom_point(size=3, color=IMPRINT[0], alpha=0.7)
-    + labs(x="Units Sold", y="Margin (%)", title="Margin Analysis")
-    + theme_minimal()
-    + anyplot_theme
-    + theme(figure_size=(4, 3.2))
+# Panel C: scatter
+panel_c = (
+    ggplot(p_margin.astype({X: float}), aes(x=X, y=Y))
+    + geom_point(size=1.8, color=IMPRINT_PALETTE[0], alpha=0.7)
+    + axis_labels(p_margin, names[2])
 )
 
-# Panel D: Regional Performance - heatmap (bottom-middle)
-p_heatmap = (
-    ggplot(df_heat, aes(x="region", y="metric", fill="value"))
-    + geom_tile(color=INK_SOFT, size=0.5)
-    + scale_fill_cmap(cmap_name="viridis")
-    + labs(x="Region", y="", fill="Score", title="Regional Heat")
-    + theme_minimal()
-    + anyplot_theme
-    + theme(figure_size=(4.5, 3.2), legend_position="bottom", legend_direction="horizontal")
+# Panel D: heatmap
+panel_d = (
+    ggplot(p_heat, aes(x=X, y=GROUP, fill=Y))
+    + geom_tile(show_legend=False, color=PAGE_BG, size=1.0)
+    + geom_text(aes(label=Y), format_string="{:.0f}", size=7, color="#FFFFFF", show_legend=False)
+    + scale_x_discrete(limits=p_heat[X].unique().tolist())
+    + scale_y_discrete(limits=p_heat[GROUP].unique().tolist()[::-1])
+    + scale_fill_gradient(low=IMPRINT_PALETTE[0], high=IMPRINT_PALETTE[2])
+    + axis_labels(p_heat, names[3])
+    + labs(y="")
 )
 
-# Panel E: Monthly Score - bar plot (bottom-right)
-p_monthly = (
-    ggplot(df_monthly, aes(x="month", y="score"))
-    + geom_bar(stat="identity", fill=IMPRINT[0], width=0.6, show_legend=False)
-    + labs(x="Month", y="Score", title="Performance")
-    + theme_minimal()
-    + anyplot_theme
-    + theme(figure_size=(4, 3.2))
+# Panel E: supporting bar chart
+panel_e = (
+    ggplot(p_perf, aes(x=X, y=Y))
+    + geom_col(fill=IMPRINT_PALETTE[0], width=0.6)
+    + scale_x_discrete(limits=p_perf[X].unique().tolist())
+    + axis_labels(p_perf, names[4])
 )
 
-# Create mosaic layout using plotnine composition
-# Top row: A (large) | B (small)
-# Bottom row: C | D | E
-top_row = p_overview | p_category
-bottom_row = p_scatter | p_heatmap | p_monthly
-layout = top_row / bottom_row
+# Mosaic: A spans the two columns that C and D share below it; B sits above E
+headroom = theme(plot_margin_top=0.08)  # space above the top row for the figure title
+left_col = (panel_a + headroom) / (panel_c | panel_d)
+right_col = (panel_b + headroom) / panel_e
+layout = (left_col | right_col) & anyplot_theme & theme(figure_size=(8, 4.5), dpi=400)
 
-# Draw and save
 fig = layout.draw()
-fig.suptitle("subplot-mosaic · plotnine · anyplot.ai", fontsize=28, fontweight="bold", y=0.98, color=INK)
 fig.set_facecolor(PAGE_BG)
-fig.subplots_adjust(top=0.92, bottom=0.08, left=0.05, right=0.95, hspace=0.32, wspace=0.22)
-
-fig.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.text(
+    0.5,
+    0.975,
+    "subplot-mosaic · python · plotnine · anyplot.ai",
+    ha="center",
+    va="top",
+    fontsize=13,
+    fontweight="bold",
+    color=INK,
+)
+fig.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
