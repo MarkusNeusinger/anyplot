@@ -2,112 +2,129 @@ library: pygal
 language: python
 specification_id: spectrum-basic
 created: '2025-12-31T05:38:16Z'
-updated: '2026-05-14T09:32:57Z'
-generated_by: claude-haiku
-workflow_run: 25852227744
+updated: '2026-11-21T15:20:36Z'
+generated_by: claude-sonnet
+workflow_run: 44918079119
 issue: 2926
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 82
 review:
   strengths:
-  - Perfect visual quality with excellent legibility in both light and dark themes
-  - Correct theme-adaptive implementation of all chrome elements
-  - Clear and accurate FFT-based spectrum visualization with three distinguishable
-    frequency peaks
-  - Realistic signal processing approach with appropriate dB scaling
-  - Complete spec compliance with proper title format and axis labels
+  - 'Log frequency axis built idiomatically: log10 positions on pygal.XY with x_value_formatter
+    turning them back into 1-2-5 Hz ticks derived from the data range'
+  - 'Plausible motor-vibration spectrum: 30 Hz shaft with 2x/3x harmonics, 600 Hz
+    gear mesh with ±30 Hz sidebands and a 1200 Hz 2x mesh line above a jagged floor'
+  - Amplitude in dB re 1 µg with values that fall out of the computation (0.8 g shaft
+    line at ~118 dB)
+  - Translucent fill under a crisp outline keeps the narrow high-frequency lines readable
+    in both themes
+  - HTML export gives native pygal hover tooltips for each bin
   weaknesses:
-  - Design could be more refined (consider removing top/right spines, more subtle
-    grid styling)
-  - Limited exploration of pygal-specific features beyond basic chart rendering
-  - Would benefit from visual annotations highlighting dominant frequency peaks (50
-    Hz, 120 Hz, 200 Hz)
+  - 'VQ-07 (dark): the dotted x and y guides are drawn near-black (about #141412)
+    on the #1A1A17 page and practically vanish, while the light render shows them
+    → guides in a muted ink that reads on the dark page (INK_MUTED-based). Likely
+    cause: pygal Style guide_stroke_color / major_guide_stroke_color left at their
+    black default.'
+  - 'VQ-01 (both): the y tick labels 50 and 100 render at 44 px while the other y
+    ticks are 56 px, so two ticks read visibly smaller → one size for all ticks (+12
+    px on the majors). Likely cause: major_label_font_size=44 below label_font_size=56;
+    pygal promotes some y labels to major labels.'
+  - 'Suggestion: annotate the 30 Hz shaft line and the 600 Hz gear mesh with their
+    frequencies, as the Notes allow.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1, correct for light theme
-      Chrome: Title, axis labels (Frequency Hz, Amplitude dB), and tick values all clearly visible in dark text with excellent contrast
-      Data: Brand-green (#009E73) filled area chart with white outline strokes; three prominent peaks at 50 Hz, 120 Hz, and 200 Hz clearly distinguishable; light gray grid lines provide subtle reference
-      Legibility verdict: PASS - all elements fully readable against light background
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title "spectrum-basic · python · pygal · anyplot.ai" centered at top; x axis "Frequency (Hz), log scale" with 1-2-5 ticks 10, 20, 50, 100, 200, 500, 1000, 2000; y axis "Amplitude (dB re 1 µg)" 10-120 in steps of 10; dotted grey grid; all dark text readable. The y ticks 50 and 100 are drawn smaller than the others.
+      Data: one brand-green #009E73 filled line (translucent fill, solid outline): broad-looking peaks at 30 Hz (~118 dB), 60 Hz (~111), 90 Hz (~103), narrow lines at 570/600/630 Hz (104/114/104) and 1200 Hz (~107) above a jagged floor at ~45-65 dB that crowds toward the high end.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17, correct for dark theme
-      Chrome: Title, axis labels, and tick values all clearly visible in light text; no dark-on-dark contrast failures observed
-      Data: Brand-green (#009E73) fill color identical to light render with black outline strokes; three frequency peaks equally clear and distinguishable as light version
-      Legibility verdict: PASS - all elements readable against dark background; chrome uses correct theme tokens
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and tick labels in light ink, all readable; no dark-on-dark text. The dotted grid, however, is drawn darker than the page and is almost invisible.
+      Data: same #009E73 outline and fill as the light render (fill darker through opacity over the dark page); identical peaks and floor.
+      Legibility verdict: PASS (text); grid nearly invisible
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes appropriately scaled
+        comment: All text readable in both themes; the y tick labels 50 and 100 render
+          as pygal major labels at 44 px while the other ticks are 56 px (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions; clean separation
+        comment: No text collisions; 1-2-5 log ticks well spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Frequency peaks clearly distinguishable
+        comment: 3 px outline over a translucent fill keeps both the low-frequency
+          peaks and the narrow 570/600/630/1200 Hz lines visible; single series, no
+          legend needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito compliant with adequate contrast
+        comment: Single brand-green series, strong contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions with generous margins
+        comment: 3200x1800 canvas; title about 55% of the width; balanced axis titles;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with units on axes
+        comment: Frequency (Hz), log scale / Amplitude (dB re 1 µg) carry units and
+          reference
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Brand green first series; backgrounds theme-correct
+        passed: false
+        comment: Brand green first series and correct backgrounds, but the dark render's
+          grid is drawn darker than the page and is practically invisible (defect
+          line)
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Good use of brand color but styling is relatively basic
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Functional but minimal customization beyond basics
+        comment: Y range snapped to whole tens around the data and a 0.45-opacity
+          fill under a crisp outline keep the floor quiet and the peaks readable
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Peaks guide viewer; could benefit from annotations
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -117,25 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency spectrum plot
+        comment: Single filled-line spectrum, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All required features present
+        comment: Log frequency axis over 10-2000 Hz with 1-2-5 ticks (C2), Hz and
+          dB units, peaks over floor (C3); optional annotations not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correctly mapped
+        comment: Every 2 Hz bin at its own log-frequency/amplitude; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format and requirements
+        comment: Title spectrum-basic · python · pygal · anyplot.ai; legend N/A for
+          one series
     data_quality:
       score: 15
       max: 15
@@ -145,19 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full spectrum with multiple components
+        comment: Fundamental with harmonics, gear mesh with sidebands, a 2x mesh line
+          and a jagged noise floor
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic signal processing approach
+        comment: 'Motor vibration: 30 Hz shaft (1800 rpm), 20-tooth gear mesh at 600
+          Hz with shaft sidebands'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values for domain
+        comment: 'Checked: 0.8 g shaft line -> 20*log10(0.8e6) = 118 dB re 1 µg, render
+          peaks at ~118 at 30 Hz; mesh 0.5 g -> 114 dB at 600 Hz in the render'
     code_quality:
       score: 10
       max: 10
@@ -167,53 +189,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward implementation
+        comment: Flat script, column constants, Data and Plot blocks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses random seed
+        comment: default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI
+        comment: numpy rfft/hanning, ticks and range derived from data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file formats and naming
+        comment: plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Good use of Style objects and theme tokens
+        passed: true
+        comment: pygal.XY with x_value_formatter turning log10 positions back into
+          Hz tick labels, xrange/range, truncate_label
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses HTML export but could leverage more features
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T15:16:26Z'
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending

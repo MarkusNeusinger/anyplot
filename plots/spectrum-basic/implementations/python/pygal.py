@@ -1,13 +1,14 @@
 """ anyplot.ai
 spectrum-basic: Frequency Spectrum Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-14
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
 import sys
 
 import numpy as np
+import pandas as pd
 
 
 sys.path.pop(0)
@@ -20,90 +21,91 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Data - Generate synthetic signal with multiple frequency components
-np.random.seed(42)
+# Imprint palette: first series is brand green
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Create a synthetic time-domain signal with known frequency components
-fs = 1000  # Sampling frequency (Hz)
-t = np.linspace(0, 1, fs)  # 1 second of data
+# Columns: set these to your table's column names
+FREQUENCY = "Frequency (Hz)"  # role: frequency
+AMPLITUDE = "Amplitude (dB re 1 µg)"  # role: amplitude
 
-# Signal with 3 frequency components: 50 Hz (strong), 120 Hz (medium), 200 Hz (weak)
+# Data: replace this block with your own table, for example df = pd.read_csv("spectrum.csv")
+# Motor vibration: 30 Hz shaft (1800 rpm) with harmonics, 600 Hz gear mesh (20 teeth) with shaft sidebands
+rng = np.random.default_rng(7)
+fs = 8192  # sampling rate (Hz)
+n = 4096  # samples -> 2 Hz bins
+t = np.arange(n) / fs
 signal = (
-    3.0 * np.sin(2 * np.pi * 50 * t)  # 50 Hz - dominant frequency
-    + 1.5 * np.sin(2 * np.pi * 120 * t)  # 120 Hz - secondary
-    + 0.8 * np.sin(2 * np.pi * 200 * t)  # 200 Hz - tertiary
-    + 0.3 * np.random.randn(len(t))  # Noise floor
+    0.80 * np.sin(2 * np.pi * 30 * t)  # shaft imbalance
+    + 0.35 * np.sin(2 * np.pi * 60 * t + 0.6)  # 2x shaft (misalignment)
+    + 0.15 * np.sin(2 * np.pi * 90 * t + 1.1)  # 3x shaft
+    + 0.50 * np.sin(2 * np.pi * 600 * t + 0.3)  # gear mesh
+    + 0.16 * np.sin(2 * np.pi * 570 * t + 2.0)  # lower sideband
+    + 0.16 * np.sin(2 * np.pi * 630 * t + 1.4)  # upper sideband
+    + 0.22 * np.sin(2 * np.pi * 1200 * t + 0.9)  # 2x gear mesh
+    + 0.02 * rng.standard_normal(n)  # broadband noise floor
+)
+window = np.hanning(n)
+spectrum = np.abs(np.fft.rfft(signal * window)) / window.sum() * 2
+freqs = np.fft.rfftfreq(n, 1 / fs)
+keep = (freqs >= 10) & (freqs <= 2000)
+df = pd.DataFrame(
+    {
+        FREQUENCY: freqs[keep],
+        AMPLITUDE: 20 * np.log10(spectrum[keep] / 1e-6),  # dB re 1 µg
+    }
 )
 
-# Compute FFT
-n = len(signal)
-fft_result = np.fft.fft(signal)
-frequencies = np.fft.fftfreq(n, 1 / fs)
+# Plot: log10 of frequency drives the x position, ticks are 1-2-5 steps inside the data range
+table = df.dropna(subset=[FREQUENCY, AMPLITUDE])
+log_f = np.log10(table[FREQUENCY].to_numpy())
+decades = range(int(np.floor(log_f.min())), int(np.ceil(log_f.max())) + 1)
+ticks = [m * 10.0**d for d in decades for m in (1, 2, 5)]
+ticks = [v for v in ticks if table[FREQUENCY].min() <= v <= table[FREQUENCY].max()]
 
-# Take only positive frequencies
-positive_mask = frequencies >= 0
-frequencies = frequencies[positive_mask]
-amplitude = np.abs(fft_result[positive_mask]) / n * 2  # Normalize
+y_low = float(np.floor(table[AMPLITUDE].min() / 10) * 10)
+y_high = float(np.ceil(table[AMPLITUDE].max() / 10) * 10)
 
-# Convert to dB scale for better visualization
-amplitude_db = 20 * np.log10(amplitude + 1e-10)
-
-# Limit to 0-300 Hz for clarity (where our signal components are)
-freq_limit_mask = frequencies <= 300
-frequencies = frequencies[freq_limit_mask]
-amplitude_db = amplitude_db[freq_limit_mask]
-
-# Downsample for pygal (it works better with fewer points)
-step = 2
-frequencies = frequencies[::step]
-amplitude_db = amplitude_db[::step]
-
-# Create custom style for large canvas with theme-adaptive colors
+TITLE = "spectrum-basic · python · pygal · anyplot.ai"
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(BRAND,),
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
     stroke_width=3,
-    opacity=0.85,
-    opacity_hover=1.0,
+    opacity=0.45,
+    opacity_hover=0.6,
 )
 
-# Create XY chart (line chart with custom x values)
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="spectrum-basic · pygal · anyplot.ai",
-    x_title="Frequency (Hz)",
-    y_title="Amplitude (dB)",
+    title=TITLE,
+    x_title=FREQUENCY + ", log scale",
+    y_title=AMPLITUDE,
     show_dots=False,
     fill=True,
-    stroke_style={"width": 3},
     show_x_guides=True,
     show_y_guides=True,
-    x_label_rotation=0,
     show_legend=False,
-    range=(-60, 20),  # dB range
-    dots_size=0,
-    margin=80,
-    spacing=40,
+    range=(y_low, y_high),
+    xrange=(float(log_f.min()), float(log_f.max())),
+    x_labels=[float(np.log10(v)) for v in ticks],
+    x_value_formatter=lambda v: f"{10**v:g}",
+    value_formatter=lambda v: f"{v:g}",
+    truncate_label=-1,
+    margin=60,
 )
+chart.add(AMPLITUDE, list(zip(log_f.tolist(), table[AMPLITUDE].tolist(), strict=True)))
 
-# Add data as XY points
-xy_data = [(float(f), float(a)) for f, a in zip(frequencies, amplitude_db, strict=True)]
-chart.add("Amplitude", xy_data)
-
-# Save as PNG and HTML with theme suffix
 chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
