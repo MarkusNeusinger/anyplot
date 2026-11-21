@@ -12,41 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-bo
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 71
 review:
   strengths:
-  - Perfect text legibility with explicit font sizing in both light and dark themes
-  - Expert command of seaborn's theme system and rc-based configuration
-  - Excellent data quality demonstrating all violin plot capabilities (normal, bimodal,
-    right-skewed, left-skewed distributions with visible medians, quartiles, whiskers,
-    and outliers)
-  - Publication-ready code structure with KISS principle maintained
-  - 'Proper theme-adaptive chrome implementation (identical data colors across themes,
-    correct background colors #FAF8F1 light/#1A1A17 dark)'
-  - Idiomatic seaborn API usage with high-level violinplot and comprehensive theming
-  - Strong data choice effectively demonstrates why violin plots are valuable for
-    distribution comparison
-  - All spec requirements met with polished execution and no technical defects
+  - Data shows normal, bimodal, right- and left-skewed groups
+  - Theme tokens threaded through sns.set_theme rc; correct surfaces and Imprint order
+  - Box and white median mark clear in both themes
   weaknesses:
-  - Design could explore custom palette or advanced visual emphasis techniques beyond
-    well-configured defaults
-  - Data storytelling relies on implicit distribution shapes rather than explicit
-    visual hierarchy (no annotation or highlight to guide viewer focus)
+  - 'VQ-05 (both): canvas is 4748x2653 instead of 3200x1800 → figsize=(8, 4.5), dpi=400.
+    Likely cause: figsize=(16, 9), dpi=300 and bbox_inches=''tight''.'
+  - 'SC-03 (both): ylim(30, 100) hides Batch D values down to about 13 and clips the
+    tops of the B, C and D violins → a y-range derived from the data. Likely cause:
+    ax.set_ylim(30, 100).'
+  - 'SC-02 (both): violin tails trail far beyond the data (Batch B and C reach about
+    43 while their minima are about 52 and 50), missing C4 → tails ending near the
+    data range. Likely cause: default cut=2.'
+  - 'SC-04 (both): title ''violin-box · seaborn · anyplot.ai'' lacks the language
+    segment → ''violin-box · python · seaborn · anyplot.ai''. Likely cause: the title
+    string.'
+  - 'DQ-02 (both): groups labelled Batch A–D read generic → batch identifiers a plant
+    would use. Likely cause: the label list.'
+  - 'CQ-03 (code): matplotlib is imported (line 17) but never used → remove it. Likely
+    cause: leftover import.'
+  - 'CQ-04 (code): lines 7–21 strip sys.path and import through importlib → plain
+    import statements. Likely cause: a local-import workaround.'
+  - 'Suggestion: outliers beyond the whiskers could be drawn as points, as the Notes
+    allow.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 spec
-      Chrome: Title "violin-box · seaborn · anyplot.ai" in dark text (24pt); axis labels "Manufacturing Batch" and "Quality Score (0-100)" in dark text (20pt); tick labels clearly visible (16pt); grid lines subtle and non-competing
-      Data: Four batches rendered in Okabe-Ito order (green #009E73, orange #D55E00, blue #0072B2, pink #CC79A7); violin shapes distinct; embedded box plots showing medians and quartiles clearly visible
-      Legibility verdict: PASS - All text elements readable; excellent contrast against light background
+      Background: warm off-white #FAF8F1; canvas 4748x2653
+      Chrome: title 'violin-box · seaborn · anyplot.ai', axis labels and ticks in dark ink, all readable; subtle grid
+      Data: violins #009E73, #C475FD, #4467A3, #BD8233 with dark outlines; dark box, white median tick; y fixed at 30-100 so Batch D's tail runs off the bottom and Batch B/C/D tops touch the axis top; tails trail below B and C's data
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 spec
-      Chrome: Title in light text, clearly visible against dark background; axis labels in light text (20pt); tick labels in light soft color, fully readable; grid lines subtle but visible
-      Data: All four data colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7); violin and box plot shapes fully visible; no dark-on-dark text failures; all axis ticks use appropriate light colors
-      Legibility verdict: PASS - All text readable; proper theme-adaptive coloring; no dark-on-dark text on near-black background; data visibility maintained
+      Background: warm near-black #1A1A17
+      Chrome: light title, labels and ticks, readable; no dark-on-dark text
+      Data: same violin colors; dark boxes with white medians visible; same clipping at 30 and 100
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -54,73 +60,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt all explicitly set; perfectly
-          readable in both themes
+        comment: Title 24 pt, labels 20 pt, ticks 16 pt on a 16x9 figure; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully separated; no overlapping elements
+        comment: No overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violins and box plots perfectly visible; distinct distributions clearly
-          differentiated
+        comment: Violins, dark boxes and white medians visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety; good contrast between all series
+        comment: Distinct Imprint hues
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Perfect proportions; plot fills 60-70% of canvas; balanced margins
+        passed: false
+        comment: Canvas 4748x2653 instead of 3200x1800; violins clipped at the top
+          of the axis (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Quality Score (0-100)'''
+        comment: Descriptive labels with unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order followed; backgrounds #FAF8F1
-          light / #1A1A17 dark; theme-correct chrome'
+        comment: 'Imprint 1-4 from #009E73; correct backgrounds'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Well-configured seaborn default with saturation=0.9 and spine removal;
-          above generic but not exceptional
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid customized (alpha=0.15, Y-axis only); spines partially removed;
-          generous whitespace
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Strong data choice (normal, bimodal, right-skewed, left-skewed) demonstrates
-          violin plot value; visual hierarchy through distribution shapes
+        passed: false
+        comment: Data displayed, no hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -128,30 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot with embedded box plot via inner='box'
+        comment: Violin with inner box
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: centered box, median, quartiles, whiskers,
-          KDE shape'
+        passed: false
+        comment: 'C4 missed: tails trail far beyond the data (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'X: batches (categorical); Y: quality scores (numeric); all data
-          visible'
+        passed: false
+        comment: Fixed ylim(30, 100) hides Batch D values down to ~13 and clips violin
+          tops (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title 'violin-box · seaborn · anyplot.ai' exact format; legend omitted
-          (appropriate)
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -159,23 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All distribution types shown; medians, quartiles, whiskers, outliers
-          visible
+        comment: Normal, bimodal and skewed groups
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Real manufacturing scenario; neutral topic; comprehensible and plausible
+        passed: false
+        comment: Plausible manufacturing scores; Batch A-D labels generic (defect
+          line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Quality scores (0-100) realistic; batch distributions sensible; factually
-          correct
+        comment: Sensible 0-100 scale
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -183,49 +182,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; imports → tokens → data → theme → plot → save; no functions/classes
+        comment: Linear
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seeded
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All imports used; no extraneous
+        passed: false
+        comment: matplotlib imported but unused (defect line)
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Pythonic, appropriate complexity, no fake functionality
+        passed: false
+        comment: importlib/sys.path workaround instead of plain imports (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Expert use of sns.violinplot() high-level API; sns.set_theme() with
-          rc dictionary; palette management
+        passed: false
+        comment: 'Default: high-level violinplot but non-idiomatic importlib imports'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Leverages seaborn's distinctive theme system via rc parameters; uses
-          inner='box' parameter uniquely
+        passed: false
+        comment: Nothing beyond the library prompt
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
 impl_tags:
   dependencies: []
   techniques: []
