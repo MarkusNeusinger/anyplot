@@ -2,130 +2,130 @@ library: seaborn
 language: python
 specification_id: dendrogram-radial
 created: '2026-05-14T09:30:58Z'
-updated: '2026-05-14T09:48:59Z'
+updated: '2026-11-21T15:34:15Z'
 generated_by: claude-sonnet
-workflow_run: 25851972774
+workflow_run: 44919228338
 issue: 5245
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (radial layout, proportional branch
-    lengths, cluster coloring, circumferential labels) implemented correctly'
-  - Scientifically authentic dataset with real gene names and biological pathways,
-    creating a genuinely meaningful dendrogram
-  - 'Excellent Okabe-Ito palette usage: first cluster uses brand green #009E73, all
-    5 clusters follow canonical order, identical data colors across both theme renders'
-  - 'Clean polar axis design: spines removed, grid off, ticks cleared, producing a
-    minimal radial aesthetic'
-  - 'Correct theme-adaptive chrome: backgrounds (#FAF8F1 / #1A1A17), title/footer
-    text colors all adapt correctly between light and dark themes'
+  - 'Correct radial geometry: scipy''s dendrogram icoord/dcoord mapped to angle and
+    merge-distance radius, root at center and leaves at equal angular spacing on the
+    rim'
+  - Subtrees inside one family take its Imprint color while mixed merges stay neutral
+    ink, so each family reads as one colored sector in both themes
+  - Leaf labels rotate along their branches and flip on the left half; family names
+    are set tangentially and upright, with no collisions
+  - Leaf dots drawn with sns.scatterplot using data=, hue= and hue_order= on a tidy
+    DataFrame
+  - Canonical 2400x2400 canvas with theme-correct chrome in both renders
   weaknesses:
-  - Gene labels (9.5pt) and pathway labels (13pt) are below the minimum font size
-    guidelines (>=16pt for tick-equivalent, >=20pt for axis-equivalent); title at
-    22pt is slightly under the >=24pt minimum
-  - Helper functions (x_to_angle, y_to_radius, get_subtree_leaves, get_node_color)
-    violate the KISS no-functions rule
-  - 'Library Mastery is limited: seaborn is used only for sns.set_theme() — the rendering
-    is entirely matplotlib/scipy; sns.set_theme() rc dict also missing several INK_SOFT
-    chrome keys (axes.edgecolor, xtick.color, ytick.color) though these do not cause
-    visible issues since ticks are disabled'
+  - 'CQ-01 (code): lines 92–93 define theta_of and radius_of as lambdas kept with
+    `# noqa: E731` → compute the angles and radii inline as numpy expressions (e.g.
+    icoord / x_max * 2 * np.pi) with no function and no disable comment. Likely cause:
+    a helper replaced by a lambda to pass the linter.'
+  - 'CQ-04 (code): line 72 builds fam_colors, which nothing reads → remove. Likely
+    cause: a color lookup replaced by IMPRINT_PALETTE[code] indexing.'
+  - 'Suggestion: an outer ring of family-colored segments (allowed by the Notes) would
+    mark sector boundaries where near-rim branches crowd.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "dendrogram-radial · seaborn · anyplot.ai" at 22pt clearly readable in dark ink; footer subtitle in muted ink (INK_MUTED); no axis labels/ticks (polar plot with hidden axes)
-      Data: Five Okabe-Ito cluster colors: DNA Repair (#009E73 brand green), MAPK (#D55E00 vermillion), Cell Cycle (#0072B2 blue), Apoptosis (#CC79A7 reddish purple), Angiogenesis (#E69F00 orange); branches colored by cluster assignment; neutral gray (INK_SOFT #4A4A44) for mixed-cluster merges; leaf dots and gene labels in cluster colors; bold pathway name labels at outer ring
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas
+      Chrome: title 'dendrogram-radial · python · seaborn · anyplot.ai' in dark ink at top; muted caption 'Ward linkage · 30 instruments × 5 families · Euclidean distance on 12 acoustic features' at bottom; polar axes hidden. All readable.
+      Data: radial dendrogram, root near center; five family sectors in Imprint order — Strings #009E73 (left), Woodwinds #C475FD (upper right), Brass #4467A3 (right), Percussion #BD8233 (upper left), Keyboards #AE3030 (bottom); mixed-family merges in neutral dark gray; leaf dots and rotated instrument names in family colors; bold family names outside the labels.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and footer text appear in light color (INK #F0EFE8 applied via text.color token); no axis labels/ticks to check
-      Data: Data colors are identical to light render — all five Okabe-Ito colors unchanged; neutral mixed-cluster arcs appear as light gray (#B8B7B0, INK_SOFT for dark theme) which is correctly adapted; gene labels and pathway names in same cluster colors as light render
-      Legibility verdict: PASS — no dark-on-dark failures; all text readable against near-black background
+      Background: warm near-black #1A1A17
+      Chrome: title in light ink, caption in light muted gray; no dark-on-dark text.
+      Data: family colors identical to the light render; mixed merges flip to light gray (#B8B7B0); brand green Strings sector clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set but below minimums: gene labels 9.5pt
-          (needs >=16pt), pathway labels 13pt (needs >=20pt), title 22pt (needs >=24pt)'
+        comment: All sizes explicit (title 12 pt, leaf labels 8 pt, family names 11
+          pt bold, caption 8 pt) on the 6 in square canvas, at the library prompt's
+          references; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Labels rotated radially with rotation_mode=anchor, mostly non-overlapping;
-          slight crowding possible in MAPK cluster arc
+        comment: Leaf labels fan out along their branches, family names sit clear
+          outside them; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Branch lines (lw=2.2) clearly visible; leaf dots (s=55) visible but
-          slightly undersized
+        comment: lw 1.4 branches and s=26 leaf dots suit 30 leaves; near-rim junction
+          crowding is permitted by C6
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; five cluster colors well-differentiated
+        comment: Five Imprint hues plus a neutral for mixed merges; each family also
+          named in text, so hue is not the only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 canvas appropriate for circular layout; slight unavoidable
-          corner whitespace
+        comment: 2400x2400 canonical canvas, circle and labels centered with balanced
+          margins; no canvas-gate file
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format; subtitle provides Ward linkage, dataset
-          size, and distance metric context
+        comment: N/A for axes (polar axes hidden); caption names linkage, sizes and
+          distance
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First cluster (DNA Repair) uses #009E73; all 5 clusters follow Okabe-Ito
-          canonical order; backgrounds #FAF8F1/#1A1A17 correct; data colors identical
-          across themes'
+        comment: 'Imprint in canonical order from #009E73; neutral INK_SOFT for mixed
+          merges; #FAF8F1 / #1A1A17 backgrounds; data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with polar spine/grid removed, cluster-colored branches
-          and labels, bold pathway anchors at outer ring — clearly above defaults
+        comment: Family names set tangentially in bold cluster color and flipped upright
+          on the lower half; leaf labels in their family color; muted method caption
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Polar axis cleaned up (spines off, grid off, ticks off); tight_layout
-          applied; clean layout; could be further polished
+        comment: Upright-flipped tangential family labels at a separate outer radius,
+          leaf labels offset from their dots, round line caps
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Color-coded branches guide viewer to pathway clusters; bold pathway
-          labels serve as navigation anchors; subtitle reinforces scientific method
+        comment: Mixed-family merges drawn in neutral ink so the five single-family
+          sectors read as the focal structure
     spec_compliance:
       score: 15
       max: 15
@@ -135,30 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct radial dendrogram: root at center, branches extend outward,
-          leaves at circumference with equal angular spacing'
+        comment: 'Radial dendrogram: root at center, leaves on the rim'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: linkage_matrix via Ward ✓; labels around circumference ✓; cluster_colors
-          coloring branches and dots ✓; branch length proportional to merge distance
-          ✓; optional metadata ring omitted (spec says optional)
+        comment: C1 equal angular spacing in tree order ✓, C2 radius set by merge
+          distance ✓, C3 family colors on branches ✓, C4 labels rotated along branches
+          ✓; C5 ring not drawn (optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Radial distance correctly mapped to merge distance; angular position
-          mapped to leaf order; all 30 leaves visible
+        comment: Merge distances mapped linearly to radius from scipy's dendrogram
+          coordinates; all 30 leaves shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'dendrogram-radial · seaborn · anyplot.ai' matches required
-          format; pathway name labels at outer ring serve as cluster legend
+        comment: Title 'dendrogram-radial · python · seaborn · anyplot.ai'; family
+          names on the outer ring act as the legend
     data_quality:
       score: 15
       max: 15
@@ -168,24 +167,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: clear cluster separation, mixed-cluster merges
-          in neutral color, proportional branch lengths, leaf labels, cluster color-coding'
+        comment: Five well-separated families, mixed-family merges near the root,
+          uneven merge radii
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Genuine biological gene names (BRCA1, BRCA2, ATM, EGFR, TP53) across
-          5 real biological pathways — scientifically meaningful and neutral
+        comment: 30 real orchestral/keyboard instruments in five correct families
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 genes × 5 pathways within spec range; Euclidean distance with
-          Ward linkage is standard for gene expression clustering
+        comment: No check values; checked that every instrument sits in its real family
+          and that Ward merges within families sit far outside the cross-family merges
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -193,35 +191,32 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Four helper functions defined (x_to_angle, y_to_radius, get_subtree_leaves,
-          get_node_color) violate no-functions rule; practically necessary for recursive
-          subtree coloring
+        comment: 'Two lambda functions assigned at lines 92–93, kept with # noqa:
+          E731 (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 6 imports used: os, matplotlib.pyplot, numpy, seaborn, scipy.cluster.hierarchy,
-          scipy.spatial.distance'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, well-organized Pythonic code; no fake UI elements; helper
-          functions genuinely needed for algorithm
+        comment: Unused fam_colors dict at line 72 (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300 and facecolor=PAGE_BG
+        comment: plot-{THEME}.png at dpi=400, no bbox_inches
     library_mastery:
       score: 4
       max: 10
@@ -231,32 +226,29 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: sns.set_theme() for global styling is correct seaborn usage; all
-          rendering via matplotlib polar projection and scipy — unavoidable given
-          seaborn has no native radial dendrogram API
+        comment: sns.scatterplot with data=, hue=, hue_order= and an Imprint palette
+          slice for the leaf dots; tree drawn with matplotlib as seaborn has no radial
+          dendrogram
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Seaborn contribution limited to sns.set_theme(); no seaborn-specific
-          plotting functions used; this is essentially a matplotlib/scipy visualization
-          with seaborn theming
+        comment: Nothing beyond the mandated theme and a hue-mapped scatter
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T15:30:12Z'
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - polar-projection
   - annotations
-  - custom-legend
-  - patches
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
-  - explicit-figure
   dataprep:
   - hierarchical-clustering
   styling:
-  - minimal-chrome
-  - alpha-blending
+  - publication-ready
