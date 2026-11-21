@@ -8,4 +8,4 @@
   choice. Now that refusal says so, and in the same turn the server makes no
   such column and no row numbers; the reply can offer them instead. When you
   ask for the days or the year yourself, the assistant makes them first and
-  binds them after, as before.
+  binds them after, as before. (#13757)

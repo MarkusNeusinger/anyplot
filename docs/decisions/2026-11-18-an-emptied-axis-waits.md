@@ -11,4 +11,4 @@
   turn lists what the server can compute. He chose the option without a note; the reason given with
   it was the agents': code decides, so it holds for every model and language, and it keeps his
   earlier rule that turning dates into numbers is an offer.
-- Where: #13198
+- Where: #13198, #13757 (the same guard after a date column is refused on an axis that takes numbers)
