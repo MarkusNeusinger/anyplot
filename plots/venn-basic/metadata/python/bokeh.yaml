@@ -2,35 +2,63 @@ library: bokeh
 language: python
 specification_id: venn-basic
 created: '2025-12-29T22:48:50Z'
-updated: '2026-05-11T11:33:56Z'
-generated_by: claude-haiku
-workflow_run: 25666982126
+updated: '2026-11-21T02:08:01Z'
+generated_by: claude-sonnet
+workflow_run: 44853070741
 issue: 2444
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 82
 review:
-  strengths: []
-  weaknesses: []
+  strengths:
+  - Circle areas follow the set sizes (r = sqrt(size/pi)) and each pair's center distance
+    is solved so the lens area matches its inclusive intersection, so Product A is
+    visibly the largest circle and Product C the smallest
+  - Exclusive counts are computed by inclusion-exclusion from the inclusive table
+    (60, 35, 25, 20, 10, 15, 10 all correct) and placed at the point of each region
+    farthest from any outline, so every count sits clear inside its region
+  - Equal data scale on both axes keeps the circles round on the 3200x1800 canvas
+  - 'Circles drawn as one ColumnDataSource-driven circle glyph with radius in data
+    units, colors in canonical Imprint order (#009E73, #C475FD, #4467A3) at 0.35 alpha
+    so every overlap reads as a blend with solid outlines'
+  - 'Clear typographic hierarchy: 40pt bold region counts, 36pt bold set names in
+    INK, 28pt set totals in INK_SOFT; all chrome theme-correct in both renders'
+  weaknesses:
+  - 'VQ-05 (dark): a thin grey rectangle frames the plot area in the dark render (about
+    40 px inside the canvas edge), a frame the light render does not show and the
+    style guide''s no-frame rule excludes → no visible frame in either theme. Likely
+    cause: the plot area''s outline or border still drawn in a default grey despite
+    p.outline_line_color = None; set the border/outline color to PAGE_BG or None on
+    every frame element.'
+  - 'CQ-01 (code): two helper functions, lens_area (lines 64-71) and pair_distance
+    (lines 74-80), break the flat KISS structure → inline the lens-area formula and
+    the bisection loop in the per-pair loop. Likely cause: the circle-layout solver
+    written as functions.'
+  - 'DQ-02 (both): the sets are labelled Product A, Product B and Product C, which
+    read as generic placeholders → concrete names for the product-feature scenario
+    (for example three real-sounding plan tiers or features). Likely cause: the SETS
+    labels in the data block.'
+  - 'Suggestion: set the n = totals closer under their set names; the gap between
+    name and total is wider than the gap to the circle.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), providing excellent contrast for all elements.
-      Chrome: Title "venn-basic · bokeh · anyplot.ai" rendered in dark ink (#1A1A17) at 48pt; set labels "Product A/B/C" and sizes "n=100/80/60" positioned outside circles in 32pt and 24pt; all region counts (60, 35, 25, 20, 10, 15, 10) centered in their respective overlap regions at 36pt bold. All text is crisp and readable against the light surface.
-      Data: Three overlapping circles in Okabe-Ito colors—green (#009E73) for A, orange (#D55E00) for B, blue (#0072B2) for C—with 35% fill alpha allowing overlaps to blend visually. The transparent circles clearly show all seven regions (exclusive + pairwise + triple intersections).
-      Legibility verdict: PASS - all elements perfectly readable
+      Background: Warm off-white #FAF8F1 across the full 3200x1800 canvas, no frame.
+      Chrome: Centered bold title "venn-basic · python · bokeh · anyplot.ai" in dark ink at top, about 40% of the width; set names "Product A/B/C" in bold dark ink outside their circles with soft-ink "n = 100/80/60" below; axes and grid hidden. All text readable.
+      Data: Three round circles: Product A green #009E73 (largest, lower left), Product B purple #C475FD (lower right), Product C blue #4467A3 (smallest, top), 0.35 fill alpha with solid outlines. Seven exclusive counts in bold dark ink inside their regions: 60, 35, 25, 20 (A∩B), 10 (A∩C), 15 (B∩C), 10 (triple).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), ensuring light text remains visible.
-      Chrome: Title, set labels, and region counts rendered in light ink (#F0EFE8) for title/labels and #B8B7B0 for sizes. All text is clearly readable against the dark surface with no dark-on-dark failures.
-      Data: Identical to light render—circles rendered in the same Okabe-Ito colors (#009E73, #D55E00, #0072B2). The transparent overlaps function identically, showing all seven regions with the same color blending. Chrome has flipped to light theme while data colors remain constant (as required).
-      Legibility verdict: PASS - all elements perfectly readable, proper theme adaptation
+      Background: Warm near-black #1A1A17; a thin grey rectangle frames the plot area about 40 px inside the canvas edge (not present in the light render).
+      Chrome: Title, set names and region counts in light ink #F0EFE8, set totals in #B8B7B0; no dark-on-dark text.
+      Data: Same circle colors, positions and alpha as the light render; blends read darker on the dark surface; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -38,52 +66,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: 48pt title, 32pt set labels, 36pt
-          region counts. Perfect readability in both themes.'
+        comment: Explicit sizes (50pt title, 40pt counts, 36pt set names, 28pt totals);
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Set labels positioned outside circles, region counts centered in
-          regions. Zero overlapping elements.
+        comment: Counts placed at each region's farthest point from the outlines;
+          set labels outside circles; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circles with 35% alpha are clearly visible; overlaps blend well;
-          all text is prominent.
+        comment: Circles with 0.35 alpha and 5px solid outlines clearly visible; every
+          region distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast; CVD-safe; transparency enables
-          clear color mixing in overlaps.
+        comment: Green/purple/blue Imprint hues, distinguishable under CVD; ink text
+          on light blends
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Circles occupy ~60% of 4800×2700 canvas; balanced margins; nothing
-          cut off; generous whitespace.
+        passed: false
+        comment: 3200x1800, round circles centred; dark render shows a stray grey
+          plot-area frame (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''venn-basic · bokeh · anyplot.ai''. Axes
-          properly hidden. Set labels + sizes descriptive.'
+        comment: Axes hidden by design; set names plus n totals descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; multi-series Okabe-Ito order (#D55E00, #0072B2)
-          ✓; backgrounds #FAF8F1/#1A1A17 ✓; theme-correct chrome in both renders ✓'
+        comment: '#009E73 first, canonical Imprint order; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -91,23 +117,21 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Well-configured defaults with transparent circles adding polish.
-          Not custom palette or publication-ready design; generic Okabe-Ito standard
-          application.
+        comment: 'Deliberate three-level typographic hierarchy: bold 40pt counts,
+          bold set names, soft-ink totals'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: 'Clean: no grid, no spines, generous whitespace. Some refinement
-          in transparency effects, but minimal customization beyond defaults.'
+        comment: Count anchors computed as the region point farthest from any outline;
+          set labels pushed outward from the diagram centre with side-dependent alignment
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data is displayed correctly but without visual emphasis or hierarchy.
-          No focal point guiding the viewer to key insights about set relationships.
+        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -117,31 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3-set Venn diagram with all subtypes (exclusive regions +
-          pairwise overlaps + triple intersection).
+        comment: Correct 3-set Venn with round circles, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Set labels (Product A/B/C) ✓; sizes (n=100/80/60) ✓; all 7 region
-          counts ✓; overlapping areas with transparency ✓
+        comment: Exclusive counts in regions, area-proportional circles (C3), translucent
+          distinct colors, labels readable (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Circles positioned correctly; all regions visible; data properly
-          mapped to spatial regions.
+        comment: Radii and pair distances derived from sizes; layout position is not
+          data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format perfect: ''venn-basic · bokeh · anyplot.ai''. Labels
-          serve as legend (N/A for single-concept Venn).'
+        comment: Title venn-basic · python · bokeh · anyplot.ai; set labels serve
+          as the legend
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -149,90 +172,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All 7 regions of 3-set Venn represented: only_A(60), only_B(35),
-          only_C(25), A∩B(20), A∩C(10), B∩C(15), A∩B∩C(10).'
+        comment: All seven regions present, pairwise and triple overlaps distinct
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Product feature overlap is real, comprehensible business scenario.
-          Neutral; realistic proportions; meaningful labels.
+        passed: false
+        comment: Product overlap scenario plausible but labels Product A/B/C read
+          generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Set sizes (100, 80, 60) and intersection proportions are factually
-          plausible for product feature distribution.
+        comment: 'Checked exclusive counts against inclusion-exclusion of 100/80/60,
+          30/20/25, 10: 60, 35, 25, 20, 10, 15, 10 all correct and computed, not typed'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Linear flow: imports → theme setup → data → calculation → figure
-          → drawing → styling → save. No functions or classes.'
+        passed: false
+        comment: Two helper functions lens_area and pair_distance (defect line); data
+          block and column constants present
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded; deterministic output; no randomness.
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (theme), time/pathlib/selenium (screenshot),
-          numpy (math), bokeh (plotting).'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. No over-engineering or fake
-          functionality.
+        comment: Complexity serves proportional layout and label placement; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png + plot-{THEME}.html (Bokeh requirement).
-          Uses current Selenium/Chrome approach.
+        comment: plot-{THEME}.html and plot-{THEME}.png via Selenium, current Bokeh
+          3 API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Expertly uses Bokeh: figure() → patch() for circles, Label() for
-          text positioning, output_file/save for export, Selenium for screenshots
-          (per bokeh guide).'
+        passed: false
+        comment: One ColumnDataSource-driven circle glyph with radius in data units
+          and field-mapped colors, instead of per-circle patches
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic Bokeh usage. Label positioning and theme tokens are Bokeh-standard,
-          not distinctive. Could be replicated nearly identically in matplotlib/plotly
-          with minimal changes.
-  verdict: REJECTED
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T02:04:38Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - patches
-  - annotations
   - html-export
+  - annotations
   patterns:
   - data-generation
+  - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
