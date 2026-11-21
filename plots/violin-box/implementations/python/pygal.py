@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-box: Violin Plot with Embedded Box Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-12
@@ -8,6 +8,7 @@ import os
 import sys
 
 import numpy as np
+import pandas as pd
 
 
 sys.path = [p for p in sys.path if not p.endswith("/python")]
@@ -19,150 +20,135 @@ from pygal.style import Style  # noqa: E402
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette - use first 4 colors for violin categories
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Generate distributions for different categories with scores constrained to 0-100
-np.random.seed(42)
-raw_data = {
-    "Engineering": np.random.normal(75, 10, 200),
-    "Marketing": np.random.normal(62, 12, 200),
-    "Sales": np.random.normal(68, 14, 200),
-    "Operations": np.random.normal(55, 8, 200),
-}
-# Clip all values to 0-100 range
-data = {k: np.clip(v, 0, 100) for k, v in raw_data.items()}
+# Constants
+WHISKER_IQR = 1.5  # whiskers reach the farthest value within this many IQRs of the box
+VIOLIN_HALF_WIDTH = 0.38  # widest half-width of a violin, in x units (groups sit 1 apart)
+BOX_HALF_WIDTH = 0.09  # half-width of the embedded box, in x units
 
-# Custom style for 4800x2700 px canvas
-custom_style = Style(
-    background=PAGE_BG,
-    plot_background=PAGE_BG,
-    foreground=INK,
-    foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+# Columns: set these to your table's column names
+DEPARTMENT = "Department"  # role: group
+SCORE = "Performance score (0-100)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+rng = np.random.default_rng(42)
+departments = {"Engineering": (75, 10), "Marketing": (62, 12), "Sales": (68, 14), "Operations": (55, 8)}
+df = pd.DataFrame(
+    {
+        DEPARTMENT: np.repeat(list(departments), 200),
+        SCORE: np.clip(np.concatenate([rng.normal(mu, sd, 200) for mu, sd in departments.values()]), 0, 100),
+    }
 )
 
-# Create XY chart for violin plot with embedded box
+# Plot: reads only df and the constants above
+groups = list(dict.fromkeys(df[DEPARTMENT]))
+values_by_group = {g: df.loc[df[DEPARTMENT] == g, SCORE].dropna().to_numpy() for g in groups}
+lo, hi = df[SCORE].min(), df[SCORE].max()
+pad = (hi - lo) * 0.06
+
+# Series are added in this order; pygal hands out colors by series index
+series_colors = []
+
+
+def add_line(chart, points, color, fill=False, stroke=True, show_dots=False, dots_size=0, width=4, dash="none"):
+    series_colors.append(color)
+    chart.add(
+        None,
+        points,
+        fill=fill,
+        stroke=stroke,
+        show_dots=show_dots,
+        dots_size=dots_size,
+        stroke_style={"width": width, "dasharray": dash},
+    )
+
+
+def add_shape(chart, points, color):
+    # pygal fills a line down to the baseline and strokes that closing edge too, so the fill
+    # goes in as an unstroked series and the outline as a separate, unfilled one
+    add_line(chart, points, color, fill=True, stroke=True, dash="0 100000")
+    add_line(chart, points, color)
+
+
 chart = pygal.XY(
-    width=4800,
-    height=2700,
-    style=custom_style,
-    title="violin-box · pygal · anyplot.ai",
-    x_title="Department",
-    y_title="Performance Score (0-100)",
+    width=3200,
+    height=1800,
+    title="violin-box · python · pygal · anyplot.ai",
+    x_title=DEPARTMENT,
+    y_title=SCORE,
     show_legend=False,
     stroke=True,
     fill=True,
     dots_size=0,
     show_x_guides=False,
     show_y_guides=True,
-    range=(0, 105),
-    xrange=(0, 6),
-    margin=80,
+    range=(lo - pad, hi + pad),
+    xrange=(0.4, len(groups) + 0.6),
+    margin=60,
+    x_labels=[{"label": str(g), "value": i + 1} for i, g in enumerate(groups)],
+    x_labels_major_count=len(groups),
+    show_minor_x_labels=True,
 )
 
-# Parameters for violin shapes
-violin_width = 0.35
-n_points = 100
+for i, group in enumerate(groups):
+    values = values_by_group[group]
+    cx = i + 1
+    color = IMPRINT_PALETTE[i]
 
-# Box plot styling
-box_stroke_style = {"width": 4, "dasharray": ""}
-median_stroke_style = {"width": 6, "dasharray": ""}
-whisker_stroke_style = {"width": 3, "dasharray": ""}
-
-# Add violins with embedded box plots for each category
-for i, (category, values) in enumerate(data.items()):
-    center_x = i + 1.5
-    violin_color = IMPRINT[i]
-
-    # Compute KDE using Silverman's rule
+    # Gaussian KDE (Silverman bandwidth) limited to the data range, so tails end near the data
     n = len(values)
-    std = np.std(values)
-    iqr = np.percentile(values, 75) - np.percentile(values, 25)
-    bandwidth = 0.9 * min(std, iqr / 1.34) * n ** (-0.2)
+    q1, median, q3 = (float(q) for q in np.percentile(values, [25, 50, 75]))
+    bandwidth = 0.9 * min(values.std(), (q3 - q1) / 1.34) * n ** (-0.2)
+    grid = np.linspace(values.min(), values.max(), 120)
+    density = np.exp(-0.5 * ((grid[:, None] - values[None, :]) / bandwidth) ** 2).sum(axis=1)
+    half = density / density.max() * VIOLIN_HALF_WIDTH
 
-    # Create range of y values for density
-    y_min, y_max = values.min(), values.max()
-    y_range = np.linspace(max(0, y_min - 5), min(100, y_max + 5), n_points)
+    outline = [(cx - h, y) for y, h in zip(grid, half, strict=True)]
+    outline += [(cx + h, y) for y, h in zip(grid[::-1], half[::-1], strict=True)]
+    add_shape(chart, outline + outline[:1], color)
 
-    # Gaussian kernel density estimation
-    density = np.zeros_like(y_range)
-    for v in values:
-        density += np.exp(-0.5 * ((y_range - v) / bandwidth) ** 2)
-    density /= n * bandwidth * np.sqrt(2 * np.pi)
+    # Box statistics
+    iqr = q3 - q1
+    inside = values[(values >= q1 - WHISKER_IQR * iqr) & (values <= q3 + WHISKER_IQR * iqr)]
+    low_whisker, high_whisker = float(inside.min()), float(inside.max())
+    outliers = values[(values < low_whisker) | (values > high_whisker)]
 
-    # Normalize density to desired width
-    density = density / density.max() * violin_width
+    # Box, whiskers and caps in ink so they stand out against the violin fill
+    box = [(cx - BOX_HALF_WIDTH, q1), (cx - BOX_HALF_WIDTH, q3), (cx + BOX_HALF_WIDTH, q3), (cx + BOX_HALF_WIDTH, q1)]
+    add_shape(chart, box + box[:1], INK)
+    cap = BOX_HALF_WIDTH * 0.7
+    for a, b in ((q1, low_whisker), (q3, high_whisker)):
+        add_line(chart, [(cx, a), (cx, b)], INK, fill=False)
+        add_line(chart, [(cx - cap, b), (cx + cap, b)], INK, fill=False)
 
-    # Create violin shape (mirrored density)
-    left_points = [(center_x - d, y) for y, d in zip(y_range, density, strict=True)]
-    right_points = [(center_x + d, y) for y, d in zip(y_range[::-1], density[::-1], strict=True)]
-    violin_points = left_points + right_points + [left_points[0]]
+    # Median in the page color so it reads on the ink box
+    add_line(chart, [(cx - BOX_HALF_WIDTH, median), (cx + BOX_HALF_WIDTH, median)], PAGE_BG, width=7)
 
-    chart.add(category, violin_points)
-
-    # Calculate box plot statistics
-    median = float(np.median(values))
-    q1 = float(np.percentile(values, 25))
-    q3 = float(np.percentile(values, 75))
-    iqr_val = q3 - q1
-
-    # Whiskers: 1.5 * IQR or data min/max
-    lower_whisker = max(values.min(), q1 - 1.5 * iqr_val)
-    upper_whisker = min(values.max(), q3 + 1.5 * iqr_val)
-
-    # Identify outliers
-    outliers = values[(values < lower_whisker) | (values > upper_whisker)]
-
-    box_width = 0.10
-
-    # Quartile box - use elevated background color for visibility
-    elevated_bg = "#FFFDF6" if THEME == "light" else "#242420"
-    quartile_box = [
-        (center_x - box_width, q1),
-        (center_x - box_width, q3),
-        (center_x + box_width, q3),
-        (center_x + box_width, q1),
-        (center_x - box_width, q1),
-    ]
-    chart.add(None, quartile_box, stroke=True, fill=True, show_dots=False, stroke_style=box_stroke_style)
-
-    # Whisker lines (vertical lines from box to whisker ends)
-    lower_whisker_line = [(center_x, q1), (center_x, lower_whisker)]
-    upper_whisker_line = [(center_x, q3), (center_x, upper_whisker)]
-    chart.add(None, lower_whisker_line, stroke=True, fill=False, show_dots=False, stroke_style=whisker_stroke_style)
-    chart.add(None, upper_whisker_line, stroke=True, fill=False, show_dots=False, stroke_style=whisker_stroke_style)
-
-    # Whisker caps (horizontal lines at ends)
-    cap_width = box_width * 0.8
-    lower_cap = [(center_x - cap_width, lower_whisker), (center_x + cap_width, lower_whisker)]
-    upper_cap = [(center_x - cap_width, upper_whisker), (center_x + cap_width, upper_whisker)]
-    chart.add(None, lower_cap, stroke=True, fill=False, show_dots=False, stroke_style=whisker_stroke_style)
-    chart.add(None, upper_cap, stroke=True, fill=False, show_dots=False, stroke_style=whisker_stroke_style)
-
-    # Median line (thicker, contrasting)
-    median_line = [(center_x - box_width * 1.2, median), (center_x + box_width * 1.2, median)]
-    chart.add(None, median_line, stroke=True, fill=False, show_dots=False, stroke_style=median_stroke_style)
-
-    # Outliers as points
+    # Outliers as individual points at their values
     if len(outliers) > 0:
-        outlier_points = [(center_x, float(o)) for o in outliers]
-        chart.add(None, outlier_points, stroke=False, fill=False, show_dots=True, dots_size=18)
+        add_line(chart, [(cx, float(o)) for o in outliers], INK, fill=False, stroke=False, show_dots=True, dots_size=11)
 
-# X-axis labels at violin positions
-chart.x_labels = ["", "Engineering", "Marketing", "Sales", "Operations", ""]
-chart.x_labels_major_count = 4
+chart.config.style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=tuple(series_colors),
+    opacity=0.55,
+    opacity_hover=0.55,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=3,
+)
 
-# Save outputs
+# Save
 chart.render_to_file(f"plot-{THEME}.html")
 chart.render_to_png(f"plot-{THEME}.png")
