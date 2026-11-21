@@ -12,41 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 75
 review:
   strengths:
-  - 'Perfect Okabe-Ito palette compliance with #009E73 brand green for first category
-    and proper theme-adaptive chrome in both renders'
-  - All six Chernoff face features properly implemented with clear variation across
-    multivariate car performance metrics
-  - Excellent legibility in both light and dark themes with zero text overlap and
-    perfectly readable facial details
-  - 'Idiomatic plotnine usage: proper ggplot composition with geom layers, facet_wrap
-    for comparison, and theme customization'
-  - Realistic, neutral car performance data with meaningful mappings (engine_power→face
-    width, fuel_efficiency→face height, safety→eye size, comfort→mouth curvature)
-  - Flawless spec compliance with correct title format, legend labels, and observation
-    layout
+  - Every variable is normalized to 0-1 and drives one facial feature, so the six
+    faces differ visibly
+  - Eye whites stay visible even at the smallest eye size
+  - Idiomatic plotnine layering with facet_wrap strips as observation labels and coord_fixed
+  - Theme-adaptive chrome correct in both renders
   weaknesses:
-  - 'Design Excellence below 15/20: while well-executed, the implementation is a straightforward
-    spec translation without exceptional aesthetic choices beyond Okabe-Ito compliance'
-  - 'LM-02 (Distinctive Features) scored 4/5: layer composition and faceting are solid
-    but not exceptionally unique to plotnine versus other grammar-of-graphics libraries'
+  - 'VQ-05 (both): the canvas is 4800x2700 instead of 3200x1800, the title''s ascenders
+    sit flush on the top edge and the legend box sits on the bottom edge → 3200x1800
+    with a margin of at least ~20 px top and bottom. Likely cause: plot.save(dpi=300)
+    with figure_size=(16, 9) instead of width=8, height=4.5, dpi=400.'
+  - 'VQ-02 (both): the legend title ''Category'' touches the left frame of the legend
+    box and ''Sedan'' its right frame → at least ~4 px padding inside the box. Likely
+    cause: legend_background frame with no legend margin.'
+  - 'VQ-07 (both): the legend order is Compact, SUV, Sedan, so the second group takes
+    Imprint position 3 (#4467A3) and the third position 2 (#C475FD) → positions 1,
+    2, 3 in legend order. Likely cause: the category_colors dict against the alphabetical
+    scale order.'
+  - 'SC-02 (both): no key tells which variable drives which facial feature; the subtitle
+    only lists Power/Efficiency/Safety/Comfort → a caption or legend naming each mapping
+    (width = power, …). Likely cause: the subtitle text.'
+  - 'SC-04 (both): the title ''chernoff-basic · plotnine · anyplot.ai'' lacks the
+    language segment → ''chernoff-basic · python · plotnine · anyplot.ai''. Likely
+    cause: labs(title=...).'
+  - 'DQ-02 (both): the observations are labelled Compact A, Compact B, Sedan A, Sedan
+    B, SUV A, SUV B, which reads as generic → plausible fictional model names. Likely
+    cause: the observation_id list.'
+  - 'CQ-04 (code): lines 63-140 append one dict per point in eight separate loops
+    → build each part as a DataFrame from its arrays (pd.DataFrame({''x'': ex, ''y'':
+    ey, ...})). Likely cause: the all_data.append loops.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "chernoff-basic · plotnine · anyplot.ai" in black, subtitle in gray (#4A4A44), facet labels in black, all clearly readable against light background.
-      Data: Six Chernoff faces with varying morphology. Compact cars in green (#009E73 — brand color, position 1), Sedan in orange (#D55E00 — position 2), SUV in blue (#0072B2 — position 3). Eyes rendered as white circles with gray pupils. Mouth, nose, and eyebrows in gray. Face widths/heights vary by metrics. Legend at bottom clearly shows category mapping.
-      Legibility verdict: PASS — All text, data markers, and facial features fully readable. No overlap. Strong contrast.
+      Background: warm off-white #FAF8F1, 4800x2700.
+      Chrome: bold dark title "chernoff-basic · plotnine · anyplot.ai" flush with the top edge, gray subtitle "Car Performance: Power/Efficiency/Safety/Comfort mapped to facial features", bold dark facet labels (Compact A, Compact B, SUV A / SUV B, Sedan A, Sedan B), legend box "Category" sitting on the bottom canvas edge. All text readable.
+      Data: six faces in a 3x2 grid; Compact in #009E73, SUV in #4467A3, Sedan in #C475FD, dark-gray outlines, eye whites with pupils, nose, eyebrows and mouth. Compact A is tall and frowning with small ringed eyes; SUV faces are wide and smiling.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface.
-      Chrome: Title in light text (#F0EFE8), subtitle and labels in lighter gray (#B8B7B0). All clearly readable on dark background. No dark-on-dark failures.
-      Data: Identical to light render — same colors (#009E73, #D55E00, #0072B2), same face morphologies, same layout. Eyes, mouth, nose, eyebrows all visible. Legend rendered with light text on dark background.
-      Legibility verdict: PASS — Excellent contrast. All text readable. Data colors fully preserved from light render, proving proper theme-adaptive chrome separation.
+      Background: warm near-black #1A1A17.
+      Chrome: title and facet labels in light ink, subtitle and legend text in light gray; legend box on a dark fill. No dark-on-dark text.
+      Data: identical fills and geometry; features in light gray, eye whites on the dark elevated fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -54,52 +66,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All text explicitly sized: title 24pt, labels 20pt, ticks 16pt—perfectly
-          readable in both themes'
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements anywhere—facet labels, title, subtitle, legend
-          all cleanly spaced
+        comment: Legend title 'Category' and 'Sedan' touch the legend frame (defect
+          line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All facial features (eyes, mouth, nose, eyebrows) clearly visible
-          with optimal sizing for 6-face grid
+        comment: All facial features visible, eye whites visible even at the smallest
+          eye size
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; three distinct colors with
-          excellent contrast
+        comment: CVD-distinct fills, neutral feature ink
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: 'Perfect layout: 16:9 canvas, 50-70% utilized for plot, balanced
-          margins, legend integrated'
+        passed: false
+        comment: Canvas 4800x2700 instead of 3200x1800; title flush on the top edge,
+          legend box on the bottom edge, grid in the middle of the width (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title is descriptive format; facet labels and subtitle provide full
-          context
+        comment: N/A for axes (no data axes); subtitle descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Perfect: first category #009E73, multi-series follows Okabe-Ito
-          order 1→3, backgrounds #FAF8F1/#1A1A17, theme-correct chrome in both renders'
+        passed: false
+        comment: Second legend group SUV takes Imprint position 3 and third group
+          Sedan position 2 (defect line)
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -107,25 +116,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with Okabe-Ito palette; lacks exceptional
-          design choices beyond spec compliance
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clean theme_void() removes spines, generous whitespace, subtle legend
-          box styling, good refinement
+        passed: false
+        comment: theme_void and themed legend box meet the rules, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Visual hierarchy through face morphology tells story: SUV faces
-          wider/rounder, mouth curvature shows comfort variation; subtitle guides
-          interpretation'
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -133,31 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Chernoff face plot with all subtypes: face outline, eyes,
-          mouth, nose, eyebrows, normalization'
+        comment: Chernoff faces with the color by group the Notes allow
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec features present: observation IDs, multivariate mapping,
-          0-1 normalization, grid layout, category coloring'
+        passed: false
+        comment: No key telling which variable drives which feature; the subtitle
+          only lists the variables (C4 missed, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct mapping: engine_power→width, fuel_efficiency→height, safety_rating→eye_size,
-          comfort_score→mouth_curvature'
+        comment: Width=power, height=MPG, eye size=safety, mouth=comfort
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title: ''chernoff-basic · plotnine · anyplot.ai''; legend correctly
-          labels categories'
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -165,24 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Chernoff features with meaningful variation: face width/height
-          vary, eye sizes differ, mouth curvature ranges from sad to happy'
+        comment: Faces vary visibly in all four mapped features
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Real car performance metrics (power, efficiency, safety, comfort)
-          with neutral, educational context; comprehensible labels
+        comment: Plausible car metrics, generic labels Compact A/B, Sedan A/B, SUV
+          A/B (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Engine power 100-320 HP, fuel efficiency 15-38 MPG, ratings 3-5—all
-          plausible; relationships make sense (SUVs: high power, low efficiency)'
+        comment: '100-320 HP, 15-38 MPG, ratings 3.0-4.9: sensible'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -190,54 +190,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports → data dict → normalization → face coordinate
-          loop → DataFrame → plot → save; no functions/classes'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; all data deterministic
+        comment: Deterministic data, seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, numpy, pandas, plotnine geoms/theme/labs—all
-          used'
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity for face construction; no over-engineering,
-          no fake UI; clear variable names
+        passed: false
+        comment: Eight per-point dict-append loops where array-built DataFrames do
+          the same (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300; not bare plot.png
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expertly uses ggplot() + geoms composition, aes() mapping, facet_wrap(),
-          scale_fill_manual(), theme() customization; all high-level API
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses geom_polygon/path/point layers creatively; clever data structure
-          with 'part' column; faceting for comparison—solid but not exceptionally
-          unique to plotnine
+        comment: Layered geoms per facial part, facet_wrap grid, coord_fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: facet_wrap strips double as observation labels; nothing further
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies: []
   techniques:

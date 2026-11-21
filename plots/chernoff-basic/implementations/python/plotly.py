@@ -1,7 +1,7 @@
 """ anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-15
+Quality: 72/100 | Updated: 2026-05-15
 """
 
 import os
