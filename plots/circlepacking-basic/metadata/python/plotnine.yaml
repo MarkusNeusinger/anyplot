@@ -12,109 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 69
 review:
   strengths:
-  - Excellent visual quality and legibility in both light and dark themes
-  - Perfect specification compliance with all required features correctly implemented
-  - Thoughtful color encoding using Okabe-Ito palette that makes hierarchy immediately
-    clear
-  - Area-proportional circle sizing correctly implemented via square-root scaling
-  - Clean, professional aesthetic with minimal visual clutter
-  - Strong data storytelling through nested visual structure
-  - Proper theme-adaptive chrome with no dark-on-dark or light-on-light legibility
-    failures
+  - 'Depth levels follow the Imprint order (#009E73 root, #C475FD, #4467A3) with theme-adaptive
+    outlines and chrome'
+  - Labels at a comfortable size, bold, readable in both themes on the blue holdings
   weaknesses:
-  - Design Excellence could be elevated beyond default Okabe-Ito application through
-    additional visual refinement techniques
-  - Library Mastery limited—could leverage more distinctive plotnine features or advanced
-    theming techniques
+  - 'VQ-05 (both): the canvas is 3600x3600 instead of the canonical 2400x2400 square,
+    and the title presses against the top edge → 2400x2400 with a top margin. Likely
+    cause: figure_size=(12, 12) with dpi=300 in plot.save.'
+  - 'VQ-02 (both): the Bonds and Real Estate labels sit on top of the Corporate and
+    Commercial circles, and overlapping holdings (Tech/Healthcare/Finance, Corporate/Government,
+    Commercial/Residential) hide each other''s outlines → each parent label clear
+    of its children and holdings that do not overlap. Likely cause: hand-typed label_y
+    = cy + r*0.60 and fixed child offsets.'
+  - 'SC-02 (both): sibling circles overlap and Stocks crosses into Bonds, against
+    C2 (no circle crossing another or its parent''s edge) → a real packing that places
+    siblings tangent without overlap. Likely cause: hand-placed coordinates such as
+    tech_x = stocks_x - 0.10.'
+  - 'SC-02, SC-03 (both): leaf areas are not comparable across parents (Corporate
+    150k is drawn larger relative to Tech 180k than their values allow) because each
+    parent scales its children by its own factor, against C1 → one sqrt(value) scale
+    for all leaves. Likely cause: stock_scale / bond_scale / realestate_scale per
+    parent.'
+  - 'SC-04 (both): the title ''circlepacking-basic · plotnine · anyplot.ai'' lacks
+    the language segment → ''circlepacking-basic · python · plotnine · anyplot.ai''.
+    Likely cause: the labs(title=...) string.'
+  - 'VQ-01 (dark): near-white bold labels on the #C475FD asset-class fill (Stocks,
+    Bonds, Real Estate) have weak contrast, about 2.8:1 → a text color reaching at
+    least 4.5:1 on that fill. Likely cause: one color=INK for every geom_text label.'
+  - 'DQ-01 (code): the hierarchy has 11 nodes, below the spec''s 20-200 → at least
+    20 nodes. Likely cause: the nodes list.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title in bold dark text, legend at bottom with clear hierarchy labels, all text dark (INK #1A1A17) and readable
-      Data: Root circle green (#009E73), asset class circles orange (#D55E00), holding circles blue (#0072B2). Circles properly nested and sized proportionally. All labels clearly visible.
+      Background: warm off-white #FAF8F1; canvas 3600x3600, not one of the canonical sizes.
+      Chrome: bold dark title 'circlepacking-basic · plotnine · anyplot.ai' pressed against the top edge; bottom legend 'Hierarchy Level' Root / Asset Classes / Holdings; all chrome text readable.
+      Data: large green #009E73 root; three purple #C475FD asset-class circles (Stocks top, Bonds left, Real Estate right) clustered in the centre, Stocks crossing into Bonds; blue #4467A3 holdings overlap each other (Tech/Healthcare/Finance, Corporate/Government, Commercial/Residential). Bonds and Real Estate labels sit on top of the Corporate and Commercial circles. Labels bold near-black, readable.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title in white/light text, legend at bottom with light text on dark background. No dark-on-dark failures detected. All text clearly readable.
-      Data: Circle colors identical to light render (green, orange, blue). No color adaptation needed for data elements (only chrome flips). All hierarchy labels visible with light text.
-      Legibility verdict: PASS
+      Background: warm near-black #1A1A17.
+      Chrome: title and legend light; no dark-on-dark text.
+      Data: identical layout and fill colors to the light render; outlines light grey. Near-white labels on the lavender asset-class fill have weak contrast; on blue they read well.
+      Legibility verdict: PASS (weak contrast on lavender)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes, bold weight, appropriate sizing
+        comment: Labels sized well; near-white labels on lavender in dark have weak
+          contrast (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: No text collisions, labels positioned thoughtfully on circle surfaces
+        passed: false
+        comment: Bonds / Real Estate labels sit on child circles; overlapping holdings
+          hide each other's extent (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All circles and nested structure clearly visible at high resolution
+        comment: All circles visible with outlines in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Depth colors CVD-distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Well-proportioned square format, centered composition, nothing cut
-          off
+        passed: false
+        comment: 3600x3600 canvas instead of 2400x2400 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format, legend properly identifies hierarchy levels
+        comment: No axes by design (N/A); legend title readable
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Root=#009E73, Asset Classes=#D55E00, Holdings=#0072B2, backgrounds
-          correct, data colors identical in both renders
+        comment: Imprint order by depth, correct backgrounds
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful Okabe-Ito palette use for hierarchy encoding, intentional
-          color choices
+        passed: false
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clean minimal aesthetic, circle strokes add subtle definition
+        passed: false
+        comment: Nothing beyond the baseline; asset classes bunched in the centre
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Strong visual hierarchy guides viewer through portfolio structure
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -122,49 +136,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct circle packing with nested structure
+        comment: Nested circles, no unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Hierarchy levels, area-proportional sizing, color encoding, labels
-          all present
+        passed: false
+        comment: 'C2 missed: siblings overlap and Stocks crosses Bonds; C1 missed:
+          leaf areas not comparable across parents (defect lines)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: ID, parent, value, label properly mapped
+        passed: false
+        comment: Per-parent scale factors distort leaf areas against their values
+          (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct, legend identifies all hierarchy levels
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Portfolio hierarchy demonstrated across 3 levels
+        passed: false
+        comment: 11 nodes, below the spec's 20-200 (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic portfolio composition, neutral context
+        comment: Investment portfolio, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values scale correctly, square-root area encoding is mathematically
-          sound
+        comment: No check values; parent totals equal the sum of their holdings
     code_quality:
       score: 10
       max: 10
@@ -174,48 +188,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward data setup and plot definition, no unnecessary abstractions
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded random state ensures deterministic output
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no redundancy
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, appropriate complexity
+        comment: No fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file format and current API
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of plotnine grammar, theme tokens properly threaded
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Polygon-based circle approach shows coordinate system understanding
+        comment: geom_polygon + geom_text, coord_fixed, theme_void; default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies: []
   techniques:

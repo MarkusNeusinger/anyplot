@@ -1,7 +1,7 @@
 """ anyplot.ai
 circlepacking-basic: Circle Packing Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-11
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-21
 """
 
 import os
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, LabelSet, Legend, LegendItem
 from bokeh.plotting import figure
@@ -16,63 +17,103 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-np.random.seed(42)
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for hierarchy levels
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: one position per hierarchy level, in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Build hierarchical data: Portfolio composition by asset class (in millions)
-hierarchy = [
-    {"id": "Portfolio", "parent": None, "value": 0, "label": "Portfolio"},
-    # Equities
-    {"id": "Equities", "parent": "Portfolio", "value": 0, "label": "Equities"},
-    {"id": "US-Large-Cap", "parent": "Equities", "value": 450, "label": "US Large Cap"},
-    {"id": "US-Mid-Cap", "parent": "Equities", "value": 280, "label": "US Mid Cap"},
-    {"id": "US-Small-Cap", "parent": "Equities", "value": 170, "label": "US Small Cap"},
-    {"id": "Intl-Dev", "parent": "Equities", "value": 320, "label": "Intl Dev"},
-    {"id": "Emerging", "parent": "Equities", "value": 180, "label": "Emerging"},
-    # Fixed Income
-    {"id": "Fixed-Income", "parent": "Portfolio", "value": 0, "label": "Fixed Income"},
-    {"id": "US-Govt", "parent": "Fixed-Income", "value": 250, "label": "US Govt"},
-    {"id": "Corp-Bonds", "parent": "Fixed-Income", "value": 180, "label": "Corp Bonds"},
-    {"id": "Int-Bonds", "parent": "Fixed-Income", "value": 120, "label": "Intl Bonds"},
-    {"id": "High-Yield", "parent": "Fixed-Income", "value": 100, "label": "High Yield"},
-    # Real Assets
-    {"id": "Real-Assets", "parent": "Portfolio", "value": 0, "label": "Real Assets"},
-    {"id": "Real-Estate", "parent": "Real-Assets", "value": 200, "label": "Real Estate"},
-    {"id": "Commodities", "parent": "Real-Assets", "value": 90, "label": "Commodities"},
-    {"id": "Infrastructure", "parent": "Real-Assets", "value": 110, "label": "Infrastructure"},
-    # Alternatives
-    {"id": "Alternatives", "parent": "Portfolio", "value": 0, "label": "Alternatives"},
-    {"id": "Hedge-Funds", "parent": "Alternatives", "value": 150, "label": "Hedge Funds"},
-    {"id": "Private-Equity", "parent": "Alternatives", "value": 130, "label": "Private Equity"},
-    {"id": "Crypto", "parent": "Alternatives", "value": 40, "label": "Crypto"},
-]
+# Columns: set these to your table's column names
+ID = "id"  # role: id
+PARENT = "parent"  # role: parent
+VALUE = "Value (M$)"  # role: value
+LABEL = "label"  # role: label
+LEVEL = "Level"  # role: extra
 
+# Data: replace this block with your own table, for example df = pd.read_csv("hierarchy.csv")
+# Portfolio composition by asset class (in millions); only leaf rows carry a value
+df = pd.DataFrame(
+    [
+        ("Portfolio", None, 0, "Portfolio", "Portfolio"),
+        ("Equities", "Portfolio", 0, "Equities", "Asset Class"),
+        ("US-Large-Cap", "Equities", 450, "US Large Cap", "Investment"),
+        ("US-Mid-Cap", "Equities", 280, "US Mid Cap", "Investment"),
+        ("US-Small-Cap", "Equities", 170, "US Small Cap", "Investment"),
+        ("Intl-Dev", "Equities", 320, "Intl Dev", "Investment"),
+        ("Emerging", "Equities", 180, "Emerging", "Investment"),
+        ("Fixed-Income", "Portfolio", 0, "Fixed Income", "Asset Class"),
+        ("US-Govt", "Fixed-Income", 250, "US Govt", "Investment"),
+        ("Corp-Bonds", "Fixed-Income", 180, "Corp Bonds", "Investment"),
+        ("Int-Bonds", "Fixed-Income", 120, "Intl Bonds", "Investment"),
+        ("High-Yield", "Fixed-Income", 100, "High Yield", "Investment"),
+        ("Real-Assets", "Portfolio", 0, "Real Assets", "Asset Class"),
+        ("Real-Estate", "Real-Assets", 200, "Real Estate", "Investment"),
+        ("Commodities", "Real-Assets", 90, "Commodities", "Investment"),
+        ("Infrastructure", "Real-Assets", 110, "Infrastructure", "Investment"),
+        ("Alternatives", "Portfolio", 0, "Alternatives", "Asset Class"),
+        ("Hedge-Funds", "Alternatives", 150, "Hedge Funds", "Investment"),
+        ("Private-Equity", "Alternatives", 130, "Private Equity", "Investment"),
+        ("Crypto", "Alternatives", 40, "Crypto", "Investment"),
+    ],
+    columns=[ID, PARENT, VALUE, LABEL, LEVEL],
+)
+
+# Plot: reads only df and the constants above
 # Build tree structure
-nodes = {item["id"]: {**item, "children": [], "x": 0.0, "y": 0.0, "r": 0.0, "depth": 0} for item in hierarchy}
-root = None
-for _node_id, node in nodes.items():
-    if node["parent"] is None:
-        root = node
-    else:
-        parent = nodes[node["parent"]]
-        parent["children"].append(node)
-        node["depth"] = parent["depth"] + 1
+nodes = {
+    row[ID]: {
+        "key": row[ID],
+        "up": row[PARENT] if pd.notna(row[PARENT]) else None,
+        "amount": 0.0 if pd.isna(row[VALUE]) else float(row[VALUE]),
+        "name": row[LABEL],
+        "kind": row[LEVEL],
+        "children": [],
+        "x": 0.0,
+        "y": 0.0,
+        "r": 0.0,
+        "depth": 0,
+    }
+    for _, row in df.iterrows()
+}
+# A row without a known parent is a root; several roots share one unnamed top circle
+tops = [n for n in nodes.values() if n["up"] not in nodes]
+for node in nodes.values():
+    if node["up"] in nodes:
+        nodes[node["up"]]["children"].append(node)
+if len(tops) == 1:
+    root = tops[0]
+else:
+    root = {"key": None, "up": None, "amount": 0.0, "name": "", "kind": "", "children": tops, "x": 0.0, "y": 0.0}
+    root.update(r=0.0, depth=0)
+    nodes["virtual root"] = root
+
+
+# Depth of every node, walking down from the root
+stack = [root]
+while stack:
+    current = stack.pop()
+    for child in current["children"]:
+        child["depth"] = current["depth"] + 1
+        stack.append(child)
 
 scale_factor = 12
+padding = 2.5 * scale_factor
 
-# Compute layout bottom-up
+# Leaf radius from area: r ~ sqrt(value)
 for node in nodes.values():
     if not node["children"]:
-        node["r"] = np.sqrt(node["value"]) * scale_factor
+        node["r"] = np.sqrt(node["amount"]) * scale_factor
+max_leaf_r = max(n["r"] for n in nodes.values() if not n["children"])
+# A leaf without a positive value still gets a sliver so the packing stays defined
+for node in nodes.values():
+    if not node["children"]:
+        node["r"] = max(node["r"], 0.02 * max_leaf_r, 1e-3)
 
+# Compute layout bottom-up
 max_depth = max(n["depth"] for n in nodes.values())
 
 for current_depth in range(max_depth, -1, -1):
@@ -150,6 +191,24 @@ for current_depth in range(max_depth, -1, -1):
                                         best_score = score
                                         best_pos = (px, py)
 
+                    if best_score == float("inf"):
+                        # No tangent slot between two placed circles: walk outward along rays until free
+                        ox = sum(children[m]["x"] for m in range(i)) / i
+                        oy = sum(children[m]["y"] for m in range(i)) / i
+                        found = False
+                        for dist in np.arange(0.0, 10 * max_leaf_r * n_children, 0.5 * scale_factor):
+                            for ang in np.linspace(0, 2 * np.pi, 72, endpoint=False):
+                                px, py = ox + dist * np.cos(ang), oy + dist * np.sin(ang)
+                                if all(
+                                    np.hypot(px - children[m]["x"], py - children[m]["y"])
+                                    >= ci["r"] + children[m]["r"] - 1e-6
+                                    for m in range(i)
+                                ):
+                                    best_pos = (px, py)
+                                    found = True
+                                    break
+                            if found:
+                                break
                     ci["x"], ci["y"] = best_pos
 
         if children:
@@ -165,7 +224,7 @@ for current_depth in range(max_depth, -1, -1):
                 child["x"] -= cx
                 child["y"] -= cy
 
-            node["r"] = enc_r + 30
+            node["r"] = enc_r + padding
 
 # Position children relative to parent (top-down)
 stack = [(root, 0.0, 0.0)]
@@ -176,53 +235,45 @@ while stack:
     for child in current["children"]:
         stack.append((child, px + child["x"], py + child["y"]))
 
-# Collect all nodes for plotting
-all_circles = []
-stack = [root]
-while stack:
-    current = stack.pop()
-    all_circles.append(current)
-    stack.extend(current["children"])
+# Collect all nodes, drawn outermost first so children sit on top of their parents
+all_circles = sorted(nodes.values(), key=lambda n: (n["depth"], -n["r"]))
 
-# Prepare data for plotting
-x_vals = [n["x"] for n in all_circles]
-y_vals = [n["y"] for n in all_circles]
-radii = [n["r"] for n in all_circles]
-depths = [n["depth"] for n in all_circles]
-labels = [n["label"] for n in all_circles]
-values = [n["value"] for n in all_circles]
+# Color by depth level
+level_names = list(dict.fromkeys(n["kind"] for n in all_circles))
 
-# Color by depth using Okabe-Ito palette
-colors = [IMPRINT[min(d, 2)] for d in depths]
-depth_names = ["Portfolio", "Asset Class", "Investment"]
-depth_labels = [depth_names[min(d, 2)] for d in depths]
 
-# Create figure (square aspect)
+def alpha_for(depth):
+    return 0.6 if depth == 0 else (0.65 if depth == 1 else 0.75)
+
+
+circle_source = ColumnDataSource(
+    data={
+        "x": [n["x"] for n in all_circles],
+        "y": [n["y"] for n in all_circles],
+        "radius": [n["r"] for n in all_circles],
+        "color": [IMPRINT_PALETTE[n["depth"] % len(IMPRINT_PALETTE)] for n in all_circles],
+        "alpha": [alpha_for(n["depth"]) for n in all_circles],
+        "line_width": [3 if n["depth"] == 0 else 2 for n in all_circles],
+        LABEL: [n["name"] for n in all_circles],
+        LEVEL: [n["kind"] for n in all_circles],
+        VALUE: [n["amount"] for n in all_circles],
+    }
+)
+
+# Square canvas, the natural shape for packed circles
+W, H = 2400, 2400
 p = figure(
-    width=3600,
-    height=3600,
-    title="circlepacking-basic · bokeh · anyplot.ai",
+    frame_width=W - 200,
+    frame_height=H - 200,
+    title="circlepacking-basic · python · bokeh · anyplot.ai",
     match_aspect=True,
     toolbar_location=None,
     tools="",
+    min_border_top=160,
+    min_border_bottom=40,
+    min_border_left=100,
+    min_border_right=100,
 )
-
-# Sort by depth and radius for proper layering
-sorted_indices = sorted(range(len(all_circles)), key=lambda i: (depths[i], -radii[i]))
-
-# Draw circles with ColumnDataSource for hover
-circle_data = {
-    "x": [x_vals[i] for i in sorted_indices],
-    "y": [y_vals[i] for i in sorted_indices],
-    "radius": [radii[i] for i in sorted_indices],
-    "color": [colors[i] for i in sorted_indices],
-    "alpha": [0.6 if depths[i] == 0 else (0.65 if depths[i] == 1 else 0.75) for i in sorted_indices],
-    "line_width": [3 if depths[i] == 0 else 2 for i in sorted_indices],
-    "label": [labels[i] for i in sorted_indices],
-    "depth_label": [depth_labels[i] for i in sorted_indices],
-    "value": [values[i] for i in sorted_indices],
-}
-circle_source = ColumnDataSource(data=circle_data)
 
 circles_glyph = p.circle(
     x="x",
@@ -235,22 +286,27 @@ circles_glyph = p.circle(
     source=circle_source,
 )
 
-# Add HoverTool for interactivity
+# Hover: name, level and value of every circle
 hover = HoverTool(
-    tooltips=[("Name", "@label"), ("Level", "@depth_label"), ("Value", "@value{0} M$")],
+    tooltips=[("Name", f"@{{{LABEL}}}"), (LEVEL, f"@{{{LEVEL}}}"), (VALUE, f"@{{{VALUE}}}{{0}}")],
     renderers=[circles_glyph],
     mode="mouse",
 )
 p.add_tools(hover)
 
-# Create legend for depth colors
+# Legend: one entry per hierarchy level (off-screen proxy glyphs carry the colors)
 legend_items = []
-for color, name in zip(IMPRINT[:3], depth_names, strict=True):
-    dummy_source = ColumnDataSource(data={"x": [-99999], "y": [-99999], "r": [10]})
-    dummy_circle = p.circle(
-        x="x", y="y", radius="r", fill_color=color, fill_alpha=0.7, line_color=INK_SOFT, source=dummy_source
+for i, name in enumerate(level_names):
+    proxy = p.circle(
+        x=[0],
+        y=[0],
+        radius=[1],
+        fill_color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+        fill_alpha=0.7,
+        line_color=INK_SOFT,
+        visible=False,
     )
-    legend_items.append(LegendItem(label=name, renderers=[dummy_circle]))
+    legend_items.append(LegendItem(label=str(name), renderers=[proxy]))
 
 legend = Legend(items=legend_items, location="top_right", label_text_font_size="24pt", glyph_height=40, glyph_width=40)
 legend.background_fill_color = ELEVATED_BG
@@ -261,27 +317,34 @@ legend.padding = 15
 legend.spacing = 10
 p.add_layout(legend)
 
-# Prepare labels for larger circles
-label_data = {"x": [], "y": [], "label": []}
+# Labels: larger leaves at their center, asset classes near the top of their circle
+label_data = {"x": [], "y": [], LABEL: []}
 for node in all_circles:
-    if not node["children"] and node["r"] >= 50:
+    if not node["children"] and node["r"] >= 0.25 * max_leaf_r:
         label_data["x"].append(node["x"])
         label_data["y"].append(node["y"])
-        label_data["label"].append(node["label"])
-    elif node["depth"] == 1:
-        label_data["x"].append(node["x"])
-        label_data["y"].append(node["y"] + node["r"] * 0.7)
-        label_data["label"].append(node["label"])
+        label_data[LABEL].append(node["name"])
+    elif node["depth"] == 1 and node["children"]:
+        # Free spot: the point near the rim with the most clearance from the circle's children
+        spots = [
+            (node["x"] + 0.68 * node["r"] * np.cos(a), node["y"] + 0.68 * node["r"] * np.sin(a))
+            for a in np.linspace(0, 2 * np.pi, 120, endpoint=False)
+        ]
+        sx, sy = max(
+            spots, key=lambda s: min(np.hypot(s[0] - c["x"], s[1] - c["y"]) - c["r"] for c in node["children"])
+        )
+        label_data["x"].append(sx)
+        label_data["y"].append(sy)
+        label_data[LABEL].append(node["name"])
 
-label_source = ColumnDataSource(data=label_data)
 label_set = LabelSet(
     x="x",
     y="y",
-    text="label",
-    source=label_source,
+    text=LABEL,
+    source=ColumnDataSource(label_data),
     text_align="center",
     text_baseline="middle",
-    text_font_size="26pt",
+    text_font_size="22pt",
     text_color=INK,
     text_font_style="bold",
 )
@@ -299,7 +362,7 @@ p.outline_line_color = None
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 
-# Set axis ranges
+# Square ranges around the root circle with a small margin
 extent = root["r"] * 1.08
 p.x_range.start = -extent
 p.x_range.end = extent
@@ -310,8 +373,7 @@ p.y_range.end = extent
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with Selenium
-W, H = 3600, 3600
+# Screenshot with headless Chrome
 opts = Options()
 for arg in (
     "--headless=new",
@@ -325,6 +387,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
