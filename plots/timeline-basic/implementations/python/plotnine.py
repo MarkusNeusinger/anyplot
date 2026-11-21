@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeline-basic: Event Timeline
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 95/100 | Updated: 2026-05-11
@@ -6,6 +6,7 @@ Quality: 95/100 | Updated: 2026-05-11
 
 import os
 import sys
+import textwrap
 from pathlib import Path
 
 
@@ -26,6 +27,7 @@ from plotnine import (  # noqa: E402
     ggplot,
     labs,
     scale_color_manual,
+    scale_x_datetime,
     scale_y_continuous,
     theme,
     theme_minimal,
@@ -39,105 +41,102 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series is always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Software development project milestones with varied timing
-data = {
-    "date": pd.to_datetime(
-        [
-            "2024-01-08",
-            "2024-02-15",
-            "2024-03-08",
-            "2024-04-12",
-            "2024-05-20",
-            "2024-06-10",
-            "2024-07-18",
-            "2024-08-05",
-            "2024-09-22",
-            "2024-10-15",
-            "2024-11-08",
-            "2024-12-20",
-        ]
-    ),
-    "event": [
-        "Project Kickoff",
-        "Requirements Complete",
-        "Architecture Review",
-        "Backend Alpha",
-        "Frontend Alpha",
-        "Integration Testing",
-        "Beta Release",
-        "User Acceptance",
-        "Performance Tuning",
-        "Security Audit",
-        "Release Candidate",
-        "Production Launch",
-    ],
-    "category": [
-        "Planning",
-        "Planning",
-        "Planning",
-        "Development",
-        "Development",
-        "Testing",
-        "Development",
-        "Testing",
-        "Development",
-        "Testing",
-        "Release",
-        "Release",
-    ],
-}
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+EVENT = "Event"  # role: event
+CATEGORY = "Phase"  # role: category
 
-df = pd.DataFrame(data)
+# Data: replace this block with your own table, for example df = pd.read_csv("events.csv", parse_dates=["Date"])
+df = pd.DataFrame(
+    {
+        DATE: pd.to_datetime(
+            [
+                "2024-01-08",
+                "2024-02-15",
+                "2024-03-08",
+                "2024-04-12",
+                "2024-05-20",
+                "2024-06-10",
+                "2024-07-18",
+                "2024-08-05",
+                "2024-09-22",
+                "2024-10-15",
+                "2024-11-08",
+                "2024-12-20",
+            ]
+        ),
+        EVENT: [
+            "Project Kickoff",
+            "Requirements Complete",
+            "Architecture Review",
+            "Backend Alpha",
+            "Frontend Alpha",
+            "Integration Testing",
+            "Beta Release",
+            "User Acceptance",
+            "Performance Tuning",
+            "Security Audit",
+            "Release Candidate",
+            "Production Launch",
+        ],
+        CATEGORY: [
+            "Planning",
+            "Planning",
+            "Planning",
+            "Development",
+            "Development",
+            "Testing",
+            "Development",
+            "Testing",
+            "Development",
+            "Testing",
+            "Release",
+            "Release",
+        ],
+    }
+)
 
-# Alternate label positions above and below the axis
-df["y_offset"] = [1 if i % 2 == 0 else -1 for i in range(len(df))]
-df["y_point"] = df["y_offset"] * 0.35
-df["y_label"] = df["y_offset"] * 0.65
+# Plot: reads only df and the constants above
+df = df.sort_values(DATE).reset_index(drop=True)
 
-# Split dataframe for alternating text positions
-df_above = df[df["y_offset"] == 1].copy()
-df_below = df[df["y_offset"] == -1].copy()
+# Alternate labels above and below the axis; markers keep their exact dates
+side = pd.Series([1 if i % 2 == 0 else -1 for i in range(len(df))])
+df["y_point"] = side * 0.35
+df["y_label"] = side * 0.65
+df["label"] = df[EVENT].map(lambda text: "\n".join(textwrap.wrap(text, width=12)))
+df_above = df[side == 1]
+df_below = df[side == -1]
 
-# Category colors - using Okabe-Ito palette
-category_colors = {
-    "Planning": IMPRINT[0],
-    "Development": IMPRINT[1],
-    "Testing": IMPRINT[2],
-    "Release": IMPRINT[3],
-}
+# The timeline axis, a little longer than the first and last event
+span = pd.Timedelta(days=20)
+axis_line = pd.DataFrame({"x": [df[DATE].min() - span], "xend": [df[DATE].max() + span]})
 
-# Create timeline plot
 plot = (
-    ggplot(df, aes(x="date", y=0))
-    # Vertical connector lines from axis to points
-    + geom_segment(aes(x="date", xend="date", y=0, yend="y_point"), color=INK_SOFT, size=0.8, alpha=0.5)
+    ggplot(df, aes(x=DATE))
+    # Connectors from the axis to each marker
+    + geom_segment(aes(xend=DATE, y=0, yend="y_point"), color=INK_SOFT, size=0.4, alpha=0.5)
     # Timeline axis line
-    + geom_segment(
-        aes(x=df["date"].min() - pd.Timedelta(days=20), xend=df["date"].max() + pd.Timedelta(days=20), y=0, yend=0),
-        color=INK_SOFT,
-        size=1.5,
-    )
-    # Event points on the timeline
-    + geom_point(aes(x="date", y="y_point", color="category"), size=5)
-    # Event labels above the axis
-    + geom_text(data=df_above, mapping=aes(x="date", y="y_label", label="event"), size=11, color=INK, va="bottom")
-    # Event labels below the axis
-    + geom_text(data=df_below, mapping=aes(x="date", y="y_label", label="event"), size=11, color=INK, va="top")
-    # Styling
-    + scale_color_manual(values=category_colors)
+    + geom_segment(aes(x="x", xend="xend", y=0, yend=0), data=axis_line, color=INK_SOFT, size=0.8, inherit_aes=False)
+    # Event markers, one per event at its date
+    + geom_point(aes(y="y_point", color=CATEGORY), size=3)
+    # Event labels above and below the axis
+    + geom_text(aes(y="y_label", label="label"), data=df_above, size=7, color=INK, va="bottom", lineheight=0.9)
+    + geom_text(aes(y="y_label", label="label"), data=df_below, size=7, color=INK, va="top", lineheight=0.9)
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=df[CATEGORY].unique().tolist())
+    + scale_x_datetime(date_breaks="1 month", date_labels="%b")
     + scale_y_continuous(limits=(-1.2, 1.2))
-    + labs(title="timeline-basic · plotnine · anyplot.ai", x="Project Timeline 2024", y="", color="Phase")
+    + labs(title="timeline-basic · python · plotnine · anyplot.ai", x=f"{DATE} (2024)", y="", color=CATEGORY)
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=24, ha="center", color=INK),
-        axis_title_x=element_text(size=20, color=INK),
-        axis_text_x=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=12, ha="center", color=INK),
+        axis_title_x=element_text(size=10, color=INK),
+        axis_text_x=element_text(size=8, color=INK_SOFT),
         axis_text_y=element_blank(),
         axis_ticks_major_y=element_blank(),
         axis_line_y=element_blank(),
@@ -146,11 +145,12 @@ plot = (
         panel_grid_major_x=element_line(color=INK_SOFT, alpha=0.1, size=0.3),
         panel_grid_minor_x=element_blank(),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="bottom",
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
