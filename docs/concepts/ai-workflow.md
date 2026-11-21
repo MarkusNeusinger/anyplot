@@ -117,8 +117,8 @@ for every line; the stories live in the guardrails file. Three examples:
 
 ## Where it falls short
 
-- **One prompt and waiting doesn't work yet.** Since the first commit on 2025-11-18, more than 950 pull
-  requests from my account have merged, and up to 2026-11-04, 208 of those 351 days had a commit under
+- **One prompt and waiting doesn't work yet.** Since the first commit on 2025-11-18, more than 1,000
+  pull requests from my account have merged, and up to 2026-11-04, 208 of those 351 days had a commit under
   my name.
 - **Models make confident mistakes.** A reply described an axis value the plot didn't draw, a summary
   said an agent was working hours after it had stopped, and a green deploy left the site blank. So

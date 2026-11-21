@@ -34,7 +34,7 @@ I'm [Markus Neusinger](https://linkedin.com/in/markus-neusinger/), a physicist a
     line says what changed and how often ([#12196](https://github.com/MarkusNeusinger/anyplot/pull/12196)).
 - **I split, assign, test, and send back.** Work goes to Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs. I test what comes back and return it until it's right.
 
-This isn't one prompt and a wait. Since November 2025, more than 950 pull requests from my account have merged and 16 releases have shipped. A new spec needs my approval, and outside the plot pipeline the agents merge nothing without my OK. What I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
+This isn't one prompt and a wait. Since November 2025, more than 1,000 pull requests from my account have merged and 17 releases have shipped. A new spec needs my approval, and outside the plot pipeline the agents merge nothing without my OK. What I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
 
 [![A grid of catalogue plots, one spec in each library, with the catalogue's spec, library, and language counts](docs/assets/readme-showcase.png)](https://anyplot.ai/plots)
 
