@@ -1,16 +1,15 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-grid: Subplot Grid Layout
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-13
 """
 
 import os
-from io import BytesIO
 
 import cairosvg
 import numpy as np
+import pandas as pd
 import pygal
-from PIL import Image, ImageDraw, ImageFont
 from pygal.style import Style
 
 
@@ -20,276 +19,141 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"
-COLOR_2 = "#C475FD"
 
-# Data - Business performance dashboard with multiple metrics
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Monthly revenue trend (line chart)
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: x
+CATEGORY = "Category"  # role: extra
+ORDERS = "Orders per day"  # role: extra
+REVENUE = "Revenue ($K)"  # role: y
+AD_SPEND = "Ad spend ($K)"  # role: extra
+ROI = "ROI (%)"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("shop_days.csv")
+# One row per trading day of an online shop: 20 days in each of the 12 months.
+rng = np.random.default_rng(42)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-revenue = [120, 135, 128, 145, 162, 158, 175, 189, 195, 210, 225, 248]  # in thousands
-
-# Sales by category (bar chart)
 categories = ["Electronics", "Apparel", "Home", "Sports", "Books"]
-sales = [45.2, 32.8, 28.5, 19.7, 15.3]  # in thousands
-
-# Advertising spend vs ROI (scatter)
-ad_spend = np.random.uniform(5, 50, 30)  # advertising spend in thousands
-roi = ad_spend * 0.12 + np.random.normal(0, 1.5, 30)  # ROI percentage
-
-# Daily order volume distribution (histogram)
-daily_orders = np.random.normal(loc=150, scale=35, size=365)
-daily_orders = np.clip(daily_orders, 50, 300)
-n_bins = 15
-counts, bin_edges = np.histogram(daily_orders, bins=n_bins)
-hist_data = [(int(count), float(bin_edges[i]), float(bin_edges[i + 1])) for i, count in enumerate(counts)]
-
-# Chart styles
-line_style = Style(
-    background=PAGE_BG,
-    plot_background=PAGE_BG,
-    foreground=INK,
-    foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=(BRAND,),
-    font_family="sans-serif",
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
-    opacity=0.85,
-    opacity_hover=1.0,
+month_col = np.repeat(months, 20)
+trend = np.repeat(np.linspace(1.0, 1.9, len(months)), 20)
+orders = np.clip(rng.normal(150, 35, len(month_col)) * trend / 1.4, 40, None).round()
+category_col = rng.choice(categories, size=len(month_col), p=[0.34, 0.24, 0.2, 0.13, 0.09])
+ad_spend = rng.uniform(5, 50, len(month_col))
+df = pd.DataFrame(
+    {
+        MONTH: month_col,
+        CATEGORY: category_col,
+        ORDERS: orders,
+        REVENUE: orders * rng.normal(0.9, 0.08, len(month_col)),
+        AD_SPEND: ad_spend,
+        ROI: ad_spend * 0.12 + rng.normal(0, 1.5, len(month_col)),
+    }
 )
 
-bar_style = Style(
-    background=PAGE_BG,
-    plot_background=PAGE_BG,
-    foreground=INK,
-    foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=(COLOR_2,),
-    font_family="sans-serif",
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
-    opacity=0.85,
-    opacity_hover=1.0,
+# Plot: pygal has no subplot support, so each cell is its own chart and the four SVGs
+# are nested into one canvas SVG that also carries the figure title.
+CANVAS_W, CANVAS_H = 3200, 1800
+MARGIN, GAP, TITLE_H = 60, 40, 170
+cell_w = (CANVAS_W - 2 * MARGIN - GAP) // 2
+cell_h = (CANVAS_H - TITLE_H - MARGIN - GAP) // 2
+
+fig_title = "subplot-grid · python · pygal · anyplot.ai"
+title_size = round(78 * min(1.0, 67 / len(fig_title)))
+
+
+def cell_style():
+    return Style(
+        background=PAGE_BG,
+        plot_background=PAGE_BG,
+        foreground=INK_SOFT,
+        foreground_strong=INK,
+        foreground_subtle=INK_MUTED,
+        colors=IMPRINT_PALETTE,
+        font_family="sans-serif",
+        title_font_size=40,
+        label_font_size=32,
+        major_label_font_size=28,
+        legend_font_size=28,
+        value_font_size=24,
+        stroke_width=4,
+        opacity=0.85,
+        opacity_hover=1.0,
+    )
+
+
+def make_cell(chart_class, title, x_title, y_title):
+    return chart_class(
+        width=cell_w,
+        height=cell_h,
+        style=cell_style(),
+        title=title,
+        x_title=x_title,
+        y_title=y_title,
+        show_legend=False,
+        show_y_guides=True,
+        show_x_guides=False,
+        truncate_label=-1,
+    )
+
+
+# Top-left: line chart of monthly revenue
+monthly = df.groupby(MONTH, sort=False)[REVENUE].sum()
+line_chart = make_cell(pygal.Line, "Monthly revenue", MONTH, REVENUE)
+line_chart.dots_size = 8
+line_chart.x_labels = monthly.index.tolist()
+line_chart.add("Revenue", monthly.tolist())
+
+# Top-right: bar chart of revenue by category
+by_category = df.groupby(CATEGORY)[REVENUE].sum().sort_values(ascending=False)
+bar_chart = make_cell(pygal.Bar, "Revenue by category", CATEGORY, REVENUE)
+bar_chart.spacing = 20
+bar_chart.x_labels = by_category.index.tolist()
+bar_chart.add("Revenue", by_category.tolist())
+
+# Bottom-left: scatter of ad spend against ROI
+scatter_chart = make_cell(pygal.XY, "Ad spend vs return", AD_SPEND, ROI)
+scatter_chart.show_x_guides = True
+scatter_chart.stroke = False
+scatter_chart.dots_size = 7
+scatter_chart.add("Days", list(zip(df[AD_SPEND].tolist(), df[ROI].tolist(), strict=True)))
+
+# Bottom-right: histogram of daily orders
+counts, edges = np.histogram(df[ORDERS].dropna(), bins=int(np.sqrt(len(df))))
+hist_chart = make_cell(pygal.Histogram, "Daily order volume", ORDERS, "Days")
+hist_chart.add(
+    "Days", [(int(c), float(lo), float(hi)) for c, lo, hi in zip(counts, edges[:-1], edges[1:], strict=True)]
 )
 
-scatter_style = Style(
-    background=PAGE_BG,
-    plot_background=PAGE_BG,
-    foreground=INK,
-    foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=(BRAND,),
-    font_family="sans-serif",
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
-    opacity=0.85,
-    opacity_hover=1.0,
+# Nest the four chart SVGs into a single canvas SVG
+cells = [line_chart, bar_chart, scatter_chart, hist_chart]
+nested = []
+for i, chart in enumerate(cells):
+    x = MARGIN + (i % 2) * (cell_w + GAP)
+    y = TITLE_H + (i // 2) * (cell_h + GAP)
+    chart.disable_xml_declaration = True
+    svg = chart.render(is_unicode=True)
+    svg = svg.replace("<svg ", f'<svg x="{x}" y="{y}" width="{cell_w}" height="{cell_h}" ', 1)
+    nested.append(svg)
+
+canvas_svg = (
+    f'<svg xmlns="http://www.w3.org/2000/svg" width="{CANVAS_W}" height="{CANVAS_H}" '
+    f'viewBox="0 0 {CANVAS_W} {CANVAS_H}">'
+    f'<rect width="{CANVAS_W}" height="{CANVAS_H}" fill="{PAGE_BG}"/>'
+    f'<text x="{CANVAS_W // 2}" y="{TITLE_H - 70}" text-anchor="middle" font-family="sans-serif" '
+    f'font-size="{title_size}" font-weight="bold" fill="{INK}">{fig_title}</text>'
+    f"{''.join(nested)}</svg>"
 )
 
-hist_style = Style(
-    background=PAGE_BG,
-    plot_background=PAGE_BG,
-    foreground=INK,
-    foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=(COLOR_2,),
-    font_family="sans-serif",
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
-    opacity=0.85,
-    opacity_hover=1.0,
-)
-
-# Create individual charts for the 2x2 grid
-cell_width = 2200
-cell_height = 1200
-
-# Top-left: Line chart - Monthly Revenue Trend
-line_chart = pygal.Line(
-    width=cell_width,
-    height=cell_height,
-    style=line_style,
-    title="Monthly Revenue ($K)",
-    x_title="Month",
-    y_title="Revenue ($K)",
-    show_legend=False,
-    show_dots=True,
-    dots_size=10,
-    show_y_guides=True,
-    show_x_guides=False,
-    truncate_label=-1,
-)
-line_chart.x_labels = months
-line_chart.add("Revenue", revenue)
-
-# Top-right: Bar chart - Sales by Category
-bar_chart = pygal.Bar(
-    width=cell_width,
-    height=cell_height,
-    style=bar_style,
-    title="Sales by Category ($K)",
-    x_title="Category",
-    y_title="Sales ($K)",
-    show_legend=False,
-    print_values=False,
-    show_y_guides=True,
-    show_x_guides=False,
-    spacing=20,
-    truncate_label=-1,
-)
-bar_chart.x_labels = categories
-bar_chart.add("Sales", sales)
-
-# Bottom-left: Scatter plot - Ad Spend vs ROI
-scatter_chart = pygal.XY(
-    width=cell_width,
-    height=cell_height,
-    style=scatter_style,
-    title="Ad Spend vs Return on Investment",
-    x_title="Ad Spend ($K)",
-    y_title="ROI (%)",
-    show_legend=False,
-    stroke=False,
-    dots_size=12,
-    show_y_guides=True,
-    show_x_guides=True,
-)
-scatter_points = [(float(x), float(y)) for x, y in zip(ad_spend, roi, strict=True)]
-scatter_chart.add("Campaigns", scatter_points)
-
-# Bottom-right: Histogram - Daily Order Distribution
-hist_chart = pygal.Histogram(
-    width=cell_width,
-    height=cell_height,
-    style=hist_style,
-    title="Daily Order Volume Distribution",
-    x_title="Orders per Day",
-    y_title="Frequency",
-    show_legend=False,
-    show_y_guides=True,
-    show_x_guides=False,
-)
-hist_chart.add("Orders", hist_data)
-
-# Render each chart to PNG
-charts = [[line_chart, bar_chart], [scatter_chart, hist_chart]]
-
-images = []
-for row_charts in charts:
-    row_images = []
-    for chart in row_charts:
-        svg_bytes = chart.render()
-        png_bytes = cairosvg.svg2png(bytestring=svg_bytes, output_width=cell_width, output_height=cell_height)
-        img = Image.open(BytesIO(png_bytes))
-        row_images.append(img)
-    images.append(row_images)
-
-# Create combined image (4800 x 2700 with space for main title)
-title_height = 180
-total_width = 4800
-total_height = 2700
-
-combined = Image.new("RGB", (total_width, total_height), PAGE_BG)
-
-# Calculate grid positioning
-grid_height = total_height - title_height
-margin_x = 100
-grid_width = total_width - 2 * margin_x
-actual_cell_width = grid_width // 2
-actual_cell_height = grid_height // 2
-
-# Paste charts into 2x2 grid
-for row_idx, row_images in enumerate(images):
-    for col_idx, img in enumerate(row_images):
-        img_resized = img.resize((actual_cell_width, actual_cell_height), Image.LANCZOS)
-        x = margin_x + col_idx * actual_cell_width
-        y = title_height + row_idx * actual_cell_height
-        combined.paste(img_resized, (x, y))
-
-# Add main title using PIL
-draw = ImageDraw.Draw(combined)
-
-try:
-    title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
-except OSError:
-    title_font = ImageFont.load_default()
-
-title_text = "subplot-grid · pygal · anyplot.ai"
-bbox = draw.textbbox((0, 0), title_text, font=title_font)
-title_width = bbox[2] - bbox[0]
-title_x = (total_width - title_width) // 2
-draw.text((title_x, 50), title_text, fill=INK, font=title_font)
-
-# Save final PNG
-combined.save(f"plot-{THEME}.png", dpi=(300, 300))
-
-# Create interactive HTML version
-html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <title>subplot-grid · pygal · anyplot.ai</title>
-    <style>
-        body {{
-            font-family: sans-serif;
-            background: {PAGE_BG};
-            color: {INK};
-            margin: 20px;
-        }}
-        h1 {{
-            text-align: center;
-            color: {INK};
-            font-size: 32px;
-            margin-bottom: 30px;
-        }}
-        .grid {{
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }}
-        .chart {{
-            width: 100%;
-            border: 1px solid {INK_MUTED};
-            border-radius: 8px;
-            overflow: hidden;
-        }}
-        .chart svg {{ width: 100%; height: auto; }}
-    </style>
-</head>
-<body>
-    <h1>subplot-grid · pygal · anyplot.ai</h1>
-    <div class="grid">
-"""
-
-# Add all four charts
-all_charts = [line_chart, bar_chart, scatter_chart, hist_chart]
-for chart in all_charts:
-    svg_data = chart.render(is_unicode=True)
-    svg_data = svg_data.replace('<?xml version="1.0" encoding="utf-8"?>', "")
-    html_content += f'        <div class="chart">{svg_data}</div>\n'
-
-html_content += """    </div>
-</body>
-</html>"""
-
-with open(f"plot-{THEME}.html", "w") as f:
-    f.write(html_content)
+# Save
+cairosvg.svg2png(bytestring=canvas_svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(
+        "<!DOCTYPE html><html><head><meta charset='utf-8'>"
+        f"<title>{fig_title}</title></head>"
+        f"<body style='margin:0;background:{PAGE_BG}'>"
+        f"<div style='max-width:{CANVAS_W}px;margin:0 auto'>"
+        f"{canvas_svg.replace('<svg xmlns', '<svg style="width:100%;height:auto" xmlns', 1)}"
+        "</div></body></html>"
+    )
