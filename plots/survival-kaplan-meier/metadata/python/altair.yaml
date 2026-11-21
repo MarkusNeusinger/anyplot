@@ -2,48 +2,69 @@ library: altair
 language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:50:58Z'
-updated: '2026-05-11T07:49:54Z'
-generated_by: claude-haiku
-workflow_run: 25657019309
+updated: '2026-11-21T01:23:47Z'
+generated_by: claude-sonnet
+workflow_run: 44849091232
 issue: 2441
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 80
 review:
   strengths:
-  - Perfect text legibility with explicitly set font sizes across all themes
-  - Flawless palette compliance with correct Okabe-Ito usage and theme-adaptive chrome
-  - All specification requirements fully met with accurate Kaplan-Meier implementation
-  - Clean, KISS-structured code with reproducible random seed
-  - Excellent library mastery with idiomatic Altair usage and distinctive features
-  - High-quality data example showing realistic clinical trial context with two treatment
-    groups
+  - Native Vega-Lite step interpolation (interpolate="step-after") on both the survival
+    line and the y/y2 CI area, so the bands step with their curves exactly
+  - Censored observations drawn with mark_tick at their censoring time and the curve's
+    height, small and thin enough not to read as steps
+  - Exact 3200x1800 canvas reached by pad-only post-processing, with theme tokens
+    threaded through axis, title and legend config in both renders
+  - Layered composition shares one x encoding and one color scale across band, line
+    and tick layers; the adaptable Data block with escaped column constants passes
+    the static and smoke checks
   weaknesses:
-  - Minimal design differentiation - relies on standard library styling without exceptional
-    aesthetic enhancement
-  - No visual storytelling or emphasis to guide viewer attention to key insights about
-    survival difference
-  - Could benefit from additional visual hierarchy to highlight the contrast between
-    treatment outcomes
+  - 'VQ-03 (both): the legend glyphs are pale translucent circles taken from the 25
+    %-opacity CI band layer, so they do not match the solid 3 px step curves they
+    explain and Treatment A''s glyph nearly vanishes on the #1A1A17 background → a
+    solid line sample at full opacity in each group''s color. Likely cause: the color
+    legend is merged from the mark_area layer (opacity=0.25); set legend=None on the
+    band and tick layers and give the line layer alt.Legend(symbolType="stroke", symbolStrokeWidth=3,
+    symbolOpacity=1).'
+  - 'DQ-03 (both): both curves plunge vertically at exactly 36 months (Treatment A
+    from about 0.38 to about 0.07, Treatment B from about 0.19 to about 0.05) because
+    every exponential draw above 36 is clipped to 36 and keeps its random event flag,
+    piling a mass of events on the last day of follow-up → observations beyond the
+    end of follow-up are censored at 36 (event = 0), so each curve ends on its last
+    real step. Likely cause: np.clip(np.random.exponential(...), 1, 36) applied to
+    time without censoring the clipped rows (the lower clip at 1 also stacks events
+    at month 1).'
+  - 'DQ-02 (both): the arms are labelled "Treatment A" and "Treatment B", generic
+    placeholders in an otherwise plausible clinical-trial story → name the arms as
+    a trial would, for example "Chemotherapy + immunotherapy" and "Chemotherapy alone".
+    Likely cause: the GROUP label list in the Data block.'
+  - 'CQ-04 (code): lines 60–92 write out the Kaplan-Meier product-limit estimate and
+    the Greenwood variance by hand, which statsmodels computes → statsmodels.duration.survfunc.SurvfuncRight(time,
+    event) with its surv_times, surv_prob and surv_prob_se. Likely cause: the inline
+    estimation loop.'
+  - 'Suggestion: a median survival annotation where each curve crosses 0.5, which
+    the Notes allow.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with no harsh white edges. Correctly rendered.
-      Chrome: Title, axis labels ("Time (Months)", "Survival Probability"), and tick labels all rendered in dark text (#1A1A17 and #4A4A44) with perfect legibility against the light background. Grid lines are subtle (opacity 0.10) but visible. Legend box has light background with subtle border.
-      Data: Two step-function survival curves - Treatment A (teal #009E73) starts high and remains above Treatment B (orange #D55E00) throughout. Confidence interval bands (opacity 0.25) shown around each curve. Censored observation tick marks visible at appropriate positions. All data elements clearly distinguishable.
-      Legibility verdict: PASS - All text is highly readable, data colors are distinct, no elements obscure each other.
+      Background: Warm off-white #FAF8F1 across the full 3200x1800 canvas, no pure white.
+      Chrome: Centered bold title "survival-kaplan-meier · python · altair · anyplot.ai" in near-black; axis titles "Time (Months)" and "Survival Probability" bold dark ink; tick labels (0-36 every 2 months, 0.0-1.0 every 0.1) in soft dark gray, all readable. Subtle grid at 10 % ink. Framed legend "Treatment group" top right on an elevated off-white box.
+      Data: Two step curves - Treatment A in #009E73 green, Treatment B in #C475FD purple - starting at 1.0 at time 0, with translucent 95 % CI bands stepping with them (overlap reads as a gray-blue). Small vertical censoring ticks sit on the curves. Both curves drop vertically at 36 months to about 0.05-0.1. Legend glyphs are pale translucent circles that do not match the solid lines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with consistent color to light theme. Correctly rendered.
-      Chrome: Title and axis labels rendered in light text (#F0EFE8) with excellent contrast against dark background. Secondary text (#B8B7B0) properly readable. Grid lines subtle but visible (opacity 0.10 with light overlay). Legend box adapted with dark background (#242420) and light border.
-      Data: Treatment A curve (teal #009E73) and Treatment B curve (orange #D55E00) remain identical in color to light render. CI bands visible with theme-adapted appearance. Censored marks clearly visible. No dark-on-dark contrast failures.
-      Legibility verdict: PASS - No dark-on-dark issues; all text is readable with appropriate color contrast; data colors identical to light render (only chrome adapted).
+      Background: Warm near-black #1A1A17, no pure black.
+      Chrome: Title, axis titles and tick labels in light ink, all readable; no dark-on-dark text. Grid subtle but visible. Legend box on #242420 with a light border and light text.
+      Data: Same #009E73 and #C475FD curves and bands as the light render; only chrome flipped. Bands read as dark green, dark purple and slate where they overlap; curves stay distinguishable. The Treatment A legend glyph is a dim dark-green circle that nearly vanishes.
+      Legibility verdict: PASS (text); legend glyphs weak
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,75 +72,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly set: Title 28px, Labels 22px, Ticks 18px. Perfect
-          readability in both themes.'
+        comment: Title 18, axis titles 14, ticks 12, legend 12/13 at scale 4, above
+          the altair reference; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. All elements clearly readable and well-spaced.
+        comment: No text collisions; band overlap handled with translucency
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Curves, CI bands, and censored marks all clearly visible and properly
-          sized.
+        comment: Curves, bands and ticks visible; legend glyphs are translucent band-layer
+          circles that do not match the solid curves (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety. Good contrast between series
-          and backgrounds.
+        comment: Green vs purple is CVD-safe with good contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 (×3 scale) optimally utilizes canvas with 50-80% coverage
-          and balanced margins.
+        comment: 3200x1800, balanced margins, title about 52 % of width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Time (Months)'' and ''Survival
-          Probability''.'
+        comment: Time (Months), Survival Probability
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect Okabe-Ito compliance (Treatment A: #009E73, Treatment B:
-          #D55E00). Backgrounds (#FAF8F1 light, #1A1A17 dark) and text colors correctly
-          theme-adaptive. Both renders pass legibility check.'
+        comment: Imprint positions 1-2 in order (#009E73 first), correct page backgrounds,
+          theme-correct chrome
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Intentional color choices and professional polish with theme tokens.
-          Well-configured defaults but not exceptional design.
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid configuration, proper legend styling, and generous whitespace.
-          Some refinement visible beyond defaults.
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data correctly displayed but no visual hierarchy or emphasis to guide
-          viewer attention. No focal point highlighting survival difference.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -129,31 +143,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kaplan-Meier plot with step function, CI bands, and censored
-          marks.
+        comment: Kaplan-Meier step curves, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: step curves, 95% CI bands, censored tick
-          marks, group comparison with legend.'
+        comment: Step function from 1.0 at t=0 (C1), stepped CI bands (C2), censoring
+          ticks on the curve (C3), two colored groups with legend (C4); no optional
+          extras drawn (C5 not triggered)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Time, Y=Survival Probability. Axes correctly cover full data range
-          [0,38] and [0,1].
+        comment: X time, Y survival 0-1, censor ticks at their times and curve heights;
+          axis covers all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels accurately reflect treatment
-          groups.
+        comment: Mandated title format; legend title 'Treatment group' with readable
+          entries
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -161,24 +175,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: two treatment groups with different outcomes,
-          censored observations, confidence intervals.'
+        comment: Two diverging groups, censoring, widening CIs, overlapping bands
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Clinical trial context is realistic and neutral. Treatment A vs B
-          is generic but comprehensible.
+        comment: Clinical trial is plausible and neutral, but arms labelled Treatment
+          A/B (defect line)
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Time range (1-36 months), survival probabilities (0-1.0), and event
-          rates (0.65-0.75) are factually plausible.
+        comment: '36-month follow-up and survival range plausible; checked the tail:
+          clipping turns over-36 draws into events at 36, so both curves plunge at
+          the end (defect line). No Check values in the Notes.'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -186,56 +200,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme tokens → data generation → KM
-          calculation → plot → save. No unnecessary abstraction.'
+        comment: Linear zones, adaptable static and smoke checks pass
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, altair, numpy, pandas) are actively used. No dead
-          imports.
+        comment: os, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no over-engineering, no fake functionality.
-          Pythonic and readable.
+        passed: false
+        comment: Lines 60-92 hand-write KM and Greenwood that statsmodels SurvfuncRight
+          computes (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html. Uses current
-          Altair API.
+        comment: plot-{THEME}.png + .html, current Altair 6 API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert-level Altair: mark_line/mark_area/mark_tick, proper encodings,
-          Scale objects, configure_* methods all idiomatic.'
+        comment: Layered chart sharing reusable alt.X/alt.Color encodings across three
+          marks, y/y2 area band
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Uses interpolate='step-after' (Altair-specific), mark_tick for censored
-          marks, alt.Y2 for CI bands, comprehensive configure_* methods.
+        passed: false
+        comment: Vega-Lite step-after interpolation on line and area, mark_tick for
+          censoring
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T01:19:00Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - html-export
@@ -245,3 +260,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
