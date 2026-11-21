@@ -2,46 +2,46 @@ library: pygal
 language: python
 specification_id: histogram-cumulative
 created: '2025-12-30T09:32:26Z'
-updated: '2026-05-11T22:54:49Z'
-generated_by: claude-haiku
-workflow_run: 25701695714
+updated: '2026-11-21T03:44:57Z'
+generated_by: claude-sonnet
+workflow_run: 44862232862
 issue: 2549
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 82
 review:
   strengths:
-  - 'Perfect Visual Quality (30/30): Explicit font sizes, zero overlap, optimal element
-    visibility, correct palette compliance'
-  - 'Perfect Spec Compliance (15/15): Correct cumulative histogram type, all required
-    features present, proper axis mapping, correct title format'
-  - 'Perfect Data Quality (15/15): Comprehensive feature coverage with realistic customer
-    satisfaction scenario, appropriate 0-1 scale'
-  - 'Flawless Code Quality (10/10): KISS structure with deterministic seeding, clean
-    imports, no over-engineering'
-  - 'Theme adaptation working correctly: Both light and dark renders display identical
-    data colors with proper chrome adaptation'
+  - Cumulative proportion computed with np.histogram + np.cumsum and drawn as one
+    adjacent bar per bin, monotonic and reaching exactly 1.0 at the last bin
+  - 'Theme tokens threaded through pygal''s Style object: warm off-white / near-black
+    surfaces with correctly flipped chrome in both renders'
+  - Font sizes follow the pygal source-pixel reference on the canonical 3200x1800
+    canvas; every label readable at full size
+  - 'Adaptable layout: a Data block ending in df, a RATING column constant reused
+    as the x-axis title and a BIN_COUNT constant'
+  - Native pygal HTML output with hover tooltips showing each bin's cumulative value
   weaknesses:
-  - 'Design Excellence below publication quality: Generic default styling without
-    custom design touches; no visual hierarchy or emphasis beyond basic bar heights'
-  - 'Limited Library Mastery: While Style object is used correctly, the implementation
-    doesn''t leverage pygal-specific distinctive features beyond theming'
+  - 'Suggestion: set Style(opacity=''1'') so the bars show solid #009E73 instead of
+    pygal''s default 0.7 fill, which washes them pale on the light surface and darkens
+    them on the dark one.'
+  - 'Suggestion: the major y ticks (0, 0.5, 1) render at major_label_font_size 44
+    beside the 56 px minor ticks; matching the two sizes would even out the y axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title, axis labels, tick labels all dark and clearly visible; grid lines subtle but visible
-      Data: Bars rendered in brand green (#009E73); cumulative proportions displayed correctly from 0 to 1; value labels on top of bars
-      Legibility verdict: PASS - all text readable, strong contrast
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'histogram-cumulative · python · pygal · anyplot.ai' centred at top in dark ink; y-axis title 'Cumulative Proportion', x-axis title 'Customer Satisfaction Rating'; y ticks 0-1 in 0.1 steps (0, 0.5, 1 slightly smaller as pygal major labels); 20 bin labels '1.0-1.2' ... '4.8-5.0' rotated 45°; dashed subtle y guides. All readable.
+      Data: 20 adjacent #009E73 bars (pygal 0.7 fill opacity, reads as a lighter green) rising monotonically from 0.001 to exactly 1.0, steep through 3.0-4.2, flattening at the top.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, tick labels all light-colored and clearly visible; grid lines subtle and light
-      Data: Bars maintain identical brand green (#009E73) color; cumulative pattern identical to light render; value labels readable
-      Legibility verdict: PASS - no dark-on-dark failures, proper theme adaptation
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, axis titles and tick labels in light ink #F0EFE8, clearly readable; guides subtle dark dashes; no dark-on-dark text.
+      Data: same #009E73 bars with the same 0.7 fill opacity (reads deeper green on the dark surface), identical heights and layout to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,47 +52,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and perfectly readable in both themes
+        comment: Title 66, axis titles 56, ticks 44/56 source px per the pygal prompt;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Rotated x-axis labels prevent overlap; all text fully readable
+        comment: Rotated 45° bin labels sit close but never collide; no text on data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars optimally sized and clearly visible; cumulative pattern evident
+        comment: 20 bars clearly visible on both surfaces; tiny first bars are the
+          data (near-zero cumulative proportion)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito brand green is colorblind-safe with excellent contrast
+        comment: Single brand-green series, good contrast, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot uses 50-80% of canvas with balanced margins; nothing cut off
+        comment: 3200x1800 canonical canvas, balanced margins, title ~62% width, nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Customer Satisfaction Rating'' and ''Cumulative
-          Proportion'''
+        comment: '''Customer Satisfaction Rating'' and ''Cumulative Proportion'' are
+          reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds theme-correct; chrome properly
-          adapts in both renders'
+        comment: 'Bars #009E73 (pygal default 0.7 fill opacity), backgrounds #FAF8F1/#1A1A17,
+          chrome flips correctly'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -100,21 +103,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults without custom design; no intentional hierarchy
-          or polish
+        comment: Style-guide baseline sizes and tokens, nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Some refinement in font sizing and theme adaptation; basic grid styling
+        comment: Default pygal dashed y guides, x guides off; spine and grid rules
+          met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clear monotonic pattern but no visual emphasis or focal point beyond
-          ascending bars
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative histogram implementation
+        comment: Cumulative histogram as adjacent bars, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: cumulative proportions, bin ranges, monotonic
-          curve'
+        comment: Monotonic cumulative proportion per bin, discrete bins readable (C1-C3
+          met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows bin ranges; y-axis shows cumulative proportions 0-1;
-          all data visible
+        comment: One bar per bin at cumsum(counts)/n up to the upper edge; y 0 to
+          1.05, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; single-series legend properly hidden
+        comment: Title 'histogram-cumulative · python · pygal · anyplot.ai'; single
+          series, legend hidden (N/A)
     data_quality:
       score: 15
       max: 15
@@ -154,22 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full range of customer satisfaction with proper cumulative
-          progression
+        comment: Full S-shaped rise from ~0 to 1, flattening at top shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer satisfaction ratings (1-5 scale, 1000 samples) is realistic
-          and neutral
+        comment: '1000 customer satisfaction ratings on a 1-5 scale: plausible and
+          neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range 0-1.05 appropriate for proportions; values factually
-          correct
+        comment: 'Checked: last bar exactly 1.0 (computed by cumsum/sum), first bar
+          0.001, median crossing near 3.6-3.8 consistent with mean 3.7'
     code_quality:
       score: 10
       max: 10
@@ -179,53 +181,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → compute → plot → save; no functions/classes'
+        comment: 'Flat zones: theme tokens, constants, Data block binding df, # Plot,
+          style, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, numpy, pygal; all used'
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code using appropriate library APIs; no over-engineering
+        comment: np.histogram + np.cumsum, no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-{THEME}.png and plot-{THEME}.html'
+        comment: plot-{THEME}.png and plot-{THEME}.html, current pygal 3 API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct use of pygal's Style object and high-level Bar API for theme
-          adaptation
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses Style theming which is pygal-specific, but implementation is
-          relatively straightforward
+        comment: High-level pygal.Bar with Style object; default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T03:41:21Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
