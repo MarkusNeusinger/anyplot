@@ -2,51 +2,64 @@ library: plotly
 language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:54:51Z'
-updated: '2026-05-14T01:17:24Z'
-generated_by: claude-haiku
-workflow_run: 25835454662
+updated: '2026-11-21T13:44:23Z'
+generated_by: claude-sonnet
+workflow_run: 44909767338
 issue: 2855
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 78
 review:
   strengths:
-  - Excellent theme adaptation with both light and dark renders fully readable
-  - Clean and reproducible code with deterministic seed
-  - Proper typography scaling for 4800×2700 pixel canvas
-  - Effective two-layer composition with good color contrast
-  - Thoughtful marker styling with opacity and white edges
+  - Imprint positions 1 and 2 give green translucent points and a solid violet LOWESS
+    curve that read clearly in both themes
+  - statsmodels lowess with frac=0.35 and it=3 (robust iterations) as the Notes ask,
+    curve spanning exactly the data's x range
+  - Column constants and a separated data block make the script adaptable to a user's
+    table, with dropna before smoothing
+  - Theme tokens threaded through title, axes, ticks, grid and legend; no dark-on-dark
+    text
+  - Interactive HTML export keeps hover inspection of every measurement
   weaknesses:
-  - 'Code-image mismatch: rendered images contain annotation boxes not present in
-    plotly.py code, breaking reproducibility'
-  - Design excellence is competent but not exceptional - lacks distinctive visual
-    flourishes beyond defaults
+  - 'SC-02 (both): the title is only the mandated ''scatter-regression-lowess · python
+    · plotly · anyplot.ai'' and does not mention LOWESS smoothing, which the Notes
+    and the spec''s title bullet require → prefix a descriptive title that names it,
+    e.g. ''Enzyme Kinetics with LOWESS Smoothing · ''. Likely cause: title string
+    built from the mandated segment only.'
+  - 'SC-02 (both): the LOWESS curve starts at about 15 at x=0.1 while the points between
+    x=0 and x=2 sit at about 3-16, so the curve cuts across the steep initial bend
+    instead of following its local center (spec bullet: follows the local center through
+    its bends) → a curve that starts near the lowest points, e.g. frac about 0.3 or
+    denser early sampling (np.geomspace for substrate). Likely cause: frac=0.35 on
+    evenly spaced x with very few points on the steep rise.'
+  - 'DQ-03 (both): the y values run from about 2 to 92 while the axis names them as
+    the ratio V/V_max, which lies between 0 and 1 → either scale the data to 0-1 or
+    label it as a percentage. Likely cause: activity generated as 100·S/(Km+S) with
+    a ratio label.'
+  - 'VQ-06 (both): the y-axis title renders the raw notation ''Enzyme Activity (V/V_max)''
+    with a literal underscore → reader text such as ''Enzyme activity (% of Vmax)''.
+    Likely cause: the ACTIVITY column constant.'
+  - 'Suggestion: the optional confidence band the Notes allow would show where the
+    fit is least certain at the steep start.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white - CORRECT
-      Chrome: Title (28px, dark #1A1A17), axis labels (22px, dark), tick labels (18px, INK_SOFT) all clearly readable against light background
-      Data: Green scatter markers (#009E73) with white edges, opacity 0.6; orange LOWESS curve (#D55E00) width 4px; both clearly distinguishable
-      Legend: Upper left with elevated background (#FFFDF6), border, two series properly labeled
-      Annotations: Two text boxes visible ("Linear Response" at lower left, "Saturation Region" at upper right) - NOT in code
-      Legibility verdict: PASS - all elements readable, no contrast failures
+      Background: warm off-white #FAF8F1 on paper and plot area
+      Chrome: title 'scatter-regression-lowess · python · plotly · anyplot.ai' centered in near-black; axis titles 'Substrate Concentration (µM)' and 'Enzyme Activity (V/V_max)' dark; ticks 0-50 and 0-80 in INK_SOFT; subtle grid; dark zero lines at x=0 and y=0; legend upper left in an elevated box with border
+      Data: 150 translucent #009E73 points rising steeply then saturating near 80-90 with a slight dip after x=42; violet #C475FD LOWESS curve from about 15 at x=0.1 to about 81 at x=50
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black - CORRECT
-      Chrome: Title (light #F0EFE8), axis labels (light), tick labels (INK_SOFT #B8B7B0) all clearly readable against dark background
-      Data: Green scatter markers (#009E73) identical to light render, orange curve (#D55E00) identical to light - PASS color consistency check
-      Legend: Upper left with dark elevated background (#242420), light borders, same two series
-      Annotations: Same text boxes styled for dark theme - NOT in code
-      Grid: Subtle rgba(240,239,232,0.10) grid visible on dark surface
-      Legibility verdict: PASS - no dark-on-dark failures, brand green visible and distinct
-
-    Both renders pass theme-readability check. Data colors are identical between themes (only chrome adapts). However, code-image mismatch exists: annotations in images are not in provided implementation code.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light tokens, all readable; no dark-on-dark text; legend box dark elevated with light border; zero lines light grey
+      Data: identical green points and violet curve to the light render; brand green visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,69 +67,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (28/22/18px), fully readable in both themes
+        comment: Title 16, axis titles 12, ticks and legend 10 explicitly set; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Opacity 0.6 avoids occlusion, LOWESS curve distinct
+        comment: No text collisions; legend box sits in the empty upper-left corner
+          clear of the points
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (11px) and curve (4px) prominent at large resolution
+        comment: 150 points at size 7 with opacity 0.6 and a page-colored outline;
+          3 px curve clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety, green/orange contrast strong
+        comment: Green points against a violet curve; contrast and CVD separation
+          good
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing cut off
+        comment: 3200x1800 canvas, title about 47 % of the width, balanced axis titles,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title format correct, X/Y labels include units
+        passed: false
+        comment: y-axis title shows the raw notation 'V/V_max' with a literal underscore
+          (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, backgrounds correct, both
-          themes proper'
+        comment: 'Points #009E73, curve #C475FD (Imprint positions 1 and 2), backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom legend styling, two-layer composition, competent but not exceptional
+        passed: false
+        comment: Style-guide baseline typography and chrome, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid and layout, standard Plotly polish without pushing further
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good narrative (saturation curve) but annotations in images not in
-          code - reproducibility issue
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -124,27 +142,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter + regression curve
+        comment: Scatter with LOWESS curve, correct type, no unrequested layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: LOWESS distinct, transparency 0.6, frac=0.35
+        passed: false
+        comment: 'Missed: title does not mention LOWESS smoothing (Notes, C4); curve
+          starts at about 15 at x=0.1 while the points there sit near 3-10, so it
+          does not follow the steep left bend (C2). Met: frac=0.35, opacity 0.6, solid
+          contrasting curve, curve spans exactly the data x range (C3)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X substrate, Y enzyme activity, axes correct
+        comment: Substrate on x, activity on y; all points at their values, axes show
+          all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, two-series legend proper
+        comment: Title in the mandated format; legend labels 'Measured values' and
+          'LOWESS smooth' read well
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -152,19 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Enzyme kinetics, 150 points, realistic complexity
+        comment: Saturating curve with a ripple shows changing slope and a gentle
+          reversal past x=40
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Biological domain plausible, scientifically sound
+        comment: Michaelis-Menten enzyme kinetics, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Values sensible for domain (0.1-50 µM, 0-100 V/V_max)
+        passed: false
+        comment: Substrate 0.1-50 µM is sensible, but activity labelled as the ratio
+          V/V_max runs 0-92 (defect line). No Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -174,54 +199,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions, direct flow
+        comment: Flat script with column constants and a separated data block
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, no unused
+        comment: os, numpy, pandas, plotly.graph_objects and statsmodels lowess all
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: statsmodels lowess call does the smoothing; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html, current API
+        comment: plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: go.Figure, add_trace, update_layout correct; theme tokens proper
+        passed: false
+        comment: go.Figure + add_trace + update_layout, the standard pattern; nothing
+          beyond the library prompt
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Interactive HTML, custom legend, standard but competent usage
+        passed: false
+        comment: Nothing beyond what the library prompt mandates (HTML export is mandated)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T13:40:53Z'
 impl_tags:
   dependencies:
   - statsmodels
   techniques:
-  - layer-composition
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
@@ -229,4 +259,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - publication-ready
