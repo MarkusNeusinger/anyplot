@@ -2,50 +2,46 @@ library: seaborn
 language: python
 specification_id: roc-curve
 created: '2025-12-26T17:38:39Z'
-updated: '2026-05-09T22:32:07Z'
-generated_by: claude-haiku
-workflow_run: 25613351538
+updated: '2026-11-21T12:29:42Z'
+generated_by: claude-sonnet
+workflow_run: 44903543645
 issue: 2273
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - Perfect theme-adaptive implementation with proper color tokens throughout (INK,
-    INK_SOFT, INK_MUTED, PAGE_BG, ELEVATED_BG)
-  - 'Excellent palette compliance: Okabe-Ito colors with first series #009E73, data
-    colors identical across both light and dark renders'
-  - Clean, explicit typography with all font sizes set for 4800×2700px canvas (title
-    24pt, labels 20pt, ticks 16pt)
-  - Clear data story showing three classifiers ranked by performance with reference
-    line and AUC scores in legend
-  - Strong spec compliance with all required ROC features (curves, AUC scores, diagonal
-    reference line, proper axis labels)
+  - Curves drawn straight from sklearn roc_curve output with estimator=None, sort=False
+    and drawstyle='steps-post', so every operating point shows as a true stair step
+  - Theme tokens threaded through title, labels, ticks, spines, grid and legend; both
+    renders theme-correct
+  - Imprint hues counted from the data (IMPRINT_PALETTE[:n_curves]) in canonical order,
+    identical across themes
+  - Square plot area with exact 0-1 limits and equal aspect, so the dashed diagonal
+    runs at 45 degrees
+  - 'Plausible clinical scenario: cardiac biomarkers ranked Troponin I > CK-MB > Myoglobin,
+    with AUCs computed, not placed'
   weaknesses:
-  - Design relies on seaborn defaults rather than custom aesthetic choices (DE-01
-    = 4, could be 6+ with intentional design decisions)
-  - Visual refinement could be stronger through intentional customization (e.g., y-axis-only
-    grid, reduced grid opacity)
-  - Data storytelling present but could be enhanced through more sophisticated visual
-    emphasis of the best-performing model
+  - 'Suggestion: draw the curves with clip_on=False so the segments along TPR=1.0
+    and FPR=0 keep their full line width at the frame.'
+  - 'Suggestion: a slightly thinner, lighter grid in the upper-left would let the
+    strong curve''s knee stand out.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1, clean and inviting
-      Chrome: Title "roc-curve · seaborn · anyplot.ai" in dark text (fontsize 24), axis labels "False Positive Rate (FPR)" and "True Positive Rate (TPR)" at fontsize 20, tick labels 0.0-1.0 at fontsize 16 — all clearly readable against light background
-      Data: Three colored ROC curves (green #009E73 for SVM/AUC 0.967, orange #D55E00 for RF/AUC 0.714, blue #0072B2 for LR/AUC 0.642) plus gray dashed reference line; first series is correct Okabe-Ito #009E73; subtle grid at alpha=0.1
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas
+      Chrome: title 'roc-curve · python · seaborn · anyplot.ai' in dark ink (medium weight), axis titles 'False positive rate (FPR)' / 'True positive rate (TPR)', grey tick labels 0.0-1.0, left/bottom spines only, subtle grid; all readable
+      Data: first series #009E73 Troponin I (AUC 0.901), #C475FD CK-MB (0.751), #4467A3 Myoglobin (0.611) as stair-step curves; grey dashed 'Random guess (AUC = 0.500)' diagonal; framed legend titled 'Diagnostic marker' in the empty lower right
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17, rich and sophisticated
-      Chrome: Title in light text (#F0EFE8), axis labels in light text (fontsize 20), tick labels in soft gray (#B8B7B0) at fontsize 16 — all clearly readable against dark background; no dark-on-dark failures
-      Data: Three colored ROC curves are IDENTICAL to light render (#009E73, #D55E00, #0072B2) confirming proper data-color consistency; gray dashed reference line appropriate for dark theme; legend with dark background box and light text
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, light-grey ticks and spines, elevated dark legend box with light text; no dark-on-dark
+      Data: same three curve colors as light; diagonal flips to light grey and stays visible
       Legibility verdict: PASS
-
-    Both renders theme-correct: light has #FAF8F1 background with dark text, dark has #1A1A17 background with light text. Data colors consistent across themes.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,48 +52,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          all readable in both themes'
+        comment: 'Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, legend title
+          9 pt: the style-guide sizes, all readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, all elements fully readable
+        comment: No collisions; the legend sits in the empty lower-right triangle
+          below the diagonal
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Three curves at 3.5pt linewidth clearly visible, well-adapted to
-          visualization
+        comment: Three 2.2 pt step curves and a 1.6 pt dashed diagonal, clearly visible
+          on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with excellent contrast between curves
+        comment: Green, purple and blue Imprint hues are CVD-distinct; diagonal is
+          a neutral dashed ink line
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px, plot fills 60-70%, balanced margins
+        comment: 2400x2400 square canvas, square plot area, balanced margins, title
+          ~56% of width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels with units (FPR, TPR), correct title format
+        comment: '''False positive rate (FPR)'' and ''True positive rate (TPR)'',
+          reader text; rates are unitless'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, both renders
-          theme-correct'
+        comment: '#009E73, #C475FD, #4467A3 in canonical order, identical in both
+          renders; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -105,21 +105,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured seaborn defaults, professional but not exceptionally
-          sophisticated
+        comment: 'Style-guide baseline: medium-weight title, elevated legend frame;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, generous whitespace; good execution
+        passed: false
+        comment: 'Despined, subtle whitegrid at alpha 0.1: the spine and grid rules
+          met, nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear ranking of models (AUC 0.967→0.714→0.642), visual hierarchy
-          present
+        passed: false
+        comment: Curves ranked by AUC in the legend, but no hierarchy chosen beyond
+          displaying the data
     spec_compliance:
       score: 15
       max: 15
@@ -129,25 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ROC curve with multiple classifiers
+        comment: Multi-model ROC curve, the correct type, no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: ROC curves, AUC scores, reference line all present
+        comment: Diagonal reference (C2), AUC per curve in the legend (C3), full 0-1
+          axes with equal aspect (C4), distinct colors named in a legend (C5) all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: FPR vs TPR correct, axes 0-1, equal aspect ratio
+        comment: FPR on x, TPR on y from sklearn roc_curve, drawn through the operating
+          points with estimator=None and sort=False; stair steps, no smoothing (C1)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels descriptive with AUC values
+        comment: Title 'roc-curve · python · seaborn · anyplot.ai' correct; legend
+          titled 'Diagnostic marker' with readable entries
     data_quality:
       score: 15
       max: 15
@@ -157,20 +162,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows three performance levels (0.64, 0.71, 0.97) plus random baseline
+        comment: Three discriminative levels (0.90, 0.75, 0.61) plus the random baseline
+          show the full range of the plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic ML scenario with real model names
+        comment: 'Cardiac biomarkers (Troponin I, CK-MB, Myoglobin) for detecting
+          a heart attack: real-world plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000 samples, 200 thresholds, realistic class separability via beta
-          distributions
+        comment: 'No check values in the spec. Checked: AUCs come from sklearn.metrics.auc
+          on roc_curve output (line 40-41), not placed; troponin ranking first is
+          domain-plausible; 400 patients'
     code_quality:
       score: 10
       max: 10
@@ -180,53 +188,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → calculation → plot → save'
+        comment: Imports -> tokens -> column constants -> Data block -> Plot -> save,
+          no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (os, matplotlib, numpy, seaborn)
+        comment: All imports used (os, plt, np, pd, sns, auc, roc_curve)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear, Pythonic, no over-engineering or fake functionality
+        comment: roc_curve and auc compute the curves; no hand-rolled algorithm, no
+          dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of sns.set_theme(), rc parameters, sns.lineplot()
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses seaborn theme system; good but not exceptionally unique
+        comment: Long-form lineplot with hue and estimator=None, sort=False, drawstyle='steps-post'
+          to draw exact ROC steps without aggregation
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Hue-mapped legend from the data column is what the library prompt
+          mandates; nothing distinctive beyond it
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T12:25:35Z'
 impl_tags:
-  dependencies: []
-  techniques: []
+  dependencies:
+  - sklearn
+  techniques:
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
+  - grid-styling
