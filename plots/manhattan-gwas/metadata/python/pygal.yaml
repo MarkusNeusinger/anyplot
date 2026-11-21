@@ -12,81 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/pygal/plot-dark.html
-quality_score: 89
+quality_score: 68
 review:
   strengths:
-  - Proper theme adaptation with all required theme tokens (PAGE_BG, INK, INK_SOFT,
-    INK_MUTED)
-  - Correct Okabe-Ito color palette with first series as brand green (#009E73)
-  - Both light and dark renders are fully readable with no legibility failures
-  - Clean visualization with effective alternating chromosome coloring
-  - Both significance thresholds properly marked at correct p-value levels
-  - Data colors remain identical between themes; only chrome adapts appropriately
-  - Reproducible output with fixed random seed
-  weaknesses: []
+  - Cumulative genome axis with centered chromosome labels
+  - Alternating Imprint colours and highlighted significant hits, with per-point tooltips
+    in the HTML output
+  - Theme tokens threaded through Style; both renders are theme-correct
+  weaknesses:
+  - 'VQ-05 (both): canvas is 4800x2700 → 3200x1800 (-1600 x -900). Likely cause: pygal.XY(width=4800,
+    height=2700).'
+  - 'VQ-01 (both): title at 28 px, ticks at 18 px and legend at 16 px read tiny on
+    the 4800 px canvas → the library prompt''s 66/56/44/44 px on 3200x1800. Likely
+    cause: the Style font sizes.'
+  - 'SC-04 (both): the title ''manhattan-gwas · pygal · anyplot.ai'' lacks the language
+    segment → ''manhattan-gwas · python · pygal · anyplot.ai''. Likely cause: the
+    title string.'
+  - 'SC-02 (both): the threshold lines render as rows of 2 px dots instead of dashed
+    lines (C4) → a two-point line with stroke_style dasharray. Likely cause: 200-point
+    series with show_dots=True.'
+  - 'DQ-02 (both): suggestive draws reach p = 1e-8, so genome-wide hits appear on
+    nearly every chromosome, with an empty band between -log10 p 3.5 and 5 → draw
+    suggestive signals in 1e-5 to 1e-7. Likely cause: 10 ** (-np.random.uniform(5,
+    8, ...)).'
+  - 'CQ-04 (code): threshold lines built from 200 interpolated points (lines 183-196),
+    a hand-written nearest-midpoint loop (lines 141-153) and per-chromosome boolean
+    list masks (lines 164-167) → two-point series, np.argmin, and vectorised masks.
+    Likely cause: list-based data prep.'
+  - 'CQ-01 (code): helper function format_x_label → a lambda or x_labels dicts. Likely
+    cause: def format_x_label.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct per style guide
-      Chrome: Title, axis labels (X: "Chromosome", Y: "-log₁₀(p-value)"), tick labels all in dark text (#1A1A17) — clearly readable
-      Data: Alternating teal/green (#009E73 - Okabe-Ito position 1) and orange (#D55E00 - position 2) for odd/even chromosomes. Significant peaks in blue (#0072B2). Two dashed threshold lines at y=5 and y≈7.3. All elements clearly distinguishable.
-      Legibility verdict: PASS — all text and data elements are readable against light background
+      Background: warm off-white #FAF8F1.
+      Chrome: small title 'manhattan-gwas · pygal · anyplot.ai'; tiny tick labels, axis titles and legend on a 4800x2700 canvas; dotted grey y guides; chromosome labels 1-22 centered and separated.
+      Data: odd chromosomes #009E73, even #C475FD, hits #4467A3; dotted amber line at 7.3 and dotted red line at 5; dense band below 2.5, gap from 3.5 to 5, hits up to 15 on chr 6, 11 and 16 and scattered hits just above 7.3 on most chromosomes.
+      Legibility verdict: PASS, but the text is very small
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct per style guide
-      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8) — clearly readable against dark background. No "dark-on-dark" failures.
-      Data: Identical colors to light render — same greens and oranges for chromosome alternation, same blue for significant peaks. Threshold lines visible. All elements distinguishable from dark background.
-      Legibility verdict: PASS — all text is readable against dark background, data colors maintain identity from light render, no theme-adaptation failures
+      Background: warm near-black #1A1A17.
+      Chrome: same layout in light ink; readable, no dark-on-dark text, but small.
+      Data: identical colours to the light render.
+      Legibility verdict: PASS, but the text is very small
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 3
         max: 8
-        passed: true
-        comment: All text elements clearly readable in both themes at full size
+        passed: false
+        comment: Title, ticks, axis titles and legend at 28/22/18/16 px on a 4800
+          px canvas read tiny in the full-size render (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap, chromosome labels at midpoints, legend positioned
-          cleanly
+        comment: No text collisions; chromosome labels 19-22 are separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers visible even in dense regions, significant peaks stand
-          out
+        comment: Dots sized for density; hits visible; legend swatches visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe, no red-green as sole signal
+        comment: Green/purple alternation plus blue highlight; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Balanced proportions, generous margins, nothing cut off
+        passed: false
+        comment: Canvas is 4800x2700, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format, axes labeled with units
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds correct, both themes work perfectly'
+        comment: 'First series #009E73, Imprint order, correct backgrounds'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -94,21 +110,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional with theme adaptation, lacks extraordinary sophistication
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clean, minimal, could have more explicit spine/grid refinement
+        comment: The spine and grid rules are met, nothing beyond that
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Guides viewer through genome, thresholds provide context
+        passed: false
+        comment: Highlight colour is allowed by the Notes; there is no further hierarchy
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -116,28 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: XY scatter correctly implements manhattan plot
+        comment: Correct Manhattan plot
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: alternating colors, thresholds, significant
-          peaks'
+        passed: false
+        comment: The threshold lines are drawn as dotted lines of 2 px dots, not dashed
+          lines (C4) (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct, all data shown
+        comment: Points at cumulative base-pair position and -log10 p
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct, legend labels match
+        passed: false
+        comment: The title lacks the language segment 'python' (defect line)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -145,70 +161,74 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full manhattan plot with all GWAS elements
+        comment: Band, suggestive hits and genome-wide hits are shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Realistic GWAS-like data, neutral domain context
+        passed: false
+        comment: Suggestive draws up to 1e-8 put hits on nearly every chromosome,
+          with an empty band between 3.5 and 5 (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic p-value range and standard thresholds
+        comment: 'Checked: thresholds at 7.3 and 5; realistic chromosome lengths'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Straightforward, no unnecessary abstraction
+        passed: false
+        comment: Defines a helper function format_x_label (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Has np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake functionality
+        passed: false
+        comment: Threshold lines hand-built from 200 points, a nearest-midpoint loop,
+          and per-chromosome list masks (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and current API
+        comment: Saves plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Good XY chart and Style usage, follows pygal conventions
+        passed: false
+        comment: XY chart and Style, but the threshold lines are faked from dots
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Limited showcase of distinctive pygal features
+        comment: Per-point tooltip labels in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies: []
   techniques:
