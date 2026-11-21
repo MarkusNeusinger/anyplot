@@ -12,35 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamlin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 72
 review:
   strengths:
-  - Excellent theme-adaptive implementation with proper token usage for both light
-    and dark renders
-  - Professional visual hierarchy created naturally by vortex field topology
-  - 'Strong technical execution: proper ODE integration for realistic streamlines,
-    scipy interpolation'
-  - Clean, idiomatic plotnine code with good separation of concerns
-  - Appropriate choice of viridis colormap for continuous flow speed data
-  - Arrow markers effectively communicate flow direction
+  - Theme tokens threaded through chrome; text readable in both renders
+  - Streamlines integrated from the field with solve_ivp and RegularGridInterpolator
+  - coord_fixed(ratio=1) keeps the vortex circular
+  - Color bar names the speed it encodes
   weaknesses:
-  - Plot title displays 'seaborn' instead of 'plotnine' — images do not match specification
-    for this library
+  - 'SC-04 (both): title reads ''streamline-basic · seaborn · anyplot.ai'' — wrong
+    library and no language segment → ''streamline-basic · python · plotnine · anyplot.ai''.
+    Likely cause: the labs(title=...) string / a render that does not come from this
+    source.'
+  - 'VQ-07 (both): speed is colored with viridis, which the style guide forbids →
+    imprint_seq via scale_color_gradient(low=''#009E73'', high=''#4467A3''). Likely
+    cause: scale_color_cmap(cmap_name=''viridis'').'
+  - 'VQ-05 (both): canvas is 3486x2967, neither 3200x1800 nor 2400x2400 → 2400x2400
+    for this square plot. Likely cause: figure_size=(16, 9) with coord_fixed and plot.save
+    without explicit width/height.'
+  - 'SC-02 (both): seeds on the same circles (a 4x6 grid plus three rings of six)
+    stack several overlapping paths per ring, leaving stair-step seams instead of
+    one smooth line per ring (C1, C2) → one seed per radius. Likely cause: the start_points
+    loops.'
+  - 'CQ-04 (code): try/except Exception: pass, np.random.seed(42) with no random draw
+    and the unused BRAND constant are dead code → remove them. Likely cause: leftover
+    scaffolding.'
+  - 'Suggestion: fewer arrowheads per ring would keep the curves the main mark more
+    clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 ✓
-      Chrome: Title (dark text, readable), axis labels (X/Y Position), tick labels (all dark text - readable) ✓
-      Data: Concentric circular streamlines with viridis colormap (purple center = slow, yellow outer = fast). Arrow markers indicate flow direction. Colorbar legend on right labeled "Flow Speed".
+      Background: warm off-white #FAF8F1, canvas 3486x2967.
+      Chrome: title 'streamline-basic · seaborn · anyplot.ai', axis titles 'X Position (m)' / 'Y Position (m)', color bar 'Flow Speed (m/s)' 1.00–2.75; dark text, all readable; L-shaped spines and horizontal grid.
+      Data: six concentric circular streamlines on viridis (purple centre to yellow outer), several stacked paths per inner ring with visible stair-step seams, many small arrowheads counter-clockwise.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 ✓
-      Chrome: Title (light text, readable), axis labels (light text, readable), tick labels (light text, readable) - no dark-on-dark text issues ✓
-      Data: Identical viridis colors to light render (only chrome theme flipped). Streamlines and arrows clearly distinguishable against dark background.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels and ticks in light ink, all readable; no dark-on-dark text.
+      Data: identical viridis colors and geometry to the light render; the darkest purple inner ring has low contrast on the dark surface but remains visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -48,72 +61,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both light and dark themes
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; colorbar positioned with clear spacing
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Streamlines and arrow markers clearly visible at appropriate sizes
+        comment: Lines and arrow markers visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is CVD-safe and perceptually uniform
+        comment: Adequate contrast; viridis is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Balanced 16:9 proportions; nothing cut off; good margins
+        passed: false
+        comment: Canvas 3486x2967 is neither 3200x1800 nor 2400x2400 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
-        max: 2
-        passed: false
-        comment: 'CRITICAL: Title says ''seaborn'' not ''plotnine''; axis labels are
-          correct with units'
-      - id: VQ-07
-        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark); viridis appropriate
-          for continuous data; both renders theme-correct'
+        comment: Axis and color-bar titles carry units (m, m/s)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: viridis colormap, forbidden for continuous data (defect line)
     design_excellence:
-      score: 17
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: Professional theme-adaptive styling; intentional viridis palette
-          choice; clear visual hierarchy from vortex topology
+        passed: false
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed via theme_minimal(); subtle grid at 10% and 5% alpha;
-          arrow markers enhance directional refinement
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Natural visual hierarchy with concentric circles; color gradient
-          tells speed story; streamlines guide viewer through field
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 9
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -121,26 +129,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamline plot showing vector field flow patterns
+        comment: Correct streamline plot
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: multiple streamlines, velocity magnitude encoding,
-          directional indicators'
+        passed: false
+        comment: 'C1/C2: duplicated seeds stack several paths on the same rings, leaving
+          stair-step seams (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates correct; axes properly cover [-3, 3] field range
+        comment: Axes cover the field
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 1
         max: 3
         passed: false
-        comment: 'FAILED: Title attribution error - says ''seaborn'' instead of ''plotnine'''
+        comment: 'Title reads ''streamline-basic · seaborn · anyplot.ai'': wrong library,
+          no language segment (defect line)'
     data_quality:
       score: 15
       max: 15
@@ -150,23 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: streamlines, velocity magnitude, direction indicators,
-          realistic vortex pattern'
+        comment: Streamlines, speed color and arrows shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Vortex field is classic fluid dynamics example; neutral and educational
+        comment: Vortex flow with metres and m/s; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range [-3, 3] sensible; 40x40 grid balances detail and clarity; velocity
-          magnitudes realistic
+        comment: Speed range ~0.9–2.8 m/s sensible for the shown rings
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -174,50 +181,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no unnecessary functions/classes
+        comment: Linear script, no def blocks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (np.random.seed(42)); ODE solver deterministic
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, plotnine, scipy'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity; proper ODE integration; no fake UI
+        passed: false
+        comment: 'Dead code: try/except pass, unused seed and BRAND constant (defect
+          line)'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using ANYPLOT_THEME variable
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper ggplot() + geom_path() + scale_color_cmap() pattern; high-level
-          grammar of graphics
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Good use of element_line/element_rect/element_text; coord_fixed()
-          for aspect ratio
-  verdict: REJECTED
+        passed: false
+        comment: Standard ggplot + geom_path layering
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond the mandated pattern
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies:
   - scipy
