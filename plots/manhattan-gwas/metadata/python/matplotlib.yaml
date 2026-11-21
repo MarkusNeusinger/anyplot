@@ -2,45 +2,50 @@ library: matplotlib
 language: python
 specification_id: manhattan-gwas
 created: '2025-12-31T05:31:23Z'
-updated: '2026-05-15T03:25:46Z'
-generated_by: claude-haiku
-workflow_run: 25898369275
+updated: '2026-11-21T18:48:19Z'
+generated_by: claude-sonnet
+workflow_run: 44936906951
 issue: 2925
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 83
 review:
   strengths:
-  - Manhattan plot architecture correctly handles cumulative position calculation,
-    chromosome alternation, and threshold visualization
-  - Theme-adaptive implementation with no legibility failures; theme tokens applied
-    consistently to all chrome elements
-  - Smart data density handling with marker size and alpha blending to prevent overplotting
-    while emphasizing significant peaks
-  - Strong visual hierarchy naturally guides viewer to significant associations through
-    color and size emphasis
-  - Complete spec adherence with all required features present and properly implemented
+  - Cumulative genomic layout built with pandas groupby + cumsum on the chromosome
+    end positions, so every variant sits at its own base-pair offset and the 22 chromosomes
+    run end to end in order
+  - Chromosome tick labels at each region's median position; labels of the narrow
+    chromosomes 18, 20 and 22 drop to a second row so every label stays readable without
+    overlapping
+  - 'Alternating Imprint positions 1 and 2 (#009E73 / #C475FD) read clearly as chromosome
+    blocks on both backgrounds, with s=4 and alpha 0.6 for the ~102,000 dense variants'
+  - Genome-wide (dashed) and suggestive (dotted) thresholds drawn as distinct theme-adaptive
+    axhline layers with a legend; genome-wide hits enlarged with an INK_SOFT ring
+    so the peaks stand out above the band
+  - Exact 3200x1800 canvas via figsize=(8, 4.5) at dpi=400 without bbox_inches, and
+    every chrome element threaded through theme tokens
   weaknesses:
-  - Design Excellence could be elevated with additional visual refinement like custom
-    spine styling or annotation callouts on prominent peaks
-  - Library Mastery shows solid feature usage but could explore more distinctive matplotlib
-    capabilities
+  - 'Suggestion: format the legend thresholds as 5×10⁻⁸ and 1×10⁻⁵ instead of the
+    programmer notation 5e-08 / 1e-05.'
+  - 'Suggestion: the genome-wide hits on green chromosomes (e.g. 11) share the chromosome''s
+    own green; a highlight color distinct from both alternating colors would separate
+    them more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly theme-appropriate
-      Chrome: Title, axis labels ("-log₁₀(p-value)", "Chromosome"), and tick labels all rendered in dark INK colors, fully readable
-      Data: Alternating Okabe-Ito colors (brand green #009E73 and vermillion #D55E00) for chromosomes; significant SNPs highlighted in brand green with larger markers and dark edge rings; density-appropriate marker sizing (s=15 for regular, s=50 for significant)
-      Legibility verdict: PASS — all elements clearly readable; no light-on-light failures; proper contrast throughout
+      Background: warm off-white #FAF8F1, 3200x1800 canvas
+      Chrome: title "manhattan-gwas · python · matplotlib · anyplot.ai" in dark INK at 12 pt (~52 % of width); axis titles "Chromosome" and "-log₁₀(p-value)" in INK; tick labels 1–22 and 0–14 in INK_SOFT, labels 18, 20, 22 on a second row; framed legend upper right (genome-wide dashed, suggestive dotted) on the elevated surface. Left and bottom spines only, no grid. All readable.
+      Data: ~102k variants as small dots alternating #009E73 / #C475FD per chromosome, dense band below -log10 p ≈ 2; 21 genome-wide hits on chr 2, 6, 11, 16 as larger #009E73 dots with a dark ring up to ~14.5; dashed line at 7.3 and dotted line at 5 span the full width; suggestive hits on chr 1, 3, 8, 12, 19 between them.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly theme-appropriate
-      Chrome: Title and axis labels rendered in light INK color (#F0EFE8), tick labels in light INK_SOFT (#B8B7B0), all clearly readable; no dark-on-dark failures
-      Data: Alternating chromosome colors (brand green #009E73 and vermillion #D55E00) are identical to light render—only chrome has adapted to dark theme; significant SNPs maintain brand green emphasis with proper visibility on dark background
-      Legibility verdict: PASS — all elements clearly readable; proper theme adaptation with no contrast failures; brand green remains prominent and accessible
+      Background: warm near-black #1A1A17, same canvas
+      Chrome: title and axis titles in light INK, tick labels and legend text in light INK_SOFT, legend frame on #242420 with light edge; no dark-on-dark text anywhere.
+      Data: identical green/purple alternation and highlighted hits as the light render; only chrome flipped. Threshold lines in light gray remain visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,72 +56,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and colored from theme tokens; fully readable
-          in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks/legend 8 pt per the style guide;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements properly positioned; no text collisions; legend positioned
-          without overlap
+        comment: Crowded small-chromosome labels staggered onto a second row; legend
+          clear of the peaks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker sizing (s=15 vs s=50) and alpha (0.6 vs 0.9) prevent overplotting;
-          all elements visible
+        comment: s=4 alpha 0.6 for ~102k dense points; hits at s=14 with ring; legend
+          line samples visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety; sufficient contrast
+        comment: Green/purple alternation is CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper 4800×2700px via figsize(16,9) at 300dpi; nothing cut off
+        comment: 3200x1800, plot fills the canvas with balanced margins; no canvas-gate
+          file
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; proper format title
+        comment: '''Chromosome'' and ''-log₁₀(p-value)'' descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series in Okabe-Ito order; backgrounds
-          correct; both themes proper'
+        comment: 'Imprint positions 1 and 2, first #009E73; backgrounds #FAF8F1 /
+          #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Intentional palette strategy; professional polish; clear visual hierarchy;
-          raised from default 4
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Spines properly removed; legend styling; threshold lines distinctly
-          styled; solid execution
+        passed: false
+        comment: 'Raised: tick labels of the narrow chromosomes alternate onto a second
+          row, a label placement chosen for this chart'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Strong visual hierarchy emphasizing peaks; clear focal point; supports
-          scientific narrative; raised from default 2
+        passed: false
+        comment: The hit highlight is what the Notes allow; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,27 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Manhattan plot type
+        comment: Manhattan plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: cumulative position, chromosome labels, alternating
-          colors, both thresholds, significance highlight'
+        comment: Cumulative x with centered labels (C1, C2), alternating colors (C3),
+          dashed genome-wide + dotted suggestive line (C4), hits stand out (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cumulative position and -log10 transformation correct; axes show
-          all data
+        comment: Points at base-pair offsets, no jitter; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Proper format title; accurate legend labels
+        comment: Title in mandated format; legend names both thresholds
     data_quality:
       score: 15
       max: 15
@@ -156,20 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 22 chromosomes; both thresholds; realistic peak distribution
+        comment: 22 chromosomes of real relative size, peaks on four chromosomes,
+          suggestive hits, null band
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic chromosome structure and p-value distribution; neutral
-          context
+        comment: Simulated GWAS on human autosome sizes, ~102k variants in the spec's
+          range; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scientifically standard thresholds (7.3, 5); realistic SNP count
+        comment: 'Checked: genome-wide line at -log10(5e-8)=7.30 and suggestive at
+          5.0, both computed from the p constants'
     code_quality:
       score: 10
       max: 10
@@ -179,64 +185,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct execution; clear linear flow
+        comment: Imports → constants → Data block ending in df → Plot → Save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused imports
+        comment: os, matplotlib, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity; elegant theme adaptation
+        comment: groupby/cumsum offsets; no written-out algorithm an available call
+          replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Proper plot-{THEME}.png format; current API
+        comment: plot-{THEME}.png at dpi=400, no bbox_inches; set_xticks(ticks, labels)
+          current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Axes methods only; theme tokens throughout; proper figsize/dpi; correct
-          parameterization
+        passed: false
+        comment: Correct Axes API; nothing beyond the mandated patterns
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses rasterized=True, alpha blending, edgecolors, zorder layering;
-          solid but standard usage
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T18:44:49Z'
 impl_tags:
   dependencies: []
   techniques:
-  - scatter-with-overlays
-  - threshold-lines
-  - categorical-coloring
+  - layer-composition
   patterns:
   - data-generation
-  - cumulative-positioning
-  - alternating-colors
+  - iteration-over-groups
   dataprep:
-  - log-transformation
-  - chromosome-binning
+  - cumulative-sum
+  - groupby-aggregation
   styling:
-  - density-appropriate-markers
   - alpha-blending
-  - theme-adaptive-chrome
+  - publication-ready
