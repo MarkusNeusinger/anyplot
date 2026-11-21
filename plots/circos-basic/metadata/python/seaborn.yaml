@@ -2,44 +2,50 @@ library: seaborn
 language: python
 specification_id: circos-basic
 created: '2025-12-31T11:07:32Z'
-updated: '2026-05-15T09:24:07Z'
-generated_by: claude-haiku
-workflow_run: 25910184733
+updated: '2026-11-21T20:19:13Z'
+generated_by: claude-sonnet
+workflow_run: 44945038293
 issue: 3005
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 82
 review:
   strengths:
-  - 'Flawless theme adaptation: data colors identical between light/dark renders,
-    chrome perfectly theme-correct in both. No dark-on-dark or light-on-light legibility
-    failures.'
-  - 'Sophisticated visualization design: custom bezier curves for ribbons, proportional
-    encoding (arc size = code volume, bar height = module size, ribbon width = call
-    count) tells a clear story.'
-  - 'Excellent typography: font sizes explicitly set (title 26pt, labels 16pt), all
-    text readable at full resolution, intelligent label rotation avoids overlaps.'
-  - 'Publication-ready composition: balanced square layout (12×12), plot fills 70%
-    of canvas, generous whitespace, polished details throughout.'
-  - 'Real-world data context: software module dependencies is relatable and neutral;
-    proportional relationships are factually plausible.'
-  weaknesses: []
+  - Ribbon ends are slotted contiguously inside each segment with width = value /
+    total_flow x span, so every ribbon is proportional to its movers value and anchored
+    on both cities
+  - All eight Imprint positions in canonical order, one per city, used consistently
+    for the ring, the rent track and the origin-colored ribbons; identical across
+    both themes
+  - Ribbons built as native matplotlib Path CURVE3 patches with alpha 0.45, so crossing
+    flows stay distinguishable on both backgrounds
+  - Theme tokens threaded through sns.set_theme rc, suptitle, labels and legend; both
+    renders fully legible
+  - Exact 2400x2400 canvas via figsize=(6,6), dpi=400 and subplots_adjust instead
+    of bbox_inches='tight'
+  weaknesses:
+  - 'CQ-01 (code): two helper functions polar() (lines 140–143) and ring_sector()
+    (lines 146–151) wrap a few numpy expressions → inline the radius*cos/sin points
+    and the annular-sector fill at the call sites. Likely cause: geometry factored
+    into functions instead of the flat Imports → Data → Plot → Save structure.'
+  - 'Suggestion: print the dearest rent (Munich, 21.5 EUR/m2) in the legend caption
+    so the track''s bar heights have a value reference.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct and matches spec requirements
-      Chrome: Title "circos-basic · seaborn · anyplot.ai" is bold, dark text, perfectly readable. Segment labels (Core, Auth, API, Database, Cache, Queue, Logging, Utils, Metrics, Config) are dark text, intelligently rotated around circle, zero overlaps. Legend with light elevated background (#FFFDF6) and dark text explains three visualization layers.
-      Data: Outer ring segments show Okabe-Ito palette cycling through colors, with first series as green (#009E73). Inner track bars show module sizes in semi-transparent form. Ribbons connect dependencies with varying widths. All colors are vibrant and clearly distinguishable from light background.
-      Legibility verdict: PASS — All text is perfectly readable. No light-on-light failures.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
+      Chrome: bold dark title 'circos-basic · python · seaborn · anyplot.ai' on top; eight bold dark city labels (Berlin, Hamburg, Munich, Cologne, Frankfurt, Stuttgart, Leipzig, Dresden) rotated along the radius and flipped upright on the left half; framed legend at the bottom with three neutral gray swatches explaining the outer ring, the rent track and the ribbons. All text readable.
+      Data: outer ring of eight colored arcs with gaps (Berlin #009E73 first, then #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD, #954477, #99B314); an inner track with a faint full-span base band and a bar per city whose height follows median rent (Munich tallest, Leipzig/Dresden shortest); 24 translucent ribbons colored by origin, slotted contiguously at both ends, crossing the interior.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct and matches spec requirements
-      Chrome: Title and all segment labels render in light text (#F0EFE8), clearly readable against dark background with no dark-on-dark failures. Legend background shifts to darker elevated color (#242420) with light text. All chrome elements properly inverted for theme.
-      Data: Outer ring segments maintain identical Okabe-Ito colors as light render — green (#009E73) first series, orange, blue, purple, etc. are all preserved. Inner track bars and ribbons maintain identical colors and transparency. Data rendering is pixel-perfect match to light render.
-      Legibility verdict: PASS — All text is clearly readable in light colors against dark background. Theme adaptation is flawless; only chrome flips, data colors remain invariant.
+      Background: warm near-black #1A1A17.
+      Chrome: title, city labels and legend text in light ink; legend on the elevated dark surface with a light outline. No dark-on-dark text.
+      Data: ring, track and ribbon colors identical to the light render; ribbons read darker against the page but every crossing ribbon stays distinguishable; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,75 +56,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 26pt, labels 16pt). Perfectly
-          readable in both light and dark themes.
+        comment: 'Title 13 pt, city labels 10 pt bold, legend 8 pt, all explicitly
+          set; dark ink on #FAF8F1 and light ink on #1A1A17 read cleanly in both renders'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Intelligent label rotation avoids all text collisions. All elements
-          clearly separated.
+        comment: Radially rotated city labels clear of each other, the ring and the
+          title; legend sits clear below the circle
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Outer ring, inner track, and ribbons all clearly visible and well-adapted
-          to complexity.
+        comment: Ring, rent track and ribbons all clearly visible in both themes;
+          neutral legend swatches visible on both legend backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Good contrast between all elements.
+        comment: Eight distinct Imprint hues, each segment also named by its label,
+          so color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect use of square format (12×12). Plot fills ~70% of canvas with
-          balanced margins.
+        comment: 2400x2400 square canvas; circle centered with balanced margins, title
+          ~72 % of width (expected for the mandated title)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''circos-basic · seaborn · anyplot.ai''.'
+        comment: No axes; legend captions name each layer with its unit (EUR per m2,
+          movers)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series is #009E73. Backgrounds correct (#FAF8F1
-          light / #1A1A17 dark). Theme-adaptive text colors correct in both renders.'
+        comment: 'All eight Imprint positions in canonical order, Berlin first in
+          #009E73; backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 16
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom bezier curves, thoughtful color-cycling, sophisticated visual
-          hierarchy. Publication-quality composition with intentional design beyond
-          defaults.
+        passed: false
+        comment: 'Style-guide baseline: clean typography and hierarchy, nothing decided
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Custom polygon rendering with careful alpha values, no unnecessary
-          elements, polished details throughout.
+        passed: false
+        comment: Faint full-span base band behind every rent bar gives each bar a
+          visible 100 % reference; ribbon ends tile each segment contiguously without
+          overlapping at the anchors
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Strong visual encoding: arc size = code volume, bar height = module
-          size, ribbon width = call count. Visual hierarchy guides viewer through
-          relationships.'
+        passed: false
+        comment: Data displayed faithfully; no focal hierarchy chosen beyond the Notes
+          (correct for a -basic spec)
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +135,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct circos plot with all required structure.
+        comment: 'Correct circos plot: one segment ring, one inner data track, ribbons;
+          no unasked layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: segments on circle, proportional ribbons,
-          distinct colors, concentric inner track.'
+        comment: 'C1 gaps + labels, C2 proportional anchored ribbons, C3 one color
+          per city, C4 one rent track inside the ring explained by the legend, C5
+          no extra layers: all met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Source→target mapping correct. Values properly encoded to visual
-          dimensions.
+        comment: Ribbon end width = value / total_flow x span, and spans follow total
+          flow, so every ribbon width is proportional to its movers value at both
+          ends
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels clearly explain visualization.
+        comment: Title 'circos-basic · python · seaborn · anyplot.ai' correct; legend
+          entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -158,85 +169,92 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: varying segment sizes, diverse dependency strengths,
-          inner track variation.'
+        comment: Unequal segment lengths, ribbon widths 8–42, rent bars from 9.0 to
+          21.5 EUR/m2 show every aspect of the type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral software engineering context (module dependencies).
+        comment: Migration between eight real German cities with plausible rents;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions are factually plausible (LOC 600–2800, call counts 12–72).
+        comment: Movers in thousands per year (8–42) and rents 9–21.5 EUR/m2 are plausible
+          magnitudes; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Imports → theme setup → data → plot → save. No unnecessary functions.
+        passed: false
+        comment: Two helper functions polar() and ring_sector() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib.patches, matplotlib.pyplot, numpy,
-          seaborn.'
+        comment: All imports used (mpatches, plt, np, pd, sns, Path)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for custom circos. No fake functionality.
+        comment: Geometry is appropriate for a hand-built circos; ribbons use matplotlib
+          Path CURVE3 instead of hand-written Bezier sums
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png with dpi=300.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Correctly uses sns.set_theme() and theme tokens. Circos plots inherently
-          require custom drawing (appropriate matplotlib approach).
+        passed: false
+        comment: sns.set_theme with rc theme tokens; drawing is necessarily matplotlib
+          patches — default
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Leverages matplotlib's strength in custom geometric visualization;
-          uses theme-adaptive token system.
+        passed: false
+        comment: Nothing seaborn-specific beyond the mandated theme call
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T20:15:36Z'
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
   - patches
   - bezier-curves
-  - manual-ticks
+  - layer-composition
   patterns:
-  - data-generation
-  - matrix-construction
+  - explicit-figure
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - groupby-aggregation
+  - normalization
   styling:
   - alpha-blending
-  - publication-ready
+  - minimal-chrome

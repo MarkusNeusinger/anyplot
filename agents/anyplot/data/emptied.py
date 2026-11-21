@@ -32,6 +32,16 @@ whose carry alone would put an earlier call's held column on a taken role is sto
 One message that both takes the column of a required role and asks for the days or the row numbers on it cannot be
 told from the fault by these records: it waits one turn.
 
+A second trigger needs no taken role (`date_misfits`): a `set_bindings` of the turn refused because it put a date
+column on a role that takes numbers (`BindingCheck.misfits`, the typed record of the refusal). The root then turned
+the dates into numbers by itself and bound them (the prep eval's `en-date-from-year-month-text`, where the axis was
+open, and `de-tagesmittel-pro-sensor` once its root kept every column). That refusal carries a fixed `message`: which
+numbers a date becomes is the user's choice, an offer. From then on the turn makes no held column: a `prepare_data`
+call that would make one is refused the same way and counts against none of the turn's caps. A root asked for the
+numbers makes them first and binds them after, so the trigger never sees it; a root that tries the dates first on a
+message that did ask for the numbers waits one turn, as on a taken role, and one that turns dates into numbers unasked
+without trying the dates first passes.
+
 Named limits, pinned as they stand and none of them a promise: a family that keeps one of its series is not taken, so
 a held column made in the turn joins it as a series, put on the open member by the carry alone or bound by the root; a held column made under the old name of a column the turn renamed
 away keeps that binding, since the start follows the rename; a role's column read as text stays in the table, so the
@@ -43,7 +53,9 @@ The other side of the boundary is a known gap: a derived column or a text conver
 the taken axis passes. So the guard writes one content-free log line per event (hook `emptied_role`: the tool, the
 outcome, the spec's role names and the operations' names, never a column or a cell): `refused`, `kept_off`, `bound`
 for a column an operation of the turn added (`added_columns`) on a taken role, and `refilled` (the role only) for a
-column that was there before the turn on a taken role. `bound` and `refilled` count and do not judge.
+column that was there before the turn on a taken role. `bound` and `refilled` count and do not judge. The second
+trigger writes `misfit` (the roles only) for each `set_bindings` refused for a date column on a role that takes
+numbers, and `offer_held` for a call it refused after one, so the two halves of that trace are counted apart.
 """
 
 from collections.abc import Collection, Mapping, Sequence
@@ -51,7 +63,7 @@ from collections.abc import Collection, Mapping, Sequence
 from core.spec_roles import DataRole
 
 from ..schemas import Binding
-from .bindings import resolve_role
+from .bindings import Misfit, resolve_role
 from .prepare import Operation, Rename, Split
 
 
@@ -141,6 +153,16 @@ def replaces(
     source = held.get(column)
     family = family_name(role, roles)
     return family in taken_roles and source is not None and source in taken_roles[family]
+
+
+def date_misfits(misfits: Sequence[Misfit], roles: list[DataRole]) -> dict[str, str]:
+    """The spec roles a refused `set_bindings` put a date column on although they take numbers, each with that column
+    (`BindingCheck.misfits`, the typed record of the refusal): a role that takes dates too never refuses one."""
+    return {
+        family_name(misfit.role, roles): misfit.column
+        for misfit in misfits
+        if misfit.dtype == "datetime" and "numeric" in misfit.kinds
+    }
 
 
 def wrong_bindings(
