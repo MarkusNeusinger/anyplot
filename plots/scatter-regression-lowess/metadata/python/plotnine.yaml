@@ -2,45 +2,43 @@ library: plotnine
 language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:52:25Z'
-updated: '2026-05-14T01:20:54Z'
-generated_by: claude-haiku
-workflow_run: 25835644578
+updated: '2026-11-21T13:49:16Z'
+generated_by: claude-sonnet
+workflow_run: 44910261739
 issue: 2855
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 97
+quality_score: 83
 review:
   strengths:
-  - Perfect theme adaptation with identical colors in both renders and proper chrome
-    switching between light and dark
-  - Clean, idiomatic plotnine code using high-level API correctly (ggplot, aes, geoms,
-    custom theme)
-  - 'Excellent spec compliance: LOWESS regression perfectly implemented with smooth
-    curve, moderate point transparency, and realistic agricultural data'
-  - Professional visual design with intentional color palette (brand green + accent
-    orange) and proper typography hierarchy
-  - All text is perfectly legible in both light and dark themes with no contrast issues
-    or dark-on-dark failures
+  - geom_smooth(method='lowess', span=0.4) lets plotnine compute the fit inside the
+    layer, matching the spec's 0.3-0.5 bandwidth
+  - Sigmoid dose-response data with noise peaking mid-curve gives LOWESS bends and
+    changing spread to adapt to; the curve tracks the floor, rise and plateau and
+    ends at the outermost points
+  - 'Theme tokens thread through every chrome element: both renders readable, data
+    colors identical'
+  - Clean Imports → Data → Plot → Save structure with column constants and a seeded
+    generator
   weaknesses:
-  - Could enhance design sophistication by adding optional confidence bands around
-    LOWESS curve (specification notes this as optional but would make implementation
-    more distinctive)
+  - 'Suggestion: an optional semi-transparent confidence band (the Notes allow one)
+    would show where the fit is less certain in the noisy mid-curve.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color
-      Chrome: Title, axis labels ("Temperature (°C)", "Crop Yield (tons/hectare)"), and tick labels all rendered in dark INK (#1A1A17) and INK_SOFT (#4A4A44) — clearly visible and readable against light surface
-      Data: 150 scatter points in brand green (#009E73) with alpha=0.6, plus orange LOWESS curve (#D55E00) at size 2.5. Colors are distinct and properly adapted. Gridlines are subtle with appropriate opacity.
-      Legibility verdict: PASS — all text is completely readable, no contrast issues, data elements clearly distinguishable
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'LOWESS dose-response · scatter-regression-lowess · python · plotnine · anyplot.ai' in dark ink, axis titles 'Drug dose (log10 mg/L)' and 'Cell viability inhibited (%)', ticks -2..2 and 0..100 in INK_SOFT; subtle grid, thin panel border — all readable
+      Data: 220 translucent #009E73 points forming a sigmoid (floor near 0 %, steep rise around 0, plateau near 100 %); a smooth purple #C475FD LOWESS curve tracks the cloud from x=-2 to 2
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color
-      Chrome: Title, axis labels, and tick labels all rendered in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) — clearly visible against dark surface. No dark-on-dark failures detected.
-      Data: Scatter points and LOWESS curve colors are identical to light render (green #009E73 and orange #D55E00) — only chrome changed as required. Gridlines maintain proper visibility with theme-adapted opacity.
-      Legibility verdict: PASS — all text is readable on dark background, no legibility failures, data colors remain prominent and consistent with light render
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink; grid subtle but visible; no dark-on-dark text
+      Data: identical green points and purple curve to the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,72 +49,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title, axis labels, ticks) perfectly readable in both light
-          and dark themes
+        comment: Explicit sizes (title 12, axis titles 10, ticks 8 pt) at the library-prompt
+          reference; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions or overlapping elements anywhere in the plot
+        comment: No text collisions; points stacked at the 0 % and 100 % bounds stay
+          distinguishable through alpha 0.6
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter points and LOWESS curve clearly visible and distinct from
-          background
+        comment: 220 points at size 2.5, alpha 0.6 suit the density; the 1.4 LOWESS
+          line reads clearly over the cloud
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; adequate contrast throughout
+        comment: 'Green points against a purple curve: distinct in lightness and hue,
+          CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Figure size 16:9 (4800x2700px) with good proportions and no cut-off
-          elements
+        comment: 3200x1800 canonical canvas; title ~85 % width (expected for the mandated
+          title), balanced axis labels, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title follows spec format
+        comment: '''Drug dose (log10 mg/L)'' and ''Cell viability inhibited (%)''
+          are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Points = #009E73 (BRAND), curve = #D55E00 (position 2), backgrounds
-          correct for both themes, no pure white/black'
+        comment: 'Points #009E73 (Imprint 1), curve #C475FD (Imprint 2); backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 19
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: Professional polish with intentional color choices, custom theme
-          with proper dark/light adaptation
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle gridlines with appropriate opacity, removed top/right spines,
-          generous whitespace
+        passed: false
+        comment: The library-prompt theme block (grid, border) met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: LOWESS curve creates clear focal point with visual hierarchy guiding
-          viewer to the relationship
+        passed: false
+        comment: Data displayed with the required curve; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +125,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with LOWESS regression curve
+        comment: Scatter with one LOWESS curve; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: LOWESS curve present and visually distinct, points have moderate
-          transparency (alpha=0.6)
+        comment: Solid contrasting curve (C1), smooth sigmoid following the cloud
+          through both bends (C2), spans -2..2 ending at the outermost points (C3),
+          title mentions LOWESS (C4), alpha 0.6, span 0.4
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=temperature, Y=yield; axes show full data range with 150 points
+        comment: x = dose, y = response; all data visible; no overshoot of the curve
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows format; no legend needed for single series
+        comment: '''LOWESS dose-response · scatter-regression-lowess · python · plotnine
+          · anyplot.ai''; single series, legend N/A'
     data_quality:
       score: 15
       max: 15
@@ -155,22 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complex nonlinear relationship in agricultural context with
-          LOWESS capturing the pattern well
+        comment: 'Sigmoid with floor, steep rise and plateau, heteroscedastic noise
+          peaking mid-curve: shows what LOWESS adapts to'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Crop yield vs temperature is real-world plausible and neutral; realistic
-          peak around 22°C
+        comment: 'Drug dose-response on cell viability: a real, neutral science scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range 5-35°C and yield 0-80 tons/hectare are sensible
-          for agricultural data
+        comment: 'No check values; checked: response bounded 0-100 % (np.clip), log10
+          dose -2..2, midpoint near 0.15 from the Hill formula'
     code_quality:
       score: 10
       max: 10
@@ -180,56 +180,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; straightforward script
+        comment: Imports → constants → Data → Plot → Save, no functions; adaptability
+          check passed
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports actually used (numpy, pandas, plotnine)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulation of interactive features
+        comment: LOWESS computed by geom_smooth, nothing written out
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current plotnine API
+        comment: plot.save('plot-{THEME}.png', dpi=400, width=8, height=4.5)
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Uses plotnine''s high-level API correctly: ggplot, aes, geom_point,
-          geom_smooth with method=''lowess'', theme'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Leverages geom_smooth with LOWESS (library-specific), custom theme
-          with element_rect/text/line for adaptation
+        passed: false
+        comment: Grammar-of-graphics layering; geom_smooth(method='lowess', span=...)
+          computes the fit inside the layer instead of precomputing it
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T13:45:37Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - layer-composition
+  techniques: []
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
