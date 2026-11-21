@@ -1,12 +1,13 @@
 """ anyplot.ai
 phase-diagram: Phase Diagram (State Space Plot)
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-14
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-21
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -17,166 +18,143 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.20)" if THEME == "light" else "rgba(240,239,232,0.20)"
-BRAND = "#009E73"  # Okabe-Ito position 1
-ACCENT_1 = "#C475FD"  # Okabe-Ito position 2
 
-# Data - Damped pendulum showing spiral convergence to equilibrium
-np.random.seed(42)
+# Imprint palette: all eight positions, one per trajectory in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Parameters for damped harmonic oscillator: d²x/dt² + 2ζω₀(dx/dt) + ω₀²x = 0
+# Constants
+EQUILIBRIUM = (0.0, 0.0)  # a damped oscillator comes to rest at zero position and zero velocity
+ARROW_SPACING = 30  # samples between an arrow's tail and its head
+ARROW_POSITIONS = (0.13, 0.33, 0.6)  # arrow heads, as fractions of each trajectory's length
+
+# Columns: set these to your table's column names
+TRAJECTORY = "Trajectory"  # role: extra
+TIME = "Time (s)"  # role: t
+POSITION = "Position x"  # role: x
+VELOCITY = "Velocity dx/dt"  # role: dx_dt
+
+# Data: replace this block with your own table, for example df = pd.read_csv("trajectories.csv")
+# Damped pendulum, d²x/dt² + 2ζω₀(dx/dt) + ω₀²x = 0, started from two initial conditions
 omega_0 = 2.0
 zeta = 0.15
-
-# Time array
-t = np.linspace(0, 15, 1500)
-dt = t[1] - t[0]
-
-# Damped frequency
 omega_d = omega_0 * np.sqrt(1 - zeta**2)
+t = np.linspace(0, 15, 1500)
+frames = []
+for x0, v0 in [(2.0, 0.0), (-1.5, 3.0)]:
+    b = (v0 + zeta * omega_0 * x0) / omega_d
+    amp = np.hypot(x0, b)
+    phase = np.arctan2(b, x0)
+    decay = amp * np.exp(-zeta * omega_0 * t)
+    angle = omega_d * t - phase
+    frames.append(
+        pd.DataFrame(
+            {
+                TRAJECTORY: f"Start x₀={x0:.1f}, v₀={v0:.1f}",
+                TIME: t,
+                POSITION: decay * np.cos(angle),
+                VELOCITY: -zeta * omega_0 * decay * np.cos(angle) - omega_d * decay * np.sin(angle),
+            }
+        )
+    )
+df = pd.concat(frames, ignore_index=True)
 
-# Trajectory 1: x(0) = 2.0, dx/dt(0) = 0
-x0 = 2.0
-v0 = 0.0
-A = np.sqrt(x0**2 + ((v0 + zeta * omega_0 * x0) / omega_d) ** 2)
-phi = np.arctan2((v0 + zeta * omega_0 * x0) / omega_d, x0)
-
-x = A * np.exp(-zeta * omega_0 * t) * np.cos(omega_d * t - phi)
-dx_dt = -zeta * omega_0 * A * np.exp(-zeta * omega_0 * t) * np.cos(omega_d * t - phi) - omega_d * A * np.exp(
-    -zeta * omega_0 * t
-) * np.sin(omega_d * t - phi)
-
-# Trajectory 2: x(0) = -1.5, dx/dt(0) = 3.0
-x0_2 = -1.5
-v0_2 = 3.0
-A2 = np.sqrt(x0_2**2 + ((v0_2 + zeta * omega_0 * x0_2) / omega_d) ** 2)
-phi2 = np.arctan2((v0_2 + zeta * omega_0 * x0_2) / omega_d, x0_2)
-
-x2 = A2 * np.exp(-zeta * omega_0 * t) * np.cos(omega_d * t - phi2)
-dx_dt_2 = -zeta * omega_0 * A2 * np.exp(-zeta * omega_0 * t) * np.cos(omega_d * t - phi2) - omega_d * A2 * np.exp(
-    -zeta * omega_0 * t
-) * np.sin(omega_d * t - phi2)
-
-# Create figure
+# Plot: reads only df and the constants above
 fig = go.Figure()
+groups = list(df.groupby(TRAJECTORY, sort=False))
 
-# Main trajectory
-fig.add_trace(
-    go.Scatter(
-        x=x,
-        y=dx_dt,
-        mode="lines+markers",
-        name="Trajectory 1 (x₀=2.0, v₀=0)",
-        line=dict(color=BRAND, width=3),
-        marker=dict(size=7, color=BRAND, opacity=0.8),
-        hovertemplate="x: %{x:.2f}<br>dx/dt: %{y:.2f}<extra></extra>",
+for i, (name, rows) in enumerate(groups):
+    fig.add_trace(
+        go.Scatter(
+            x=rows[POSITION],
+            y=rows[VELOCITY],
+            mode="lines+markers",
+            name=str(name),
+            line=dict(color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)], width=2),
+            marker=dict(size=3.5, color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)], opacity=0.8),
+            hovertemplate="x: %{x:.2f}<br>dx/dt: %{y:.2f}<extra></extra>",
+        )
     )
-)
 
-# Second trajectory
+# Fixed point (equilibrium)
 fig.add_trace(
     go.Scatter(
-        x=x2,
-        y=dx_dt_2,
-        mode="lines+markers",
-        name="Trajectory 2 (x₀=-1.5, v₀=3.0)",
-        line=dict(color=ACCENT_1, width=3),
-        marker=dict(size=7, color=ACCENT_1, opacity=0.8),
-        hovertemplate="x: %{x:.2f}<br>dx/dt: %{y:.2f}<extra></extra>",
-    )
-)
-
-# Fixed point (equilibrium at origin)
-fig.add_trace(
-    go.Scatter(
-        x=[0],
-        y=[0],
+        x=[EQUILIBRIUM[0]],
+        y=[EQUILIBRIUM[1]],
         mode="markers",
-        name="Fixed Point (Stable)",
-        marker=dict(size=18, color=INK, symbol="x", line=dict(width=3)),
-        hovertemplate="Equilibrium<br>x=0, dx/dt=0<extra></extra>",
+        name="Fixed point (stable)",
+        marker=dict(size=10, color=INK, symbol="x", line=dict(width=2, color=INK)),
+        hovertemplate="Equilibrium<br>x=%{x}, dx/dt=%{y}<extra></extra>",
     )
 )
 
-# Initial conditions
+# Initial conditions: first row of every trajectory
+starts = df.groupby(TRAJECTORY, sort=False).first()
 fig.add_trace(
     go.Scatter(
-        x=[x[0], x2[0]],
-        y=[dx_dt[0], dx_dt_2[0]],
+        x=starts[POSITION],
+        y=starts[VELOCITY],
         mode="markers",
-        name="Initial Conditions",
-        marker=dict(size=14, color=INK_SOFT, symbol="circle"),
+        name="Initial conditions",
+        marker=dict(size=8, color=INK_SOFT, symbol="circle"),
         hovertemplate="Initial: x=%{x:.2f}, dx/dt=%{y:.2f}<extra></extra>",
     )
 )
 
-# Direction arrows
-arrow_indices = [200, 500, 900]
-for idx in arrow_indices:
-    # Arrow for trajectory 1
-    fig.add_annotation(
-        x=x[idx],
-        y=dx_dt[idx],
-        ax=x[idx - 30],
-        ay=dx_dt[idx - 30],
-        xref="x",
-        yref="y",
-        axref="x",
-        ayref="y",
-        showarrow=True,
-        arrowhead=2,
-        arrowsize=2,
-        arrowwidth=2,
-        arrowcolor=BRAND,
-    )
-    # Arrow for trajectory 2
-    fig.add_annotation(
-        x=x2[idx],
-        y=dx_dt_2[idx],
-        ax=x2[idx - 30],
-        ay=dx_dt_2[idx - 30],
-        xref="x",
-        yref="y",
-        axref="x",
-        ayref="y",
-        showarrow=True,
-        arrowhead=2,
-        arrowsize=2,
-        arrowwidth=2,
-        arrowcolor=ACCENT_1,
-    )
+# Direction arrows, pointing along time
+for i, (_, rows) in enumerate(groups):
+    for frac in ARROW_POSITIONS:
+        head = int(frac * len(rows))
+        fig.add_annotation(
+            x=rows[POSITION].iloc[head],
+            y=rows[VELOCITY].iloc[head],
+            ax=rows[POSITION].iloc[head - ARROW_SPACING],
+            ay=rows[VELOCITY].iloc[head - ARROW_SPACING],
+            xref="x",
+            yref="y",
+            axref="x",
+            ayref="y",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=2,
+            arrowwidth=1.5,
+            arrowcolor=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+        )
 
-# Update layout
+# Style
 fig.update_layout(
-    title=dict(text="phase-diagram · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    autosize=False,
+    title=dict(
+        text="phase-diagram · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"
+    ),
     xaxis=dict(
-        title=dict(text="Position x", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
+        title=dict(text=POSITION, font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
         gridcolor=GRID,
         gridwidth=1,
         zeroline=True,
         zerolinecolor=INK_SOFT,
-        zerolinewidth=2,
+        zerolinewidth=1.5,
         linecolor=INK_SOFT,
     ),
     yaxis=dict(
-        title=dict(text="Velocity dx/dt", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
+        title=dict(text=VELOCITY, font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
         gridcolor=GRID,
         gridwidth=1,
         zeroline=True,
         zerolinecolor=INK_SOFT,
-        zerolinewidth=2,
+        zerolinewidth=1.5,
         linecolor=INK_SOFT,
     ),
     legend=dict(
-        font=dict(size=16, color=INK_SOFT), x=0.02, y=0.98, bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, borderwidth=1
+        font=dict(size=10, color=INK_SOFT), x=0.02, y=0.98, bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, borderwidth=1
     ),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font=dict(color=INK),
-    margin=dict(l=80, r=40, t=100, b=80),
+    margin=dict(l=70, r=30, t=60, b=60),
 )
 
 # Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
