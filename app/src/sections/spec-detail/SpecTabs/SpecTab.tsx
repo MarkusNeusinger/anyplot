@@ -6,7 +6,7 @@ import { MdHeading, MdListItem } from 'src/sections/spec-detail/SpecTabs/md';
 import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
 import { proseLinkStyle, semanticColors, typography } from 'src/theme';
 import type { SourceEntry, SpecSources } from 'src/types';
-import { doiUrl, hasSourceEntries } from 'src/utils/specSources';
+import { doiUrl, hasSourceEntries, isWebAddress } from 'src/utils/specSources';
 
 interface SpecTabProps {
   title: string;
@@ -34,9 +34,13 @@ function SourceItem({ entry }: { entry: SourceEntry }) {
         '&::marker': { color: 'var(--ink-muted)' },
       }}
     >
-      <Link href={entry.url} target="_blank" rel="noopener noreferrer" sx={sourceLinkSx}>
-        {entry.title}
-      </Link>
+      {isWebAddress(entry.url) ? (
+        <Link href={entry.url} target="_blank" rel="noopener noreferrer" sx={sourceLinkSx}>
+          {entry.title}
+        </Link>
+      ) : (
+        entry.title
+      )}
       {entry.doi && (
         <>
           {' · '}

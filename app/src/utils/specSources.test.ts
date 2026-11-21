@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { doiUrl, hasSourceEntries, sourcesJsonLd } from 'src/utils/specSources';
+import { doiUrl, hasSourceEntries, isWebAddress, sourcesJsonLd } from 'src/utils/specSources';
 
 describe('hasSourceEntries', () => {
   it('is true only for a spec that names a work', () => {
@@ -10,6 +10,24 @@ describe('hasSourceEntries', () => {
     expect(
       hasSourceEntries({ inspired_by: [], references: [{ title: 'A', url: 'https://a.example' }] })
     ).toBe(true);
+  });
+});
+
+describe('isWebAddress', () => {
+  it('admits only http and https addresses with a host', () => {
+    expect(isWebAddress('https://example.org/a')).toBe(true);
+    expect(isWebAddress('HTTP://example.org')).toBe(true);
+    for (const other of [
+      'javascript:alert(1)',
+      ' https://example.org',
+      'https://',
+      'https:///x',
+      '//example.org',
+      'data:text/html,x',
+      'ftp://example.org',
+    ]) {
+      expect(isWebAddress(other)).toBe(false);
+    }
   });
 });
 

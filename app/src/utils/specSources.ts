@@ -12,6 +12,15 @@ export function hasSourceEntries(sources: SpecSources | null | undefined): sourc
 }
 
 /**
+ * Whether a source's address may become a link. The API passes only blocks that
+ * core/spec_sources.py accepts, http and https addresses alone; the page checks again, so a
+ * `javascript:` or other address never reaches an href whatever the response holds.
+ */
+export function isWebAddress(url: string): boolean {
+  return /^https?:\/\/[^\s/]/i.test(url);
+}
+
+/**
  * The resolver address of a DOI. The DOI goes in as it stands: core/spec_sources.py admits
  * only characters that need no escaping in a URL path, and the crawler pages build the same
  * address.

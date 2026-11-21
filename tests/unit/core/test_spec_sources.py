@@ -132,6 +132,14 @@ class TestBadBlocks:
                 "sources.references[0].doi: not a DOI",
             ),
             ({"title": "A", "url": "https://example.org", "doi": "10.1000"}, "sources.references[0].doi: not a DOI"),
+            (
+                {"title": "A", "url": "https://example.org", "doi": "10.1234/../../target"},
+                "sources.references[0].doi: not a DOI",
+            ),
+            (
+                {"title": "A", "url": "https://example.org", "doi": "10.1234/./x"},
+                "sources.references[0].doi: not a DOI",
+            ),
             ({"title": "A", "url": "https://example.org", "isbn": "12345"}, "sources.references[0].isbn: not an ISBN"),
             (
                 {"title": "A", "url": "https://example.org", "isbn": 9783161484100},
@@ -159,6 +167,8 @@ class TestBadBlocks:
             "url-with-space",
             "doi-as-url",
             "doi-without-suffix",
+            "doi-with-parent-segments",
+            "doi-with-a-dot-segment",
             "short-isbn",
             "unquoted-isbn",
             "null-doi",

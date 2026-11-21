@@ -96,6 +96,20 @@ describe('SpecTab', () => {
       expect(screen.queryByRole('heading', { name: 'inspired by' })).not.toBeInTheDocument();
     });
 
+    it('shows a title whose address is not a web address as text, without a link', () => {
+      render(
+        <SpecTab
+          {...baseProps}
+          sources={{
+            inspired_by: [],
+            references: [{ title: 'A crafted entry', url: 'javascript:alert(1)' }],
+          }}
+        />
+      );
+      expect(screen.getByText('A crafted entry')).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'A crafted entry' })).not.toBeInTheDocument();
+    });
+
     it('shows nothing for a spec that names no work', () => {
       for (const none of [null, { data: 'invented' as const, inspired_by: [], references: [] }]) {
         const { unmount } = render(<SpecTab {...baseProps} sources={none} />);
