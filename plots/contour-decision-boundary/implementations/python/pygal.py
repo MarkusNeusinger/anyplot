@@ -1,20 +1,22 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-decision-boundary: Decision Boundary Classifier Visualization
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-16
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 
 
-# Remove script directory from path to avoid name collision with pygal package
+# Remove script directory from path to avoid name collision with the pygal package
 _script_dir = str(Path(__file__).parent)
 sys.path = [p for p in sys.path if p != _script_dir]
 
 import cairosvg  # noqa: E402
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 from sklearn.datasets import make_moons  # noqa: E402
@@ -27,263 +29,150 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # First series
-COLORS = ("#009E73", "#C475FD")  # Two classes
+# Imprint palette: all eight positions, one per class in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Generate synthetic classification data (moon shapes)
-np.random.seed(42)
+# Constants
+MESH_CELLS = 800  # mesh cells along the longer side; fine enough that the boundary shows no stair-steps
+REGION_OPACITY = 0.26  # fill of the predicted regions, light enough that the points stay the strongest marks
+
+MISCLASSIFIED_RING = "#AE3030"  # ring and legend swatch of the misclassified points
+
+# Columns: set these to your table's column names
+FEATURE_1 = "Feature 1"  # role: X1
+FEATURE_2 = "Feature 2"  # role: X2
+CLASS = "Class"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("points.csv")
 X, y = make_moons(n_samples=150, noise=0.25, random_state=42)
+df = pd.DataFrame({FEATURE_1: X[:, 0], FEATURE_2: X[:, 1], CLASS: y})
 
-# Train SVM classifier
-clf = SVC(kernel="rbf", C=1.0, gamma="scale")
-clf.fit(X, y)
+# Plot: reads only df and the constants above
+df = df.dropna(subset=[FEATURE_1, FEATURE_2, CLASS]).reset_index(drop=True)
+df[[FEATURE_1, FEATURE_2]] = df[[FEATURE_1, FEATURE_2]].astype(float)
+features = df[[FEATURE_1, FEATURE_2]].to_numpy()
+labels = df[CLASS].astype(str).to_numpy()
+classes = sorted(set(labels))
+class_index = np.searchsorted(classes, labels)
 
-# Create mesh grid for decision boundary
-h = 0.02  # Step size
-x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
-y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
-xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+clf = SVC(kernel="rbf", C=1.0, gamma="scale").fit(features, labels)
+wrong = clf.predict(features) != labels
 
-# Get predictions on mesh grid
-Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
-Z = Z.reshape(xx.shape)
+# Plotted feature plane: the data range plus a margin
+x_min, x_max = df[FEATURE_1].min() - 0.5, df[FEATURE_1].max() + 0.5
+y_min, y_max = df[FEATURE_2].min() - 0.5, df[FEATURE_2].max() + 0.5
 
-# Style for 4800x2700 canvas
-custom_style = Style(
+# Predictions on the mesh, one cell per prediction (cell centres)
+step = max(x_max - x_min, y_max - y_min) / MESH_CELLS
+x_edges = np.arange(x_min, x_max + step, step)
+y_edges = np.arange(y_min, y_max + step, step)
+x_centres = (x_edges[:-1] + x_edges[1:]) / 2
+y_centres = (y_edges[:-1] + y_edges[1:]) / 2
+xx, yy = np.meshgrid(x_centres, y_centres)
+grid_class = np.searchsorted(classes, clf.predict(np.c_[xx.ravel(), yy.ravel()])).reshape(xx.shape)
+
+# Style
+imprint_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=COLORS,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    colors=(*IMPRINT_PALETTE[:2], MISCLASSIFIED_RING),
+    title_font_size=64,
+    label_font_size=52,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
+    opacity=1.0,
+    opacity_hover=1.0,
 )
 
-# Create base XY chart
 chart = pygal.XY(
-    width=4800,
-    height=2700,
-    style=custom_style,
-    title="contour-decision-boundary · pygal · anyplot.ai",
-    show_legend=False,
-    margin=120,
-    margin_top=200,
-    margin_bottom=250,
-    margin_left=350,
-    margin_right=400,
-    show_x_labels=False,
-    show_y_labels=False,
-    show_x_guides=False,
-    show_y_guides=False,
-    x_title="",
-    y_title="",
+    width=3200,
+    height=1800,
+    style=imprint_style,
+    title="contour-decision-boundary · python · pygal · anyplot.ai",
+    x_title=FEATURE_1,
+    y_title=FEATURE_2,
+    xrange=(x_min, x_max),
+    range=(y_min, y_max),
+    show_x_guides=True,
+    show_y_guides=True,
+    stroke=False,
+    legend_at_bottom=True,
+    legend_at_bottom_columns=len(classes) + 1,
+    legend_box_size=36,
+    truncate_legend=-1,
+    margin=40,
+    print_values=False,
+    css=[
+        "file://style.css",
+        "file://graph.css",
+        f"inline:.guide.line, .axis.major.line {{ stroke: none !important; }} .dot {{ stroke: {INK}; stroke-width: 3; }} "
+        f".serie-{len(classes)} .dot {{ stroke: {MISCLASSIFIED_RING} !important; stroke-width: 9 !important; }}",
+    ],
 )
 
-# Plot dimensions (matching chart margins)
-plot_x = 350
-plot_y = 200
-plot_width = 4800 - 350 - 400
-plot_height = 2700 - 200 - 250
-
-
-# Helper function to map data coordinates to SVG coordinates
-def data_to_svg(data_x, data_y):
-    svg_x = plot_x + (data_x - x_min) / (x_max - x_min) * plot_width
-    svg_y = plot_y + plot_height - (data_y - y_min) / (y_max - y_min) * plot_height
-    return svg_x, svg_y
-
-
-# Build SVG content
-svg_parts = []
-
-# Draw decision boundary regions (filled cells)
-n_rows, n_cols = Z.shape
-cell_w = plot_width / (n_cols - 1)
-cell_h = plot_height / (n_rows - 1)
-
-# Alpha values for background regions
-region_opacity = 0.4
-
-for i in range(n_rows - 1):
-    for j in range(n_cols - 1):
-        # Use the class prediction for this cell
-        cell_class = Z[i, j]
-        # Use Okabe-Ito colors for regions
-        color = COLORS[int(cell_class)]
-        cx = plot_x + j * cell_w
-        cy = plot_y + plot_height - (i + 1) * cell_h
-        svg_parts.append(
-            f'<rect x="{cx:.1f}" y="{cy:.1f}" width="{cell_w + 0.5:.1f}" '
-            f'height="{cell_h + 0.5:.1f}" fill="{color}" stroke="none" opacity="{region_opacity}"/>'
-        )
-
-# Axis frame
-svg_parts.append(
-    f'<rect x="{plot_x}" y="{plot_y}" width="{plot_width}" height="{plot_height}" '
-    f'fill="none" stroke="{INK_MUTED}" stroke-width="3"/>'
+# One series per class (correctly classified points), then the misclassified points
+for i, label in enumerate(classes):
+    keep = (class_index == i) & ~wrong
+    chart.add(f"{CLASS} {label}", list(zip(df[FEATURE_1][keep], df[FEATURE_2][keep], strict=True)), dots_size=14)
+chart.add(
+    "Misclassified (large, red ring)",
+    [
+        {"value": (a, b), "color": IMPRINT_PALETTE[k % len(IMPRINT_PALETTE)]}
+        for a, b, k in zip(df[FEATURE_1][wrong], df[FEATURE_2][wrong], class_index[wrong], strict=True)
+    ],
+    dots_size=22,
 )
 
-# Draw training points on top
-marker_size = 18
-for idx in range(len(X)):
-    px, py = X[idx]
-    svg_x, svg_y = data_to_svg(px, py)
-    point_class = y[idx]
-    color = COLORS[point_class]
+svg = chart.render(is_unicode=True)
 
-    # Predict class for this point to check if correctly classified
-    pred = clf.predict([[px, py]])[0]
-    is_correct = pred == point_class
+# Data-to-pixel mapping, read off the tick guides pygal drew (value label -> guide position)
+tick = r'<path d="M{pos}" class="[^"]*" /><text[^>]*>([^<]*)</text>'
+x_ticks = [(float(lab), float(pos)) for pos, lab in re.findall(tick.format(pos=r"([\d.]+) [\d.]+ v[\d.]+"), svg)]
+y_ticks = [(float(lab), float(pos)) for pos, lab in re.findall(tick.format(pos=r"[\d.]+ ([\d.]+) h[\d.]+"), svg)]
+x_fit = np.polyfit(*zip(*x_ticks, strict=True), 1)
+y_fit = np.polyfit(*zip(*y_ticks, strict=True), 1)
 
-    # Use different marker for correct vs incorrect
-    if is_correct:
-        # Filled circle for correctly classified
-        svg_parts.append(
-            f'<circle cx="{svg_x:.1f}" cy="{svg_y:.1f}" r="{marker_size}" '
-            f'fill="{color}" stroke="{INK}" stroke-width="2"/>'
-        )
-    else:
-        # X marker for misclassified
-        svg_parts.append(
-            f'<circle cx="{svg_x:.1f}" cy="{svg_y:.1f}" r="{marker_size}" '
-            f'fill="{color}" stroke="#E53935" stroke-width="4"/>'
-        )
-        size = marker_size * 0.7
-        svg_parts.append(
-            f'<line x1="{svg_x - size:.1f}" y1="{svg_y - size:.1f}" '
-            f'x2="{svg_x + size:.1f}" y2="{svg_y + size:.1f}" stroke="#E53935" stroke-width="3"/>'
-        )
-        svg_parts.append(
-            f'<line x1="{svg_x + size:.1f}" y1="{svg_y - size:.1f}" '
-            f'x2="{svg_x - size:.1f}" y2="{svg_y + size:.1f}" stroke="#E53935" stroke-width="3"/>'
-        )
+# Predicted regions: merge each mesh row into runs of one class, drawn as opaque rects
+# inside one translucent group, so neighbouring cells never show seams
+x_px = list(np.polyval(x_fit, x_edges))
+y_px = list(np.polyval(y_fit, y_edges))
+rects = []
+for r in range(grid_class.shape[0]):
+    row = grid_class[r]
+    start = 0
+    for c in range(1, len(row) + 1):
+        if c == len(row) or row[c] != row[start]:
+            top = min(y_px[r], y_px[r + 1]) - 0.4
+            height = abs(y_px[r + 1] - y_px[r]) + 0.8
+            left = x_px[start]
+            width = x_px[c] - left
+            rects.append(
+                f'<rect x="{left:.2f}" y="{top:.2f}" width="{width:.2f}" height="{height:.2f}" '
+                f'fill="{IMPRINT_PALETTE[row[start] % len(IMPRINT_PALETTE)]}"/>'
+            )
+            start = c
+region_group = f'<g class="regions" opacity="{REGION_OPACITY}" clip-path="url(#plot-clip)">{"".join(rects)}</g>'
 
-# X-axis labels and ticks
-n_x_ticks = 7
-for i in range(n_x_ticks):
-    frac = i / (n_x_ticks - 1)
-    tick_x = plot_x + frac * plot_width
-    tick_y = plot_y + plot_height
-    val = x_min + frac * (x_max - x_min)
-    svg_parts.append(
-        f'<line x1="{tick_x:.1f}" y1="{tick_y}" x2="{tick_x:.1f}" y2="{tick_y + 20}" '
-        f'stroke="{INK_MUTED}" stroke-width="3"/>'
-    )
-    svg_parts.append(
-        f'<text x="{tick_x:.1f}" y="{tick_y + 65}" text-anchor="middle" fill="{INK}" '
-        f'style="font-size:42px;font-family:sans-serif">{val:.1f}</text>'
-    )
-
-# X-axis title
-svg_parts.append(
-    f'<text x="{plot_x + plot_width / 2}" y="{plot_y + plot_height + 140}" text-anchor="middle" '
-    f'fill="{INK}" style="font-size:48px;font-weight:bold;font-family:sans-serif">Feature 1</text>'
+plot_open = svg.index('class="plot"')
+bg_end = svg.index("/>", plot_open) + 2  # end of the plot background rect
+clip = f'<clipPath id="plot-clip"><rect x="{x_px[0]:.2f}" y="{min(y_px):.2f}" width="{x_px[-1] - x_px[0]:.2f}" height="{abs(y_px[-1] - y_px[0]):.2f}"/></clipPath>'
+# Frame the feature plane
+frame = (
+    f'<rect x="{x_px[0]:.2f}" y="{min(y_px):.2f}" width="{x_px[-1] - x_px[0]:.2f}" '
+    f'height="{abs(y_px[-1] - y_px[0]):.2f}" fill="none" stroke="{INK_MUTED}" stroke-width="3"/>'
 )
+svg = svg[:bg_end] + clip + region_group + frame + svg[bg_end:]
 
-# Y-axis labels and ticks
-n_y_ticks = 7
-for i in range(n_y_ticks):
-    frac = i / (n_y_ticks - 1)
-    tick_y = plot_y + plot_height - frac * plot_height
-    tick_x = plot_x
-    val = y_min + frac * (y_max - y_min)
-    svg_parts.append(
-        f'<line x1="{tick_x - 20}" y1="{tick_y:.1f}" x2="{tick_x}" y2="{tick_y:.1f}" '
-        f'stroke="{INK_MUTED}" stroke-width="3"/>'
-    )
-    svg_parts.append(
-        f'<text x="{tick_x - 30}" y="{tick_y + 14:.1f}" text-anchor="end" fill="{INK}" '
-        f'style="font-size:42px;font-family:sans-serif">{val:.1f}</text>'
-    )
-
-# Y-axis title (rotated)
-y_title_x = plot_x - 200
-y_title_y = plot_y + plot_height / 2
-svg_parts.append(
-    f'<text x="{y_title_x}" y="{y_title_y}" text-anchor="middle" fill="{INK}" '
-    f'style="font-size:48px;font-weight:bold;font-family:sans-serif" '
-    f'transform="rotate(-90, {y_title_x}, {y_title_y})">Feature 2</text>'
-)
-
-# Legend
-legend_x = plot_x + plot_width + 50
-legend_y = plot_y + 50
-
-# Class 0 legend
-svg_parts.append(
-    f'<circle cx="{legend_x + 20}" cy="{legend_y}" r="20" fill="{COLORS[0]}" stroke="{INK}" stroke-width="2"/>'
-)
-svg_parts.append(
-    f'<text x="{legend_x + 55}" y="{legend_y + 12}" fill="{INK}" '
-    f'style="font-size:42px;font-family:sans-serif">Class 0</text>'
-)
-
-# Class 1 legend
-svg_parts.append(
-    f'<circle cx="{legend_x + 20}" cy="{legend_y + 70}" r="20" fill="{COLORS[1]}" stroke="{INK}" stroke-width="2"/>'
-)
-svg_parts.append(
-    f'<text x="{legend_x + 55}" y="{legend_y + 82}" fill="{INK}" '
-    f'style="font-size:42px;font-family:sans-serif">Class 1</text>'
-)
-
-# Misclassified legend
-svg_parts.append(
-    f'<circle cx="{legend_x + 20}" cy="{legend_y + 150}" r="20" fill="{INK_MUTED}" stroke="#E53935" stroke-width="4"/>'
-)
-size = 14
-svg_parts.append(
-    f'<line x1="{legend_x + 20 - size}" y1="{legend_y + 150 - size}" '
-    f'x2="{legend_x + 20 + size}" y2="{legend_y + 150 + size}" stroke="#E53935" stroke-width="3"/>'
-)
-svg_parts.append(
-    f'<line x1="{legend_x + 20 + size}" y1="{legend_y + 150 - size}" '
-    f'x2="{legend_x + 20 - size}" y2="{legend_y + 150 + size}" stroke="#E53935" stroke-width="3"/>'
-)
-svg_parts.append(
-    f'<text x="{legend_x + 55}" y="{legend_y + 162}" fill="{INK}" '
-    f'style="font-size:42px;font-family:sans-serif">Misclassified</text>'
-)
-
-# Combine all SVG parts
-custom_svg = "\n".join(svg_parts)
-
-# Add dummy data point (required by pygal)
-chart.add("", [(0, 0)])
-
-# Render base chart and inject custom SVG
-base_svg = chart.render(is_unicode=True)
-
-# Insert custom SVG before the closing </svg> tag
-output_svg = base_svg.replace("</svg>", f"{custom_svg}\n</svg>")
-
-# Save SVG and convert to PNG using cairosvg
-cairosvg.svg2png(bytestring=output_svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
-
-# Save interactive HTML
-html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>contour-decision-boundary - pygal</title>
-    <style>
-        body {{ margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: {PAGE_BG}; }}
-        .chart {{ max-width: 100%; height: auto; }}
-    </style>
-</head>
-<body>
-    <figure class="chart">
-        {output_svg}
-    </figure>
-</body>
-</html>
-"""
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
 
 with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
+    f.write(
+        f'<!DOCTYPE html><html><head><meta charset="utf-8"><title>contour-decision-boundary - pygal</title>'
+        f"<style>body{{margin:0;background:{PAGE_BG}}}svg{{max-width:100%;height:auto}}</style></head>"
+        f"<body>{svg}</body></html>"
+    )
