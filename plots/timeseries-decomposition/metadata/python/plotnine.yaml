@@ -2,51 +2,57 @@ library: plotnine
 language: python
 specification_id: timeseries-decomposition
 created: '2025-12-31T10:56:56Z'
-updated: '2026-05-14T22:54:21Z'
-generated_by: claude-haiku
-workflow_run: 25889844907
+updated: '2026-11-21T18:13:36Z'
+generated_by: claude-sonnet
+workflow_run: 44933725611
 issue: 2992
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 82
 review:
   strengths:
-  - Perfect spec compliance — all four decomposition components correctly displayed
-    in proper order with appropriate scaling
-  - Excellent theme adaptation — both light and dark renders properly readable with
-    correct theme tokens throughout
-  - Proper statistical visualization — seasonal_decompose used appropriately with
-    additive model
-  - Idiomatic plotnine code — excellent ggplot2 grammar with faceting and theme element
-    constructors
-  - Reproducible implementation — seed set with realistic synthetic data containing
-    trend and seasonality
-  - Clear visual hierarchy — vertical stacking naturally guides interpretation through
-    decomposition sequence
+  - 'Idiomatic plotnine grammar: long-format data with an ordered Categorical drives
+    facet_wrap(ncol=1, scales=''free_y''), giving each component its own fitted y
+    scale on one shared date axis'
+  - statsmodels seasonal_decompose with period 7 produces a clean weekly seasonal
+    and a slow trend; injected campaign, outage and viral-post spikes stand out in
+    the residual panel
+  - 'Theme tokens threaded through every chrome element: both renders are fully readable
+    with identical brand-green data'
+  - Daily website sessions with busy weekdays and quiet weekends is a realistic, neutral
+    scenario at plausible scale
   weaknesses:
-  - Limited design sophistication — relies on theme_minimal() without additional visual
-    refinement or emphasis techniques
-  - No advanced visual techniques — straightforward line-only visualization without
-    weight variation or other visual indicators
+  - 'VQ-02 (both): the y tick labels of the short Trend panel (4000-6500 in six 500-steps),
+    and likewise Original and Residual, sit edge to edge with no gap between neighbouring
+    labels → at least a few px of clear space between labels (fewer breaks or taller
+    panels). Likely cause: each data panel is only about 180 px tall, so five or six
+    default breaks per panel stack 8 pt labels flush.'
+  - 'VQ-05 (both): the four strip bands take about 45% of each panel''s height and
+    blank gaps of similar size sit between the panels, so the data areas fill only
+    about 40% of the canvas height → data panels at least about 60% of the height
+    (smaller strip padding, smaller panel_spacing_y). Likely cause: strip_text without
+    a reduced margin plus panel_spacing_y=0.04.'
+  - 'Suggestion: a slightly heavier line for the Original panel would set it apart
+    as the input the other three panels decompose.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title, axis labels (Date, Passengers), tick marks all clearly visible in dark text (INK token); facet headers show component names clearly
-      Data: All lines in brand green (#009E73); four subplots stacked vertically (Original, Trend, Seasonal, Residual); grid subtle but aids value reading
-      Legibility verdict: PASS — all text readable, no overlaps, no light-on-light issues
+      Background: warm off-white #FAF8F1 across canvas and panels, 3200x1800.
+      Chrome: bold dark title "timeseries-decomposition · python · plotnine · anyplot.ai" centred at about 67% width; four facet strips (Original, Trend, Seasonal, Residual) on #FFFDF6 with dark outline and bold dark text; shared y title "Daily website sessions", x title "Date", x ticks Feb-Oct 2024 every two months; soft-grey y tick labels per panel that sit flush against each other in the short panels; faint grid in every panel. All text readable.
+      Data: single #009E73 line in every panel - original with weekly sawtooth and upward drift (3,000-7,500), trend from about 4,000 to 6,500 starting and ending three days in, seasonal 7-day pattern from -1,000 to +600 repeated 39 times, residual noise with spikes near Feb, early Jul and late Jul.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title, axis labels, tick marks all clearly visible in light text (INK/INK_SOFT tokens); facet headers readable; no dark-on-dark failures
-      Data: Lines identical green (#009E73) to light render — confirming proper theme-adaptive rendering where only chrome inverts
-      Legibility verdict: PASS — all elements clearly visible in both themes, proper chrome inversion, zero readability failures
+      Background: warm near-black #1A1A17, strips on #242420 with light-grey outline.
+      Chrome: title, strip labels and axis titles in light ink, tick labels in light grey; no dark-on-dark text; grid faint but visible.
+      Data: identical #009E73 lines and shapes to the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,66 +60,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: All sizes set at the style-guide references (title 12, axis titles
+          10, ticks 8, strips 9 pt); readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Clear spacing between subplots; no text collisions
+        comment: Y tick labels in the short Trend, Original and Residual panels sit
+          edge to edge with no gap between them (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines clearly visible with appropriate thickness
+        comment: 0.7 line for 273 daily points is clearly visible in every panel and
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green maintains CVD safety and contrast
+        comment: Single brand-green series with strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions; nothing cut off; generous panel spacing
+        comment: 3200x1800 canvas; strip bands and blank gaps leave each data panel
+          only about 10% of the canvas height (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with proper title format
+        comment: '''Date'' and ''Daily website sessions'' name the quantity and its
+          count unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green used; correct backgrounds; theme-adaptive chrome verified
+        comment: 'Imprint #009E73 in both renders; #FAF8F1 / #1A1A17 backgrounds;
+          theme-correct chrome'
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Clean faceting with clear hierarchy; minimal embellishment appropriate
-          for technical context
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and whitespace; modest customization via theme_minimal()
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Vertical stacking guides interpretation; facet labels aid understanding
+        comment: 'Data choice: a campaign spike, an outage and a viral post are injected
+          so the residual panel shows what the decomposition isolates'
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Four vertically stacked subplots in correct order
+        comment: Four stacked decomposition panels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All components displayed; consistent axis; clear labeling; seasonal_decompose
-          used
+        comment: C1 order and labels, C2 shared time axis, C3 free y scales, C4 slow
+          trend and constant 7-day seasonal, C5 light grid in every panel; seasonal_decompose
+          additive
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X/Y mapping with proper free_y scaling
+        comment: Date on x, component values on y; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; facet headers serve as labels
+        comment: Title 'timeseries-decomposition · python · plotnine · anyplot.ai';
+          legend N/A (single series, strips label panels)
     data_quality:
       score: 15
       max: 15
@@ -152,19 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All decomposition aspects shown
+        comment: Trend, weekly seasonality and irregular residual with spikes all
+          present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic airline data; realistic synthetic generation
+        comment: Daily website sessions with busy weekdays and quiet weekends
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values; free_y optimal for each component
+        comment: 'Checked: 2024-01-01 is a Monday, so weekday_effect index 0 is Monday
+          and the weekend dip is Sat/Sun; sessions 3,000-7,500/day; seasonal range
+          about -1,000 to +600 matches the generated weekday offsets'
     code_quality:
       score: 10
       max: 10
@@ -174,57 +191,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single script; no unnecessary abstractions
+        comment: Column constants, one Data block, plot code, save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set; deterministic
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear, readable; no fake UI
+        comment: statsmodels seasonal_decompose does the computation; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi 400
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Excellent ggplot2 syntax with faceting and theme elements
+        comment: Long-format data with an ordered Categorical driving facet_wrap(scales='free_y'),
+          scale_x_datetime(date_breaks, date_labels)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: facet_wrap is plotnine-characteristic; straightforward usage
+        comment: Nothing beyond what the spec and library prompt require
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T18:09:36Z'
 impl_tags:
   dependencies:
   - statsmodels
   techniques:
   - faceting
-  - subplots
   patterns:
   - data-generation
   - wide-to-long
   dataprep:
   - time-series
-  styling: []
+  styling:
+  - grid-styling

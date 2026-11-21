@@ -1,7 +1,7 @@
 """ anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-14
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
@@ -18,7 +18,6 @@ from plotnine import (
     geom_line,
     ggplot,
     labs,
-    scale_size_manual,
     scale_x_datetime,
     theme,
     theme_minimal,
@@ -32,77 +31,68 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
 
-# Data - Monthly airline passengers with trend and seasonality
-np.random.seed(42)
-n_months = 144  # 12 years of monthly data
+# Imprint palette: all eight positions, first series is always brand green
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Create date range
-dates = pd.date_range(start="2012-01-01", periods=n_months, freq="MS")
+# Constants
+SEASONAL_PERIOD = 7  # weekly cycle in daily data
+COMPONENTS = ["Original", "Trend", "Seasonal", "Residual"]
 
-# Generate synthetic airline passenger data with:
-# - Upward trend
-# - Strong yearly seasonality (peak in summer)
-# - Random noise
-t = np.arange(n_months)
-trend = 200 + t * 2.5  # Growing trend
-seasonal = 40 * np.sin(2 * np.pi * t / 12 - np.pi / 2)  # Peak in summer (month 7)
-residual = np.random.normal(0, 15, n_months)
-value = trend + seasonal + residual
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+SESSIONS = "Daily website sessions"  # role: value
 
-# Create DataFrame
-df = pd.DataFrame({"date": dates, "value": value})
+# Data: replace this block with your own table, for example df = pd.read_csv("sessions.csv")
+rng = np.random.default_rng(42)
+n_days = 273  # 39 full weeks
+days = np.arange(n_days)
+growth = 4000 + 9 * days + 350 * np.sin(2 * np.pi * days / 273)  # slow, slightly wavy audience growth
+weekday_effect = np.array([620, 540, 480, 430, 260, -820, -1010])  # busy Mon-Fri, quiet weekend
+noise = rng.normal(0, 230, n_days)
+noise[[40, 135, 210]] += [900, -800, 1100]  # a campaign spike, an outage, a viral post
+df = pd.DataFrame(
+    {DATE: pd.date_range("2024-01-01", periods=n_days, freq="D"), SESSIONS: growth + weekday_effect[days % 7] + noise}
+)
 
-# Perform seasonal decomposition using statsmodels
-decomposition = seasonal_decompose(df["value"], model="additive", period=12)
+# Plot: reads only df and the constants above
+decomposition = seasonal_decompose(
+    df[SESSIONS].interpolate(limit_area="inside").bfill().ffill().to_numpy(), model="additive", period=SEASONAL_PERIOD
+)
+series = [df[SESSIONS].to_numpy(), decomposition.trend, decomposition.seasonal, decomposition.resid]
 
-# Prepare data for plotnine with all components
 df_plot = pd.DataFrame(
     {
-        "date": np.tile(dates, 4),
-        "value": np.concatenate(
-            [df["value"].values, decomposition.trend.values, decomposition.seasonal.values, decomposition.resid.values]
-        ),
-        "component": np.repeat(["Original", "Trend", "Seasonal", "Residual"], n_months),
+        DATE: np.tile(df[DATE].to_numpy(), len(COMPONENTS)),
+        SESSIONS: np.concatenate(series),
+        "Component": pd.Categorical(np.repeat(COMPONENTS, len(df)), categories=COMPONENTS, ordered=True),
     }
-)
+).dropna()  # the centered moving average leaves the series edges unestimated
 
-# Remove NaN values (decomposition creates NaNs at edges)
-df_plot = df_plot.dropna()
-
-# Make component a categorical with correct order
-df_plot["component"] = pd.Categorical(
-    df_plot["component"], categories=["Original", "Trend", "Seasonal", "Residual"], ordered=True
-)
-
-# Create faceted plot with four components
-# Emphasize original series with thicker line
 plot = (
-    ggplot(df_plot, aes(x="date", y="value", size="component"))
-    + geom_line(color=BRAND)
-    + facet_wrap("~component", ncol=1, scales="free_y", dir="v")
-    + scale_x_datetime(date_labels="%Y", date_breaks="2 years")
-    + scale_size_manual(values={"Original": 1.8, "Trend": 1.2, "Seasonal": 1.2, "Residual": 1.2}, guide=None)
-    + labs(title="timeseries-decomposition · plotnine · anyplot.ai", x="Date", y="Passengers")
+    ggplot(df_plot, aes(x=DATE, y=SESSIONS))
+    + geom_line(color=IMPRINT_PALETTE[0], size=0.7)
+    + facet_wrap("Component", ncol=1, scales="free_y")
+    + scale_x_datetime(date_labels="%b %Y", date_breaks="2 months")
+    + labs(title="timeseries-decomposition · python · plotnine · anyplot.ai", x=DATE, y=SESSIONS)
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
-        axis_title_x=element_text(size=20, margin={"t": 15}, color=INK),
-        axis_title_y=element_text(size=20, margin={"r": 15}, color=INK),
-        axis_text_x=element_text(size=14, color=INK_SOFT),
-        axis_text_y=element_text(size=12, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT, size=0.5),
-        strip_text=element_text(size=16, weight="bold", color=INK),
+        plot_title=element_text(size=12, ha="center", weight="bold", color=INK),
+        axis_title_x=element_text(size=10, margin={"t": 6}, color=INK),
+        axis_title_y=element_text(size=10, margin={"r": 6}, color=INK),
+        axis_text_x=element_text(size=8, color=INK_SOFT),
+        axis_text_y=element_text(size=8, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
+        strip_text=element_text(size=9, weight="bold", color=INK),
         strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        panel_spacing_y=0.06,
-        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
+        panel_spacing_y=0.04,
+        panel_grid_major=element_line(color=INK, size=0.25, alpha=0.15),
         panel_grid_minor=element_blank(),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
