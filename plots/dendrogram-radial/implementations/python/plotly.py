@@ -1,7 +1,7 @@
 """anyplot.ai
 dendrogram-radial: Radial Dendrogram
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 81/100 | Created: 2026-05-14
+Quality: pending | Created: 2026-05-14
 """
 
 import os
