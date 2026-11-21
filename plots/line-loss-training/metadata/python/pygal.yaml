@@ -2,54 +2,60 @@ library: pygal
 language: python
 specification_id: line-loss-training
 created: '2025-12-31T00:13:54Z'
-updated: '2026-05-14T05:45:33Z'
-generated_by: claude-haiku
-workflow_run: 25843905278
+updated: '2026-11-21T14:24:09Z'
+generated_by: claude-sonnet
+workflow_run: 44913210953
 issue: 2860
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/python/pygal/plot-dark.html
-quality_score: 92
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality across both themes with excellent text legibility and no
-    overlap
-  - Ideal data representation showing clear overfitting behavior with diverging training/validation
-    curves
-  - Theme-adaptive design using custom Style object with correct Okabe-Ito palette
-    and warm off-white/near-black backgrounds
-  - Clean reproducible code with explicit font sizing and thoughtful parameter choices
-  - All spec requirements met perfectly with correct title format and descriptive
-    axis labels
+  - Theme-adaptive pygal Style threads PAGE_BG / INK / INK_MUTED through every chrome
+    element, so both renders read cleanly with identical Imprint data colors
+  - Font sizes, stroke width and dot size set at the library prompt's values for the
+    3200x1800 canvas, giving balanced, legible text
+  - 'Data shows the full training story: steep early drop, a growing gap, and validation
+    loss turning upward after its minimum near epoch 30 while training loss keeps
+    falling'
+  - 'Adaptable structure: column-role constants above one Data block that binds df,
+    with pygal lists built from df via .tolist()'
+  - Interactive HTML output keeps pygal's native per-point hover tooltips
   weaknesses:
-  - Design Excellence could be elevated with visual emphasis techniques (color contrast,
-    size variation) to highlight the overfitting inflection point
-  - Spec suggests optional annotation marking optimal stopping point (minimum validation
-    loss at epoch ~25) - not implemented but optional
-  - 'Library Mastery: could leverage more distinctive pygal features beyond basic
-    style customization'
+  - 'VQ-05 (both): the legend sits in the top-left canvas corner about 8 px from the
+    left edge, above the y-axis title and detached from the plot area → place it next
+    to the plot with a margin of at least 40 px, e.g. legend_at_bottom=True with legend_at_bottom_columns=2.
+    Likely cause: legend_at_bottom=False, which puts pygal''s legend column at the
+    far left of the canvas.'
+  - 'DE-02 (both): a dashed grid on both axes with a vertical guide at each of the
+    50 epochs, most visible in the light render, where the style guide asks line charts
+    for a y-only, solid, subtle grid → drop the vertical guides and keep the horizontal
+    ones. Likely cause: show_x_guides=True combined with an x_label (including the
+    empty strings) for every epoch.'
+  - 'Suggestion: the integer y ticks ''1'' and ''2'' render smaller than ''0.8'' or
+    ''1.2'' because pygal draws major labels at major_label_font_size=44 — matching
+    it to label_font_size would even out the tick column.'
+  - 'Suggestion: the optional marker the Notes allow at the minimum-validation-loss
+    epoch (about epoch 30) would point at the early-stopping point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1 as specified
-      Chrome: Title "line-loss-training · pygal · anyplot.ai" is clear and dark; axis labels "Epoch" and "Cross-Entropy Loss" are readable; tick labels (0.2, 0.4, 0.6, ..., 2.4 on Y-axis; epoch values on X-axis) are all clearly visible against the light surface; legend box in top-left shows "Training Loss" and "Validation Loss" with green and orange indicators
-      Data: Training Loss (green #009E73) shows steady exponential decay from ~2.4 to ~0.2 over 50 epochs; Validation Loss (orange #D55E00) shows similar initial decay but diverges upward after epoch ~25, demonstrating overfitting; both curves use square dots (size 6px) that are clearly visible; lines use 3px stroke width for prominence
-      Grid: Subtle gray grid lines (x and y) visible but not dominant
-      Legibility verdict: PASS - All text is readable against the light background; no "light on light" issues; grid is appropriately subtle
+      Background: warm off-white #FAF8F1 across canvas and plot area (3200x1800).
+      Chrome: title 'line-loss-training · python · pygal · anyplot.ai' in dark monospace at the top, about 60% of the width; y-axis title 'Cross-Entropy Loss' (rotated) and x-axis title 'Epoch' in dark ink; y ticks 0.2-2.4 (the integer ticks 1 and 2 slightly smaller), x ticks every 5 epochs 5-50; dashed grey guides on both axes, one vertical per epoch; legend with square swatches 'Training Loss' / 'Validation Loss' in the top-left canvas corner. All text readable.
+      Data: Training Loss in #009E73 green and Validation Loss in #C475FD lilac, lines with round dots for 50 epochs; training falls 2.42 -> 0.11, validation falls to about 0.40 at epoch 30 then rises to about 0.59.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17 as specified
-      Chrome: Title and axis labels are light-colored and clearly readable against the dark background; tick labels are visible; legend box styling is adapted for dark theme; no "dark on dark" failures - all text has appropriate contrast
-      Data: Training Loss (green #009E73) and Validation Loss (orange #D55E00) are identical to light render - colors do NOT change between themes, only chrome (background, text, grid) adapts; data visualization shows the same overfitting pattern with the same divergence at epoch ~25
-      Grid: Subtle grid lines adapted for dark theme, visible but not intrusive
-      Legibility verdict: PASS - All text is clearly readable against the dark background; brand green #009E73 remains visible and readable; no accessibility issues between renders
-
-    Both renders pass theme-readability and palette-compliance checks. Data colors are theme-independent (Okabe-Ito palette), chrome is fully adaptive.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, all clearly readable; no dark-on-dark text; grid guides dark and subtle; legend text light.
+      Data: identical green #009E73 and lilac #C475FD curves, same shapes as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,78 +63,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: Title 28px, Labels 22px, Ticks 18px;
-          perfectly readable in both themes'
+        comment: Sizes set explicitly at the library prompt's values (title 66, axis
+          titles 56, ticks 56/44, legend 44); every text element readable in both
+          themes; title spans about 60% of the width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; x-labels show every 5th epoch for perfect
-          readability
+        comment: No text collides with text or data; x labels every 5th epoch
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both lines clearly visible with 3px stroke; dots (size 6) well-sized
-          for 50-point dataset
+        comment: stroke_width 5 and dots_size 7 suit 50 points per series; legend
+          swatches match the line colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) is colorblind-safe; excellent
-          contrast between colors and background'
+        comment: Green against lilac differs in hue and lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Plot fills 60-70% of canvas; balanced margins (80px); generous whitespace;
-          nothing cut off
+        passed: false
+        comment: Plot fills the canvas well (3200x1800, gate passed), but the legend
+          sits in the top-left canvas corner about 8 px from the edge, detached from
+          the plot (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Epoch'' and ''Cross-Entropy Loss'' (with type);
-          title format correct'
+        comment: '''Epoch'' and ''Cross-Entropy Loss'' name the loss function as the
+          Notes ask; loss is unitless'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green) ✓; second series #D55E00 (Okabe-Ito
-          pos 2) ✓; backgrounds #FAF8F1 (light) and #1A1A17 (dark) ✓; data colors
-          identical across themes; chrome fully adaptive'
+        comment: 'Training #009E73, validation #C475FD in Imprint order; #FAF8F1 /
+          #1A1A17 backgrounds; data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Custom Style with theme-adaptive colors and explicit font sizing;
-          professional polish; intentional design decisions; not quite publication-ready
-          but clearly above defaults
+        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes)
+          and nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
-        passed: true
-        comment: Grid styling is subtle and appropriate; margins are generous; legend
-          positioning well-considered; some refinement visible
+        passed: false
+        comment: Dashed grid on both axes with a vertical guide at every epoch, short
+          of the style guide's y-only solid subtle grid for line charts (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through diverging curves; overfitting story
-          is evident around epoch 25; visual emphasis through line separation; optional
-          annotation for optimal point not implemented
+        passed: false
+        comment: Data displayed; the overfitting divergence is visible from the data
+          alone, no hierarchy chosen beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -138,29 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: dual-line plot with clear distinction between
-          series'
+        comment: Correct two-line loss chart over a shared epoch axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Training and validation loss curves ✓; legend clearly labeling each
-          ✓; all spec requirements met
+        comment: Distinct colors, legend labelling each curve, x axis from epoch 1
+          to 50, y label names the loss (C1-C4 met); optional minimum marker not drawn,
+          which deducts nothing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis (Epoch): correct range 1-50; Y-axis (Loss): correct scale;
-          all data visible'
+        comment: Epoch on x, loss on y, each line through its logged values in epoch
+          order; all data in view
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-loss-training · pygal · anyplot.ai'' ✓; legend labels
-          correct and descriptive'
+        comment: Title 'line-loss-training · python · pygal · anyplot.ai' in the mandated
+          format; legend entries 'Training Loss' / 'Validation Loss'
     data_quality:
       score: 15
       max: 15
@@ -170,22 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key aspects: initial decay, overfitting divergence, plateau
-          behavior; realistic training scenario'
+        comment: Shows the steep early drop, the gap, and validation turning upward
+          while training still falls
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, comprehensible scenario: deep learning training monitoring;
-          neutral topic; plausible data'
+        comment: Neural-network training history; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Loss values (2.4→0.2) realistic for Cross-Entropy Loss; exponential
-          decay with noise is authentic; overfitting at epoch 25 is plausible
+        comment: 'Checked in render and code: training 2.42 -> 0.11, validation minimum
+          about 0.40 at epoch 30 rising to 0.59 at epoch 50; plausible cross-entropy
+          values'
     code_quality:
       score: 10
       max: 10
@@ -195,59 +198,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → style → chart → save; no functions
-          or classes'
+        comment: Imports -> tokens -> column constants -> Data block binding df ->
+          Plot -> Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path manipulation is necessary and justified
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; appropriate complexity; no fake functionality
+        comment: Lean, no dead code; lists built from df with .tolist()
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-light.png, plot-dark.png, plot-light.html, plot-dark.html;
-          correct theme suffixes
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of pygal.Line(), Style object, chart.add(), proper parameter
-          choices for font sizing and grid
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal's Style system for theme adaptation; render_to_png() and
-          render() methods; could leverage more interactive/animation features unique
-          to pygal
+        comment: Standard pygal.Line + Style + chart.add; nothing beyond the library
+          prompt's pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; the HTML output
+          keeps pygal's native hover tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T14:20:16Z'
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - publication-ready
+  - grid-styling
