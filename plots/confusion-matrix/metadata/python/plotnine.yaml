@@ -2,46 +2,46 @@ library: plotnine
 language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:37:40Z'
-updated: '2026-05-09T16:42:59Z'
-generated_by: claude-haiku
-workflow_run: 25606182292
+updated: '2026-11-21T12:11:23Z'
+generated_by: claude-sonnet
+workflow_run: 44902220864
 issue: 2272
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 84
 review:
   strengths:
-  - 'Perfect visual quality: all text readable, no overlap, excellent contrast in
-    both themes'
-  - 'Flawless theme adaptation: warm backgrounds correct, text colors theme-adaptive,
-    data colors consistent across themes'
-  - 'Complete spec compliance: all required features present with correct labels and
-    format'
-  - 'Excellent code quality: clean KISS structure, reproducible with seed, no extraneous
-    code'
-  - 'Strong data storytelling: diagonal/off-diagonal color contrast guides viewer
-    to model performance patterns'
+  - 'imprint_seq (#009E73 -> #4467A3) via scale_fill_gradient, identical in both themes,
+    with a colorbar titled ''Sample Count'''
+  - Cell-label color flips at the value midpoint through scale_color_identity, so
+    every count reads on green and blue cells alike in both themes
+  - Axis order taken from the data with scale_x_discrete/scale_y_discrete limits and
+    coord_fixed square tiles; the diagonal runs top-left to bottom-right
+  - Long table via rename_axis().stack().reset_index() keeps the data block a plain
+    labeled matrix
+  - Page-colored tile gaps separate cells without heavy borders; mandated title with
+    the python segment
   weaknesses:
-  - 'Design excellence is generic: well-configured library defaults without exceptional
-    custom touches or sophisticated palette work'
-  - 'Library mastery is competent but not distinctive: could leverage more plotnine-specific
-    patterns or features unique to the library'
+  - 'Suggestion: the optional diagonal outline the Notes allow would mark the correct
+    predictions independently of color.'
+  - 'Suggestion: a row-normalized (recall) variant with percentage labels, named on
+    the colorbar, is an option the Notes list.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct per style guide
-      Chrome: Title "confusion-matrix · plotnine · anyplot.ai" in bold dark text; axis labels "True Label" and "Predicted Label" in dark text; class names (Negative, Neutral, Positive) clearly visible; all readable with excellent contrast
-      Data: Blues gradient from #e8f4f8 (light) to #08519c (dark); diagonal cells darker, off-diagonal lighter; cell borders in subtle dark gray; numbers in cells with adaptive coloring (white on dark cells, dark on light cells)
-      Legibility verdict: PASS — all text fully readable, no contrast issues
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas
+      Chrome: bold title 'confusion-matrix · python · plotnine · anyplot.ai' (~82 % of width), bold axis titles 'Predicted Label' (x) and 'True Label' (y), class tick labels Negative/Neutral/Positive in INK_SOFT; colorbar 'Sample Count' 20-80 in an elevated box; all readable
+      Data: 3x3 tiles on the imprint_seq ramp, #009E73 for low counts to #4467A3 for the diagonal (85, 72, 81); page-colored gaps between tiles; bold counts, near-black on green cells, off-white on blue cells
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct per style guide
-      Chrome: Title and all labels in light text (white/light gray) on dark background; all readable with strong contrast; cell borders visible in light color
-      Data: Blues gradient adapted for dark theme (light teal #2a3f4f to cyan #56b4e9); diagonal/off-diagonal color distribution identical to light render; numbers colored adaptively
-      Legibility verdict: PASS — all text fully readable, no dark-on-dark failures, data colors match light render exactly
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels in light INK_SOFT, colorbar box #242420 with light frame and labels; no dark-on-dark text
+      Data: tile colors identical to the light render; gaps now near-black; cell label colors unchanged and legible on every tile
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,46 +52,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set; perfectly readable in both themes
+        comment: All sizes explicitly set (title 13, axis titles 12, ticks 10, cell
+          labels bold); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text; all elements clearly spaced
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells optimally sized for 3x3 grid
+        comment: Nine large tiles with page-colored gaps; colorbar visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High contrast; adaptive text ensures readability
+        comment: Cell text flips dark/light at the value midpoint; green-to-blue ramp
+          is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Fills ~60% of canvas with balanced margins
+        comment: 2400x2400 square canvas; balanced matrix and colorbar, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context
+        comment: '''True Label'' / ''Predicted Label'' as the spec asks; colorbar
+          titled ''Sample Count'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Blues gradient appropriate for count data; backgrounds and text colors
-          theme-correct in both renders
+        comment: 'imprint_seq (#009E73 -> #4467A3), identical in both themes; backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -99,19 +103,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults; not exceptional
+        comment: 'Style-guide baseline: explicit typography, theme tokens, nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Grid removed, spines removed, generous whitespace
+        passed: false
+        comment: Tiles separated by page-colored gaps (geom_tile color=PAGE_BG) instead
+          of ink borders, a separator chosen for this chart
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Diagonal/off-diagonal contrast guides viewer
+        passed: false
+        comment: Data displayed; diagonal stands out through the colormap only, no
+          further hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap format
+        comment: Confusion-matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: Axis titles, cell counts, sequential cmap, colorbar; C1-C4 met; optional
+          diagonal highlight not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: True/Predicted labels correctly assigned
+        comment: True on y, predicted on x, same class order on both axes, diagonal
+          top-left to bottom-right
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend correct
+        comment: Title 'confusion-matrix · python · plotnine · anyplot.ai'; colorbar
+          title is reader text
     data_quality:
       score: 15
       max: 15
@@ -149,19 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all confusion matrix aspects
+        comment: Correct diagonal, asymmetric confusion between adjacent sentiment
+          classes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sentiment classification is neutral and plausible
+        comment: Three-class sentiment classifier, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually sound
+        comment: 100 samples per true class; raw counts, no normalization claimed
     code_quality:
       score: 10
       max: 10
@@ -171,57 +182,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: Fixed data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no fake functionality
+        comment: Long format via rename_axis().stack().reset_index(); no hand-rolled
+          loops
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300
+        comment: Saves plot-{THEME}.png at dpi=400, 6x6 in
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Idiomatic plotnine with ggplot, geom_tile, scale_fill_gradient
+        passed: false
+        comment: Grammar-of-graphics layering, scale_x/y_discrete limits from df,
+          coord_fixed for square cells, scale_color_identity for computed label colors
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Uses scale_color_identity with adaptive coloring; competent but not
-          particularly distinctive
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T12:08:11Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - colorbar
   patterns:
-  - data-generation
   - matrix-construction
+  - wide-to-long
   dataprep: []
   styling:
-  - custom-colormap
+  - publication-ready
