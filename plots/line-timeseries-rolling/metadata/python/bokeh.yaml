@@ -2,42 +2,47 @@ library: bokeh
 language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:48:24Z'
-updated: '2026-05-13T13:09:47Z'
-generated_by: claude-haiku
-workflow_run: 25800869968
+updated: '2026-11-21T10:08:16Z'
+generated_by: claude-sonnet
+workflow_run: 44892193489
 issue: 2786
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 80
 review:
   strengths:
-  - Flawless visual quality with explicit font sizing and perfect theme adaptation
-  - Complete spec compliance with all required features and polish
-  - Excellent data storytelling through visual hierarchy - line weight and opacity
-    make trend unmistakable
-  - 'Perfect code structure: reproducible, clean, idiomatic Bokeh'
-  - Dual-theme design executed flawlessly with identical data colors and theme-correct
-    chrome
+  - Trailing pandas rolling(20).mean() with dropna makes the average begin once its
+    window is filled (C3)
+  - 'Clear hierarchy: raw line thin at alpha 0.65, rolling average 7px opaque in contrasting
+    #C475FD'
+  - Theme tokens threaded through every chrome element; both renders fully readable
+  - Canvas contract and style-guide text sizes met exactly; toolbar disabled for the
+    static render
   weaknesses:
-  - Design Excellence is solid but not exceptional - uses library defaults for most
-    styling without custom visual refinement
-  - Could leverage more distinctive Bokeh features beyond standard patterns
+  - 'DQ-02 (both): the series is an unnamed ''Stock Price ($)'' with no company or
+    ticker, which reads as generic → name a plausible fictional instrument in the
+    axis or legend label. Likely cause: the PRICE column name.'
+  - 'DQ-03 (both): a stock''s daily closes are drawn on every calendar day including
+    weekends (freq=''D'', 250 days ending in September) → business days (freq=''B'').
+    Likely cause: pd.date_range(..., freq=''D'').'
+  - 'Suggestion: a HoverTool reporting date, price and rolling value would add inspection
+    value in the HTML.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and not pure white
-      Chrome: Title "line-timeseries-rolling · bokeh · anyplot.ai" (28pt dark text), axis labels "Date" and "Stock Price ($)" (22pt), tick labels (18pt gray) - all clearly readable
-      Data: Green raw data line (#009E73, alpha=0.4) shows volatility; orange rolling average (#D55E00, thick) shows trend
-      Legibility verdict: PASS - all text is fully readable, grid is subtle, no contrast issues
+      Background: warm off-white #FAF8F1, 3200x1800, no toolbar.
+      Chrome: bold title 'line-timeseries-rolling · python · bokeh · anyplot.ai' top-left (~55% width), italic axis titles 'Date' and 'Stock Price ($)', tick labels Jan-Sep 2024 and 95-130 in INK_SOFT, subtle grid on both axes, legend top-left on an elevated box. All readable.
+      Data: thin semi-transparent #009E73 raw line (250 noisy daily points trending 100->120), thick #C475FD 20-day trailing rolling average starting about 20 Jan.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and not pure black
-      Chrome: Title, axis labels in light text (#F0EFE8), tick labels in lighter gray (#B8B7B0) - all clearly readable; legend has elevated background (#242420) for definition
-      Data: Green raw data (#009E73) and orange rolling average (#D55E00) - identical to light render, proving theme-independent data encoding
-      Legibility verdict: PASS - all text is fully readable against dark background; no dark-on-dark failures; grid is subtle
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, legend box #242420 with light labels, grid subtle but visible. No dark-on-dark text.
+      Data: same #009E73 and #C475FD as the light render; raw line recedes but stays visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,48 +53,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28pt, labels 22pt, ticks 18pt;
+        comment: All sizes explicit (title 50pt, axis titles 42pt, ticks/legend 34pt);
           readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Perfect positioning; no overlapping elements
+        comment: No text collisions; legend sits in the empty upper-left region
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Raw data (thin, transparent) and rolling average (thick) optimally
-          sized
+        comment: Raw line 3px at alpha 0.65 recedes but stays visible; rolling line
+          7px opaque; legend glyphs match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors have strong contrast; CVD-safe
+        comment: Green vs purple differ in hue, lightness and line weight
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas; balanced margins
+        comment: 3200x1800, plot fills most of the canvas, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include units; format correct
+        comment: '''Date'' and ''Stock Price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette correct; backgrounds theme-correct; chrome properly
-          adapted
+        comment: '#009E73 first, #C475FD second; #FAF8F1 / #1A1A17 backgrounds; chrome
+          theme-correct'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -97,21 +103,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults; not exceptional - could be more refined
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and whitespace; legend frame adds polish; spines not
-          removed
+        comment: 'Outline removed, subtle grid: baseline, nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Effective hierarchy through visual weight; clear trend; good but
-          minimal emphasis
+        comment: Line-weight hierarchy is what the Notes prescribe; no emphasis chosen
+          beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -121,28 +126,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series with dual overlay
+        comment: Time series with rolling-average overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: raw data, rolling average, legend with window
-          size, grid'
+        comment: 'C1-C5 met: semi-transparent raw line, prominent contrasting average,
+          trailing window starts at day 20, legend with window size, grid on both
+          axes'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, price on Y; all 250 points visible
+        comment: Date on x, price on y, trailing window keeps the average at its own
+          dates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Mandated title format; legend 'Raw Data' / 'Rolling Average (20-day)'
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -150,19 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows trend, volatility, smoothing, edge effects
+        comment: Noise, trend, smoothing and the shorter rolling line all shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Stock price scenario is standard and real-world plausible
+        passed: false
+        comment: 'Plausible but generic: an unnamed ''Stock Price ($)'' (defect line)'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Price range, volatility, and trend all factually sound
+        passed: false
+        comment: 'Checked: rolling starts on 2024-01-20 (window 20, line 44), price
+          range 95-129. Daily calendar dates include weekends for a stock (defect
+          line)'
     code_quality:
       score: 10
       max: 10
@@ -172,13 +181,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no functions or classes
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -190,35 +199,39 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake UI
+        comment: pandas rolling().mean(); dropna for the window; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming and current API
+        comment: plot-{THEME}.png + .html, current Bokeh 3 API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of figure(), ColumnDataSource, line() API
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Bokeh patterns but fairly standard approach; no callbacks or
-          advanced interactions
+        comment: Correct ColumnDataSource + figure.line usage, nothing beyond the
+          library prompt
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T10:04:31Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - layer-composition
   - html-export
   patterns:
   - data-generation
