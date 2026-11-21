@@ -2,53 +2,51 @@ library: altair
 language: python
 specification_id: histogram-stepwise
 created: '2025-12-30T11:21:47Z'
-updated: '2026-05-12T09:28:19Z'
-generated_by: claude-haiku
-workflow_run: 25725250325
+updated: '2026-11-21T05:27:15Z'
+generated_by: claude-sonnet
+workflow_run: 44870511884
 issue: 2645
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality with all text sizes explicitly set and readable in both
-    light and dark themes
-  - Theme-adaptive chrome correctly implemented throughout (chrome flips appropriately,
-    data colors stay constant)
-  - 'Correct palette compliance: brand green #009E73 used consistently, backgrounds
-    are proper warm tones'
-  - Clean, idiomatic altair implementation with proper use of mark_line() and step-after
-    interpolation
-  - Complete spec compliance with all required features (step lines, no fill, proper
-    bin representation)
-  - Excellent data quality showing a realistic bimodal distribution
-  - Proper canvas utilization with balanced layout
+  - Step path built from np.histogram edges and counts, so every horizontal segment
+    sits exactly at its bin's count and the outline starts and ends on the baseline
+  - Count axis pinned at zero from the data (domain [0, max*1.05]), so step heights
+    compare as counts
+  - Theme tokens threaded through title, axis titles, ticks, domain and grid; only
+    the green outline stays constant between themes
+  - Canvas sized per the library contract (620x320 view at scale 4, padded to 3200x1800)
+    with tooltip-free HTML export alongside the PNG
   weaknesses:
-  - 'Design Excellence is moderate: while technically correct, lacks artistic sophistication
-    or distinctive visual enhancement'
-  - Visual refinement could be elevated with more generous whitespace, refined grid
-    styling, or strategic color/typography choices
-  - 'No visual storytelling: plot displays the data but doesn''t create emphasis or
-    guide the viewer to insights'
+  - 'VQ-06 (both): the x-axis title ''Measurement Value'' names no quantity and no
+    unit → a measured quantity with its unit, e.g. ''Sensor reading (mV)''. Likely
+    cause: VALUES = [''Measurement Value''].'
+  - 'DQ-02 (both): the scenario is the generic ''Measurement Value'' with no domain
+    → a concrete bimodal measurement (e.g. commute time in minutes, sensor readings
+    in mV) named in the column. Likely cause: the VALUES constant and data block.'
+  - 'Suggestion: overlaying a second distribution on shared bin edges, as the Notes
+    allow, would show what step histograms are for.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly rendered
-      Chrome: Title (28px dark), axis labels (22px dark), tick labels (18px dark INK_SOFT) - all clearly readable against light background
-      Data: Brand green (#009E73) step line with 3px stroke, clearly visible with bimodal distribution peaks around 25 and 45
-      Legibility verdict: PASS - all text fully readable, no overlap
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas (chart centered with padding)
+      Chrome: left-anchored bold title 'histogram-stepwise · python · altair · anyplot.ai' in dark ink; axis titles 'Measurement Value' and 'Frequency' bold dark; tick labels (x 5-70 by 5, y 0-70 by 10) in soft dark grey; subtle grid on both axes; left and bottom domain lines only
+      Data: single #009E73 step outline, 3 px, 25 bins; bimodal staircase peaking at 67 near 27 with a second peak of 31 near 44; one empty bin near 66 lies on the baseline
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly rendered
-      Chrome: Title, axis labels, and tick labels all rendered in light colors (INK and INK_SOFT) - all clearly readable against dark background, no dark-on-dark failures
-      Data: Brand green (#009E73) step line - identical to light render, only chrome has flipped as intended
-      Legibility verdict: PASS - all text fully readable, theme adaptation correct throughout
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels in light grey, grid faint light; no dark-on-dark text
+      Data: identical #009E73 outline and shape to the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,49 +54,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: Title 16, axis titles 12, ticks 10 at scale 4 (style-guide sizes);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all labels clear and distinct
+        comment: No text collisions; single outline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line with strokeWidth=3 is clearly visible and adapted to the
-          distribution
+        comment: strokeWidth=3 outline carries the plot on both surfaces
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 has excellent contrast on both light and dark
-          backgrounds'
+        comment: Single green series with strong contrast on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins; nothing cut off
+        comment: 3200x1800 canvas, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels (Measurement Value, Frequency); title format correct
+        passed: false
+        comment: '''Measurement Value'' carries no unit (defect line)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: brand green #009E73, backgrounds #FAF8F1 (light)/#1A1A17
-          (dark), theme-adaptive chrome correct in both renders'
+        comment: '#009E73 series, #FAF8F1 / #1A1A17 backgrounds, theme-correct chrome'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -106,21 +101,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with clean styling; uses Okabe-Ito
-          palette and theme tokens but lacks artistic enhancement
+        comment: 'Style-guide baseline: left-anchored title, theme tokens; nothing
+          beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Good refinement: axes configured with transparency on top/right,
-          grid subtly styled at 6% opacity'
+        comment: Spine and grid rules met; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy or emphasis created
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,29 +124,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Perfect step histogram with correct step-function representation
+        comment: Outline-only step histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: step lines (no fill), horizontal segments
-          at count level, vertical segments connecting bins'
+        comment: C1 horizontal segment per bin and vertical joins, C2 count axis from
+          0, C3 strong outline; C4 N/A (single distribution)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned (Measurement Value × Frequency); axes show
-          full data range (6–70)
+        comment: Steps sit exactly on np.histogram edges and counts; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend appropriately omitted for single series
+        comment: Mandated title format; legend N/A for a single series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -160,20 +153,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: clear bimodal distribution with two peaks'
+        comment: Bimodal 500-point sample shows peaks, a jagged staircase and an empty
+          bin on the baseline
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Realistic synthetic data: two normal distributions concatenated;
-          neutral domain'
+        passed: false
+        comment: Generic 'Measurement Value' with no domain (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions correct; scale and frequency counts factually sound
+        comment: Counts sum to 500, peak 67 near 27; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -183,56 +176,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, altair, numpy, pandas'
+        comment: All imports used (PIL for the pad step)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        comment: np.histogram + np.repeat build the step path in two lines
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: saves as plot-{THEME}.png and plot-{THEME}.html'
+        comment: plot-{THEME}.png padded to 3200x1800 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of altair: alt.Chart() with mark_line(), proper encode()
-          for x/y/order, configure_* methods for theme adaptation'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses interpolate='step-after' which is distinctive to altair; theme-adaptive
-          chrome well-executed
+        comment: Standard mark_line + encode + configure_*; default
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T05:24:13Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - html-export
+  - step-line
   patterns:
   - data-generation
   dataprep:
   - binning
-  styling: []
+  styling:
+  - minimal-chrome
