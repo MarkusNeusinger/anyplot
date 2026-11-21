@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 icicle-basic: Basic Icicle Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-13
@@ -8,206 +8,150 @@ import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
+from matplotlib.colors import to_rgb
 from matplotlib.patches import Rectangle
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Hierarchical data: File system structure
-hierarchy_data = [
-    ("Root", None, 1000),
-    ("Documents", "Root", 350),
-    ("Media", "Root", 450),
-    ("Projects", "Root", 200),
-    ("Reports", "Documents", 150),
-    ("Presentations", "Documents", 120),
-    ("Templates", "Documents", 80),
-    ("Images", "Media", 200),
-    ("Videos", "Media", 180),
-    ("Audio", "Media", 70),
-    ("Q1_Report.pdf", "Reports", 50),
-    ("Q2_Report.pdf", "Reports", 60),
-    ("Annual.pdf", "Reports", 40),
-    ("Sales.pptx", "Presentations", 70),
-    ("Training.pptx", "Presentations", 50),
-    ("Photos", "Images", 120),
-    ("Screenshots", "Images", 80),
-    ("Tutorials", "Videos", 100),
-    ("Recordings", "Videos", 80),
-    ("Code", "Projects", 120),
-    ("Designs", "Projects", 80),
+# Imprint palette: all eight positions, one per top-level branch in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
+
+# Constants
+ROOT_COLOR = "#7A7A72"  # neutral fill for the root block, identical in both themes
+MIN_CHARS = 4  # a rectangle that cannot hold this many characters gets no label
+
+# Columns: set these to your table's column names
+NAME = "Budget line"  # role: name
+PARENT = "Parent"  # role: parent
+VALUE = "Budget (thousand USD)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("budget.csv")
+# Annual budget by department, project and expense category; only leaves carry a value
+rows = [
+    ("Company", None, None),
+    ("Engineering", "Company", None),
+    ("Marketing", "Company", None),
+    ("Operations", "Company", None),
+    ("Sales", "Company", None),
+    ("Platform", "Engineering", None),
+    ("Mobile App", "Engineering", None),
+    ("Campaigns", "Marketing", None),
+    ("Brand", "Marketing", None),
+    ("Logistics", "Operations", None),
+    ("Facilities", "Operations", None),
+    ("Enterprise", "Sales", None),
+    ("Retail", "Sales", None),
+    ("Platform Staff", "Platform", 1450),
+    ("Platform Cloud", "Platform", 780),
+    ("Mobile Staff", "Mobile App", 920),
+    ("Mobile Tools", "Mobile App", 210),
+    ("Campaign Media", "Campaigns", 640),
+    ("Campaign Events", "Campaigns", 330),
+    ("Brand Agency", "Brand", 280),
+    ("Brand Content", "Brand", 190),
+    ("Shipping", "Logistics", 710),
+    ("Warehousing", "Logistics", 460),
+    ("Rent", "Facilities", 520),
+    ("Utilities", "Facilities", 150),
+    ("Enterprise Staff", "Enterprise", 880),
+    ("Enterprise Travel", "Enterprise", 240),
+    ("Retail Staff", "Retail", 560),
+    ("Retail Commissions", "Retail", 310),
 ]
+df = pd.DataFrame(rows, columns=[NAME, PARENT, VALUE])
 
-# Build node dictionary
-nodes = {}
-for name, parent, value in hierarchy_data:
-    nodes[name] = {"name": name, "parent": parent, "value": value, "children": []}
+# Plot: reads only df and the constants above
+children = {name: [] for name in df[NAME]}
+for name, parent in zip(df[NAME], df[PARENT], strict=True):
+    if parent in children:
+        children[parent].append(name)
+own_value = dict(zip(df[NAME], df[VALUE], strict=True))
+root = df.loc[df[PARENT].isna(), NAME].iloc[0]
 
-for name, parent, _value in hierarchy_data:
-    if parent and parent in nodes:
-        nodes[parent]["children"].append(name)
 
-# Calculate levels
-levels = {}
-for name in nodes:
-    level = 0
-    current = name
-    while nodes[current]["parent"] is not None:
-        level += 1
-        current = nodes[current]["parent"]
-    levels[name] = level
+def total(name):
+    """Leaf value, or the sum over the children."""
+    if not children[name]:
+        return 0.0 if pd.isna(own_value[name]) else own_value[name]
+    return sum(total(child) for child in children[name])
 
-max_level = max(levels.values())
 
-# Calculate totals (sum of children or own value if leaf)
-totals = {}
-sorted_nodes = sorted(nodes.keys(), key=lambda x: levels[x], reverse=True)
-for name in sorted_nodes:
-    children = nodes[name]["children"]
-    if not children:
-        totals[name] = nodes[name]["value"]
-    else:
-        totals[name] = sum(totals[child] for child in children)
+def depth(name):
+    """Number of levels below this node, itself included."""
+    return 1 + max((depth(child) for child in children[name]), default=0)
 
-# Calculate icicle chart positions
-rectangles = []
-stack = [("Root", 0.0, 1.0, 0)]
 
+n_levels = depth(root)
+branch_color = {name: IMPRINT_PALETTE[i] for i, name in enumerate(children[root])}
+
+# Icicle layout: one row per level, children split the parent's width by value
+rects = []
+stack = [(root, 0.0, 1.0, 0, None)]
 while stack:
-    name, x_start, x_end, level = stack.pop()
-    width = x_end - x_start
-    height = 1.0 / (max_level + 1)
-    y = 1.0 - (level + 1) * height
+    name, x0, x1, level, branch = stack.pop()
+    rects.append((name, x0, x1 - x0, level, branch))
+    x = x0
+    for child in children[name]:
+        width = (x1 - x0) * total(child) / total(name) if total(name) else 0.0
+        stack.append((child, x, x + width, level + 1, child if level == 0 else branch))
+        x += width
 
-    rectangles.append(
-        {"name": name, "x": x_start, "y": y, "width": width, "height": height, "level": level, "value": totals[name]}
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.02, right=0.98, bottom=0.03, top=0.88)
+ax_width_in = fig.get_figwidth() * (0.98 - 0.02)
+row_height = 1.0 / n_levels
+gap = 0.002
+
+for name, x, width, level, branch in rects:
+    if branch is None:
+        color = to_rgb(ROOT_COLOR)
+    else:
+        # Lighter toward the leaves, mixed with white so the fill is identical in both themes
+        mix = 0.28 * (level - 1)
+        color = tuple(c + (1 - c) * mix for c in to_rgb(branch_color[branch]))
+    y = 1.0 - (level + 1) * row_height
+    ax.add_patch(
+        Rectangle(
+            (x + gap, y + gap), width - 2 * gap, row_height - 2 * gap, facecolor=color, edgecolor=PAGE_BG, linewidth=1.2
+        )
     )
 
-    children = nodes[name]["children"]
-    if children:
-        total_child_value = sum(totals[c] for c in children)
-        current_x = x_start
-        for child in reversed(children):
-            child_fraction = totals[child] / total_child_value
-            child_width = width * child_fraction
-            stack.append((child, current_x, current_x + child_width, level + 1))
-            current_x += child_width
-
-rect_df = pd.DataFrame(rectangles)
-n_levels = max_level + 1
-
-# Use viridis colormap for hierarchy levels (theme-independent, works on both light and dark)
-cmap = plt.colormaps["viridis"]
-level_colors = {i: cmap(i / (n_levels - 1)) for i in range(n_levels)}
-
-# Create figure and axes
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
-
-# Draw rectangles
-gap = 0.005
-for _, rect in rect_df.iterrows():
-    x = rect["x"] + gap
-    y = rect["y"] + gap
-    w = max(rect["width"] - 2 * gap, 0.001)
-    h = max(rect["height"] - 2 * gap, 0.001)
-    level = int(rect["level"])
-    color = level_colors[level]
-
-    patch = Rectangle((x, y), w, h, facecolor=color, edgecolor=INK_SOFT, linewidth=1.5)
-    ax.add_patch(patch)
-
-    # Add text labels with names and values
-    if rect["width"] < 0.02:
+    # Label only rectangles with room for it; pick the text color with the better contrast
+    fontsize = 9 if level < 2 else 7
+    chars_fit = int(width * ax_width_in / (fontsize * 0.8 / 72))
+    if chars_fit < MIN_CHARS:
         continue
-
-    cx = rect["x"] + rect["width"] / 2
-    cy = rect["y"] + rect["height"] / 2
-
-    # Determine text color for contrast
-    rgb = color[:3]
-    luminance = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
-    text_color = INK_SOFT if luminance > 0.5 else "#F5F5F5"
-
-    fontsize = 16 if level == 0 else (14 if level == 1 else (12 if level == 2 else 10))
-
-    # Format value
-    value = int(rect["value"])
-    if value >= 1000:
-        value_str = f"{value / 1000:.1f}GB"
-    else:
-        value_str = f"{value}MB"
-
-    # Smart label truncation
-    name = rect["name"]
-    available_width = rect["width"]
-    available_chars = max(5, int(available_width * 100))
-
-    if len(name) <= available_chars:
-        display_text = f"{name}\n{value_str}"
-    else:
-        if "." in name:
-            parts = name.rsplit(".", 1)
-            ext = "." + parts[1]
-            base_chars = available_chars - len(ext) - 1
-            if base_chars > 0:
-                display_text = f"{parts[0][:base_chars]}…\n{value_str}"
-            else:
-                display_text = value_str
-        else:
-            display_text = f"{name[: available_chars - 1]}…\n{value_str}"
-
+    lum = [0.2126, 0.7152, 0.0722]
+    rel = sum(
+        w * (c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4) for w, c in zip(lum, color, strict=True)
+    )
+    text_color = "#1A1A17" if (rel + 0.05) / 0.05 > 1.05 / (rel + 0.05) else "#FFFFFF"
+    name = str(name)
+    label = name if len(name) <= chars_fit else name[: chars_fit - 1] + "…"
     ax.text(
-        cx,
-        cy,
-        display_text,
+        x + width / 2,
+        y + row_height / 2,
+        f"{label}\n{total(name):,.0f}",
         ha="center",
         va="center",
         fontsize=fontsize,
         fontweight="bold",
         color=text_color,
-        linespacing=1.2,
+        linespacing=1.25,
     )
 
-# Configure axes
+# Style
 ax.set_xlim(0, 1)
 ax.set_ylim(0, 1)
-ax.set_aspect("auto")
 ax.axis("off")
+ax.set_title("icicle-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=8)
 
-# Title
-ax.text(
-    0.5,
-    0.98,
-    "icicle-basic · seaborn · anyplot.ai",
-    ha="center",
-    va="top",
-    fontsize=24,
-    fontweight="medium",
-    color=INK,
-    transform=ax.transAxes,
-)
-
-# Legend for hierarchy levels
-legend_labels = ["Level 0", "Level 1", "Level 2", "Level 3"][:n_levels]
-legend_patches = [
-    plt.Line2D([0], [0], marker="s", color="w", markerfacecolor=level_colors[i], markersize=12, label=legend_labels[i])
-    for i in range(n_levels)
-]
-ax.legend(
-    handles=legend_patches,
-    loc="lower right",
-    fontsize=14,
-    framealpha=0.95,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
-    title="Hierarchy Level",
-    title_fontsize=16,
-)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
