@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: line-filled
 created: '2025-12-30T11:21:44Z'
-updated: '2026-05-12T17:18:24Z'
-generated_by: claude-haiku
-workflow_run: 25749794347
+updated: '2026-11-21T07:22:44Z'
+generated_by: claude-sonnet
+workflow_run: 44879463049
 issue: 2643
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,36 +15,30 @@ preview_html_dark: null
 quality_score: 82
 review:
   strengths:
-  - 'Perfect Visual Quality (30/30): all text readable in both themes with explicit
-    font sizing (24/20/16pt)'
-  - 'Perfect Spec Compliance (15/15): all requirements met exactly as specified'
-  - 'Perfect Data Quality (15/15): realistic website traffic scenario with appropriate
-    monthly scale'
-  - 'Perfect Code Quality (10/10): clean, reproducible code with proper KISS structure
-    and seed'
-  - Correct Okabe-Ito brand color (#009E73) and proper theme-adaptive chrome (warm
-    off-white/near-black backgrounds)
-  - Both light and dark renders fully legible with no dark-on-dark or light-on-light
-    failures
+  - 'Fill and line share #009E73, with the line (size 1.3) drawn on top and clearly
+    stronger than the alpha 0.35 fill in both themes'
+  - Value axis starts at zero with expand=(0, 0), so the fill ends exactly on the
+    baseline and its height stays proportional to the value
+  - Theme tokens threaded through every chrome element; both renders fully legible
+  - Column constants and data-driven breaks and limits keep the plot code independent
+    of the sample table
   weaknesses:
-  - 'Design Excellence at library defaults (8/20): no custom aesthetic choices, relies
-    on theme_minimal() baseline'
-  - 'Generic visual presentation: full rectangle spines instead of refined L-shape'
-  - No visual hierarchy or emphasis created beyond basic fill/line combination
-  - 'Library Mastery at defaults (4/10): standard area chart pattern without distinctive
-    plotnine features'
+  - 'Suggestion: drop the top and right panel border (panel_border=element_blank()
+    with axis_line kept) for the style guide''s L-shaped frame.'
+  - 'Suggestion: month names instead of 1-12 on the x axis, and thousands separators
+    on the y ticks (labels=comma_format), would read faster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark text (#1A1A17), clearly readable
-      Data: Semi-transparent teal fill (#009E73, alpha=0.4) with darker green line overlay showing monthly website visitors; colors match spec
-      Legibility verdict: PASS - all elements readable at full resolution
+      Background: warm off-white #FAF8F1 across canvas and panel, not pure white
+      Chrome: title 'line-filled · python · plotnine · anyplot.ai' in dark ink, axis titles 'Month' / 'Website Visitors' dark, tick labels 1-12 and 0-60000 in soft dark grey, all readable; subtle grid, full thin panel border
+      Data: #009E73 line over 12 monthly points (55k-70k, peak in month 4) with a semi-transparent green fill down to the y=0 baseline, which sits flush on the x axis; gridlines visible through the fill
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title, axis labels, tick labels all in light text, clearly readable against dark background; no dark-on-dark failures
-      Data: Same teal fill and line as light render (identical data colors); brand green (#009E73) clearly visible and distinguishable
-      Legibility verdict: PASS - all elements readable in both themes with perfect contrast
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title, axis titles and tick labels in light ink, all readable; no dark-on-dark text; light grey panel border and faint grid
+      Data: same #009E73 line and fill as the light render (fill reads darker on the dark page through its alpha); brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,47 +49,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; 24pt title, 20pt labels, 16pt ticks;
-          perfectly readable in both light and dark themes
+        comment: Sizes set explicitly at the style-guide values (title 12 pt, axis
+          titles 10 pt, ticks 8 pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no collisions or overlap
+        comment: No text collisions anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Fill and line perfectly adapted to single-series chart; both clearly
-          distinguishable from background
+        comment: 1.3 line clearly stronger than the alpha 0.35 fill; 12 points, the
+          line reads at full size in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 provides strong contrast and CVD safety'
+        comment: Single series; green line and fill contrast well against both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions; plot fills 60-70% of 16:9 canvas with balanced
-          margins
+        comment: 3200x1800 canvas (gate passed); panel fills about 80% of the canvas
+          with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Month'' and ''Website Visitors'''
+        comment: '''Month'' and ''Website Visitors'' are readable titles; the count
+          is its own unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds are #FAF8F1 (light) and #1A1A17
-          (dark); both renders theme-correct'
+        comment: 'Single series in #009E73; backgrounds #FAF8F1 / #1A1A17; chrome
+          theme-correct in both renders'
     design_excellence:
       score: 8
       max: 20
@@ -105,22 +100,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default; uses theme_minimal() with standard
-          elements; no custom palette or intentional design hierarchy
+        comment: The style-guide baseline (Imprint brand green, theme tokens, explicit
+          sizes) and nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization; grid is subtle (alpha=0.10); spines present
-          as full border; library defaults dominate
+        comment: Subtle grid, minor grid off; full panel border from the library prompt's
+          theme mapping; nothing refined beyond the baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed without explicit visual hierarchy or focal point;
-          fill/line combo shows magnitude but lacks emphasis
+        comment: Data displayed; no hierarchy or focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +124,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled line plot type with area emphasis
+        comment: 'Filled line plot: geom_area under geom_line'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (alpha=0.4), visible line overlay, fill matches
-          line color, baseline at y=0
+        comment: C1 line in x order, unsmoothed, filled all along; C2 fill ends at
+          y=0, axis starts at 0; C3 alpha 0.35, gridlines visible through the fill
+          in both themes; C4 line on top in the fill's color
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: continuous months (1-12); Y: numeric visitors (0-~70000); axes
-          show all data'
+        comment: Month on x, visitors on y; y range 0 to 1.1x max shows all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''line-filled · plotnine · anyplot.ai''; single-series
-          legend appropriately omitted'
+        comment: Title 'line-filled · python · plotnine · anyplot.ai' matches the
+          format; no legend for a single series (C5)
     data_quality:
       score: 15
       max: 15
@@ -161,22 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows magnitude, trend, and monthly variation; realistic website
-          traffic pattern with seasonal component
+        comment: Shows trend, dips and a peak in April over a 12-month series with
+          the fill to the baseline
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world website traffic scenario; neutral, comprehensible domain;
-          no controversial topics
+        comment: 'Monthly website visitors: real, neutral business scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (50k-65k visitors) plausible for website; monthly scale appropriate;
-          all proportions realistic
+        comment: 'Checked: values 55k-70k monthly visitors read off the axis, consistent
+          with the seeded generation; no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -186,32 +179,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save; no classes/functions'
+        comment: Linear imports, constants, data, plot, save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; appropriate complexity; no over-engineering
-          or fake UI
+        comment: Appropriate complexity; data cleanup (astype, dropna, sort) serves
+          column adaptability
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current plotnine API; correct DPI
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi 400; current plotnine 0.15
+          API
     library_mastery:
       score: 4
       max: 10
@@ -221,22 +215,25 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct ggplot grammar with aes(), geom layers, theme customization;
-          doesn't leverage advanced patterns
+        comment: Correct grammar (aes with column constants, geom layers, theme);
+          no pattern beyond the library prompt
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: geom_area + geom_line is standard; generic usage applicable to any
-          grammar-of-graphics library
+        comment: geom_area + geom_line is generic grammar-of-graphics usage
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T07:19:07Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - layer-composition
+  techniques: []
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling
