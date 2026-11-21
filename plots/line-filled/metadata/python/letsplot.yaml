@@ -2,42 +2,45 @@ library: letsplot
 language: python
 specification_id: line-filled
 created: '2025-12-30T11:23:34Z'
-updated: '2026-05-12T17:24:36Z'
-generated_by: claude-haiku
-workflow_run: 25750114039
+updated: '2026-11-21T07:25:49Z'
+generated_by: claude-sonnet
+workflow_run: 44879696934
 issue: 2643
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality with all text readable in both light and dark themes
-  - Spec compliance is flawless across all dimensions
-  - Code is clean, reproducible, and well-structured
-  - Theme-adaptive styling correctly implemented throughout
-  - Data quality demonstrates realistic website traffic with seasonal variation
-  - Explicit font sizing ensures readability at high resolution
+  - 'geom_area under geom_line with the same brand color: the line reads clearly above
+    a 0.4-alpha fill in both themes'
+  - Value axis from zero via a data-driven limit (scale_y_continuous(limits=[0, max*1.1],
+    expand=[0, 0])), so the fill sits on the baseline and its height stays proportional
+  - 'Theme tokens threaded through every chrome element: no dark-on-dark or light-on-light
+    text'
+  - HTML export keeps lets-plot's native hover tooltips for each month
   weaknesses:
-  - 'Design Excellence is moderate: lacks custom aesthetic sophistication beyond configured
-    defaults'
-  - Data storytelling could be enhanced with visual emphasis techniques on key patterns
-  - LetsPlot-specific features not fully leveraged in implementation
+  - 'DE-02 (both): the gridlines run on both axes in opaque INK_SOFT (#4A4A44 light
+    / #B8B7B0 dark) and a frame closes all four sides of the panel, short of the style
+    guide''s baseline for a line chart → y-axis grid only at about 15 % opacity (rgba
+    ink 0.15), and only the left and bottom axis lines. Likely cause: panel_grid_major=element_line(color=INK_SOFT,
+    size=0.3) without panel_grid_major_x=element_blank(), and axis_line under theme_minimal()
+    drawing the full panel border.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 with subtle gridlines
-      Chrome: Title, axis labels ("Month", "Website Visitors"), and tick labels all clearly visible in dark text (INK #1A1A17)
-      Data: Rendered in Okabe-Ito brand color #009E73 with semi-transparent area fill (alpha=0.4), visible line on top, and marker points at each month
-      Legibility verdict: PASS - All text fully readable with no overlap or visibility issues
+      Background: warm off-white #FAF8F1
+      Chrome: title 'line-filled · python · letsplot · anyplot.ai' top left in dark ink, axis titles 'Month' and 'Website Visitors', ticks 1-12 and 0-70,000 in INK_SOFT; all readable. Opaque grey grid on both axes and a frame on all four sides
+      Data: #009E73 line with 12 round markers over a 0.4-alpha green fill down to y=0; gridlines visible through the fill
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 with subtle theme-adapted gridlines
-      Chrome: Title, axis labels, and tick labels all clearly visible in light text (INK #F0EFE8 for primary, INK_SOFT #B8B7B0 for ticks). No dark-on-dark failures.
-      Data: Data color #009E73 is identical to light render, confirming proper theme implementation. Only chrome has flipped.
-      Legibility verdict: PASS - All text fully readable in dark theme with perfect contrast
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink, all readable; no dark-on-dark text; light grey grid and frame
+      Data: identical #009E73 line, markers and fill (fill reads deep green on the dark surface); gridlines visible through it
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,70 +51,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
-          Perfectly readable in both themes.
+        comment: Title 16 pt, axis titles 12 pt, ticks 10 pt (style-guide sizes),
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no collisions or overlapping elements.
+        comment: No text collisions; points sit on the line without hiding anything
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and lines optimally adapted to data density (12 months).
-          All elements clearly distinguishable.
+        comment: 12 sparse points with prominent 3-size markers and a 1.2 line; fill
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast and CVD-safe color.
+        comment: Single brand-green series, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced, generous margins.
+        comment: 3200x1800 canvas, title about 38 % of the width, balanced axis titles,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with clear meaning.
+        comment: '''Month'' and ''Website Visitors'' taken from readable column constants'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct #009E73. Backgrounds are #FAF8F1 (light) and #1A1A17 (dark).
-          Theme-adaptive chrome throughout.'
+        comment: '#009E73 series; #FAF8F1 / #1A1A17 backgrounds; chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 12
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Well-configured library default with intentional brand color. Clean
-          and professional but not exceptional.
+        passed: false
+        comment: 'Default: clean style-guide typography, nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: theme_minimal() provides clean base. Subtle gridlines, balanced whitespace.
+        passed: false
+        comment: Opaque INK_SOFT grid on both axes plus a four-sided panel frame (defect
+          line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Data shows seasonal pattern with clear peak. Visual hierarchy guides
-          reader through trend.
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +124,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled line plot with geom_area() + geom_line() + geom_point().
+        comment: 'Filled line plot: geom_area under geom_line'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: semi-transparent fill, visible line, matching
-          colors, baseline at y=0.'
+        comment: 'Notes: semi-transparent fill (0.4), line on top, same color, baseline
+          0. C1-C4 all met: straight segments in x order, fill to zero along the whole
+          line, gridlines visible through the fill in both themes, line clearly stronger
+          than the fill'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned. Axes show all data.
+        comment: x=Month, y=Website Visitors; y axis from 0 to 1.1x max, all data
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Single series, no legend (correct omission).
+        comment: Title 'line-filled · python · letsplot · anyplot.ai'; single series,
+          no legend (N/A)
     data_quality:
       score: 15
       max: 15
@@ -150,19 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows variation, trend, and seasonal pattern.
+        comment: 'Rise, peak in month 4, dip and recovery: shows the magnitude emphasis
+          of the type'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real website traffic scenario. Neutral and plausible.
+        comment: 'Monthly website visitors: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic numbers. Plausible seasonal variation.
+        comment: 55k-70k monthly visitors, sensible for a mid-size site; spec has
+          no Check values
     code_quality:
       score: 10
       max: 10
@@ -172,56 +181,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → setup → data → plot → save.'
+        comment: Flat script; column constants and a Data block, adaptability check
+          passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Fully deterministic.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expertly uses ggplot paradigm with proper layer composition and theme
-          customization.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses layer composition effectively. Theme-aware styling. Could leverage
-          more letsplot-specific features.
+        passed: false
+        comment: Standard ggplot layer composition and theme(); nothing beyond the
+          library prompt
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T07:22:14Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling
