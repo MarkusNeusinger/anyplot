@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-bipartite: Bipartite Network Graph
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: pending | Created: 2026-05-14
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 77/100 | Updated: 2026-11-21
 """
 
 import os
