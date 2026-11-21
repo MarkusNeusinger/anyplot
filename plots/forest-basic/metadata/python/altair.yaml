@@ -2,45 +2,58 @@ library: altair
 language: python
 specification_id: forest-basic
 created: '2025-12-27T19:59:34Z'
-updated: '2026-05-11T01:13:58Z'
-generated_by: claude-haiku
-workflow_run: 25645028747
+updated: '2026-11-21T00:28:11Z'
+generated_by: claude-sonnet
+workflow_run: 44843296610
 issue: 2378
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/altair/plot-dark.html
-quality_score: 94
+quality_score: 81
 review:
   strengths:
-  - Perfect visual legibility in both light and dark themes with no adaptation failures
-  - 'Proper use of Okabe-Ito palette (brand green #009E73 for data, orange #E69F00
-    for pooled); data colors identical across renders'
-  - Clean, professional aesthetic with subtle grid and minimal-chrome design
-  - Weight-proportional marker sizing adds visual depth without clutter
-  - Effective use of altair's layer composition and tooltips; interactive HTML export
-  - All spec requirements met precisely; data quality and realism excellent
+  - Pooled estimate computed from the studies by inverse-variance weighting, so the
+    diamond and its interval follow the data
+  - Clean layer composition on one shared x scale with x/x2 interval rules and weight-sized
+    markers (alt.Size with a range)
+  - Theme tokens threaded through title, axis, tick and grid colors; both renders
+    fully legible
+  - Native formatted tooltips per layer in the HTML export
   weaknesses:
-  - Design Excellence could be elevated with stronger visual hierarchy or emphasis
-    techniques (e.g., annotation, size/opacity variation) to guide the viewer toward
-    key findings
+  - 'SC-02 (both): the pooled diamond is a fixed-size point glyph (about -0.40 to
+    -0.35 wide) while its interval runs about -0.48 to -0.28 as a separate rule, so
+    the diamond''s tips are not at the pooled bounds (C2) → draw the diamond as a
+    polygon whose left and right tips sit at the pooled CI bounds (e.g. mark_area/mark_line
+    over the four vertices, or a mark_trail/path), dropping the rule on that row.
+    Likely cause: mark_point(shape=''diamond'', size=420) plus the pooled row included
+    in ci_lines.'
+  - 'VQ-07 (both): the pooled diamond is filled with #AE3030, the semantic red anchor
+    reserved for bad/loss/error roles, although the pooled estimate carries no such
+    meaning → the second Imprint position #C475FD or the brand green with a distinct
+    outline. Likely cause: color=IMPRINT_PALETTE[4] in the diamond mark.'
+  - 'CQ-01 (code): a helper function tooltip(label) (lines 85-91) breaks the flat
+    no-functions structure → inline the tooltip lists in each layer. Likely cause:
+    the def tooltip() block.'
+  - 'Suggestion: a slightly heavier CI stroke (about 2 px) would give the rows more
+    presence on the large canvas.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with clear dark text throughout
-      Chrome: Title "forest-basic · altair · anyplot.ai" prominent and readable; study names (Johnson 2018 through Taylor 2023) dark and clearly visible on left; x-axis label "Standardized Mean Difference (95% CI)" and tick labels in dark gray
-      Data: Ten studies displayed with green (#009E73) confidence interval lines and proportional-sized circle markers; vertical dashed reference line at 0; pooled estimate as orange/yellow diamond (#E69F00) with green border at bottom
-      Legibility verdict: PASS - All elements are sharp and highly legible against light surface
+      Background: warm off-white #FAF8F1, 3200x1800, chart centred with even margins
+      Chrome: title 'forest-basic · python · altair · anyplot.ai' near-black, centred; study names (Johnson 2018 ... Taylor 2023, chronological top to bottom) and 'Pooled estimate' in dark grey; x-axis title 'Standardized mean difference (95% CI)' bold dark; ticks -1.2..0.6; subtle vertical grid; dashed grey null line at 0 through all rows
+      Data: #009E73 CI rules (1.5 px) and semi-opaque green circles sized by weight (Williams/Wilson largest, Brown smallest); pooled row: red #AE3030 diamond with green outline, fixed size, with a green rule from about -0.48 to -0.28 through it
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with all text shifted to light colors
-      Chrome: Title, study labels, axis labels all light-colored and clearly readable against dark background; no dark-on-dark issues
-      Data: Confidence intervals, circles, and pooled diamond are IDENTICAL in color to light render (#009E73 green and #E69F00 orange); only chrome has adapted to theme
-      Legibility verdict: PASS - No dark-on-dark failures; all text readable and data colors perfectly preserved across themes
+      Background: warm near-black #1A1A17
+      Chrome: title and axis title light (#F0EFE8), study and tick labels light grey; grid faint, null line light grey dashed; no dark-on-dark text
+      Data: identical green rules and markers and the same red diamond with green outline as the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -48,73 +61,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all clearly readable and sized appropriately
-          (28px, 22px, 18px) in both themes
+        comment: Title 16, axis title 12, tick labels 10 at scale 4 (library-prompt
+          sizes); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Study labels well-spaced, no text collisions, all elements distinct
+        comment: No text collisions; study labels well spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers visible and appropriately sized; CI lines (strokeWidth=4)
-          and diamond (size=1500) prominent
+        comment: Ten sparse markers prominent, 1.5 px CI rules clearly visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Uses Okabe-Ito #009E73 and #E69F00—colorblind-safe, high contrast'
+        comment: Green on cream/near-black with good contrast; no red-green sole signal
+          (rows carry labels)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas (1600×900) well-proportioned; margins adequate; no clipping
+        comment: Canvas gate passed (3200x1800); chart centred with balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label descriptive; title correctly formatted
+        comment: x-axis titled 'Standardized mean difference (95% CI)'; study axis
+          self-explanatory
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73; pooled #E69F00; backgrounds correct; data
-          colors identical across themes'
+        passed: false
+        comment: 'Study series #009E73 and backgrounds correct, but the pooled diamond
+          is filled with the semantic red anchor #AE3030 (defect line)'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional polish with weight-proportional markers, elegant reference
-          line, effective color hierarchy
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, explicit sizes; nothing beyond
+          it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid, minimalist Y-axis, dashed reference line; room for additional
-          refinement
+        passed: false
+        comment: Spines and y-axis domain removed, subtle grid; the spine and grid
+          rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear focal point on pooled diamond; color contrast guides viewer;
-          could strengthen with emphasis techniques
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -122,27 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct forest plot with all structural elements
+        comment: Correct forest plot, no unrequested layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Confidence intervals, point estimates, diamond, reference line all
-          present
+        passed: false
+        comment: Diamond is a fixed-size glyph whose tips do not reach the pooled
+          interval bounds; a rule draws the interval instead (C2, defect line). Reference
+          line at 0, weight sizing, chronological order and labeled axis present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: effect size with CI bounds; Y: study names; size: weight—all
-          correct'
+        comment: Effects, intervals, weights all at their data values; axis covers
+          all intervals
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; study labels match data; no legend needed
+        comment: Title 'forest-basic · python · altair · anyplot.ai' correct; no legend
+          needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -152,80 +169,90 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all forest-plot aspects with 10 studies and pooled aggregate
+        comment: Ten studies, wide and narrow intervals, one study crossing null on
+          the other side, pooled row
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic study names, plausible effect sizes, neutral topic
+        comment: Plausible RCT meta-analysis on standardized mean differences, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Effect size range and CI widths realistic; y-axis accommodates all
-          rows
+        comment: SMDs -0.67..0.12 realistic; pooled estimate computed by inverse-variance
+          from CI widths (about -0.38, CI about -0.48 to -0.28), matching the render.
+          No Check values in Notes
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Simple, direct code; no unnecessary functions
+        passed: false
+        comment: A helper function tooltip() (lines 85-91) breaks the no-functions
+          rule (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, altair, pandas; all used
+        comment: os, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; natural use of altair tooltips
+        comment: Appropriate complexity; pooled estimate computed with vectorised
+          pandas
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html; current API
+        comment: Saves plot-{THEME}.png (padded to target) and .html; current Altair
+          6 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Proper altair patterns: Chart, marks, encoding, layer composition'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Layer composition, interactive tooltips, HTML export, weight-proportional
-          sizing
+        passed: false
+        comment: Idiomatic layer composition with shared x scale and x/x2 interval
+          encoding, escaped fields with explicit types
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Formatted HTML tooltips per layer (native interactivity); nothing
+          else distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T00:24:25Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
   - edge-highlighting
+  - grid-styling
