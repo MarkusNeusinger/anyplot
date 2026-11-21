@@ -1,7 +1,7 @@
 """ anyplot.ai
 icicle-basic: Basic Icicle Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-13
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 77/100 | Updated: 2026-11-21
 """
 
 import os
@@ -28,163 +28,170 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for hierarchy levels
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+# Imprint palette: one color per hierarchy level, root first
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: File system hierarchy with sizes (MB)
-data = [
-    {"name": "root", "parent": "", "value": 0},
-    {"name": "Documents", "parent": "root", "value": 0},
-    {"name": "Photos", "parent": "root", "value": 0},
-    {"name": "Projects", "parent": "root", "value": 0},
-    {"name": "Archive", "parent": "root", "value": 0},
-    {"name": "Reports", "parent": "Documents", "value": 450},
-    {"name": "Invoices", "parent": "Documents", "value": 280},
-    {"name": "Notes", "parent": "Documents", "value": 180},
-    {"name": "Vacation", "parent": "Photos", "value": 680},
-    {"name": "Family", "parent": "Photos", "value": 520},
-    {"name": "Events", "parent": "Photos", "value": 340},
-    {"name": "WebApp", "parent": "Projects", "value": 0},
-    {"name": "DataSci", "parent": "Projects", "value": 0},
-    {"name": "Mobile", "parent": "Projects", "value": 380},
-    {"name": "Frontend", "parent": "WebApp", "value": 320},
-    {"name": "Backend", "parent": "WebApp", "value": 420},
-    {"name": "Config", "parent": "WebApp", "value": 200},
-    {"name": "Models", "parent": "DataSci", "value": 520},
-    {"name": "Scripts", "parent": "DataSci", "value": 300},
-    {"name": "Old2023", "parent": "Archive", "value": 1200},
-    {"name": "Old2022", "parent": "Archive", "value": 950},
-]
+# Constants
+LABEL_VALUE_MIN = 0.07  # rectangles wider than this share of the root get name and value
+LABEL_NAME_MIN = 0.05  # rectangles wider than this share get the name only
 
-df = pd.DataFrame(data)
+# Columns: set these to your table's column names
+NAME = "Name"  # role: name
+PARENT = "Parent"  # role: parent
+VALUE = "Size (MB)"  # role: value
 
-# Build lookup tables
-name_to_idx = {row["name"]: idx for idx, row in df.iterrows()}
-children_map = {name: df[df["parent"] == name]["name"].tolist() for name in df["name"]}
+# Data: replace this block with your own table, for example df = pd.read_csv("folders.csv")
+# Only leaves carry a value; parents are summed from their children below.
+df = pd.DataFrame(
+    {
+        NAME: [
+            "root",
+            "Documents",
+            "Photos",
+            "Projects",
+            "Archive",
+            "Reports",
+            "Invoices",
+            "Notes",
+            "Vacation",
+            "Family",
+            "Events",
+            "WebApp",
+            "DataSci",
+            "Mobile",
+            "Frontend",
+            "Backend",
+            "Config",
+            "Models",
+            "Scripts",
+            "Old2023",
+            "Old2022",
+        ],
+        PARENT: [
+            "",
+            "root",
+            "root",
+            "root",
+            "root",
+            "Documents",
+            "Documents",
+            "Documents",
+            "Photos",
+            "Photos",
+            "Photos",
+            "Projects",
+            "Projects",
+            "Projects",
+            "WebApp",
+            "WebApp",
+            "WebApp",
+            "DataSci",
+            "DataSci",
+            "Archive",
+            "Archive",
+        ],
+        VALUE: [
+            None,
+            None,
+            None,
+            None,
+            None,
+            450,
+            280,
+            180,
+            680,
+            520,
+            340,
+            None,
+            None,
+            380,
+            320,
+            420,
+            200,
+            520,
+            300,
+            1200,
+            950,
+        ],
+    }
+)
 
-# Calculate values for non-leaf nodes (bottom-up aggregation)
-processed = set()
-while len(processed) < len(df):
-    for _, row in df.iterrows():
-        name = row["name"]
-        if name in processed:
-            continue
-        kids = children_map[name]
-        if len(kids) == 0:
-            processed.add(name)
-        elif all(k in processed for k in kids):
-            total = sum(df.loc[name_to_idx[k], "value"] for k in kids)
-            df.loc[name_to_idx[name], "value"] = total
-            processed.add(name)
+# Plot: reads only df and the constants above
+children = {name: [] for name in df[NAME]}
+for name, parent in zip(df[NAME], df[PARENT], strict=True):
+    if parent in children:
+        children[parent].append(name)
+root = df.loc[~df[PARENT].isin(children), NAME].iloc[0]
+own_value = dict(zip(df[NAME], df[VALUE], strict=True))
 
-# Calculate depths (distance from root)
-depths = {"root": 0}
-queue = ["root"]
-while queue:
-    current = queue.pop(0)
-    for child in children_map[current]:
-        depths[child] = depths[current] + 1
-        queue.append(child)
 
-max_depth = max(depths.values())
+def total(name):
+    """Leaf value, or the sum of the children's totals."""
+    if not children[name]:
+        return own_value[name]
+    return sum(total(kid) for kid in children[name])
 
-# Build icicle rectangles using iterative BFS
+
+# Depth-first layout: width follows value, children sit inside their parent's extent
 rects = []
-layout_queue = [("root", 0.0, 1.0)]
 
-while layout_queue:
-    name, x_start, x_end = layout_queue.pop(0)
-    depth = depths[name]
-    y_top = max_depth - depth + 1
-    y_bottom = max_depth - depth
-    value = df.loc[name_to_idx[name], "value"]
 
-    rects.append(
-        {"name": name, "xmin": x_start, "xmax": x_end, "ymin": y_bottom, "ymax": y_top, "depth": depth, "value": value}
-    )
+def place(name, depth, x_start, x_end):
+    rects.append({"name": name, "xmin": x_start, "xmax": x_end, "depth": depth, "value": total(name)})
+    kids = sorted(children[name], key=lambda k: -total(k))
+    kid_sum = sum(total(k) for k in kids)
+    x = x_start
+    for kid in kids:
+        width = total(kid) / kid_sum * (x_end - x_start)
+        place(kid, depth + 1, x, x + width)
+        x += width
 
-    # Queue children proportionally
-    kids = children_map[name]
-    if kids:
-        kid_values = [(k, df.loc[name_to_idx[k], "value"]) for k in kids]
-        kid_values.sort(key=lambda x: -x[1])
-        total_value = sum(v for _, v in kid_values)
-        if total_value > 0:
-            curr_x = x_start
-            for kid, val in kid_values:
-                width = (val / total_value) * (x_end - x_start)
-                layout_queue.append((kid, curr_x, curr_x + width))
-                curr_x += width
 
+place(root, 0, 0.0, 1.0)
 rect_df = pd.DataFrame(rects)
 
-# Color palette by depth using Okabe-Ito
-colors = {0: IMPRINT[0], 1: IMPRINT[1], 2: IMPRINT[2], 3: IMPRINT[3], 4: IMPRINT[4], 5: IMPRINT[5]}
-rect_df["fill_color"] = rect_df["depth"].map(colors)
-
-# Calculate label positions and widths
+# Root in the top row, one row per level below it
+max_depth = rect_df["depth"].max()
+rect_df["ymax"] = max_depth - rect_df["depth"] + 1
+rect_df["ymin"] = max_depth - rect_df["depth"]
 rect_df["width"] = rect_df["xmax"] - rect_df["xmin"]
 rect_df["x_center"] = (rect_df["xmin"] + rect_df["xmax"]) / 2
 rect_df["y_center"] = (rect_df["ymin"] + rect_df["ymax"]) / 2
 
-# Labels: show name + value for wide rectangles, name only for medium, hide for very narrow
-rect_df["label"] = rect_df.apply(
-    lambda r: f"{r['name']}\n({int(r['value'])} MB)" if r["width"] > 0.05 else (r["name"] if r["width"] > 0.02 else ""),
-    axis=1,
-)
+# Labels: name and value on wide rectangles, name only on medium ones, none on slivers
+rect_df["label"] = [
+    f"{n}\n({v:.0f} MB)" if w > LABEL_VALUE_MIN else (n if w > LABEL_NAME_MIN else "")
+    for n, v, w in zip(rect_df["name"], rect_df["value"], rect_df["width"], strict=True)
+]
 
-# Convert depth to categorical with descriptive labels
-level_labels = {
-    0: "Level 0 (Root)",
-    1: "Level 1 (Folders)",
-    2: "Level 2 (Subfolders)",
-    3: "Level 3 (Groups)",
-    4: "Level 4 (Items)",
-    5: "Level 5 (Leaf)",
-}
-rect_df["depth_label"] = pd.Categorical(
-    rect_df["depth"].map(level_labels), categories=list(level_labels.values()), ordered=True
-)
+# Color by hierarchy level
+levels = [f"Level {d}" for d in range(max_depth + 1)]
+rect_df["level"] = pd.Categorical([f"Level {d}" for d in rect_df["depth"]], categories=levels, ordered=True)
 
-# Separate light and dark backgrounds for text color contrast
+# Text color per level, chosen for contrast against the level's fill
 dark_bg = rect_df[rect_df["depth"].isin([0, 1, 3])]
-light_bg = rect_df[rect_df["depth"].isin([2, 4, 5])]
+light_bg = rect_df[~rect_df["depth"].isin([0, 1, 3])]
 
-# Create plot
 plot = (
     ggplot(rect_df)
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="depth_label"), color="white", size=1.5)
-    + geom_text(aes(x="x_center", y="y_center", label="label"), data=dark_bg, size=11, color=INK)
-    + geom_text(
-        aes(x="x_center", y="y_center", label="label"),
-        data=light_bg,
-        size=11,
-        color=INK if THEME == "light" else INK_SOFT,
-    )
-    + scale_fill_manual(
-        values={
-            "Level 0 (Root)": IMPRINT[0],
-            "Level 1 (Folders)": IMPRINT[1],
-            "Level 2 (Subfolders)": IMPRINT[2],
-            "Level 3 (Groups)": IMPRINT[3],
-            "Level 4 (Items)": IMPRINT[4],
-            "Level 5 (Leaf)": IMPRINT[5],
-        },
-        name="Hierarchy Level",
-    )
-    + labs(title="icicle-basic · plotnine · anyplot.ai")
+    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="level"), color="white", size=0.75)
+    + geom_text(aes(x="x_center", y="y_center", label="label"), data=dark_bg, size=5, color=INK)
+    + geom_text(aes(x="x_center", y="y_center", label="label"), data=light_bg, size=5, color=INK)
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=levels, name="Hierarchy level")
+    + labs(title="icicle-basic · python · plotnine · anyplot.ai")
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        figure_size=(16, 9),
-        plot_title=element_text(size=28, ha="center", weight="bold", color=INK),
+        figure_size=(8, 4.5),
+        plot_margin=0.03,
+        plot_title=element_text(size=14, ha="center", weight="bold", color=INK),
         legend_position="right",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_title=element_text(size=8, color=INK),
+        legend_text=element_text(size=7, color=INK_SOFT),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
