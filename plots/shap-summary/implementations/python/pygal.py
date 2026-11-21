@@ -1,38 +1,49 @@
-""" anyplot.ai
+"""anyplot.ai
 shap-summary: SHAP Summary Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Created: 2026-05-14
 """
 
 import os
-import re
 import sys
 
 
 sys.path = [p for p in sys.path if not p.endswith("implementations/python")]  # noqa: E402
 
-import matplotlib as mpl  # noqa: E402
+import cairosvg  # noqa: E402
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
-from matplotlib.colors import Normalize  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(script_dir)
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+LOW_COLOR = "#4467A3"  # Imprint blue: low feature values
+MID_COLOR = "#9C9786"  # mid-tone of imprint_div, visible on both page colors
+HIGH_COLOR = "#AE3030"  # Imprint red: high feature values
+N_BINS = 11  # color steps of the low-to-high scale
+
+# Columns: set these to your table's column names
+FEATURE = "Feature"  # role: feature_names
+SHAP = "SHAP value (impact on model output)"  # role: shap_values
+FEATURE_VALUE = "Feature value"  # role: feature_values
+
+# Data: replace this block with your own table, for example df = pd.read_csv("shap.csv")
 np.random.seed(42)
 n_samples = 200
-n_features = 10
-
-feature_names = [
+names = [
     "Age",
     "Income",
     "Credit Score",
@@ -44,20 +55,50 @@ feature_names = [
     "Payment History",
     "Inquiries",
 ]
+parts = []
+for i, name in enumerate(names):
+    shap_i = np.random.normal(0, 0.3 + i * 0.05, n_samples)
+    value_i = np.random.uniform(0, 1, n_samples)
+    parts.append(pd.DataFrame({FEATURE: name, SHAP: shap_i, FEATURE_VALUE: value_i}))
+df = pd.concat(parts, ignore_index=True)
 
-shap_values = np.zeros((n_samples, n_features))
-feature_values = np.zeros((n_samples, n_features))
+# Plot: reads only df and the constants above
 
-for i in range(n_features):
-    shap_values[:, i] = np.random.normal(0, 0.3 + i * 0.05, n_samples)
-    feature_values[:, i] = np.random.uniform(0, 1, n_samples)
 
-importance = np.abs(shap_values).mean(axis=0)
-sorted_idx = np.argsort(-importance)
+def lerp_hex(c0, c1, t):
+    """Linear blend of two hex colors."""
+    a = [int(c0[k : k + 2], 16) for k in (1, 3, 5)]
+    b = [int(c1[k : k + 2], 16) for k in (1, 3, 5)]
+    r, g, bl = (round(x + (y - x) * t) for x, y in zip(a, b, strict=True))
+    return f"#{r:02X}{g:02X}{bl:02X}"
 
-shap_values = shap_values[:, sorted_idx]
-feature_values = feature_values[:, sorted_idx]
-feature_names = [feature_names[i] for i in sorted_idx]
+
+def diverging(t):
+    """imprint_div: blue (t=0) through the mid-tone to red (t=1)."""
+    return lerp_hex(LOW_COLOR, MID_COLOR, 2 * t) if t < 0.5 else lerp_hex(MID_COLOR, HIGH_COLOR, 2 * t - 1)
+
+
+# Rows sorted by mean |SHAP|, most important at the top (highest y position)
+importance = df.groupby(FEATURE, sort=False)[SHAP].apply(lambda s: s.abs().mean()).sort_values()
+row_of = {name: pos for pos, name in enumerate(importance.index)}
+n_rows = len(row_of)
+
+# Feature value scaled to 0..1 within its own feature, then binned into color steps
+scaled = df.groupby(FEATURE, sort=False)[FEATURE_VALUE].transform(lambda s: (s - s.min()) / (s.max() - s.min()))
+bin_of = np.clip(np.floor(scaled * N_BINS), 0, N_BINS - 1)
+
+# Vertical jitter inside the row (layout only); the SHAP value stays on the x axis untouched
+rng = np.random.default_rng(7)
+jitter = np.clip(rng.normal(0, 0.13, len(df)), -0.35, 0.35)
+y_pos = df[FEATURE].map(row_of).to_numpy() + jitter
+
+# Zero line first so the dots draw on top of it; one series per color step
+series = [("SHAP = 0", [(0, -0.6), (0, n_rows - 0.4)], INK_SOFT)]
+for b in range(N_BINS):
+    mask = (bin_of == b).to_numpy()
+    if mask.any():
+        pts = list(zip(df.loc[mask, SHAP].tolist(), y_pos[mask].tolist(), strict=True))
+        series.append((f"Feature value bin {b + 1}", pts, diverging((b + 0.5) / N_BINS)))
 
 custom_style = Style(
     background=PAGE_BG,
@@ -65,83 +106,58 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=("#009E73",),
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    stroke_width=2,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
+    colors=tuple(color for _, _, color in series),
+    opacity="0.8",
+    opacity_hover="1",
+    title_font_size=66,
+    label_font_size=52,
+    major_label_font_size=44,
+    legend_font_size=44,
+    stroke_width=3,
 )
 
+title = "shap-summary · python · pygal · anyplot.ai"
 chart = pygal.XY(
     style=custom_style,
-    title="shap-summary · pygal · anyplot.ai",
-    x_title="SHAP Value",
-    y_title="Feature",
-    width=4800,
-    height=2700,
+    title=title,
+    x_title=SHAP,
+    y_title=FEATURE,
+    width=3200,
+    height=1800,
     show_legend=False,
-    y_labels=feature_names,
     show_x_guides=True,
+    show_y_guides=True,
+    dots_size=7,
+    stroke=False,
+    margin_right=330,
+    range=(-0.6, n_rows - 0.4),
+    y_labels=[{"label": name, "value": pos} for name, pos in row_of.items()],
+    y_labels_major=list(range(n_rows)),
+    truncate_label=-1,
 )
+chart.add(series[0][0], series[0][1], stroke=True, show_dots=False, stroke_style={"width": 4, "dasharray": "18,12"})
+for label, pts, _ in series[1:]:
+    chart.add(label, pts)
 
-cmap = mpl.colormaps.get_cmap("BrBG")
-norm = Normalize(vmin=0, vmax=1)
-
-for j in range(n_features):
-    n_bands = 10
-    for band in range(n_bands):
-        band_color_value = (band + 0.5) / n_bands
-        color_rgba = cmap(norm(band_color_value))
-        hex_color = "#{:02x}{:02x}{:02x}".format(
-            int(color_rgba[0] * 255), int(color_rgba[1] * 255), int(color_rgba[2] * 255)
-        )
-
-        points = []
-        for i in range(n_samples):
-            feature_val = feature_values[i, j]
-            if band / n_bands <= feature_val < (band + 1) / n_bands:
-                jitter = np.random.normal(0, 0.15)
-                points.append((shap_values[i, j], j + jitter))
-
-        if points:
-            chart.add(f"{feature_names[j]}_band_{band}", points, show_legend=False, color=hex_color)
-
-# Add reference line at x=0 (neutral SHAP value)
-x_min, x_max = shap_values.min(), shap_values.max()
-margin = (x_max - x_min) * 0.05
-chart.add(
-    "Zero Reference",
-    [(0, -0.7), (0, n_features - 0.3)],
-    show_legend=False,
-    stroke_style={"width": 2, "dasharray": "5,5"},
-    color=INK_SOFT,
+# Color bar: pygal has none, so a gradient is injected into the SVG next to the plot
+svg = chart.render(is_unicode=True)
+bar_x, bar_y, bar_w, bar_h = 3200 - 250, 640, 46, 520
+stops = "".join(
+    f'<stop offset="{t:.2f}" stop-color="{diverging(1 - t)}"/>' for t in np.linspace(0, 1, 2 * N_BINS + 1).tolist()
 )
+colorbar = (
+    f'<defs><linearGradient id="fvbar" x1="0" y1="0" x2="0" y2="1">{stops}</linearGradient></defs>'
+    f'<rect x="{bar_x}" y="{bar_y}" width="{bar_w}" height="{bar_h}" fill="url(#fvbar)" '
+    f'stroke="{INK_MUTED}" stroke-width="2"/>'
+    f'<g fill="{INK}" font-family="sans-serif" font-size="44">'
+    f'<text x="{bar_x + bar_w + 18}" y="{bar_y + 40}">High</text>'
+    f'<text x="{bar_x + bar_w + 18}" y="{bar_y + bar_h}">Low</text>'
+    f'<text x="{bar_x + bar_w / 2}" y="{bar_y - 40}" text-anchor="middle" font-size="46">{FEATURE_VALUE}</text></g>'
+)
+svg = svg.replace("</svg>", colorbar + "</svg>")
 
-# Render to SVG string and save HTML
-svg_content = chart.render()
-
-# Post-process SVG for dark theme to fix text colors
-if THEME == "dark":
-    svg_str = svg_content.decode("utf-8") if isinstance(svg_content, bytes) else svg_content
-
-    # Replace/add fill attributes in all text elements with light color
-    # First, replace any existing fill="#..." in text elements
-    svg_str = re.sub(r'(<text\s+[^>]*?)fill="[^"]*"', rf'\1fill="{INK}"', svg_str)
-
-    # For text elements without fill attribute, add one
-    def add_fill_to_text(match):
-        text_tag = match.group(0)
-        if "fill=" not in text_tag:
-            return text_tag[:-1] + f' fill="{INK}">'
-        return text_tag
-
-    svg_str = re.sub(r"<text[^>]*>", add_fill_to_text, svg_str)
-    svg_content = svg_str.encode("utf-8")
-
-# Save HTML
-with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(svg_content)
-
-# Render to PNG (using pygal's native renderer)
-chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(svg)
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800)
