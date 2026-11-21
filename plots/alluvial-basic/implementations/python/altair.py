@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 78/100 | Updated: 2026-11-20
@@ -26,7 +26,7 @@ TIME_POINT = "Election year"  # role: time_point
 CATEGORY = "Party"  # role: category
 NEXT_CATEGORY = "Party at next election"  # role: extra
 NEXT_TIME_POINT = "Next election year"  # role: extra
-FLOW = "Voters (thousands)"  # role: value
+FLOW = "Voters (thousands)"  # role: flow
 
 # Data: replace this block with your own edge list, for example df = pd.read_csv("flows.csv")
 # One row per band: the party at one election, the party at the next, and the voters who made that move.
@@ -44,18 +44,18 @@ df = pd.DataFrame(
         ("2012", "2016", "Independent", "Liberal", 20),
         ("2016", "2020", "Conservative", "Conservative", 260),
         ("2016", "2020", "Conservative", "Independent", 50),
-        ("2016", "2020", "Liberal", "Liberal", 240),
+        ("2016", "2020", "Liberal", "Liberal", 250),
         ("2016", "2020", "Liberal", "Progressive", 45),
-        ("2016", "2020", "Progressive", "Progressive", 140),
-        ("2016", "2020", "Progressive", "Liberal", 35),
-        ("2016", "2020", "Independent", "Independent", 90),
+        ("2016", "2020", "Progressive", "Progressive", 120),
+        ("2016", "2020", "Progressive", "Liberal", 30),
+        ("2016", "2020", "Independent", "Independent", 80),
         ("2016", "2020", "Independent", "Conservative", 25),
-        ("2016", "2020", "Independent", "Progressive", 15),
+        ("2016", "2020", "Independent", "Progressive", 10),
         ("2020", "2024", "Conservative", "Conservative", 250),
         ("2020", "2024", "Conservative", "Independent", 35),
-        ("2020", "2024", "Liberal", "Liberal", 255),
+        ("2020", "2024", "Liberal", "Liberal", 240),
         ("2020", "2024", "Liberal", "Progressive", 40),
-        ("2020", "2024", "Progressive", "Progressive", 160),
+        ("2020", "2024", "Progressive", "Progressive", 135),
         ("2020", "2024", "Progressive", "Liberal", 40),
         ("2020", "2024", "Independent", "Independent", 100),
         ("2020", "2024", "Independent", "Conservative", 20),
@@ -65,18 +65,16 @@ df = pd.DataFrame(
 )
 
 # Plot: reads only df and the constants above
-ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
 TITLE = "alluvial-basic · python · altair · anyplot.ai"
 
 # Canvas: inner view in px; saved at scale_factor 4 and padded to 3200 x 1800
-WIDTH, HEIGHT = 620, 320
-NODE_WIDTH, NODE_GAP = 54, 7
+WIDTH, HEIGHT = 620, 340
+NODE_WIDTH, NODE_GAP = 76, 7
 TOP, BOTTOM, SIDE = 46, 14, 40
 CURVE_POINTS = 30
 
 time_points = list(dict.fromkeys([*df[TIME_POINT], *df[NEXT_TIME_POINT]]))
 categories = list(dict.fromkeys([*df[CATEGORY], *df[NEXT_CATEGORY]]))
-color_of = dict(zip(categories, IMPRINT_PALETTE, strict=False))
 time_idx = {tp: i for i, tp in enumerate(time_points)}
 n_cols = len(time_points)
 col_x = [SIDE + i * (WIDTH - 2 * SIDE) / (n_cols - 1) for i in range(n_cols)]
@@ -84,8 +82,10 @@ col_x = [SIDE + i * (WIDTH - 2 * SIDE) / (n_cols - 1) for i in range(n_cols)]
 # Block size per column: outgoing flow in the first column, incoming flow after that
 edges = df.assign(src_t=df[TIME_POINT].map(time_idx))
 edges["tgt_t"] = df[NEXT_TIME_POINT].map(time_idx)
-totals = {(0, c): v for c, v in edges[edges["src_t"] == 0].groupby(CATEGORY, sort=False)[FLOW].sum().items()}
-totals.update({(t, c): v for (t, c), v in edges.groupby(["tgt_t", NEXT_CATEGORY], sort=False)[FLOW].sum().items()})
+outflow = edges.groupby(["src_t", CATEGORY], sort=False)[FLOW].sum()
+inflow = edges.groupby(["tgt_t", NEXT_CATEGORY], sort=False)[FLOW].sum()
+inflow.index.names = outflow.index.names
+totals = pd.concat([outflow, inflow], axis=1).max(axis=1).to_dict()
 
 # Stack the blocks of each column, with a gap between them
 usable = (HEIGHT - TOP - BOTTOM) - NODE_GAP * (len(categories) - 1)
@@ -186,7 +186,7 @@ node_layer = (
 
 label_layer = (
     alt.Chart(nodes)
-    .mark_text(fontSize=7, fontWeight="bold", color=INK, baseline="middle", align="center")
+    .mark_text(fontSize=10, fontWeight="bold", color=INK, baseline="middle", align="center")
     .encode(x=alt.X("label_x:Q", scale=x_scale), y=alt.Y("label_y:Q", scale=y_scale), text="party:N")
 )
 
@@ -218,8 +218,7 @@ chart.save(f"plot-{THEME}.html")
 # Pad (never crop) the saved PNG to the canonical landscape canvas
 TARGET_W, TARGET_H = 3200, 1800
 img = Image.open(f"plot-{THEME}.png").convert("RGB")
-if img.width > TARGET_W or img.height > TARGET_H:
-    raise SystemExit(f"altair produced {img.width}x{img.height}, larger than {TARGET_W}x{TARGET_H}")
+img.thumbnail((TARGET_W, TARGET_H))  # only shrinks, when other data makes the legend or view larger
 canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
 canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
 canvas.save(f"plot-{THEME}.png")
