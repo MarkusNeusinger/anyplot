@@ -2,46 +2,56 @@ library: plotly
 language: python
 specification_id: point-basic
 created: '2025-12-30T09:31:42Z'
-updated: '2026-05-11T17:21:42Z'
-generated_by: claude-haiku
-workflow_run: 25685094445
+updated: '2026-11-21T03:11:48Z'
+generated_by: claude-sonnet
+workflow_run: 44859295154
 issue: 2551
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality with all text explicitly sized and readable in both light
-    and dark themes
-  - Flawless spec compliance with all required features correctly implemented
-  - Clean, reproducible code with appropriate complexity and defensive programming
-  - Excellent theme adaptation with no legibility failures and proper chrome color
-    switching
-  - Professional appearance with well-balanced layout and subtle effective grid styling
+  - Native plotly error_x with asymmetric array/arrayminus driven straight from the
+    lower/upper columns gives capped 95 % intervals in one trace
+  - fig.add_vline with a positioned 'Null' annotation marks the null effect with the
+    library's own reference-line API
+  - 'Theme tokens threaded through every chrome element; both renders read cleanly
+    with identical #009E73 data marks'
+  - Canonical 3200x1800 canvas with the full mandated title and library-prompt font
+    sizes
   weaknesses:
-  - Design excellence modest—follows well-configured defaults without distinctive
-    visual design beyond spec requirements
-  - Data storytelling not emphasized—no visual hierarchy, emphasis, or annotation
-    to highlight treatment effect magnitudes
+  - 'VQ-03 (both): Treatment C''s lower bound is exactly 0.0, so its left cap sits
+    under the dashed null line and is masked by it → a lower bound that does not coincide
+    with the null value (e.g. half-width 1.4 instead of 1.5) so both caps show. Likely
+    cause: half_widths[3] = 1.5 with estimate 1.5.'
+  - 'DQ-02 (both): the groups are labelled ''Treatment A''–''Treatment E'' and the
+    axis unit is the placeholder ''(units)'' → named interventions and a real effect
+    unit (e.g. blood-pressure reduction in mmHg). Likely cause: the GROUP labels list
+    and the ESTIMATE column name.'
+  - 'CQ-04 (code): the legend dict in update_layout (lines 99–108) styles a legend
+    that never renders, since a single trace has no legend by default → delete the
+    block. Likely cause: a legend kept from an earlier version.'
+  - 'Suggestion: ordering the treatments by estimate would let the reader rank the
+    effects at a glance.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title and axis labels in dark INK color (#1A1A17); tick labels in secondary INK_SOFT (#4A4A44); all clearly readable
-      Data: Six treatment groups with green circles (#009E73) and horizontal error bars with end caps; null reference line at x=0 (dashed, labeled)
-      Legibility verdict: PASS – all text fully readable against light background
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: title 'point-basic · python · plotly · anyplot.ai' centered in dark ink; axis titles 'Effect size (units)' and 'Treatment group' dark; tick labels and 'Null' label in INK_SOFT; subtle grid on both axes; L-shaped axis lines; all readable
+      Data: six rows (Control at top, Treatment A–E below) with #009E73 circular markers and capped horizontal 95 % intervals; dashed INK_SOFT null line at x=0; Treatment C's lower cap coincides with the null line
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title and axis labels in light INK (#F0EFE8); tick labels in secondary light INK_SOFT (#B8B7B0); grid lines subtle; legend box framed; all readable against dark surface
-      Data: Green circles and error bars remain identical (#009E73) to light render; null line and all data elements clearly visible
-      Legibility verdict: PASS – no dark-on-dark failures; excellent readability in dark theme; chrome properly theme-adapted
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title and axis titles in light ink #F0EFE8, ticks and 'Null' label in #B8B7B0; grid subtle; no dark-on-dark text
+      Data: identical #009E73 markers and intervals; null line light grey dashed
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,70 +59,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 32px, labels 24px, ticks 18-20px; all explicitly set and perfectly
-          readable in both themes
+        comment: Title 16 px, axis titles 12 px, ticks 10 px at scale 4, the library
+          prompt's sizes; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; clean, well-spaced layout
+        comment: No text collisions; the Null label sits above the plot area clear
+          of the data
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Marker size 18 optimal for 6 categories; error caps clearly visible
+        passed: false
+        comment: Markers (9 px at scale 4) and caps visible, but Treatment C's lower
+          cap lands exactly on the dashed null line and is masked by it (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) excellent contrast; Okabe-Ito palette CVD-safe
+        comment: Single brand green with good contrast on both surfaces; no color-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot uses ~60% of canvas; balanced margins (l:150, r:80, t:100, b:80)
+        comment: 3200x1800 canvas; balanced margins; title ~34 % of width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Effect Size (units)'' and ''Treatment
-          Group'''
+        comment: '''Effect size (units)'' and ''Treatment group'' are reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; backgrounds #FAF8F1/#1A1A17 correct;
-          chrome colors theme-adaptive'
+        comment: 'Series #009E73; backgrounds #FAF8F1/#1A1A17; chrome from theme tokens'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured professional default; no custom palette or distinctive
-          design
+        passed: true
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Subtle grid, framed legend, generous margins
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed without visual hierarchy or emphasis; null line informative
-          but not visually prominent
+        passed: true
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,28 +131,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal point estimate plot with error bars—correct
+        comment: Horizontal point-estimate plot; only the single null reference line
+          the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Points, confidence intervals, categories, reference line all present
+        comment: Distinct markers, asymmetric 95 % intervals with caps, horizontal
+          layout, null line; C1, C2, C4, C5 met (C3 cap visibility counted under VQ-03)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis estimates, Y-axis categories; axes show all data
+        comment: Markers at their estimates; x-axis spans every interval
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'point-basic · plotly · anyplot.ai' correct; legend
-          accurate
+        comment: Title 'point-basic · python · plotly · anyplot.ai'; single series
+          needs no legend (N/A)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -151,21 +162,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six groups with varying estimates (0-4.2) and CI widths (0.8-1.5)
+        comment: Six groups, intervals of varied width, one crossing and one touching
+          the null
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Treatment effects with CIs—realistic, scientifically plausible, neutral
+        passed: false
+        comment: Plausible treatment-effect study, but groups 'Treatment A–E' and
+          the unit 'units' read generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Effect sizes and proportions factually sensible for treatment study
+        comment: Effect sizes −0.8 to 5.3 sensible; no Check values in the Notes
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -173,55 +186,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plot → save; no functions/classes'
+        comment: Linear script, six zones, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects; all used
+        comment: os, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, appropriate complexity, defensive strict=False
+        passed: false
+        comment: The legend block (lines 99–108) styles a legend that never renders
+          for this single trace (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct go.Figure(), go.Scatter(), error_x; solid but not leveraging
-          advanced patterns
+        comment: Native asymmetric error_x with array/arrayminus computed from the
+          df columns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses add_vline() with annotation—Plotly-specific; otherwise straightforward
+        comment: fig.add_vline with a built-in positioned annotation for the null
+          reference; HTML export with hover
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T03:08:10Z'
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
