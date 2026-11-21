@@ -1,7 +1,7 @@
 """ anyplot.ai
 streamline-basic: Basic Streamline Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-14
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
@@ -10,84 +10,98 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.patches import FancyArrowPatch
+from matplotlib.colors import LinearSegmentedColormap
+from scipy.interpolate import RegularGridInterpolator
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Set seed for reproducibility
-np.random.seed(42)
+# Imprint palette: continuous speed encoding uses the single-polarity Imprint ramp
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
-# Vortex flow field: u = -y, v = x (creates circular streamlines)
-streamlines_data = []
-arrow_data = []
-streamline_id = 0
+# Constants
+SEEDS_PER_EDGE = 13  # streamlines started along each inflow edge of the domain
+STEP = 0.04  # integration step length in data units
+MAX_STEPS = 600  # safety cap per streamline
+SEGMENT_STRIDE = 3  # integration steps merged into one colored segment
 
-# Starting points at different radii
-radii = [0.8, 1.2, 1.6, 2.0, 2.4, 2.8]
-n_per_radius_map = {0.8: 3, 1.2: 4, 1.6: 5, 2.0: 5, 2.4: 6, 2.8: 6}
-dt = 0.03
-max_steps = 250
+# Columns: set these to your table's column names
+X = "X Position (m)"  # role: x
+Y = "Y Position (m)"  # role: y
+U = "Horizontal velocity u (m/s)"  # role: u
+V = "Vertical velocity v (m/s)"  # role: v
+SPEED = "Flow Speed (m/s)"  # role: extra
+LINE = "Streamline"  # role: extra
+SEGMENT = "Segment"  # role: extra
 
-for r in radii:
-    n_per_radius = n_per_radius_map[r]
-    for i in range(n_per_radius):
-        angle = 2 * np.pi * i / n_per_radius + (r * 0.15)
-        x = r * np.cos(angle)
-        y = r * np.sin(angle)
-        streamline_points = []
+# Data: replace this block with your own grid, for example df = pd.read_csv("field.csv")
+# A saddle-point flow, u = x and v = -y, sampled on a regular 41 x 41 grid
+grid = np.linspace(-3, 3, 41)
+xx, yy = np.meshgrid(grid, grid)
+df = pd.DataFrame({X: xx.ravel(), Y: yy.ravel(), U: xx.ravel(), V: -yy.ravel()})
 
-        # Trace streamline using Euler integration
-        for step in range(max_steps):
-            if abs(x) > 3.2 or abs(y) > 3.2:
-                break
+# Plot: reads only df and the constants above
+xs = np.sort(df[X].dropna().unique())
+ys = np.sort(df[Y].dropna().unique())
+u_grid = df.pivot_table(index=Y, columns=X, values=U, sort=True).reindex(index=ys, columns=xs).to_numpy()
+v_grid = df.pivot_table(index=Y, columns=X, values=V, sort=True).reindex(index=ys, columns=xs).to_numpy()
+interp_u = RegularGridInterpolator((ys, xs), u_grid, bounds_error=False, fill_value=np.nan)
+interp_v = RegularGridInterpolator((ys, xs), v_grid, bounds_error=False, fill_value=np.nan)
 
-            # Vector field: circular vortex
-            u = -y
-            v = x
-            speed = np.sqrt(u**2 + v**2)
 
-            if speed < 1e-6:
-                break
+def velocity(px, py):
+    return float(interp_u((py, px))), float(interp_v((py, px)))
 
-            vel_mag = np.sqrt(x**2 + y**2)
-            streamlines_data.append(
-                {
-                    "x": float(x),
-                    "y": float(y),
-                    "streamline_id": streamline_id,
-                    "order": step,
-                    "velocity": float(vel_mag),
-                }
-            )
-            streamline_points.append((x, y, u, v, vel_mag))
 
-            x = x + dt * u / speed
-            y = y + dt * v / speed
+# Seeds along the top and bottom edges, spread across the full width
+seed_x = np.linspace(xs.min(), xs.max(), SEEDS_PER_EDGE)
+seeds = [(sx, ys.max()) for sx in seed_x] + [(sx, ys.min()) for sx in seed_x]
 
-        # Store arrow position at midpoint
-        if len(streamline_points) > 20:
-            mid_idx = len(streamline_points) // 2
-            px, py, pu, pv, pvel = streamline_points[mid_idx]
-            arrow_data.append({"x": px, "y": py, "u": pu, "v": pv, "velocity": pvel})
+paths = []
+for sx, sy in seeds:
+    px, py = float(sx), float(sy)
+    pts = [(px, py)]
+    for _ in range(MAX_STEPS):
+        u, v = velocity(px, py)
+        mag = np.hypot(u, v)
+        if not np.isfinite(mag) or mag < 1e-9:
+            break
+        # Midpoint step of fixed arc length along the field direction
+        mx, my = px + 0.5 * STEP * u / mag, py + 0.5 * STEP * v / mag
+        u, v = velocity(mx, my)
+        mag = np.hypot(u, v)
+        if not np.isfinite(mag) or mag < 1e-9:
+            break
+        px, py = px + STEP * u / mag, py + STEP * v / mag
+        if not (xs.min() <= px <= xs.max() and ys.min() <= py <= ys.max()):
+            break
+        pts.append((px, py))
+    if len(pts) > 2:
+        paths.append(np.array(pts))
 
-        streamline_id += 1
+rows = []
+arrows = []
+segment_id = 0
+for line_id, path in enumerate(paths):
+    speeds = np.array([np.hypot(*velocity(px, py)) for px, py in path])
+    for k in range(0, len(path) - 1, SEGMENT_STRIDE):
+        stop = min(k + SEGMENT_STRIDE, len(path) - 1)
+        seg_speed = speeds[k : stop + 1].mean()
+        for j in (k, stop):
+            rows.append({X: path[j, 0], Y: path[j, 1], SPEED: seg_speed, LINE: line_id, SEGMENT: segment_id})
+        segment_id += 1
+    # One direction arrow per line, on the inflow part of the path
+    a = int(0.3 * (len(path) - 1))
+    arrows.append((path[a], path[a + 1], speeds[a]))
+lines = pd.DataFrame(rows)
 
-# Create DataFrames
-df = pd.DataFrame(streamlines_data)
-arrows_df = pd.DataFrame(arrow_data)
+norm = plt.Normalize(lines[SPEED].min(), lines[SPEED].max())
 
-# Compute average velocity per streamline for color encoding
-avg_velocity = df.groupby("streamline_id")["velocity"].mean().reset_index()
-avg_velocity.columns = ["streamline_id", "avg_velocity"]
-df = df.merge(avg_velocity, on="streamline_id")
-
-# Configure seaborn with theme-adaptive colors
 sns.set_theme(
     style="ticks",
     rc={
@@ -99,78 +113,56 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
     },
 )
 
-# Create square figure for equal aspect ratio
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Use viridis colormap for continuous velocity data
-palette = sns.color_palette("viridis", as_cmap=True)
-norm = plt.Normalize(df["avg_velocity"].min(), df["avg_velocity"].max())
-
-# Plot streamlines with continuous color encoding
 sns.lineplot(
-    data=df,
-    x="x",
-    y="y",
-    hue="avg_velocity",
-    units="streamline_id",
+    data=lines,
+    x=X,
+    y=Y,
+    hue=SPEED,
+    hue_norm=norm,
+    units=SEGMENT,
     estimator=None,
     sort=False,
-    linewidth=2.5,
-    alpha=0.85,
-    palette="viridis",
+    palette=imprint_seq,
+    linewidth=1.8,
+    solid_capstyle="round",
     legend=False,
     ax=ax,
 )
 
-# Add arrowheads to show flow direction
-cmap = plt.cm.viridis
-for _, arrow in arrows_df.iterrows():
-    px, py = arrow["x"], arrow["y"]
-    pu, pv = arrow["u"], arrow["v"]
-    speed = np.sqrt(pu**2 + pv**2)
-    dx = 0.15 * pu / speed
-    dy = 0.15 * pv / speed
-    color = cmap(norm(arrow["velocity"]))
-    arrow_patch = FancyArrowPatch(
-        (px - dx / 2, py - dy / 2),
-        (px + dx / 2, py + dy / 2),
-        arrowstyle="->,head_width=4,head_length=4",
-        color=color,
-        linewidth=2,
-        mutation_scale=1,
+# Direction arrows, colored like the line they sit on
+for tail, head, speed in arrows:
+    ax.annotate(
+        "",
+        xy=head,
+        xytext=tail,
+        arrowprops={"arrowstyle": "-|>", "color": imprint_seq(norm(speed)), "lw": 0, "mutation_scale": 16},
         zorder=10,
     )
-    ax.add_patch(arrow_patch)
 
-# Add colorbar
-sm = plt.cm.ScalarMappable(cmap="viridis", norm=norm)
+# Colorbar naming the encoded scalar
+sm = plt.cm.ScalarMappable(cmap=imprint_seq, norm=norm)
 sm.set_array([])
-cbar = fig.colorbar(sm, ax=ax, shrink=0.8, aspect=20)
-cbar.set_label("Flow Speed (m/s)", fontsize=20, color=INK)
-cbar.ax.tick_params(labelsize=16, colors=INK_SOFT)
+cbar = fig.colorbar(sm, ax=ax, shrink=0.8, aspect=20, pad=0.03)
+cbar.set_label(SPEED, fontsize=10, color=INK)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
 
-# Style axes
-ax.set_xlabel("X Position (m)", fontsize=20, color=INK)
-ax.set_ylabel("Y Position (m)", fontsize=20, color=INK)
-ax.set_title("streamline-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Style
+ax.set_title("streamline-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(X, fontsize=10, color=INK)
+ax.set_ylabel(Y, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.set_aspect("equal")
-ax.set_xlim(-3.5, 3.5)
-ax.set_ylim(-3.5, 3.5)
+ax.set_xlim(xs.min(), xs.max())
+ax.set_ylim(ys.min(), ys.max())
+ax.yaxis.grid(True, linewidth=0.8)
+sns.despine(ax=ax)
 
-# Remove spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
-
-# Subtle grid
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

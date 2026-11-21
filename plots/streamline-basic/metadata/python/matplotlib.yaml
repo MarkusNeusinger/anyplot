@@ -2,51 +2,50 @@ library: matplotlib
 language: python
 specification_id: streamline-basic
 created: '2025-12-31T00:07:17Z'
-updated: '2026-05-14T07:21:11Z'
-generated_by: claude-haiku
-workflow_run: 25847284102
+updated: '2026-11-21T14:42:40Z'
+generated_by: claude-sonnet
+workflow_run: 44914849214
 issue: 2861
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 83
 review:
   strengths:
-  - 'Perfect theme adaptation: data colors identical across renders, chrome appropriately
-    theme-shifted'
-  - Excellent text legibility in both light and dark themes with explicitly set font
-    sizes (24pt title, 20pt labels, 16pt ticks)
-  - Sophisticated flow field design combining vortex, source, and secondary vortex
-    features showing thoughtful domain understanding
-  - Dual encoding of velocity magnitude through both color (viridis) and linewidth
-    variation is effective and intentional
-  - Clean, reproducible code with proper seed setting and idiomatic matplotlib usage
-  - 'Polished visual refinement: subtle grid (α=0.1), proper spine removal, generous
-    whitespace, well-integrated colorbar'
-  - Expert application of streamplot parameters and theme tokens throughout
+  - Speed is encoded twice, via imprint_seq color and streamline width, with a colorbar
+    that names the quantity and its unit
+  - Masked arrays let streamplot stop cleanly at missing velocities, an idiomatic
+    matplotlib touch
+  - Correct 2400x2400 square canvas with equal aspect, and theme tokens threaded through
+    every chrome element in both renders
+  - Streamlines seeded across the whole domain at a balanced density=1.5; curves are
+    smooth and never cross
   weaknesses:
-  - 'DE-01 (6/8): Aesthetic sophistication is strong but could reach FiveThirtyEight
-    publication level with custom theme refinements or unique visual flourishes'
-  - 'DE-03 (4/6): Data storytelling is good but could be emphasized more through explicit
-    visual hierarchy highlighting specific flow field features'
+  - 'VQ-05 (both): the equal-aspect axes plus colorbar fill only the middle ~70 %
+    of the square canvas height, leaving empty bands of about 15 % above the title
+    and below the x label → tighten the vertical figure margins so the plot fills
+    the canvas. Likely cause: default subplot params with set_aspect(''equal'') and
+    no fig.subplots_adjust / layout=''constrained''.'
+  - 'Suggestion: arrowheads crowd into the bottom-right and top-left corners where
+    lines bunch; a slightly lower arrow count there would keep the curves dominant.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct)
-      Chrome: Title "streamline-basic · matplotlib · anyplot.ai" in dark ink (readable); axis labels "X Position (m)" and "Y Position (m)" in dark ink (readable); tick labels in INK_SOFT (readable); grid lines subtle at α≈0.1 (visible but not dominant)
-      Data: Streamlines rendered with viridis colormap (purple→blue→cyan→green→yellow); linewidth varies with velocity magnitude (1.5–2.5×); colorbar shows "Velocity Magnitude" scale; flow pattern shows primary central vortex, source field, and secondary vortex on right; arrows indicate direction
-      Legibility verdict: PASS - All text fully readable, excellent contrast, no visibility issues
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas
+      Chrome: title 'streamline-basic · python · matplotlib · anyplot.ai' in dark ink, axis labels 'X Position (m)' / 'Y Position (m)' and colorbar label 'Velocity magnitude (m/s)' dark, tick labels INK_SOFT; subtle grid; top/right spines removed
+      Data: streamlines in imprint_seq from #009E73 (slow, centre) to #4467A3 (fast, corners), width growing with speed; spiral outflow from a source near the origin wrapped by a large rotation; '->' arrows along the lines; empty bands above the title and below the x label
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct)
-      Chrome: Title in light text (INK=#F0EFE8) (readable); axis labels in light text (readable); tick labels in INK_SOFT=#B8B7B0 (readable against dark background); grid lines subtle and visible; colorbar properly styled with light colors
-      Data: Streamlines use IDENTICAL viridis colormap to light render (data color fidelity confirmed); linewidth variation identical to light render; colorbar scale shows same velocity magnitude range; flow pattern identical
-      Legibility verdict: PASS - All text fully readable against dark background, no dark-on-dark failures, data colors preserved perfectly across theme switch
+      Background: warm near-black #1A1A17
+      Chrome: title, axis labels and colorbar label in light ink, ticks in light grey #B8B7B0; no dark-on-dark text; grid subtle but visible
+      Data: identical streamline colors, widths and arrows to the light render; only chrome flipped; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,71 +53,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfect readability in both themes
+        comment: Title 12 pt, axis labels 10 pt, ticks 8 pt set explicitly; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; tight layout ensures clean spacing
+        comment: No text collisions; streamlines never cross
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Streamlines perfectly adapted to density; linewidth varies with speed
-          (1.5-2.5x)
+        comment: Line widths 0.8-2.2 scale with speed; arrows visible but secondary
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and CVD-safe
+        comment: Green-to-blue ramp plus width redundancy; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Excellent balance, proper margins, well-integrated colorbar
+        passed: false
+        comment: 2400x2400 canvas correct, but about 15 % empty band above the title
+          and below the x label (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''X Position (m)'', ''Y Position (m)'''
+        comment: X/Y Position (m), colorbar 'Velocity magnitude (m/s)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Viridis for continuous data; correct backgrounds (#FAF8F1/#1A1A17);
-          theme-adaptive chrome; both renders theme-correct
+        comment: 'imprint_seq (#009E73 -> #4467A3) for speed; backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful flow field design; dual encoding (color + linewidth);
-          above defaults but could reach publication-elite level
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed appropriately, subtle grid, generous whitespace, polished
-          colorbar
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good visual hierarchy from center vortex to periphery; could emphasize
-          specific flow features more
+        passed: false
+        comment: Color and width encode speed as the Notes allow; no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +126,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamline plot with all subtypes present
+        comment: Single-field streamline plot; only Notes-allowed color and width
+          encodings plus arrows
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: streamlines, velocity color, linewidth variation,
-          colorbar'
+        comment: 'C1 smooth non-crossing curves, C2 seeds across the whole domain
+          at balanced density, C3 sparse arrows with the flow, C4 named colorbar and
+          width growing with speed: all met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y grid correctly mapped; U/V velocity components properly applied
+        comment: x/y grid mapped correctly, full [-3, 3] domain shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar properly labels velocity magnitude
+        comment: Title 'streamline-basic · python · matplotlib · anyplot.ai'; colorbar
+          names the scalar
     data_quality:
       score: 15
       max: 15
@@ -157,21 +158,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all streamline aspects: primary vortex, source field, secondary
-          vortex, velocity magnitude variation'
+        comment: Spiral source at the origin, outer rotation, varying speed
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real CFD/fluid dynamics scenario; physically plausible field configuration
+        comment: Fluid velocity field in metres and m/s, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Grid [-3,3]×[-3,3] appropriate for field visualization; velocity
-          proportions correct
+        comment: 'Checked: speed range ~0.2-3.8 m/s on the colorbar matches hypot(u,
+          v) over the grid; no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -181,69 +181,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → theme setup → data → plot → save; no
-          functions/classes'
+        comment: Linear zones, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic results
+        comment: Deterministic analytic field
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib, numpy'
+        comment: os, plt, np, pd, LinearSegmentedColormap all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake functionality
+        comment: Tidy df -> pivot -> masked arrays fits the adaptable-code zones;
+          no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming (plot-{THEME}.png); current API
+        comment: plot-{THEME}.png, dpi=400, no bbox_inches tight
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ax.streamplot(), fig.colorbar(), theme tokens; high-level
-          API
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses streamplot's color encoding + sophisticated linewidth variation;
-          distinctive to matplotlib
-    score_caps:
-      applied: false
-      details: No caps applied; implementation passed all criteria without triggering
-        cap thresholds
-    total_score: 94
-    max_score: 100
-    verdict: APPROVED
-    review_attempt: 1
-    threshold_for_attempt: 90
+        passed: false
+        comment: ax.streamplot with np.ma masked arrays so streamlines stop at missing
+          velocities; fig.colorbar(strm.lines)
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: streamplot's per-grid-point color and linewidth arrays
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T14:39:31Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - manual-ticks
+  - custom-colormap
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - dataframe-pivot
+  dataprep:
+  - masked-array
   styling:
-  - custom-colormap
-  - grid-styling
+  - publication-ready
+  - theme-tokens
