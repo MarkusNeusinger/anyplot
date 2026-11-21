@@ -2,44 +2,49 @@ library: letsplot
 language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:48:53Z'
-updated: '2026-05-13T07:43:18Z'
-generated_by: claude-haiku
-workflow_run: 25785054436
+updated: '2026-11-21T09:12:54Z'
+generated_by: claude-sonnet
+workflow_run: 44887984802
 issue: 2781
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 81
 review:
   strengths:
-  - 'Perfect visual quality: all text sizes explicitly set and readable in both light
-    and dark themes'
-  - Correct and precise palette implementation with Okabe-Ito colors and theme-adaptive
-    chrome
-  - Complete spec compliance with all required asymmetric error bar features
-  - Realistic, well-contextualized quarterly sales data with meaningful error asymmetry
-  - Clean, Pythonic code structure with idiomatic letsplot usage
-  - Interactive tooltips demonstrate library mastery
+  - 'Asymmetric arms read at a glance: thick capped bars with a larger central dot,
+    each arm set by its own error column (C1, C2)'
+  - Caption states that the bars are the 10th-90th percentile forecast range (C3)
+  - Theme tokens threaded through every chrome element; data color identical in both
+    renders
+  - Native layer_tooltips() exposes quarter, sales and both bounds in the HTML view
+  - Column constants and a self-contained data block; y limits derived from the data
   weaknesses:
-  - 'Design excellence is generic: uses library defaults without custom styling'
-  - Visual refinement relies entirely on theme_minimal() and theme tokens
-  - Data storytelling is implicit; no visual hierarchy or emphasis to guide viewer
-    focus
+  - 'DE-02 (both): the panel is framed on all four sides (top and right borders visible)
+    and the solid INK_SOFT grid runs on both axes, including vertical lines on the
+    4-category x-axis, reading stronger than the style guide''s 15 % rule color →
+    keep only the left and bottom axis lines and a y-only grid at rgba(ink, 0.15).
+    Likely cause: a panel border kept from theme_minimal()/axis_line on all sides,
+    and panel_grid_major=element_line(color=INK_SOFT) applied to x and y.'
+  - 'Suggestion: tighten the y-range padding (currently 0.75 × lowest bound to 1.1
+    × highest) so the bars use more of the panel height.'
+  - 'Suggestion: an open or ink-outlined central marker would separate the point from
+    its same-colored bar even more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "errorbar-asymmetric · letsplot · anyplot.ai" (bold, 24pt), Y-axis "Sales (thousands USD)" (20pt, dark), X-axis "Quarter" (20pt, dark), tick labels Q1-Q4 (16pt, dark), caption (14pt, dark). All text is dark and clearly readable against light background. Grid lines are subtle and visible.
-      Data: Four data points rendered in Okabe-Ito green (#009E73). Error bars display with visible horizontal caps showing asymmetric magnitudes: Q1 (77-100), Q2 (87-110), Q3 (66-84), Q4 (98-127). Marker size (6) is appropriate for 4-point dataset.
-      Legibility verdict: PASS - All text fully readable, excellent contrast, no dark-on-light issues
+      Background: warm off-white #FAF8F1 on page and panel
+      Chrome: bold title 'errorbar-asymmetric · python · letsplot · anyplot.ai' top-left (~58 % width), y-axis 'Sales (thousand USD)', x-axis 'Quarter', ticks 50-140 and Q1-Q4, right-aligned caption 'Error bars represent 10th-90th percentile forecast range'; all dark text, readable. Panel framed on all four sides; solid grey grid on both axes.
+      Data: four #009E73 dots (Q1 85, Q2 92, Q3 78, Q4 105) with thick capped error bars 77-100, 87-110, 66-84, 98-127
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title, axis labels, and tick labels rendered in light color (#F0EFE8/#B8B7B0). All text is clearly readable against dark background. Grid lines are subtle but visible with light opacity.
-      Data: Data colors are identical to light render - same Okabe-Ito green (#009E73) for points and error bars. Error bar caps and marker outlines maintain visibility.
-      Legibility verdict: PASS - All text light-colored and readable, no dark-on-dark failures, excellent theme adaptation. Grid and data elements distinguish well from background.
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks and caption in light soft ink; no dark-on-dark text. Same four-sided frame and light-grey grid.
+      Data: identical #009E73 dots and error bars as the light render
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,47 +55,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All sizes explicit: title 24pt, labels 20pt, ticks 16pt; perfectly
-          readable in both themes'
+        comment: Title 16, axis titles 12, ticks 10, caption 10 at the 800x450 reference;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and error bars optimally visible for 4-point dataset
+        comment: 4 points at size 6, error bars size 1.5 with wide caps; prominent
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with excellent contrast
+        comment: Single green series, strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance with generous margins and appropriate plot fill
+        comment: 3200x1800, title ~58 % width, balanced labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: '''Sales (thousand USD)'', ''Quarter'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 and #1A1A17; theme chrome
-          correct'
+        comment: '#009E73 first series; #FAF8F1 / #1A1A17 backgrounds; chrome flips
+          correctly'
     design_excellence:
-      score: 8
+      score: 6
       max: 20
       items:
       - id: DE-01
@@ -98,19 +104,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but no exceptional design
+        comment: 'Style-guide baseline: Imprint green, theme tokens, explicit sizes;
+          nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 0
         max: 6
         passed: false
-        comment: Minimal customization; relies on theme_minimal() defaults
+        comment: 'Short of the baseline: all four spines and a solid two-axis grid
+          (defect line)'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed with variation but no visual hierarchy or emphasis
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -120,25 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct asymmetric error bar scatter plot
+        comment: 'Correct asymmetric error bar plot: one point per quarter with separate
+          lower/upper arms'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: central points, asymmetric errors, caps, annotation'
+        comment: Caps at both ends (C2), marker distinct from bar, caption states
+          10th-90th percentile range (C3); single series so C4 N/A
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: Quarter on x, sales on y; axis spans every bar; marks at their values
+          (C1)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; caption explains bounds
+        comment: Title matches errorbar-asymmetric · python · letsplot · anyplot.ai;
+          single series, caption explains bounds
     data_quality:
       score: 15
       max: 15
@@ -148,19 +160,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: varying asymmetry across quarters'
+        comment: 'Asymmetry varies: upside-heavy Q1/Q2/Q4, downside-heavy Q3'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real business scenario with plausible confidence intervals
+        comment: Quarterly sales forecast with percentile range, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions are factually plausible
+        comment: 'No Check values in spec; checked bounds in render vs data: Q1 77-100,
+          Q2 87-110, Q3 66-84, Q4 98-127'
     code_quality:
       score: 10
       max: 10
@@ -170,56 +183,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean import-data-plot-save structure
+        comment: Linear imports, data, plot, save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, pandas, lets_plot, ggsave all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake functionality
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG and HTML output
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ggplot + geom_* API with theme tokens
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses letsplot's interactive tooltips; could leverage more distinctive
-          features
+        comment: 'Standard ggplot grammar: geom_errorbar + geom_point, labs, theme()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: layer_tooltips() with custom lines (quarter, sales, min, max) for
+          the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T09:09:34Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
