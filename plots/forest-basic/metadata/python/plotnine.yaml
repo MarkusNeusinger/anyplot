@@ -2,112 +2,138 @@ library: plotnine
 language: python
 specification_id: forest-basic
 created: '2025-12-27T19:23:19Z'
-updated: '2026-05-11T01:14:50Z'
-generated_by: claude-haiku
-workflow_run: 25645079268
+updated: '2026-11-21T00:31:48Z'
+generated_by: claude-sonnet
+workflow_run: 44843634200
 issue: 2378
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Perfect theme adaptation with correct color tokens for both light and dark renders
-  - Excellent typography hierarchy with explicitly set font sizes throughout
-  - Flawless specification compliance - all required forest plot elements present
-    and correctly implemented
-  - Strong data quality with realistic meta-analysis scenario and appropriate confidence
-    intervals
-  - Clean, idiomatic plotnine usage with proper grammar-of-graphics composition
+  - 'Classic forest-plot table layout built from the grammar: study names in a left
+    text column, each study''s estimate and interval in a right column, the pooled
+    row set in bold, all as geom_text layers with their own data frames'
+  - 'Pooled diamond computed from the studies: its tips sit at the inverse-variance
+    pooled interval (-0.39 to -0.23) derived from the study intervals, not at typed
+    numbers'
+  - Axis limits and text-column positions follow the data's span, so the layout adapts
+    to another table
+  - 'Theme tokens threaded through every text layer and the chrome; both renders read
+    cleanly with identical #009E73 data marks'
+  - scale_size_identity maps study weight to marker size directly; smallest marker
+    (Davis 2020) stays visible and the largest stays inside its row
   weaknesses:
-  - Design Excellence could be elevated with more visual emphasis or hierarchy (e.g.,
-    highlight studies with CIs crossing null effect)
-  - LM-02 (Distinctive Features) is solid but represents fairly standard plotnine
-    patterns
+  - 'VQ-01 (both): the right-hand estimate column (e.g. "-0.45 [-0.72, -0.18]") is
+    set at 6.5 pt, below the 8 pt tick-label reference, and reads small beside the
+    7.5 pt study names → 8 pt (+1.5 pt). Likely cause: geom_text(size=6.5) on the
+    studies label layer and the pooled_right layer.'
+  - 'VQ-06 (both): the x-axis title "Mean Difference (Treatment - Control)" names
+    the measure but no outcome or unit, so a value like -0.31 has no scale a reader
+    can interpret → name the outcome and its unit, e.g. "Mean Difference in Systolic
+    BP (mmHg, Treatment − Control)". Likely cause: the EFFECT column name used as
+    axis title.'
+  - 'DQ-02 (both): the scenario is a generic "treatment vs control" trial set with
+    no named intervention or outcome → name a concrete, neutral intervention and outcome
+    (e.g. a lifestyle program vs usual care on blood pressure) in the data comment
+    and the effect column. Likely cause: the data block''s generic labels.'
+  - 'Suggestion: the y limits (-1, n + 1.5) leave about one and a half empty rows
+    above Smith 2018; a tighter upper limit would balance the panel.'
+  - 'Suggestion: the pooled effect uses the supplied weights while its standard error
+    uses inverse variances; using inverse-variance weights for both would keep the
+    diamond''s centre and width from one model.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "forest-basic · plotnine · anyplot.ai" is prominent (24pt), study names on left are dark and readable (16pt), effect sizes on right are secondary text color and readable (10pt). X-axis label "Mean Difference (Treatment - Control)" is clearly visible (20pt). All tick labels are readable at 16pt.
-      Data: Green error bars and points (#009E73 brand color) are crisp and clearly visible. Confidence intervals show appropriate variation. Pooled diamond at bottom is well-defined. Vertical reference line at zero is subtle but visible.
-      Legibility verdict: PASS - All text is clearly readable; excellent contrast against light background; no overlaps or legibility issues.
+      Background: warm off-white #FAF8F1 (sampled 250,248,241); 3200x1800 canvas.
+      Chrome: title "forest-basic · python · plotnine · anyplot.ai" centred, ~45% of width, dark ink; x-axis title "Mean Difference (Treatment - Control)" in dark ink; tick labels -0.8 to 0.4 in soft ink; subtle vertical grid; full panel border in INK_SOFT. Left column of study names (Smith 2018 … Anderson 2023) in dark ink, bold "Pooled" row; right column of "estimate [lower, upper]" labels in soft ink, pooled row bold. All text readable.
+      Data: ten #009E73 point estimates with capped horizontal CI whiskers, marker size scaled by weight (Davis 2020 smallest, Anderson 2023 largest); translucent #009E73 diamond in its own bottom row spanning -0.39 to -0.23 centred at -0.31; dashed soft-ink null line at 0 through all rows and the diamond row. Four intervals cross zero.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title text is light-colored (#F0EFE8) and fully readable. Study names are light, clearly visible against dark background. Effect sizes use secondary text color (#B8B7B0) and are readable. X-axis labels and tick labels are all light-colored and readable. No dark-on-dark text failures.
-      Data: Error bars and points are identical #009E73 as in light render (perfect color consistency). Diamond is the same teal color. Vertical reference line is visible. Grid lines are appropriately visible.
-      Legibility verdict: PASS - All text is light-colored and readable on dark background; data colors are identical to light render; no theme-adaptation failures.
+      Background: warm near-black #1A1A17 (sampled 26,26,23).
+      Chrome: title, axis title and study names in light ink; tick labels and estimate column in light soft ink; panel border light grey; grid subtle. No dark-on-dark text.
+      Data: identical #009E73 markers, whiskers and diamond outline; the diamond's 0.7-alpha fill reads darker over the dark page, as expected. Null line visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicitly set; readable in both themes
+        passed: false
+        comment: All sizes explicit and readable in both themes; the right estimate
+          column at 6.5 pt reads small against the 8 pt tick reference (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Study names on left, values on right; no overlaps
+        comment: No text collides with text or marks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bars and markers clearly visible; appropriate sizing
+        comment: Weight-sized markers from Davis 2020 (smallest) to Anderson 2023
+          all visible; whiskers and diamond crisp
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe palette; good contrast both themes
+        comment: Single hue with position encoding; strong contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect canvas utilization; balanced margins
+        comment: 3200x1800; text columns, data and axis fill the canvas with balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels with context; proper title format
+        passed: false
+        comment: Measure named but no outcome or unit (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 throughout; theme-correct chrome both renders'
+        comment: '#009E73 single series, identical across themes; #FAF8F1 / #1A1A17
+          backgrounds; chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Professional, clean design; theme tokens used throughout
+        passed: false
+        comment: 'Forest-plot table typography chosen beyond the baseline: left name
+          column, right estimate column in soft ink, bold pooled row'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid styling, minimal spines, generous whitespace
+        passed: false
+        comment: Text columns aligned on shared left edges and placed from the data
+          span; grid limited to the tick range
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear layout guides viewer; visual hierarchy present
+        passed: false
+        comment: Data displayed; the diamond and null line are spec-required, no further
+          hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -117,27 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct forest plot with all standard elements
+        comment: Forest plot, single meta-analysis, no excluded layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Point estimates, CIs, pooled diamond, reference line, labels
+        comment: C1 rows in chronological order with markers and CI lines; C2 computed
+          diamond in bottom row; C3 null line at 0 through all rows; C4 weight-sized
+          markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: Effects on x, rows on y, every mark at its value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend properly omitted for single series
+        comment: Correct title format; legend N/A for one series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -145,19 +173,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varying effect sizes, CIs, and precision
+        comment: Varying interval widths and weights; intervals both crossing and
+          clearing the null
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Meta-analysis of RCTs; neutral, realistic scenario
+        passed: false
+        comment: Plausible RCT meta-analysis but no named intervention or outcome
+          (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct; pooled effect within study range
+        comment: 'Checked: pooled SE recomputed from the interval widths (~0.041)
+          gives [-0.39, -0.23] as rendered; weighted mean -0.31 matches the label
+          and diamond centre'
     code_quality:
       score: 10
       max: 10
@@ -167,54 +199,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plot → save'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary packages
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity; pooled interval derived in four lines
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct filename format plot-{THEME}.png
+        comment: plot-{THEME}.png at 8x4.5 in, 400 dpi
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Good ggplot pattern; proper use of geoms and theme
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses geom_polygon for diamond; theme tokens; solid plotnine patterns
+        passed: false
+        comment: Correct layered grammar with per-layer data; nothing beyond the usual
+          patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: geom_errorbarh/geom_polygon/geom_text are standard; nothing distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T00:27:36Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
