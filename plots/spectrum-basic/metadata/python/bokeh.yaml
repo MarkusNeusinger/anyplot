@@ -2,48 +2,51 @@ library: bokeh
 language: python
 specification_id: spectrum-basic
 created: '2025-12-31T05:38:40Z'
-updated: '2026-05-14T09:25:00Z'
-generated_by: claude-haiku
-workflow_run: 25852163441
+updated: '2026-11-21T15:15:11Z'
+generated_by: claude-sonnet
+workflow_run: 44917532467
 issue: 2926
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 83
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing (28pt title, 22pt labels, 18pt
-    ticks) and zero readability failures in both light and dark themes
-  - Excellent theme-adaptive chrome with no dark-on-dark or light-on-light text failures;
-    data colors identical between renders
-  - 'Expert Bokeh usage: ColumnDataSource with formatted hover strings, HoverTool
-    interactivity, varea() fill, Selenium screenshot pattern'
-  - Strong data quality showing realistic signal processing (FFT, harmonics, noise)
-    with proper dB scaling
-  - 'Complete spec compliance: correct plot type, all required features, proper axis
-    labels with units, title format correct'
-  - Clean, reproducible code with linear KISS structure and deterministic random seed
+  - Peaks are detected from the spectrum with a vectorised local-maximum test, so
+    highlights always sit exactly on their bins and the legend names their computed
+    frequencies
+  - Logarithmic frequency axis via x_axis_type='log' with the DC bin dropped, and
+    a y range derived from the data that shows the -6 dB fundamental and the ~-60
+    dB floor together
+  - 'Clean Bokeh idioms: ColumnDataSource(df) with column-name constants, varea fill
+    under the line, HoverTool with formatted brace-escaped fields'
+  - Theme tokens threaded through every chrome element; both renders are readable
+    and the data colors are identical
   weaknesses:
-  - 'Design Excellence (12/20) could be elevated: consider removing/refining spines,
-    exploring custom visual emphasis, or additional typographic hierarchy refinements'
+  - 'VQ-03 (both): the legend glyphs are about 4-6 px dots and a short dash beside
+    30pt labels, so the peak colors are hard to match to their markers → glyphs of
+    roughly 40-50 px (+35 px). Likely cause: p.legend.glyph_width/glyph_height left
+    at Bokeh''s 20 px default on a 3200x1800 canvas.'
+  - 'Suggestion: tick labels on the log axis could read 1, 10, 100 Hz instead of 10^0,
+    10^1, 10^2 (e.g. a NumeralTickFormatter or LogTickFormatter setting).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, readable
-      Chrome: Title "spectrum-basic · bokeh · anyplot.ai", axis labels "Frequency (Hz)" and "Amplitude (dB)", tick labels from -80 to +40 dB - all dark text clearly visible against light background
-      Data: Spectrum line in brand green (#009E73), filled area with low alpha (0.15), three peak markers in Okabe-Ito colors (#D55E00 orange at 50 Hz, #0072B2 blue at 150 Hz, #CC79A7 purple at 400 Hz), legend with Signal Spectrum label
-      Legibility verdict: PASS - All text readable with excellent contrast
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: bold near-black title 'spectrum-basic · python · bokeh · anyplot.ai' top-left; italic axis titles 'Frequency (Hz)' and 'Amplitude (dB)'; grey tick labels 10^0/10^1/10^2 on the log x axis and 0 to -80 on y; subtle grid; legend top-right on an elevated panel. All readable.
+      Data: spectrum as a #009E73 line with a 15% green fill down to the axis floor; jagged noise floor around -60 dB, three narrow peaks at 50 Hz (~-6 dB), 150 Hz (~-12 dB) and 400 Hz (~-16.5 dB) topped by markers in #C475FD, #4467A3, #BD8233 with a soft ink outline; legend lists Spectrum and each peak frequency, though its glyphs are tiny.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, readable
-      Chrome: Same title, axis labels, and tick labels now in light text (#F0EFE8) - clearly visible against dark background. No dark-on-dark failures.
-      Data: Spectrum line identical color to light render (#009E73), peak markers identical colors (#D55E00, #0072B2, #CC79A7), legend uses elevated dark background (#242420)
-      Legibility verdict: PASS - All text readable with excellent contrast. Data colors perfectly match light render (only chrome changed).
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light grey, legend on #242420 with light labels; no dark-on-dark text.
+      Data: identical line, fill and peak marker colors to the light render; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,73 +54,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: 28pt title, 22pt labels, 18pt ticks.
-          Perfectly readable in both themes.'
+        comment: Title 50pt, axis titles 42pt, ticks 34pt, legend 30pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. All labels and legend have clear spacing.
+        comment: No text collisions; legend sits clear of the peaks in the top-right
+          corner
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Spectrum line and peak markers clearly visible. Excellent density
-          adaptation for frequency domain.
+        passed: false
+        comment: Spectrum line and peak markers clearly visible; legend glyphs are
+          tiny next to 30pt labels (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe. Good contrast between data
-          and background.
+        comment: Green line on both surfaces with high contrast; peak markers differ
+          in hue and are also named by frequency
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 50-80% of canvas. Balanced margins and whitespace. Good
-          utilization.
+        comment: 3200x1800 canvas, balanced margins, nothing cut off; title ~45% of
+          width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Frequency (Hz) and Amplitude (dB).'
+        comment: Frequency (Hz) and Amplitude (dB) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Markers use Okabe-Ito 2-4. Backgrounds theme-correct.
-          Text and chrome theme-adaptive.'
+        comment: 'Spectrum in #009E73, peaks in Imprint positions 2-4, backgrounds
+          #FAF8F1/#1A1A17, chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Professional styling with well-configured defaults. Subtle design
-          touches (filled area, colored markers). Could reach 6+ with custom refinements.
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, elevated legend;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid (10% alpha), thoughtful legend styling, generous whitespace.
-          Room for spine refinement.
+        passed: false
+        comment: Subtle grid and outline per style guide; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through colored peak markers. Filled area
-          provides context for noise floor. Viewer immediately sees dominant frequencies.
+        passed: false
+        comment: Peak highlights are what the Notes suggest; no further hierarchy
+          chosen
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency spectrum with proper FFT-based representation.
+        comment: Frequency spectrum drawn as a filled line; only the Notes-allowed
+          peak highlights added
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: amplitude/frequency mapping, axis labels with
-          units, peak highlighting, multiple components.'
+        comment: Log frequency axis (C2), units on both axes, peaks highlighted at
+          their bins (C4), peaks and floor shown together (C3)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned. All data visible and properly scaled.
+        comment: Every bin at its frequency/amplitude; y range from data covers floor
+          and peaks; DC bin dropped for the log axis
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct (spectrum-basic · bokeh · anyplot.ai). Legend
-          labels clear and descriptive.
+        comment: Title 'spectrum-basic · python · bokeh · anyplot.ai' correct; legend
+          names each peak frequency
     data_quality:
       score: 15
       max: 15
@@ -157,22 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: fundamental (50 Hz), harmonic (150 Hz), component
-          (400 Hz), noise floor.'
+        comment: Fundamental, harmonic, further component and noise floor all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic signal processing scenario. Real-world applicable (audio,
-          machinery, electrical).
+        comment: Synthetic multi-tone signal sampled at 8192 Hz, plausible vibration/audio
+          context, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct sampling, amplitude scaling, and proportions. Proper
-          dB conversion.
+        comment: 'Checked: sine amplitudes 1.0/0.5/0.3 give one-sided |X|/N of 0.5/0.25/0.15
+          = -6.0/-12.0/-16.5 dB, matching the marker heights read off the axis; noise
+          floor near -60 dB fits 0.1 std noise over 8192 samples'
     code_quality:
       score: 10
       max: 10
@@ -182,65 +187,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports > tokens > data > plot > styling > save. No
-          functions/classes.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Deterministic FFT computation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports. All utilized (numpy, bokeh, selenium, os,
-          time, pathlib).
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. Proper ColumnDataSource usage. Elegant theme
-          token pattern.
+        comment: Peaks found by a vectorised local-maximum test instead of hardcoded
+          frequencies; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and .html output. Modern Bokeh/Selenium
-          API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh 3 API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Expert usage: ColumnDataSource pattern, figure API, HoverTool, theme
-          tokens, Selenium approach.'
+        passed: false
+        comment: ColumnDataSource(df) with column-name constants, x_axis_type='log',
+          Range1d from data, toolbar_location=None
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: 'Excellent Bokeh-specific: HoverTool with formatted strings, varea()
-          fill, interactive + screenshot pattern.'
-    total_score: 92
-    total_max: 100
+        passed: false
+        comment: varea fill under the line and HoverTool with brace-escaped column
+          fields and number formatters
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T15:11:24Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
   - html-export
+  - log-scale
   patterns:
   - data-generation
   - columndatasource
-  dataprep: []
+  dataprep:
+  - fft
   styling:
-  - grid-styling
+  - alpha-blending
