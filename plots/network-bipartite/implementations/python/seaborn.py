@@ -1,15 +1,16 @@
-""" anyplot.ai
+"""anyplot.ai
 network-bipartite: Bipartite Network Graph
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 85/100 | Created: 2026-05-14
+Quality: 85/100 | Updated: 2026-11-21
 """
 
 import os
 
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
+from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 
 
@@ -20,8 +21,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-COLOR_A = "#009E73"  # Okabe-Ito position 1 — researchers
-COLOR_B = "#C475FD"  # Okabe-Ito position 2 — papers
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 sns.set_theme(
     style="ticks",
@@ -40,131 +41,150 @@ sns.set_theme(
     },
 )
 
-# Data — researcher–paper authorship network
-np.random.seed(42)
+# Columns: set these to your table's column names
+SPECIES = "Species"  # role: source
+HABITAT = "Habitat"  # role: target
 
-researchers = [
-    "A. Chen",
-    "B. Patel",
-    "C. Nguyen",
-    "D. Kim",
-    "E. Santos",
-    "F. Okafor",
-    "G. Mueller",
-    "H. Tanaka",
-    "I. Rossi",
-    "J. Andersen",
+# Data: replace this block with your own edge list, for example df = pd.read_csv("occurrences.csv")
+rng = np.random.default_rng(7)
+species_names = [
+    "Snow leopard",
+    "Red fox",
+    "Golden eagle",
+    "Brown bear",
+    "Grey wolf",
+    "Otter",
+    "Beaver",
+    "Lynx",
+    "Moose",
+    "Capercaillie",
+    "Black stork",
+    "Natterjack toad",
 ]
-
-papers = [
-    "P01: Deep Learning",
-    "P02: Graph Theory",
-    "P03: NLP Methods",
-    "P04: Optimization",
-    "P05: Bayesian ML",
-    "P06: Vision CNN",
-    "P07: Transfer Learn",
-    "P08: GAN Models",
-    "P09: Causal Inf.",
-    "P10: Reinforcement",
-    "P11: Clustering",
-    "P12: Fairness AI",
+habitat_names = [
+    "Alpine meadow",
+    "Boreal forest",
+    "Wetland",
+    "River bank",
+    "Rocky scree",
+    "Mixed woodland",
+    "Peat bog",
+    "Open steppe",
 ]
+rows = []
+for name in species_names:
+    n_habitats = rng.integers(1, 5)
+    for h in rng.choice(len(habitat_names), size=n_habitats, replace=False):
+        rows.append((name, habitat_names[h]))
+df = pd.DataFrame(rows, columns=[SPECIES, HABITAT])
 
-# Generate authorship edges (each researcher authors 2–4 papers)
-raw_edges = []
-for researcher in researchers:
-    n_papers = np.random.randint(2, 5)
-    chosen = np.random.choice(range(len(papers)), size=n_papers, replace=False)
-    for idx in chosen:
-        raw_edges.append((researcher, papers[idx]))
+# Plot: reads only df and the constants above
+degree = pd.concat([df[SPECIES].value_counts(), df[HABITAT].value_counts()])
+species_order = list(dict.fromkeys(df[SPECIES]))
+habitat_order = list(dict.fromkeys(df[HABITAT]))
 
-edges = list(set(raw_edges))
 
-# Compute degrees
-researcher_degree = dict.fromkeys(researchers, 0)
-paper_degree = dict.fromkeys(papers, 0)
-for r, p in edges:
-    researcher_degree[r] += 1
-    paper_degree[p] += 1
+def column_positions(order, x):
+    """Spread the nodes of one set evenly down a vertical line at position x."""
+    y = np.linspace(1, 0, len(order)) if len(order) > 1 else np.array([0.5])
+    return {name: (x, yi) for name, yi in zip(order, y, strict=True)}
 
-# Node positions: left column = researchers, right column = papers
-n_r = len(researchers)
-n_p = len(papers)
 
-researcher_pos = {r: (0.0, 1.0 - i / (n_r - 1)) for i, r in enumerate(researchers)}
-paper_pos = {p: (1.0, 1.0 - i / (n_p - 1)) for i, p in enumerate(papers)}
+pos = {**column_positions(species_order, 0.0), **column_positions(habitat_order, 1.0)}
+nodes = pd.DataFrame(
+    {
+        "node": list(pos),
+        "x": [p[0] for p in pos.values()],
+        "y": [p[1] for p in pos.values()],
+        "set": [SPECIES] * len(species_order) + [HABITAT] * len(habitat_order),
+    }
+)
+nodes["degree"] = nodes["node"].map(degree)
+set_colors = {SPECIES: IMPRINT_PALETTE[0], HABITAT: IMPRINT_PALETTE[1]}
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Draw edges
-for researcher, paper in edges:
-    rx, ry = researcher_pos[researcher]
-    px, py = paper_pos[paper]
-    ax.plot([rx, px], [ry, py], color=INK_SOFT, alpha=0.22, linewidth=1.2, zorder=1)
+# Edges first, thin and light, beneath the nodes
+segments = [[pos[s], pos[h]] for s, h in zip(df[SPECIES], df[HABITAT], strict=True)]
+ax.add_collection(LineCollection(segments, colors=INK_SOFT, alpha=0.35, linewidths=0.7, zorder=1))
 
-# Draw nodes — size encodes degree
-min_s, max_s = 400, 1600
-max_deg_r = max(researcher_degree.values())
-max_deg_p = max(paper_degree.values())
+# Nodes: hue = set membership, size = degree
+sns.scatterplot(
+    data=nodes,
+    x="x",
+    y="y",
+    hue="set",
+    size="degree",
+    sizes=(90, 420),
+    palette=set_colors,
+    edgecolor=PAGE_BG,
+    linewidth=1.0,
+    legend=False,
+    zorder=3,
+    ax=ax,
+)
 
-for researcher in researchers:
-    x, y = researcher_pos[researcher]
-    deg = researcher_degree[researcher]
-    size = min_s + (max_s - min_s) * (deg / max_deg_r)
-    ax.scatter(x, y, s=size, color=COLOR_A, edgecolors=PAGE_BG, linewidth=2.5, zorder=3)
+# Labels on the outer side of each column
+for _, node in nodes.iterrows():
+    left = node["set"] == SPECIES
+    ax.annotate(
+        node["node"],
+        xy=(node["x"], node["y"]),
+        xytext=(-12 if left else 12, 0),
+        textcoords="offset points",
+        ha="right" if left else "left",
+        va="center",
+        fontsize=8,
+        color=INK_SOFT,
+    )
 
-for paper in papers:
-    x, y = paper_pos[paper]
-    deg = paper_degree[paper]
-    size = min_s + (max_s - min_s) * (deg / max_deg_p)
-    ax.scatter(x, y, s=size, color=COLOR_B, edgecolors=PAGE_BG, linewidth=2.5, zorder=3)
-
-# Node labels
-for researcher in researchers:
-    x, y = researcher_pos[researcher]
-    ax.text(x - 0.06, y, researcher, ha="right", va="center", fontsize=16, color=INK_SOFT)
-
-for paper in papers:
-    x, y = paper_pos[paper]
-    ax.text(x + 0.06, y, paper, ha="left", va="center", fontsize=16, color=INK_SOFT)
-
-# Column headers
-ax.text(0.0, 1.08, "Researchers", ha="center", va="bottom", fontsize=20, fontweight="bold", color=COLOR_A)
-ax.text(1.0, 1.08, "Papers", ha="center", va="bottom", fontsize=20, fontweight="bold", color=COLOR_B)
+# Column headings above each column
+top = nodes["y"].max()
+for name in (SPECIES, HABITAT):
+    ax.annotate(
+        name,
+        xy=(nodes.loc[nodes["set"] == name, "x"].iloc[0], top),
+        xytext=(0, 16),
+        textcoords="offset points",
+        ha="center",
+        va="bottom",
+        fontsize=10,
+        fontweight="bold",
+        color=set_colors[name],
+    )
 
 # Legend
 legend_elements = [
-    mpatches.Patch(facecolor=COLOR_A, edgecolor=PAGE_BG, label="Researchers"),
-    mpatches.Patch(facecolor=COLOR_B, edgecolor=PAGE_BG, label="Papers"),
-    Line2D([0], [0], color=INK_SOFT, alpha=0.5, linewidth=2, label="Authorship"),
-]
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        linestyle="",
+        markersize=7,
+        markerfacecolor=set_colors[name],
+        markeredgecolor=PAGE_BG,
+        label=name,
+    )
+    for name in (SPECIES, HABITAT)
+] + [Line2D([0], [0], color=INK_SOFT, alpha=0.6, linewidth=1.5, label="Occurs in")]
 legend = ax.legend(
-    handles=legend_elements,
-    loc="lower center",
-    bbox_to_anchor=(0.5, -0.04),
-    ncol=3,
-    fontsize=16,
-    framealpha=0.9,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
+    handles=legend_elements, loc="lower center", bbox_to_anchor=(0.5, -0.02), ncol=3, fontsize=8, framealpha=0.9
 )
 for text in legend.get_texts():
     text.set_color(INK)
 
-ax.set_xlim(-0.48, 1.48)
-ax.set_ylim(-0.14, 1.22)
+ax.set_xlim(-0.55, 1.55)
+ax.set_ylim(-0.12, 1.14)
 ax.axis("off")
 
 ax.set_title(
-    "Researcher–Paper Authorship · network-bipartite · seaborn · anyplot.ai",
-    fontsize=23,
+    "Species–Habitat Occurrence · network-bipartite · python · seaborn · anyplot.ai",
+    fontsize=11,
     fontweight="medium",
     color=INK,
-    pad=16,
+    pad=6,
 )
 
-plt.tight_layout(pad=2.0)
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.92, bottom=0.02)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
