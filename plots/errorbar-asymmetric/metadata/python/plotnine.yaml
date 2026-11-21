@@ -12,144 +12,152 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 61
 review:
   strengths:
-  - Correct asymmetric error bar implementation with visible caps
-  - Proper theme-adaptive chrome in both light and dark renders
-  - Good spec compliance - all required features present
-  - Clean minimal design with appropriate use of Okabe-Ito palette
-  - Clear caption explaining the error bounds
-  - Realistic clinical trial data with sensible asymmetry patterns
+  - Correct asymmetric error bars with visible caps on both ends via native geom_errorbar
+  - Caption names the 95 % confidence interval bounds
+  - Asymmetry runs in both directions and varies from point to point
   weaknesses:
-  - 'Code-image mismatch: Code sets color=BRAND for all geoms but rendered images
-    show color differentiation by treatment effectiveness - requires clarification'
-  - Code header contains stale metadata (83/100, attempt 1) suggesting the file was
-    not properly updated for attempt 2
-  - Limited library mastery - basic geom usage without distinctive plotnine features
-    or advanced techniques
-  - Design Excellence could be elevated with more sophisticated visual hierarchy or
-    emphasis techniques
+  - 'VQ-01, VQ-07 (dark): legend title ''Effectiveness'' and its entries render near-black
+    on the #1A1A17 background and cannot be read → light text from INK / INK_SOFT.
+    Likely cause: legend_title / legend_text not set from the theme tokens.'
+  - 'VQ-07 (both): the second and third groups are drawn in Okabe-Ito orange (#D55E00)
+    and blue (#0072B2) → Imprint colors only, here a single #009E73 series. Likely
+    cause: a color scale outside the Imprint palette.'
+  - 'SC-01 (both): points and bars are colored by a derived ''Effectiveness'' bin
+    (Low/Moderate/High) that the spec does not ask for → one color for the single
+    series. Likely cause: an extra color mapping on a binned effect column.'
+  - 'VQ-05 (both): canvas is 4800x2700, not one of the canonical sizes → 3200x1800
+    (-1600 x -900). Likely cause: figure_size=(16, 9) with dpi=300.'
+  - 'SC-04 (both): title ''errorbar-asymmetric · plotnine · anyplot.ai'' lacks the
+    language segment → ''errorbar-asymmetric · python · plotnine · anyplot.ai''. Likely
+    cause: the title string.'
+  - 'DQ-02 (both): groups labelled ''Treatment A''-''Treatment D'' read as generic
+    → named, plausible treatments or factor levels. Likely cause: the treatments list.'
+  - 'CQ-01 (code): line 38 opens the Data block with no column-0 # Plot marker after
+    it → one block between column-0 # Data and # Plot markers that ends by binding
+    df, with no plotting, styling or theme token inside and no plotting call above
+    it. Likely cause: the plot code is not separated from the data generation.'
+  - 'CQ-01 (code): has no column constant for the required roles `x`, `y`, `error_lower`,
+    `error_upper` → one string constant per required column role above the Data block,
+    each with a trailing # role: <role> comment naming a spec role. Likely cause:
+    column names are typed where they are used instead of once, above the block.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title, x-label "Treatment Group", y-label "Symptom Reduction (%)" all in dark INK color; tick labels in INK_SOFT; caption explains CI bounds - all readable
-      Data: 5 treatments with asymmetric error bars; bars have visible horizontal caps; legend shows "Effectiveness" categories with color coding (Low=green, Moderate=orange, High=blue); colors follow Okabe-Ito palette
-      Legibility verdict: PASS - all elements clearly readable
+      Background: warm off-white #FAF8F1, 4800x2700 canvas.
+      Chrome: bold title 'errorbar-asymmetric · plotnine · anyplot.ai' (no language segment); bold axis titles 'Treatment Group' and 'Symptom Reduction (%)'; ticks in INK_SOFT; L-shaped axis lines; a top legend 'Effectiveness' with Low/Moderate/High entries in small dark text; caption bottom right explaining the 95 % CI bounds and the effectiveness bins. All readable.
+      Data: five points with capped asymmetric error bars (Placebo -3 to 12 around 5, Treatment B 37-50 around 42, Treatment D 9-32 around 18 ...), colored green (Low), orange #D55E00 (Moderate) and blue #0072B2 (High).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title and labels in light text (F0EFE8/B8B7B0); grid subtle but visible; caption readable
-      Data: Same color rendering as light (green, orange, blue for effectiveness levels) - confirming data colors are theme-independent; error bars and points equally distinct; no dark-on-dark failures
-      Legibility verdict: PASS - all text readable, no contrast failures
-
-    Both renders demonstrate proper theme adaptation with only chrome changing (background, text colors) while Okabe-Ito data colors remain consistent.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks and caption in light tokens; but the legend title 'Effectiveness' and the entries 'Low', 'Moderate', 'High' render near-black on the near-black background and are essentially invisible.
+      Data: same green/orange/blue colors as the light render.
+      Legibility verdict: FAIL (legend text dark-on-dark)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 16
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: All text readable in both light and dark renders
+        passed: false
+        comment: 'Dark render: legend title ''Effectiveness'' and entries render near-black
+          on #1A1A17 and cannot be read (defect line)'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; treatment labels, error bars, legend all
-          properly spaced
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bars with caps clearly visible; points distinct; colors well-differentiated
+        comment: Large markers and bars, clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (green, orange, blue) is CVD-safe; adequate contrast
+        comment: Green/orange/blue CVD-distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Good proportions at 4800x2700; nothing cut off; generous margins
+        passed: false
+        comment: Canvas 4800x2700, not one of the canonical sizes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title follows required format
+        comment: '''Treatment Group'', ''Symptom Reduction (%)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Code specifies color=BRAND only, but images show multi-color output
-          - mismatch between code and rendered result
+        comment: Orange and blue are Okabe-Ito, not Imprint; dark-theme legend text
+          is wrong-theme chrome (defect line)
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Thoughtful color-coding by effectiveness level; clean minimal theme;
-          but code doesn't reflect this complexity
+        comment: Baseline typography, nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Spines removed; subtle grid; good whitespace; could be more refined
+        comment: L-shaped frame, subtle grid; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Color differentiation aids understanding; caption explains bounds;
-          but limited visual hierarchy emphasis
+        comment: Color grouping is an unasked derived channel and earns no storytelling
+          credit
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct asymmetric error bar plot
+        passed: false
+        comment: Derived color channel by effectiveness bins is an unasked encoding
+          (defect line)
       - id: SC-02
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Asymmetric error bars with caps; categorical x-axis; proper caption;
-          color differentiation present
+        comment: Caps, separate arms, caption naming the 95 % CI all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: categorical treatments; Y: symptom reduction %; error bounds
-          correctly mapped'
+        comment: Values and bounds mapped correctly, axis spans every bar
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: Title format correct but legend effectiveness categorization not
-          in code
+        comment: Title lacks the language segment 'python' (defect line)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -157,55 +165,53 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows asymmetric bounds with all 5 treatments; caps clearly visible
+        comment: Asymmetry in both directions varies by point
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Plausible clinical trial outcomes; asymmetry patterns realistic;
-          neutral context
+        passed: false
+        comment: Groups labelled Treatment A-D read as generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Symptom reduction 0-50% range appropriate; error bounds realistic
+        comment: Symptom reduction -3 to 50 % plausible; no Check values in the spec
     code_quality:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
-        passed: true
-        comment: Simple, no functions/classes
+        passed: false
+        comment: No Data/Plot block separation and no column constants (defect lines)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set (np.random.seed(42))
+        comment: Deterministic data, seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Imports used
       - id: CQ-04
         name: Code Elegance
-        score: -1
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Code sets color=BRAND for all geoms, but rendered images
-          show multi-color output - implementation doesn''t match specification'
+        passed: true
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png
     library_mastery:
       score: 4
       max: 10
@@ -214,17 +220,17 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Standard plotnine patterns; proper use of theme customization; could
-          be more sophisticated
+        passed: false
+        comment: Standard grammar patterns
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Basic geom usage; no distinctive plotnine features; good theme token
-          handling but limited advancement
-  verdict: REJECTED
+        comment: Nothing distinctive
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies: []
   techniques: []
