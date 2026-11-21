@@ -2,56 +2,62 @@ library: altair
 language: python
 specification_id: streamline-basic
 created: '2025-12-31T00:18:39Z'
-updated: '2026-05-14T07:38:06Z'
-generated_by: claude-haiku
-workflow_run: 25847498965
+updated: '2026-11-21T15:00:24Z'
+generated_by: claude-sonnet
+workflow_run: 44916146261
 issue: 2861
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 80
 review:
   strengths:
-  - 'Perfect theme compliance: Both light and dark renders pass readability checks
-    with correct backgrounds, proper text colors, and no dark-on-dark issues'
-  - 'Flawless visual quality: All text sizes explicitly set (title 28pt, labels 22pt,
-    ticks 18pt), no overlap, excellent element visibility, proper axis labeling with
-    units'
-  - 'Complete spec compliance: Correct streamline plot type, all required features
-    present (multiple streamlines, velocity-encoded color, proper field visualization),
-    correct title format'
-  - 'Strong data quality: Vortex flow example shows all aspects of streamline visualization
-    with varying radii and speeds, realistic physics context'
-  - 'Clean code structure: Straightforward data generation with Euler integration,
-    reproducible with seed, properly configured chart with theme tokens'
-  - 'Solid Altair mastery: Correct use of detail encoding for streamline grouping,
-    order encoding for line sequencing, proper scale domain specification for consistent
-    axes'
+  - Equal x/y domains on a square 370×370 view keep the vortex streamlines truly circular,
+    so the field geometry reads correctly
+  - Each streamline is traced for one arc only, so neighbouring lines never retrace
+    or overlap and every orbit reads as one clean curve
+  - 'Continuous speed uses the Imprint sequential ramp (#009E73 → #4467A3) with a
+    titled colour bar ''Flow speed (units/s)''; data colours are identical in both
+    themes'
+  - 'Idiomatic Altair multi-line drawing: one mark_line with detail= per streamline
+    and order= on the integration step'
+  - Theme tokens threaded through title, axes, grid, view stroke and legend frame;
+    both renders fully readable, and the PNG is padded (never cropped) onto the exact
+    2400×2400 canvas
   weaknesses:
-  - 'Design Excellence could be elevated: Generic viridis colormap usage (correct
-    but standard); consider subtle visual refinements like custom legend styling or
-    strategic whitespace emphasis'
-  - 'Limited Altair-specific features: Could leverage more distinctive Altair capabilities
-    (e.g., interactive selection, dynamic range sliders) though not required for static
-    PNG output'
+  - 'SC-02 (both): every orbit is drawn as six separate Euler arcs whose ends do not
+    meet, leaving small visible notches and radial steps at each joint (clearest on
+    the r = 2.6 and 3.0 orbits) — violates the spec''s ''smooth curves … without kinks''
+    property → one continuous, closed curve per orbit with no visible seams. Likely
+    cause: the step count int(2πr/n_per_radius/dt)+1 truncates each arc, and normalized
+    Euler steps drift outward so consecutive arcs sit at slightly different radii.'
+  - 'VQ-05 (both): the legend frame is about 390 px wide while its gradient is about
+    45 px wide, so most of the box is empty, and the chart block leaves about 300
+    px bands of empty page above and below on the square canvas → a legend frame that
+    fits its gradient and labels, and an inner view that uses more of the canvas height
+    (about +60 px view height). Likely cause: the legend title width sets the frame
+    width, and width=height=370 is well below the 500×460 square view the library
+    prompt recommends.'
+  - 'Suggestion: sparse direction arrows along a few streamlines would show the counter-clockwise
+    rotation, which the curves alone do not reveal.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "streamline-basic · altair · anyplot.ai", axis labels "X Position (units)" / "Y Position (units)", tick labels all clearly visible in dark text ✓
-      Data: Concentric circular streamlines rendered with viridis colormap (purple inner → yellow outer), first series gradient starts in blue-purple range, consistent with continuous data palette recommendation ✓
-      Legibility verdict: PASS — all text is dark-on-light with excellent contrast and readability
+      Background: warm off-white #FAF8F1 across the full 2400×2400 canvas (padding in the same colour).
+      Chrome: centred bold title "streamline-basic · python · altair · anyplot.ai" in dark ink; axis titles "X position (units)" / "Y position (units)" in dark ink; tick labels −3.5 … 3.5 in INK_SOFT; subtle grid; view framed by a thin INK_SOFT stroke. All readable.
+      Data: eight concentric circular orbits (r ≈ 0.4–3.0), each built from six arcs, coloured by speed on the Imprint sequential ramp from #009E73 (inner, slow) to #4467A3 (outer, fast). Small seams/notches visible at the arc joints. Colour bar "Flow speed (units/s)" 1–3 in an elevated legend box on the right that is mostly empty.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title, axis labels, tick labels all clearly visible in light text. No dark-on-dark issues — text is light-colored. Legend text and labels properly rendered ✓
-      Data: Streamline colors are identical to light render (viridis unchanged), only theme chrome flipped as expected. Flow visualization clear and readable ✓
-      Legibility verdict: PASS — all elements are readable with proper theme-adaptive text colors
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink (#F0EFE8), tick labels in #B8B7B0, grid subtle and visible, legend box on #242420 with light text. No dark-on-dark text.
+      Data: identical green→blue orbit colours as the light render; only chrome flipped. Brand green on the inner orbits reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,49 +65,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title=28px, labels=22px, ticks=18px, perfectly
-          readable in both themes'
+        comment: Title 16, axis titles 13, ticks 11, legend 10–11 px at scale 4; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all fully readable
+        comment: No text collisions; streamlines never overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Streamlines optimally sized with opacity=0.85, clearly distinguishable
-          from background
+        comment: 2.5 px lines (10 px rendered) clearly visible against both backgrounds;
+          colour bar gradient visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
+        comment: Green→blue sequential ramp, monotone in lightness, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'Perfect layout: plot fills 50-80% of canvas with balanced margins'
+        passed: false
+        comment: Canvas exactly 2400×2400; legend frame mostly empty and wide empty
+          bands above/below the chart (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''X Position (units)'', ''Y Position
-          (units)'''
+        comment: '''X position (units)'', ''Y position (units)'', ''Flow speed (units/s)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous data (correct), backgrounds #FAF8F1 (light)
-          / #1A1A17 (dark), all text theme-correct, no pure white/black'
+        comment: 'Continuous speed on imprint_seq (#009E73 → #4467A3); backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -109,24 +115,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default with viridis and proper styling, but not
-          exceptional. No custom palette or intentional design hierarchy beyond defaults
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: 'Minimal customization: grid opacity configured (0.10), theme tokens
-          applied, but limited additional refinement'
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Vortex pattern shows flow structure through concentric circles and
-          gradient, but data is displayed without additional emphasis or visual hierarchy
+        comment: Field displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -134,27 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamline plot visualizing vector field
+        comment: Streamline plot of a single vortex field; only the colour encoding
+          the Notes allow
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: multiple streamlines, velocity-encoded color,
-          complete field visualization'
+        passed: false
+        comment: 'C2 met (radii 0.4–3.0 across the domain, balanced density), C4 met
+          (speed colour with named colour bar); C1 partly missed: visible seams/kinks
+          at the arc joints (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, axes show all data from -3.5 to 3.5 units
+        comment: Equal domains on a square view keep circles circular; all data inside
+          the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct 'streamline-basic · altair · anyplot.ai', legend
-          properly labeled 'Flow Speed'
+        comment: Title 'streamline-basic · python · altair · anyplot.ai'; colour bar
+          titled with units
     data_quality:
       score: 15
       max: 15
@@ -164,22 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple radii (0.4 to 3.0), varying flow speeds,
-          complete circular vortex pattern'
+        comment: Full vortex traced at eight radii with speed varying by radius
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Vortex flow is classic physics example, real-world applicable (fluid
-          dynamics, electromagnetic fields)
+        comment: Spec's own example field u = -y, v = x, a textbook rigid-rotation
+          vortex; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Grid from -3.5 to 3.5 units is sensible, proportions correct for
-          vortex field
+        comment: Speed equals radius for this field; colour range 0.4–3.0 matches
+          the orbit radii read off the axes
     code_quality:
       score: 10
       max: 10
@@ -189,59 +194,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward: imports → tokens → data generation → chart → save'
+        comment: 'Flat script in the six zones: tokens, constants, Data block, Plot,
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible starting points
+        comment: Deterministic integration (seed set)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, altair, numpy, pandas'
+        comment: os, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for Euler integration, clean implementation,
-          no fake functionality
+        comment: Appropriate complexity; groupby transform for per-line speed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+        comment: plot-{THEME}.png padded to 2400×2400 and plot-{THEME}.html; Altair
+          6 API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of Altair''s high-level API: detail encoding for streamline
-          grouping, order for line sequencing, proper configure methods'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Altair's detail and order encoding effectively, but implementation
-          could leverage more distinctive Altair-specific features
+        comment: Standard high-level encodings (detail + order for multi-line), configure_*
+          chrome
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T14:56:09Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - colorbar
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
+  - groupby-aggregation
   dataprep: []
   styling:
+  - custom-colormap
   - grid-styling
-  - alpha-blending
