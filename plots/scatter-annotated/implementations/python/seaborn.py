@@ -1,16 +1,14 @@
 """ anyplot.ai
 scatter-annotated: Annotated Scatter Plot with Text Labels
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-13
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
-from adjustText import adjust_text
 
 
 # Theme tokens
@@ -19,9 +17,10 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
 
-# Set seaborn theme with adaptive colors
+# Imprint palette: position 1 is always the first series
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 sns.set_theme(
     style="ticks",
     rc={
@@ -39,90 +38,138 @@ sns.set_theme(
     },
 )
 
-# Data: Startup companies with revenue vs operating margin
-np.random.seed(42)
-startups = [
-    "TechVenture",
-    "DataFlow",
-    "CloudScale",
-    "NeuralAI",
-    "SecureNet",
-    "EdgeCompute",
-    "ApiPlatform",
-    "DevTools",
-    "QuantumOps",
-    "ByteShift",
-    "StreamHub",
-    "AutoScale",
-    "MetaSync",
-    "SignalLabs",
-    "FusionCore",
-]
-n_points = len(startups)
+# Columns: set these to your table's column names
+GDP = "GDP per capita (thousand USD)"  # role: x
+LIFE_EXPECTANCY = "Life expectancy (years)"  # role: y
+COUNTRY = "Country"  # role: label
 
-# Revenue (millions) and Operating Margin (%)
-revenue = np.random.uniform(10, 150, n_points)
-operating_margin = np.random.uniform(5, 35, n_points) + 0.1 * revenue + np.random.randn(n_points) * 5
-operating_margin = np.clip(operating_margin, -20, 45)
-
-# Create DataFrame
-df = pd.DataFrame({"company": startups, "revenue": revenue, "operating_margin": operating_margin})
-
-# Create figure and plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-
-# Scatter plot with Okabe-Ito brand color
-sns.scatterplot(
-    data=df, x="revenue", y="operating_margin", s=250, alpha=0.7, color=BRAND, edgecolor=PAGE_BG, linewidth=1.5, ax=ax
+# Data: replace this block with your own table, for example df = pd.read_csv("countries.csv")
+df = pd.DataFrame(
+    {
+        COUNTRY: [
+            "Norway",
+            "United States",
+            "Germany",
+            "Australia",
+            "Japan",
+            "Saudi Arabia",
+            "Turkey",
+            "China",
+            "Russia",
+            "Brazil",
+            "Mexico",
+            "South Africa",
+            "Indonesia",
+            "India",
+            "Nigeria",
+            "Rwanda",
+        ],
+        GDP: [82.0, 76.3, 51.4, 64.8, 34.0, 30.4, 12.8, 12.7, 12.2, 8.9, 11.1, 6.7, 4.8, 2.4, 2.2, 0.9],
+        LIFE_EXPECTANCY: [
+            83.2,
+            78.5,
+            81.0,
+            83.3,
+            84.5,
+            77.6,
+            76.0,
+            78.2,
+            73.2,
+            75.5,
+            75.1,
+            64.4,
+            68.0,
+            70.2,
+            53.6,
+            69.0,
+        ],
+    }
 )
 
-# Create text annotations with initial offset (collect for adjustText)
-texts = []
-for _, row in df.iterrows():
-    offset_x = 4.0
-    offset_y = 1.5
-    text = ax.text(
-        row["revenue"] + offset_x,
-        row["operating_margin"] + offset_y,
-        row["company"],
-        fontsize=14,
-        color=INK_SOFT,
-        ha="left",
-        va="bottom",
-    )
-    texts.append(text)
+# Plot: reads only df and the constants above
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Use adjustText to prevent label overlaps with connecting lines
-adjust_text(
-    texts,
-    x=df["revenue"].values,
-    y=df["operating_margin"].values,
-    arrowprops={"arrowstyle": "-", "color": INK_SOFT, "alpha": 0.5, "lw": 0.8},
-    expand=(1.3, 1.3),
-    force_text=(0.3, 0.3),
-    force_points=(0.3, 0.3),
+sns.scatterplot(
+    data=df,
+    x=GDP,
+    y=LIFE_EXPECTANCY,
+    s=110,
+    alpha=0.7,
+    color=IMPRINT_PALETTE[0],
+    edgecolor=PAGE_BG,
+    linewidth=0.8,
     ax=ax,
 )
+ax.set_xscale("log")
+ax.margins(x=0.12, y=0.16)
 
-# Labels and styling
-ax.set_xlabel("Annual Revenue ($ Million)", fontsize=20, color=INK)
-ax.set_ylabel("Operating Margin (%)", fontsize=20, color=INK)
-ax.set_title("scatter-annotated · seaborn · anyplot.ai", fontsize=24, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Each label tries eight positions around its marker and keeps the one that overlaps the
+# fewest markers, earlier labels and axes edges; only text moves, markers stay at their values
+LABEL_SIZE = 8
+GAP = 7  # distance between marker center and label anchor, in points
+CANDIDATES = [  # (dx, dy, ha, va) in points, in order of preference
+    (GAP, 0, "left", "center"),
+    (-GAP, 0, "right", "center"),
+    (0, GAP, "center", "bottom"),
+    (0, -GAP, "center", "top"),
+    (GAP, GAP, "left", "bottom"),
+    (-GAP, GAP, "right", "bottom"),
+    (GAP, -GAP, "left", "top"),
+    (-GAP, -GAP, "right", "top"),
+    (2 * GAP, 2 * GAP, "left", "bottom"),
+    (-2 * GAP, 2 * GAP, "right", "bottom"),
+    (2 * GAP, -2 * GAP, "left", "top"),
+    (-2 * GAP, -2 * GAP, "right", "top"),
+]
+fig.canvas.draw()
+renderer = fig.canvas.get_renderer()
+marker_px = 6 * fig.dpi / 72  # marker radius plus a little air, in pixels
+centers = ax.transData.transform(df[[GDP, LIFE_EXPECTANCY]].to_numpy())
+axes_box = ax.get_window_extent()
 
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
 
-# Grid on y-axis only
-ax.yaxis.grid(True, alpha=0.1, linewidth=0.8, linestyle="-")
-ax.xaxis.grid(False)
+def overlap(a, b):
+    w = min(a.x1, b.x1) - max(a.x0, b.x0)
+    h = min(a.y1, b.y1) - max(a.y0, b.y0)
+    return w * h if w > 0 and h > 0 else 0.0
 
-# Adjust axis limits to accommodate labels
-ax.set_xlim(-10, max(revenue) + 25)
-ax.set_ylim(min(operating_margin) - 8, max(operating_margin) + 10)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+boxes = []
+for idx in df[LIFE_EXPECTANCY].sort_values(ascending=False).index:
+    best = None
+    for rank, (dx, dy, ha, va) in enumerate(CANDIDATES):
+        label = ax.annotate(
+            df.loc[idx, COUNTRY],
+            xy=(df.loc[idx, GDP], df.loc[idx, LIFE_EXPECTANCY]),
+            xytext=(dx, dy),
+            textcoords="offset points",
+            fontsize=LABEL_SIZE,
+            color=INK_SOFT,
+            ha=ha,
+            va=va,
+            arrowprops={"arrowstyle": "-", "color": INK_SOFT, "alpha": 0.5, "lw": 0.6, "shrinkA": 1, "shrinkB": 4},
+        )
+        box = label.get_window_extent(renderer)
+        cost = rank * 0.01 + sum(overlap(box, other) for other in boxes) * 10
+        for cx, cy in centers:
+            cost += overlap(box, type(box)([[cx - marker_px, cy - marker_px], [cx + marker_px, cy + marker_px]])) * 10
+        cost += (box.width * box.height - overlap(box, axes_box)) * 50
+        if best is None or cost < best[0]:
+            if best is not None:
+                best[1].remove()
+            best = (cost, label, box)
+        else:
+            label.remove()
+    boxes.append(best[2])
+
+# Style
+title = "scatter-annotated · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(GDP, fontsize=10)
+ax.set_ylabel(LIFE_EXPECTANCY, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.set_xticks([1, 3, 10, 30, 100], ["1", "3", "10", "30", "100"])
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.6)
+sns.despine(ax=ax)
+
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

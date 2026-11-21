@@ -2,46 +2,58 @@ library: seaborn
 language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:47:43Z'
-updated: '2026-05-13T11:08:11Z'
-generated_by: claude-haiku
-workflow_run: 25794969275
+updated: '2026-11-21T09:39:42Z'
+generated_by: claude-sonnet
+workflow_run: 44890030554
 issue: 2790
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - Excellent text legibility with explicit font sizing across all elements in both
-    themes
-  - Professional theme adaptation using token-based approach; both light and dark
-    renders are perfectly readable
-  - Smart use of adjustText library with arrow styling to prevent annotation overlap
-  - Proper Okabe-Ito color compliance (#009E73 identical in both themes)
-  - Clean code structure with reproducible random seed
-  - Idiomatic seaborn usage with proper theme configuration
+  - Native sns.scatterplot on the tidy df with column constants; seaborn titles both
+    axes from the constant values, so the axis titles carry units without extra calls
+  - Log-scaled x axis with readable 1/3/10/30/100 ticks spreads the 0.9–82 thousand
+    USD range evenly and turns the GDP–life-expectancy relationship into a near-linear
+    band
+  - Every one of the 16 points carries a label with a thin INK_SOFT leader line at
+    alpha 0.5, subtler than the markers and the text, in both themes
+  - Markers at alpha 0.7 with a page-colored edge stay at their exact data values;
+    only text moves
+  - 'Theme tokens threaded through sns.set_theme rc; chrome flips cleanly while #009E73
+    stays identical in both renders, on the exact 3200×1800 canvas'
   weaknesses:
-  - 'DE-03: Plot displays data clearly but lacks visual storytelling through emphasis
-    or visual hierarchy—no focal point guides viewer to a particular insight about
-    startup metrics'
+  - 'VQ-02 (both): the ''Mexico'' label sits against the lower edge of Turkey''s marker
+    and its right end touches the start of ''Saudi Arabia'' in the 10–30k cluster
+    → clear both by at least 2 px. Likely cause: the hand-built candidate search scores
+    marker boxes at a fixed 6 pt radius and accepts the first position whose small
+    residual overlap cost beats the alternatives.'
+  - 'CQ-04, CQ-01 (code): lines 106–163 write out a 12-candidate greedy label-placement
+    search with a helper function `overlap()` although adjustText (installed, and
+    the Notes ask for it) computes this → `texts = [ax.text(...) for ...]` plus `adjust_text(texts,
+    x=..., y=..., arrowprops=..., ax=ax)`. Likely cause: hand-rolled placement in
+    place of the library call.'
+  - 'Suggestion: a slightly heavier weight or INK color on the two outlier labels
+    (Nigeria, Japan) would give the reader a first stop.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title in dark text (fontsize=24), axis labels in dark text (fontsize=20), tick labels (fontsize=16) — all clearly visible and readable
-      Data: 15 teal markers (#009E73, Okabe-Ito position 1) with alpha=0.7; company labels positioned near points with subtle gray connecting arrows; scatter pattern shows revenue vs operating margin relationship
-      Legibility verdict: PASS — all text readable, no contrast issues, markers clearly distinguishable from background
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "scatter-annotated · python · seaborn · anyplot.ai" in dark ink, ~55% of width; axis titles "GDP per capita (thousand USD)" (log x, ticks 1/3/10/30/100) and "Life expectancy (years)" (50–85) in dark ink; INK_SOFT tick labels; subtle horizontal grid; top/right spines removed. All readable.
+      Data: 16 #009E73 markers at alpha 0.7 with page-colored edges, each labelled with a country name in INK_SOFT 8 pt and a thin grey leader line; labels on varying sides. The 10–30k cluster is tight: 'Mexico' touches Turkey's marker and the start of 'Saudi Arabia'.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface
-      Chrome: Title in light text, axis labels in light text, tick labels in light gray — all clearly visible; no "dark-on-dark" failures detected; spines and grid rendered in light gray
-      Data: Teal markers (#009E73) identical to light render — data colors are theme-independent as required; connecting arrows and labels in light gray; all annotation text readable
-      Legibility verdict: PASS — all text readable on dark background, excellent contrast, data colors match light render perfectly
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels light grey, grid subtle; no dark-on-dark text.
+      Data: identical #009E73 markers and label positions as in light; labels and leaders in light grey, all readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,72 +61,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: Title 12, axis titles 10, ticks and labels 8 pt per the style guide;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: adjustText prevents all label collisions with connecting arrows;
-          no overlapping text
+        passed: false
+        comment: '''Mexico'' touches Turkey''s marker and ''Saudi Arabia'' (defect
+          line)'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 15 points with s=250 and alpha=0.7; markers perfectly adapted to
-          data density
+        comment: 16 markers at s=110, alpha 0.7, clearly visible; leaders subtle but
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single Okabe-Ito color with excellent contrast; CVD-safe
+        comment: Single hue, strong contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins; generous whitespace
+        comment: 3200x1800, balanced margins, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title format correct
+        comment: Descriptive titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; background #FAF8F1/#1A1A17; chrome colors
-          theme-correct'
+        comment: '#009E73 first series; correct backgrounds; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Strong design with token-based theme adaptation and professional
-          adjustText integration; not quite publication-level
+        passed: false
+        comment: Label text in INK_SOFT under INK axis titles gives a clear hierarchy;
+          log axis with hand-picked 1-3-10 ticks reads cleanly
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: 'Good: spines removed, grid customized, whitespace balanced; margins
-          could be slightly more generous'
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed clearly but lacks visual hierarchy or emphasis to
-          guide viewer to insight
+        comment: Custom log tick set and data margins chosen for this chart; y-only
+          grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Log x scale chosen by the implementation turns the GDP–life expectancy
+          relation into a readable band with Nigeria and South Africa standing out
+          below it
     spec_compliance:
       score: 15
       max: 15
@@ -124,108 +136,113 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with annotations
+        comment: Annotated scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: scatter, text labels, connecting arrows'
+        comment: Labels on all points, thin leader lines when offset, alpha 0.7; C1–C4
+          met (C2 slight collision scored in VQ-02)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all data visible
+        comment: Markers at exact values; only text moves
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; labels serve legend purpose
+        comment: Correct title format; single series needs no legend (N/A)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows varied data with good distribution across domains
+        comment: Labels on different sides and distances, a dense cluster and outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic startup metrics; neutral business context
+        comment: Country GDP per capita vs life expectancy, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible values with realistic proportions
+        comment: Values plausible (Norway 82k/83.2 y, Nigeria 2.2k/53.6 y); no Check
+          values in the spec
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Clean linear structure with no functions/classes
+        passed: false
+        comment: Helper function overlap() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures determinism
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Pythonic and appropriate complexity
+        passed: false
+        comment: Lines 106–163 hand-roll label placement that adjustText computes
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format with high DPI
+        comment: plot-{THEME}.png at dpi 400, no bbox tight
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Expert seaborn patterns with proper theme setup
+        passed: false
+        comment: Axes-level sns.scatterplot with data= and constants, sns.despine;
+          placement is plain matplotlib
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses adjustText library integration for overlap handling
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T09:35:48Z'
 impl_tags:
-  dependencies:
-  - adjusttext
+  dependencies: []
   techniques:
   - annotations
-  patterns:
-  - data-generation
-  - explicit-figure
+  - manual-ticks
+  patterns: []
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
   - edge-highlighting
+  - grid-styling
