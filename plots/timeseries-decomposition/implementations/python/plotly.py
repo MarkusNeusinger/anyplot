@@ -1,7 +1,7 @@
 """anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 92/100 | Updated: 2026-11-21
+Quality: pending | Updated: 2026-11-21
 """
 
 import os
