@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-directed: Directed Network Graph
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-14
@@ -7,6 +7,7 @@ Quality: 91/100 | Updated: 2026-05-14
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -16,246 +17,192 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette (first series is #009E73)
-IMPRINT = [
-    "#009E73",  # Brand green (entry point)
-    "#C475FD",  # Vermillion (core)
-    "#4467A3",  # Blue (data)
-    "#BD8233",  # Reddish purple (helpers)
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+NODE_PX = 28  # node marker diameter in pixels on the 600 px canvas
+CANVAS = 600  # square canvas, the circular layout has no preferred axis
+ARROW_LEN = 0.4  # tail distance of the arrow annotation (data units)
+CURVE = 0.55  # sideways bow of an edge whose reverse edge also exists (data units)
+
+# Columns: set these to your table's column names
+SOURCE = "Source module"  # role: edges
+TARGET = "Target module"  # role: edges
+MODULE = "Module"  # role: nodes
+GROUP = "Module group"  # role: nodes
+
+# Data: replace this block with your own edge list (df) and node table (nodes),
+# for example df = pd.read_csv("edges.csv")
+nodes = pd.DataFrame(
+    {
+        MODULE: [
+            "main",
+            "api",
+            "auth",
+            "database",
+            "models",
+            "utils",
+            "config",
+            "logging",
+            "cache",
+            "router",
+            "middleware",
+            "validators",
+            "schemas",
+        ],
+        GROUP: [
+            "Entry",
+            "Core",
+            "Core",
+            "Core",
+            "Data",
+            "Helpers",
+            "Helpers",
+            "Helpers",
+            "Core",
+            "Core",
+            "Core",
+            "Data",
+            "Data",
+        ],
+    }
+)
+edge_pairs = [
+    ("main", "api"),
+    ("main", "config"),
+    ("main", "logging"),
+    ("api", "auth"),
+    ("api", "router"),
+    ("api", "middleware"),
+    ("auth", "database"),
+    ("auth", "utils"),
+    ("database", "models"),
+    ("database", "cache"),
+    ("models", "schemas"),
+    ("utils", "logging"),
+    ("config", "logging"),
+    ("cache", "logging"),
+    ("router", "middleware"),
+    ("router", "validators"),
+    ("middleware", "auth"),
+    ("validators", "schemas"),
+    ("schemas", "utils"),
+    ("utils", "schemas"),
 ]
+df = pd.DataFrame(edge_pairs, columns=[SOURCE, TARGET])
 
-# Data: Software module dependencies (arrows show import direction)
-np.random.seed(42)
-
-nodes = [
-    {"id": 0, "label": "main", "group": 0},
-    {"id": 1, "label": "api", "group": 1},
-    {"id": 2, "label": "auth", "group": 1},
-    {"id": 3, "label": "database", "group": 1},
-    {"id": 4, "label": "models", "group": 2},
-    {"id": 5, "label": "utils", "group": 3},
-    {"id": 6, "label": "config", "group": 3},
-    {"id": 7, "label": "logging", "group": 3},
-    {"id": 8, "label": "cache", "group": 1},
-    {"id": 9, "label": "router", "group": 1},
-    {"id": 10, "label": "middleware", "group": 1},
-    {"id": 11, "label": "validators", "group": 2},
-    {"id": 12, "label": "schemas", "group": 2},
-]
-
-# Directed edges with bidirectional pairs
-edges = [
-    (0, 1, False),  # main -> api
-    (0, 6, False),  # main -> config
-    (0, 7, False),  # main -> logging
-    (1, 2, False),  # api -> auth
-    (1, 9, False),  # api -> router
-    (1, 10, False),  # api -> middleware
-    (2, 3, False),  # auth -> database
-    (2, 5, False),  # auth -> utils
-    (3, 4, False),  # database -> models
-    (3, 8, False),  # database -> cache
-    (4, 12, False),  # models -> schemas
-    (5, 7, False),  # utils -> logging
-    (6, 7, False),  # config -> logging
-    (8, 7, False),  # cache -> logging
-    (9, 10, False),  # router -> middleware
-    (9, 11, False),  # router -> validators
-    (10, 2, False),  # middleware -> auth
-    (11, 12, False),  # validators -> schemas
-    (12, 5, True),  # schemas <-> utils (bidirectional)
-]
-
-# Circular layout
+# Plot: reads only df, nodes and the constants above
+# Circular layout: nodes evenly spaced in the order of the node table
 n_nodes = len(nodes)
 angles = np.linspace(0, 2 * np.pi, n_nodes, endpoint=False)
-radius = 3
-node_x = radius * np.cos(angles)
-node_y = radius * np.sin(angles)
+radius = 3.0
+pos = {m: (radius * np.cos(a), radius * np.sin(a)) for m, a in zip(nodes[MODULE], angles, strict=True)}
 
-# Create figure
+# Scale: labels sit outside the ring, so the view extends past it by label width
+view = radius * 1.55
+px_per_unit = (CANVAS - 40) / (2 * view)
+trim = (NODE_PX / 2 + 1) / px_per_unit  # edges stop at the node border
+
+# Pairs linked in both directions get two curved edges, all others stay straight
+edge_set = set(zip(df[SOURCE], df[TARGET], strict=True))
+
 fig = go.Figure()
-
-# Add edges as lines with arrows
-for idx, edge_data in enumerate(edges):
-    if len(edge_data) == 3:
-        source, target, bidirectional = edge_data
-    else:
-        source, target = edge_data
-        bidirectional = False
-
-    x0, y0 = node_x[source], node_y[source]
-    x1, y1 = node_x[target], node_y[target]
-
-    # Calculate direction vector
-    dx, dy = x1 - x0, y1 - y0
-    length = np.sqrt(dx**2 + dy**2)
-    if length > 0:
-        dx, dy = dx / length, dy / length
-
-    # Node radius for adjustment
-    node_radius = 0.35
-
-    # For bidirectional edges, use curved paths
-    if bidirectional:
-        # Create a curved path using intermediate points
-        # Control point offset for the curve
-        perp_x, perp_y = -dy, dx
-        offset = 0.5
-
-        # Start and end points adjusted for node radius
-        x0_adj = x0 + dx * node_radius
-        y0_adj = y0 + dy * node_radius
-        x1_adj = x1 - dx * node_radius
-        y1_adj = y1 - dy * node_radius
-
-        # Midpoint
-        mid_x = (x0_adj + x1_adj) / 2 + perp_x * offset
-        mid_y = (y0_adj + y1_adj) / 2 + perp_y * offset
-
-        # Create curved edge
-        t = np.linspace(0, 1, 20)
-        curve_x = []
-        curve_y = []
-        for ti in t:
-            # Quadratic Bezier curve
-            bx = (1 - ti) ** 2 * x0_adj + 2 * (1 - ti) * ti * mid_x + ti**2 * x1_adj
-            by = (1 - ti) ** 2 * y0_adj + 2 * (1 - ti) * ti * mid_y + ti**2 * y1_adj
-            curve_x.append(bx)
-            curve_y.append(by)
-
-        fig.add_trace(
-            go.Scatter(
-                x=curve_x,
-                y=curve_y,
-                mode="lines",
-                line=dict(width=2, color=INK_SOFT),
-                hoverinfo="none",
-                showlegend=False,
-            )
+t = np.linspace(0, 1, 60)
+for src, dst in zip(df[SOURCE], df[TARGET], strict=True):
+    p0, p2 = np.array(pos[src]), np.array(pos[dst])
+    direction = (p2 - p0) / np.hypot(*(p2 - p0))
+    bow = CURVE if (dst, src) in edge_set else 0.0
+    ctrl = (p0 + p2) / 2 + bow * np.array([-direction[1], direction[0]]) * 2
+    # Quadratic Bezier from node centre to node centre
+    path = ((1 - t) ** 2)[:, None] * p0 + (2 * (1 - t) * t)[:, None] * ctrl + (t**2)[:, None] * p2
+    keep = (np.hypot(*(path - p0).T) > trim) & (np.hypot(*(path - p2).T) > trim)
+    path = path[keep]
+    fig.add_trace(
+        go.Scatter(
+            x=path[:, 0],
+            y=path[:, 1],
+            mode="lines",
+            line=dict(width=1.5, color=INK_SOFT),
+            hoverinfo="skip",
+            showlegend=False,
         )
-    else:
-        # Straight edge
-        x0_adj = x0 + dx * node_radius
-        y0_adj = y0 + dy * node_radius
-        x1_adj = x1 - dx * node_radius
-        y1_adj = y1 - dy * node_radius
-
-        fig.add_trace(
-            go.Scatter(
-                x=[x0_adj, x1_adj],
-                y=[y0_adj, y1_adj],
-                mode="lines",
-                line=dict(width=2, color=INK_SOFT),
-                hoverinfo="none",
-                showlegend=False,
-            )
-        )
-
-# Add arrowheads
-for idx, edge_data in enumerate(edges):
-    if len(edge_data) == 3:
-        source, target, bidirectional = edge_data
-    else:
-        source, target = edge_data
-        bidirectional = False
-
-    x0, y0 = node_x[source], node_y[source]
-    x1, y1 = node_x[target], node_y[target]
-
-    dx, dy = x1 - x0, y1 - y0
-    length = np.sqrt(dx**2 + dy**2)
-    if length > 0:
-        dx, dy = dx / length, dy / length
-
-    node_radius = 0.4
-    ax = x1 - dx * node_radius
-    ay = y1 - dy * node_radius
-
+    )
+    # Arrowhead at the target border, pointing along the end of the path; the tail is
+    # a fixed distance back so short edges keep a visible head
+    back = np.nonzero(np.hypot(*(path - path[-1]).T) >= ARROW_LEN)[0]
+    tail = path[back[-1]] if len(back) else path[0]
     fig.add_annotation(
-        x=ax,
-        y=ay,
-        ax=x1 - dx * (node_radius + 0.25),
-        ay=y1 - dy * (node_radius + 0.25),
+        x=path[-1, 0],
+        y=path[-1, 1],
+        ax=tail[0],
+        ay=tail[1],
         xref="x",
         yref="y",
         axref="x",
         ayref="y",
         showarrow=True,
         arrowhead=2,
-        arrowsize=1.5,
-        arrowwidth=2,
+        arrowsize=1.3,
+        arrowwidth=1.5,
         arrowcolor=INK_SOFT,
     )
 
-    # For bidirectional edges, add second arrow in opposite direction
-    if bidirectional:
-        bx = x0 + dx * node_radius
-        by = y0 + dy * node_radius
-        fig.add_annotation(
-            x=bx,
-            y=by,
-            ax=x0 + dx * (node_radius + 0.25),
-            ay=y0 + dy * (node_radius + 0.25),
-            xref="x",
-            yref="y",
-            axref="x",
-            ayref="y",
-            showarrow=True,
-            arrowhead=2,
-            arrowsize=1.5,
-            arrowwidth=2,
-            arrowcolor=INK_SOFT,
-        )
-
-# Add nodes by group
-group_names = ["Entry", "Core", "Data", "Helpers"]
-for group_idx in range(len(IMPRINT)):
-    group_nodes = [n for n in nodes if n["group"] == group_idx]
-    group_x = [node_x[n["id"]] for n in group_nodes]
-    group_y = [node_y[n["id"]] for n in group_nodes]
-    group_labels = [n["label"] for n in group_nodes]
-
+# Nodes by group, label pushed outward from the ring so edges stay out of the text
+for i, (group, members) in enumerate(nodes.groupby(GROUP, sort=False)):
+    xs = np.array([pos[m][0] for m in members[MODULE]])
+    ys = np.array([pos[m][1] for m in members[MODULE]])
+    side = np.where(xs > 0.5, "middle right", np.where(xs < -0.5, "middle left", "top center"))
+    side = np.where((side == "top center") & (ys < 0), "bottom center", side)
     fig.add_trace(
         go.Scatter(
-            x=group_x,
-            y=group_y,
+            x=xs,
+            y=ys,
             mode="markers+text",
-            marker=dict(size=18, color=IMPRINT[group_idx], line=dict(width=1.5, color=INK_SOFT)),
-            text=group_labels,
-            textposition="middle center",
-            textfont=dict(size=14, color=INK, family="monospace"),
-            name=group_names[group_idx],
-            hovertemplate="<b>%{text}</b><br>Group: " + group_names[group_idx] + "<extra></extra>",
+            marker=dict(size=NODE_PX, color=IMPRINT_PALETTE[i], line=dict(width=1.5, color=INK_SOFT)),
+            text=members[MODULE],
+            textposition=list(side),
+            textfont=dict(size=11, color=INK, family="monospace"),
+            name=str(group),
+            hovertemplate="<b>%{text}</b><br>" + GROUP + ": " + str(group) + "<extra></extra>",
         )
     )
 
-# Update layout
+# Style
 fig.update_layout(
-    title=dict(text="network-directed · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
-    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, title="", range=[-4.2, 4.2]),
+    autosize=False,
+    title=dict(text="network-directed · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5),
+    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, title="", range=[-view, view]),
     yaxis=dict(
-        showgrid=False, zeroline=False, showticklabels=False, title="", range=[-4.2, 4.2], scaleanchor="x", scaleratio=1
+        showgrid=False,
+        zeroline=False,
+        showticklabels=False,
+        title="",
+        range=[-view, view],
+        scaleanchor="x",
+        scaleratio=1,
     ),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
     showlegend=True,
     legend=dict(
-        title=dict(text="Module Groups", font=dict(size=18, color=INK)),
-        font=dict(size=16, color=INK_SOFT),
-        x=1.02,
-        y=0.5,
-        yanchor="middle",
+        title=dict(text=GROUP, font=dict(size=11, color=INK)),
+        font=dict(size=11, color=INK_SOFT),
+        orientation="h",
+        x=0.5,
+        xanchor="center",
+        y=0.0,
+        yanchor="top",
         bgcolor=ELEVATED_BG,
         bordercolor=INK_SOFT,
         borderwidth=1,
     ),
-    margin=dict(l=50, r=200, t=100, b=50),
+    margin=dict(l=20, r=20, t=60, b=60),
     hovermode="closest",
 )
 
 # Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=CANVAS, height=CANVAS, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
