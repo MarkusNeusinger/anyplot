@@ -2,50 +2,52 @@ library: letsplot
 language: python
 specification_id: network-directed
 created: '2025-12-30T23:57:51Z'
-updated: '2026-05-14T03:40:01Z'
-generated_by: claude-haiku
-workflow_run: 25840099156
+updated: '2026-11-21T14:15:07Z'
+generated_by: claude-sonnet
+workflow_run: 44912360833
 issue: 2858
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - Full theme-adaptive color support with INK_SOFT edges and INK text labels correctly
-    switching between light and dark themes
-  - Correct Okabe-Ito palette usage with first series as brand green (#009E73)
-  - Clean minimal design using theme_void() that doesn't compete with network structure
-  - Hierarchical layout effectively shows dependency flow and creates natural visual
-    hierarchy
-  - Both light and dark renders fully readable with no legibility issues
-  - White node strokes provide excellent definition across all color backgrounds
-  - Title and legend formatting meet spec requirements precisely
+  - Hierarchical layout computed from the edge list (longest-path layering), so dependencies
+    flow top to bottom from App to Config and Logger
+  - Edges shortened in screen proportions so every closed arrowhead touches the target
+    node border in both renders
+  - geom_label with a page-coloured backing and label_size=0 keeps passing edges out
+    of the node labels
+  - Node outlines and all chrome come from theme tokens; Imprint colours identical
+    across light and dark
   weaknesses:
-  - Node stroke color hardcoded as white rather than theme-adaptive (though works
-    well visually)
-  - Limited design sophistication beyond functional minimalism
-  - No curved edges despite spec mentioning them for bidirectional connections
-  - Could employ more visual refinement (e.g., subtle edge bundling, varied edge weights,
-    or more sophisticated layout tweaking)
+  - 'VQ-03 (both): the API→Database arrowhead lands exactly where the Cache→Logger
+    and HTTP Client→Config edges cross above Database, so the head merges into the
+    crossing and its direction is hard to read → a layout slot order in the middle
+    layer that moves that crossing away from the Database border. Likely cause: nodes[''slot'']
+    taken from table order (groupby(''layer'').cumcount()).'
+  - 'Suggestion: the legend key column shows a slightly different shaded block behind
+    the glyphs; a legend_key fill from ELEVATED_BG would make the legend one surface.'
+  - 'Suggestion: slightly longer arrowheads (length 7 → 9) would read more clearly
+    beside the 11-size nodes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with no pure white or dark elements
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text with strong contrast
-      Data: Nodes colored by Okabe-Ito palette (green #009E73 primary, orange/blue/purple for other groups), edges gray with visible closed arrows
-      Legibility verdict: PASS - all elements clearly readable with appropriate contrast on light surface
+      Background: warm off-white #FAF8F1, no axes, no grid, no panel frame (theme_void)
+      Chrome: bold title 'network-directed · python · letsplot · anyplot.ai' in dark INK at the top centre; bold dark node labels under every node; legend 'Module type' on an elevated off-white card at the right; all readable
+      Data: 10 nodes in five layers (App/Utils, API, Auth/Cache/HTTP Client/Queue, Database, Config/Logger); App #009E73, Core #C475FD, Infrastructure #4467A3, Utility #BD8233; 20 grey INK_SOFT edges with closed arrowheads ending at the target borders, converging on Config and Logger
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with no pure black elements
-      Chrome: Title, axis labels, tick labels all clearly visible in light text (#F0EFE8) with strong contrast
-      Data: Okabe-Ito colors identical to light render (only chrome has flipped), edges appear lighter gray (INK_SOFT #B8B7B0), no dark-on-dark failures
-      Legibility verdict: PASS - all elements clearly readable, no dark-on-dark issues, brand green remains distinctly visible
+      Background: warm near-black #1A1A17
+      Chrome: title, node labels and legend text in light ink; legend on a #242420 card; no dark-on-dark text
+      Data: node colours identical to the light render; edges in light grey INK_SOFT, node rings in the page colour; brand green App node clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,67 +55,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text bold and clearly readable in both themes with strong contrast
+        comment: Title 16 pt, bold node labels about 15 pt, legend 10/11 pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements; nodes and labels well-spaced
+        comment: No text collisions; edges that pass a label run behind its page-coloured
+          backing so the text stays clear
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Nodes appropriately sized, arrows prominent with closed heads and
-          visible alpha
+        passed: false
+        comment: Nodes and edges well sized for 10 nodes, but the API→Database arrowhead
+          sits exactly on the crossing of Cache→Logger and HTTP Client→Config and
+          is hard to read (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Imprint colours on page background, group never encoded by red-green
+          alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing cut off
+        comment: 3200×1800 canvas, title about 54 % of width, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted, no axis labels appropriate for network
-          graph
+        comment: N/A for axes (network layout); title in mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds correct, both renders theme-correct'
+        comment: 'Groups in Imprint order starting at #009E73, backgrounds #FAF8F1
+          / #1A1A17, node outlines from PAGE_BG'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Hierarchical layout thoughtful but styling relatively standard
+        comment: 'Style-guide baseline: Imprint palette, theme tokens, explicit sizes;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Clean minimal design but limited visual embellishment
+        comment: Page-coloured label backings (geom_label, label_size=0) mask passing
+          edges and page-coloured node rings separate nodes from edges
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy with effective dependency flow narrative
+        comment: Hierarchy comes from the layered layout the Notes allow; no further
+          focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -123,25 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct directed network graph
+        comment: Directed network graph with arrowed edges
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: C1 arrowheads end at target borders, C2 one closed arrow style, C3
+          n/a (no bidirectional pair), C4 hierarchical layout without axes, edges
+          thinner/lighter than nodes, C5 labels readable and attached
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Nodes positioned hierarchically, edges correctly represent relationships
+        comment: Layout-positioned type; every edge drawn from source to target as
+          in the edge list
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend properly formatted
+        comment: Title 'network-directed · python · letsplot · anyplot.ai'; legend
+          'Module type' with readable group names
     data_quality:
       score: 15
       max: 15
@@ -151,19 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All network graph features demonstrated
+        comment: Shows layered dependency flow, fan-out (API) and fan-in (Config,
+          Logger), a disconnected-from-root source (Utils)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software dependencies is authentic and plausible
+        comment: Software module dependencies, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 nodes is ideal scale, neither sparse nor crowded
+        comment: 10 nodes, 20 edges, inside the 10–50 node range
     code_quality:
       score: 10
       max: 10
@@ -173,56 +188,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward procedural code
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Fully deterministic data and layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports used, proper namespacing
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity with edge-shrinking logic
+        comment: Longest-path layering in a few lines (networkx not available); edge
+          shortening vectorised
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: Saves plot-{THEME}.png and .html via ggsave(path='.')
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper ggplot composition and geom usage
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses arrow() and geom_segment appropriately
+        comment: Standard ggplot composition with geom_segment(arrow=arrow()), geom_point
+          shape 21, theme_void
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T14:11:19Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - groupby-aggregation
   dataprep: []
   styling:
   - minimal-chrome
   - alpha-blending
+  - edge-highlighting
