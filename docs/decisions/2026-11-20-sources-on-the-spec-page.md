@@ -7,4 +7,4 @@
   so every other page stays as it is, and the same entries in what the site gives search engines and
   language models: the page's structured data and the machine-readable views of a spec. His answer
   on the decision page, with the condition that the links can be clicked.
-- Where: `app/src/sections/spec-detail/SpecTabs/SpecTab.tsx`, `docs/reference/seo.md`
+- Where: #13523

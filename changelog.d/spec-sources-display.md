@@ -8,4 +8,4 @@
   tool `get_spec_detail` carry `sources`, and the prerendered hub and
   implementation pages list them and name them in their JSON-LD
   (`isBasedOn` for the works that gave the idea, `citation` for the
-  references) on the page node, never on the code.
+  references) on the page node, never on the code. (#13523)
