@@ -12,35 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 71
 review:
   strengths:
-  - Perfect theme adaptation with zero dark-on-dark failures in both light and dark
-    renders
-  - Diverse multi-panel composition demonstrating line, histogram, scatter, and dual-axis
-    techniques in cohesive narrative
-  - 'Flawless Okabe-Ito palette compliance with brand green #009E73 as first series'
-  - Clean, idiomatic seaborn code with proper theme token system and explicit text
-    sizing
-  - All text legibility verified at 4800×2700px with readable contrast in both themes
-  weaknesses: []
+  - Four related views of one monitoring station, each a self-contained plot with
+    titled independent axes, aligned along rows and columns
+  - Theme tokens threaded through all chrome; readable in both themes
+  - Imprint categorical colors in canonical order for the four series
+  weaknesses:
+  - 'VQ-05 (both): canvas is 4745x2655, not a canonical size → 3200x1800 (−1545 ×
+    −855). Likely cause: figsize=(16, 9) at dpi=300 with bbox_inches=''tight''; use
+    figsize=(8, 4.5), dpi=400 and no bbox_inches.'
+  - 'VQ-07 (both): the continuous Hour hue uses viridis, which the style guide forbids
+    → imprint_seq (#009E73 → #4467A3). Likely cause: palette=''viridis'' in sns.scatterplot.'
+  - 'SC-04 (both): title ''subplot-grid · seaborn · anyplot.ai'' misses the language
+    segment → ''subplot-grid · python · seaborn · anyplot.ai''. Likely cause: the
+    fig.suptitle string.'
+  - 'VQ-02 (both): the boxed Hour legend covers scatter points near (7 °C, 55 %) and
+    the AQI/Pressure legend covers the tops of the first AQI bars → no legend over
+    data. Likely cause: loc=''best''/''upper left'' inside the data area without headroom;
+    use a colorbar beside the scatter and raise the AQI y-limit.'
+  - 'CQ-04 (code): an unused DateTime column (pd.date_range) and unused bars/line
+    assignments → delete them. Likely cause: leftovers from an earlier draft.'
+  - 'Suggestion: link the two time-based panels with a shared hour axis to show the
+    shared-axes mode the Notes mention.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, NOT pure white
-      Chrome: Title, subplot titles, axis labels, tick labels all dark INK (#1A1A17) and INK_SOFT (#4A4A44)
-      Data: Green temperature line (#009E73), orange humidity histogram (#D55E00), viridis scatter (Hour hue), blue AQI bars (#0072B2), reddish-purple pressure line (#CC79A7)
-      Grid: Subtle y-axis grid with alpha=0.10, visible but not dominant
-      Legibility verdict: PASS - All text is clearly readable with proper contrast against light background
+      Background: warm off-white #FAF8F1; canvas 4745x2655
+      Chrome: suptitle 'subplot-grid · seaborn · anyplot.ai', subplot titles, axis titles and ticks in dark ink, all readable; subtle grid
+      Data: green #009E73 temperature line, purple #C475FD humidity histogram, temperature-vs-humidity scatter colored by hour with viridis and a boxed 'Hour' legend inside the cell that covers points, blue #4467A3 AQI bars with an ochre #BD8233 pressure line on a twin axis and a legend that covers the first bars
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, NOT pure black
-      Chrome: Title, subplot titles, axis labels, tick labels all light INK (#F0EFE8) and INK_SOFT (#B8B7B0)
-      Data: Colors are IDENTICAL to light render - green #009E73, orange #D55E00, viridis, blue #0072B2, reddish-purple #CC79A7 (data-color invariance confirmed)
-      Grid: Subtle grid with alpha=0.10, visible against dark surface
-      Legibility verdict: PASS - All text is clearly readable, NO dark-on-dark failures (all text is light colored)
+      Background: warm near-black #1A1A17
+      Chrome: all text in light ink and readable; no dark-on-dark
+      Data: colors identical to the light render; only chrome flips
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 22
       max: 30
       items:
       - id: VQ-01
@@ -48,76 +58,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
-          Perfectly readable in both themes.'
+        comment: All text readable in both themes; sizes explicitly set
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: No text collisions. 2×2 grid with proper spacing. Legend positioned
-          optimally.
+        passed: false
+        comment: The Hour legend covers scatter points near (7 °C, 55 %) and the AQI/Pressure
+          legend covers the tops of the first AQI bars (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements clearly visible: line width 3, histogram alpha 0.7,
-          scatter s=150 alpha 0.8, bars alpha 0.6.'
+        comment: Line, bars, histogram and scatter markers clearly visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe. Viridis for continuous. Adequate contrast throughout.
+        comment: Good contrast; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Perfect 4800×2700px canvas. Plot fills ~70% with balanced margins.
-          tight_layout optimized.
+        passed: false
+        comment: Canvas 4745x2655, not one of the canonical sizes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title: ''subplot-grid · seaborn · anyplot.ai''. All axis labels
-          include units.'
+        comment: Axis titles with units where needed
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First series #009E73. Multi-series follows Okabe-Ito order. Viridis
-          for continuous. Backgrounds #FAF8F1/#1A1A17. Both renders theme-correct.'
+        passed: false
+        comment: Continuous Hour hue uses viridis, a forbidden colormap (defect line)
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Multi-panel composition with intentional hierarchy. Diverse plot
-          types show thoughtful design. Clearly above defaults.
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, generous whitespace. Good attention
-          to detail with edge coloring.
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Multi-panel narrative guides viewer through environmental monitoring.
-          Visual progression reinforces hierarchy.
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -125,27 +128,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2×2 subplot grid with different plot types per cell.
+        comment: Correct 2x2 subplot grid with a different plot type per cell
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: configurable dimensions, multiple plot types,
-          independent axes, clear titles.'
+        comment: Each cell titled, plot areas aligned along rows and columns, independent
+          axes self-contained, legends inside their cells
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct. Hour→Temperature, Humidity→Frequency, Temperature×Humidity,
-          Hour→AQI/Pressure.
+        comment: All marks at their data values
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct. All subplots titled. Legends with correct labels.
+        passed: false
+        comment: Title 'subplot-grid · seaborn · anyplot.ai' misses the language segment
+          (defect line)
     data_quality:
       score: 15
       max: 15
@@ -155,24 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all subplot capabilities: time series, distribution,
-          bivariate, dual-axis.'
+        comment: Line, histogram, scatter and dual-axis bar+line cover the plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world plausible environmental monitoring. Neutral, understandable
-          scenario.
+        comment: 'Environmental monitoring station: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values plausible: Temperature (5–20°C), Humidity (40–80%), AQI
-          (40–80), Pressure (~1012–1014 hPa).'
+        comment: 'Axis values plausible: temperature 5–23 °C, humidity 44–79 %, AQI
+          40–63, pressure ~1013 hPa'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -180,50 +181,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions/classes. Clean sequence: setup → data → plot → save.'
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib.pyplot, numpy, pandas, seaborn.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no over-engineering, no fake functionality.
+        passed: false
+        comment: 'Dead code: an unused DateTime column and unused bars/line variables
+          (defect line)'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API.
+        comment: Saves plot-{THEME}.png with current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert sns.set_theme() usage, axes-level API (preferred), ax.twinx()
-          idiomatically applied.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses twinx() for dual-axis and multi-panel composition. Could leverage
-          more seaborn-specific features.
+        passed: false
+        comment: Axes-level seaborn calls in a matplotlib grid, sns.set_theme — the
+          mandated baseline
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
 impl_tags:
   dependencies: []
   techniques:
