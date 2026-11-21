@@ -2,44 +2,60 @@ library: bokeh
 language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:48:12Z'
-updated: '2026-05-11T07:40:05Z'
-generated_by: claude-haiku
-workflow_run: 25656648838
+updated: '2026-11-21T01:20:39Z'
+generated_by: claude-sonnet
+workflow_run: 44848769023
 issue: 2441
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 80
 review:
   strengths:
-  - Correct Kaplan-Meier implementation with proper step functions and confidence
-    interval bands
-  - Excellent theme adaptation with correct color tokens in both light and dark renders
-  - All text elements properly sized and readable across both themes—no legibility
-    failures
-  - Proper use of Okabe-Ito palette (positions 1–2) with accurate color identity preservation
-  - Clean, idiomatic Bokeh code with essential helpers and no extraneous complexity
-  - Censored observations correctly marked and visible
-  - Median survival reference line adds interpretive context
+  - Kaplan-Meier curves drawn as true step functions starting at S=1 at time zero,
+    with 95% log-log confidence bands built as patches that step with their curve
+    (fill_alpha 0.15), so overlapping bands stay distinguishable in both themes
+  - Censored observations marked with rotated bokeh 'dash' markers at their own censoring
+    time and the curve height there, small enough not to read as steps
+  - 'Group-driven loop assigns Imprint positions 1 and 2 (#009E73 Treatment, #C475FD
+    Control) from the data; legend labels carry the group size (n=80)'
+  - Canvas is the canonical 3200x1800 with explicit min_border margins; nothing clipped,
+    toolbar hidden, theme tokens threaded through title, axes, grid and legend in
+    both renders
+  - Column-name constants drive the axis label and grouping, so the file adapts to
+    a user's own time/event/group table
   weaknesses:
-  - Design excellence is solid but straightforward—limited by default Bokeh styling
-    conventions
-  - No advanced refinements like spine removal or minimal-chrome styling
+  - 'DQ-03 (both): event times are generated with np.clip(..., 0.5, 36) while keeping
+    event=1, so every subject whose exponential time exceeds 36 months becomes an
+    event at exactly 36; both curves end in an artificial cliff (Treatment 0.38 →
+    ~0.08, Control 0.24 → ~0.06) instead of being administratively censored at end
+    of follow-up → mark times beyond 36 months as censored (event = 0) at 36. Likely
+    cause: the clip on treatment_times/control_times without resetting the event flag.'
+  - 'CQ-01 (code): two helper functions compute_km() and to_steps() break the Imports
+    → Data → Plot → Save structure → inline the estimator in the per-group loop (the
+    step conversion is two np.repeat lines). Likely cause: helper functions kept from
+    the predecessor.'
+  - 'Suggestion: label the median survival time of each group where its curve crosses
+    the 0.5 dashed line, so the median line carries a value.'
+  - 'Suggestion: a HoverTool on the curves (time, survival, at-risk) would use bokeh''s
+    interactivity in the HTML output.'
+  - 'Suggestion: statsmodels.duration.survfunc.SurvfuncRight could replace the hand-written
+    Kaplan-Meier loop if its confidence-interval transform matches the log-log band.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title, axis labels "Time (months)" and "Survival Probability", tick labels (0–1 and 0–38) all rendered in dark text (INK #1A1A17 and INK_SOFT #4A4A44). All clearly readable against light background. Legend "Treatment (n=80)" and "Control (n=80)" properly styled with background box.
-      Data: Treatment curve (#009E73 brand green), Control curve (#D55E00 vermillion). Confidence interval bands with 15% alpha transparency. Censored observations marked with small dash marks. Median reference line (dashed horizontal at 0.5) visible.
-      Legibility verdict: PASS - All text is clearly visible, no light-on-light issues, grid subtle but visible (10% alpha)
+      Background: warm off-white #FAF8F1, 3200x1800 canvas, thin INK_SOFT plot outline.
+      Chrome: bold title "survival-kaplan-meier · python · bokeh · anyplot.ai" top-left (~55% width), italic axis titles "Time (months)" and "Survival Probability", tick labels 0–35 and 0–1 in dark grey; subtle grid at 10% alpha. All readable.
+      Data: Treatment curve in #009E73 and Control in #C475FD as step functions from S=1 at t=0, each with a translucent stepped 95% CI band (overlap reads blue-grey), vertical dash tick marks for censored observations on the curves, a dashed grey horizontal line at S=0.5; both curves drop to near zero in a vertical cliff at 36 months. Legend bottom-left "Treatment (n=80)" / "Control (n=80)" with short line glyphs on an elevated background.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, and tick labels adapted to light text (INK #F0EFE8 and INK_SOFT #B8B7B0). All readable with proper contrast against dark background. Legend background (#242420) provides appropriate contrast. No dark-on-dark text failures.
-      Data: Treatment curve identical #009E73, Control curve identical #D55E00 (Okabe-Ito positions preserved). CI bands visible with proper alpha. Censored marks clearly distinguished. Median reference line visible. Brand green maintains visibility and identity on dark surface.
-      Legibility verdict: PASS - All text readable, no dark-on-dark failures, grid adapted correctly with 10% alpha, data colors identical to light render
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in near-white, tick labels light grey, grid subtle, legend box #242420 with light-grey labels; no dark-on-dark text.
+      Data: identical curve, band and tick colors to the light render (#009E73, #C475FD); bands read as dark green/purple tints with a slate overlap; dashed 0.5 line in light grey; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,70 +66,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 28pt, axis labels 22pt, ticks 18pt,
-          legend 20pt). Readable in both themes.
+        comment: Title 50pt, axis titles 42pt, ticks and legend 34pt as the bokeh
+          prompt sets; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend well-positioned bottom-left. Clear spacing. No collisions.
+        comment: No text collisions; legend bottom-left sits clear of the curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Censored markers (dashes) visible. Curves prominent. CI bands appropriately
-          transparent.
+        comment: Curves at line_width 3, censor dashes size 20, bands at alpha 0.15;
+          legend line glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1–2. CVD-safe. No red-green sole signal.
+        comment: Green vs. lilac, CVD-safe; not a red-green pair
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 format. Nothing cut off. Balanced proportions.
+        comment: Canonical 3200x1800, balanced margins, title ~55% width, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units.
+        comment: Time (months) with unit, Survival Probability
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Backgrounds correct. Both renders theme-correct.'
+        comment: Imprint positions 1 and 2; correct backgrounds in both themes
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional execution. Median reference line and CI band treatment
-          add context. Competent but not exceptional.
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid. Styled legend. Default L-shaped frame. No exceptional
-          refinement.
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy. Step function accurate. Median line provides
-          focal point.
+        passed: false
+        comment: Data displayed; the median line is the Notes' optional extra, no
+          further hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -123,28 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kaplan-Meier with step functions.
+        comment: Kaplan-Meier step plot; median reference is an extra the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: step functions, CI bands, censored marks,
-          group comparison, legend with n.'
+        comment: Step functions (C1), stepped CI bands (C2), censor ticks on the curve
+          (C3), per-group colors and legend (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=survival probability (0–1). All data displayed.
+        comment: x = time, y = survival 0–1; all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct. Legend labels match.
+        comment: Title format correct; legend names the groups with n
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -152,80 +167,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all KM aspects: comparison, censoring, step behavior,
-          divergence.'
+        comment: Two groups, censoring throughout, diverging and crossing curves,
+          widening bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinical trial data (treatment vs. control) realistic and neutral.
+        comment: Neutral clinical-trial treatment vs. control
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Survival probability 0–1 correct. Time 0–38 months appropriate.
+        passed: false
+        comment: Survival 0–1 and 36-month follow-up plausible, but clipped times
+          are kept as events, giving an artificial end-of-study cliff (defect line);
+          estimator and log-log CI checked in code
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Only essential compute_km() helper. Clean, direct plotting.
+        passed: false
+        comment: Two helper functions compute_km() and to_steps() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake interactivity.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming (plot-{THEME}.html/png).
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium, as the
+          library prompt requires
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Idiomatic Bokeh patterns. Proper theme tokens. Selenium screenshot
-          pattern correct.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses Bokeh-specific features well (ColumnDataSource, patch, Span).
-          Competent but not exceptional.
+        passed: false
+        comment: figure/patch/line/scatter/Span with theme tokens; lines pass raw
+          arrays rather than a ColumnDataSource from df
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T01:16:56Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - layer-composition
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
+  - columndatasource
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
