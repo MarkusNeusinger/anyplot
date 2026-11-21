@@ -2,45 +2,57 @@ library: altair
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:23:32Z'
-updated: '2026-05-12T11:13:33Z'
-generated_by: claude-haiku
-workflow_run: 25730507182
+updated: '2026-11-21T06:15:52Z'
+generated_by: claude-sonnet
+workflow_run: 44874281730
 issue: 2647
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Perfect theme adaptation with identical data colors in both light and dark renders
-  - All text legible in both themes with proper contrast and no theme-adaptation failures
-  - 'Okabe-Ito palette correctly applied with #009E73 as first series'
-  - Clean code with proper environment-based theming and theme tokens
-  - Clear data storytelling showing energy transition (coal declining, renewables
-    rising)
-  - Correct use of stack=normalize for 100% stacked composition
+  - Uses Vega-Lite's stack='normalize' so the 100% shares are computed by the library,
+    with alt.Order fixing a stable bottom-to-top layer order
+  - 'Theme tokens threaded through axis, title, legend and view: all text readable
+    in both renders on #FAF8F1 and #1A1A17'
+  - 'Imprint palette in canonical order with #009E73 for the first layer; legend at
+    the bottom names every layer'
+  - Canvas padded (never cropped) to exactly 3200x1800
+  - Native tooltips with formatted share values in the HTML view
   weaknesses:
-  - Design is competent but standard - no extra visual refinement beyond spec requirements
-  - Could leverage more Altair distinctive features like interactive selections or
-    faceting
+  - 'VQ-02 (both): the legend title ''Energy source'' and the ''Renewables'' label
+    touch the legend frame''s left and right edges, and the Coal swatch sits on the
+    left frame line → at least 6-8 px padding inside the frame. Likely cause: configure_legend
+    without padding (set padding≈8).'
+  - 'VQ-05 (both): the ordinal x scale leaves an empty strip inside the plot frame
+    left of 2015 and right of 2024 (about 5% of the width on each side) → areas span
+    the frame edge to edge. Likely cause: x type=''ordinal'' with default band padding;
+    use type=''quantitative'' (or temporal) with a 2015-2024 domain and integer tick
+    format, or scale paddingOuter=0.'
+  - 'VQ-07 (both): mark_area opacity=0.85 lets the page show through, so the Imprint
+    fills render visibly different between themes (Natural Gas lighter lilac on light,
+    darker purple on dark) → opaque fills (opacity 1). Likely cause: mark_area(opacity=0.85).'
+  - 'Suggestion: direct labels at the right end of each layer could replace the legend
+    lookup.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) correctly applied
-      Chrome: Title, axis labels ("Year", "Share of Energy Mix (%)"), tick labels all clearly visible in dark text with excellent contrast
-      Data: Four stacked areas - Coal (green #009E73), Natural Gas (orange #D55E00), Nuclear (blue #0072B2), Renewables (reddish purple #CC79A7). Boundaries between areas are clear and distinct. Legend at bottom shows all four sources.
-      Legibility verdict: PASS - all elements readable with strong contrast
+      Background: warm off-white #FAF8F1 canvas and view, 3200x1800.
+      Chrome: title 'area-stacked-percent · python · altair · anyplot.ai' centered in dark ink; y-axis 'Share of total (%)' 0%-100% in 10% steps, x-axis 'Year' 2015-2024; subtle grid; bottom-left framed legend 'Energy source' (title and Renewables label touch the frame). All readable.
+      Data: four stacked areas bottom to top Coal #009E73 (45%->16%), Natural Gas #C475FD, Nuclear #4467A3, Renewables #BD8233 (18%->44%), flat top at 100%; small empty strips inside the frame left of 2015 and right of 2024.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) correctly applied
-      Chrome: Title, axis labels, tick labels all rendered in light text and clearly readable against dark background. No dark-on-dark failures detected.
-      Data: Colors identical to light render (Coal green, Natural Gas orange, Nuclear blue, Renewables pink). All boundaries visible and consistent.
-      Legibility verdict: PASS - theme adaptation successful, no contrast issues
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light grey, legend on #242420 elevated fill; no dark-on-dark text.
+      Data: same palette and order as light; at opacity 0.85 the fills read slightly darker than in the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -48,70 +60,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (labelFontSize=18, titleFontSize=22). All
-          text readable in both themes.
+        comment: Title 16, axis titles 12, ticks 10, legend 10/11 at scale 4; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Elements well-spaced, no overlapping text or labels.
+        passed: false
+        comment: Legend title 'Energy source' and the 'Renewables' label touch the
+          legend frame's left and right edges (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Area boundaries clearly distinguishable.
+        comment: Four broad layers with thin boundary lines, legend swatches visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; all colors distinct.
+        comment: Four distinct Imprint hues, CVD-safe, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Good proportions, well-balanced, nothing cut off.
+        passed: false
+        comment: Canvas 3200x1800; ordinal x band padding leaves an empty strip inside
+          the frame left of 2015 and right of 2024 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units ('Share of Energy Mix (%)').
+        comment: '''Share of total (%)'' and ''Year'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73, follows Okabe-Ito order, backgrounds correct,
-          both renders theme-correct.'
+        passed: false
+        comment: 'Imprint order, #009E73 first, correct backgrounds; opacity 0.85
+          lets the page show through, so fills render visibly different between themes
+          (defect line)'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional use of Okabe-Ito palette and opacity layering. Clean
-          and intentional, but fairly standard.
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit sizes;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: L-shaped frame, subtle grid (opacity 0.10), generous margins, no
-          unnecessary decoration.
+        passed: false
+        comment: Subtle grid at 0.10 and framed view per baseline; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear narrative of energy transition (coal declining, renewables
-          rising).
+        passed: false
+        comment: Data displayed with a clear stack order, no hierarchy chosen beyond
+          the spec
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked area chart using stack='normalize'.
+        comment: Correct 100% stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All required features present.
+        comment: 'All Notes and C1-C4 bullets met: layers start where the lower ends,
+          full-height flat top, 0-100% axis, fixed order with legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Year (time), Percentage (normalized), Source (categorical). All correct.
+        comment: Year on x, normalized share on y, source as color; marks at their
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title formatted correctly; legend complete with all categories.
+        comment: Title 'area-stacked-percent · python · altair · anyplot.ai' correct;
+          legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -149,19 +167,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four energy sources represented; realistic range.
+        comment: Shrinking, growing and steady layers all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world plausible energy mix data; neutral framing.
+        comment: Plausible, neutral energy-mix transition 2015-2024
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentage scale (0–100%) appropriate for composition data.
+        comment: 'Checked: each year''s inputs sum to 100, the stack tops at 100%,
+          Coal 45%→16% read off the axis'
     code_quality:
       score: 10
       max: 10
@@ -171,56 +190,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean, straightforward, no unnecessary abstractions.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports.
+        comment: os, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Theme-adaptive tokens properly threaded; no fake UI.
+        comment: Concise, uses stack='normalize' instead of hand-computing shares
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html.
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Proper use of mark_area, encode API, stack='normalize', alt.Scale,
-          alt.Legend.
+        passed: false
+        comment: 'Idiomatic: stack=''normalize'' computes shares in Vega-Lite, alt.Order
+          fixes stack order, typed encodings with escaped fields'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses order encoding for stack control, but doesn't leverage other
-          Altair capabilities like interactions.
+        passed: false
+        comment: Native tooltips with formatted values in the HTML view; nothing else
+          distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T06:12:30Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
