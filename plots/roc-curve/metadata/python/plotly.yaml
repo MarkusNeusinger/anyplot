@@ -2,45 +2,53 @@ library: plotly
 language: python
 specification_id: roc-curve
 created: '2025-12-26T17:38:40Z'
-updated: '2026-05-09T22:33:14Z'
-generated_by: claude-haiku
-workflow_run: 25613390883
+updated: '2026-11-21T12:33:22Z'
+generated_by: claude-sonnet
+workflow_run: 44903793512
 issue: 2273
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Perfect theme-adaptive implementation with both renders readable and legible
-  - All text explicitly sized with correct font hierarchy (28px title, 22px labels,
-    18px ticks)
-  - 'Correct Okabe-Ito palette: first series #009E73, second #D55E00, no violations'
-  - Clean reproducible code with full seed control and no over-engineering
-  - 'Complete spec compliance: all required features present and correctly implemented'
-  - Professional design with fill under AUC and proper visual hierarchy
+  - Equal aspect ratio via yaxis scaleanchor='x' with constrain='domain', so the diagonal
+    runs at 45 degrees on a square plot area
+  - 'Clean theme threading: every text, grid, axis line and legend surface comes from
+    theme tokens and reads correctly in both renders'
+  - ROC points computed with sklearn roc_curve/auc and AUC shown per model in the
+    legend
+  - 'Adaptable structure: column constants with role comments and one # Data block
+    ending in a tidy df, plotted with a groupby loop'
   weaknesses:
-  - 'Design Excellence is solid but standard: uses conventional ROC visualization
-    without exceptional customization'
-  - 'Data storytelling effective but conservative: visual hierarchy through color
-    and fill without advanced emphasis techniques'
-  - Library Mastery could maximize plotly-specific features (4/5 rather than 5/5 for
-    distinctive features)
+  - 'DQ-03 (both): both classifiers are fit and scored on the same 500 training rows,
+    so the depth-5 tree''s in-sample AUC of 0.97 beats logistic regression''s 0.93,
+    an ordering a held-out ROC would not support → split with train_test_split (e.g.
+    test_size=0.3, random_state=42) and compute roc_curve on the test fold. Likely
+    cause: clf.fit(X, y) followed by clf.predict_proba(X).'
+  - 'DQ-02 (both): the task is an anonymous make_classification set, so nothing in
+    the render says what is being classified → give the data a named binary task (e.g.
+    churn or fraud screening) through the dataset comment and the legend/axis context.
+    Likely cause: make_classification with no domain framing.'
+  - 'Suggestion: the translucent AUC fill covers only the first model; either drop
+    it or explain in the legend that the shaded area is that model''s AUC.'
+  - 'Suggestion: a hovertemplate showing FPR, TPR and the threshold per operating
+    point would use plotly''s interactivity in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color, not pure white
-      Chrome: Title, axis labels (22px), tick labels (18px) all in dark text (#1A1A17/#4A4A44) — clearly readable
-      Data: Green curve (#009E73) for Logistic Regression with light green fill; orange curve (#D55E00) for Decision Tree; gray dashed baseline (#888888); all clearly distinguishable
-      Legibility verdict: PASS — all text explicitly sized, zero overlap, optimal contrast against light surface
+      Background: warm off-white #FAF8F1 across canvas and plot area (2400x2400 square).
+      Chrome: centred title 'roc-curve · python · plotly · anyplot.ai' in dark ink; axis titles 'False Positive Rate' / 'True Positive Rate' and ticks 0-1 step 0.2 in dark grey; subtle grid; boxed legend lower right on the elevated surface. All readable.
+      Data: Logistic Regression in #009E73 as a stair-step curve with a translucent green fill to zero; Decision Tree in #C475FD as a coarse piecewise-linear curve hugging the top-left; dashed muted grey diagonal from (0,0) to (1,1). Legend: Random Classifier, Logistic Regression (AUC = 0.93), Decision Tree (AUC = 0.97).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color, not pure black
-      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8/#B8B7B0) — clearly readable, no dark-on-dark failures
-      Data: Green curve (#009E73) and orange curve (#D55E00) identical to light render, confirming correct color preservation; only chrome changed
-      Legibility verdict: PASS — all text readable, proper light-on-dark contrast, no dark-on-dark issues, brand green visible
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light grey, faint grid, legend box on #242420 with light border and text. No dark-on-dark text.
+      Data: identical #009E73 and #C475FD curves; the fill reads as a dark green tint; the diagonal switches to the lighter muted grey and stays visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,69 +59,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
-          perfectly readable in both themes
+        comment: All sizes explicit and above the plotly references (title 17, axis
+          titles 14, ticks 12, legend 11 px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text; legend positioned bottom-right without interference
+        comment: No text collisions; the legend sits in the empty lower-right corner
+          clear of every curve
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curves and baseline clearly visible; line widths optimally adapted
+        comment: 3 px model lines and 2 px dashed baseline are prominent; legend line
+          samples match the curves in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with strong contrast; CVD-safe; gray baseline appropriately
-          neutral
+        comment: 'Green vs lavender plus a dashed muted baseline: distinguishable
+          under CVD'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas; balanced margins; generous whitespace
+        comment: Square 2400x2400 canvas, plot area fills most of it, balanced margins,
+          legend inside the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels; axes 0-1 with clear ticks
+        comment: Descriptive axis titles; rates are unitless fractions, so no unit
+          applies
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, background theme-correct,
-          chrome theme-adaptive'
+        comment: 'First model #009E73, second #C475FD, baseline in the theme-adaptive
+          muted anchor; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Well-executed but uses standard ROC visualization approach
+        passed: true
+        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes)
+          and nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid, generous margins, border-framed legend, theme-adaptive
-          styling
+        comment: 'Beyond the baseline: legend placed in the empty lower-right region
+          on the elevated surface, margins tuned so the square plot area is centred
+          under the title'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Visual hierarchy through color and fill; clear AUC comparison
+        comment: Data displayed; the AUC fill on only the first model is not an emphasis
+          tied to an insight
     spec_compliance:
       score: 15
       max: 15
@@ -123,27 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ROC curve with multiple models and baseline
+        comment: Correct ROC curve comparison
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two ROC curves, AUC values, random baseline all present
+        comment: Diagonal baseline, AUC in legend, axes 0-1 with equal aspect (scaleanchor),
+          distinct colors per model, curves corner to corner (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: FPR/TPR axes correct 0-1 with equal aspect ratio
+        comment: FPR on x, TPR on y, computed operating points joined by straight
+          segments, no smoothing
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels with AUC values
+        comment: Title 'roc-curve · python · plotly · anyplot.ai' correct; legend
+          names each model with its AUC
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -151,19 +169,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows two classifiers with different performance and baseline
+        comment: 'Two models compared, stair-step and coarse tree curves, diagonal
+          baseline: all aspects of the type shown'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Standard ML binary classification; neutral scientific context
+        passed: false
+        comment: Real classifier names, but the task itself is an unnamed make_classification
+          dataset (defect line)
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Realistic AUC values and proportions for the domain
+        passed: false
+        comment: 'Checked: AUC values come from sklearn auc() on the plotted fpr/tpr
+          (0.93 / 0.97) and match the legend; but both models are scored on their
+          own training data (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -173,56 +195,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions/classes
+        comment: 'Imports -> tokens -> column constants -> # Data -> # Plot -> save;
+          no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set and deterministic
+        comment: np.random.seed(42) and random_state=42 everywhere
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: roc_curve/auc from sklearn, groupby loop; no written-out algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and naming
+        comment: write_image 600x600 scale 4 plus write_html, current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Expert use of go.Figure, Scatter, add_trace, update_layout
+        comment: Correct go.Scatter usage with groupby loop; nothing beyond the library
+          prompt's pattern
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: false
-        comment: Uses fill, HTML export, and theme-aware features; could maximize
-          library uniqueness
+        passed: true
+        comment: Generic usage; default hover only
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T12:29:32Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - html-export
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
