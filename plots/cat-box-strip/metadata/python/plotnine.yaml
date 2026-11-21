@@ -2,46 +2,48 @@ library: plotnine
 language: python
 specification_id: cat-box-strip
 created: '2025-12-30T16:30:02Z'
-updated: '2026-05-13T05:49:29Z'
-generated_by: claude-haiku
-workflow_run: 25780574620
+updated: '2026-11-21T08:50:24Z'
+generated_by: claude-sonnet
+workflow_run: 44886282054
 issue: 2695
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 83
 review:
   strengths:
-  - Perfect visual quality with all text legible in both themes
-  - Excellent theme-adaptive chrome implementation with no dark-on-dark or light-on-light
-    failures
-  - Comprehensive data representation combining box plot summary with individual point
-    visibility
-  - Clean, reproducible code with proper seeding and idiomatic plotnine patterns
-  - 'Proper Okabe-Ito palette compliance with first series #009E73 and multi-series
-    canonical order'
+  - Points stay exactly at their values via position_jitter(width=0.15, height=0,
+    random_state=42), and every cloud stays inside its own category band
+  - Box outlines, medians and whiskers use the theme token INK_SOFT, so the box summary
+    reads through the translucent points in both themes
+  - 'Imprint palette in canonical order with the first group #009E73; data colors
+    identical across both renders'
+  - Shared scale limits for x, fill and color keep order and colors aligned for any
+    table passed in
   weaknesses:
-  - Design excellence is modest; no custom refinements or distinctive aesthetic choices
-    beyond library defaults
-  - Limited visual storytelling; data displayed clearly but without strategic emphasis
-    or visual hierarchy to guide insight
+  - 'DQ-02 (both): the treatments are labelled ''Fertilizer A'', ''Fertilizer B'',
+    ''Fertilizer C'', which read as generic placeholders → concrete treatment names
+    such as ''Compost'', ''NPK 10-10-10'', ''Slow-release''. Likely cause: the category
+    label list in np.repeat([...]).'
+  - 'Suggestion: the fill legend repeats the x-axis categories; dropping it (legend_position=''none'')
+    would give the panel more width.'
+  - 'Suggestion: the legend title ''Treatment Group'' fills its frame edge to edge;
+    a little legend padding would let it breathe.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, not pure white
-      Chrome: Title in 24pt dark ink (#1A1A17), axis labels 20pt, tick labels 16pt secondary text (#4A4A44); all clearly readable
-      Data: Okabe-Ito colors (green #009E73 for Control, orange #D55E00, blue #0072B2, purple #CC79A7); box plots alpha=0.7, points alpha=0.6
-      Grid: Subtle horizontal lines (alpha 0.10 major, 0.05 minor)
+      Background: warm off-white #FAF8F1, 3200x1800, panel framed by a thin INK_SOFT border
+      Chrome: title 'cat-box-strip · python · plotnine · anyplot.ai' in dark ink, axis titles 'Treatment Group' and 'Plant Growth (cm)', tick labels 20-50 and the four group names in soft dark grey; legend 'Treatment Group' on an elevated off-white box at the right; all readable
+      Data: four boxes (Control #009E73, Fertilizer A #C475FD, Fertilizer B #4467A3, Fertilizer C #BD8233) at alpha 0.7 with dark-grey outlines, medians and whiskers; 40 jittered translucent points per group over each box; Fertilizer C shows a small low-yield cluster near 26-36 cm below its box
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, not pure black
-      Chrome: Title and labels in light text (#F0EFE8 and #B8B7B0); all clearly readable against dark background
-      Data: Okabe-Ito colors identical to light render (same #009E73, #D55E00, #0072B2, #CC79A7); only chrome colors changed
-      Grid: Light-colored subtle gridlines with opacity, appropriately visible
-      Legibility verdict: PASS - no dark-on-dark failures; all text readable; theme adaptation complete
+      Background: warm near-black #1A1A17, same layout
+      Chrome: title and axis titles in light ink, tick labels in light grey, legend box on #242420 with light text; no dark-on-dark text
+      Data: same four Imprint colors as the light render; box outlines, medians and whiskers switch to light grey and stay clearly visible; points readable through their outlines inside the boxes
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,70 +54,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set; title 24pt, labels 20pt, ticks 16pt; fully
-          readable in both themes
+        comment: Sizes set to the plotnine prompt's references (title 12, axis titles
+          10, ticks 8, legend 8/9 pt at 8x4.5 in); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; box and jitter widths properly balanced
+        comment: No text collisions; point overlap inside dense boxes is permitted
+          by C5 and points stay distinguishable by their darker outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 160 data points with optimal alpha (box 0.7, points 0.6); markers
-          clearly visible
+        comment: 160 points at size 1.8, alpha 0.6 suit the density; box outlines,
+          medians and whiskers in INK_SOFT read in both themes; legend swatches match
+          the box fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; adequate contrast
+        comment: Imprint positions 1-4 are CVD-safe; categories are also separated
+          by position on the x-axis
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 16:9 proportions; 50-70% canvas utilization; balanced margins
+        comment: 3200x1800 canvas; balanced margins; title ~47% of width; legend sits
+          next to the panel
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units (Plant Growth (cm))
+        comment: '''Treatment Group'' and ''Plant Growth (cm)'' are reader text with
+          a unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito positions 1-4; backgrounds #FAF8F1/#1A1A17;
-          theme-correct in both renders'
+        comment: 'First group #009E73, then #C475FD, #4467A3, #BD8233 in canonical
+          order; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct in both'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured defaults; no distinctive design flourishes
+        passed: true
+        comment: Style-guide baseline with theme tokens; nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Spines removed by theme_minimal; subtle grid; minimal customization
-          beyond defaults
+        comment: Spine/grid rules met as the library prompt prescribes; no further
+          refinement
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Clear display with natural hierarchy; no special emphasis or visual
-          focal point
+        passed: true
+        comment: The data the implementation chose gives Fertilizer C a small low-yield
+          subgroup that sits visibly below its box, a focal contrast between box summary
+          and raw points
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +133,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box + strip combination
+        comment: Box plot with jittered strip overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Box, strip, jitter, transparency all present
+        comment: 'Notes and C1-C4 met: boxes with median and whiskers, points over
+          boxes, jitter with alpha, shared y-axis not forced to zero'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct; all data visible; colors map to categories
+        comment: position_jitter(height=0) keeps every point at its value; width=0.15
+          keeps points inside their band
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Title 'cat-box-strip · python · plotnine · anyplot.ai'; legend title
+          and entries match the groups
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -153,20 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows medians, quartiles, whiskers, individual points; distributions
-          vary (control tight, treatments improving, C bimodal)
+        comment: Groups with different centers and spreads, points beyond whiskers,
+          a lumpy group C
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Plant growth scenario; realistic and neutral
+        passed: false
+        comment: Plausible fertilizer trial, but treatments labelled 'Fertilizer A/B/C'
+          read as generic placeholders (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 15-55cm appropriate for plant growth; proportions sensible
+        comment: Plant growth 15-57 cm over 40 plants per group is plausible; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -176,49 +189,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: Flat script, column constants with role comments
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) and position_jitter(random_state=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; sys.path handled properly
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no fake UI
+        comment: Direct DataFrame construction with np.repeat; no excess
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves plot-{THEME}.png via plot.save
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert ggplot grammar; all patterns idiomatic
+        comment: Grammar layering with explicit position_jitter(height=0, random_state)
+          object and shared scale limits for x/fill/color, beyond the prompt's template
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Proper choices but generic/standard approach; no distinctive library-specific
-          features
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T08:46:45Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -228,3 +244,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
