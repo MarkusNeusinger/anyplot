@@ -1,7 +1,7 @@
 """anyplot.ai
 bar-3d-categorical: 3D Bar Chart for Categorical Comparison
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-11-21
+Quality: pending | Updated: 2026-11-21
 """
 
 import os
