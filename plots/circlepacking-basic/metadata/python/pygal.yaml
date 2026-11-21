@@ -2,123 +2,148 @@ library: pygal
 language: python
 specification_id: circlepacking-basic
 created: '2025-12-30T00:04:29Z'
-updated: '2026-05-11T15:40:04Z'
-generated_by: claude-haiku
-workflow_run: 25679610329
+updated: '2026-11-21T03:02:18Z'
+generated_by: claude-sonnet
+workflow_run: 44858218271
 issue: 2498
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - Perfect visual quality (30/30) with crystal-clear readability in both light and
-    dark themes
-  - Excellent theme-adaptive styling using pygal.Style infrastructure correctly
-  - Realistic, compelling organizational data with proper hierarchical structure
-  - Smart use of opacity gradation and color-by-depth creating professional visual
-    hierarchy
-  - Clean, reproducible, deterministic code with linear KISS structure
-  - Correct Okabe-Ito palette compliance with perfect theme-chrome adaptation between
-    renders
+  - 'True hierarchical circle packing: leaf radius = sqrt(value) on one global scale,
+    siblings packed by a front-chain tangent search and each parent sized by a minimax
+    enclosing circle, so every circle sits fully inside its parent'
+  - Theme tokens flow through a pygal Style object that the hand-written SVG reads
+    back; data colors identical in both renders, chrome flips cleanly with no dark-on-dark
+    text
+  - Sector-tinted parent fills at 22% opacity with 90% leaves make each nesting level
+    distinguishable in both themes
+  - Sector names set outside their circles with a page-colored halo, and two-tier
+    leaf labels (bold name over value) in the large circles
+  - SVG <title> tooltips on every circle give the name and budget in the HTML output,
+    covering the unlabeled small leaves
+  - 'Clean adaptable layout: column constants with role comments and a marked Data
+    block; neutral, plausible city-budget scenario'
   weaknesses:
-  - Library Mastery limited by necessity of custom SVG implementation (circle packing
-    not built-in to pygal; appropriate trade-off)
-  - Design Excellence slightly constrained by strict adherence to Okabe-Ito palette
-    per specification (correct choice but limits aesthetic variation)
+  - 'VQ-01 (both): the small-leaf labels Dispatch, Cycling and Trees render at about
+    24-28 px with their values at about 19-22 px, and the footer key at 34 px, all
+    below the pygal 44 px reference, so they read small beside the 46 px sector names
+    → names and values at least 36-44 px where they fit (+12 to +20 px), otherwise
+    left to the tooltip, and the footer key at 44 px (+10 px). Likely cause: LABEL_MIN_SIZE
+    = 24 and the size * 0.78 value text; footer text size 34.'
+  - 'VQ-02 (both): the ''Public safety'' sector label sits on the root circle''s outline
+    at the upper left, its halo cutting a gap into the root edge → keep the label''s
+    box inside the root circle with about 20 px clearance from its edge. Likely cause:
+    the label is placed at y - r - 18 above the sector circle, whose top touches the
+    root''s inner padding.'
+  - 'CQ-01 (code): eight module-level functions (escape, overlaps, tangent_points,
+    enclose, pack, layout, flatten, text) → keep only what the recursive packing needs;
+    use html.escape for escape and inline text() and flatten() into the drawing loops.
+    Likely cause: helper functions written for one-off steps.'
+  - 'Suggestion: the label rule keys on text fit, so Prevention (45) and Libraries
+    (40) stay unlabeled while Trees (18) is labelled; a size threshold on the circle
+    would make ''larger circles labelled'' read consistently.'
+  - 'Suggestion: Parks takes slot 5, the semantic-red anchor #AE3030, by ordinal position;
+    skipping to #2ABCCD would keep red free.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "circlepacking-basic · pygal · anyplot.ai" at top in dark text (INK #1A1A17); department labels (Engineering, Sales, Marketing, Operations) in dark text above circles; team labels (Backend, QA, Frontend, etc.) in dark text inside circles where space permits; legend at bottom with level descriptions - ALL READABLE
-      Data: Root circle in light green (#009E73) at 20% opacity; 4 department circles in tan/brown (#D55E00) at 40% opacity; ~16 team circles in blue (#0072B2) at 85% opacity; circles sized proportionally to headcount values
-      Legibility verdict: PASS - Excellent readability, no dark-on-light failures, all text sizes appropriate for 3600×3600 canvas
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas.
+      Chrome: bold dark title "Riverton city budget · circlepacking-basic · python · pygal · anyplot.ai" across ~80% of the width; five bold dark sector names (Public safety, Education, Parks above their circles; Transport, Health below) with page-colored halos; footer key "Circle area = Budget (million USD); color = sector" in INK_SOFT. All readable; the 'Public safety' label sits on the root outline.
+      Data: a large root circle (muted 8% fill, INK_SOFT outline) encloses five sector circles tinted at 22% in Imprint order (Transport #009E73, Health #C475FD, Education #4467A3, Public safety #BD8233, Parks #AE3030), each holding three leaf circles at 90% fill with page-colored outlines. Large leaves carry bold dark names plus values (Schools 240, Hospitals 210, Roads 180, Transit 150, Police 130, Fire 100, Clinics 90, Upkeep 60); small Dispatch 35, Cycling 30, Trees 18 carry small labels; Libraries, Adult ed., Prevention, Recreation are unlabeled. No circle crosses another or its parent.
+      Legibility verdict: PASS (small-leaf labels read small)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title in light text (INK #F0EFE8) - clearly readable; department labels in light text above circles - clearly readable; team labels in light text inside circles - clearly readable; legend at bottom with level descriptions - clearly readable
-      Data: Root circle in green (#009E73) - IDENTICAL to light render; 4 department circles in tan/brown (#D55E00) - IDENTICAL to light render; ~16 team circles in blue (#0072B2) - IDENTICAL to light render; all circles maintain same sizes as light render
-      Legibility verdict: PASS - Excellent readability, NO dark-on-dark failures (no black text on near-black background), all light text properly colored for dark theme, data colors perfectly preserved from light render
+      Background: warm near-black #1A1A17.
+      Chrome: title, sector names and footer key flip to light ink (#F0EFE8 / #B8B7B0) with dark halos; all clearly readable, no dark-on-dark text. Root and sector outlines turn light grey.
+      Data: identical leaf hues and positions to the light render; sector tints darken against the near-black page but stay distinguishable from the root and from their leaves; leaf outlines now near-black. Leaf labels stay dark ink on the mid-tone fills and remain readable.
+      Legibility verdict: PASS (same small-leaf label sizes as light)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 64px, departments 52px, teams
-          adaptive up to 36px; perfectly readable in both themes
+        comment: Title, sector labels and big-leaf labels read well in both themes;
+          the small-leaf labels (Dispatch, Cycling, Trees at ~24-28 px, their values
+          ~19-22 px) and the 34 px footer key sit below the pygal 44 px reference
+          and read small (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Zero text overlapping; labels positioned with care, legend clean
-          and separate
+        comment: No text-on-text collisions; the 'Public safety' label sits on the
+          root circle's outline, its halo cutting a gap into the edge (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circles optimally sized for density; opacity gradation ensures visibility
-          at all depths
+        comment: All 21 circles clearly visible in both themes; leaves outlined in
+          the page color, sectors and root in INK_SOFT
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; excellent contrast; CVD-safe
+        comment: Imprint hues, sectors also named by text; dark leaf ink on mid-tone
+          fills has adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3600×3600 square format perfect for circle packing; ~85% plot fill
-          with balanced margins
+        comment: 2400x2400 square; root circle fills the area below the title with
+          even margins; title ~80% width, expected for the long mandated title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format; legend identifies all depth levels clearly
+        comment: No axes by design; footer key names the encodings with units 'Budget
+          (million USD)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First color #009E73 ✓; Okabe-Ito order ✓; backgrounds #FAF8F1/#1A1A17
-          ✓; theme chrome perfect ✓'
+        comment: 'First sector #009E73, Imprint canonical order, backgrounds #FAF8F1/#1A1A17,
+          data colors identical across themes'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong intentional design with opacity gradation, color-by-depth
-          hierarchy, professional presentation. Correctly uses Okabe-Ito rather than
-          custom palette.
+        comment: Two-tier leaf typography (bold name over lighter value) and parent
+          fills tinted at 22% in their sector hue that echo the 90% leaves
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle strokes (INK_SOFT, 2-3px by depth), opacity variation, generous
-          whitespace, clean SVG structure
+        comment: Sector names set outside their circles (above for the upper half,
+          below for the lower) with a page-colored halo; page-colored leaf outlines
+          separate touching siblings; uniform padding derived from the mean leaf radius
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Clear hierarchical narrative: size encodes headcount, color encodes
-          depth, opacity shows parent/child distinction'
+        comment: Printed values in the large leaves let Schools (240) and Hospitals
+          (210) read as the budget's anchors; descriptive title prefix sets the scene
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +153,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Circle packing with hierarchical nesting; all 3 levels present
+        comment: True nested circle packing, no axes, grid, reference lines or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hierarchical data ✓, area-proportional sizing ✓, color by depth ✓,
-          labels on large circles ✓
+        comment: C1 area-proportional leaves (r = sqrt(value)), C2 front-chain packing
+          with every circle inside its parent, C3 color by sector with tinted parents,
+          C4 larger circles labelled, C5 no extra layers; root encloses all with padding
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Position encodes hierarchy, area encodes value, color encodes depth;
-          all data visible
+        comment: Leaf radius = sqrt(value) on one global scale, so areas compare across
+          sectors; position from packing (layout-positioned type)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels clear and match data
+        comment: '''Riverton city budget · circlepacking-basic · python · pygal ·
+          anyplot.ai''; sectors named directly, footer key for the encodings'
     data_quality:
       score: 15
       max: 15
@@ -158,58 +185,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all circle packing aspects: multiple levels, varied sizes,
-          clear packing'
+        comment: 3 levels, 21 nodes, 5 sectors with 3 leaves each spanning 18-240
+          so size contrast and packing both show
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real organizational structure, neutral topic, legitimate business
-          use case
+        comment: Fictional city budget by sector and program, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Team headcount 6-45 realistic; proportions align with real hierarchies
+        comment: 'Program budgets of 18-240 million USD, total 1,483 million: plausible
+          for a mid-size city; no Check values in the spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme → data → tree → positioning → SVG →
-          save'
+        comment: Clear zones and a marked Data block, but eight module-level functions;
+          escape/text/flatten are helpers beyond the recursive packing (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data and rendering; environment-controlled theme
+        comment: Deterministic data and layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, os, sys, ET, cairosvg, Style'
+        comment: math, os, cairosvg, pandas, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no over-engineering, no fake functionality
+        comment: No installed package computes circle packing (squarify/networkx not
+          available), so the front-chain pack and minimax enclose are justified
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and plot-{THEME}.html naming
+        comment: Writes plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -217,27 +245,30 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct use of pygal.Style for theme-aware styling; custom SVG necessary
-          since circle packing not built-in
+        comment: pygal has no circle-packing chart; the Style object carries the theme
+          tokens and the SVG reads them back
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Limited pygal-specific features; mostly custom SVG implementation
-          (appropriate trade-off for correctness)
+        comment: Nothing pygal-specific beyond Style; SVG <title> tooltips are hand-written
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T02:57:17Z'
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - custom-legend
+  - custom-svg
+  - hover-tooltips
   - html-export
   patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
+  - dataframe-input
+  - recursion
+  dataprep:
+  - hierarchical-data
   styling:
-  - publication-ready
   - alpha-blending
+  - edge-highlighting
