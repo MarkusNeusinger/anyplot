@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-15
@@ -7,6 +7,7 @@ Quality: 91/100 | Updated: 2026-05-15
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from scipy import signal
 
@@ -16,94 +17,90 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Data - EEG biomedical signal with alpha-beta oscillations
-np.random.seed(42)
-sample_rate = 256  # Hz (standard EEG sampling rate)
-duration = 4.0  # seconds
-t = np.linspace(0, duration, int(sample_rate * duration))
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Simulate EEG with multiple frequency components
-# Alpha waves (8-12 Hz), beta waves (12-30 Hz), and muscle artifact (50 Hz)
-alpha = 2.0 * np.sin(2 * np.pi * 10 * t)  # 10 Hz alpha waves
-beta = 1.5 * np.sin(2 * np.pi * 20 * t + np.pi / 4)  # 20 Hz beta waves
-muscle_artifact = 0.8 * np.sin(2 * np.pi * 50 * t)  # 50 Hz artifact
+# Continuous colormap: Imprint sequential (brand green to blue)
+IMPRINT_SEQ = [[0.0, IMPRINT_PALETTE[0]], [1.0, IMPRINT_PALETTE[2]]]
 
-# Add realistic noise and transient bursts
-noise = np.random.randn(len(t)) * 0.5
-transient = np.zeros_like(t)
-transient[int(1.5 * sample_rate) : int(2.2 * sample_rate)] += 3.0 * np.sin(
-    2 * np.pi * 15 * t[int(1.5 * sample_rate) : int(2.2 * sample_rate)]
-)
+# Constants
+MAX_FREQ_HZ = 60  # upper edge of the EEG band of interest
+FLOOR_DB = 40  # dynamic range kept below the strongest component, in dB
 
-eeg_signal = alpha + beta + muscle_artifact + noise + transient
+# Columns: set these to your table's column names
+TIME = "Time (seconds)"  # role: extra
+SIGNAL = "EEG amplitude (µV)"  # role: signal
+SAMPLE_RATE = "Sample rate (Hz)"  # role: sample_rate
 
-# Compute spectrogram
-nperseg = 128  # Window size for better frequency resolution
-noverlap = 96  # Overlap (75% overlap for smooth visualization)
-frequencies, times, Sxx = signal.spectrogram(eeg_signal, fs=sample_rate, nperseg=nperseg, noverlap=noverlap)
+# Data: replace this block with your own table, for example df = pd.read_csv("eeg.csv")
+rng = np.random.default_rng(42)
+fs = 256  # Hz, standard EEG sampling rate
+t = np.arange(0, 4.0, 1 / fs)
+alpha = 2.0 * np.sin(2 * np.pi * 10 * t)  # 10 Hz alpha rhythm
+beta = 1.5 * np.sin(2 * np.pi * 20 * t + np.pi / 4)  # 20 Hz beta rhythm
+muscle = 0.8 * np.sin(2 * np.pi * 50 * t)  # 50 Hz muscle artifact
+burst = np.where((t >= 1.5) & (t < 2.2), 3.0 * np.sin(2 * np.pi * 15 * t), 0.0)  # transient burst
+noise = rng.normal(0, 0.5, len(t))
+df = pd.DataFrame({TIME: t, SIGNAL: alpha + beta + muscle + burst + noise, SAMPLE_RATE: fs})
 
-# Limit frequency range to 0-60 Hz (typical EEG band of interest)
-freq_mask = frequencies <= 60
-frequencies = frequencies[freq_mask]
-Sxx = Sxx[freq_mask, :]
+# Plot: reads only df and the constants above
+sample_rate = df[SAMPLE_RATE].iloc[0]
+nperseg = min(128, len(df))
+samples = df[SIGNAL].interpolate(limit_direction="both").to_numpy()  # a gap is bridged, never zero-filled
+frequencies, times, power = signal.spectrogram(samples, fs=sample_rate, nperseg=nperseg, noverlap=nperseg * 15 // 16)
+times = times + df[TIME].iloc[0]
+keep = frequencies <= MAX_FREQ_HZ
+frequencies, power = frequencies[keep], power[keep, :]
+power_db = 10 * np.log10(power + 1e-10)
+zmax = np.nanmax(power_db)
 
-# Convert to dB scale for better visualization
-Sxx_db = 10 * np.log10(Sxx + 1e-10)
-
-# Create spectrogram heatmap
-fig = go.Figure()
-
-fig.add_trace(
+fig = go.Figure(
     go.Heatmap(
         x=times,
         y=frequencies,
-        z=Sxx_db,
-        colorscale="Viridis",
+        z=power_db,
+        zmin=zmax - FLOOR_DB,
+        zmax=zmax,
+        colorscale=IMPRINT_SEQ,
         colorbar={
-            "title": {"text": "Power (dB)", "font": {"size": 20, "color": INK}},
-            "tickfont": {"size": 16, "color": INK_SOFT},
+            "title": {"text": "Power (dB)", "font": {"size": 12, "color": INK}},
+            "tickfont": {"size": 10, "color": INK_SOFT},
             "len": 0.85,
-            "thickness": 25,
+            "thickness": 16,
             "outlinecolor": INK_SOFT,
-            "bordercolor": INK_SOFT,
-            "borderwidth": 1,
+            "outlinewidth": 1,
         },
-        hovertemplate="Time: %{x:.2f}s<br>Frequency: %{y:.1f}Hz<br>Power: %{z:.1f}dB<extra></extra>",
+        hovertemplate="Time: %{x:.2f} s<br>Frequency: %{y:.1f} Hz<br>Power: %{z:.1f} dB<extra></extra>",
     )
 )
 
-# Layout
+# Style
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "spectrogram-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "spectrogram-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Time (seconds)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
-        "gridcolor": GRID,
+        "title": {"text": df.columns[0], "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "linecolor": INK_SOFT,
         "showgrid": False,
     },
     yaxis={
-        "title": {"text": "Frequency (Hz)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
-        "gridcolor": GRID,
+        "title": {"text": "Frequency (Hz)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "linecolor": INK_SOFT,
         "showgrid": False,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"l": 100, "r": 120, "t": 100, "b": 100},
-    height=None,
-    width=None,
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
 
-# Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
