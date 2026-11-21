@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-stepwise: Step Line Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-13
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-21
 """
 
 import os
