@@ -2,45 +2,46 @@ library: seaborn
 language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:47:34Z'
-updated: '2026-05-13T13:06:11Z'
-generated_by: claude-haiku
-workflow_run: 25800651977
+updated: '2026-11-21T10:00:22Z'
+generated_by: claude-sonnet
+workflow_run: 44891746757
 issue: 2786
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 85
 review:
   strengths:
-  - 'Perfect visual quality across all dimensions: text legible in both themes, colors
-    compliant, no overlaps'
-  - 'Excellent spec compliance: all required features present and correctly implemented'
-  - Clean, reproducible code with proper seed management
-  - Thoughtful theme-adaptive styling via sns.set_theme() with custom rc parameters
-  - Strong visual hierarchy using opacity and line weight to guide viewer to trend
-  - Both light and dark renders properly theme-correct with appropriate text/chrome
-    colors
-  - Realistic, domain-appropriate data example
+  - Theme threaded through sns.set_theme(rc=...) so all chrome flips cleanly while
+    the Imprint data colors stay identical in both renders
+  - Rolling average computed with pandas rolling(window=WINDOW, min_periods=WINDOW),
+    so it begins only once its 24-hour window is full
+  - Reads the tidy df through data=df and column constants, letting seaborn title
+    the axes from the column names
+  - Hourly latency scenario with a daily load cycle and a release-driven step change
+    gives the rolling line a clear job against spiky raw data
+  - Exact 3200x1800 canvas with compact '%b %d' date ticks and a legend placed in
+    empty space
   weaknesses:
-  - Design excellence slightly lower than exceptional due to straightforward time
-    series visualization (well-executed but not particularly distinctive)
-  - Library mastery limited to standard seaborn patterns rather than distinctive library
-    features
+  - 'Suggestion: name the date axis ''Time (hourly)'' or similar so the 24-hour window
+    reads against the sampling interval.'
+  - 'Suggestion: a slightly lighter alpha on the dark render''s raw line would keep
+    it receding equally in both themes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct per style guide
-      Chrome: Title "line-timeseries-rolling · seaborn · anyplot.ai" in dark text (24pt), x-axis "Date" and y-axis "Stock Price ($)" in dark text (20pt), tick labels in secondary dark color (16pt), all clearly readable
-      Data: Raw daily prices in brand green (#009E73) at 50% opacity with 2pt line weight; 20-day moving average in vermillion (#D55E00) at 100% opacity with 4pt line weight; legend distinguishes "Daily Price" from "20-Day Moving Average"
-      Legibility verdict: PASS - All elements clearly visible with proper contrast and no text overlaps
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'line-timeseries-rolling · python · seaborn · anyplot.ai' in dark ink; axis titles 'Time' and 'Response time (ms)'; '%b %d' date ticks Mar 03-Mar 17 and 75-250 y ticks in INK_SOFT; subtle grid on both axes; top/right spines removed; legend upper right on elevated surface - all readable
+      Data: raw hourly response time as thin #009E73 line at alpha 0.65, spiky 75-245 ms; 24-hour rolling average as thick #C475FD line starting Mar 04, near 190 ms then dropping to ~125 ms after Mar 10
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct per style guide
-      Chrome: Title in light text (#F0EFE8), axis labels in light text, tick labels in secondary light color (#B8B7B0), all clearly readable against dark background with no dark-on-dark failures
-      Data: Raw prices in brand green (#009E73) at 50% opacity, moving average in vermillion (#D55E00) at 100% opacity - identical colors to light render, clearly visible and distinguishable
-      Legibility verdict: PASS - All text readable, proper theme adaptation, no dark-on-dark text failures, data colors preserved from light render
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles in light ink, ticks in light-grey INK_SOFT, subtle light grid, legend on #242420 with light text; no dark-on-dark text
+      Data: same #009E73 raw line (reads darker through alpha on the dark surface but still visible) and same #C475FD rolling line - colors identical to light
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,78 +52,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
-          All readable in both themes with proper color assignment from theme tokens.'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, all set explicitly
+          from theme tokens; readable in both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. X-axis labels rotated 30° with ha='right'. Legend
-          positioned without data overlap.
+        comment: No text collisions; legend sits in the empty upper-right area above
+          the post-release level
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Raw data visually secondary (2pt, 50% alpha); moving average prominent
-          (4pt, 100% opacity). Both colors clearly distinguishable. 252 data points
-          busy but discernible.
+        comment: 336 points as a 0.9 pt line at alpha 0.65 recedes but stays visible
+          in both themes; 2.2 pt rolling line dominates; legend line samples match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito colors (#009E73, #D55E00) colorblind-safe. Good contrast.
-          Line weight and opacity differentiate beyond color.'
+        comment: Green vs purple distinguishable under CVD, plus width/alpha contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: figsize=(16,9) at dpi=300 = 4800×2700px optimal. Good proportions,
-          generous balanced margins, tight_layout() utilized.
+        comment: 3200x1800 canvas, balanced margins, title ~57% of width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. 'Date' appropriate for temporal data. 'Stock
-          Price ($)' descriptive with units.
+        comment: '''Response time (ms)'' with units; ''Time'' on the date axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Second series #D55E00 (Okabe-Ito position
-          2). Backgrounds #FAF8F1/#1A1A17 correct. All text colors theme-adaptive.'
+        comment: 'Raw series #009E73, rolling #C475FD (Imprint 1-2), identical across
+          themes; backgrounds #FAF8F1/#1A1A17'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional color palette with intentional hierarchy. Okabe-Ito
-          colors used meaningfully. Theme-adaptive design. Well-executed but straightforward
-          visualization.
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Top/right spines removed. Subtle grid (alpha=0.15). Generous whitespace.
-          Legend framealpha=0.85. X-axis label rotation. Well-polished.
+        passed: false
+        comment: 'Beyond the baseline: compact ''%b %d'' date ticks that need no rotation,
+          legend placed in the one empty region'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: 'Strong visual hierarchy: moving average emphasized (4pt, 100%),
-          raw data de-emphasized (2pt, 50%). Color contrast guides viewer to trend.
-          Clear narrative.'
+        passed: false
+        comment: The chosen scenario (latency drop after a mid-period release) gives
+          a focal step change that the rolling line makes legible beyond the noise
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Time series with rolling average overlay. Correct chart type with
-          proper data layering.
+        comment: Time series with rolling-average overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Raw data line with semi-transparency. Moving average as prominent
-          line. Legend distinguishes series. Window size shown.
+        comment: Raw semi-transparent thin line, prominent contrasting rolling line,
+          legend with window size, grid on both axes; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: date (temporal). Y: stock price (numeric). Axes capture full
-          data range with appropriate margins.'
+        comment: Date on x, value on y; rolling average starts after 24 h (min_periods=WINDOW),
+          not padded
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data series.
+        comment: Title 'line-timeseries-rolling · python · seaborn · anyplot.ai';
+          legend 'Raw response time' / '24-hour rolling average'
     data_quality:
       score: 15
       max: 15
@@ -163,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: raw volatility and smoothed trend. 252 trading
-          days demonstrates comprehensively.'
+        comment: Shows noisy spiky raw data, a smoothing that lags the step change
+          and the shorter rolling span
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price analysis realistic. Price range ($97-118) plausible.
-          20-day MA standard in finance. Uptrend with seasonality authentic.
+        comment: 'Hourly API response time over two weeks with daily load cycle and
+          a release improvement: plausible, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Stock prices in USD appropriate. 1-year trading period meaningful.
-          Y-axis captures all data with good margins.
+        comment: 'Latency 75-245 ms, 24-hour window on hourly data; checked: rolling
+          line begins at Mar 04 00:00 (24th hour, line 45); no Check values in spec'
     code_quality:
       score: 10
       max: 10
@@ -188,60 +183,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward structure. No unnecessary functions/classes.
+        comment: Imports, tokens, constants, Data block, Plot, Save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data generation deterministic.
+        comment: default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No redundant packages.
+        comment: All imports used (mdates for the formatter)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Appropriate complexity. No fake functionality. Theme
-          tokens elegant.
+        comment: pandas rolling().mean() used; no written-out algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current API usage.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses sns.lineplot() high-level API. Leverages sns.set_theme() and
-          sns.set_context(). Proper ax parameter. Idiomatic manipulation.
+        passed: false
+        comment: sns.lineplot with data=df and column constants, sns.set_theme rc
+          for all chrome, sns.despine
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Thoughtful theme-adaptive rc configuration. Multi-line with deliberate
-          styling. Standard seaborn patterns rather than distinctive features.
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T09:56:51Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
+  - time-series
+  - rolling-window
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
-  - time-series
   - rolling-window
   styling:
   - alpha-blending
+  - minimal-chrome
   - grid-styling

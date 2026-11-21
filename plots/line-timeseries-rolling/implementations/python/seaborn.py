@@ -1,11 +1,12 @@
 """ anyplot.ai
 line-timeseries-rolling: Time Series with Rolling Average Overlay
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-13
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-21
 """
 
 import os
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -19,31 +20,30 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-BRAND = "#009E73"  # Okabe-Ito position 1
-ACCENT = "#C475FD"  # Okabe-Ito position 2
+# Imprint palette: canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Stock price with 20-day moving average (domain differs from temp/traffic)
-np.random.seed(42)
+# Constants
+WINDOW = 24  # rolling window in observations (hours)
 
-# Generate 252 trading days (1 year) of stock price data
-dates = pd.date_range(start="2024-01-01", periods=252, freq="B")
+# Columns: set these to your table's column names
+TIME = "Time"  # role: date
+LATENCY = "Response time (ms)"  # role: value
 
-# Stock price with uptrend, volatility, and correction pattern
-day_index = np.arange(252)
-base_price = 100
+# Data: replace this block with your own table, for example df = pd.read_csv("latency.csv")
+# Hourly API response time over two weeks, with a drop after a mid-period release
+rng = np.random.default_rng(7)
+hours = pd.date_range(start="2025-03-03", periods=336, freq="h")
+hour_of_day = hours.hour.to_numpy()
+daily_load = 25 * np.sin(2 * np.pi * (hour_of_day - 9) / 24)
+level = np.where(np.arange(len(hours)) < 168, 190.0, 125.0)
+spikes = rng.exponential(18, len(hours)) * (rng.random(len(hours)) < 0.12)
+df = pd.DataFrame({TIME: hours, LATENCY: level + daily_load + rng.normal(0, 14, len(hours)) + spikes})
 
-# Uptrend with noise and correction
-trend = base_price + 0.05 * day_index + 3 * np.sin(2 * np.pi * day_index / 252)
-volatility = np.random.normal(0, 2.5, 252)
-stock_price = trend + volatility
+# Plot: reads only df and the constants above
+# min_periods=WINDOW leaves the average empty until the window is full
+rolling = df[LATENCY].rolling(window=WINDOW, min_periods=WINDOW).mean()
 
-# Create DataFrame
-df = pd.DataFrame({"date": dates, "price": stock_price})
-
-# Calculate 20-day moving average (typical trading analysis window)
-df["moving_avg"] = df["price"].rolling(window=20, center=False).mean()
-
-# Configure seaborn with theme-adaptive colors
 sns.set_theme(
     style="ticks",
     rc={
@@ -55,42 +55,29 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
-sns.set_context("talk", font_scale=1.1)
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Plot raw data as semi-transparent line with slight prominence boost
-sns.lineplot(data=df, x="date", y="price", ax=ax, color=BRAND, alpha=0.5, linewidth=2, label="Daily Price")
+sns.lineplot(
+    data=df, x=TIME, y=LATENCY, ax=ax, color=IMPRINT_PALETTE[0], alpha=0.65, linewidth=0.9, label="Raw response time"
+)
+sns.lineplot(
+    x=df[TIME], y=rolling, ax=ax, color=IMPRINT_PALETTE[1], linewidth=2.2, label=f"{WINDOW}-hour rolling average"
+)
 
-# Plot moving average as prominent smooth line
-sns.lineplot(data=df, x="date", y="moving_avg", ax=ax, color=ACCENT, linewidth=4, label="20-Day Moving Average")
+# Style
+ax.set_title("line-timeseries-rolling · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(TIME, fontsize=10, color=INK)
+ax.set_ylabel(LATENCY, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+ax.grid(True, alpha=0.15, linewidth=0.6, axis="both")
+ax.legend(fontsize=8, loc="upper right", framealpha=0.9, edgecolor=INK_SOFT)
+sns.despine(ax=ax)
+fig.tight_layout()
 
-# Styling
-ax.set_xlabel("Date", fontsize=20, color=INK)
-ax.set_ylabel("Stock Price ($)", fontsize=20, color=INK)
-ax.set_title("line-timeseries-rolling · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Rotate x-axis labels for readability
-plt.xticks(rotation=30, ha="right")
-
-# Legend styling with reduced framealpha
-ax.legend(fontsize=16, loc="upper left", framealpha=0.85, edgecolor=INK_SOFT)
-
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for spine in ["left", "bottom"]:
-    ax.spines[spine].set_color(INK_SOFT)
-
-# Grid on both axes for time series readability
-ax.grid(True, alpha=0.15, linewidth=0.8, axis="both")
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
