@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spectrogram-basic: Spectrogram Time-Frequency Heatmap
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 95/100 | Updated: 2026-05-15
@@ -21,57 +21,59 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Generate chirp signal (frequency increases over time)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns: set these to your table's column names
+TIME = "Time (seconds)"  # role: extra
+SIGNAL = "Amplitude"  # role: signal
+SAMPLE_RATE = "Sample rate (Hz)"  # role: sample_rate
+FREQUENCY = "Frequency (Hz)"  # role: extra
+POWER = "Power (dB)"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("signal.csv")
 np.random.seed(42)
-sample_rate = 1000  # Hz
+rate = 1000  # Hz
 duration = 2.0  # seconds
-t = np.linspace(0, duration, int(sample_rate * duration))
+t = np.linspace(0, duration, int(rate * duration))
+# Linear chirp sweeping 10 Hz to 200 Hz, plus noise
+chirp = signal.chirp(t, f0=10, f1=200, t1=duration, method="linear") + 0.1 * np.random.randn(len(t))
+df = pd.DataFrame({TIME: t, SIGNAL: chirp, SAMPLE_RATE: rate})
 
-# Chirp signal: frequency sweeps from 10 Hz to 200 Hz
-f0, f1 = 10, 200
-chirp_signal = signal.chirp(t, f0=f0, f1=f1, t1=duration, method="linear")
-chirp_signal += 0.1 * np.random.randn(len(t))  # Add noise
-
-# Compute spectrogram using scipy
+# Plot
+fs = df[SAMPLE_RATE].iloc[0]
 nperseg = 128
-noverlap = 96
-frequencies, times, Sxx = signal.spectrogram(chirp_signal, fs=sample_rate, nperseg=nperseg, noverlap=noverlap)
-
-# Convert to dB scale for better visualization
+frequencies, times, Sxx = signal.spectrogram(df[SIGNAL].to_numpy(), fs=fs, nperseg=nperseg, noverlap=nperseg * 3 // 4)
 Sxx_db = 10 * np.log10(Sxx + 1e-10)
 
-# Create mesh data for heatmap
-time_grid, freq_grid = np.meshgrid(times, frequencies)
-df = pd.DataFrame({"time": time_grid.flatten(), "frequency": freq_grid.flatten(), "power": Sxx_db.flatten()})
+time_grid, freq_grid = np.meshgrid(times + df[TIME].min(), frequencies)
+tiles = pd.DataFrame({TIME: time_grid.flatten(), FREQUENCY: freq_grid.flatten(), POWER: Sxx_db.flatten()})
+# Keep the lower half of the spectrum, where the sweep lives
+tiles = tiles[tiles[FREQUENCY] <= fs / 4]
 
-# Filter to relevant frequency range (0-250 Hz) to avoid wasted space
-df = df[df["frequency"] <= 250]
-
-# Create spectrogram using geom_tile with theme-adaptive styling
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_line(color=INK_SOFT, size=0.3),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(size=20, color=INK),
-    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_title=element_text(size=12, color=INK),
+    axis_text=element_text(size=10, color=INK_SOFT),
     axis_line=element_line(color=INK_SOFT, size=0.5),
-    plot_title=element_text(size=24, color=INK),
+    plot_title=element_text(size=16, color=INK),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_title=element_text(size=18, color=INK),
-    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=12, color=INK),
+    legend_text=element_text(size=10, color=INK_SOFT),
 )
 
 plot = (
-    ggplot(df, aes(x="time", y="frequency", fill="power"))
+    ggplot(tiles, aes(x=TIME, y=FREQUENCY, fill=POWER))
     + geom_tile()
-    + scale_fill_viridis(name="Power (dB)")
-    + labs(x="Time (seconds)", y="Frequency (Hz)", title="spectrogram-basic · letsplot · anyplot.ai")
+    + scale_fill_gradient(low=IMPRINT_PALETTE[0], high=IMPRINT_PALETTE[2], name=POWER)
+    + labs(title="spectrogram-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x for 4800x2700) and HTML with theme suffix
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
