@@ -12,46 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 76
 review:
   strengths:
-  - 'Theme-Adaptive Excellence: Both light and dark renders are pixel-perfect with
-    correct token application and no readability failures'
-  - 'Asymmetric Visualization: Error bars with fill_between effectively communicate
-    unequal uncertainty bounds'
-  - 'Spec Fidelity: All required features (caps, asymmetry, legend) implemented as
-    specified'
-  - 'Code Clarity: Simple, idiomatic, reproducible implementation with no bloat'
-  - 'Data Appropriateness: Realistic monthly sales scenario with plausible confidence
-    intervals'
+  - Native errorbar() with a two-row yerr, caps at both ends and a distinct marker
+  - 'Theme tokens applied to all chrome: readable in both themes'
+  - Legend states the 10th-90th percentile bounds
   weaknesses:
-  - 'Minimal Design Flourish: Uses default marker styling; could explore edge colors
-    or transparency gradients for higher design scores'
-  - 'Limited Distinctive Techniques: Relies on core errorbar + fill_between; no secondary
-    techniques (twin-axes, annotations) explored'
+  - 'VQ-05 (both): canvas is 4766x2670, not the canonical 3200x1800 → 3200x1800 (−1566
+    × −870). Likely cause: figsize=(16, 9) at dpi=300 with bbox_inches=''tight'' in
+    savefig.'
+  - 'SC-04 (both): title ''errorbar-asymmetric · matplotlib · anyplot.ai'' lacks the
+    language segment → ''errorbar-asymmetric · python · matplotlib · anyplot.ai''.
+    Likely cause: ax.set_title string.'
+  - 'CQ-01 (code): the Data block ends with numpy arrays (months, sales, error_lower,
+    error_upper) read directly by the plot, with no column constants → column constants
+    per role above one Data block that ends by binding df, plot code reading only
+    df. Likely cause: arrays defined instead of a DataFrame.'
+  - 'Suggestion: drop the translucent fill_between band; the spec does not ask for
+    it, and the caps already mark each interval.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "errorbar-asymmetric · matplotlib · anyplot.ai" in dark INK color (24pt), Y-axis label "Sales (thousands USD)" and X-axis label "Month" in INK color (20pt), tick labels in INK_SOFT (#4A4A44) at 16pt
-      All text is HIGHLY READABLE against light background - PASS
-      Data: 8 data points with large circular markers (22pt) in brand green (#009E73), asymmetric error bars with visible caps (capsize=10), semi-transparent green fill between confidence bounds
-      Legend: "Median with 10th-90th percentile bounds" on elevated background (#FFFDF6) in upper left
-      Grid: Subtle Y-axis grid at 15% alpha, aids value reading without competing with data
-      Legibility verdict: PASS - excellent contrast, no overlaps, all elements clearly distinguished
+      Background: warm off-white #FAF8F1, canvas 4766x2670.
+      Chrome: title 'errorbar-asymmetric · matplotlib · anyplot.ai' in dark ink; y-axis 'Sales (thousands USD)', x-axis 'Month'; ticks 0-120 and Jan-Aug in INK_SOFT; subtle horizontal grid; top/right spines removed. All readable.
+      Data: 8 green #009E73 markers with asymmetric error bars and caps at both ends, a translucent green band between the bounds; legend at upper left 'Median with 10th-90th percentile bounds'.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title and axis labels in light INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0)
-      All text is HIGHLY READABLE against dark background - PASS
-      Data: Identical to light render - brand green (#009E73) markers and error bars confirm Okabe-Ito invariance
-      Legend: Same label on dark elevated background (#242420) with appropriate edge color
-      Grid: Subtle Y-axis grid at 15% alpha, consistent with light render
-      Color consistency: Data colors IDENTICAL to light render - only chrome flipped as expected
-      Legibility verdict: PASS - no dark-on-dark failures, no text contrast issues, all elements clearly visible
-      Both renders PASS theme-readability check - implementation successful
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink tokens; faint grid; legend frame on #242420. No dark-on-dark text.
+      Data: same #009E73 markers, bars, caps and band as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -59,75 +53,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title 24pt, labels 20pt, ticks 16pt) explicitly sized and
-          perfectly readable in both light and dark themes
+        comment: Explicit sizes, proportionate to the 16x9 in figure; readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping elements; legend positioned cleanly with adequate
-          spacing
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (markersize=22) and error bars (elinewidth=3) clearly distinguishable;
-          fill adds depth
+        comment: Prominent markers and caps for 8 points; legend glyph matches
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green (#009E73) is CVD-safe with strong contrast on both
-          surfaces
+        comment: 'Single #009E73 series, good contrast'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 16:9 aspect ratio optimal for time series; tight layout; nothing
-          cut off
+        passed: false
+        comment: Canvas 4766x2670, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title follows spec format
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series uses #009E73; backgrounds correct; both renders theme-correct'
+        comment: '#009E73, correct backgrounds, theme-correct chrome'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Semi-transparent fill_between() adds refined visual storytelling;
-          intentional color choice; limited custom flourish
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Spines properly removed; grid subtle; generous whitespace; could
-          use marker edge colors
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Asymmetric errors guide viewer; clear visual hierarchy; legend explains
-          bounds; strong narrative
+        passed: false
+        comment: Data displayed; the unrequested band earns no credit
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,28 +122,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct asymmetric error bar plot using errorbar() with asymmetric
-          yerr
+        comment: Asymmetric error bar plot via errorbar()
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: error bars with visible caps, asymmetric bounds, clear
-          markers, legend'
+        comment: Caps, distinct marker, legend naming the bounds; C4 N/A
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (months), Y-axis (sales); all 8 points correctly plotted;
-          Y-range shows all data
+        comment: Marks at their values; axis spans all bars
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title matches spec format; legend explains asymmetric interpretation
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -166,73 +150,73 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Asymmetric error bars fully demonstrated with different lower and
-          upper magnitudes
+        comment: Asymmetric intervals with varying ratios
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales data realistic and neutral; percentile interpretation
-          plausible
+        comment: Monthly sales, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible; error magnitudes proportionate; Y-axis extends comfortably
+        comment: Sensible values; bounds in the render match the data
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions or abstractions; straightforward plot code
+        comment: Data block does not end in a df and has no column constants (defect
+          line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic data
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy imported; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current matplotlib API
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Proper errorbar() with asymmetric yerr; theme-adaptive colors; spine
-          idiom; legend styling
+        comment: Native errorbar() with asymmetric yerr; standard usage
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: fill_between() visualization is distinctive; limited to single technique
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
 impl_tags:
   dependencies: []
   techniques:
