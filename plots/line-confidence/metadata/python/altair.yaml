@@ -2,48 +2,52 @@ library: altair
 language: python
 specification_id: line-confidence
 created: '2025-12-26T16:14:06Z'
-updated: '2026-05-09T12:49:55Z'
-generated_by: claude-haiku
-workflow_run: 25601312703
+updated: '2026-11-21T00:07:57Z'
+generated_by: claude-sonnet
+workflow_run: 44840977692
 issue: 2007
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - Excellent theme adaptation with flawless color contrast in both light and dark
-    modes
-  - Professional visual hierarchy with central trend clearly emphasized over uncertainty
-    context
-  - Perfect specification compliance with all required features present and well-executed
-  - Realistic data generation demonstrating forecast uncertainty decay with widening
-    intervals
-  - Interactive HTML output with informative tooltips
-  - Clean, idiomatic altair code with proper layering and encoding
+  - 'Clean layered chart: semi-transparent mark_area band (y/y2) under a 3.5 px brand-green
+    line, the line clearly the strongest mark'
+  - Legend built natively from a calculated series field on separate fill and stroke
+    scales, so the band shows as a swatch and the line as a stroke sample, labelled
+    '95% confidence interval' and 'Predicted value'
+  - Theme tokens threaded through axes, view, legend and title; both renders fully
+    legible
+  - Column constants with escaped field names and explicit titles, plus formatted
+    tooltips and zoom/pan in the HTML
   weaknesses:
-  - 'Minor: Could enhance visual definition of confidence band edges with subtle stroke
-    on band boundary'
+  - 'VQ-06 (both): the y-axis title ''Predicted value'' names no quantity or unit
+    → a measured quantity with its unit, e.g. ''Daily visitors (thousands)''. Likely
+    cause: FORECAST column constant.'
+  - 'DQ-02 (both): the scenario is generic — ''Day'' and ''Predicted value'' with
+    no domain → name a concrete forecast (e.g. daily website visitors, energy demand
+    in MWh). Likely cause: the DAY/FORECAST constants and the data comment.'
+  - 'Suggestion: a single shared legend box instead of two side-by-side boxes would
+    read more compactly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title, axis labels ("Day", "Predicted Value"), tick labels all in dark text, clearly readable against light background
-      Data: Central line in brand green (#009E73) with point markers; semi-transparent green confidence band (opacity 0.25) surrounding it; subtle grid at 10% opacity; legend identifies "Confidence Band (5%)" and "Central Line"
-      Data representation: Time-series forecast showing upward trend over 50 days with confidence intervals widening over time
-      Legibility verdict: PASS - all text elements readable, no light-on-light failures, excellent contrast
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: bold title 'line-confidence · python · altair · anyplot.ai' centred; axis titles 'Day' and 'Predicted value' in dark INK, ticks 0-50 and 100-180 in INK_SOFT; subtle grid; two boxed legend entries top-left on #FFFDF6 — all readable
+      Data: #009E73 3.5 px line over a 0.25-opacity #009E73 band widening from ~10 to ~24 units; grid visible through the band; first series is #009E73
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title, axis labels, tick labels all in light gray/off-white text, clearly readable against dark background; grid remains subtle and visible
-      Data: Identical to light render - central line in same green (#009E73), same point markers, same semi-transparent confidence band; only chrome elements have adapted to light values for contrast
-      Data representation: Identical trend and uncertainty visualization as light render
-      Legibility verdict: PASS - all text elements readable, no dark-on-dark failures, excellent contrast; data colors proven identical between themes with only chrome adapted
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light #F0EFE8, ticks in #B8B7B0, legend boxes on #242420 with light labels; no dark-on-dark text
+      Data: identical #009E73 line and band; band reads as a darker green tint on the dark page, grid visible through it
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,68 +55,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicit (28px title, 22px labels, 18px ticks); readable
-          in both themes
+        comment: Explicit sizes (title 22, axis titles 18, ticks and legend 14 at
+          scale 4); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no collision of labels or elements
+        comment: No text collisions; the legends sit in empty space above the band
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Central line, band, point markers all clearly distinguishable
+        comment: 3.5 px line over a 0.25-opacity band; legend glyphs (square swatch,
+          stroke sample) match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 is colorblind-safe; adequate contrast'
+        comment: 'Single hue #009E73 with good contrast on both surfaces; no colour-only
+          distinction needed'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 proportions well-balanced; generous margins; nothing cut off
+        comment: 3200x1800 canvas; balanced margins; title ~56% of width; nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels; correct title format
+        passed: false
+        comment: Y-axis title 'Predicted value' names no quantity or unit (defect
+          line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct; both renders theme-adapted'
+        comment: 'Brand #009E73 for line and band; #FAF8F1 / #1A1A17 backgrounds;
+          chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional palette use; intentional hierarchy emphasizing central
-          trend
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid (10% opacity); clean configuration; good whitespace
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear focal point on trend; band provides context; widening intervals
-          convey confidence decay
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +129,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with confidence interval
+        comment: Correct line plot with a confidence band; no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Central line, band, legend, grid all present
+        comment: 'C1-C5 all met: prominent line on top, band between bounds, semi-transparent
+          with grid visible, legend naming line and the 95% confidence interval, band
+          a lighter tone of the line colour; grid present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Day, Y=Predicted Mean, Y2=bounds; full data range shown
+        comment: x=Day, y=central value, y/y2=bounds; full data range shown; marks
+          at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match spec
+        comment: Title 'line-confidence · python · altair · anyplot.ai'; legend entries
+          readable
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -150,19 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete: trend, band, points, widening uncertainty'
+        comment: Trend, band, widening uncertainty and short-term noise all shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 95% confidence interval; realistic widening; neutral domain
+        passed: false
+        comment: Plausible forecast shape, but the predicted quantity is generic (defect
+          line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range 95–185 with 5% padding; sensible magnitude
+        comment: Values 95-185 with a band widening from ~10 to ~24; sensible; no
+          Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -172,50 +185,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes
+        comment: Flat script, column constants and one Data block
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seed (42)
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Appropriate complexity; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct naming; current API
+        comment: Saves plot-{THEME}.png (padded to 3200x1800) and plot-{THEME}.html;
+          current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: 'Idiomatic altair patterns: Chart, mark layers, y2 encoding, alt.layer()'
+        passed: false
+        comment: Legend built natively from a transform_calculate series field mapped
+          to separate fill and stroke scales; y/y2 area encoding
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Interactive HTML with tooltips; proper encoding system
+        passed: false
+        comment: Interactive HTML (.interactive() zoom/pan) with per-layer formatted
+          tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T00:04:29Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
@@ -225,3 +245,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
