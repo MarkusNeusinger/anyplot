@@ -2,53 +2,59 @@ library: bokeh
 language: python
 specification_id: upset-basic
 created: '2026-05-13T21:26:57Z'
-updated: '2026-05-13T21:49:52Z'
+updated: '2026-11-21T13:11:15Z'
 generated_by: claude-sonnet
-workflow_run: 25826665591
+workflow_run: 44906825698
 issue: 5250
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 82
 review:
   strengths:
-  - Complete, correct UpSet plot with all three canonical components in proper alignment
-    via linked axes
-  - Degree-based color coding adds genuine analytical value — directly addresses the
-    spec suggestion to use color to distinguish intersection degree
-  - 'Perfect theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are
-    fully readable with correct chrome tokens throughout'
-  - 'Clean code: shared Range1d objects elegantly handle multi-panel axis alignment,
-    FixedTicker with overrides handles categorical-style numeric axes idiomatically'
+  - 'Complete UpSet layout: intersection bars, dot matrix and set-size bars aligned
+    through shared Range1d objects, so the panels also pan and zoom together in the
+    HTML output'
+  - 'Membership reads at a glance in both themes: filled #009E73 dots joined by 10px
+    connectors against hollow, muted non-member dots'
+  - Intersections computed with Counter(memberships).most_common(MAX_INTERSECTIONS)
+    from a tidy element/sets table, so the counts fall out of the data
+  - 'Theme tokens threaded through every chrome element; both renders fully legible
+    with correct #FAF8F1 / #1A1A17 surfaces'
   weaknesses:
-  - 'Okabe-Ito canonical order not followed for degree colors: degree-2 uses blue
-    (position 3 = #0072B2) instead of vermillion (position 2 = #D55E00), skipping
-    the second color'
-  - No HoverTool implemented despite Bokeh generating interactive HTML — a major missed
-    opportunity; tooltips on bars showing gene counts and on matrix dots showing set
-    membership would be highly distinctive
-  - Corner legend panel oversized relative to legend content, creating unbalanced
-    whitespace in the top-left quadrant
-  - Experiment labels (Exp A–F) are generic — more descriptive names would improve
-    data storytelling
+  - 'VQ-01 (both): tick labels at 28pt and axis titles at 34pt sit below the bokeh
+    reference of 34pt / 42pt and read small beside the 50pt title → 34pt ticks (+6pt)
+    and 42pt axis titles (+8pt). Likely cause: major_label_text_font_size=''28pt''
+    and axis_label_text_font_size=''34pt'' on p_bar and p_sets.'
+  - 'DQ-01 (both): all 12 shown intersections have degree 1 or 2, so no column shows
+    a combination of three or more sets → generate memberships where at least one
+    3-set intersection ranks among the 12 largest. Likely cause: independent membership
+    draws with probabilities 0.21-0.38.'
+  - 'DQ-02 (both): the sets are labelled Exp A-Exp F, which reads generic → name the
+    experiments by condition (e.g. ''Heat Shock'', ''Hypoxia'', ''Drought''). Likely
+    cause: the experiments list.'
+  - 'Suggestion: a HoverTool on bars and dots could show the exact set combination
+    and count in the HTML view.'
+  - 'Suggestion: shading the matrix dots or bars by intersection degree, as the Notes
+    allow, would separate the single-set columns from the pairs.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "upset-basic · bokeh · anyplot.ai" clearly readable (dark text). "Intersection Size" y-axis label and "Set Size" x-axis label both readable. Tick labels and count annotations (77, 64, 59...) readable. Set names Exp A–F readable on matrix panel.
-      Data: Four-panel UpSet layout. Intersection bars colored by degree — green (#009E73) for degree-1, blue for degree-2, orange for degree-3+. Horizontal set-size bars all green. Dot matrix with filled colored active dots, hollow outline inactive dots, thick green connecting segments. Degree legend in top-left panel.
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, not pure white.
+      Chrome: bold title 'upset-basic · python · bokeh · anyplot.ai' centred above the intersection bars; italic 'Intersection Size' y-axis title with ticks 0-80; italic 'Set Size' x-axis title with reversed ticks 400-0 under the left bars; set names Exp A-Exp F left of the matrix rows; count labels 77 ... 21 above each bar. All dark text, clearly readable.
+      Data: 12 intersection bars in #009E73 sorted descending (77 to 21); six horizontal set-size bars in #009E73 growing leftwards, aligned with the matrix rows; dot matrix with filled green dots for member sets joined by thick green vertical connectors, hollow grey muted dots for non-members. Six single-set columns followed by six two-set columns.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, tick labels, count annotations, set names all rendered in light off-white text — fully readable against dark surface. No dark-on-dark failures detected. Legend text readable.
-      Data: Colors identical to light render — same green (#009E73), blue, orange for degree coding. Data color identity across themes confirmed.
-      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark issues
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title in near-white, axis titles light, tick labels and set names in light grey (INK_SOFT), count labels light grey; no dark-on-dark text anywhere.
+      Data: same #009E73 green for bars, dots and connectors as the light render (the alpha blend reads a little deeper on the dark surface); hollow muted dots in grey remain visible but subdued.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,75 +62,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28pt, axis labels 18-20pt, ticks
-          16-17pt). All text readable in both themes. Minor deduction for small count
-          annotation labels
+        comment: Explicit sizes; all text readable in both themes. Tick labels at
+          28pt and axis titles at 34pt sit below the bokeh reference 34pt/42pt and
+          read small beside the 50pt title (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No text collisions; count labels clear of bar tops; set names clear
+          of dots
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Active dots (size 34), connecting segments (line_width 14), and bars
-          well-sized for canvas
+        comment: Active dots size 28 and 10px connectors clearly visible; muted hollow
+          dots present but subdued in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; green/blue/orange are distinguishable
+        comment: Single green series on high-contrast surfaces; membership encoded
+          by fill vs hollow, not by hue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: '4-panel layout fills most canvas. Minor deduction: corner legend
-          panel oversized for its content'
+        comment: 3200x1800 canvas; three panels aligned and filling the canvas; title
+          centred, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Intersection Size, Set Size. Title in correct
-          format'
+        comment: '''Intersection Size'' and ''Set Size'' describe count axes; set
+          names readable'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds correct (#FAF8F1/#1A1A17), first series #009E73. Partial:
-          degree-2 uses #0072B2 (position 3) instead of #D55E00 (position 2), skipping
-          canonical Okabe-Ito order'
+        comment: 'All marks #009E73 (Imprint position 1); backgrounds #FAF8F1 / #1A1A17;
+          chrome tokens flip correctly'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above defaults: degree-based color coding adds design intent. Clean
-          multi-panel composition. Not publication-ready — corner panel underutilized'
+        comment: Clean style-guide baseline; nothing beyond it in typography or hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid (alpha 0.08-0.10), tick marks hidden, INK_SOFT axis lines,
-          inactive dot low alpha. Good refinement.
+        comment: Matrix grid reduced to one faint guide per set row, x ticks and tick
+          marks dropped on the matrix, page-coloured edges on dots and bars separate
+          overlapping marks
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Degree color coding communicates intersection structure. Sorted bars
-          guide viewer. Clear focal point on largest intersections.
+        passed: false
+        comment: Data displayed in the spec's sort order; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -134,51 +141,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct UpSet plot with all three canonical components
+        comment: Correct UpSet layout; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Intersections sorted by size, connected dots, set-size bars, intersection
-          bars, degree shading
+        comment: Descending sort, connected dots, muted non-member dots, set-size
+          bars, intersection bars all present (C1-C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Matrix rows=sets, columns=intersections, connecting lines show combinations
+        comment: Rows = sets, columns = intersections; bars at their counts from zero;
+          marks at data positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Degree legend clearly labels all three categories
+        comment: Title 'upset-basic · python · bokeh · anyplot.ai' correct; single
+          series, legend N/A
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows degree-1, degree-2, and degree-3+ intersections with appropriate
-          variety across 6 sets
+        comment: Only degree-1 and degree-2 intersections appear among the 12 shown
+          (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: 'Genomic differential expression scenario is plausible and neutral.
-          Minor: Exp A-F labels are generic'
+        comment: Gene expression scenario plausible and neutral, but sets labelled
+          Exp A-F read generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 800 genes, 6 experiments, intersection sizes 21-77 are realistic
-          for genomic data
+        comment: 800 genes, set sizes ~190-340, intersection counts 21-77 plausible;
+          counts derived via Counter over membership signatures, not typed in. Spec
+          has no Check values
     code_quality:
       score: 10
       max: 10
@@ -188,34 +198,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure with clear section comments, no functions or classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, time, pathlib, numpy, bokeh, selenium'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, shared Range1d for linked panels, no fake functionality
+        comment: Counter.most_common computes the intersections; no hand-rolled algorithm
+          or dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png using current Bokeh
-          API and Selenium pattern
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png at 3200x1800 with the
+          CDP viewport pin
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -223,30 +234,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Shared Range1d for linked panel axes, FixedTicker with major_label_overrides,
-          gridplot, segment for connecting lines. Missing ColumnDataSource.
+        comment: Shared Range1d objects link the panels, gridplot layout, FixedTicker
+          with major_label_overrides for set names, ColumnDataSource for the count
+          labels
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: 'Linked axis ranges with shared Range1d is genuinely Bokeh-specific.
-          Inverted x-axis via Range1d(max*1.20, 0) is clean Bokeh idiom. Missed: no
-          HoverTool despite interactive HTML output'
+        passed: false
+        comment: Shared ranges give linked panning/zooming across the three panels
+          in the HTML output - a Bokeh-native interaction
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T13:07:09Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - html-export
-  - manual-ticks
-  - annotations
   - subplots
+  - annotations
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
+  - columndatasource
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling

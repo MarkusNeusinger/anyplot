@@ -2,105 +2,101 @@ library: seaborn
 language: python
 specification_id: upset-basic
 created: '2026-05-13T21:00:47Z'
-updated: '2026-05-13T21:27:54Z'
+updated: '2026-11-21T13:05:35Z'
 generated_by: claude-sonnet
-workflow_run: 25825750771
+workflow_run: 44906562243
 issue: 5250
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Complete and correct UpSet plot with all three required components (intersection
-    bars, dot matrix, set size bars)
-  - Degree-based Okabe-Ito coloring provides meaningful visual hierarchy showing intersection
-    complexity
-  - Theme adaptation is flawless — both renders pass readability checks with no dark-on-dark
-    failures
-  - Green-background set name labels are a distinctive design touch that anchors the
-    matrix rows
-  - Perfect spec compliance and data quality — realistic marketing scenario with comprehensive
-    feature coverage
-  - Clean, reproducible code with proper KISS structure
+  - 'Complete UpSet layout: size-sorted intersection bars, dot matrix and set-size
+    bars, each aligned with its matrix column or row (C1, C3)'
+  - Filled, joined active dots against small muted dots read clearly in both themes
+    (C2)
+  - Intersections computed with pd.crosstab + value_counts, so every bar counts exactly
+    its combination (C4)
+  - 'Seaborn drives the marks: sns.barplot for both bar panels, long-form sns.scatterplot
+    over a cells table, sns.despine'
+  - Theme tokens threaded through sns.set_theme rc; both renders pass the readability
+    check
   weaknesses:
-  - Font sizes explicitly set but below recommended minimums (title 21pt vs. >=24pt,
-    axis labels 17pt vs. >=20pt, tick labels 13pt vs. >=16pt) — increase all text
-    sizes to meet guidelines
-  - Library Mastery is low (4/10) because seaborn is only used for theming; the actual
-    UpSet plot construction is pure matplotlib — consider using sns.despine(), sns.set_palette(),
-    or other seaborn idioms
-  - 'DE-03 limited: degree coloring shows complexity but no focal point or specific
-    insight is emphasized — consider highlighting the largest intersection or most-overlapping
-    set'
+  - 'Suggestion: order the matrix rows and set-size bars by set size (largest at the
+    top) instead of first appearance in df, so the set-size panel reads as a ranking.'
+  - 'Suggestion: the degree shading the Notes allow, as steps of one Imprint ramp,
+    would let the reader see intersection degree in the bars as well as in the matrix.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 — correct light theme surface
-      Chrome: Title "Customer Segments · upset-basic · seaborn · anyplot.ai" in dark text clearly readable; "Intersection Size" and "Set Size" axis labels visible; tick labels and count annotations readable; Degree legend with light-colored legend box visible in upper-right
-      Data: Intersection bars colored by degree using Okabe-Ito: 1-set green (#009E73), 2-set orange (#D55E00), 3-set blue (#0072B2), 4-set pink (#CC79A7); active dots match degree colors; inactive dots are semi-transparent gray; connecting lines visible; set size bars all green; set name labels have green background fills
-      Legibility verdict: PASS — all text elements clearly readable against warm off-white background
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: title 'Customer Segments · upset-basic · python · seaborn · anyplot.ai' in dark ink centered at top (~67 % width); 'Intersection size' y-axis title and 0-140 ticks on the top bar panel; 'Set size' axis title with 600/400/200/0 ticks under the left bar panel; set names Mobile, Loyalty, Premium, Email, Social in dark ink between the set bars and the matrix; subtle horizontal grid. All readable.
+      Data: 14 intersection bars in #009E73 sorted 137 -> 30 with small count labels on top; dot matrix with large green filled dots joined by green vertical lines for participating sets and small grey muted dots elsewhere; five green set-size bars extending left from zero, aligned with the matrix rows.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17 — correct dark theme surface
-      Chrome: Title and all axis labels in light-colored text, clearly visible; tick labels in muted light color; Degree legend has dark-elevated background with light text; no dark-on-dark text failures observed
-      Data: Degree-based Okabe-Ito colors are identical to light render (green, orange, blue, pink); set name green background fills remain visible and anchoring; connecting lines and dots clearly distinguishable on dark surface
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and set names in light ink; tick and count labels in light grey INK_SOFT; spines and grid light and subtle. No dark-on-dark text.
+      Data: identical #009E73 bars, dots and connectors as the light render; muted dots darker grey but still visible against the background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: 'Sizes explicitly set but below minimums: title 21pt (rec >=24),
-          axis labels 17pt (rec >=20), tick labels 13pt (rec >=16)'
+        comment: Title 12 pt, axis titles 10 pt, ticks and set names 8 pt (style-guide
+          sizes); all readable in both themes; count labels at 7 pt stay legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text collides with text or marks; set names sit in their own column
+          clear of the set-size bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Active dots s=200, inactive s=55 alpha=0.28, bars and connecting
-          lines all well-proportioned
+        comment: Active dots s=85 against muted s=30 alpha 0.3; connector lines 2.2
+          pt clearly visible; 14 bars well sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe; active/inactive contrast clear
+        comment: Single brand hue plus neutral grey; filled vs muted dots differ by
+          size and lightness, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Four-panel gridspec well-proportioned; minor wasted space in corner
-          and left margin
+        comment: 3200x1800 canvas; title ~67 % of width; balanced labels; top-left
+          quadrant left empty as in the standard UpSet layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Intersection Size and Set Size are descriptive and appropriate
+        comment: '''Intersection size'' and ''Set size'' are descriptive count axes'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; degree coloring follows Okabe-Ito order; correct
-          theme backgrounds in both renders'
+        comment: 'All marks in #009E73, muted dots from INK_MUTED; backgrounds #FAF8F1
+          / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -108,23 +104,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: degree-based Okabe-Ito coloring and green-background
-          set name labels elevate the design; not publication-ready but clearly above
-          generic defaults'
+        comment: 'Above baseline: a deliberate two-tier dot hierarchy (85 vs 30, muted
+          alpha) and count labels subordinated in INK_SOFT'
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Spines removed appropriately; subtle 10% grid; corner panel cleanly
-          blank; decent whitespace
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
+        passed: true
+        comment: Faint 6 % row guides through the matrix tie each set name to its
+          dots and its set-size bar; spacer column keeps names off the bars
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: Degree coloring creates hierarchy; descending sort guides viewer;
-          but no specific insight highlighted or annotated
+        comment: Data displayed in sorted order; no hierarchy chosen beyond what the
+          Notes ask
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct UpSet plot with all three panels: intersection bars, dot
-          matrix, set size bars'
+        comment: Correct UpSet layout with no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted by size descending; connected dots; inactive dots; horizontal
-          set bars; vertical intersection bars
+        comment: C1 matrix + both bar panels aligned; C2 filled+joined vs muted dots;
+          C3 sorted by size descending; C4 zero baselines with count axis and labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct mapping: columns=intersections, rows=sets, all data visible'
+        comment: Columns = intersections, rows = sets; set-size bars align with matrix
+          rows (Email 750, Mobile 620, Social 470, Premium 345, Loyalty 260)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains upset-basic, seaborn, anyplot.ai in correct order;
-          Degree legend appropriate
+        comment: Title 'Customer Segments · upset-basic · python · seaborn · anyplot.ai'
+          in the mandated form; no legend needed (single hue) - N/A
     data_quality:
       score: 15
       max: 15
@@ -165,22 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 14 intersections spanning 1-set to 4-set degrees; wide size range
-          26-136; diverse set sizes
+        comment: 14 intersections from degree 1 to degree 4, long tail 137 to 30,
+          five sets of clearly different size
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer segments across marketing channels (Email, Mobile, Social,
-          Premium, Loyalty) — neutral, real-world business scenario
+        comment: 'Customer segments across marketing channels (Email, Mobile, Social,
+          Premium, Loyalty): neutral, plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1200 customers, probabilistic memberships 0.21-0.62, intersection
-          sizes 26-136 are plausible
+        comment: 1200 customers with membership rates 0.21-0.62 give plausible counts;
+          no Check values in the spec; bars counted from exact combinations via value_counts
     code_quality:
       score: 10
       max: 10
@@ -190,62 +185,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> theme -> data -> panels -> save; no functions
-          or classes'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, collections.Counter, matplotlib.pyplot, numpy,
-          seaborn'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for manually constructed UpSet plot; no over-engineering
+        comment: pd.crosstab + value_counts compute the intersections; no hand-rolled
+          counting
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current seaborn API
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches='tight'
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: sns.set_theme() with full rc dict is correct seaborn approach; matplotlib
-          primitives appropriate since seaborn has no native UpSet API
+        comment: sns.set_theme with token rc, sns.barplot (vertical and orient='h'),
+          long-form sns.scatterplot on a cells table, sns.despine
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Seaborn used mainly for sns.set_theme() theming; all plotting (bars,
-          scatter, lines) uses matplotlib directly
+        comment: Nothing seaborn-specific beyond what the library prompt shows
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-21T13:01:56Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - annotations
   - manual-ticks
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
-  - matrix-construction
+  - groupby-aggregation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - minimal-chrome
+  - grid-styling
