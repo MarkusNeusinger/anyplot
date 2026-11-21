@@ -40,7 +40,7 @@ fig.add_trace(
         x=df[MONTH],
         y=df[TRAFFIC],
         mode="lines",
-        line=dict(color=BRAND, width=3),
+        line={"color": BRAND, "width": 3},
         fill="tozeroy",
         fillcolor="rgba(0, 158, 115, 0.35)",
         hovertemplate="%{x}: %{y:.1f}K visitors<extra></extra>",
@@ -50,33 +50,36 @@ fig.add_trace(
 # Style
 fig.update_layout(
     autosize=False,
-    title=dict(
-        text="line-filled · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"
-    ),
-    xaxis=dict(
-        title=dict(text=MONTH, font=dict(size=12, color=INK)),
-        tickfont=dict(size=10, color=INK_SOFT),
-        showgrid=True,
-        gridcolor=GRID,
-        gridwidth=1,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-    ),
-    yaxis=dict(
-        title=dict(text=TRAFFIC, font=dict(size=12, color=INK)),
-        tickfont=dict(size=10, color=INK_SOFT),
-        showgrid=True,
-        gridcolor=GRID,
-        gridwidth=1,
-        rangemode="tozero",
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-    ),
+    title={
+        "text": "line-filled · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "title": {"text": MONTH, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "showgrid": True,
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": TRAFFIC, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "showgrid": True,
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "rangemode": "tozero",
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    font=dict(color=INK),
+    font={"color": INK},
     showlegend=False,
-    margin=dict(l=80, r=40, t=80, b=60),
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
 
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
