@@ -2,103 +2,112 @@ library: plotnine
 language: python
 specification_id: network-bipartite
 created: '2026-05-14T21:06:21Z'
-updated: '2026-05-14T21:25:45Z'
+updated: '2026-11-21T17:42:06Z'
 generated_by: claude-sonnet
-workflow_run: 25885513078
+workflow_run: 44930923116
 issue: 5247
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 82
 review:
   strengths:
-  - 'Excellent visual refinement: grid, border, y-axis all removed; only x-axis line
-    retained'
-  - Clever use of plotnine grammar primitives (geom_segment + geom_point + geom_text)
-    to construct bipartite network without any network library dependency
-  - Real, scientifically plausible gene-disease data with factually accurate associations
-    (BRCA1-Breast Cancer, TP53-Lung Cancer)
-  - 'Perfect spec compliance: all required features present, correct bipartite two-column
-    structure'
-  - Theme-adaptive chrome correctly implemented for both light and dark renders
-  - Node size encoding via scale_size_continuous effectively highlights hub genes
+  - Two clearly separated columns with airline labels on the outer left and airport
+    labels on the outer right, every label colored by its set and clear of the edges
+    in both themes
+  - Node size maps degree through scale_size_continuous with a range of 3–9, so JFK
+    and LAX stand out as hubs while the single-route DFW and DXB stay visible
+  - 'The size legend uses guides(size=guide_legend(override_aes={''color'': INK_SOFT})),
+    so its circles read on both backgrounds'
+  - Edges are thin INK_SOFT segments at alpha 0.35, lighter than the nodes and still
+    visible on the dark surface
+  - 'Set order comes from df via limits=node_sets, so the first set gets #009E73 and
+    the second #C475FD'
+  - Real, neutral airline–airport route data (Delta/ATL, United/ORD, Lufthansa/FRA,
+    Emirates/DXB) in the spec's size range
   weaknesses:
-  - 'Okabe-Ito ordering violation: code uses positions 1 (#009E73) and 3 (#0072B2),
-    skipping position 2 (#D55E00 vermillion) — fix by changing COLOR_DISEASE = "#D55E00"'
-  - Node label geom_text uses size=10, below the recommended >=16pt minimum — increase
-    to at least size=14 or size=16
-  - DE-03 storytelling is limited to implicit node-size hierarchy — consider adding
-    a labs(caption=...) annotation highlighting the most connected gene hub
+  - 'VQ-05 (both): the legend box has almost no inner padding: the ''Node set'' title
+    sits on the left frame line and ''Airport'' runs to the right frame line → give
+    the legend about 4–6 pt of inner margin. Likely cause: no legend_box_margin /
+    legend_margin in theme() around the ELEVATED_BG frame.'
+  - 'SC-02 (both): a horizontal axis line runs across the full plot width under the
+    columns, though the spec''s first characteristic bullet asks for no axes → drop
+    the line and keep the bold set names as column headings. Likely cause: axis_line_x=element_line(color=INK_SOFT,
+    size=0.5).'
+  - 'DQ-03 (both): the airline set has 8 nodes, below the spec''s 10–50 nodes per
+    set (12 airports is inside) → at least 10 airlines (+2), for example Air Canada
+    and British Airways with their routes. Likely cause: the routes dict has 8 keys.'
+  - 'Suggestion: placing the set names as headings above each column (geom_text at
+    y slightly above 1) would tie them closer to their nodes than the bottom axis
+    does.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "network-bipartite · plotnine · anyplot.ai" in dark ink, clearly readable. X-axis labels "Genes" and "Diseases" in bold dark text. Legend text readable. No light-on-light issues.
-      Data: Gene nodes in teal/green (#009E73), Disease nodes in orange-warm tone. Node sizes vary by degree (larger = more connections). Gray connecting segments at alpha=0.30. All elements clearly distinguishable.
-      Legibility verdict: PASS — all text readable against light background
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title "network-bipartite · python · plotnine · anyplot.ai" in dark ink at top, about 50 % of the width. Bold column names "Airline" and "Airport" under a thin INK_SOFT axis line at the bottom. Legend box on the right (elevated off-white with a dark frame) with "Node set" (Airline, Airport) and "Routes" (1–6 dark circles). All text is readable; the legend's title and entries sit tight against the frame.
+      Data: 8 airline nodes in #009E73 on the left (Delta to Emirates), labels to the left in the same green; 12 airport nodes in #C475FD on the right (ATL to DXB), labels to the right. Node size grows with degree (JFK and LAX largest, DFW and DXB smallest but visible). 36 straight grey edges at low alpha, only between the columns.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black
-      Chrome: Title and axis labels in light ink, clearly readable against dark background. Legend background uses elevated dark surface. No dark-on-dark failures detected.
-      Data: Gene colors identical to light render (same teal/green). Disease colors identical to light render (same orange-warm). Only chrome elements flip between themes, data colors remain constant.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, column names and legend title in light ink; legend entries in light grey; legend box on the #242420 elevated surface with a light frame. No dark-on-dark text; the size legend circles are light grey and visible.
+      Data: green #009E73 and lilac #C475FD identical to the light render; edges in light grey at low alpha, faint but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis ticks 22pt, legend 16pt explicitly set; geom_text
-          node labels use size=10 which is below the >=16pt guideline
+        comment: Title 12 pt, column names 11 pt bold, node labels 11, legend 9 pt;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 12 gene labels on left side are closely spaced; minor potential crowding
-          but no visible collision in renders
+        comment: Labels on the outer side of each column, clear of the edges and of
+          each other
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes clearly visible with degree-encoded sizing; edges at alpha=0.30,
-          size=0.6 are intentionally subtle but borderline faint
+        comment: Nodes 3–9 sized by degree, edges faint but visible in both themes;
+          size-legend circles override to INK_SOFT and read on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors; CVD-safe combination
+        comment: Green vs lilac, plus separate columns; not color-only
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Bipartite structure fills canvas well with balanced margins, ~65%
-          canvas utilization
+        passed: false
+        comment: 3200x1800; legend box has no inner padding, title and entries touch
+          the frame (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Genes and Diseases axis break labels are descriptive and context-appropriate
+        comment: Set names 'Airline' and 'Airport' label the columns
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Gene correctly uses #009E73 (position 1) but Disease uses #0072B2
-          (position 3), skipping position 2 (#D55E00). Backgrounds and chrome are
-          theme-correct.'
+        passed: true
+        comment: 'First set #009E73, second #C475FD; backgrounds theme-correct'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -106,25 +115,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean bipartite layout with thoughtful color-coding and size-encoded
-          nodes; above generic default but not publication-level polish
+        comment: Node labels colored by their set, bold column headings in INK; a
+          typographic hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Excellent: both grid axes removed, panel border removed, y-axis
-          hidden, only x-axis line retained; edge alpha and node sizing carefully
-          tuned'
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
+        passed: true
+        comment: Labels aligned on the outer side of each column (right-aligned left,
+          left-aligned right), consistent gutters
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: Node degree-sizing provides visual hierarchy; no explicit annotation
-          or caption highlights key patterns like hub genes
+        comment: Degree sizing as the Notes ask; no further focal point
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -132,31 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bipartite network graph with two-column layout, edges only
-          between sets
+        comment: Bipartite two-column network, edges only between the sets
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Separated columns, color by set membership, node size encodes degree,
-          labels nudged away from edges
+        passed: false
+        comment: Columns, set colors, degree size, straight faint edges, outer labels
+          met; C1 asks for no axes but an x-axis line spans the plot (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Genes at x=0, Diseases at x=1, y positions distributed via linspace,
-          all 25 connections represented
+        comment: All 36 routes drawn between the right nodes; layout-positioned type
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: network-bipartite · plotnine · anyplot.ai;
-          legend shows Node Type and Degree scale'
+        comment: Title format correct; legends 'Node set' and 'Routes' read for a
+          reader
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -164,22 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows hub nodes, low-degree nodes, bipartite two-mode structure,
-          degree variation; all bipartite aspects demonstrated
+        comment: Hubs (JFK, LAX, Delta, United), single-route nodes (DFW, DXB), crossings
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Gene-disease associations in oncology using real gene names (BRCA1,
-          TP53, EGFR, KRAS) and real cancer types; neutral scientific context
+        comment: Real airlines and hub airports, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 12 genes, 8 diseases, 25 edges within spec range; associations are
-          scientifically plausible
+        passed: false
+        comment: Real route patterns; but the airline set has 8 nodes, below the spec's
+          10–50 per set (defect line). Degree computed via value_counts, not typed
     code_quality:
       score: 10
       max: 10
@@ -189,36 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> theme tokens -> data -> plot assembly -> save;
-          no functions or classes'
+        comment: Linear, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data is deterministic
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine symbols imported are used; no unused imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; sys.path workaround is legitimate for plotnine.py
-          filename conflict; two geom_text calls for left/right positioning is correct
-          grammar approach
+        comment: value_counts for degree, map for edge endpoints
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', dpi=300, width=16, height=9) correct
+        comment: plot-{THEME}.png at 8x4.5 in, dpi 400
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -226,28 +226,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Grammar of graphics used well: layered geoms, aes() mappings for
-          data-driven color and size, scale_* for consistent encodings, comprehensive
-          theme() control'
+        comment: Layered geoms with aes mappings, scale limits from the data, guides()
+          with override_aes for the size legend
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Grammar composition to build bipartite network from primitives is
-          distinctively plotnine/ggplot2; scale_size_continuous with data-driven node
-          sizing leverages plotnine aesthetic system; but approach is replicable in
-          ggplot2 with minor syntax changes
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T17:38:30Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
   - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - groupby-aggregation
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
