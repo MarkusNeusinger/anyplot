@@ -2,46 +2,66 @@ library: plotnine
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T11:20:28Z'
-updated: '2026-05-14T17:21:14Z'
-generated_by: claude-haiku
-workflow_run: 25873527210
+updated: '2026-11-21T17:37:59Z'
+generated_by: claude-sonnet
+workflow_run: 44930268450
 issue: 3002
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 82
 review:
   strengths:
-  - Flawless execution across technical metrics (visual quality, spec compliance,
-    data quality, code quality)
-  - Perfect theme adaptation with no legibility issues in either render
-  - Excellent use of plotnine's composition operators for asymmetric mosaic layout
-  - Custom theme applied consistently, demonstrating deep mastery of plotnine's theming
-    system
-  - Diverse subplot types (line, bar, scatter, heatmap) demonstrate comprehensive
-    capability
+  - 'Genuine mosaic: Sales Trend spans exactly the two columns of Margin Analysis
+    and Regional Heat below it, with flush edges and consistent gutters, composed
+    with plotnine''s | and / operators'
+  - Direct end labels in each product's color replace a legend, with axis expansion
+    reserved so they never collide with the lines
+  - One theme broadcast to all five panels with the & operator; chrome flips cleanly
+    between light and dark while data colors stay identical
+  - 'Heatmap uses the allowed #009E73->#4467A3 sequential ramp with page-colored tile
+    gutters and in-cell values'
   weaknesses:
-  - Design Excellence could be elevated with more visual emphasis or hierarchy within
-    individual panels (e.g., strategic color contrast or size variation in the Monthly
-    Performance bars)
+  - 'SC-02, DE-03 (both): the primary Sales Trend panel is the same width and height
+    as Quarterly Revenue and Performance, so the largest panel does not hold the primary
+    data (C2) → make Sales Trend clearly the largest panel, e.g. a wider left column
+    or B and E stacked in a narrower right column. Likely cause: `left_col | right_col`
+    gives both columns equal widths.'
+  - 'VQ-07 (both): the ordered quarters Q1-Q4 are filled with four unrelated categorical
+    hues (#009E73, #C475FD, #4467A3, #BD8233), which hides their order → one color
+    for all bars (the x axis already names the quarter) or ordered steps of imprint_seq.
+    Likely cause: `aes(fill=GROUP)` with GROUP = quarters and `scale_fill_manual(values=IMPRINT_PALETTE)`.'
+  - 'VQ-06 (both): the heatmap title ''Regional Heat'' and its blank y title never
+    say what the 0-100 cell values measure → a title naming the measure and its unit,
+    e.g. ''Regional index (0-100)''. Likely cause: PANEL label ''Regional Heat'' and
+    Y_LABEL ''''.'
+  - 'DQ-02 (both): products named Alpha, Beta and Gamma and Sales/Profit/Growth cells
+    drawn from one uniform(0, 100) read as placeholders → concrete product names and
+    per-metric values in plausible units. Likely cause: the `products` list and `rng.uniform(0,
+    100, ...)` in the heat block.'
+  - 'CQ-01 (code): `def axis_labels(sub, title)` (lines 125-126) is a helper function
+    in a script that should run flat → inline `labs(x=..., y=..., title=...)` per
+    panel. Likely cause: the helper for the per-panel labs.'
+  - 'Suggestion: a ''.'' empty cell in the layout (plot_spacer) would demonstrate
+    the gap feature the Notes allow.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title "subplot-mosaic · plotnine · anyplot.ai" is bold (24pt) and dark, axis labels (20pt) and tick labels (16pt) are dark and clearly readable against light surface. Grid lines are subtle (alpha=0.10/0.05). All text elements meet legibility requirements.
-      Data: Sales Trend uses green (#009E73), orange (#D55E00), blue (#0072B2) with visible points (alpha=0.6). Quarterly Revenue shows the same color sequence for Q1-Q4 bars. Margin Analysis displays teal scatter points (alpha=0.7). Regional Performance heatmap uses viridis colormap with clear tile boundaries. Monthly Performance bars are green (#009E73). All colors match Okabe-Ito specification.
-      Legibility verdict: PASS - All elements are clearly readable on light background.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas
+      Chrome: bold figure title 'subplot-mosaic · python · plotnine · anyplot.ai' centered at top; five bold panel titles (Sales Trend, Quarterly Revenue, Margin Analysis, Regional Heat, Performance); dark axis titles and INK_SOFT ticks, subtle grid; all readable
+      Data: Sales Trend (top left, spanning the two bottom-left columns) has three lines with dots: Alpha #009E73, Beta #C475FD, Gamma #4467A3 with direct end labels; Quarterly Revenue bars in green, purple, blue, ochre; Margin Analysis green scatter of 80 points; Regional Heat 4x3 tiles on a green-to-blue ramp with white values; Performance six green bars Jan-Jun
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title, axis labels, and tick labels are light-colored and fully readable against dark background. No dark-on-dark text failures detected. Grid lines are subtle and visible. All chrome elements adapt correctly to dark theme.
-      Data: Sales Trend, Quarterly Revenue, and Monthly Performance colors are IDENTICAL to light render (green #009E73, orange #D55E00, blue #0072B2, pink). Regional Performance heatmap colormap is identical to light render. Brand green remains prominent and distinguishable. Only the background and text colors have adapted to the dark theme, as required.
-      Legibility verdict: PASS - All elements are clearly readable on dark background with no theme-adaptation failures.
+      Background: warm near-black #1A1A17
+      Chrome: title, panel titles and axis titles in light ink, ticks in light grey; grid faint but visible; no dark-on-dark text anywhere
+      Data: identical colors to the light render; brand green #009E73 clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -49,74 +69,81 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt. All readable in both themes.
+        comment: Explicit sizes (figure title 13 pt, panel titles 10 pt bold, axis
+          titles 9 pt, ticks 7.5 pt); every label reads cleanly in both themes at
+          full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Five panels clearly separated with hspace=0.32, wspace=0.22. No collisions.
+        comment: No text collisions; the Gamma and Alpha end labels sit close but
+          clear of each other and of the lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines (size=1.2), points (size=2.5-3), scatter (size=3, alpha=0.7),
-          heatmap tiles all clearly visible.
+        comment: Lines 1.0 with 60-point markers, 80 scatter points at 1.8 with alpha
+          0.7, tiles with page-colored gaps; all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito + viridis is colorblind-safe.
+        comment: Imprint colors are CVD-safe; white cell values hold contrast on the
+          green-to-blue tiles
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Asymmetric layout with clear hierarchy. Nothing cut off. Proportions
-          excellent.
+        comment: 3200x1800 canvas, panels evenly spaced, nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All labels descriptive with units (Day, Sales Units, Quarter, Revenue
-          k$, etc.).
+        passed: false
+        comment: Axes carry units (Sales (units), Revenue (k$), Margin (%)), but the
+          heatmap title 'Regional Heat' never says what its 0-100 values measure (defect
+          line)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73. Multi-series follow Okabe-Ito order. Continuous
-          uses viridis. Backgrounds theme-correct.'
+        passed: false
+        comment: 'Backgrounds and chrome theme-correct, first series #009E73, heatmap
+          on the allowed #009E73->#4467A3 sequential ramp; but the ordered quarters
+          Q1-Q4 get four unrelated categorical hues (defect line)'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Custom theme, explicit color choices, intentional palette. Professional
-          polish.
+        passed: false
+        comment: 'Raised one step: a deliberate type hierarchy (13 pt figure title
+          > 10 pt bold panel titles > 9 pt axis titles) and direct end labels in each
+          series'' color instead of a legend'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Spines removed, grid subtle, whitespace generous, heatmap borders
-          provide definition.
+        passed: false
+        comment: 'Raised: direct labels replace the legend with axis expansion reserved
+          for them, heatmap tiles separated by page-colored gutters with in-cell values
+          instead of a colorbar, minor grid removed'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear hierarchy, consistent colors unify panels, dashboard structure
-          narrates product performance.
+        passed: false
+        comment: 'Default: the primary trend panel is no larger than the Quarterly
+          Revenue and Performance panels, so no focal point is set'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -124,30 +151,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Mosaic layout with varying sizes using plotnine composition operators
-          (| and /).
+        comment: 'A true mosaic: Sales Trend spans the two columns of Margin Analysis
+          and Regional Heat, built with plotnine''s composition operators (plotnine
+          has no string-pattern API)'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Layout flexibility, different plot types, visual hierarchy, all spec
-          requirements satisfied.
+        passed: false
+        comment: 'Spanning, mixed plot types, consistent spacing (C1, C3, C4) met;
+          C2 missed: the primary Sales Trend panel is the same size as Quarterly Revenue
+          and Performance (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x/y mapping in all panels. Axes show complete data ranges.
+        comment: All marks at their data values; end labels nudged, data unmoved;
+          axes show the full ranges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Main title correct format. Panel titles present. Legends properly
-          labeled.
+        comment: Title 'subplot-mosaic · python · plotnine · anyplot.ai' correct;
+          series identified by direct labels
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -155,81 +185,93 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple data types showcase subplot versatility.
+        comment: Line, bar, scatter and heatmap panels with a spanning primary view
+          show all aspects of a mosaic
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Product performance dashboard is neutral and plausible.
+        passed: false
+        comment: Neutral sales dashboard, but products named Alpha/Beta/Gamma and
+          a heatmap of uniform 0-100 numbers read as placeholders (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values sensible: sales 75-150, revenue 35-55k, margins 0-40%,
-          scores 75-95.'
+        comment: 'Checked: sales 77-140 units, revenue 35-55 k$, margins 3-39 %, scores
+          78-95; no check values in the spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No functions or classes. Direct plot creation.
+        passed: false
+        comment: A helper function axis_labels() breaks the flat imports -> data ->
+          plot -> save structure (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports. No unused modules.
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity (AR-08 PASS). Appropriate complexity.
+        comment: Appropriate complexity for five panels; no written-out algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly.
+        comment: Saves plot-{THEME}.png at 400 dpi with figure_size (8, 4.5); current
+          API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of ggplot + geoms, theme customization, composition
-          operators. Pure plotnine idiom.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Mosaic composition and custom theme demonstrate strong mastery.
+        passed: false
+        comment: 'Raised: grammar-of-graphics panels composed with | and /, one theme
+          broadcast with &, theme_set(theme_minimal()), limits from the data'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Raised: plotnine''s composition algebra (& to broadcast a theme
+          across every panel, per-panel theme for headroom)'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T17:33:30Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - layer-composition
+  - annotations
+  - custom-colormap
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
-  - grid-styling
+  - minimal-chrome
   - alpha-blending
+  - grid-styling
