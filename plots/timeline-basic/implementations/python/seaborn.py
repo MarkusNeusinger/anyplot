@@ -1,12 +1,14 @@
 """ anyplot.ai
 timeline-basic: Event Timeline
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-11
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-21
 """
 
 import os
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 
@@ -14,48 +16,13 @@ import seaborn as sns
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (canonical order)
-IMPRINT = [
-    "#009E73",  # brand green
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-    "#BD8233",  # reddish purple
-    "#AE3030",  # orange
-]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Software project milestones
-events = [
-    ("2024-01-15", "Project Kickoff", "Planning"),
-    ("2024-02-20", "Requirements Done", "Planning"),
-    ("2024-04-01", "Architecture Design", "Design"),
-    ("2024-05-15", "UI Mockups", "Design"),
-    ("2024-07-01", "Backend MVP", "Development"),
-    ("2024-08-15", "Frontend MVP", "Development"),
-    ("2024-10-01", "Alpha Release", "Testing"),
-    ("2024-11-15", "Beta Testing", "Testing"),
-    ("2025-01-10", "Go Live", "Deployment"),
-]
-
-df = pd.DataFrame(events, columns=["date", "event", "category"])
-df["date"] = pd.to_datetime(df["date"])
-
-# Create y-offset for alternating labels (above/below axis)
-df["y_offset"] = [1 if i % 2 == 0 else -1 for i in range(len(df))]
-
-# Map categories to Okabe-Ito colors
-category_order = ["Planning", "Design", "Development", "Testing", "Deployment"]
-palette = {
-    "Planning": IMPRINT[0],  # green
-    "Design": IMPRINT[1],  # vermillion
-    "Development": IMPRINT[2],  # blue
-    "Testing": IMPRINT[3],  # reddish purple
-    "Deployment": IMPRINT[4],  # orange
-}
-
-# Set seaborn theme with theme-adaptive tokens
 sns.set_theme(
     style="ticks",
     rc={
@@ -67,90 +34,129 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
-        "legend.facecolor": PAGE_BG,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+EVENT = "Event"  # role: event
+CATEGORY = "Phase"  # role: category
 
-# Draw the main timeline axis
-ax.axhline(y=0, color=INK_SOFT, linewidth=3, zorder=1)
-
-# Plot events using seaborn scatterplot
-sns.scatterplot(
-    data=df,
-    x="date",
-    y=[0] * len(df),
-    hue="category",
-    hue_order=category_order,
-    palette=palette,
-    s=500,
-    zorder=3,
-    ax=ax,
-    legend=True,
-    edgecolor=PAGE_BG,
-    linewidth=2,
+# Data: replace this block with your own table, for example df = pd.read_csv("events.csv")
+df = pd.DataFrame(
+    {
+        DATE: pd.to_datetime(
+            [
+                "2025-03-03",
+                "2025-03-24",
+                "2025-04-28",
+                "2025-06-16",
+                "2025-07-07",
+                "2025-09-15",
+                "2025-10-06",
+                "2025-12-01",
+                "2026-01-26",
+                "2026-02-16",
+            ]
+        ),
+        EVENT: [
+            "Permit Granted",
+            "Site Cleared",
+            "Foundation Poured",
+            "Frame Raised",
+            "Roof Sealed",
+            "Wiring Passed",
+            "Plumbing Passed",
+            "Drywall Finished",
+            "Final Inspection",
+            "Keys Handed Over",
+        ],
+        CATEGORY: [
+            "Site prep",
+            "Site prep",
+            "Foundation",
+            "Structure",
+            "Structure",
+            "Systems",
+            "Systems",
+            "Finishing",
+            "Finishing",
+            "Finishing",
+        ],
+    }
 )
 
-# Add vertical connector lines and event labels
-for _idx, row in df.iterrows():
-    y_end = row["y_offset"] * 0.55
+# Plot: reads only df and the constants above
+df = df.sort_values(DATE).reset_index(drop=True)
+side = np.where(np.arange(len(df)) % 2 == 0, 1, -1)  # alternate above / below the axis
+categories = list(dict.fromkeys(df[CATEGORY]))
+palette = {category: IMPRINT_PALETTE[i] for i, category in enumerate(categories)}
 
-    # Connector line
-    ax.plot([row["date"], row["date"]], [0, y_end], color=palette[row["category"]], linewidth=2.5, zorder=2)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-    # Event label
-    va = "bottom" if row["y_offset"] > 0 else "top"
+ax.axhline(0, color=INK_SOFT, linewidth=1.6, zorder=1)
+
+sns.scatterplot(
+    data=df,
+    x=DATE,
+    y=np.zeros(len(df)),
+    hue=CATEGORY,
+    hue_order=categories,
+    palette=palette,
+    s=110,
+    edgecolor=PAGE_BG,
+    linewidth=1.2,
+    zorder=3,
+    ax=ax,
+)
+
+# Connectors and labels: lengths alternate so neighbouring labels never collide
+for i, row in df.iterrows():
+    reach = side[i] * (0.5 if i % 4 < 2 else 0.8)
+    ax.plot([row[DATE], row[DATE]], [0, reach], color=palette[row[CATEGORY]], linewidth=1.3, zorder=2)
     ax.annotate(
-        row["event"],
-        xy=(row["date"], y_end),
+        row[EVENT],
+        xy=(row[DATE], reach),
+        xytext=(0, 4 * side[i]),
+        textcoords="offset points",
         ha="center",
-        va=va,
-        fontsize=15,
+        va="bottom" if side[i] > 0 else "top",
+        fontsize=8,
         fontweight="bold",
         color=INK,
-        xytext=(0, 10 * row["y_offset"]),
-        textcoords="offset points",
     )
 
-# Style the plot
-ax.set_xlim(df["date"].min() - pd.Timedelta(days=40), df["date"].max() + pd.Timedelta(days=60))
-ax.set_ylim(-1.1, 1.1)
-
-# Remove y-axis and spines for clean timeline look
+span = df[DATE].max() - df[DATE].min()
+ax.set_xlim(df[DATE].min() - span * 0.07, df[DATE].max() + span * 0.07)
+ax.set_ylim(-1.15, 1.15)
 ax.set_yticks([])
 ax.set_ylabel("")
 ax.set_xlabel("")
-ax.spines["left"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["top"].set_visible(False)
-ax.spines["bottom"].set_visible(False)
+sns.despine(ax=ax, left=True, bottom=True)
 
-# Format x-axis with monthly ticks
-ax.tick_params(axis="x", labelsize=16, length=0, colors=INK_SOFT)
-ax.xaxis.set_major_locator(plt.matplotlib.dates.MonthLocator(interval=2))
-ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter("%b %Y"))
-plt.setp(ax.get_xticklabels(), rotation=45, ha="right", color=INK_SOFT)
+ax.xaxis.set_major_locator(mdates.MonthLocator(interval=2))
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+ax.tick_params(axis="x", labelsize=8, length=0, pad=6)
 
-# Title and legend
-ax.set_title("timeline-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
-
-# Place legend at bottom center, horizontal layout
+ax.set_title("timeline-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
 ax.legend(
-    title="Phase",
-    title_fontsize=16,
-    fontsize=14,
-    loc="lower center",
-    ncol=5,
-    framealpha=0.9,
+    title=CATEGORY,
+    title_fontsize=8,
+    fontsize=8,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.1),
+    ncol=len(categories),
+    frameon=True,
+    facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
-    facecolor=PAGE_BG,
-    bbox_to_anchor=(0.5, -0.15),
+    labelcolor=INK,
 )
+for handle in ax.get_legend().legend_handles:
+    handle.set_markersize(7)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.04, right=0.96, top=0.9, bottom=0.2)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

@@ -12,114 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 74
 review:
   strengths:
-  - Perfect theme adaptation with zero legibility issues in both light and dark renders
-  - Excellent code structure following KISS principle with clean, Pythonic implementation
-  - Clever use of dataframe splitting and y_offset for natural alternating label positioning
-  - Full palette compliance using Okabe-Ito colors correctly across all phases
-  - Comprehensive use of explicit font sizing across all text elements (24pt, 20pt,
-    16pt, 11pt)
-  - Professional timeline visualization with strong visual hierarchy and chronological
-    storytelling
+  - Markers at their exact dates with labels alternating above and below on connectors;
+    no label collisions
+  - Theme tokens threaded through all chrome; both renders readable
+  - Plausible, neutral software-project milestone data with uneven spacing
   weaknesses:
-  - Grid opacity could be even more subtle (currently alpha=0.1; could explore 0.05-0.08)
-  - Could leverage more advanced plotnine patterns (custom guides, position adjustments)
-    for distinctive library mastery
+  - 'VQ-05 (both): the canvas is 4800×2700 instead of 3200×1800 → 3200×1800 (−1600
+    × −900 px). Likely cause: figure_size=(16, 9) saved with dpi=300 instead of (8,
+    4.5) at dpi=400.'
+  - 'VQ-07 (both): the legend lists the phases alphabetically with Development (#C475FD)
+    first and Planning (#009E73) second, so the first categorical entry is not the
+    brand green and the order is not the project''s → data order, first entry #009E73.
+    Likely cause: scale_color_manual(values=category_colors) without limits=df[''category''].unique().tolist().'
+  - 'SC-04 (both): the title ''timeline-basic · plotnine · anyplot.ai'' lacks the
+    language segment → ''timeline-basic · python · plotnine · anyplot.ai''. Likely
+    cause: the labs(title=...) string.'
+  - 'VQ-01 (both): the event labels render at about 70 % of the tick label size (about
+    5.5 pt equivalent on the 16-in figure, below the 8 pt reference) → about the tick
+    size (+5 in geom_text units at this figure size). Likely cause: geom_text(size=11)
+    next to 16 pt ticks.'
+  - 'Suggestion: monthly ticks would suit a one-year timeline better than four quarterly
+    ISO dates.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white — correctly themed
-      Chrome: Title (24pt), x-axis label (20pt), tick labels (16pt), and event labels (11pt) all rendered in dark text (INK #1A1A17 and INK_SOFT #4A4A44). All text is crisp and clearly readable against light surface. No light-on-light failures.
-      Data: 12 event points colored by phase using Okabe-Ito palette — Planning (green #009E73), Development (orange #D55E00), Testing (blue #0072B2), Release (purple #CC79A7). Event labels alternate above/below timeline axis with perfect spacing. Grid lines subtle (alpha=0.1) on x-axis. Timeline axis line prominent in dark gray.
-      Legibility verdict: PASS — All elements readable, no overlap, excellent contrast
+      Background: warm off-white #FAF8F1, correct
+      Chrome: title 'timeline-basic · plotnine · anyplot.ai' (no language segment), x-axis title 'Project Timeline 2024', quarterly ISO ticks 2024-01-01..2025-01-01, faint vertical grid, framed legend 'Phase' at the bottom in alphabetical order (Development, Planning, Release, Testing); all text readable, event labels small relative to the ticks
+      Data: dark-grey axis line, 12 markers alternating above/below on grey connectors; Planning #009E73, Development #C475FD, Testing #4467A3, Release #BD8233; single-line event labels alternate above/below. Canvas 4800x2700
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black — correctly themed
-      Chrome: Title, axis labels, tick labels, and event labels all rendered in light text (INK #F0EFE8 and INK_SOFT #B8B7B0). All text is clearly readable against dark surface. No dark-on-dark failures detected.
-      Data: Event point colors are **identical** to light render (same Okabe-Ito values: #009E73, #D55E00, #0072B2, #CC79A7). Label positions unchanged. Grid lines and timeline axis rendered in light gray, maintaining visibility. Brand green #009E73 is vibrant and readable on dark surface.
-      Legibility verdict: PASS — Perfect mirror of light render with only chrome adapted to dark theme. Data colors unchanged as required.
+      Background: warm near-black #1A1A17, correct
+      Chrome: all text in light ink, readable; no dark-on-dark
+      Data: colors identical to the light render
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          event labels 11pt. All perfectly readable in both themes.'
+        passed: false
+        comment: Title, axis title and ticks readable; event labels at geom_text size
+          11 render at about 70 % of the tick size, below the reference (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Event labels alternate above/below timeline with y_offset mechanism.
-          Zero overlap, perfect spacing.
+        comment: Single-line labels alternate above/below; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points (size=5), connector lines (size=0.8), and axis (size=1.5)
-          optimally sized for 12 events. All visible and well-adapted.
+        comment: 12 markers at size 5 with connectors clearly visible; legend glyphs
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast. CVD-safe. No red-green sole
-          signal.
+        comment: Four distinct Imprint hues plus direct labels; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 16:9 landscape fills 60-70% of canvas with balanced margins. Perfect
-          proportions and whitespace.
+        passed: false
+        comment: Canvas 4800x2700, not one of the two canonical sizes (defect line);
+          also wide empty bands above and below the labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title format and labels. Legend title 'Phase' clear and
-          informative.
+        comment: '''Project Timeline 2024'' and ISO quarter ticks are descriptive
+          and unambiguous'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73. Multi-series follows Okabe-Ito order. Backgrounds
-          #FAF8F1/#1A1A17. Theme-correct chrome in both renders.'
+        passed: false
+        comment: Colors are Imprint hues and backgrounds correct, but the legend is
+          alphabetical with Development (#C475FD) first and Planning green second
+          (defect line)
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Strong design with theme-adaptive tokens, custom category mapping,
-          and intentional choices. Professional above defaults.
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, Imprint palette;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Removed y-axis grid, subtle x-axis grid, spines handled well, generous
-          whitespace. Legend frame polished.
+        passed: false
+        comment: Spine and grid rules met; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Timeline tells project progression story. Category colors create
-          visual grouping. Clear focal point and rhythm.
+        passed: false
+        comment: Events displayed chronologically; no hierarchy chosen beyond the
+          Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -127,29 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal timeline with events as points and labels. All
-          subtypes present.
+        comment: Horizontal event timeline with markers, connectors and labels; category
+          color is allowed by the Notes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Date mapping, event labels, category color-coding, clear date formatting.
-          All features present.
+        comment: Horizontal, alternating labels (C2), quarterly ISO date ticks (C3),
+          category legend (C4), basic scope (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly maps dates. Y-axis uses categorical offset. All
-          12 events visible.
+        comment: Markers sit at their exact dates on one time axis (C1); all 12 events
+          shown
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Correct title format 'timeline-basic · plotnine · anyplot.ai'. Legend
-          labels match categories.
+        passed: false
+        comment: Title 'timeline-basic · plotnine · anyplot.ai' lacks the language
+          segment (defect line); legend labels match
     data_quality:
       score: 15
       max: 15
@@ -159,22 +167,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all timeline aspects: varied timing, multiple categories (4
-          phases), natural event spacing.'
+        comment: Uneven spacing, four categories, 12 events across a year
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real software development lifecycle scenario. Professional, comprehensible,
-          neutral.
+        comment: Neutral software-project milestones with plausible names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 events over 12 months is realistic. Phase durations plausible.
-          2024 context appropriate.
+        comment: 12 events over 2024 at plausible intervals; no Check values in the
+          spec
     code_quality:
       score: 10
       max: 10
@@ -184,52 +190,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save. No functions/classes.
-          Perfect KISS principle.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic. Explicit dates, no randomness.
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, Path, pandas, plotnine. Zero unused.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant y_offset calculation. Smart dataframe splitting for labels.
-          No over-engineering.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: saves as plot-{THEME}.png at dpi=300. Current API.'
+        comment: Saves plot-{THEME}.png; current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Expert grammar of graphics: ggplot() + geom layers, proper aes(),
-          scale_color_manual(), theme() customization.'
+        passed: false
+        comment: Standard grammar layering and scale_color_manual with a dict; mandated
+          patterns only
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Multiple geom layers, custom layer composition, named factor mapping.
-          Could explore more advanced patterns.
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies: []
   techniques:
