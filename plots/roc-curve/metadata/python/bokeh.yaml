@@ -2,43 +2,51 @@ library: bokeh
 language: python
 specification_id: roc-curve
 created: '2025-12-26T17:39:45Z'
-updated: '2026-05-09T22:35:36Z'
-generated_by: claude-haiku
-workflow_run: 25613428240
+updated: '2026-11-21T12:37:16Z'
+generated_by: claude-sonnet
+workflow_run: 44904050013
 issue: 2273
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/bokeh/plot-dark.html
-quality_score: 93
+quality_score: 80
 review:
   strengths:
-  - Both light and dark renders fully readable with correct theme adaptation
-  - Clean visualization with three classifiers showing performance progression
-  - Proper Okabe-Ito palette with AUC scores in legend
-  - Idiomatic bokeh patterns (ColumnDataSource, HoverTool, Legend styling)
-  - Square format with equal aspect ratio matches ROC specification
+  - Square 2400×2400 canvas with a square plot area and fixed 0–1 rate axes, so the
+    random-classifier diagonal runs at 45° in both renders
+  - Legend entries carry the AUC per curve ('Model A (AUC = 0.87)'), with the dashed
+    INK_SOFT diagonal clearly told apart from the solid model lines in both themes
+  - AUC is computed from the plotted points with np.trapezoid and the three curves
+    are ordered best to worst in canonical Imprint order
+  - 'Idiomatic bokeh: one ColumnDataSource per model built from the tidy df, legend_label
+    on each glyph, and a HoverTool reading the column names for the HTML view'
+  - Theme tokens threaded through title, axes, ticks, grid, outline and an elevated
+    legend box; text fully legible in light and dark
   weaknesses:
-  - Design Excellence could be elevated with subtle visual emphasis on best-performing
-    model (bolder line, refined typography)
-  - Legend positioning and styling could be more refined
+  - 'DQ-02 (both): the classifiers are labelled ''Model A'', ''Model B'', ''Model
+    C'', abstract labels with no evaluation context → name real model types for a
+    concrete task (for example ''Gradient Boosting'', ''Logistic Regression'', ''Naive
+    Bayes'' on a churn or spam classifier). Likely cause: the keys of the shapes dict.'
+  - 'Suggestion: generate scores for a finite labelled sample and compute the curves
+    with sklearn.metrics.roc_curve / auc, so the operating points read as an actual
+    classifier evaluation rather than closed-form power curves.'
+  - 'Suggestion: a slightly heavier line for the best model would give the comparison
+    a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct warm tone not pure white
-      Chrome: Title "roc-curve · bokeh · anyplot.ai" clearly visible in dark text (#1A1A17). Axis labels "False Positive Rate" (x) and "True Positive Rate" (y) fully readable. Tick labels (0, 0.2, 0.4, 0.6, 0.8, 1) on both axes clearly visible in secondary color (#4A4A44).
-      Data: Three ROC curves in Okabe-Ito colors: Model A (green #009E73, AUC 0.97), Model B (orange #D55E00, AUC 0.74), Model C (blue #0072B2, AUC 0.62). Reference diagonal line shown dashed in light gray. Legend displays all four series with AUC values in styled box.
-      Grid: Subtle grid lines at 10% opacity on both axes.
-      Legibility verdict: PASS - All text is dark on light background, fully readable, no light-on-light issues.
+      Background: warm off-white #FAF8F1 on the whole 2400×2400 canvas; legend box in the elevated #FFFDF6 with a thin INK_SOFT border.
+      Chrome: bold title "roc-curve · python · bokeh · anyplot.ai" centred at the top (~50 % of the width); italic axis titles "False Positive Rate" (x) and "True Positive Rate" (y); ticks 0, 0.2 … 1 on both axes in INK_SOFT; very subtle grid; thin outline round the square plot area. All text dark on light and fully readable.
+      Data: three solid curves from (0,0) to (1,1): Model A in #009E73 (AUC 0.87) hugging the top-left, Model B in #C475FD (0.74), Model C in #4467A3 (0.62); grey dashed random-classifier diagonal corner to corner. Legend bottom-right lists the diagonal (AUC = 0.50) and the three models with their AUC; it sits in empty space below Model C's curve.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct tone not pure black
-      Chrome: Title clearly visible in light text (#F0EFE8). Axis labels fully readable in light text. Tick labels visible in secondary light color (#B8B7B0). Legend box has dark elevated background (#242420) with light text.
-      Data: Same three ROC curves with identical colors to light render (green, orange, blue). Reference diagonal line visible. AUC scores displayed in legend.
-      Grid: Subtle grid lines matching light render opacity.
-      No dark-on-dark failures observed - all text elements have sufficient contrast against dark background.
-      Legibility verdict: PASS - All text is light on dark background, fully readable, no dark-on-dark failures.
+      Background: warm near-black #1A1A17; legend box #242420.
+      Chrome: title and axis titles in light #F0EFE8, ticks and legend text in #B8B7B0, grid subtle and visible; no dark-on-dark text anywhere.
+      Data: the same three curve colors as the light render (#009E73, #C475FD, #4467A3), identical geometry; the dashed diagonal is a lighter grey and stays clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,67 +57,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes with correct theme-adaptive colors
+        comment: All sizes set (title 50pt, axis titles 42pt, ticks 34pt, legend 30pt);
+          readable in both themes, balanced x/y
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text collisions; legend well-positioned
+        comment: No text collisions; legend sits in empty space below the curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Three curves and reference line all clearly distinguishable
+        comment: Curves at line_width 7, diagonal at 4 dashed; legend glyphs match
+          the lines in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors 1-3 are colorblind-safe
+        comment: Green/violet/blue well separated; diagonal distinguished by dash
+          and grey
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format appropriate for equal aspect ratio; nothing cut off
+        comment: 2400×2400, square plot area fills most of the canvas, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axes labeled descriptively
+        comment: 'False/True Positive Rate: descriptive; rates are unitless'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; multi-series follows Okabe-Ito order; theme-correct
-          backgrounds'
+        comment: 'Imprint positions 1–3 in canonical order, first #009E73; backgrounds
+          and chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional styling with theme-adaptive colors; AUC scores in legend;
-          dashed reference line for distinction
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid, clean borders, proper legend spacing
+        passed: false
+        comment: Baseline grid and frame (outline per the bokeh prompt), nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear performance progression; focal point evident
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -119,27 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ROC curve structure
+        comment: Multi-model ROC curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple models, reference line, AUC scores
+        comment: 'C1 curves corner to corner, C2 diagonal, C3 AUC in legend, C4 0–1
+          axes on a square area, C5 colors + legend: all met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correct and show full range
+        comment: FPR on x, TPR on y, full range shown, unsmoothed polylines through
+          200 points
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct; labels match data
+        comment: Title in mandated format; legend entries match the curves
     data_quality:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: DQ-01
@@ -147,19 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three models with different performance levels; reference line included
+        comment: Three models of clearly different quality plus the random baseline
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Plausible AUC values (0.62-0.97); neutral context
+        passed: false
+        comment: Models labelled 'Model A/B/C', abstract (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible 0-1 range with padding
+        comment: 'Checked: AUC of TPR=FPR^k is 1/(1+k): k=0.15→0.87, 0.35→0.74, 0.6→0.625,
+          matching legend values computed by np.trapezoid; curves start at (0,0) and
+          end at (1,1) on the axes'
     code_quality:
       score: 10
       max: 10
@@ -169,13 +184,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward code
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -187,42 +202,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Proper bokeh patterns; no fake UI
+        comment: One loop over models from a tidy df; nothing written out that a call
+          computes
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: plot-{THEME}.html + .png via Selenium with CDP viewport pinning
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: figure(), ColumnDataSource, HoverTool used correctly
+        comment: Correct ColumnDataSource/legend_label usage; standard patterns
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: HoverTool for interactivity; interactive HTML+PNG workflow; legend
-          styling
+        passed: false
+        comment: HoverTool with column-name tooltips and number formats for the HTML
+          view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T12:33:12Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
-  - multi-series
-  - reference-line
+  - html-export
+  - layer-composition
   patterns:
   - data-generation
-  - deterministic-seed
+  - iteration-over-groups
+  - columndatasource
+  - groupby-aggregation
   dataprep: []
   styling:
-  - theme-adaptive
-  - legend-styling
+  - grid-styling
