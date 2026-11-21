@@ -69,9 +69,15 @@ class UniversalJSON(TypeDecorator):
     impl = JSON
     cache_ok = True
 
+    def __init__(self, none_as_null: bool = False):
+        # Stored on the type itself, not only on its impl: SQLAlchemy builds the statement cache key from the
+        # `__init__` parameters held as attributes, so the two variants must not share one.
+        self.none_as_null = none_as_null
+        super().__init__(none_as_null=none_as_null)
+
     def load_dialect_impl(self, dialect):
-        """Load the appropriate type based on the dialect, keeping the impl's `none_as_null`."""
-        none_as_null = self.impl.none_as_null
+        """Load the appropriate type based on the dialect, keeping `none_as_null`."""
+        none_as_null = self.none_as_null
         if dialect.name == "postgresql":
             return dialect.type_descriptor(postgresql.JSONB(none_as_null=none_as_null))
         else:

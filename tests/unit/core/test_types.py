@@ -134,6 +134,10 @@ class TestUniversalJSON:
             assert UniversalJSON().load_dialect_impl(MockDialect(name)).none_as_null is False
         assert isinstance(UniversalJSON().load_dialect_impl(MockDialect("postgresql")), JSONB)
 
+    def test_the_flag_is_part_of_the_statement_cache_key(self):
+        """With cache_ok, two variants of the type that share a key would share compiled statements."""
+        assert UniversalJSON()._static_cache_key != UniversalJSON(none_as_null=True)._static_cache_key
+
 
 class TestUniversalUUID:
     """Tests for UniversalUUID type."""
