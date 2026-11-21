@@ -12,32 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 72
 review:
   strengths:
-  - Perfect visual quality with all text explicitly sized and readable in both themes
-  - Excellent palette compliance with correct Okabe-Ito ordering and theme-adaptive
+  - Depth levels in Imprint positions 1–3, identical across themes with theme-correct
     chrome
-  - Strong design aesthetics featuring intentional depth-based color hierarchy
-  - Clean, reproducible code with zero fake interactivity or over-engineering
-  - Realistic organizational structure data demonstrating all circle packing features
-  - Professional layout and proportions appropriate for symmetric visualization
-  weaknesses: []
+  - Leaf circle areas proportional to team headcount
+  - All font sizes explicitly set and readable in both themes
+  weaknesses:
+  - 'VQ-02 (both): the Engineering and Operations labels run across the team circles
+    nested inside them, and Product crowds its circles → place parent labels where
+    no child circle sits (e.g. on the parent''s top edge). Likely cause: every label
+    drawn at its circle''s center.'
+  - 'VQ-05, CQ-05 (both): the canvas is 3408x3568, neither 2400x2400 nor 3200x1800
+    → figsize=(6, 6), dpi=400 with the default bbox. Likely cause: figsize=(12, 12),
+    savefig(dpi=300, bbox_inches="tight").'
+  - 'SC-02 (both): sibling circles are not packed closely — teams sit on a fixed ring
+    at 0.55 of the parent radius and departments at fixed diagonal angles, leaving
+    wide gaps (C2) → place siblings by a packing algorithm (tangent/front-chain packing).
+    Likely cause: the fixed child_ring_radius and dept_angles layout.'
+  - 'SC-04 (both): the title ''circlepacking-basic · matplotlib · anyplot.ai'' lacks
+    the language segment → ''circlepacking-basic · python · matplotlib · anyplot.ai''.
+    Likely cause: the title string.'
+  - 'CQ-04 (code): comments call the palette ''Okabe-Ito'' and #C475FD ''vermillion'',
+    contradicting the Imprint colors the code uses → correct the comments. Likely
+    cause: stale comments from an older palette.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title clearly readable in dark text (24pt bold); legend in upper right with light-gray text on elevated background; all labels (Company, department names) readable with appropriate contrast
-      Data: Root circle in brand green (#009E73); department circles in vermillion (#D55E00); team circles in blue (#0072B2) — colors match Okabe-Ito positions 1-3; no overlap; circles properly sized by value
-      Legibility verdict: PASS — all text, colors, and elements clearly visible against light background
+      Background: warm off-white #FAF8F1
+      Chrome: bold title 'circlepacking-basic · matplotlib · anyplot.ai' in dark ink at top; legend in the upper-right corner with soft-ink text on an elevated box; all readable
+      Data: large brand-green #009E73 root circle with 'Company' in its center; four lilac #C475FD department circles at fixed diagonal positions; small blue #4467A3 team circles spread on a loose ring inside each; team circles unlabeled; Engineering and Operations labels run across their team circles
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title in white/light text and readable; legend text in light gray on dark elevated background; all chrome properly light-colored with no dark-on-dark failures
-      Data: Root, department, and team circles show identical colors to light render (#009E73, #D55E00, #0072B2) — data colors constant across themes as required; legend background and borders properly darkened
-      Legibility verdict: PASS — all text, colors, and elements clearly visible against dark background; no dark-on-dark failures detected
+      Background: warm near-black #1A1A17
+      Chrome: title and labels in light ink, legend box dark elevated with light text; no dark-on-dark text
+      Data: identical green/lilac/blue fills to the light render, light-grey outlines
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -45,73 +59,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (24pt), labels (11-18pt), legend (16pt) — all explicitly sized
-          and readable
+        comment: Title 24pt bold, labels 11–18pt bold, legend 16pt on a 12in figure
+          — explicitly set and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: Zero overlapping elements; all text fully readable
+        comment: Engineering and Operations labels run across their team circles;
+          Product label crowds its circles (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circle sizes optimally adapted to hierarchy; all elements distinct
-          and visible
+        comment: Circles and outlines visible; legend swatches match the 0.8-alpha
+          fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides excellent CVD safety and contrast
+        comment: Green/lilac/blue levels distinct by luminance and outlines
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: Square format ideal for symmetric visualization; generous padding;
-          optimal proportions
+        comment: Canvas 3408x3568 is neither canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Correct title format: spec-id · library · anyplot.ai'
+        comment: N/A — no axes for a packing layout
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order (#D55E00, #0072B2); backgrounds
-          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+        comment: Imprint positions 1–3 by depth, identical across themes; correct
+          backgrounds and chrome
     design_excellence:
-      score: 17
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
         passed: true
-        comment: Intentional depth-based color hierarchy; theme-adaptive polish; above
-          generic defaults
+        comment: Style-guide baseline; flat large root fill, nothing decided beyond
+          it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Circle edges, alpha blending, elevated legend frame, generous whitespace
+        passed: false
+        comment: Baseline; loose ring placement leaves large undesigned empty regions
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear hierarchy through size and color; guides viewer through organizational
-          structure
+        passed: false
+        comment: Data displayed, no emphasis chosen
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -119,26 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct circle packing with proper nesting
+        comment: Circle packing chart, basic variant, no extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: 'All features present: hierarchy, proportional sizing, color-by-depth,
-          labels'
+        comment: 'C2 missed: siblings sit on a fixed loose ring, not packed closely;
+          other properties present (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hierarchy correct; all nodes visible; accurate proportions
+        comment: Layout-positioned type; leaf areas proportional to value
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title lacks the 'python' language segment (defect line); legend labels
+          fine
     data_quality:
       score: 15
       max: 15
@@ -148,22 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: hierarchy, proportional sizing, no overlap, varied
-          sizes'
+        comment: Three levels with varied team sizes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Professional org structure; plausible team sizes; neutral context
+        comment: Company departments and team headcounts — neutral, realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible and proportionally accurate
+        comment: 'Checked: leaf areas follow sqrt(value/total); Backend largest, Legal
+          smallest'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -171,50 +185,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Direct flow: data → positioning → plotting → save'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set; deterministic data
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (os, matplotlib, numpy)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity for custom positioning
+        comment: 'Comments name the palette ''Okabe-Ito'' and #C475FD ''vermillion'',
+          contradicting the code (defect line)'
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: 'Correct format: plot-{THEME}.png'
+        passed: false
+        comment: bbox_inches='tight' and dpi=300, which the library prompt forbids
+          (defect line)
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Expert use of patches.Circle, Axes methods, theme tokens; high-level
-          API
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom circle positioning; leverages matplotlib geometric capabilities
-    score_caps: []
+        comment: Correct patches.Circle and proxy Patch legend usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic patch drawing
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
 impl_tags:
   dependencies: []
   techniques:
