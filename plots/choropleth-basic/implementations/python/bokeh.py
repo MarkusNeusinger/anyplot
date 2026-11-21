@@ -1,251 +1,181 @@
 """ anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 73/100 | Updated: 2026-05-15
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
-import math
+import os
+import time
+from pathlib import Path
 
-from bokeh.io import export_png
+import numpy as np
+import pandas as pd
+from bokeh.io import output_file, save
 from bokeh.models import ColorBar, ColumnDataSource, LabelSet, LogColorMapper
-from bokeh.palettes import Blues9
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data: US states arranged in a tile grid map layout (all 50 states + DC)
-# Grid positions (col, row) - approximating geographic positions
-regions = {
-    "AK": (0, 5),
-    "HI": (0, 1),
-    "WA": (1, 5),
-    "OR": (1, 4),
-    "CA": (0, 3),
-    "NV": (1, 3),
-    "ID": (2, 5),
-    "MT": (3, 5),
-    "WY": (3, 4),
-    "UT": (2, 3),
-    "AZ": (2, 2),
-    "CO": (3, 3),
-    "NM": (3, 2),
-    "ND": (4, 5),
-    "SD": (4, 4),
-    "NE": (4, 3),
-    "KS": (4, 2),
-    "OK": (4, 1),
-    "TX": (3, 1),
-    "MN": (5, 5),
-    "IA": (5, 4),
-    "MO": (5, 3),
-    "AR": (5, 2),
-    "LA": (5, 1),
-    "WI": (6, 5),
-    "IL": (6, 4),
-    "IN": (7, 4),
-    "MI": (7, 5),
-    "OH": (8, 4),
-    "KY": (7, 3),
-    "TN": (6, 3),
-    "MS": (6, 2),
-    "AL": (7, 2),
-    "GA": (8, 2),
-    "FL": (8, 1),
-    "SC": (9, 2),
-    "NC": (9, 3),
-    "VA": (9, 4),
-    "WV": (8, 3),
-    "PA": (10, 4),
-    "NY": (10, 5),
-    "VT": (11, 5),
-    "NH": (11, 4),
-    "ME": (12, 5),
-    "MA": (11, 3),
-    "RI": (12, 3),
-    "CT": (11, 2),
-    "NJ": (10, 3),
-    "DE": (10, 2),
-    "MD": (9, 1),
-    "DC": (10, 1),
-}
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+NO_DATA = "#B9B8B0" if THEME == "light" else "#6E6D66"
 
-# Population density values (people per sq mile) - realistic ranges
-density_values = {
-    "AK": 1,
-    "HI": 226,
-    "CA": 253,
-    "TX": 112,
-    "FL": 411,
-    "NY": 408,
-    "PA": 286,
-    "IL": 227,
-    "OH": 289,
-    "GA": 185,
-    "NC": 218,
-    "MI": 177,
-    "NJ": 1263,
-    "VA": 218,
-    "WA": 117,
-    "AZ": 64,
-    "MA": 901,
-    "TN": 167,
-    "IN": 189,
-    "MO": 89,
-    "MD": 636,
-    "WI": 108,
-    "CO": 57,
-    "MN": 71,
-    "SC": 173,
-    "AL": 99,
-    "LA": 107,
-    "KY": 114,
-    "OR": 44,
-    "OK": 58,
-    "CT": 733,
-    "IA": 57,
-    "MS": 63,
-    "AR": 58,
-    "UT": 40,
-    "NV": 28,
-    "KS": 36,
-    "NM": 17,
-    "NE": 25,
-    "WV": 74,
-    "ID": 23,
-    "ME": 44,
-    "NH": 154,
-    "RI": 1061,
-    "MT": 8,
-    "DE": 508,
-    "SD": 12,
-    "ND": 11,
-    "VT": 68,
-    "WY": 6,
-    # DC intentionally missing to demonstrate missing data handling
-}
+# Imprint palette: first position is the brand green
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Prepare data for rectangles
-xs = []
-ys = []
-widths = []
-heights = []
-colors = []
-abbrevs = []
-abbrev_x = []
-abbrev_y = []
 
-# Color mapping - use log scale to better differentiate low-density states
-min_val = max(1, min(density_values.values()))  # Log scale needs min > 0
-max_val = max(density_values.values())
-palette = list(reversed(Blues9))
-color_mapper = LogColorMapper(palette=palette, low=min_val, high=max_val, nan_color="#d0d0d0")
+def _lerp_hex(c0, c1, t):
+    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
+    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
+    r, g, b = (round(a + (b - a) * t) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
+    return f"#{r:02X}{g:02X}{b:02X}"
 
-# Process each region - rect is centered, so adjust coords to center of tile
-for abbrev, (col, row) in regions.items():
-    center_x = col * 1.1 + 0.5
-    center_y = row * 1.1 + 0.5
-    xs.append(center_x)
-    ys.append(center_y)
-    widths.append(1.0)
-    heights.append(1.0)
-    abbrev_x.append(center_x)
-    abbrev_y.append(center_y)
-    abbrevs.append(abbrev)
 
-    if abbrev in density_values:
-        density = density_values[abbrev]
-        # Map to color index using log scale for better low-value differentiation
-        log_min = math.log10(min_val)
-        log_max = math.log10(max_val)
-        log_val = math.log10(max(density, 1))  # Ensure positive for log
-        norm = (log_val - log_min) / (log_max - log_min)
-        idx = min(int(norm * (len(palette) - 1)), len(palette) - 1)
-        colors.append(palette[idx])
-    else:
-        # Missing data - gray with pattern indication
-        colors.append("#d0d0d0")
+# imprint_seq: single-polarity ramp from brand green to blue
+IMPRINT_SEQ = [_lerp_hex("#009E73", "#4467A3", t / 255.0) for t in range(256)]
 
-# Create data sources
-rect_source = ColumnDataSource(data={"x": xs, "y": ys, "width": widths, "height": heights, "fill_color": colors})
+# Columns: set these to your table's column names
+STATE = "State"  # role: region_id
+TILE_COL = "Tile column"  # role: extra
+TILE_ROW = "Tile row"  # role: extra
+DENSITY = "Population density (people per sq mile)"  # role: value
 
-# Determine text colors based on background (using log scale)
-text_colors = []
-log_min = math.log10(min_val)
-log_max = math.log10(max_val)
-for abbrev in abbrevs:
-    if abbrev not in density_values:
-        text_colors.append("#333333")
-    else:
-        density = density_values[abbrev]
-        log_val = math.log10(max(density, 1))
-        norm = (log_val - log_min) / (log_max - log_min)
-        text_colors.append("white" if norm > 0.5 else "#306998")
+# Data: US states as a tile grid (column, row) with population density; replace with your own table
+# DC is left without a value on purpose to show the no-data style.
+df = pd.DataFrame(
+    [
+        ("AK", 0, 5, 1), ("HI", 0, 1, 226), ("WA", 1, 5, 117), ("OR", 1, 4, 44),
+        ("CA", 0, 3, 253), ("NV", 1, 3, 28), ("ID", 2, 5, 23), ("MT", 3, 5, 8),
+        ("WY", 3, 4, 6), ("UT", 2, 3, 40), ("AZ", 2, 2, 64), ("CO", 3, 3, 57),
+        ("NM", 3, 2, 17), ("ND", 4, 5, 11), ("SD", 4, 4, 12), ("NE", 4, 3, 25),
+        ("KS", 4, 2, 36), ("OK", 4, 1, 58), ("TX", 3, 1, 112), ("MN", 5, 5, 71),
+        ("IA", 5, 4, 57), ("MO", 5, 3, 89), ("AR", 5, 2, 58), ("LA", 5, 1, 107),
+        ("WI", 6, 5, 108), ("IL", 6, 4, 227), ("IN", 7, 4, 189), ("MI", 7, 5, 177),
+        ("OH", 8, 4, 289), ("KY", 7, 3, 114), ("TN", 6, 3, 167), ("MS", 6, 2, 63),
+        ("AL", 7, 2, 99), ("GA", 8, 2, 185), ("FL", 8, 1, 411), ("SC", 9, 2, 173),
+        ("NC", 9, 3, 218), ("VA", 9, 4, 218), ("WV", 8, 3, 74), ("PA", 10, 4, 286),
+        ("NY", 10, 5, 408), ("VT", 11, 5, 68), ("NH", 11, 4, 154), ("ME", 12, 5, 44),
+        ("MA", 11, 3, 901), ("RI", 12, 3, 1061), ("CT", 11, 2, 733), ("NJ", 10, 3, 1263),
+        ("DE", 10, 2, 508), ("MD", 9, 1, 636), ("DC", 10, 1, None),
+    ],
+    columns=[STATE, TILE_COL, TILE_ROW, DENSITY],
+)  # fmt: skip
+df[DENSITY] = df[DENSITY].astype(float)
 
-label_source = ColumnDataSource(data={"x": abbrev_x, "y": abbrev_y, "text": abbrevs, "text_color": text_colors})
+# Plot: reads only df and the constants above
+PITCH = 1.1  # tile spacing; tiles are 1.0 wide so a thin gap shows between neighbours
+values = df[DENSITY]
+low, high = values.min(), values.max()
+color_mapper = LogColorMapper(palette=IMPRINT_SEQ, low=low, high=high, nan_color=NO_DATA)
 
-# Create figure (4800x2700 for landscape)
+# Fill color per tile, taken from the same log mapping the color bar uses
+norm = (np.log10(values) - np.log10(low)) / (np.log10(high) - np.log10(low))
+index = (norm * (len(IMPRINT_SEQ) - 1)).round()
+fills = [NO_DATA if np.isnan(i) else IMPRINT_SEQ[int(i)] for i in index]
+# Label ink: light text on dark fills, dark text on light fills (relative luminance)
+label_ink = []
+for fill in fills:
+    r, g, b = (int(fill[k : k + 2], 16) / 255 for k in (1, 3, 5))
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    label_ink.append("#1A1A17" if luminance > 0.35 else "#FAF8F1")
+
+source = ColumnDataSource(
+    {
+        "x": df[TILE_COL] * PITCH,
+        "y": df[TILE_ROW] * PITCH,
+        "fill": fills,
+        "ink": label_ink,
+        "label": df[STATE],
+        "value": values,
+    }
+)
+
+title = "choropleth-basic · python · bokeh · anyplot.ai"
 p = figure(
-    width=4800,
-    height=2700,
-    title="choropleth-basic · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title,
     x_axis_location=None,
     y_axis_location=None,
     tools="",
     toolbar_location=None,
-    x_range=(-1, 14),
-    y_range=(0, 7),
+    x_range=(df[TILE_COL].min() * PITCH - 0.7, df[TILE_COL].max() * PITCH + 0.7),
+    y_range=(df[TILE_ROW].min() * PITCH - 0.7, df[TILE_ROW].max() * PITCH + 0.7),
+    min_border_top=110,
+    min_border_bottom=60,
+    min_border_left=60,
+    min_border_right=60,
+    background_fill_color=PAGE_BG,
+    border_fill_color=PAGE_BG,
 )
-
-# Remove grid and axes
-p.grid.grid_line_color = None
 p.outline_line_color = None
-p.xaxis.visible = False
-p.yaxis.visible = False
+p.outline_line_alpha = 0
+p.grid.grid_line_color = None
 
-# Draw rectangles for each state
-p.rect(
-    x="x",
-    y="y",
-    width="width",
-    height="height",
-    source=rect_source,
-    fill_color="fill_color",
-    fill_alpha=0.9,
-    line_color="white",
-    line_width=2,
+p.rect(x="x", y="y", width=1.0, height=1.0, source=source, fill_color="fill", line_color=PAGE_BG, line_width=2)
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="label",
+        text_color="ink",
+        source=source,
+        text_align="center",
+        text_baseline="middle",
+        text_font_size="30pt",
+        text_font_style="bold",
+    )
 )
 
-# Add state abbreviation labels
-labels = LabelSet(
-    x="x",
-    y="y",
-    text="text",
-    text_color="text_color",
-    source=label_source,
-    text_align="center",
-    text_baseline="middle",
-    text_font_size="18pt",
-    text_font_style="bold",
-)
-p.add_layout(labels)
-
-# Title styling
-p.title.text_font_size = "32pt"
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
 p.title.align = "center"
 
-# Color bar for legend - made larger for prominence
 color_bar = ColorBar(
     color_mapper=color_mapper,
     width=60,
-    height=1200,
-    location=(0, 0),
-    title="Population Density (per sq mile)",
-    title_text_font_size="24pt",
-    major_label_text_font_size="20pt",
-    title_standoff=20,
-    padding=30,
-    margin=40,
+    height=1100,
+    location="center",
+    title=DENSITY,
+    title_text_font_size="30pt",
+    title_text_color=INK,
+    major_label_text_font_size="28pt",
+    major_label_text_color=INK_SOFT,
+    title_standoff=24,
+    padding=20,
+    margin=30,
+    background_fill_color=PAGE_BG,
+    bar_line_color=INK_SOFT,
+    major_tick_line_color=INK_SOFT,
 )
 p.add_layout(color_bar, "right")
 
-# Save output
-export_png(p, filename="plot.png")
+# Save: interactive HTML, then a headless Chrome screenshot at the exact canvas size
+W, H = 3200, 1800
+html_path = Path(f"plot-{THEME}.html")
+output_file(str(html_path))
+save(p)
+
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{html_path.resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

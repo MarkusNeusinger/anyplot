@@ -2,175 +2,190 @@ library: bokeh
 language: python
 specification_id: choropleth-basic
 created: '2025-12-31T21:33:44Z'
-updated: '2026-05-15T05:51:40Z'
-generated_by: claude-haiku
-workflow_run: 25902151606
+updated: '2026-11-21T19:16:39Z'
+generated_by: claude-sonnet
+workflow_run: 44939426043
 issue: 3069
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/bokeh/plot-dark.html
-quality_score: 73
+quality_score: 82
 review:
   strengths:
-  - Correct choropleth tile map with realistic US population density data
-  - Proper handling of missing data with gray color
-  - Readable text in both light and dark renders despite code not implementing themes
-  - Effective log scale for differentiating low-density states
-  - Clean layout with good canvas utilization
-  - Clear and prominent ColorBar legend with proper title and units
+  - LogColorMapper with nan_color feeds a log-scaled ColorBar, so the three-decade
+    density range reads on one bar and DC's gray is explained by the map itself
+  - 'Theme tokens threaded through title, color-bar title, ticks and backgrounds:
+    both renders are readable'
+  - Label ink chosen per tile from the fill's luminance, so every state code stays
+    legible
+  - Real US state population densities with DC left out on purpose to show the no-data
+    style
+  - imprint_seq ramp built as the library prompt prescribes; correct 3200x1800 canvas
+    with the Selenium + CDP save pattern
   weaknesses:
-  - Code uses export_png() instead of Selenium + HTML screenshot pattern required
-    by bokeh library guide
-  - Output hardcoded as plot.png; should generate plot-light.png and plot-dark.png
-    with HTML artifacts
-  - No ANYPLOT_THEME environment variable support; theme colors not implemented in
-    code
-  - 'Text colors hardcoded (white, #306998) instead of using theme-aware INK/INK_SOFT
-    tokens'
-  - Background fill color not set (p.background_fill_color missing)
-  - Generic Blues palette with no design sophistication or custom aesthetic choices
-  - No visual hierarchy or data storytelling; pure density display without geographic
-    insight
+  - 'SC-01, SC-02 (both): the states are drawn as equal squares on a tile grid (a
+    tile cartogram), not as filled areas with their real outlines in a projection
+    suited to the US such as Albers Equal Area, which the spec''s first characteristic
+    bullet and its projection Note ask for → draw the state boundary polygons (patches/multi_polygons
+    from a GeoJSON source, projected) shaded by value. Likely cause: the rect glyph
+    on (Tile column, Tile row) positions instead of p.patches/p.multi_polygons on
+    projected state geometries.'
+  - 'Suggestion: the dark render shows a faint gray frame around the plot area that
+    the light render does not; setting the frame line explicitly to the page color
+    would keep both themes identical.'
+  - 'Suggestion: a HoverTool showing state and density would make the HTML view more
+    useful; the source already carries the value column.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1, correctly themed for light page surface
-      Chrome: Title (32pt, dark text), state labels (18pt, adaptive colors), legend title (24pt) all clearly visible and readable
-      Data: Tile map of 50 US states arranged in geographic grid with white borders, colored using Blues sequential palette from light (low density) to dark blue (high density). Log color scale effectively differentiates low-density states. DC shown in light gray for missing data.
-      Legibility verdict: PASS - All text elements readable, proper contrast maintained
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: centered bold title 'choropleth-basic · python · bokeh · anyplot.ai' in dark ink; no axes or grid; vertical color bar on the right with italic title 'Population density (people per sq mile)' and log ticks 10^0..10^3 in soft dark ink, all readable.
+      Data: 51 US states as equal squares on a geographic tile grid (AK top-left, HI bottom-left, New England right), filled from the imprint_seq ramp: low-density states (AK, WY, MT) in brand green #009E73, dense states (NJ, RI, MA, MD) in blue toward #4467A3. Bold dark two-letter codes in every tile. DC is a gray no-data tile. Thin page-colored gaps separate neighbours.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17, correctly themed for dark page surface
-      Chrome: All text light-colored/white for contrast. Title, state labels, legend title all readable against dark background. No "dark-on-dark" failures detected.
-      Data: Identical tile map with data colors unchanged from light render—all blues remain the same, confirming proper data color consistency across themes. Only chrome (background, text) adapted.
-      Legibility verdict: PASS - All text readable, proper light-on-dark contrast, no theme-readability failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, color-bar title and ticks flip to light ink and read clearly; a faint gray frame outlines the plot area. No dark-on-dark text: the state codes stay dark on the mid-tone tiles.
+      Data: tile fills identical to the light render; DC no-data gray darker (#6E6D66) but still distinct from the ramp.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (32pt, 18pt, 20-24pt), readable in both
-          themes. Code lacks ANYPLOT_THEME implementation but outputs are correct.
+        comment: Title 50 pt, state labels 30 pt bold, color-bar title 30 pt and ticks
+          28 pt, all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: State abbreviations well-spaced, no collisions
+        comment: No text collides; every state code sits inside its own tile
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Tiles clearly visible, sizing appropriate for ~50 regions
+        comment: 51 tiles at full size with thin page-colored gaps; color bar clearly
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blues palette CVD-safe, good contrast
+        comment: Green-to-blue ramp with dark bold labels; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot ~60% of canvas, balanced margins, legend well-positioned
+        comment: 3200x1800 canvas, tile grid fills the plot area, color bar balanced
+          on the right, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title, legend with units
+        comment: No axes (map); color-bar title names the variable with its unit (people
+          per sq mile)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Rendered outputs show correct backgrounds and theme adaptation, but
-          code does not implement ANYPLOT_THEME support, theme-aware colors, or required
-          background fill colors
+        passed: true
+        comment: 'imprint_seq (#009E73 -> #4467A3) through LogColorMapper; #FAF8F1
+          / #1A1A17 backgrounds; chrome flips correctly'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 5
         max: 8
         passed: false
-        comment: Generic Blues palette, no custom design or intentional hierarchy
+        comment: 'Above baseline: label ink chosen per tile from the fill luminance,
+          bold codes, centered title hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Grid removed (good), but minimal deliberate polish or optimization
+        comment: 'Above baseline: axes, outline and grid removed so the tiles stand
+          alone; PITCH gap gives page-colored separation instead of drawn borders'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Data displayed with log scale helping differentiation, but no visual
-          hierarchy or geographic insight
+        comment: 'Default: the data is shown, no focal point chosen beyond the log
+          scale'
     spec_compliance:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct choropleth tile map
+        passed: false
+        comment: 'Tile-grid cartogram, a related but different form: states are equal
+          squares, not filled areas with their real outlines in a projection (defect
+          line)'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Legend, regional coloring, missing data handling all present
+        passed: false
+        comment: Color legend, visible boundaries and gray no-data present; C1's real
+          outlines and projection missing (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: States correctly mapped and colored
+        comment: Each state's fill comes from its own density value through the same
+          log mapping as the color bar
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title correct format, legend functional but could be more refined
+        passed: true
+        comment: Title matches 'choropleth-basic · python · bokeh · anyplot.ai'; color-bar
+          title is reader text
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows full density range and missing data handling
+        comment: Low (AK 1) to high (NJ 1263) densities and one missing region (DC)
+          shown
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Real US population density data, factually accurate
+        comment: Real, neutral US state population densities
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually correct per census data
+        comment: 'Checked NJ 1263, RI 1061, MA 901, CT 733, AK 1 per sq mile: plausible
+          census-level densities; log scale fits the three-decade range'
     code_quality:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -178,13 +193,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: data → mapping → figure → labels → export'
+        comment: Linear script; the only helper is the _lerp_hex ramp builder the
+          library prompt prescribes
       - id: CQ-02
         name: Reproducibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hardcoded data is deterministic but lacks seed comment
+        passed: true
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -196,14 +212,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality
+        comment: Hand-mapped fills are needed for the per-tile label ink; no avoidable
+          algorithm
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Uses export_png() instead of Selenium; outputs plot.png
-          instead of plot-light.png and plot-dark.png'
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium with the
+          CDP viewport pin
     library_mastery:
       score: 5
       max: 10
@@ -213,22 +230,30 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct figure/ColumnDataSource/ColorBar, but violates bokeh library
-          guide for output
+        comment: 'Default: figure + ColumnDataSource + rect + LabelSet + ColorBar,
+          the standard pattern'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses ColorBar and LogColorMapper, but no theme-aware design leveraging
-          bokeh strengths
+        comment: LogColorMapper with nan_color drives a log-ticked ColorBar, a bokeh-native
+          log color scale
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T19:12:26Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - colorbar
+  - annotations
+  - html-export
   patterns:
   - columndatasource
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
+  - minimal-chrome
   - custom-colormap
