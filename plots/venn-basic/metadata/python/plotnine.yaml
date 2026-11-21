@@ -12,38 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 71
 review:
   strengths:
-  - Perfect visual and spec compliance with no legibility issues in either theme
-  - Clean, professional implementation with proper theme adaptation
-  - Well-structured data with realistic, neutral context
-  - All required Venn regions clearly labeled and differentiated
-  - Correct color palette and consistent branding
+  - All seven regions labelled with correct exclusive counts
+  - Theme tokens threaded through title, labels, counts and outlines; readable in
+    both themes
+  - Imprint colours 1–3 with translucent fills so overlaps read as blends
   weaknesses:
-  - Design lacks sophistication or custom styling refinement
-  - No advanced visual hierarchy or design emphasis techniques applied
-  - Library usage is functional but straightforward without distinctive plotnine features
+  - 'VQ-05 (both): canvas is 3600×3600, not a canonical size → 2400×2400 square (−1200
+    × −1200). Likely cause: figure_size=(12, 12) with plot.save(dpi=300); use figure_size=(6,
+    6) and plot.save(width=6, height=6, dpi=400).'
+  - 'VQ-02 (both): the set names sit on their circles'' outlines — "Developers" crosses
+    circle A''s edge, "ML" sits on circle C''s bottom outline, "Scientists" touches
+    circle B → clear each name of its outline. Likely cause: set_name_labels offsets
+    of radius*0.8/0.9/1.1 that land on the circle edge.'
+  - 'SC-02 (both): all three circles share radius 5, so the 100-member set is drawn
+    the same size as the 60-member set and overlap areas ignore the intersection sizes
+    → radii from sqrt(size/π) and centre distances solved from the overlap areas.
+    Likely cause: radius = 5 and a fixed offset for every circle.'
+  - 'SC-04 (both): title reads "venn-basic · plotnine · anyplot.ai", missing the language
+    segment → "venn-basic · python · plotnine · anyplot.ai". Likely cause: the labs(title=...)
+    string.'
+  - 'VQ-07 (dark): a white hairline frames the canvas edge on the #1A1A17 surface
+    → the frame in the page colour. Likely cause: plot_background=element_rect(fill=PAGE_BG,
+    color=None) leaves matplotlib''s white figure edge; set color=PAGE_BG.'
+  - 'CQ-01 (code): the Data block (lines 36–132) reads the theme token IMPRINT, ends
+    with color_map instead of a tidy df, and binds circle_df, count_labels_df and
+    set_name_df that the plot reads; no column constants for set_labels, set_sizes,
+    intersections → one df with column constants, drawing tables derived from it below
+    the block. Likely cause: styling and geometry written inside the data section.'
+  - 'CQ-04 (code): line 33 comments the Imprint colours as the "Okabe-Ito palette"
+    → name it Imprint. Likely cause: a stale comment.'
+  - 'Suggestion: derive the region counts from the inclusive sizes in code instead
+    of typing them in the region_counts dict.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly theme-adapted
-      Chrome: Title (24pt), set labels (14pt), count labels (18pt bold) all dark text, clearly readable
-      Data: Three circles in Okabe-Ito colors — green (#009E73), orange (#D55E00), blue (#0072B2) with alpha=0.45
-      Region counts: 60, 35, 25, 20, 10, 15, 10 positioned in all seven regions
-      Circle outlines: INK_SOFT color (#4A4A44) visible against light background
-      Legibility verdict: PASS — all text readable, excellent contrast
+      Background: warm off-white #FAF8F1, 3600×3600 canvas
+      Chrome: title "venn-basic · plotnine · anyplot.ai" in dark INK; set names in bold INK_SOFT sitting on the circles' outlines; no axes
+      Data: three equal-size translucent circles — #009E73 green, #C475FD purple, #4467A3 blue — with dark outlines; counts 60, 35, 25, 20, 10, 15, 10 in bold dark text inside their regions
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly theme-adapted
-      Chrome: Title and labels now in light color (#F0EFE8), clearly readable against dark background
-      Data colors: Identical to light render — green, orange, blue unchanged
-      Region counts: Same 60, 35, 25, 20, 10, 15, 10 in white/light text
-      Circle outlines: Light colored, visible against dark background
-      Theme adaptation: Perfect chrome flip, no dark-on-dark failures
-      Legibility verdict: PASS — all elements readable, proper light-text contrast on dark surface
+      Background: warm near-black #1A1A17 with a white hairline at the canvas edge
+      Chrome: title and set names in light text, readable; no dark-on-dark
+      Data: identical fill colours; outlines and counts flip to light tokens
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -51,44 +68,45 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (24pt), count labels (18pt bold), set labels (14pt) explicitly
-          sized and readable in both themes
+        comment: Title, counts and set names readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: All text regions clearly separated; no collisions
+        passed: false
+        comment: Set names Python Developers, Data Scientists and ML Engineers sit
+          on their circles' outlines (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circles with alpha=0.45 clearly show overlapping regions
+        comment: Translucent fills with outlines; all regions visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with high contrast
+        comment: Imprint green/purple/blue; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Square format (3600×3600px) appropriate; balanced proportions
+        passed: false
+        comment: Canvas 3600×3600, not one of the canonical sizes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; no axis labels (appropriate)
+        comment: Title present; axes stripped (N/A)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First color #009E73; backgrounds correct in both themes'
+        passed: false
+        comment: Imprint positions 1–3, correct backgrounds; a white hairline frames
+          the dark canvas (defect line)
     design_excellence:
       score: 8
       max: 20
@@ -97,22 +115,22 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Functional design but lacks custom styling or sophistication
+        passed: true
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization; clean but not refined
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Clear focal point but without exceptional visual hierarchy
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -120,25 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct three-circle Venn diagram
+        comment: Three-circle Venn
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: labels, sizes, intersections, counts'
+        passed: false
+        comment: 'Equal circles: areas do not follow set sizes as the Notes ask (defect
+          line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All seven regions labeled with correct counts
+        comment: Counts in their correct regions
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; legend appropriately omitted
+        passed: false
+        comment: Title lacks the python language segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -148,71 +167,72 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All seven regions shown with complete count data
+        comment: All seven regions present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech team skill overlap is plausible and neutral
+        comment: Team skills, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Team size values are sensible and realistic
+        comment: Counts 60, 35, 25, 20, 10, 15, 10 match the inclusive sizes
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No unnecessary functions; straightforward script
+        passed: false
+        comment: Data block mixes styling and drawing tables (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses fixed data; deterministic
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity; no fake UI
+        passed: false
+        comment: Comment calls the Imprint colours the Okabe-Ito palette (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Proper geom_polygon, geom_text, scale_fill_manual usage; theme adaptation
-          correct
+        comment: geom_polygon, geom_text, scale_fill_manual
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Alpha blending used but not distinctive to plotnine
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies: []
   techniques:
