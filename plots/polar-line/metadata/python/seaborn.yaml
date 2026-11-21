@@ -2,59 +2,53 @@ library: seaborn
 language: python
 specification_id: polar-line
 created: '2025-12-30T16:29:48Z'
-updated: '2026-05-12T22:48:42Z'
-generated_by: claude-haiku
-workflow_run: 25766311634
+updated: '2026-11-21T07:33:35Z'
+generated_by: claude-sonnet
+workflow_run: 44880256163
 issue: 2692
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality across all 7 criteria—all text legible in both themes with
-    zero chrome-theme failures
-  - Flawless spec compliance—polar projection, multi-series lines, grid, and legend
-    correctly implemented
-  - Excellent data quality and code cleanliness—realistic wind data, reproducible
-    with seed, deterministic
-  - Theme-adaptive styling correctly implemented—Okabe-Ito data colors identical between
-    renders; all chrome uses correct INK tokens
-  - Strong library mastery—polar projection and seaborn theming show solid matplotlib/seaborn
-    proficiency
-  - Clear visual hierarchy—prevailing winds pattern visually emphasized with consistent
-    marker/line treatment
+  - Compass-convention polar axis (0° at north, clockwise) fits the bearing data
+  - 72 bearings per series drawn as straight-segment closed loops at their exact values,
+    no smoothing
+  - Radius unit carried by a clear caption; legend names both antennas
+  - Theme tokens threaded through sns.set_theme rc; Imprint first two positions in
+    order, identical across themes
+  - Exact 2400×2400 square canvas via figsize×dpi without bbox_inches
   weaknesses:
-  - Design excellence is solid but not exceptional—plot is professional but lacks
-    distinctive aesthetic flourishes or advanced storytelling techniques
-  - Could enhance visual refinement—consider explicit spine removal or additional
-    grid customization for more polished appearance
-  - Library mastery slightly generic—while correct, lacks distinctive seaborn features
-    like advanced palette chaining or faceting patterns
+  - 'VQ-05 (both): the title spans about 93 % of the canvas width, past the ~90 %
+    limit → under 90 % (about −1 pt). Likely cause: ax.set_title fontsize=12 on the
+    6-inch square canvas.'
+  - 'VQ-02 (both): the radial tick label ''2'' at 105° sits on the Yagi and Cardioid
+    lines just right of the centre → place the radial labels on a bearing where both
+    lines stay inside the inner ring. Likely cause: ax.set_rlabel_position(105).'
+  - 'CQ-01 (code): a helper function _offset() is defined in the data block → inline
+    the wrapped angular offset as an array expression. Likely cause: def _offset(centre)
+    at lines 51–53.'
+  - 'Suggestion: melting the two gain columns into a long table would let one sns.lineplot
+    call with hue= draw both series.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified—NOT pure white or dark
-      Chrome: Title, compass direction labels, and radial tick labels all rendered in dark INK colors; clearly readable against light surface
-      Data: Green line (#009E73) with circular markers for "Prevailing Winds"; orange line (#D55E00) with square markers for "Secondary Pattern"; both colors vivid and distinct
-      Grid: Concentric circles and radial lines present with subtle styling (alpha=0.15); visible but not dominant
-      Legend: Positioned upper right with proper styling and frameon=True
-      Legibility verdict: PASS—all text is readable; no light-on-light conflicts
+      Background: warm off-white #FAF8F1, 2400x2400 square
+      Chrome: title 'Antenna Gain by Bearing · polar-line · python · seaborn · anyplot.ai' in dark ink at top (~93% width); angle ticks 0°–315° every 45° with 0° at north, clockwise; radial ticks 2–10 at 105°; caption 'Radius: antenna gain (linear power ratio)' bottom right; framed legend bottom left. All readable.
+      Data: green #009E73 '3-element Yagi' closed loop with narrow main lobe at ~60° and small back lobe; lavender #C475FD 'Cardioid' broad loop toward ~210°. Light concentric/radial grid. The '2' radial tick touches both lines near the centre.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified—NOT pure black or light
-      Chrome: Title and axis labels rendered in light INK colors (#F0EFE8 and #B8B7B0); clearly readable against dark surface
-      Data: Green line (#009E73) and orange line (#D55E00) identical to light render—data colors unchanged; only chrome has adapted
-      Grid: Equally subtle as light render; maintains visual consistency
-      Legend: Light-colored text on darker background; properly styled
-      Legibility verdict: PASS—no dark-on-dark conflicts; all text readable; brand green maintains visibility
-
-    Color identity confirmed: Okabe-Ito positions 1–7 are identical between renders; only backgrounds and text colors (chrome) differ.
+      Background: warm near-black #1A1A17
+      Chrome: title in near-white, ticks/caption in #B8B7B0, legend on #242420 with light text, outer spine light grey; no dark-on-dark text.
+      Data: identical green and lavender lines to the light render; grid subtle but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,71 +56,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicitly set with theme-adaptive colors; readable
-          in both light and dark themes
+        comment: Title 12 pt, angle ticks 10 pt, radial ticks 8 pt, caption and legend
+          set explicitly; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Compass labels, legend, and radial ticks well-spaced with no collisions
+        comment: The radial tick label '2' at 105° sits on the Yagi and Cardioid lines
+          near the centre (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Distinct markers per series; line width 3.5 and marker sizes appropriately
-          scaled
+        comment: 2.2 pt lines without markers suit 72 points per series; legend line
+          samples match the lines in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; good contrast in both themes
+        comment: Green vs lavender separate well under CVD; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 12×12 figsize appropriate for polar plots; generous padding
+        comment: Square 2400×2400 canvas correct, but the title spans about 93 % of
+          the canvas width (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive with correct format; axis labels clear
+        comment: 'Angles in degrees; radius named with its unit in the caption ''Radius:
+          antenna gain (linear power ratio)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series brand green (#009E73); backgrounds correct (#FAF8F1
-          light, #1A1A17 dark); both renders theme-correct'
+        comment: 'First series #009E73, second #C475FD (Imprint order); backgrounds
+          #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Intentional marker differentiation; custom grid styling; thoughtful
-          legend placement. Slightly generic overall.
+        comment: Compass convention chosen for bearings (0° at north, clockwise) and
+          the radius unit set as a quiet caption instead of a crowded polar ylabel
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Grid customized; clean composition; generous whitespace. Could benefit
-          from explicit spine removal.
+        passed: false
+        comment: Style-guide grid and spine handling, nothing beyond it
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Clear visual hierarchy; realistic data; legend supports narrative.
-          Straightforward presentation without advanced techniques.
+        comment: The pair contrasts a narrow directional main lobe with a broad cardioid,
+          so directivity is the immediate read
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar coordinate projection; lines connect points in theta
-          order
+        comment: Polar line plot, lines joined in theta order
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Lines present; multiple series shown; grid lines and legend included
+        comment: Lines in theta order (C1), no markers (C2 n/a), concentric + radial
+          grid with labelled angles and radii (C3), two series in a legend on shared
+          scales (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Theta: 8 compass directions; Radius: 0-20 m/s; all data plotted;
-          no clipping'
+        comment: Every 5° point at its own angle and radius; straight segments, no
+          smoothing; ylim from data max
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels descriptive and match data series
+        comment: '''Antenna Gain by Bearing · polar-line · python · seaborn · anyplot.ai'';
+          legend names both antennas'
     data_quality:
       score: 15
       max: 15
@@ -166,82 +164,87 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates cyclical data, multiple series, continuous measurements
+        comment: 72 bearings × 2 series, closed loops, crossing shapes, main and back
+          lobes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wind speed by direction is meteorologically plausible; neutral; realistic
-          patterns
+        comment: Yagi vs cardioid antenna gain patterns, neutral and specific
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds 0-20 m/s reasonable; 8 compass directions standard; sensible
-          increments
+        comment: Yagi peak ~10 linear (≈10 dBi) at 60°, cardioid ~5.5 at 210° with
+          null at 30°; plausible values. No Check values in spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Simple script; no extraneous functions/classes; direct plotting code
+        comment: A helper function _offset() is defined in the data block (defect
+          line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set (np.random.seed(42)); deterministic output
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib.pyplot, numpy, seaborn'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; idiomatic matplotlib/seaborn
-          usage
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves plot-{THEME}.png at dpi 400, no bbox_inches
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct matplotlib polar projection API; sns.set_theme() for theming;
-          theme token system follows seaborn best practices
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn theming effectively; custom marker styles; polar projection
-          well-implemented. Generic defaults; lacks advanced techniques.
+        comment: sns.lineplot with data=, column constants and sort=False on a matplotlib
+          polar axis; default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-21T07:29:56Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - grid-styling

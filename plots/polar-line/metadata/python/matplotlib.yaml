@@ -2,50 +2,51 @@ library: matplotlib
 language: python
 specification_id: polar-line
 created: '2025-12-30T16:29:25Z'
-updated: '2026-05-12T22:41:43Z'
-generated_by: claude-haiku
-workflow_run: 25766227539
+updated: '2026-11-21T07:31:56Z'
+generated_by: claude-sonnet
+workflow_run: 44880021966
 issue: 2692
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 97
+quality_score: 83
 review:
   strengths:
-  - Perfect theme adaptation with all chrome properly flipped between light and dark
-    renders
-  - 'Correct Okabe-Ito palette use: brand green (#009E73) for Summer series, orange
-    (#D55E00) for Winter'
-  - Excellent text legibility in both themes with explicit font sizing and appropriate
-    color tokens
-  - 'Idiomatic matplotlib usage: proper polar projection, theme-aware styling, custom
-    tick formatting'
-  - Clean code structure with deterministic data generation and proper spine/grid
-    configuration
-  - Professional legend styling with background and border matching current theme
-  - 'All specification requirements met: two-series polar line plot with proper axes
-    and labels'
-  weaknesses: []
+  - Correct 2400x2400 square canvas for a polar plot with the default savefig bbox
+  - Both series closed into loops in theta order with markers sitting on the line
+    (C1, C2)
+  - Radial ticks derived from the data with MaxNLocator and labelled with units via
+    FuncFormatter
+  - 'Full theme adaptation: background, title, ticks, grid, polar spine and legend
+    frame flip; data colors identical'
+  - 'Adaptable structure: column constants, a tidy df and a plot block that reads
+    only df'
+  weaknesses:
+  - 'VQ-02 (both): the ''10°C'' radial tick label at the 45° position is crossed by
+    the Summer line between its 1:00 and 2:00 points, so the ''C'' sits on the green
+    line → move the radial labels to an angle where no series line passes the labelled
+    rings. Likely cause: ax.set_rlabel_position(45).'
+  - 'Suggestion: a clock-style angular axis (ax.set_theta_zero_location(''N''), ax.set_theta_direction(-1))
+    would put 0:00 at the top and run the hours clockwise, as readers expect from
+    a time-of-day dial.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "polar-line · matplotlib · anyplot.ai" in dark text (#1A1A17); hour labels (6:00-0:00) and temperature labels (0°C-30°C) in soft dark gray (#4A4A44) — all clearly readable against light background
-      Data: Summer series in brand green (#009E73) as outer loop; Winter series in orange (#D55E00) as inner loop; both colors vibrant and well-distinguished; markers (circles) clearly visible
-      Legend: Positioned at upper left with light elevated background (#FFFDF6), dark text labels; grid subtle with low opacity
-      Legibility verdict: PASS — all text is dark on light with excellent contrast; grid supports rather than competes with data
+      Background: warm off-white #FAF8F1, 2400x2400 square
+      Chrome: dark title 'polar-line · python · matplotlib · anyplot.ai' at top; hour labels 0:00-21:00 every 3 h in INK_SOFT (0:00 at east, counter-clockwise); radial labels 10/20/30 °C along 45°; subtle concentric and radial grid; dark-grey polar spine; legend upper right on #FFFDF6
+      Data: Summer outer loop in #009E73, Winter inner loop in #C475FD near the centre, both with round markers and closed
+      Legibility verdict: PASS (the '10°C' label is touched by the Summer line)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title in light text (#F0EFE8); hour and temperature labels in light soft gray (#B8B7B0) — all clearly readable against dark background; no dark-on-dark failures
-      Data: Summer (green #009E73) and Winter (orange #D55E00) colors are identical to light render — only chrome has flipped to light tones; markers and lines equally visible
-      Legend: Dark elevated background (#242420), light text labels; legend frame border in soft light gray; properly themed
-      Legibility verdict: PASS — all text is light on dark with good contrast; no legibility issues; brand green visible and distinct
+      Background: warm near-black #1A1A17
+      Chrome: light title and light-grey tick labels, grid visible but subtle, light polar spine, legend on #242420 with light text; no dark-on-dark
+      Data: colors identical to the light render
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,74 +54,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized, readable in both light and dark renders
-          with appropriate theme colors
+        comment: Title 12 pt, hour ticks 9 pt, radial ticks 8 pt, legend 9 pt; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No text collisions; legend positioned away from plot; radial labels
-          at 45° positioning
+        passed: false
+        comment: The '10°C' radial tick label is crossed by the Summer line near 1:00
+          (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (size 8) and lines (width 3) clearly visible; concentric
-          grid subtle but present
+        comment: 2 px lines with 4.5 pt markers suit 24 points per series; legend
+          line samples match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-2; CVD-safe palette; no red-green sole signal
+        comment: Green vs. lavender differ in hue and lightness; series also separated
+          by radius
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format (12x12) appropriate for polar; nothing cut off; generous
-          whitespace
+        comment: 2400x2400 square canvas; polar disc centred, legend outside the disc
+          with no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title with spec-id/library/brand; temperature labels with units;
-          hour labels descriptive
+        comment: Hours labelled H:00 on the angular axis, radial ticks carry °C units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series follows Okabe-Ito order; backgrounds
-          correct; chrome properly themed'
+        comment: 'Summer #009E73, Winter #C475FD (Imprint order); backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 17
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: Theme-aware styling with careful color choices; intentional visual
-          hierarchy; custom legend frame
+        passed: false
+        comment: Style-guide baseline (theme tokens, Imprint palette, explicit font
+          sizes); nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid (alpha 0.15), generous title padding; polar grid structure
-          is visually appropriate
+        passed: false
+        comment: Spine and grid rules met (subtle grid, themed polar spine); nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear seasonal contrast (Summer outer/warmer vs Winter inner/cooler);
-          color guides narrative; legend provides context
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,25 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar line chart; lines connect points around circular axis
+        comment: Polar line plot, lines around a circular axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple series, connected lines, grid visible, markers on points
+        comment: Theta-ordered lines, multiple colored series, concentric + radial
+          grid, labeled angles and radii (C1-C4 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Theta: 0-24 hours; Radius: 0-35°C; all data within limits'
+        comment: Theta from hour of day over a full circle, radius from temperature;
+          all points inside 0-35 °C
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match intent
+        comment: Title 'polar-line · python · matplotlib · anyplot.ai'; legend Summer
+          / Winter
     data_quality:
       score: 15
       max: 15
@@ -158,21 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Polar projection demonstrated; multi-series comparison; grid structure;
-          scale labels shown
+        comment: Two series, closed cyclic loops, a small loop near the centre beside
+          a larger one
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily temperature cycle realistic; seasonal variation appropriate;
-          ranges plausible (5-30°C)
+        comment: Hourly summer vs. winter temperatures, plausible ranges
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 24-point hourly data; 0-35°C range sensible; random noise adds realism
+        comment: Summer about 12-29 °C, winter about 0-11 °C; sensible for the domain
+          (no Check values in spec)
     code_quality:
       score: 10
       max: 10
@@ -182,59 +185,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary abstractions; straightforward generation and plotting
+        comment: Six-zone adaptable structure, no functions; adaptability check passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (np.random.seed(42)) for deterministic results
+        comment: RandomState(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; sys.path cleanup prevents conflicts
+        comment: plt, np, pd, FuncFormatter, MaxNLocator all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; theme handling elegant; polar loop-closing technique
-          appropriate
+        comment: Appropriate complexity; limits and ticks derived from df
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; correct DPI (300); no bare plot.png
+        comment: Saves plot-{THEME}.png with default bbox; current API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct plt.subplots() with polar; axes methods; theme token pattern;
-          tight_layout(); set_rlabel_position()
+        passed: false
+        comment: Axes API with polar projection via subplot_kw, MaxNLocator + FuncFormatter
+          tickers for data-derived radial ticks
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Polar projection mastery; theme-adaptive styling; legend frame API;
-          closed-loop technique; custom formatting
+        passed: false
+        comment: set_rlabel_position and the ticker machinery on a polar axis; no
+          further distinctive feature
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-21T07:28:06Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - manual-ticks
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - publication-ready
-  - grid-styling
