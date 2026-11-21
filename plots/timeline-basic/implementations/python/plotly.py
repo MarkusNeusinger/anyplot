@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 timeline-basic: Event Timeline
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-11
+Library: plotly | Python 3
 """
 
 import os
@@ -16,165 +15,135 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette (first series always #009E73)
-IMPRINT = [
-    "#009E73",  # bluish green (brand)
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-    "#BD8233",  # reddish purple
-]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Economic and stock market milestones (2018-2024)
-data = {
-    "date": [
-        "2018-12-26",
-        "2019-07-17",
-        "2020-03-16",
-        "2020-11-09",
-        "2021-03-11",
-        "2021-11-09",
-        "2022-03-16",
-        "2023-03-10",
-        "2024-01-10",
-    ],
-    "event": [
-        "Market Bottom",
-        "Bull Run Begins",
-        "COVID Crash",
-        "Post-Election Rally",
-        "Recovery Accelerates",
-        "Peak Market Euphoria",
-        "Rate Hikes Begin",
-        "Bank Crisis Resolved",
-        "AI Boom Peaks",
-    ],
-    "category": ["Market", "Market", "Crisis", "Recovery", "Recovery", "Expansion", "Correction", "Crisis", "Growth"],
-}
-df = pd.DataFrame(data)
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+EVENT = "Event"  # role: event
+CATEGORY = "Category"  # role: category
 
-# Color mapping for categories
-colors = {
-    "Market": IMPRINT[0],
-    "Recovery": IMPRINT[1],
-    "Crisis": IMPRINT[2],
-    "Expansion": IMPRINT[3],
-    "Growth": IMPRINT[0],
-    "Correction": IMPRINT[1],
-}
-
-# Alternate positions to prevent label overlap
-positions = [1, -1, 1, -1, 1, -1, 1, -1, 1]
-df["position"] = positions
-df["x_pos"] = range(len(df))
-
-# Create figure
-fig = go.Figure()
-
-# Add the timeline axis line
-fig.add_trace(
-    go.Scatter(
-        x=[-0.5, len(df) - 0.5],
-        y=[0, 0],
-        mode="lines",
-        line=dict(color=INK_SOFT, width=3),
-        hoverinfo="skip",
-        showlegend=False,
-    )
+# Data: replace this block with your own table, for example df = pd.read_csv("events.csv")
+df = pd.DataFrame(
+    {
+        DATE: pd.to_datetime(
+            [
+                "2018-12-26",
+                "2019-07-17",
+                "2020-03-16",
+                "2020-11-09",
+                "2021-03-11",
+                "2021-11-09",
+                "2022-03-16",
+                "2023-03-10",
+                "2024-01-10",
+            ]
+        ),
+        EVENT: [
+            "Market Bottom",
+            "Bull Run Begins",
+            "COVID Crash",
+            "Post-Election Rally",
+            "Recovery Accelerates",
+            "Peak Market Euphoria",
+            "Rate Hikes Begin",
+            "Bank Crisis Resolved",
+            "AI Boom Peaks",
+        ],
+        CATEGORY: ["Market", "Market", "Crisis", "Recovery", "Recovery", "Expansion", "Correction", "Crisis", "Growth"],
+    }
 )
 
-# Add vertical connector lines for each event
-for idx, row in df.iterrows():
+# Plot: reads only df and the constants above
+df = df.sort_values(DATE).reset_index(drop=True)
+side = [1 if i % 2 == 0 else -1 for i in range(len(df))]  # alternate above / below the axis
+reach = [side[i] * (0.55 if (i // 2) % 2 == 0 else 0.85) for i in range(len(df))]  # stem length, layout only
+categories = list(dict.fromkeys(df[CATEGORY]))
+span = df[DATE].max() - df[DATE].min()
+pad = span * 0.06
+
+fig = go.Figure()
+
+# Stems from axis to label
+for date, y in zip(df[DATE], reach):
     fig.add_trace(
         go.Scatter(
-            x=[row["x_pos"], row["x_pos"]],
-            y=[0, row["position"] * 0.4],
+            x=[date, date],
+            y=[0, y],
             mode="lines",
-            line=dict(color=INK_SOFT, width=2, dash="dot"),
+            line=dict(color=INK_SOFT, width=1),
             hoverinfo="skip",
             showlegend=False,
         )
     )
 
-# Add event markers and labels by category
-for category in df["category"].unique():
-    cat_df = df[df["category"] == category].reset_index(drop=True)
-
+# Event markers, one trace and one Imprint color per category
+for i, cat in enumerate(categories):
+    rows = df[df[CATEGORY] == cat]
     fig.add_trace(
         go.Scatter(
-            x=cat_df["x_pos"],
-            y=[0] * len(cat_df),
+            x=rows[DATE],
+            y=[0] * len(rows),
             mode="markers",
-            marker=dict(size=14, color=colors[category], line=dict(color=PAGE_BG, width=2)),
-            name=category,
+            marker=dict(size=12, color=IMPRINT_PALETTE[i], line=dict(color=PAGE_BG, width=1.5)),
+            name=cat,
+            customdata=rows[[EVENT]].assign(when=rows[DATE].dt.strftime("%b %d, %Y")),
             hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<extra></extra>",
-            customdata=list(
-                zip(cat_df["event"].tolist(), [pd.to_datetime(d).strftime("%B %d, %Y") for d in cat_df["date"]])
-            ),
         )
     )
 
-# Add event labels
-for idx, row in df.iterrows():
-    y_offset = row["position"] * 0.5
+# Event name and date, tied to the marker by its stem
+for date, event, y in zip(df[DATE], df[EVENT], reach):
     fig.add_annotation(
-        x=row["x_pos"],
-        y=y_offset,
-        text=row["event"],
+        x=date,
+        y=y,
+        text=f"<b>{event}</b><br><span style='font-size:8px;color:{INK_SOFT}'>{date:%b %Y}</span>",
         showarrow=False,
-        font=dict(size=18, color=INK),
+        font=dict(size=10, color=INK),
         xanchor="center",
-        yanchor="bottom" if row["position"] > 0 else "top",
+        yanchor="bottom" if y > 0 else "top",
     )
 
-# Add date labels
-for idx, row in df.iterrows():
-    y_offset = row["position"] * 0.15
-    date_str = pd.to_datetime(row["date"]).strftime("%b %Y")
-    fig.add_annotation(
-        x=row["x_pos"],
-        y=y_offset,
-        text=date_str,
-        showarrow=False,
-        font=dict(size=14, color=INK_SOFT),
-        xanchor="center",
-        yanchor="bottom" if row["position"] > 0 else "top",
-    )
-
-# Layout
+title = "timeline-basic · python · plotly · anyplot.ai"
 fig.update_layout(
-    title=dict(text="timeline-basic · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    autosize=False,
+    width=800,
+    height=450,
+    title=dict(text=title, font=dict(size=16, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
-        title=dict(text="Economic Timeline (2018-2024)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=16, color=INK_SOFT),
-        tickvals=[0, 2, 4, 6, 8],
-        ticktext=["Dec 2018", "Mar 2020", "Mar 2021", "Mar 2022", "Jan 2024"],
+        title=dict(text=DATE, font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
+        tickformat="%Y",
+        dtick="M12",
+        range=[df[DATE].min() - pad, df[DATE].max() + pad],
         showgrid=True,
         gridcolor=GRID,
-        gridwidth=1,
         zeroline=False,
         linecolor=INK_SOFT,
+        linewidth=2,
     ),
-    yaxis=dict(visible=False, range=[-1, 1], fixedrange=True),
+    yaxis=dict(visible=False, range=[-1.25, 1.25], fixedrange=True),
     template="plotly_white",
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
     showlegend=True,
     legend=dict(
         orientation="h",
         yanchor="bottom",
-        y=1.02,
+        y=1.0,
         xanchor="center",
         x=0.5,
-        font=dict(size=16, color=INK_SOFT),
+        font=dict(size=10, color=INK_SOFT),
         bgcolor=ELEVATED_BG,
         bordercolor=INK_SOFT,
         borderwidth=1,
     ),
-    margin=dict(l=80, r=80, t=120, b=80),
+    margin=dict(l=40, r=40, t=90, b=60),
 )
 
-# Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Output
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
