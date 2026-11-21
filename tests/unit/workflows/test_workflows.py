@@ -401,7 +401,7 @@ class TestWorkflowTriggers:
 class TestCiTestsSpecSectionCheck:
     """ci-tests.yml lints every spec's characteristic section on every event,
     inside the required "Run Tests" job — a PR that changes only plots/ files
-    other than a specification.md skips pytest, so this step is the only thing
+    other than the two specification files skips pytest, so this step is the only thing
     that guards the regen gate's C1..Cn contract there."""
 
     def _steps(self) -> list[dict[str, Any]]:
@@ -436,11 +436,14 @@ class TestCiTestsSpecSectionCheck:
         assert "specification\\.md$" in check
 
     def test_a_changed_specification_runs_the_unit_tests(self) -> None:
-        """The role audit (tests/unit/agents/data/test_computed.py) reads every spec's Data bullets: a spec PR runs
-        it, instead of leaving a failure to the next Python PR."""
-        check = self._step("Check for testable changes")["run"]
-        [config] = [line for line in check.splitlines() if "CONFIG_CHANGES=$(" in line]
-        assert "|plots/[^/]+/specification\\.md)$" in config
+        """The role audit (tests/unit/agents/data/test_computed.py) reads every spec's Data bullets, and
+        tests/unit/core/test_spec_sources.py every spec's sources block: a PR that changes only one of the two files
+        runs them, instead of leaving a failure to the next Python PR."""
+        pattern = self._config_changes_pattern()
+        assert pattern.search("plots/scatter-basic/specification.md")
+        assert pattern.search("plots/scatter-basic/specification.yaml")
+        assert not pattern.search("plots/scatter-basic/metadata/python/matplotlib.yaml")
+        assert not pattern.search("plots/scatter-basic/specification.yaml.bak")
 
     def test_a_changed_chat_explainer_runs_the_unit_tests(self) -> None:
         """tests/unit/test_agent_intro_examples.py reads the explainer's example pairs from AgentIntro.tsx: a PR that
