@@ -48,11 +48,11 @@ The saved `plot-light.png` / `plot-dark.png` **must** end up at exactly one of t
 | Orientation | Pixels      | Use case |
 |-------------|-------------|----------|
 | Landscape   | 3200 × 1800 | Default — most plots (16:9) |
-| Square      | 2400 × 2400 | Symmetric plots: pie, radar, heatmaps, maze, crossword, anything with no preferred horizontal axis (1:1) |
+| Square      | 2400 × 2400 | Symmetric plots: pie, radar, heatmaps, maze, crossword, Venn diagrams, circle packing, polar charts, a plot drawn with equal axes, anything with no preferred horizontal axis (1:1) |
 
 Pick the orientation that suits the spec's content; do **not** average between them, do **not** invent a third aspect ratio. The exact knobs to set for your library are in `prompts/library/{LIBRARY}.md` ("Canvas — hard rule, no deviation"). Use those numbers verbatim.
 
-**If regenerating: the previous implementation's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are HISTORICAL. Do NOT carry them forward, even if every other line in the previous code is fine.** Your very first edit to the previous file is to overwrite those values to the canonical pair from the library prompt. Everything else (fonts, colours, layout, data scenario) comes after that one edit is in place.
+**If regenerating: the previous implementation's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are HISTORICAL. Do NOT carry them forward, even if every other line in the previous code is fine.** Your very first edit to the previous file is to overwrite those values to the canonical pair from the library prompt. Everything else (fonts, colours, layout, data scenario) comes after that one edit is in place. Choose the orientation from what the plot draws, not from the old figure: a plot that keeps a 1:1 aspect (`set_aspect("equal")`, `axis("equal")`, a Venn diagram, a circle packing, a polar chart) takes the square pair. Old files often drew such a plot on a landscape figure and let `bbox_inches="tight"` cut the empty sides away; without that crop, which the library prompt forbids, the plot shrinks to the middle of the landscape canvas and leaves empty bands at both sides.
 
 A post-render gate in `impl-review.yml` measures the saved PNG dimensions and rejects anything off-target by more than 16 px on either axis, then routes the PR into `impl-repair.yml`. Repair attempts are capped — drift past 4 attempts deletes the implementation from `main`. The cheapest path is to land on target on the first render. Step 3 below includes a PIL self-check you must run before committing.
 

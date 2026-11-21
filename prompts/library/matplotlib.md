@@ -28,7 +28,7 @@ The saved PNG must be **exactly** one of these two sizes (post-render gate in `i
 # Landscape — default for most plots (16:9)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)   # → 3200 × 1800 px
 
-# Square — only for symmetric plots (pie, radar, heatmap, maze, …)
+# Square — symmetric plots (pie, radar, heatmap, maze, Venn, polar, equal axes, …)
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400)     # → 2400 × 2400 px
 ```
 
