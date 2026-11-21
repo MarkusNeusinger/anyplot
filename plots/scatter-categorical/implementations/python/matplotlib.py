@@ -1,13 +1,14 @@
 """ anyplot.ai
 scatter-categorical: Categorical Scatter Plot
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-12
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-21
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
@@ -17,66 +18,65 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (canonical order)
-IMPRINT = [
-    "#009E73",  # bluish green — ALWAYS first series
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-    "#BD8233",  # reddish purple
-]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+MARKERS = ["o", "s", "^", "D", "v", "P", "X", "h"]  # one marker shape per group, same order as the palette
 
-# Data — plant species with distinct petal characteristics
-np.random.seed(42)
+# Columns: set these to your table's column names
+PETAL_LENGTH = "Petal length (cm)"  # role: x
+PETAL_WIDTH = "Petal width (cm)"  # role: y
+SPECIES = "Species"  # role: category
+
+# Data: replace this block with your own table, for example df = pd.read_csv("petals.csv")
+rng = np.random.default_rng(42)
 n_per_group = 40
-
-# Species A: Smaller petals
-species_a_x = np.random.normal(1.5, 0.3, n_per_group)
-species_a_y = np.random.normal(0.3, 0.1, n_per_group)
-
-# Species B: Medium petals
-species_b_x = np.random.normal(4.0, 0.5, n_per_group)
-species_b_y = np.random.normal(1.3, 0.2, n_per_group)
-
-# Species C: Larger petals
-species_c_x = np.random.normal(5.5, 0.6, n_per_group)
-species_c_y = np.random.normal(2.0, 0.3, n_per_group)
-
-categories = ["Species A", "Species B", "Species C"]
-markers = ["o", "s", "^"]
+# (mean length, sd length, mean width, sd width) per species
+profiles = {"Species A": (1.5, 0.3, 0.3, 0.1), "Species B": (4.0, 0.5, 1.3, 0.2), "Species C": (5.5, 0.6, 2.0, 0.3)}
+df = pd.concat(
+    [
+        pd.DataFrame(
+            {PETAL_LENGTH: rng.normal(mx, sx, n_per_group), PETAL_WIDTH: rng.normal(my, sy, n_per_group), SPECIES: name}
+        )
+        for name, (mx, sx, my, sy) in profiles.items()
+    ],
+    ignore_index=True,
+)
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot each category with distinct colors and markers
-scatter_data = [
-    (species_a_x, species_a_y, IMPRINT[0], markers[0]),
-    (species_b_x, species_b_y, IMPRINT[1], markers[1]),
-    (species_c_x, species_c_y, IMPRINT[2], markers[2]),
-]
+for i, (species, rows) in enumerate(df.groupby(SPECIES, sort=False)):
+    ax.scatter(
+        rows[PETAL_LENGTH],
+        rows[PETAL_WIDTH],
+        s=70,
+        color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+        alpha=0.8,
+        marker=MARKERS[i % len(MARKERS)],
+        edgecolors=PAGE_BG,
+        linewidth=0.5,
+        label=species,
+    )
 
-for i, (x, y, color, marker) in enumerate(scatter_data):
-    ax.scatter(x, y, s=200, c=color, alpha=0.8, label=categories[i], marker=marker, edgecolors=PAGE_BG, linewidth=0.5)
-
-# Labels and styling
-ax.set_xlabel("Petal Length (cm)", fontsize=20, color=INK)
-ax.set_ylabel("Petal Width (cm)", fontsize=20, color=INK)
-ax.set_title("scatter-categorical · matplotlib · anyplot.ai", fontsize=24, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Style
+ax.set_xlabel(PETAL_LENGTH, fontsize=10, color=INK)
+ax.set_ylabel(PETAL_WIDTH, fontsize=10, color=INK)
+ax.set_title("scatter-categorical · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
-ax.yaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
-# Legend
-leg = ax.legend(fontsize=16, loc="upper left")
-if leg:
-    leg.get_frame().set_facecolor(ELEVATED_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    plt.setp(leg.get_texts(), color=INK_SOFT)
+leg = ax.legend(title=SPECIES, fontsize=8, title_fontsize=9, loc="upper left")
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
+leg.get_title().set_color(INK)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
