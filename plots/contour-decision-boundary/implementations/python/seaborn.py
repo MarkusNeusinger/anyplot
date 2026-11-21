@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-decision-boundary: Decision Boundary Classifier Visualization
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-16
@@ -8,39 +8,21 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
-from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
-from sklearn.datasets import make_moons
-from sklearn.svm import SVC
+from matplotlib.colors import ListedColormap
+from sklearn.neighbors import KNeighborsClassifier
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-BRAND = "#009E73"
-ALT_COLOR = "#C475FD"
-
-np.random.seed(42)
-X, y = make_moons(n_samples=200, noise=0.25, random_state=42)
-X1 = X[:, 0]
-X2 = X[:, 1]
-
-clf = SVC(kernel="rbf", C=1.0, gamma="scale")
-clf.fit(X, y)
-
-x1_min, x1_max = X1.min() - 0.5, X1.max() + 0.5
-x2_min, x2_max = X2.min() - 0.5, X2.max() + 0.5
-xx1, xx2 = np.meshgrid(np.linspace(x1_min, x1_max, 200), np.linspace(x2_min, x2_max, 200))
-grid_points = np.c_[xx1.ravel(), xx2.ravel()]
-
-Z = clf.predict(grid_points).reshape(xx1.shape)
-
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 sns.set_theme(
     style="ticks",
@@ -52,105 +34,81 @@ sns.set_theme(
         "text.color": INK,
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
-        "grid.color": INK,
-        "grid.alpha": 0.10,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-contour = ax.contourf(xx1, xx2, Z, levels=[-0.5, 0.5, 1.5], colors=[BRAND, ALT_COLOR], alpha=0.3)
+# Constants
+STATES = ["Healthy", "Degrading", "Faulty"]  # ordered machine health states
+N_NEIGHBORS = 15  # k of the nearest-neighbor classifier
+MESH_STEPS = 300  # mesh resolution per axis
+CORRECT, MISCLASSIFIED = "Correct", "Misclassified"  # marker styles
 
-ax.contour(xx1, xx2, Z, levels=[0.5], colors=[INK_SOFT], linewidths=3)
+# Columns: set these to your table's column names
+VIBRATION = "Vibration (mm/s)"  # role: X1
+TEMPERATURE = "Bearing temperature (°C)"  # role: X2
+STATE = "Health state"  # role: y
+FIT = "Prediction"  # role: extra
 
-predictions = clf.predict(X)
-correct_mask = predictions == y
-incorrect_mask = ~correct_mask
+# Data: replace this block with your own table, for example df = pd.read_csv("machines.csv")
+rng = np.random.default_rng(7)
+centers = np.array([[2.0, 55.0], [3.9, 66.0], [5.8, 77.0]])
+spread = np.array([[1.1, 5.0], [1.2, 5.5], [1.1, 5.0]])  # (vibration, temperature) std per state
+labels = np.repeat(np.arange(len(STATES)), 90)
+blobs = centers[labels] + rng.normal(size=(len(labels), 2)) * spread[labels]
+df = pd.DataFrame(
+    {VIBRATION: np.round(blobs[:, 0], 2), TEMPERATURE: np.round(blobs[:, 1], 1), STATE: [STATES[i] for i in labels]}
+)
+
+# Plot: reads only df and the constants above
+df = df.dropna(subset=[VIBRATION, TEMPERATURE, STATE]).astype({STATE: str}).reset_index(drop=True)
+states = list(dict.fromkeys(df[STATE]))
+state_colors = {s: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, s in enumerate(states)}
+
+features = df[[VIBRATION, TEMPERATURE]].to_numpy()
+scale = features.std(axis=0)
+clf = KNeighborsClassifier(n_neighbors=N_NEIGHBORS).fit(features / scale, df[STATE])
+correct = clf.predict(features / scale) == df[STATE].to_numpy()
+df[FIT] = np.where(correct, CORRECT, MISCLASSIFIED)
+
+pad = 0.08 * np.ptp(features, axis=0)
+lo, hi = features.min(axis=0) - pad, features.max(axis=0) + pad
+xx, yy = np.meshgrid(np.linspace(lo[0], hi[0], MESH_STEPS), np.linspace(lo[1], hi[1], MESH_STEPS))
+region = clf.predict(np.c_[xx.ravel(), yy.ravel()] / scale)
+region_idx = np.array([states.index(s) for s in region]).reshape(xx.shape)
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+region_cmap = ListedColormap([state_colors[s] for s in states])
+ax.contourf(xx, yy, region_idx, levels=np.arange(len(states) + 1) - 0.5, cmap=region_cmap, alpha=0.22)
+ax.contour(xx, yy, region_idx, levels=np.arange(len(states) - 1) + 0.5, colors=INK_SOFT, linewidths=1.2)
 
 sns.scatterplot(
-    x=X1[correct_mask],
-    y=X2[correct_mask],
-    hue=y[correct_mask],
-    palette=[BRAND, ALT_COLOR],
-    s=200,
-    edgecolor=PAGE_BG,
-    linewidth=1.5,
-    alpha=0.9,
+    data=df,
+    x=VIBRATION,
+    y=TEMPERATURE,
+    hue=STATE,
+    hue_order=states,
+    palette=state_colors,
+    style=FIT,
+    style_order=[CORRECT, MISCLASSIFIED],
+    markers={CORRECT: "o", MISCLASSIFIED: "X"},
+    s=38,
+    edgecolor=INK,
+    linewidth=0.5,
     ax=ax,
-    legend=False,
 )
 
-if np.any(incorrect_mask):
-    ax.scatter(
-        X1[incorrect_mask],
-        X2[incorrect_mask],
-        s=300,
-        edgecolors="#BD8233",
-        linewidths=3.5,
-        facecolors="none",
-        alpha=0.95,
-        marker="o",
-    )
-
-legend_elements = [
-    Patch(facecolor=BRAND, alpha=0.3, edgecolor=INK_SOFT, label="Class 0 Region"),
-    Patch(facecolor=ALT_COLOR, alpha=0.3, edgecolor=INK_SOFT, label="Class 1 Region"),
-    Line2D(
-        [0],
-        [0],
-        marker="o",
-        color="w",
-        markerfacecolor=BRAND,
-        markersize=14,
-        markeredgecolor=PAGE_BG,
-        markeredgewidth=1.5,
-        label="Class 0 (correct)",
-    ),
-    Line2D(
-        [0],
-        [0],
-        marker="o",
-        color="w",
-        markerfacecolor=ALT_COLOR,
-        markersize=14,
-        markeredgecolor=PAGE_BG,
-        markeredgewidth=1.5,
-        label="Class 1 (correct)",
-    ),
-    Line2D(
-        [0],
-        [0],
-        marker="o",
-        color="w",
-        markerfacecolor="none",
-        markersize=14,
-        markeredgecolor="#BD8233",
-        markeredgewidth=3.5,
-        label="Misclassified",
-    ),
-]
-ax.legend(handles=legend_elements, loc="upper right", fontsize=14, framealpha=0.95)
-
-ax.set_xlabel("Feature 1 (Normalized)", fontsize=20, color=INK)
-ax.set_ylabel("Feature 2 (Normalized)", fontsize=20, color=INK)
-ax.set_title("contour-decision-boundary · seaborn · anyplot.ai", fontsize=24, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-accuracy = np.mean(predictions == y) * 100
-ax.text(
-    0.02,
-    0.98,
-    f"SVM Accuracy: {accuracy:.1f}%",
-    transform=ax.transAxes,
-    fontsize=16,
-    verticalalignment="top",
-    fontweight="bold",
-    bbox={"boxstyle": "round", "facecolor": ELEVATED_BG, "alpha": 0.95, "edgecolor": INK_SOFT},
-    color=INK,
-)
-
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+# Style
+ax.set_xlim(lo[0], hi[0])
+ax.set_ylim(lo[1], hi[1])
+accuracy = correct.mean() * 100
+ax.set_title("contour-decision-boundary · python · seaborn · anyplot.ai", fontsize=12, color=INK)
+ax.set_xlabel(VIBRATION, fontsize=10)
+ax.set_ylabel(TEMPERATURE, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.legend(fontsize=7, title_fontsize=7.5, loc="upper left", framealpha=0.95, title=f"k-NN accuracy {accuracy:.1f}%")
+sns.despine(ax=ax)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
