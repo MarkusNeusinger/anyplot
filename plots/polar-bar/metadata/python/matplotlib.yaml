@@ -12,43 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 96
+quality_score: 71
 review:
   strengths:
-  - Excellent theme adaptation with proper token threading through all elements (PAGE_BG,
-    ELEVATED_BG, INK, INK_SOFT, BRAND) — both light and dark renders are fully legible
-    and visually correct
-  - 'Strong design execution: polar projection with proper compass orientation (North
-    at top, clockwise), intentional bar width calculation, custom legend styling,
-    and subtle grid (alpha=0.15) that doesn''t compete with data'
-  - Professional use of Okabe-Ito palette with correct positioning (Calm=pos 1 green,
-    Moderate=pos 2 orange, Strong=pos 3 blue); stacking creates clear visual hierarchy
-    for wind speed categories
-  - 'Proper matplotlib idioms: ax.subplots with polar projection, set_theta_zero_location/direction
-    for compass alignment, rlabel_position to avoid overlap, custom legend frame styling'
-  - Clean, simple code structure with deterministic seed (np.random.seed(42)), realistic
-    meteorological wind data, and correct output format (plot-{THEME}.png)
+  - Compass orientation via set_theta_zero_location('N') and set_theta_direction(-1)
+  - Stacked bars with consistent segment order and bottom offsets; radial scale starts
+    at zero
+  - Theme tokens threaded through labels, grid, bar edges and legend in both renders
   weaknesses:
-  - 'Minor: DE-02 could be elevated slightly with additional refinement — consider
-    removing or hiding specific spines in polar space (if applicable) or refining
-    whitespace further'
+  - 'VQ-05 (both): the saved canvas is 3570x2805, not one of the canonical 3200x1800
+    / 2400x2400 sizes, and the title sits only a few px above the N label → 2400x2400
+    square (−1170 x −405 px) with pad between title and rim. Likely cause: figsize=(12,
+    12) at dpi=300 with bbox_inches=''tight''.'
+  - 'CQ-05 (code): savefig uses bbox_inches=''tight'' and dpi=300, which the matplotlib
+    prompt forbids → bbox_inches default (None) and dpi=400 with figsize=(6, 6). Likely
+    cause: the savefig call.'
+  - 'SC-04 (both): the title reads ''polar-bar · matplotlib · anyplot.ai'' and lacks
+    the language segment → ''polar-bar · python · matplotlib · anyplot.ai''. Likely
+    cause: the set_title string.'
+  - 'VQ-07 (both): the polar spine is drawn in the default pure black, harsh on #FAF8F1
+    and dark-on-dark on #1A1A17 → hide it or colour it from INK_SOFT. Likely cause:
+    ax.spines[''polar''] left at its default.'
+  - 'VQ-02 (both): the ''10%'' radial label is drawn over the purple segment of the
+    NE bar → keep radial labels clear of bars (fewer rings or a label angle between
+    bars). Likely cause: set_yticks([10, 20, 30, 40]) with set_rlabel_position(45)
+    on the NE spoke.'
+  - 'VQ-06 (both): the radial scale shows only ''%'' ticks and never names the quantity
+    → label it as frequency of observations (%). Likely cause: no radial axis label.'
+  - 'DQ-03 (code): the 24 direction-by-speed percentages sum to 209 %, but shares
+    of one observation record must sum to 100 % → rescale to a 100 % grand total (−109
+    percentage points). Likely cause: the hand-typed calm/moderate/strong arrays.'
+  - 'CQ-04 (code): np.random.seed(42) is called with no random draw and bars1/bars2/bars3
+    are never used → delete the seed and the unused assignments. Likely cause: leftover
+    template lines.'
+  - 'Suggestion: highlighting the prevailing W sector would give the rose a focal
+    point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — clean, not pure white.
-      Chrome: Title, compass directions (N, NE, E, SE, S, SW, W, NW), and radial percentage labels are all in bold dark text (INK color #1A1A17), clearly readable against the light surface. Radial labels positioned at 45° to avoid overlap.
-      Data: Three stacked bar series using Okabe-Ito colors: Calm (0-5 m/s) in brand green (#009E73 — position 1), Moderate (5-10 m/s) in vermillion (#D55E00 — position 2), Strong (>10 m/s) in blue (#0072B2 — position 3). Bars have subtle soft ink edges (INK_SOFT #4A4A44) for definition, with alpha=0.9. Grid is subtle and visible.
-      Legend: Positioned at upper left with title "Wind Speed" in bold dark text, category labels in soft ink, light background (#FFFDF6), subtle border.
-      Legibility verdict: PASS — all text is readable; no light-on-light issues.
+      Background: warm off-white #FAF8F1, canvas 3570x2805 (non-canonical).
+      Chrome: bold dark title 'polar-bar · matplotlib · anyplot.ai' close above the N label, bold 18 pt compass labels, grey radial labels 10-40 % along the NE spoke ('10%' drawn over the NE bar), pure black polar spine, legend 'Wind Speed' to the right. All text readable.
+      Data: 8 stacked sectors, Calm #009E73, Moderate #C475FD, Strong #4467A3, outlined in INK_SOFT; W longest.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — clean, not pure black.
-      Chrome: Title and compass directions now appear in light text (#F0EFE8), clearly readable against the dark surface. Radial labels in secondary light text (#B8B7B0), visible and readable. No dark-on-dark failures.
-      Data: Bar colors are IDENTICAL to the light render — Calm green, Moderate orange, Strong blue. Data colors do not change with theme; only chrome flipped. Bar edges are now lighter (still INK_SOFT adapted to dark theme). Grid is subtle and visible on the dark surface.
-      Legend: Light text with dark background (#242420), readable. Title and labels follow theme adaptation.
-      Legibility verdict: PASS — all text is readable; all elements distinguish clearly from the dark background. No legibility failures in either theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title and compass labels light, radial labels and legend grey-light, grid subtle; the polar spine stays pure black and nearly vanishes on the dark surface.
+      Data: identical colours to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -56,82 +69,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title 24pt bold, directions 18pt bold, radial labels 14pt)
-          explicitly sized and readable in both light and dark themes; no light-on-light
-          or dark-on-dark failures
+        comment: 'Title 24 pt, compass 18 pt bold, radial 14 pt, legend 14 pt on a
+          12 in figure: all at or above reference and readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Radial labels positioned at 45° to avoid overlap with pie slices;
-          direction labels evenly spaced around circle; all text readable
+        passed: false
+        comment: The '10%' radial label sits on top of the NE bar's purple segment
+          (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with well-defined edges (edgecolor=INK_SOFT,
-          linewidth=1.5); bar width=0.8 sector provides good spacing; markers not
-          obscured
+        comment: Bars outlined and clearly visible in both themes; legend swatches
+          match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; no red-green as sole signal; adequate
-          contrast across all text and data elements
+        comment: Green / purple / blue stack is CVD-distinguishable; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: Square format (12×12 figsize) appropriate for circular plot; nothing
-          cut off; proportions well-balanced
+        passed: false
+        comment: Canvas 3570x2805, not one of the two canonical sizes, and the title
+          crowds the N label (defect lines)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title descriptive ('polar-bar · matplotlib · anyplot.ai'); compass
-          directions clear; radial labels show percentages
+        passed: false
+        comment: Radial quantity never named; only % ticks (defect line)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series is #009E73 (Okabe-Ito pos 1); multi-series follows
-          order (pos 1, 2, 3); light background #FAF8F1, dark background #1A1A17;
-          both renders theme-correct'
+        passed: false
+        comment: Imprint order correct and backgrounds correct, but the polar spine
+          is default pure black, harsh in light and near-invisible in dark (defect
+          line)
     design_excellence:
-      score: 17
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
         passed: true
-        comment: Custom theme tokens, intentional color palette, proper polar projection
-          setup with compass orientation, sophisticated legend styling — shows design
-          thought; nearly professional polish
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clean plot with subtle grid (alpha=0.15), subtle bar edges for definition,
-          legend frame styling, generous whitespace via square format and tight_layout
+        passed: false
+        comment: Subtle grid; the spine and grid rules otherwise met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Stacked bars create visual hierarchy: calm base (green) → moderate
-          (orange) → strong (blue); polar arrangement guides through compass; legend
-          title and labels explain wind speed context'
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -139,32 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar bar chart (wind rose); bars radiate from center in
-          circular arrangement
+        comment: Correct stacked polar bar chart (wind rose)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: compass directions (8 cardinal/intercardinal),
-          stacked bars for wind speed ranges (Calm/Moderate/Strong), legend with clear
-          labels'
+        comment: Bars from centre, 8 compass directions, stacked speed classes, legend;
+          C1-C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angles correctly map to compass directions; bar height represents
-          frequency/magnitude; axes show full data range (0-50%)
+        comment: Compass order clockwise from N, radial axis from 0; segments at their
+          values
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title is 'polar-bar · matplotlib · anyplot.ai' (correct format);
-          legend shows 'Wind Speed' with category labels (Calm, Moderate, Strong)
+        passed: false
+        comment: Title 'polar-bar · matplotlib · anyplot.ai' lacks the language segment
+          (defect line)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -172,24 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects of polar bar chart shown: 8 compass directions, 3 wind
-          speed categories, stacked frequency distribution, clear magnitude scale'
+        comment: Shows stacking, uneven totals, dominant W sector
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wind speed distribution is meteorologically plausible (calm > strong
-          frequencies); neutral, non-controversial dataset
+        comment: Plausible, neutral wind-speed scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'Radial axis 0-50 is sensible for wind frequency percentages; data
-          values (calm: 12-22, moderate: 4-15, strong: 2-8) appropriate for domain'
+        passed: false
+        comment: 'Checked the data arrays: the 24 percentages sum to 209 %, not 100
+          % (defect line)'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -197,56 +198,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple script without unnecessary functions or classes; straightforward
-          data + plot structure
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output on every run
+        comment: Deterministic hard-coded arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only imports used: os (for ANYPLOT_THEME), matplotlib.pyplot, numpy'
+        comment: os, pyplot, numpy all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI or simulated interactivity; straightforward matplotlib
-          usage with proper API calls
+        passed: false
+        comment: np.random.seed(42) with no random call and unused bars1/bars2/bars3
+          handles (defect line)
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png correctly (no bare plot.png); uses current
-          matplotlib API
+        passed: false
+        comment: savefig with bbox_inches='tight' at dpi 300, which the library prompt
+          forbids and which produced the off-canvas size (defect line)
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent matplotlib idioms: plt.subplots with projection=''polar'',
-          ax.bar with stacking (bottom parameter), set_theta_zero_location/direction
-          for compass orientation, proper axis configuration, legend positioning with
-          bbox_to_anchor'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses matplotlib's polar projection effectively; stacking bars in
-          polar space is matplotlib-specific; theme-adaptive styling throughout; could
-          explore more advanced polar features (e.g., spirals, custom projections)
+        comment: Polar projection, set_theta_zero_location/direction, set_rlabel_position
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: PolarAxes theta controls; nothing further distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
 impl_tags:
   dependencies: []
   techniques:

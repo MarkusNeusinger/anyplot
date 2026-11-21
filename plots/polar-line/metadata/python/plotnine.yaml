@@ -2,50 +2,50 @@ library: plotnine
 language: python
 specification_id: polar-line
 created: '2026-05-12T22:53:07Z'
-updated: '2026-05-12T23:02:02Z'
-generated_by: claude-haiku
-workflow_run: 25766766514
+updated: '2026-11-21T07:45:43Z'
+generated_by: claude-sonnet
+workflow_run: 44881179555
 issue: 2692
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - 'Perfect visual quality: all text sizes explicitly set (title 24pt, labels 20pt,
-    ticks 16pt) and readable in both themes'
-  - 'Exemplary palette compliance: first series is #009E73 (Okabe-Ito pos 1), second
-    series #D55E00 (pos 2), both identical across light/dark renders'
-  - 'Clean code structure: KISS pattern with proper seed (np.random.seed(42)), theme-adaptive
-    tokens correctly applied throughout'
-  - 'Proper plotnine idioms: layer composition (geom_path + geom_point), manual color
-    scaling, custom theme — all idiomatic usage'
-  - 'Strong data context: realistic hourly activity patterns over two weeks, clear
-    visual comparison between Week 1 and Week 2'
+  - 'Clock-face polar frame: 0h at the top, hours running clockwise, labelled every
+    3 h, with concentric rings at round radius steps and radial spokes, lighter than
+    the data lines in both themes'
+  - coord_fixed keeps the rings circular, so every point sits at its true angle and
+    radius and each week is a closed loop in theta order
+  - 'Theme tokens threaded through every layer: grid, labels, legend frame and caption
+    flip cleanly between #FAF8F1 and #1A1A17 while the Imprint data colours stay identical'
+  - 'Legend and series colours follow the data order via scale_color_manual(limits=groups),
+    so Week 1 gets #009E73'
   weaknesses:
-  - 'Code/image discrepancy: code specifies x="" and y="" (empty axis labels), but
-    rendered images show ''Radial Magnitude'' labels — investigate version mismatch'
-  - 'Design excellence is competent but not exceptional (DE-01=4): plot is well-configured
-    default without distinctive aesthetic choices'
-  - 'Data variation: both activity patterns follow similar sinusoidal shapes; could
-    benefit from more pronounced difference between weeks to strengthen data storytelling'
+  - 'DQ-02 (both): the radius is titled ''Activity (events per hour)'' without saying
+    what is counted, so the scenario reads as generic → name the measured quantity
+    (e.g. ''Website visits per hour'' or ''Support tickets per hour''). Likely cause:
+    the VALUE constant.'
+  - 'Suggestion: give the legend more inner padding; the title ''Week'' and the ''Week
+    2'' label sit almost on the frame (legend_box_margin / legend_margin).'
+  - 'Suggestion: the hand-written nice-step block (r_max/4, magnitude, 1-2-5 steps)
+    could use mizani''s breaks_extended(), which plotnine already depends on.'
+  - 'Suggestion: the redundant guides(color=''legend'') call can go.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) surface, not pure white.
-      Chrome: Title, axis labels, and tick labels all dark and clearly readable. Legend positioned top-right with light background and dark text.
-      Data: Two lines representing Week 1 (teal #009E73) and Week 2 (orange #D55E00) showing hourly activity patterns in circular layout. Markers visible at each data point. Grid lines subtle but visible.
-      Legibility verdict: PASS — all text readable, good contrast, no "light-on-light" failures.
+      Background: warm off-white #FAF8F1, square 2400x2400.
+      Chrome: title 'polar-line · python · plotnine · anyplot.ai' dark and centred; hour labels 0h-21h every 45° outside the outer ring in INK_SOFT; ring values 20/40/60/80 along the 22.5° bearing; legend 'Week' (Week 1, Week 2) in a light box with a dark frame below the disc; caption 'Rings: Activity (events per hour)' bottom right. All readable.
+      Data: two closed loops of 24 points each, Week 1 #009E73 and Week 2 #C475FD, with markers on the line; Week 1 peaks near 12h (~78), Week 2 shifted to ~15-17h; loops cross near 13h. Grid rings and spokes are faint grey, lighter than the lines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all light and clearly readable against dark background. NO dark-on-dark failures. Legend positioned identically to light render with dark background and light text.
-      Data: Identical colors to light render (Week 1 teal #009E73, Week 2 orange #D55E00) — data colors constant across themes. Markers and lines equally distinct.
-      Legibility verdict: PASS — all text readable in both renders, theme-adaptive chrome working correctly.
-
-    Both renders demonstrate proper theme adaptation. Data colors (Okabe-Ito palette) identical in both; only background, text, and grid chrome adapt by theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title near-white, hour and ring labels light grey, legend box #242420 with a light frame, caption light grey; no dark-on-dark text.
+      Data: identical #009E73 and #C475FD loops and markers as in the light render; grid rings and spokes faint but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,75 +56,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: Explicit sizes (title 12 pt, legend 9 pt, hour labels 9, ring labels
+          7, caption 8); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements; all labels fully readable
+        comment: No text collides with text or data; ring labels sit between spokes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines (size=1.5) and markers (size=3.5) optimally sized for 48 total
-          points across two series
+        comment: '24 points per series with 2.2 markers on 1.2 lines: markers visible,
+          lines still read as lines; legend glyphs match the marks in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) provides excellent contrast
-          and CVD safety'
+        comment: Green vs lavender differ strongly in luminance and hue; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins; legend properly
-          positioned
+        comment: Square 2400x2400 canvas (gate passed); polar disc centred, fills
+          ~55% of the canvas, legend directly below
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Rendered images show descriptive axis labels; title follows spec
-          format
+        comment: 'Angles labelled as hours (0h-21h); radius title with units in the
+          caption ''Rings: Activity (events per hour)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito positions 1-2);
-          background #FAF8F1 (light)/#1A1A17 (dark); text colors theme-adaptive; colors
-          identical in both renders'
+        comment: 'Week 1 #009E73, Week 2 #C475FD (Imprint order); backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Looks like well-configured library default; no exceptional design
-          choices or custom color harmony
+        comment: 'Beyond baseline: clock-face orientation (0h at top, clockwise),
+          hour-of-day angle labels and a muted ring-label scale along a bearing between
+          spokes give a clear typographic hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Good refinement: theme_minimal() removes spines, grid subtle (alpha
-          0.08), generous whitespace'
+        passed: false
+        comment: Round-number ring steps chosen from the data, ring labels placed
+          off the spokes, grid at alpha 0.18; legend box is cramped (title and last
+          entry nearly touch the frame), so not higher
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy through color contrast (teal vs orange) shows week-to-week
-          comparison; patterns somewhat similar, limiting emphasis
+        passed: false
+        comment: Data displayed; the two weeks' phase shift is visible but no emphasis
+          chosen
     spec_compliance:
       score: 15
       max: 15
@@ -134,54 +134,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: polar line plot with lines connecting points
-          in circular layout'
+        comment: 'Polar line plot: closed lines on a polar grid'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: multiple series, color differentiation, cyclical
-          angular data, continuous radius'
+        comment: Lines in theta order (C1), markers on the line (C2), concentric rings
+          plus radial spokes with angle and radius labels (C3), two coloured series
+          named in a legend (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Polar-to-Cartesian conversion correct (theta_rad, radius → x, y);
-          axes show full range (-80 to 80)
+        comment: coord_fixed keeps circles round; every point at its angle and radius,
+          no smoothing
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''polar-line · plotnine · anyplot.ai'' (correct format);
-          legend labels: ''Period'' with ''Week 1'', ''Week 2'' (correct)'
+        comment: Title 'polar-line · python · plotnine · anyplot.ai' correct; legend
+          'Week' with 'Week 1', 'Week 2'
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows variation between weeks with sinusoidal patterns and random
-          noise; would benefit from more pronounced difference
+        comment: Two series with a phase shift and different amplitude, a small loop
+          near the centre beside a larger one, crossing loops
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Realistic scenario: hourly activity patterns over two weeks (24
-          hours × 2 weeks = 48 points); neutral and plausible'
+        passed: false
+        comment: Hour-of-day cycle over two weeks is plausible, but 'Activity (events
+          per hour)' does not say what is counted (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values range ~-60 to +50; scale is plausible for activity magnitude
-          over 24-hour cycles
+        comment: Values 2-80 events per hour, non-negative, daily peak around noon;
+          checked ring scale 20-80 against the data code (r_max ~78)
     code_quality:
       score: 10
       max: 10
@@ -191,57 +191,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean sequential flow: theme tokens → data generation → dataframe
-          → plot creation → save'
+        comment: 'Flat script: tokens, constants, data, plot, save; no functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, plotnine components'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, no over-engineering, no fake functionality
+        comment: Polar-to-Cartesian projection and grid are needed because plotnine
+          has no coord_polar; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using ggsave(); correct API
+        comment: plot.save('plot-{THEME}.png', dpi=400, 6x6 in); current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert plotnine patterns: ggplot API with geoms, scale_color_manual,
-          element_text/element_rect/element_line theming'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses layer composition and custom theme, but polar conversion is
-          manual workaround (plotnine lacks native polar projection)
+        passed: false
+        comment: Layered grammar with one data frame per layer and scale_color_manual
+          limits from data; manual projection keeps it at the default
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic layering; nothing distinctive to plotnine beyond what any
+          grammar library would do
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T07:42:00Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - polar-projection
+  - annotations
   patterns:
   - data-generation
+  - wide-to-long
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
