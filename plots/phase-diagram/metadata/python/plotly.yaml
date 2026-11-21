@@ -2,46 +2,61 @@ library: plotly
 language: python
 specification_id: phase-diagram
 created: '2025-12-31T11:06:07Z'
-updated: '2026-05-14T15:11:14Z'
-generated_by: claude-haiku
-workflow_run: 25867662265
+updated: '2026-11-21T17:02:22Z'
+generated_by: claude-sonnet
+workflow_run: 44927138191
 issue: 3004
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 80
 review:
   strengths:
-  - Perfect spec compliance with all required features implemented
-  - Realistic damped harmonic oscillator physics
-  - Excellent text legibility in both light and dark themes
-  - Strong visual hierarchy through color, arrows, and element marking
-  - Clean, maintainable code with proper theme tokens
-  - Both renders theme-correct with identical data colors
+  - Correct analytic damped-oscillator solution (x and dx/dt derived from the same
+    closed form), both spirals end at the marked equilibrium (0, 0)
+  - 'Direction arrows run with time: rightward above the dx/dt = 0 axis and leftward
+    below it, on both trajectories'
+  - Data-coordinate arrow annotations (axref/ayref='x'/'y') and per-trace hovertemplates
+    use plotly's native annotation and hover machinery for the HTML view
+  - Emphasized zero lines in INK_SOFT make the dx/dt = 0 axis, where the fixed point
+    lives, the plot's reference line
+  - 'Theme tokens threaded through every chrome element: both renders theme-correct
+    with identical Imprint data colors'
+  - Data generation loops over initial conditions into one tidy df; the plot block
+    reads only df and the column constants
   weaknesses:
-  - 'Design feels like a well-tuned library default without exceptional customization
-    (DE-01: 4/8)'
-  - 'Grid refinement and whitespace optimization could be improved (DE-02: 4/6)'
-  - 'Limited use of Plotly-specific distinctive features beyond standard go.Scatter
-    and annotations (LM-02: 4/5)'
+  - 'VQ-02, SC-02 (both): the legend box at the top left covers the start of the purple
+    trajectory at (−1.5, 3.0), its initial-condition marker and its first ~0.6 units
+    of curve, so that trajectory cannot be traced from its starting point (C4) → place
+    the legend in an area without data, e.g. the empty lower-left corner or outside
+    the plot area. Likely cause: legend x=0.02, y=0.98.'
+  - 'SC-02 (both): the direction arrows'' shafts are straight chords across 30 samples
+    that visibly leave the curve (green near x≈−1.2 from dx/dt 0.4 to 1.4; purple
+    along dx/dt≈−2.1 from x 0.8 to 0.2) → an arrow span of a few samples so the shaft
+    lies on the trajectory. Likely cause: ARROW_SPACING = 30.'
+  - 'VQ-06 (both): axis titles ''Position x'' and ''Velocity dx/dt'' carry no units
+    for a pendulum → e.g. ''Angle θ (rad)'' and ''Angular velocity dθ/dt (rad/s)''.
+    Likely cause: the POSITION and VELOCITY constants.'
+  - 'Suggestion: a time color gradient with a color bar (the Notes offer it) would
+    show the decay rate more directly than three arrows per trajectory.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "phase-diagram · plotly · anyplot.ai" at 28px (dark text), axis labels "Position x" and "Velocity dx/dt" at 22px, tick labels at 18px. All readable against light background.
-      Data: Two trajectories (teal #009E73 and orange #D55E00 from Okabe-Ito palette). Spiral convergence to fixed point (0,0) marked with black X. Direction arrows show time evolution. Initial conditions marked with muted circles. Grid at 20% opacity, subtle but visible. Zeroline (x=0, y=0) visible.
-      Legibility verdict: PASS - All text clearly readable, no dark-on-light failures, strong contrast
+      Background: warm off-white #FAF8F1, 3200x1800 landscape.
+      Chrome: title "phase-diagram · python · plotly · anyplot.ai" centered at the top (~38 % of the width), axis titles "Position x" and "Velocity dx/dt", tick labels −1.5…2 and −3…4 in dark grey; subtle grid, emphasized dark zero lines at x=0 and dx/dt=0; legend box (elevated off-white, thin border) at the top left. All text readable.
+      Data: two inward spirals of a damped oscillator — green #009E73 from (2, 0), purple #C475FD from (−1.5, 3) — drawn as lines with small dense markers, three arrows each running with time (rightward above, leftward below the dx/dt=0 axis), a black X fixed point at (0, 0) where both converge, grey start dots. The purple start point and the first part of its curve lie under the legend box.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Same title and labels now rendered in light colors (teal/gray text). All readable against dark background. Legend box uses dark background (#242420) with light text.
-      Data: Data colors identical to light render (#009E73 and #D55E00) - only chrome flipped, not data colors
-      Legibility verdict: PASS - All text light-colored and readable, no dark-on-dark failures, zero-crosslines visible, grid appropriate contrast
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, grid subtle, zero lines light grey, legend box on #242420 with light text and border. No dark-on-dark text.
+      Data: green and purple identical to the light render; fixed-point X and start dots switch to light ink and stay visible at the converged center. Same legend-over-start issue.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -49,48 +64,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, labels 22px, ticks 18px - all explicitly set and readable
-          in both themes
+        comment: Title 16, axis titles 12, ticks and legend 10 px at scale 4 — the
+          plotly references; readable in both themes
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: Legend box covers the purple trajectory's start and its initial-condition
+          marker (defect line)
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, legend clearly positioned
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Markers visible at 7px with 0.8 opacity, appropriate for dense 1500-point
-          trajectories
+        comment: Lines 2 px with 3.5 px markers at 0.8 opacity suit 1500 points per
+          trajectory; legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with strong contrast, CVD-safe
+        comment: Green vs purple separable under CVD; strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700px, plot fills ~65% canvas, balanced margins
+        comment: 3200x1800, no gate file; balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title and labels include units and descriptive text
+        passed: false
+        comment: Axis titles without units (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito first series #009E73, backgrounds #FAF8F1/#1A1A17, theme-correct
-          chrome'
+        comment: 'First series #009E73, second #C475FD; #FAF8F1 / #1A1A17 backgrounds;
+          chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -98,24 +114,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default, lacks publication-exceptional custom
-          design
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Grid and whitespace adequate, could refine margins and reduce grid
-          prominence
+        comment: Emphasized zero lines chosen for this chart mark the dx/dt=0 axis
+          of the fixed point
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Excellent visual hierarchy; arrows, colors, and markings guide viewer
-          to understand stability
+        passed: false
+        comment: Data displayed with the elements the Notes suggest; no hierarchy
+          chosen beyond them
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -123,26 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct phase diagram with x vs dx/dt trajectories
+        comment: x vs dx/dt phase portrait
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Multiple trajectories, fixed point, direction arrows, initial conditions
-          all present
+        passed: false
+        comment: 'C4 broken: purple start hidden under the legend; arrow shafts leave
+          the curve (defect lines). C1, C2, C3 directions, C5 met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: x horizontal, dx/dt vertical, marks at their values, all data in
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend labels correct and descriptive
+        comment: Title in the mandated format; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -152,20 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows convergence, multiple initial conditions, equilibrium, damped
-          oscillation, time evolution
+        comment: Two initial conditions, inward spirals, stable fixed point, time
+          direction
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Damped pendulum motion; realistic physics, neutral scientific context
+        comment: Damped pendulum, neutral physics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Damped harmonic oscillator physics correct; values factually sound
+        comment: 'Checked: x(0)=x0 and v(0)=v0 from the closed form (lines 44-55),
+          velocity is the exact derivative, envelope e^(−0.3·15)≈0.011 so both end
+          at (0,0)'
     code_quality:
       score: 10
       max: 10
@@ -175,62 +193,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Deterministic analytic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Loops over initial conditions and groups; no duplication
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Correct go.Figure, go.Scatter, update_layout patterns; good theme-token
-          approach
+        passed: false
+        comment: go.Scatter per group plus data-coordinate annotations (axref/ayref)
+          for arrows, the plotly idiom for vector arrows
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: false
-        comment: Uses arrows and zeroline styling, but mostly standard usage; could
-          leverage animation or advanced features
+        comment: Per-trace hovertemplates for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T16:58:45Z'
 impl_tags:
   dependencies: []
   techniques:
-  - direction-arrows
-  - zeroline
-  - multi-trajectory
+  - annotations
+  - hover-tooltips
+  - html-export
+  - layer-composition
   patterns:
-  - analytical-solution
-  - damped-oscillator
-  dataprep:
-  - exponential-decay
-  - trigonometric-functions
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
   styling:
-  - theme-adaptive-chrome
   - publication-ready
+  - alpha-blending
