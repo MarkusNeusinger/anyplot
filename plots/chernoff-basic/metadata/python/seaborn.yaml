@@ -12,36 +12,60 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 69
 review:
   strengths:
-  - Sophisticated multivariate encoding with Chernoff faces leveraging human face-recognition
-    abilities
-  - Flawless theme adaptation with identical data colors and proper chrome switching
-    between light and dark renders
-  - Okabe-Ito palette correctly applied with brand green (#009E73) as first series
-  - Clean minimal-chrome visual design with generous gridspec spacing
-  - Deterministic and reproducible with np.random.seed(42)
-  - Excellent data storytelling with clear visual hierarchy and feature mapping explanation
-  - No legibility failures in either light or dark theme
+  - 'Theme tokens threaded through sns.set_theme rc and every patch: chrome flips
+    correctly between #FAF8F1 and #1A1A17 with identical data colors'
+  - Real UCI wine data with a seeded pick of five wines per class
+  - 'Imprint palette in order with #009E73 first, and a framed class legend'
+  - 'Text sized at the reference throughout: title, face labels, legend and key all
+    read comfortably'
   weaknesses:
-  - Limited seaborn-specific API usage; implementation relies primarily on matplotlib
-    patches for custom shapes, with seaborn mainly handling theme configuration
+  - 'VQ-05 (both): the canvas is 4105x2691, not one of the canonical sizes → 3200x1800
+    (−905 x −891). Likely cause: figsize=(16, 9) with dpi=300 and bbox_inches="tight"
+    in savefig.'
+  - 'VQ-03 (both): faces are cut flat by their cell bounds — Class 1 #4 top and bottom,
+    Class 2 #2 top and bottom, Class 2 #5 left and right, Class 3 #1 and Class 3 #5
+    — so their outlines are incomplete → keep every face inside its cell. Likely cause:
+    ax.set_xlim(0, 1) / ax.set_ylim(0, 1) while face_width and face_height reach 1.0–1.1.'
+  - 'SC-02 (both): C3 missed: the clipped faces and, at high values, eyebrows that
+    tilt into near-vertical strokes outside the head (Class 1 #2, Class 2 #3, Class
+    2 #4, Class 3 #1) stop reading as parts of a face → keep every feature inside
+    the face at both ends of its range. Likely cause: the cell limits and eyebrow_angle
+    = -0.12 + features[2] * 0.24.'
+  - 'SC-03 (both): the key labels the face height as Phenols and the eye size as Malic
+    Acid, but the code maps column 6 (flavanoids) and column 9 (color intensity),
+    so the faces decode to the wrong variables; variables are also scaled 0–1 within
+    each class, which erases between-class differences → label the key from the mapped
+    feature names and scale over all observations. Likely cause: selected_features
+    = [0, 6, 9, 12] with a hand-written key string, and the per-class normalization
+    loop.'
+  - 'SC-04 (both): the title reads "chernoff-basic · seaborn · anyplot.ai", missing
+    the language segment → "chernoff-basic · python · seaborn · anyplot.ai". Likely
+    cause: the fig.suptitle string.'
+  - 'CQ-01 (code): a hex_to_rgb helper function is defined → use matplotlib.colors.to_rgb
+    inline and drop the function. Likely cause: def hex_to_rgb at lines 83–84.'
+  - 'CQ-04 (code): the left and right eye, pupil and eyebrow are each written out
+    twice (lines 117–150) → one loop over sign in (-1, 1). Likely cause: copy-pasted
+    blocks.'
+  - 'Suggestion: a seaborn-native touch (for example sns.set_palette for the class
+    colors) would show more of the library.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly styled
-      Chrome: Title "chernoff-basic · seaborn · anyplot.ai" is bold and clearly visible in dark INK. Face labels ("Class X #Y") are in dark text, fully readable. Legend titled "Wine Class" with three colored patches on elevated background (#FFFDF6). Feature mapping text at bottom in italic INK_SOFT is legible.
-      Data: 15 Chernoff faces with Class 1 (green #009E73), Class 2 (orange #D55E00), Class 3 (blue #0072B2) perfectly matching Okabe-Ito order. Each face encodes four chemical measurements through facial morphology. Eyes, eyebrows, nose, and mouth are clearly distinguishable.
-      Legibility verdict: PASS - All text is readable; no legibility issues detected.
+      Background: warm off-white #FAF8F1.
+      Chrome: title "chernoff-basic · seaborn · anyplot.ai" in dark ink, offset left of centre; bold dark face labels; framed legend "Wine Class" bottom right on #FFFDF6; italic INK_SOFT key at the bottom ("Face Width ← Alcohol | Face Height ← Phenols | Eye Size ← Malic Acid | Mouth Curve ← Proline"). All readable.
+      Data: 15 faces in a 3x5 grid: Class 1 #009E73, Class 2 #C475FD, Class 3 #4467A3, dark outlines. Several faces are cut flat by their cell bounds (Class 1 #4 top and bottom, Class 2 #2, Class 2 #5 sides, Class 3 #1, Class 3 #5); several eyebrows stand as near-vertical strokes outside the head. Canvas 4105x2691.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly styled
-      Chrome: Title, labels, legend, and feature text all rendered in light colors (INK light, INK_SOFT light) providing excellent contrast against the dark background. No "dark-on-dark" failures. Legend background correctly shows elevated theme color (#242420).
-      Data: All 15 face colors (green, orange, blue) are IDENTICAL to the light render, confirming proper data preservation across theme variations. Pupils and eyebrows provide sharp visual definition against the dark canvas.
-      Legibility verdict: PASS - All elements clearly visible; theme adaptation is correct and legible in both directions.
+      Background: warm near-black #1A1A17.
+      Chrome: title, labels, legend and key in light ink; legend on #242420. No dark-on-dark text.
+      Data: face fills identical to the light render; outlines, brows and noses in light ink, eye whites dark with light pupils. Same clipping as the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -49,76 +73,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, labels, legend, and feature text all readable in both themes
-          with proper contrast
+        comment: Title 24pt, labels 11pt, legend 14pt and key 12pt at dpi 300 all
+          read at or above the reference in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Each face in own subplot; labels, legend, feature text spatially
-          distinct
+        comment: 'Legend sits beside Class 3 #5 without touching text'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: All 15 faces clearly visible; facial features distinguishable; varying
-          sizes create hierarchy
+        passed: false
+        comment: Several face outlines are cut by their cell bounds (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides CVD-safe colors; adequate contrast; eyebrows
-          and pupils add definition
+        comment: Distinct hues plus labels
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 16:9 landscape with generous margins; nothing cut off; logical flow
+        passed: false
+        comment: Canvas 4105x2691, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; legend titled; feature mapping explains facial
-          features
+        comment: No data axes by design; key present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; follows Okabe-Ito order; backgrounds correct;
-          data colors identical across themes'
+        comment: '#009E73, #C475FD, #4467A3 in order; correct backgrounds'
     design_excellence:
-      score: 17
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful face design; character-driven; proportional features encode
-          data meaningfully; clear typography hierarchy
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Axes off; generous gridspec spacing; edge colors and alpha provide
-          subtle definition
+        passed: false
+        comment: Axes off; nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy; color signals class membership; face variation
-          creates focal points; feature mapping provides narrative
+        passed: false
+        comment: No hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 10
       max: 15
       items:
       - id: SC-01
@@ -126,27 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Chernoff face visualization
+        comment: Chernoff faces with class color
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec features present: faces, feature mapping, grid layout,
-          color coding, explanation'
+        passed: false
+        comment: 'C3 missed: clipped faces and eyebrows sticking out of the head (defect
+          line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Face width ← Alcohol, height ← Phenols, eye size ← Malic acid, mouth
-          ← Proline; normalized within class
+        passed: false
+        comment: Key names Phenols and Malic Acid for columns 6 (flavanoids) and 9
+          (color intensity); within-class scaling (defect lines)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; legend titled 'Wine Class' with proper labels
+        passed: false
+        comment: Title lacks the python segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -156,76 +172,72 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four features mapped; 15 observations; full variation within wine
-          classes
+        comment: Four variables to four main features; faces differ visibly
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real UCI Wine dataset; chemical measurements realistic; neutral;
-          appropriate use case
+        comment: Real UCI wine data, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Features normalized 0-1 within class; sensible face parameter ranges;
-          15 faces optimal density
+        comment: No Check values; bounded feature ranges
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No functions/classes; straightforward procedural code
+        passed: false
+        comment: hex_to_rgb helper function (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic selection
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.patches, matplotlib.pyplot, numpy,
-          seaborn, sklearn.datasets'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI; appropriate complexity for custom visualization
+        passed: false
+        comment: Left/right eye and eyebrow blocks written out twice (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with 300 DPI; correct naming
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: sns.set_style/context/theme properly configured; rc params thread
-          tokens; patch shapes idiomatic
+        passed: false
+        comment: sns.set_theme rc tokens; matplotlib patches
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Limited seaborn-specific API; implementation matplotlib-centric with
-          seaborn mainly for theming
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
 impl_tags:
   dependencies:
   - sklearn

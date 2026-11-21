@@ -1,7 +1,7 @@
 """ anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-15
+Quality: 69/100 | Updated: 2026-05-15
 """
 
 import os
