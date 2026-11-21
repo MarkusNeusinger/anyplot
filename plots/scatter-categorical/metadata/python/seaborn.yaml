@@ -2,49 +2,54 @@ library: seaborn
 language: python
 specification_id: scatter-categorical
 created: '2025-12-30T10:38:26Z'
-updated: '2026-05-12T13:10:33Z'
-generated_by: claude-haiku
-workflow_run: 25735828626
+updated: '2026-11-21T06:38:17Z'
+generated_by: claude-sonnet
+workflow_run: 44876016117
 issue: 2597
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 72
 review:
   strengths:
-  - Perfect theme-adaptive implementation with matching data colors and flipped chrome
-  - Explicit font sizing throughout ensures readability at large canvas size
-  - Excellent palette compliance (Okabe-Ito first series, proper ordering, correct
-    backgrounds)
-  - High-quality synthetic data with realistic domain context
-  - Proper use of alpha blending for overlapping point visualization
-  - Clean, maintainable code following KISS principles
+  - 'Theme tokens threaded through sns.set_theme rc: chrome flips cleanly while the
+    Imprint data colors stay identical in both renders'
+  - Exact 3200x1800 canvas with style-guide font sizes (12/10/8 pt)
+  - Alpha 0.7 plus a thin page-colored outline keeps overlapping Temperature and Humidity
+    points distinguishable
+  - Column constants with role comments make the data block replaceable
   weaknesses:
-  - Limited visual refinement beyond library defaults (no custom palette, standard
-    spine removal)
-  - No visual hierarchy or emphasis—data displayed clearly but lacks storytelling
-  - Design feels competent but not exceptional
+  - 'DQ-03, VQ-05, DQ-01 (both): the x axis ''Ambient Value'' puts pressure (~1005
+    hPa) on the same scale as temperature (~25 °C) and humidity (~28 %), so about
+    94 % of the x-range (≈45 to ≈995) is empty and Temperature and Humidity are squeezed
+    into one ~40 px-wide strip where their within-group pattern cannot be read → choose
+    two variables that share units across all groups (e.g. one x and one y quantity
+    measured for every category) so every cluster spans a comparable part of the axis.
+    Likely cause: pressure_x = np.random.normal(1005, 5, ...) in the data block.'
+  - 'VQ-06, DQ-02 (both): axis titles ''Ambient Value'' and ''Sensor Output'' have
+    no units and read as generic placeholders for physically different quantities
+    → name a real measured variable with its unit on each axis (e.g. ''Ambient Temperature
+    (°C)''). Likely cause: the AMBIENT and OUTPUT column names.'
+  - 'Suggestion: varying marker shape by category (style=SENSOR), which the Notes
+    allow, would add a second channel for distinction.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), perfect for light theme
-      Chrome: Title "scatter-categorical · seaborn · anyplot.ai" in bold dark text (24pt), axis labels "Ambient Value" and "Sensor Output" in dark text (20pt), tick labels in secondary ink color (16pt). All text fully readable.
-      Data: Three sensor types color-coded: Temperature in brand green (#009E73), Pressure in vermillion (#D55E00), Humidity in blue (#0072B2). Marker size s=200 with alpha=0.7 creates clear visibility of overlapping points.
-      Legend: "Sensor Type" positioned upper left with three entries matching data colors
-      Grid: Y-axis grid only with subtle styling (alpha=0.10)
-      Legibility verdict: PASS - All elements perfectly readable against light background
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'scatter-categorical · python · seaborn · anyplot.ai' (12 pt, dark ink), axis titles 'Ambient Value' / 'Sensor Output' (10 pt), ticks 0-1000 and 30-100 (8 pt, soft ink), subtle horizontal grid, top/right spines removed. Legend 'Sensor Type' upper center on elevated fill over empty space. All readable.
+      Data: 150 points, Temperature #009E73, Pressure #C475FD, Humidity #4467A3, alpha 0.7 with thin page-colored edges. Temperature and Humidity form one narrow overlapping strip at x≈20-45; Pressure is a strip at x≈995-1015; the middle ~94 % of the x-range is empty.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), perfect for dark theme
-      Chrome: Title in light color (#F0EFE8), axis labels in light color, tick labels in secondary light (#B8B7B0). All text perfectly readable against dark background with no dark-on-dark issues.
-      Data: Identical sensor type colors to light render - green, vermillion, blue unchanged (proving correct theme-adaptive implementation). Legend background in elevated dark (#242420).
-      Grid: Y-axis grid in appropriately inverted opacity
-      Legibility verdict: PASS - All elements fully readable, no dark-on-dark failures, colors consistent with light render
+      Background: warm near-black #1A1A17, 3200x1800.
+      Chrome: title, axis titles in light ink, ticks in soft light ink, grid subtle, legend on #242420 with light text. No dark-on-dark text.
+      Data: identical colors and positions to the light render; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -52,67 +57,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set, perfect readability in both themes
+        comment: 'Title 12 pt, axis titles 10 pt, ticks 8 pt, legend 8/9 pt: the style-guide
+          sizes, readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlap, all text elements fully readable
+        comment: Legend sits upper center over empty space; no text collides with
+          text or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 points with s=200 and alpha=0.7 optimally adapted to density
+        comment: 150 points at s=60, alpha 0.7 with a thin page-colored outline; legend
+          glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe with excellent contrast
+        comment: 'Imprint green, lavender, blue: distinct under CVD, good contrast
+          on both surfaces'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Perfect balance, plot fills 60% of canvas with generous margins
+        passed: false
+        comment: 3200x1800 canvas correct, but about 94 % of the x-range between ~45
+          and ~995 is empty, two clusters squeezed into thin strips (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels with context
+        passed: false
+        comment: '''Ambient Value'' and ''Sensor Output'' carry no units, and the
+          x axis mixes °C, % and hPa (defect line)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito ordering, correct backgrounds, perfect
-          chrome adaptation'
+        comment: 'First series #009E73, canonical Imprint order, #FAF8F1 / #1A1A17
+          backgrounds, chrome theme-correct'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured defaults with theme-aware styling, but lacks custom
-          refinement
+        passed: true
+        comment: Style-guide baseline (ticks style, theme tokens, explicit sizes),
+          nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Y-axis grid only, spines removed, legend styled appropriately
+        comment: Spines removed and y-grid subtle as mandated; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed clearly but no visual hierarchy or emphasis
+        passed: true
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,47 +133,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct categorical scatter plot
+        comment: Categorical scatter, hue by category
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X/Y variables, categorical coloring, legend present
+        comment: Colors per category, legend naming every category, alpha transparency,
+          thin outline (C1-C3 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Mapping logical and clear
+        comment: x/y mapped correctly, all data inside the axes, no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format and labels
+        comment: Title 'scatter-categorical · python · seaborn · anyplot.ai'; legend
+          'Sensor Type' with readable entries
     data_quality:
-      score: 15
+      score: 8
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Shows all aspects with multiple categories and clustering
+        passed: false
+        comment: Three groups present, but Temperature and Humidity are compressed
+          into a ~40 px strip so their within-group pattern and overlap cannot be
+          compared (defect line)
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: IoT sensor scenario realistic and neutral
+        passed: false
+        comment: Sensor scenario neutral, but 'Ambient Value' / 'Sensor Output' are
+          generic labels for physically different quantities (defect line)
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: All values factually accurate
+        passed: false
+        comment: 'Pressure (~1005 hPa) shares one x axis with temperature (~25 °C)
+          and humidity (~28 %): not sensible values for a shared axis (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -172,48 +189,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean flow, no functions/classes
+        comment: Flat script, column constants with role comments, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of seaborn high-level API
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Standard rather than distinctive usage
+        passed: true
+        comment: 'sns.set_theme rc + sns.scatterplot with hue/palette: the standard
+          seaborn pattern, nothing beyond'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-21T06:35:03Z'
 impl_tags:
   dependencies: []
   techniques: []
@@ -222,5 +243,5 @@ impl_tags:
   - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - edge-highlighting
