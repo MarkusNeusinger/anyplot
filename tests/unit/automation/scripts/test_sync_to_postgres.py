@@ -810,6 +810,52 @@ review:
         assert impl["review_verdict"] == "APPROVED"
 
 
+class TestScanSources:
+    """The `sources` block of specification.yaml reaches the spec row checked and normalised (core/spec_sources.py)."""
+
+    def _scan(self, tmp_path, sources_yaml: str = "") -> dict:
+        plot_dir = tmp_path / "line-example"
+        plot_dir.mkdir()
+        (plot_dir / "specification.md").write_text("# line-example: Example\n\n## Description\nA line.\n")
+        (plot_dir / "specification.yaml").write_text(
+            f"spec_id: line-example\ntitle: Example\ntags:\n  plot_type: [line]\n{sources_yaml}"
+        )
+        result = scan_plot_directory(plot_dir)
+        assert result is not None
+        return result["spec"]
+
+    def test_a_spec_without_a_block_stores_none(self, tmp_path):
+        spec = self._scan(tmp_path)
+        assert "sources" in spec, "every spec row carries the key, so the batched insert has the same columns"
+        assert spec["sources"] is None
+
+    def test_a_sound_block_is_stored_normalised(self, tmp_path):
+        spec = self._scan(
+            tmp_path,
+            "sources:\n"
+            "  data: computed\n"
+            "  inspired_by: []\n"
+            "  references:\n"
+            "    - title: >\n"
+            "        A paper\n"
+            "        with a long title\n"
+            '      url: "https://doi.org/10.1000/xyz123"\n'
+            '      doi: "10.1000/xyz123"\n',
+        )
+        assert spec["sources"] == {
+            "data": "computed",
+            "references": [
+                {"title": "A paper with a long title", "url": "https://doi.org/10.1000/xyz123", "doi": "10.1000/xyz123"}
+            ],
+        }
+
+    def test_a_block_with_problems_is_left_out_with_a_warning(self, tmp_path, caplog):
+        spec = self._scan(tmp_path, "sources:\n  inspired_by:\n    - title: A\n      url: javascript:alert(1)\n")
+        assert spec["sources"] is None
+        assert "Sources of line-example not synced" in caplog.text
+        assert "sources.inspired_by[0].url: not an http or https address" in caplog.text
+
+
 class TestChunked:
     """Tests for _chunked helper function."""
 
@@ -1030,6 +1076,20 @@ class TestSyncToDatabase:
         assert {"name", "description", "runtime_version", "documentation_url"} <= lang_updated
         assert {"name", "description", "version", "language_id", "framework"} <= lib_updated
         assert "created" not in lang_updated
+
+    def test_spec_upsert_writes_and_clears_the_sources(self):
+        """The spec upsert sets `sources` from the incoming row, so a block that was removed clears the column."""
+        from sqlalchemy.dialects.postgresql.dml import OnConflictDoUpdate
+
+        mock_session = MagicMock()
+        mock_session.execute.return_value.fetchall.return_value = []
+        spec = {"id": "line-example", "title": "Example", "tags": None, "sources": None}
+        sync_to_database(mock_session, [{"spec": spec, "implementations": []}])
+
+        # After the language and library seeds, the third statement is the spec upsert.
+        spec_clause = mock_session.execute.call_args_list[2][0][0]._post_values_clause
+        assert isinstance(spec_clause, OnConflictDoUpdate)
+        assert "sources" in {field for field, _ in spec_clause.update_values_to_set}
 
     def test_seed_versions_come_from_the_pins_and_keep_the_stored_one_when_unresolved(self):
         """libraries.version and languages.runtime_version are read from the pin files
