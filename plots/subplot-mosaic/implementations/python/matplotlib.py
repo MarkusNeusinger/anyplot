@@ -1,134 +1,131 @@
 """ anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-14
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-21
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # Position 1 - always first series
-OI_2 = "#C475FD"
-OI_3 = "#4467A3"
-OI_4 = "#BD8233"
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
-np.random.seed(42)
-
-# Time series data for main overview chart
-dates = np.arange(100)
-sales = np.cumsum(np.random.randn(100) * 5 + 2) + 500
-
-# Category data for bar chart
-categories = ["Product A", "Product B", "Product C", "Product D"]
-values = [85, 120, 95, 110]
-
-# Scatter data for correlation plot
-x_scatter = np.random.normal(50, 15, 80)
-y_scatter = x_scatter * 0.8 + np.random.normal(0, 10, 80)
-
-# Histogram data
-measurements = np.random.normal(100, 20, 200)
-
-# Metric values for small panels
-metrics = {"Growth": 12.5, "Conversion": 3.2, "Retention": 87.4}
-
-# Create mosaic layout: "AAB;AAB;CDE" pattern
-# A = large overview (spans 2 rows, 2 cols), B = bar chart (right side, 2 rows)
-# C, D, E = three small panels at bottom
-mosaic = """
+# Constants
+MOSAIC = """
 AAB
 AAB
 CDE
-"""
+"""  # A spans 2x2 cells, B spans 2 rows, C, D and E fill the bottom row
 
-fig, axes = plt.subplot_mosaic(mosaic, figsize=(16, 9), facecolor=PAGE_BG)
-fig.patch.set_facecolor(PAGE_BG)
+# Columns: set these to your table's column names; panels of different length share one table, padded with NaN
+DAY = "Day"  # role: x
+SALES = "Cumulative Sales ($)"  # role: y
+PRODUCT = "Product"  # role: extra
+UNITS = "Units Sold"  # role: extra
+FEATURE_X = "Feature X"  # role: extra
+FEATURE_Y = "Feature Y"  # role: extra
+MEASUREMENT = "Value"  # role: extra
+METRIC = "Metric"  # role: extra
+METRIC_VALUE = "Metric value (%)"  # role: extra
 
-# A: Main time series overview
-axes["A"].set_facecolor(PAGE_BG)
-axes["A"].plot(dates, sales, linewidth=3, color=BRAND)
-axes["A"].fill_between(dates, sales.min(), sales, alpha=0.2, color=BRAND)
-axes["A"].set_xlabel("Day", fontsize=20, color=INK)
-axes["A"].set_ylabel("Cumulative Sales ($)", fontsize=20, color=INK)
-axes["A"].set_title("Sales Overview", fontsize=22, color=INK, fontweight="medium")
-axes["A"].tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-for spine in ("top", "right"):
-    axes["A"].spines[spine].set_visible(False)
-for spine in ("left", "bottom"):
-    axes["A"].spines[spine].set_color(INK_SOFT)
-axes["A"].yaxis.grid(True, alpha=0.10, color=INK_SOFT, linewidth=0.8)
+# Data: replace this block with your own table, for example df = pd.read_csv("dashboard.csv")
+np.random.seed(42)
+sales = np.cumsum(np.random.randn(100) * 5 + 2) + 500
+feature_x = np.random.normal(50, 15, 80)
+feature_y = feature_x * 0.8 + np.random.normal(0, 10, 80)
+measurements = np.random.normal(100, 20, 200)
+df = pd.DataFrame(
+    {
+        DAY: pd.Series(np.arange(100)),
+        SALES: pd.Series(sales),
+        PRODUCT: pd.Series(["Product A", "Product B", "Product C", "Product D"]),
+        UNITS: pd.Series([85, 120, 95, 110]),
+        FEATURE_X: pd.Series(feature_x),
+        FEATURE_Y: pd.Series(feature_y),
+        MEASUREMENT: pd.Series(measurements),
+        METRIC: pd.Series(["Growth", "Conversion", "Retention"]),
+        METRIC_VALUE: pd.Series([12.5, 3.2, 87.4]),
+    }
+)
 
-# B: Bar chart for categories
-axes["B"].set_facecolor(PAGE_BG)
-bars = axes["B"].barh(categories, values, color=BRAND, edgecolor=INK_SOFT, linewidth=1.5)
-axes["B"].set_xlabel("Units Sold", fontsize=20, color=INK)
-axes["B"].set_title("Product Performance", fontsize=22, color=INK, fontweight="medium")
-axes["B"].tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-for spine in ("top", "right"):
-    axes["B"].spines[spine].set_visible(False)
-for spine in ("left", "bottom"):
-    axes["B"].spines[spine].set_color(INK_SOFT)
-axes["B"].xaxis.grid(True, alpha=0.10, color=INK_SOFT, linewidth=0.8)
-# Add value labels
-for bar, val in zip(bars, values, strict=True):
-    axes["B"].text(val + 2, bar.get_y() + bar.get_height() / 2, str(val), va="center", fontsize=14, color=INK)
+# Plot: every panel reads its own columns of df
+fig, axes = plt.subplot_mosaic(
+    MOSAIC, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG, gridspec_kw={"height_ratios": [1, 1, 1.2]}
+)
+panel_axes = list(axes.values())
+for ax in panel_axes:
+    ax.set_facecolor(PAGE_BG)
+    ax.tick_params(axis="both", colors=INK_SOFT)
+    for spine in ("top", "right"):
+        ax.spines[spine].set_visible(False)
+    for spine in ("left", "bottom"):
+        ax.spines[spine].set_color(INK_SOFT)
+    ax.set_axisbelow(True)
 
-# C: Scatter plot
-axes["C"].set_facecolor(PAGE_BG)
-axes["C"].scatter(x_scatter, y_scatter, s=150, alpha=0.7, color=OI_2, edgecolors=PAGE_BG, linewidth=1)
-axes["C"].set_xlabel("Feature X", fontsize=18, color=INK)
-axes["C"].set_ylabel("Feature Y", fontsize=18, color=INK)
-axes["C"].set_title("Correlation", fontsize=20, color=INK, fontweight="medium")
-axes["C"].tick_params(axis="both", labelsize=14, colors=INK_SOFT)
-for spine in ("top", "right"):
-    axes["C"].spines[spine].set_visible(False)
-for spine in ("left", "bottom"):
-    axes["C"].spines[spine].set_color(INK_SOFT)
-axes["C"].grid(True, alpha=0.10, color=INK_SOFT, linewidth=0.8)
+# A: main time series, the largest panel
+ax = axes["A"]
+series = df[[DAY, SALES]].dropna()
+ax.plot(series[DAY], series[SALES], linewidth=1.8, color=IMPRINT_PALETTE[0])
+ax.fill_between(series[DAY], series[SALES].min(), series[SALES], alpha=0.2, color=IMPRINT_PALETTE[0])
+ax.set_title("Sales Overview", fontsize=11, color=INK, fontweight="medium")
+ax.set_xlabel(DAY, fontsize=10, color=INK)
+ax.set_ylabel(SALES, fontsize=10, color=INK)
+ax.tick_params(labelsize=8)
+ax.yaxis.grid(True, alpha=0.10, color=INK_SOFT, linewidth=0.5)
 
-# D: Histogram
-axes["D"].set_facecolor(PAGE_BG)
-axes["D"].hist(measurements, bins=20, color=OI_3, edgecolor=PAGE_BG, linewidth=1, alpha=0.8)
-axes["D"].set_xlabel("Value", fontsize=18, color=INK)
-axes["D"].set_ylabel("Frequency", fontsize=18, color=INK)
-axes["D"].set_title("Distribution", fontsize=20, color=INK, fontweight="medium")
-axes["D"].tick_params(axis="both", labelsize=14, colors=INK_SOFT)
-for spine in ("top", "right"):
-    axes["D"].spines[spine].set_visible(False)
-for spine in ("left", "bottom"):
-    axes["D"].spines[spine].set_color(INK_SOFT)
-axes["D"].yaxis.grid(True, alpha=0.10, color=INK_SOFT, linewidth=0.8)
+# B: horizontal bars with value labels
+ax = axes["B"]
+bars_df = df[[PRODUCT, UNITS]].dropna()
+bars = ax.barh(bars_df[PRODUCT], bars_df[UNITS], color=IMPRINT_PALETTE[0], edgecolor=INK_SOFT, linewidth=0.8)
+ax.bar_label(bars, padding=3, fontsize=7, color=INK)
+ax.set_xlim(0, bars_df[UNITS].max() * 1.15)
+ax.set_title("Product Performance", fontsize=11, color=INK, fontweight="medium")
+ax.set_xlabel(UNITS, fontsize=10, color=INK)
+ax.tick_params(labelsize=8)
+ax.xaxis.grid(True, alpha=0.10, color=INK_SOFT, linewidth=0.5)
 
-# E: Metrics display
-axes["E"].set_facecolor(PAGE_BG)
-axes["E"].set_xlim(0, 1)
-axes["E"].set_ylim(0, 1)
-axes["E"].axis("off")
-axes["E"].set_title("Key Metrics", fontsize=20, color=INK, fontweight="medium", pad=20)
-y_positions = [0.75, 0.45, 0.15]
-colors = [BRAND, OI_2, OI_3]
-for (name, value), y_pos, color in zip(metrics.items(), y_positions, colors, strict=True):
-    axes["E"].text(0.5, y_pos, name, ha="center", va="center", fontsize=16, color=INK, fontweight="medium")
-    axes["E"].text(0.5, y_pos - 0.12, f"{value}%", ha="center", va="center", fontsize=24, color=color)
-# Add box around metrics
-rect = plt.Rectangle((0.05, 0.02), 0.9, 0.96, fill=False, edgecolor=INK_SOFT, linewidth=1.5)
-axes["E"].add_patch(rect)
+# C: scatter
+ax = axes["C"]
+ax.scatter(df[FEATURE_X], df[FEATURE_Y], s=14, alpha=0.7, color=IMPRINT_PALETTE[1], edgecolors=PAGE_BG, linewidth=0.4)
+ax.set_title("Correlation", fontsize=10, color=INK, fontweight="medium")
+ax.set_xlabel(FEATURE_X, fontsize=9, color=INK)
+ax.set_ylabel(FEATURE_Y, fontsize=9, color=INK)
+ax.tick_params(labelsize=7)
+ax.grid(True, alpha=0.10, color=INK_SOFT, linewidth=0.5)
 
-# Main title
-fig.suptitle("subplot-mosaic · matplotlib · anyplot.ai", fontsize=26, fontweight="medium", color=INK, y=0.98)
+# D: histogram
+ax = axes["D"]
+ax.hist(df[MEASUREMENT].dropna(), bins=20, color=IMPRINT_PALETTE[2], edgecolor=PAGE_BG, linewidth=0.5, alpha=0.8)
+ax.set_title("Distribution", fontsize=10, color=INK, fontweight="medium")
+ax.set_xlabel(MEASUREMENT, fontsize=9, color=INK)
+ax.set_ylabel("Frequency", fontsize=9, color=INK)
+ax.tick_params(labelsize=7)
+ax.yaxis.grid(True, alpha=0.10, color=INK_SOFT, linewidth=0.5)
 
-plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+# E: key metrics as text tiles inside a framed panel
+ax = axes["E"]
+tiles = df[[METRIC, METRIC_VALUE]].dropna()
+ax.set_xlim(0, 1)
+ax.set_ylim(0, 1)
+ax.axis("off")
+ax.set_title("Key Metrics", fontsize=10, color=INK, fontweight="medium", pad=10)
+slots = (np.arange(len(tiles))[::-1] + 0.5) / len(tiles)
+for i, (name, value, slot) in enumerate(zip(tiles[METRIC], tiles[METRIC_VALUE], slots, strict=True)):
+    color = IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)]
+    ax.text(0.12, slot, name, ha="left", va="center", fontsize=8, color=INK, fontweight="medium")
+    ax.text(0.88, slot, f"{value}%", ha="right", va="center", fontsize=11, color=color)
+ax.add_patch(plt.Rectangle((0.05, 0.02), 0.9, 0.96, fill=False, edgecolor=INK_SOFT, linewidth=0.8))
+
+fig.suptitle("subplot-mosaic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+fig.tight_layout(rect=(0, 0, 1, 0.95))
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
