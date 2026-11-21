@@ -12,111 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 70
 review:
   strengths:
-  - 'Perfect theme adaptation: data colors identical across light/dark, text colors
-    properly inverted for readability in both renders'
-  - Correct mosaic implementation using plotly's specs system with colspan
-  - Comprehensive multi-chart dashboard with realistic business data (revenue trends,
-    category breakdowns, metrics)
-  - Clean, reproducible code with np.random.seed(42)
-  - Proper Okabe-Ito palette usage (positions 1–5 in correct order)
-  - Good visual hierarchy and information flow (overview → detail → metrics)
+  - Correct mosaic through make_subplots specs with colspan, with a wide overview
+    panel on top and unequal row heights
+  - 'Clean theme adaptation: data colors identical across renders, chrome from INK
+    / INK_SOFT / GRID tokens'
+  - Plausible, neutral sales dashboard with four different plot types
   weaknesses:
-  - Design Excellence could be higher with more aesthetic refinement (spine manipulation,
-    enhanced typography hierarchy)
-  - 'Library Mastery is conservative: uses core features well but doesn''t leverage
-    distinctive plotly capabilities like hover templates and range sliders'
+  - 'VQ-05 (both): canvas is 4800x2700 instead of the landscape target 3200x1800 (−1600
+    × −900) → 3200x1800. Likely cause: write_image(width=1600, height=900, scale=3)
+    instead of width=800, height=450, scale=4.'
+  - 'VQ-02, SC-02 (both): the revenue panel''s ''Date'' axis title overprints the
+    ''Product Performance'' panel title, and ''Month'' / ''Units Sold'' sit directly
+    on the ''Category Distribution'' / ''Response Time'' titles → keep every axis
+    title at least 8 px clear of the panel title below. Likely cause: vertical_spacing=0.12
+    too tight for 22 px axis titles under two-line date ticks (''Jan 14 / 2024'').'
+  - 'SC-04 (both): title ''subplot-mosaic · plotly · anyplot.ai'' lacks the language
+    segment → ''subplot-mosaic · python · plotly · anyplot.ai''. Likely cause: the
+    title text.'
+  - 'VQ-01 (both): tick labels at 18 px and axis titles at 22 px on a 1600x900 layout
+    (about 9 / 11 px at the 800x450 reference) sit below the 10 / 12 px references
+    → 10 / 12 px on an 800x450 layout (+1 px each). Likely cause: tickfont size=18,
+    title_font size=22.'
+  - 'DQ-02 (both): the Product Performance scatter is labelled ''Feature X'' / ''Feature
+    Y'', placeholder names in an otherwise concrete sales dashboard → name the measured
+    quantities with units. Likely cause: the update_xaxes / update_yaxes title_text
+    for row 2, col 1.'
+  - 'CQ-01 (code): no column-0 # Data / # Plot zones and no column constants for the
+    x and y roles → one Data block that binds df between the markers and one constant
+    per column role above it. Likely cause: data generated as loose arrays used directly
+    in each add_trace call.'
+  - 'CQ-04 (code): the comment ''# Okabe-Ito palette'' (line 23) labels the Imprint
+    colors below it → ''# Imprint palette''. Likely cause: a stale comment.'
+  - 'Suggestion: the seven near-identical add_trace blocks could be one loop over
+    a panel table.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) surface - correct color
-      Chrome: Title "subplot-mosaic · plotly · anyplot.ai" centered and clearly readable in dark text; axis labels, tick labels, subplot titles all dark-colored and visible
-      Data: Top-left Revenue Trend uses green (#009E73) with semi-transparent fill; top-right Monthly Sales uses orange (#D55E00); middle-left scatter uses green markers (size 16); middle-right Category Distribution uses Okabe-Ito multi-color bars; bottom row metrics in green, orange, blue with semi-transparent fills
-      Legibility verdict: PASS - all text clearly readable against light background
+      Background: warm off-white #FAF8F1; canvas 4800x2700.
+      Chrome: centered title 'subplot-mosaic · plotly · anyplot.ai' in dark ink; panel titles, axis titles and tick labels dark and readable; subtle grid. The 'Date' axis title of the revenue panel overprints the 'Product Performance' panel title; 'Month' and 'Units Sold' sit directly on top of the 'Category Distribution' and 'Response Time' titles.
+      Data: mosaic AAB;CCD;EFG — green #009E73 revenue area spanning two columns, purple monthly bars, green scatter of 100 points spanning two columns, horizontal category bars (Sports top to Electronics bottom) in red, ochre, blue, purple, green, three small area charts in green, purple, blue.
+      Legibility verdict: PASS (all text readable apart from the overprinted 'Date' / 'Product Performance' pair)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) surface - correct color
-      Chrome: Title and all axis/tick/subplot labels now light-colored, providing excellent contrast against dark background; no dark-on-dark failures detected
-      Data: IDENTICAL colors to light render - green (#009E73), orange (#D55E00), blue (#0072B2) maintained; only chrome (background, text, grid) flipped to dark theme
-      Legibility verdict: PASS - all text clearly readable against dark background, data colors consistent with light render
+      Background: warm near-black #1A1A17.
+      Chrome: all text in light ink, no dark-on-dark; same 'Date' / 'Product Performance' collision as the light render.
+      Data: colors identical to the light render; only chrome flips.
+      Legibility verdict: PASS (same collision as light)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title (28px), axis labels (22px), tick labels (18px) all explicitly
-          set with INK tokens; readable in both themes
+        comment: Readable in both themes; tick labels 18 px and axis titles 22 px
+          on a 1600x900 layout are slightly below the references (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Proper margins (100, 80, 140, 80) and spacing (vertical 0.12, horizontal
-          0.10) prevent collisions
+        passed: false
+        comment: '''Date'' overprints ''Product Performance''; ''Month'' and ''Units
+          Sold'' crowd the panel titles below (defect line)'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter markers size 16, lines width 3-4, fill opacity 0.2-0.25 all
-          clearly visible
+        comment: Markers size 16 at 0.8 opacity, 3-4 px lines, solid bars; all visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe by design
+        comment: Imprint hues, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 4800×2700 px, nothing cut off, balanced proportions
+        passed: false
+        comment: Canvas 4800x2700 instead of 3200x1800 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title format correct
+        comment: Panel titles and axis titles with units where they apply
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follow Okabe-Ito order, backgrounds
-          correct (#FAF8F1/#1A1A17), both renders theme-correct'
+        comment: 'First series #009E73, Imprint order, correct backgrounds, colors
+          identical across themes'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Thoughtful Okabe-Ito usage and hierarchy; room for more refined aesthetic
-          touches (spine manipulation, typography)
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and generous margins; could benefit from spine customization
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clear hierarchy and narrative flow; could enhance with intentional
-          color emphasis
+        comment: Hierarchy as the Notes ask, no focal point beyond it
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -124,30 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mosaic via make_subplots() with colspan; pattern AAB;CCD;EFG
-          properly implemented
+        comment: Mosaic AAB;CCD;EFG via make_subplots specs with colspan
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Varying sizes, multiple chart types, clear hierarchy, consistent
-          spacing
+        passed: false
+        comment: 'C3 missed: axis titles run into the panel titles of the row below
+          (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, all data visible and appropriate
+        comment: Marks at their data values
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct, subplot titles descriptive, legend appropriately
-          hidden
+        passed: false
+        comment: Title lacks the language segment (defect line); legend N/A
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -155,74 +170,77 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all mosaic aspects: asymmetric layout, multiple types,
-          size variation'
+        comment: Two spanning panels, unequal row heights, four plot types
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Real-world dashboard scenario, plausible ranges, neutral framing
+        comment: Plausible sales dashboard, but 'Feature X' / 'Feature Y' are placeholder
+          names (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue $30k-$70k, product features 0-100+, categories 0-35, metrics
-          realistic
+        comment: 'No check values in the spec; checked: revenue ~$50k-65k, efficiency
+          80-100 %, response time 45-70 ms'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear, straightforward, no unnecessary abstractions
+        comment: Linear, no functions, but no Data/Plot zones and no column constants
+          (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures determinism
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pandas, plotly (all used)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI, appropriate complexity
+        passed: false
+        comment: Comment '# Okabe-Ito palette' contradicts the Imprint colors below
+          it (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/.html, current API
+        comment: Saves plot-{THEME}.png and .html, current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: make_subplots() with specs parameter is canonical; proper add_trace(row=,
-          col=) and update_*axes() patterns
+        comment: make_subplots specs with colspan, row_heights, column_widths, subplot_titles,
+          per-cell axis updates
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Leverages colspan and subplot titles well; conservative approach
-          — could explore hover templates and range sliders
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
 impl_tags:
   dependencies: []
   techniques:
