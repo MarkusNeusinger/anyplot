@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 network-bipartite: Bipartite Network Graph
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 89/100 | Created: 2026-05-14
+Quality: 89/100 | Updated: 2026-11-21
 """
 
 import os
@@ -16,9 +16,8 @@ if script_dir in sys.path:
 import altair as alt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402
 
-
-np.random.seed(42)
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -27,11 +26,17 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-COLOR_A = "#009E73"  # Authors — Okabe-Ito position 1
-COLOR_B = "#C475FD"  # Papers — Okabe-Ito position 2
+# Imprint palette: position 1 for the first set, position 2 for the second
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — researcher-paper affiliation network (bibliometrics)
-author_names = [
+# Columns: set these to your table's column names
+SOURCE = "Author"  # role: source
+TARGET = "Paper"  # role: target
+
+# Data: replace this block with your own edge list, for example df = pd.read_csv("edges.csv")
+# Researcher-paper affiliation network (bibliometrics): one row per authorship
+np.random.seed(42)
+authors = [
     "Chen, L.",
     "Smith, R.",
     "Patel, A.",
@@ -45,127 +50,123 @@ author_names = [
     "Ahmed, F.",
     "Wilson, G.",
 ]
-paper_ids = [f"P{i + 1:02d}" for i in range(15)]
+papers = [f"P{i + 1:02d}" for i in range(15)]
+rows = []
+for author in authors:
+    n_papers = np.random.randint(2, 5)
+    for paper in np.random.choice(papers, size=n_papers, replace=False):
+        rows.append({SOURCE: author, TARGET: paper})
+df = pd.DataFrame(rows).drop_duplicates()
 
-# Edges: each author co-authors 2–4 papers
-edge_list = []
-for author in author_names:
-    n = np.random.randint(2, 5)
-    selected = np.random.choice(paper_ids, size=n, replace=False)
-    for p in selected:
-        edge_list.append({"source": author, "target": p})
-edges_df = pd.DataFrame(edge_list).drop_duplicates(subset=["source", "target"])
-
-# Node degrees
-src_deg = edges_df.groupby("source").size().reset_index(name="degree")
-tgt_deg = edges_df.groupby("target").size().reset_index(name="degree")
-
-# Node positions — two columns, evenly spaced vertically
-nodes_a = pd.DataFrame(
-    {"node": author_names, "x": 0.22, "y": np.linspace(0.08, 0.88, len(author_names)), "set": "Author"}
-).merge(src_deg.rename(columns={"source": "node"}), on="node", how="left")
-nodes_a["degree"] = nodes_a["degree"].fillna(0).astype(int)
-
-nodes_b = pd.DataFrame(
-    {"node": paper_ids, "x": 0.78, "y": np.linspace(0.08, 0.88, len(paper_ids)), "set": "Paper"}
-).merge(tgt_deg.rename(columns={"target": "node"}), on="node", how="left")
-nodes_b["degree"] = nodes_b["degree"].fillna(0).astype(int)
-
-nodes_df = pd.concat([nodes_a, nodes_b], ignore_index=True)
-
-# Edge coordinates for mark_rule (x,y → x2,y2)
-node_pos = nodes_df.set_index("node")[["x", "y"]].to_dict("index")
-edge_records = []
-for _, row in edges_df.iterrows():
-    s, t = node_pos[row["source"]], node_pos[row["target"]]
-    edge_records.append({"x": s["x"], "y": s["y"], "x2": t["x"], "y2": t["y"]})
-edge_data = pd.DataFrame(edge_records)
-
-# Shared scale objects
+# Plot: reads only df and the constants above
+SET_A, SET_B = SOURCE, TARGET
+title = "network-bipartite · python · altair · anyplot.ai"
 xscale = alt.Scale(domain=[0.0, 1.0])
 yscale = alt.Scale(domain=[0.0, 1.05])
 
-TITLE = "network-bipartite · altair · anyplot.ai"
 
-# Edge lines
-edges_chart = (
-    alt.Chart(edge_data)
-    .mark_rule(color=INK_SOFT, opacity=0.28, strokeWidth=1.2)
-    .encode(x=alt.X("x:Q", scale=xscale, axis=None), y=alt.Y("y:Q", scale=yscale, axis=None), x2="x2:Q", y2="y2:Q")
+def column_nodes(names, x, set_name):
+    """Nodes of one set in a column, ordered as in df, with their degree."""
+    degree = df[set_name].value_counts()
+    return pd.DataFrame(
+        {
+            "node": names,
+            "x": x,
+            "y": np.linspace(0.08, 0.88, len(names)),
+            "set": set_name,
+            "degree": [int(degree.get(n, 0)) for n in names],
+        }
+    )
+
+
+nodes_a = column_nodes(list(df[SET_A].unique()), 0.24, SET_A)
+nodes_b = column_nodes(sorted(df[SET_B].unique()), 0.76, SET_B)
+nodes = pd.concat([nodes_a, nodes_b], ignore_index=True)
+
+# Edge coordinates: one rule segment per row of df
+pos_a = nodes_a.set_index("node")[["x", "y"]]
+pos_b = nodes_b.set_index("node")[["x", "y"]]
+edges = pd.DataFrame(
+    {
+        "x": pos_a.loc[df[SET_A], "x"].to_numpy(),
+        "y": pos_a.loc[df[SET_A], "y"].to_numpy(),
+        "x2": pos_b.loc[df[SET_B], "x"].to_numpy(),
+        "y2": pos_b.loc[df[SET_B], "y"].to_numpy(),
+    }
 )
 
-# Nodes — size encodes degree, color encodes set membership
+x_enc = alt.X("x:Q", scale=xscale, axis=None)
+y_enc = alt.Y("y:Q", scale=yscale, axis=None)
+
+edges_chart = (
+    alt.Chart(edges)
+    .mark_rule(color=INK_SOFT, opacity=0.3, strokeWidth=0.6)
+    .encode(x=x_enc, y=y_enc, x2="x2:Q", y2="y2:Q")
+)
+
+# Nodes: size encodes degree, color encodes set membership
 nodes_chart = (
-    alt.Chart(nodes_df)
-    .mark_circle(stroke=PAGE_BG, strokeWidth=2)
+    alt.Chart(nodes)
+    .mark_circle(stroke=PAGE_BG, strokeWidth=1, opacity=1)
     .encode(
-        x=alt.X("x:Q", scale=xscale, axis=None),
-        y=alt.Y("y:Q", scale=yscale, axis=None),
+        x=x_enc,
+        y=y_enc,
         color=alt.Color(
             "set:N",
-            scale=alt.Scale(domain=["Author", "Paper"], range=[COLOR_A, COLOR_B]),
-            legend=alt.Legend(title="Node Set", titleFontSize=20, labelFontSize=18, orient="bottom-right"),
+            title="Node set",
+            sort=None,
+            scale=alt.Scale(domain=[SET_A, SET_B], range=IMPRINT_PALETTE[:2]),
+            legend=alt.Legend(titleFontSize=11, labelFontSize=10, orient="bottom-right", padding=4),
         ),
-        size=alt.Size("degree:Q", scale=alt.Scale(range=[200, 1200]), legend=None),
-        tooltip=["node:N", "set:N", "degree:N"],
+        size=alt.Size("degree:Q", scale=alt.Scale(range=[30, 200]), legend=None),
+        tooltip=["node:N", "set:N", "degree:Q"],
     )
 )
 
-# Node labels — authors right-aligned, papers left-aligned
+# Labels sit on the outer side of each column
 labels_a = (
-    alt.Chart(nodes_a[["node", "x", "y"]])
-    .mark_text(align="right", dx=-30, fontSize=15)
-    .encode(
-        x=alt.X("x:Q", scale=xscale, axis=None),
-        y=alt.Y("y:Q", scale=yscale, axis=None),
-        text="node:N",
-        color=alt.value(INK_SOFT),
-    )
+    alt.Chart(nodes_a)
+    .mark_text(align="right", dx=-12, fontSize=10, color=INK_SOFT)
+    .encode(x=x_enc, y=y_enc, text="node:N")
 )
-
 labels_b = (
-    alt.Chart(nodes_b[["node", "x", "y"]])
-    .mark_text(align="left", dx=30, fontSize=15)
+    alt.Chart(nodes_b)
+    .mark_text(align="left", dx=12, fontSize=10, color=INK_SOFT)
+    .encode(x=x_enc, y=y_enc, text="node:N")
+)
+
+# Column headings name the sets in their colors
+headers = pd.DataFrame(
+    {"x": [0.24, 0.76], "y": [0.98, 0.98], "text": [SET_A + "s", SET_B + "s"], "set": [SET_A, SET_B]}
+)
+headers_chart = (
+    alt.Chart(headers)
+    .mark_text(fontSize=13, fontWeight="bold")
     .encode(
-        x=alt.X("x:Q", scale=xscale, axis=None),
-        y=alt.Y("y:Q", scale=yscale, axis=None),
-        text="node:N",
-        color=alt.value(INK_SOFT),
+        x=x_enc,
+        y=y_enc,
+        text="text:N",
+        color=alt.Color("set:N", legend=None, scale=alt.Scale(domain=[SET_A, SET_B], range=IMPRINT_PALETTE[:2])),
     )
 )
 
-# Column header labels
-header_a = (
-    alt.Chart(pd.DataFrame({"x": [0.22], "y": [0.97], "text": ["Authors"]}))
-    .mark_text(fontSize=22, fontWeight="bold", color=COLOR_A)
-    .encode(x=alt.X("x:Q", scale=xscale, axis=None), y=alt.Y("y:Q", scale=yscale, axis=None), text="text:N")
-)
-
-header_b = (
-    alt.Chart(pd.DataFrame({"x": [0.78], "y": [0.97], "text": ["Papers"]}))
-    .mark_text(fontSize=22, fontWeight="bold", color=COLOR_B)
-    .encode(x=alt.X("x:Q", scale=xscale, axis=None), y=alt.Y("y:Q", scale=yscale, axis=None), text="text:N")
-)
-
-# Compose all layers
 chart = (
-    alt.layer(edges_chart, nodes_chart, labels_a, labels_b, header_a, header_b)
-    .properties(width=1600, height=900, title=alt.Title(TITLE), background=PAGE_BG)
+    alt.layer(edges_chart, nodes_chart, labels_a, labels_b, headers_chart)
+    .properties(width=620, height=320, title=alt.Title(title), background=PAGE_BG)
     .configure_view(fill=PAGE_BG, strokeOpacity=0)
-    .configure_axis(
-        domainColor=INK_SOFT,
-        tickColor=INK_SOFT,
-        gridColor=INK,
-        gridOpacity=0.10,
-        labelColor=INK_SOFT,
-        titleColor=INK,
-        labelFontSize=18,
-        titleFontSize=22,
-    )
-    .configure_title(color=INK, fontSize=28, anchor="start", offset=12)
+    .configure_title(color=INK, fontSize=16, anchor="start", offset=8)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the canonical canvas
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TW or img.height > TH:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, exceeds target {TW}x{TH}")
+canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+canvas.paste(img, ((TW - img.width) // 2, (TH - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
