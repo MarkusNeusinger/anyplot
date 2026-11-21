@@ -2,39 +2,43 @@ library: matplotlib
 language: python
 specification_id: spectrogram-basic
 created: '2025-12-31T05:34:22Z'
-updated: '2026-05-15T07:31:44Z'
-generated_by: claude-haiku
-workflow_run: 25905696479
+updated: '2026-11-21T19:32:44Z'
+generated_by: claude-sonnet
+workflow_run: 44940859188
 issue: 2927
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 83
 review:
   strengths:
-  - Proper spectrogram computation using scipy with appropriate signal parameters
-  - Correct use of viridis colormap for perceptually uniform continuous data representation
-  - Clean theme-adaptive styling with proper token usage for both light and dark themes
-  - Clear axis labeling with units and descriptive title
-  - Colorbar with dB scale units properly labeled
+  - scipy.signal.spectrogram with nperseg=256 / noverlap=200 resolves the 500 Hz burst
+    as a narrow horizontal ridge and the chirp as a continuous track
+  - imprint_seq colormap with percentile-clipped vmin/vmax keeps the noise floor visible
+    beside the strong components
+  - Color bar labeled Power/Frequency (dB/Hz) with themed ticks and outline; all chrome
+    threaded through INK / INK_SOFT in both themes
+  - Exact 3200x1800 canvas via figsize/dpi and subplots_adjust, no bbox_inches trimming
   weaknesses:
-  - Design Excellence at default/minimal level — could benefit from additional visual
-    refinement or distinctive styling choices
+  - 'Suggestion: raising vmin toward the noise-floor median would push the background
+    to the green end and give the blue chirp and burst ridges more contrast within
+    imprint_seq.'
+  - 'Suggestion: rasterized=True has no effect on a PNG-only output and could be dropped.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)
-      Chrome: Title, axis labels, and tick labels are dark (INK color) and clearly readable against the light background. Colorbar label and scale are readable.
-      Data: Viridis colormap displays the spectrogram clearly, showing the chirp signal as a diagonal band increasing in frequency from ~100Hz to ~1000Hz over 2 seconds, with a distinct bright burst feature at ~0.8-1.2s/500Hz. Colors range from dark purple (low power, ~-90dB) to bright yellow (high power, ~-20dB).
-      Legibility verdict: PASS — all text readable against light background
+      Background: warm off-white #FAF8F1 page around a full-bleed spectrogram image.
+      Chrome: title "spectrogram-basic · python · matplotlib · anyplot.ai" in dark ink; axis titles "Time (s)" and "Frequency (Hz)", ticks 0.25-1.75 s and 0-2000 Hz in soft dark gray; right color bar labeled "Power/Frequency (dB/Hz)" with ticks -60 to -20. All readable; L-shaped spines.
+      Data: imprint_seq ramp from brand green #009E73 (low power, noise floor) to blue #4467A3 (high power). The chirp rises as a blue diagonal track from ~100 Hz at 0 s to ~1000 Hz at 2 s; a fainter horizontal blue ridge at 500 Hz runs from 0.8 to 1.2 s. Mottled green-teal noise fills the rest.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)
-      Chrome: Title, axis labels, and tick labels are light-colored and clearly readable against the dark background. No dark-on-dark failures observed. Colorbar label and scale are readable.
-      Data: Viridis colormap is identical to the light render, showing the same chirp and burst patterns with no loss of clarity. Data colors did not change between themes (only chrome flipped).
-      Legibility verdict: PASS — all text readable against dark background, proper theme adaptation
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light gray, color-bar outline light gray; no dark-on-dark text.
+      Data: identical colors to the light render (same green-to-blue image, same chirp and burst); only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -45,48 +49,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title, axis labels, tick labels, colorbar) clearly readable
-          in both themes with proper font sizing
+        comment: Explicit sizes at the style-guide references (title 12 pt, axis titles
+          and color-bar label 10 pt, ticks 8 pt); all text readable in both themes,
+          INK / INK_SOFT tokens on every element
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions or overlapping elements; clean, readable layout
+        comment: No text collisions; color bar clear of the image
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly visible; spectrogram pattern distinct, chirp
-          and burst features easily identifiable
+        comment: Chirp track and 500 Hz burst both read as blue ridges against the
+          green noise floor in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe; excellent contrast
-          throughout
+        comment: Green-to-blue ramp, no red-green signal; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, spectrogram fills plot area well, nothing cut off
+        comment: 3200x1800 canvas (gate passed); title ~54 % of width; balanced axis
+          labels; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled with units (Time (s), Frequency (Hz)), colorbar labeled
-          with units (Power/Frequency (dB/Hz))
+        comment: Time (s), Frequency (Hz), Power/Frequency (dB/Hz)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis colormap correct for continuous data; backgrounds are #FAF8F1
-          (light) and #1A1A17 (dark); chrome colors use proper INK/INK_SOFT tokens'
+        comment: 'imprint_seq (#009E73 -> #4467A3) for the continuous magnitude; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
       score: 8
       max: 20
@@ -96,23 +100,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional polish with appropriate colormap choice; viridis is
-          well-chosen but reflects standard matplotlib defaults rather than distinctive
-          design
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Spines properly styled (L-shaped frame); no grid (appropriate for
-          heatmaps); minimal visual customization
+        comment: Spine rules met, color-bar outline themed; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data inherently tells the story (chirp and burst are naturally focal);
-          no deliberate visual hierarchy or emphasis beyond data representation
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +122,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct spectrogram type using scipy.signal.spectrogram and pcolormesh
-          display
+        comment: Single time-frequency image with color bar; no extra panels, lines
+          or callouts (C5)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar with dB scale, time and frequency axes, clear axis labels
+        comment: Perceptually uniform Imprint cmap, dB color bar with unit, labeled
+          axes (C1, C2); noise floor visible beside the components (C3); nperseg=256
+          / noverlap=200 gives a narrow tone ridge and continuous sweep (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis is time in seconds, Y-axis is frequency in Hz, colorbar shows
-          power in dB/Hz
+        comment: Time on x, frequency on y, each cell at its STFT time/frequency
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows pattern 'spectrogram-basic · matplotlib · anyplot.ai'
+        comment: Title 'spectrogram-basic · python · matplotlib · anyplot.ai'; color
+          bar labeled; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -152,22 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full spectrogram representation shows both the chirp signal and tone
-          burst, demonstrating key spectrogram features
+        comment: 'Sweep, steady tone burst with onset/offset, and noise floor: shows
+          what a spectrogram reveals'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic parameters: 4000 Hz sample rate, frequency range 100-1000
-          Hz, 2-second duration, appropriate dB scale'
+        comment: Chirp test signal, the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Sensible values for signal processing domain: dB scale (-90 to -20),
-          frequency 0-2000 Hz, time 0-2 seconds'
+        comment: 4 kHz sampling -> 0-2000 Hz Nyquist axis; chirp 100 -> 1000 Hz over
+          2 s and burst at 500 Hz, 0.8-1.2 s read off the axes; dB range about -70
+          to -15 dB/Hz plausible for unit-amplitude tones
     code_quality:
       score: 10
       max: 10
@@ -177,51 +179,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward signal generation and visualization
+        comment: Flat script, Data block and column constants per adaptable-code contract
+          (checker pass)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib, numpy, scipy; all are used'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no faked UI; signal generation is clear and
-          purposeful
+        comment: scipy.signal.spectrogram computes the STFT; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves correctly as plot-{THEME}.png with dpi=300 and bbox_inches='tight'
+        comment: plot-{THEME}.png, bbox_inches default, current API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic matplotlib: fig/ax pattern, ax.pcolormesh(), fig.colorbar(),
-          proper environment-based theme handling'
+        comment: Axes API; pcolormesh with shading='gouraud' on the STFT grid and
+          vmin/vmax normalisation fed to fig.colorbar
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses standard pcolormesh and colorbar approach; no distinctive matplotlib
-          features showcased
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T19:28:57Z'
 impl_tags:
   dependencies:
   - scipy
@@ -229,6 +233,7 @@ impl_tags:
   - colorbar
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
