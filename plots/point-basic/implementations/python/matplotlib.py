@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 point-basic: Point Estimate Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-11
@@ -7,76 +7,90 @@ Quality: 86/100 | Updated: 2026-05-11
 import os
 
 import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Data - Clinical trial treatment effect estimates with 95% confidence intervals
-np.random.seed(42)
-treatments = ["Placebo", "Treatment A", "Treatment B", "Treatment C", "Treatment D", "Treatment E"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Simulated effect sizes (standardized mean differences) with confidence intervals
-estimates = np.array([0.0, 0.35, 0.58, 0.42, 0.71, 0.28])
-ci_lower = np.array([-0.15, 0.10, 0.35, 0.18, 0.48, 0.02])
-ci_upper = np.array([0.15, 0.60, 0.81, 0.66, 0.94, 0.54])
+# Constants
+REFERENCE = 0.0  # the null value: a coefficient of zero means no effect on price
 
-# Calculate errors for errorbar (asymmetric)
-lower_errors = estimates - ci_lower
-upper_errors = ci_upper - estimates
+# Columns: set these to your table's column names
+PREDICTOR = "Predictor"  # role: category
+COEFFICIENT = "Effect on sale price (thousand USD)"  # role: estimate
+CI_LOW = "Lower 95% bound"  # role: lower_bound
+CI_HIGH = "Upper 95% bound"  # role: upper_bound
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
-
-# Create horizontal point estimate plot with error bars
-y_positions = np.arange(len(treatments))
-
-ax.errorbar(
-    estimates,
-    y_positions,
-    xerr=[lower_errors, upper_errors],
-    fmt="o",
-    color=BRAND,
-    markersize=14,
-    markeredgecolor=PAGE_BG,
-    markeredgewidth=1,
-    capsize=8,
-    capthick=2.5,
-    elinewidth=2.5,
-    ecolor=BRAND,
+# Data: replace this block with your own table, for example df = pd.read_csv("coefficients.csv")
+df = pd.DataFrame(
+    {
+        PREDICTOR: [
+            "Garage spaces",
+            "Bedrooms",
+            "Renovated kitchen",
+            "Lot size (per 1,000 sq ft)",
+            "Floor area (per 100 sq ft)",
+            "Age (per decade)",
+            "Distance to city centre (per km)",
+            "Busy road frontage",
+        ],
+        COEFFICIENT: [18.5, 6.2, 27.4, 3.1, 14.8, -9.6, -4.3, -21.7],
+        CI_LOW: [9.8, -3.5, 14.9, -4.2, 11.6, -13.1, -7.9, -38.4],
+        CI_HIGH: [27.2, 15.9, 39.9, 10.4, 18.0, -6.1, -0.7, -5.0],
+    }
 )
 
-# Styling
-ax.set_yticks(y_positions)
-ax.set_yticklabels(treatments, fontsize=18, color=INK_SOFT)
-ax.set_xlabel("Effect Size", fontsize=20, color=INK)
-ax.set_ylabel("Treatment Group", fontsize=20, color=INK)
-ax.set_title("point-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT)
+# Plot: reads only df and the constants above
+table = df.sort_values(COEFFICIENT).reset_index(drop=True)
+y = table.index.to_numpy()
+est = table[COEFFICIENT].to_numpy()
+lower = (est - table[CI_LOW].to_numpy()).clip(min=0)
+upper = (table[CI_HIGH].to_numpy() - est).clip(min=0)
 
-# Set x-axis limits with padding
-ax.set_xlim(-0.4, 1.1)
-ax.set_ylim(-0.5, len(treatments) - 0.5)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Grid - subtle vertical lines only
-ax.grid(True, axis="x", alpha=0.10, linewidth=0.8, color=INK)
+ax.axvline(REFERENCE, color=INK_SOFT, linewidth=1.2, linestyle="--", zorder=1)
+ax.errorbar(
+    est,
+    y,
+    xerr=[lower, upper],
+    fmt="o",
+    color=IMPRINT_PALETTE[0],
+    ecolor=IMPRINT_PALETTE[0],
+    markersize=7,
+    markeredgecolor=PAGE_BG,
+    markeredgewidth=0.8,
+    elinewidth=1.8,
+    capsize=4,
+    capthick=1.8,
+    zorder=3,
+)
+
+# Style
+ax.set_title("point-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_yticks(y, table[PREDICTOR])
+ax.set_xlabel(COEFFICIENT, fontsize=10, color=INK)
+ax.set_ylabel(PREDICTOR, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+
+span = table[CI_HIGH].max() - table[CI_LOW].min()
+ax.set_xlim(table[CI_LOW].min() - span * 0.04, table[CI_HIGH].max() + span * 0.04)
+ax.set_ylim(-0.6, len(table) - 0.4)
+
+ax.grid(True, axis="x", alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
-
-# Spines
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 
-# Invert y-axis so first treatment is at top
-ax.invert_yaxis()
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
