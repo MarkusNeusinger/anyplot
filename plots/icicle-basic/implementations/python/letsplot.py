@@ -1,7 +1,7 @@
 """ anyplot.ai
 icicle-basic: Basic Icicle Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-13
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
@@ -29,117 +29,108 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per hierarchy level in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Hierarchical data: File system example
-hierarchy = [
-    {"name": "root", "parent": "", "value": 1000},
-    {"name": "Documents", "parent": "root", "value": 350},
-    {"name": "Media", "parent": "root", "value": 400},
-    {"name": "Projects", "parent": "root", "value": 250},
-    {"name": "Work", "parent": "Documents", "value": 200},
-    {"name": "Personal", "parent": "Documents", "value": 150},
-    {"name": "Photos", "parent": "Media", "value": 220},
-    {"name": "Videos", "parent": "Media", "value": 180},
-    {"name": "Python", "parent": "Projects", "value": 120},
-    {"name": "Web", "parent": "Projects", "value": 130},
-    {"name": "Reports", "parent": "Work", "value": 120},
-    {"name": "Contracts", "parent": "Work", "value": 80},
-    {"name": "Letters", "parent": "Personal", "value": 90},
-    {"name": "Receipts", "parent": "Personal", "value": 60},
-    {"name": "2024", "parent": "Photos", "value": 130},
-    {"name": "2023", "parent": "Photos", "value": 90},
-    {"name": "Movies", "parent": "Videos", "value": 100},
-    {"name": "Clips", "parent": "Videos", "value": 80},
-    {"name": "DataViz", "parent": "Python", "value": 70},
-    {"name": "ML", "parent": "Python", "value": 50},
-    {"name": "Frontend", "parent": "Web", "value": 75},
-    {"name": "Backend", "parent": "Web", "value": 55},
-]
+# Columns: set these to your table's column names
+NAME = "name"  # role: name
+PARENT = "parent"  # role: parent
+VALUE = "value"  # role: value
 
-# Build tree structure
-name_to_node = {row["name"]: row for row in hierarchy}
+# Data: replace this block with your own table, for example df = pd.read_csv("hierarchy.csv")
+df = pd.DataFrame(
+    [
+        ("root", "", 1000),
+        ("Documents", "root", 350),
+        ("Media", "root", 400),
+        ("Projects", "root", 250),
+        ("Work", "Documents", 200),
+        ("Personal", "Documents", 150),
+        ("Photos", "Media", 220),
+        ("Videos", "Media", 180),
+        ("Python", "Projects", 120),
+        ("Web", "Projects", 130),
+        ("Reports", "Work", 120),
+        ("Contracts", "Work", 80),
+        ("Letters", "Personal", 90),
+        ("Receipts", "Personal", 60),
+        ("2024", "Photos", 130),
+        ("2023", "Photos", 90),
+        ("Movies", "Videos", 100),
+        ("Clips", "Videos", 80),
+        ("DataViz", "Python", 70),
+        ("ML", "Python", 50),
+        ("Frontend", "Web", 75),
+        ("Backend", "Web", 55),
+    ],
+    columns=[NAME, PARENT, VALUE],
+)
+
+# Plot: reads only df and the constants above
+parent_of = df.set_index(NAME)[PARENT].fillna("").to_dict()
+# A parent that names no row (or is empty) marks a root
+parent_of = {node: (parent if parent in parent_of else "") for node, parent in parent_of.items()}
+value_of = df.set_index(NAME)[VALUE].to_dict()
 children = {}
-for row in hierarchy:
-    parent = row["parent"]
-    if parent not in children:
-        children[parent] = []
+for node, parent in parent_of.items():
     if parent:
-        children[parent].append(row["name"])
+        children.setdefault(parent, []).append(node)
 
-# Calculate level for each node
+# Level of each node = number of ancestors
 levels = {}
-for row in hierarchy:
-    level = 0
-    current = row["name"]
-    while name_to_node[current]["parent"]:
+for node in parent_of:
+    level, current = 0, node
+    while parent_of[current]:
         level += 1
-        current = name_to_node[current]["parent"]
-    levels[row["name"]] = level
-
+        current = parent_of[current]
+    levels[node] = level
 max_level = max(levels.values())
 
-# Calculate rectangle positions (horizontal icicle: root at top)
+# Rectangle positions (root at the top, children directly below their parent)
+roots = [node for node, parent in parent_of.items() if not parent]
 rects = []
-stack = [("root", 0.0, 1.0)]
-
+stack = [(root, 0.0, 1.0) for root in roots]
 while stack:
-    name, x_start, x_end = stack.pop()
-    level = levels[name]
-
+    node, x_start, x_end = stack.pop()
     rects.append(
         {
-            "name": name,
+            NAME: node,
             "xmin": x_start,
             "xmax": x_end,
-            "ymin": max_level - level,
-            "ymax": max_level - level + 1,
-            "level": level,
+            "ymin": max_level - levels[node],
+            "ymax": max_level - levels[node] + 1,
+            "level": levels[node],
         }
     )
+    kids = children.get(node, [])
+    total = sum(value_of[k] for k in kids)
+    cursor = x_start
+    for kid in kids:
+        width = (x_end - x_start) * value_of[kid] / total
+        stack.append((kid, cursor, cursor + width))
+        cursor += width
 
-    if name in children and children[name]:
-        child_names = children[name]
-        total_value = sum(name_to_node[c]["value"] for c in child_names)
-        x_end_temp = x_end
-
-        for child_name in reversed(child_names):
-            child_value = name_to_node[child_name]["value"]
-            child_width = (x_end - x_start) * (child_value / total_value)
-            child_x_start = x_end_temp - child_width
-            stack.append((child_name, child_x_start, x_end_temp))
-            x_end_temp = child_x_start
-
-# Create dataframe for rectangles
 rect_df = pd.DataFrame(rects)
 rect_df["level_str"] = rect_df["level"].astype(str)
-
-# Calculate center positions and dimensions for labels
 rect_df["x_center"] = (rect_df["xmin"] + rect_df["xmax"]) / 2
 rect_df["y_center"] = (rect_df["ymin"] + rect_df["ymax"]) / 2
-rect_df["width"] = rect_df["xmax"] - rect_df["xmin"]
 
-# Show labels for rectangles with sufficient width
-rect_df["label_len"] = rect_df["name"].str.len()
-rect_df["show_label"] = rect_df["width"] > (rect_df["label_len"] * 0.007 + 0.01)
+# Label only rectangles wide enough for their text
+rect_df["width"] = rect_df["xmax"] - rect_df["xmin"]
+rect_df["show_label"] = rect_df["width"] > (rect_df[NAME].str.len() * 0.007 + 0.01)
 label_df = rect_df[rect_df["show_label"]].copy()
 
-# Adjust font size based on level
-label_df["font_size"] = label_df["level"].map({0: 14, 1: 12, 2: 8, 3: 7})
+# Label size (mm) shrinks with depth
+label_df["font_size"] = (7.0 - 1.0 * label_df["level"]).clip(lower=4.0)
 
-# Color palette by level using Okabe-Ito
-colors = {
-    "0": IMPRINT[0],  # Level 0: bluish green
-    "1": IMPRINT[1],  # Level 1: vermillion
-    "2": IMPRINT[2],  # Level 2: blue
-    "3": IMPRINT[3],  # Level 3: reddish purple
-}
+level_colors = {str(i): IMPRINT_PALETTE[i] for i in range(max_level + 1)}
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -149,32 +140,31 @@ anyplot_theme = theme(
     axis_text=element_blank(),
     axis_ticks=element_blank(),
     axis_line=element_blank(),
-    plot_title=element_text(size=24, color=INK),
+    plot_title=element_text(size=16, color=INK),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(size=16, color=INK_SOFT),
-    legend_title=element_text(size=18, color=INK),
+    legend_text=element_text(size=10, color=INK_SOFT),
+    legend_title=element_text(size=12, color=INK),
 )
 
-# Create plot
 plot = (
     ggplot()
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="level_str"),
         data=rect_df,
         color=INK_SOFT,
-        size=1.5,
+        size=0.75,
         alpha=0.9,
     )
-    + geom_text(aes(x="x_center", y="y_center", label="name", size="font_size"), data=label_df, color=INK)
-    + scale_fill_manual(values=colors, name="Hierarchy Level")
+    + geom_text(aes(x="x_center", y="y_center", label=NAME, size="font_size"), data=label_df, color=INK)
+    + scale_fill_manual(values=level_colors, name="Hierarchy Level")
     + scale_size_identity()
     + xlim(-0.02, 1.02)
     + ylim(-0.1, max_level + 1.1)
-    + labs(title="icicle-basic · letsplot · anyplot.ai")
+    + labs(title="icicle-basic · python · letsplot · anyplot.ai")
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save outputs
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
