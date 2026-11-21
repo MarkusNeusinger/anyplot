@@ -2,48 +2,54 @@ library: plotly
 language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T00:05:08Z'
-updated: '2026-05-13T17:23:36Z'
-generated_by: claude-haiku
-workflow_run: 25814281509
+updated: '2026-11-21T11:23:27Z'
+generated_by: claude-sonnet
+workflow_run: 44898181633
 issue: 2501
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 83
 review:
   strengths:
-  - Perfect theme-adaptive implementation with data colors maintained across light/dark
-    renders
-  - Excellent text legibility in both themes with no dark-on-dark or light-on-light
-    failures
-  - Well-chosen Okabe-Ito palette with natural semantic mapping (green=survived, orange=did
-    not survive)
-  - Real Titanic dataset with high data quality and realistic context
-  - Proper use of Plotly's interactive Parcats chart with meaningful hover information
-  - All spec requirements met with complete feature coverage
+  - Native go.Parcats with categoryorder='array' keeps every dimension in its natural
+    order (First→Third, Survived→Did Not Survive)
+  - 'Ribbons colored by the outcome dimension with Survived on brand green #009E73
+    and Did Not Survive on #C475FD, identical in both themes'
+  - Theme tokens threaded through labelfont, tickfont, title and backgrounds; all
+    text readable in light and dark
+  - Real Titanic data from seaborn behind clean column constants and a replaceable
+    data block
+  - 'Library-native interactivity in the HTML: hoveron=''color'' path highlighting
+    with count+probability and freeform drag arrangement'
   weaknesses:
-  - DE-01 could be elevated with custom styling touches like refined typography hierarchy
-    or distinctive visual emphasis
-  - LM-02 could reach 5 by leveraging more advanced Plotly-specific features beyond
-    standard Parcats (custom callbacks, advanced interactivity)
+  - 'VQ-02 (both): the interior axes'' category labels (Female, Male, Cherbourg, Queenstown,
+    Southampton) are drawn on top of the incoming ribbons, readable only through the
+    text halo → labels clear of the ribbons, e.g. wider spacing so the label sits
+    in the gap before the ribbons fan in, or shorter labels. Likely cause: go.Parcats
+    places category labels on the left of every non-first axis, over the ribbons arriving
+    there.'
+  - 'Suggestion: the ribbon_color mapping (line 55) fails on missing values (astype(int)
+    on NA); mapping categories through a dict with a fill value would keep the snippet
+    robust on user data.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface color
-      Chrome: Title, axis labels, and tick labels rendered in dark text (#1A1A17, #4A4A44) - all clearly readable against light background; no light-on-light failures
-      Data: Ribbons colored with #009E73 (green, survived) and #D55E00 (orange, did not survive) - first series is correct Okabe-Ito brand color; proportional widths show observation flow; smooth hspline curves clearly visible
-      Legibility verdict: PASS - All text elements readable; no overlap; data elements optimal visibility
+      Background: Warm off-white #FAF8F1, 3200x1800.
+      Chrome: Title "parallel-categories-basic · python · plotly · anyplot.ai" centered in dark ink; dimension labels Passenger Class, Sex, Embarked, Outcome in dark ink above four vertical axes; category labels (First/Second/Third, Female/Male, Cherbourg/Queenstown/Southampton, Survived/Did Not Survive) in soft dark gray. Interior labels sit over ribbons but remain readable via a light halo.
+      Data: Each axis is split into segments proportional to category share, each segment two-toned by outcome; hspline ribbons in #009E73 (Survived) and #C475FD (Did Not Survive) with count-proportional widths; the large purple Third→Male→Southampton→Did Not Survive flow dominates.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct surface color
-      Chrome: Title, axis labels, and tick labels rendered in light text (#F0EFE8, #B8B7B0) - all clearly readable against dark background; no dark-on-dark failures; dimension labels distinctly visible
-      Data: Ribbons maintain identical colors to light render (#009E73 green, #D55E00 orange) - confirming proper theme-adaptive design where only chrome flips while data colors remain constant; interactive legend properly styled
-      Legibility verdict: PASS - All text elements readable; theme adaptation verified; data colors identical to light render
+      Background: Warm near-black #1A1A17.
+      Chrome: Title and dimension labels in light ink, category labels in light gray with a dark halo; no dark-on-dark text.
+      Data: Same green #009E73 / purple #C475FD segments and ribbons as the light render (ribbons appear darker only through transparency over the dark page); layout identical.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,69 +57,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, and tick labels explicitly sized and perfectly
-          readable in both light and dark themes
+        comment: Title 16, dimension labels 13 (INK), category labels 11 (INK_SOFT)
+          explicitly set; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All text elements well-spaced with no collisions or overlapping
+        comment: Interior category labels (Female, Male, Cherbourg, Queenstown, Southampton)
+          sit on top of incoming ribbons (defect line); readable thanks to the halo
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ribbons optimally visible and proportional to data density
+        comment: Segments and ribbons clearly visible in both themes; thin ribbons
+          for rare paths are permitted (C6)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors provide excellent contrast and colorblind safety
+        comment: Green vs purple, CVD-safe, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins
+        comment: 3200x1800, balanced margins, nothing clipped; title ~46% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive dimension labels and correct title format
+        comment: Dimension labels are readable names (Passenger Class, Sex, Embarked,
+          Outcome)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
-          dark); text colors theme-adaptive in both renders'
+        comment: 'First outcome category (Survived) = #009E73, second #C475FD; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Polished use of Plotly styling with professional color scheme; smooth
-          hspline curves; could be elevated with more custom design touches
+        comment: Style-guide baseline (theme tokens, Imprint palette, explicit font
+          sizes); nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Explicit margin settings and balanced whitespace; good default refinement
+        comment: Default Parcats spacing and label placement; no refinement beyond
+          the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Well-known Titanic dataset with natural color mapping (green=survived)
-          guides viewer through patterns
+        passed: false
+        comment: Coloring by outcome is what the Notes ask; no further hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel categories (Parcats) implementation
+        comment: go.Parcats parallel categories plot, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple dimensions, ribbon width proportional, color-coded outcomes,
-          interactive hover info
+        comment: C1 four named axes with labeled proportional segments; C2 count-proportional
+          ribbons; C3 colored by last dimension (Outcome), colored segments identify
+          it; C4 natural category order; C5 no extra layers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dimensions correctly mapped; data flows logically
+        comment: All 889 passengers mapped across 4 dimensions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and clear dimension labels
+        comment: Title 'parallel-categories-basic · python · plotly · anyplot.ai';
+          no legend needed, Outcome axis segments carry the color key
     data_quality:
       score: 15
       max: 15
@@ -152,20 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of parallel categories: multi-dimensional flow
-          and variation'
+        comment: 4 dimensions with 2-3 categories, crossing and splitting flows, rare
+          paths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Titanic dataset, historically accurate, neutral topic
+        comment: Real Titanic passenger data, the spec's example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Data proportions factually correct
+        comment: Proportions match the dataset (Third class largest, Southampton dominant,
+          ~38% survived); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -175,55 +187,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save flow
+        comment: 'Linear zones: theme, constants, data block, plot, save; adaptable-code
+          check passes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses deterministic seaborn dataset
+        comment: Deterministic bundled dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly and seaborn; all imports used
+        comment: os, plotly.graph_objects, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake functionality
+        comment: Dimensions built by one comprehension; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses go.Parcats() (recommended API), proper dimension specs
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
+        passed: true
+        comment: go.Parcats with categoryorder='array' / categoryarray and a line
+          colorscale
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
         passed: false
-        comment: Leverages interactive Parcats with hspline curves; could use more
-          advanced Plotly features
+        comment: hspline ribbons, hoveron='color' path highlighting and freeform drag
+          arrangement in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T11:19:52Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - seaborn
   techniques:
   - hover-tooltips
   - html-export
   patterns:
   - dataset-loading
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
