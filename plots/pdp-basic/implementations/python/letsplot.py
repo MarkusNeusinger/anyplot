@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pdp-basic: Partial Dependence Plot
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-15
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 78/100 | Updated: 2026-11-21
 """
 
 import os
