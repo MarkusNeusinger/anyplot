@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 volcano-basic: Volcano Plot for Statistical Significance
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-14
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -17,97 +18,114 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - Simulated differential expression results
-np.random.seed(42)
-n_genes = 500
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Generate log2 fold changes (effect sizes)
-log2_fc = np.random.normal(0, 1.5, n_genes)
+# Constants
+FC_THRESHOLD = 1.0  # |log2 fold change| of 1 is a 2-fold change
+P_THRESHOLD = 1.3  # -log10(0.05)
+UP, DOWN, NOT_SIGNIFICANT = "Up-regulated", "Down-regulated", "Not significant"
+STATUS_COLORS = {
+    UP: IMPRINT_PALETTE[4],
+    DOWN: IMPRINT_PALETTE[2],
+    NOT_SIGNIFICANT: MUTED,
+}  # semantic: red up, blue down
 
-# Generate p-values (most genes not significant)
-base_pvalues = np.random.beta(1, 10, n_genes)  # Right-skewed toward 1
+# Columns: set these to your table's column names
+LOG2FC = "Log₂ fold change"  # role: log2_fold_change
+NEGLOG10P = "-Log₁₀ (p-value)"  # role: neg_log10_pvalue
 
-# Make genes with large fold changes more likely to be significant
-significance_boost = np.exp(-np.abs(log2_fc) * 0.5)
-pvalues = base_pvalues * significance_boost
-pvalues = np.clip(pvalues, 1e-10, 1)
+# Data: replace this block with your own table, for example df = pd.read_csv("differential_expression.csv")
+rng = np.random.default_rng(42)
+n_features = 2000
+log2_fc = rng.normal(0, 1.4, n_features)
+base_p = rng.beta(1, 8, n_features)
+p_values = np.clip(base_p * np.exp(-np.abs(log2_fc) * 1.1) * rng.uniform(0.01, 1, n_features), 1e-12, 1)
+df = pd.DataFrame({LOG2FC: log2_fc, NEGLOG10P: -np.log10(p_values)})
 
-# Calculate -log10(p-value)
-neg_log10_pvalue = -np.log10(pvalues)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+x_field, y_field = LOG2FC.translate(ESCAPE), NEGLOG10P.translate(ESCAPE)
 
-# Determine significance categories
-fc_threshold = 1.0  # log2(2) = 1, meaning 2-fold change
-pval_threshold = 1.3  # -log10(0.05) ≈ 1.3
-
-significant_up = (log2_fc >= fc_threshold) & (neg_log10_pvalue >= pval_threshold)
-significant_down = (log2_fc <= -fc_threshold) & (neg_log10_pvalue >= pval_threshold)
-
-category = np.where(significant_up, "Up-regulated", np.where(significant_down, "Down-regulated", "Not Significant"))
-
-# Create dataframe
-df = pd.DataFrame({"log2_fold_change": log2_fc, "neg_log10_pvalue": neg_log10_pvalue, "category": category})
-
-# Threshold lines data
-vline_data = pd.DataFrame({"x": [-fc_threshold, fc_threshold]})
-hline_data = pd.DataFrame({"y": [pval_threshold]})
-
-# Color mapping using Okabe-Ito palette
-color_scale = alt.Scale(
-    domain=["Up-regulated", "Down-regulated", "Not Significant"],
-    range=["#009E73", "#AE3030", INK_SOFT],  # imprint green (up) / red (down) / adaptive gray (n.s.)
+passes_p = df[NEGLOG10P] >= P_THRESHOLD
+df["Status"] = np.select(
+    [passes_p & (df[LOG2FC] >= FC_THRESHOLD), passes_p & (df[LOG2FC] <= -FC_THRESHOLD)],
+    [UP, DOWN],
+    default=NOT_SIGNIFICANT,
 )
 
-# Main scatter plot
-scatter = (
+x_limit = float(np.ceil(df[LOG2FC].abs().max()))
+y_top = float(df[NEGLOG10P].max() * 1.05)
+
+points = (
     alt.Chart(df)
-    .mark_circle(size=80, opacity=0.7)
+    .mark_circle(size=34, opacity=0.55)
     .encode(
-        x=alt.X("log2_fold_change:Q", title="Log₂ Fold Change", scale=alt.Scale(domain=[-6, 6])),
-        y=alt.Y("neg_log10_pvalue:Q", title="-Log₁₀(p-value)"),
-        color=alt.Color("category:N", scale=color_scale, title="Significance"),
-        tooltip=["log2_fold_change:Q", "neg_log10_pvalue:Q", "category:N"],
+        x=alt.X(x_field, type="quantitative", title=LOG2FC, scale=alt.Scale(domain=[-x_limit, x_limit], nice=False)),
+        y=alt.Y(y_field, type="quantitative", title=NEGLOG10P, scale=alt.Scale(domain=[0, y_top], nice=False)),
+        color=alt.Color(
+            "Status",
+            type="nominal",
+            title="Significance",
+            scale=alt.Scale(domain=list(STATUS_COLORS), range=list(STATUS_COLORS.values())),
+            legend=alt.Legend(symbolOpacity=1, symbolSize=120),
+        ),
+        order=alt.Order("Status", sort="descending"),
+        tooltip=[
+            alt.Tooltip(x_field, type="quantitative", title=LOG2FC, format=".2f"),
+            alt.Tooltip(y_field, type="quantitative", title=NEGLOG10P, format=".2f"),
+            alt.Tooltip("Status", type="nominal", title="Significance"),
+        ],
     )
 )
 
-# Vertical threshold lines
-vlines = alt.Chart(vline_data).mark_rule(strokeDash=[8, 4], color=INK_SOFT, strokeWidth=2).encode(x="x:Q")
+rule_style = {"strokeDash": [6, 4], "strokeWidth": 1.4, "color": INK, "opacity": 0.8}
+vlines = alt.Chart(pd.DataFrame({"x": [-FC_THRESHOLD, FC_THRESHOLD]})).mark_rule(**rule_style).encode(x="x:Q")
+hline = alt.Chart(pd.DataFrame({"y": [P_THRESHOLD]})).mark_rule(**rule_style).encode(y="y:Q")
 
-# Horizontal threshold line
-hline = alt.Chart(hline_data).mark_rule(strokeDash=[8, 4], color=INK_SOFT, strokeWidth=2).encode(y="y:Q")
-
-# Combine all layers
 chart = (
-    (scatter + vlines + hline)
+    (points + vlines + hline)
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title("volcano-basic · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        width=590,
+        height=320,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 12},
+        title=alt.Title("volcano-basic · python · altair · anyplot.ai", fontSize=16, anchor="middle"),
         background=PAGE_BG,
     )
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
     .configure_axis(
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=10,
+        titleFontSize=12,
+        gridColor=INK,
         gridOpacity=0.10,
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
-        gridColor=INK_SOFT,
         labelColor=INK_SOFT,
         titleColor=INK,
     )
     .configure_legend(
-        titleFontSize=18,
-        labelFontSize=16,
-        symbolSize=200,
+        titleFontSize=11,
+        labelFontSize=10,
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
+        padding=8,
         labelColor=INK_SOFT,
         titleColor=INK,
     )
-    .configure_title(color=INK, fontSize=28)
+    .configure_title(color=INK)
 )
 
-# Save as PNG and HTML with theme-suffixed filenames
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Output: pad (never crop) the PNG to the 3200 x 1800 landscape target
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TARGET_W, TARGET_H = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_W or img.height > TARGET_H:
+    raise SystemExit(f"vl-convert produced {img.width}x{img.height}, exceeds {TARGET_W}x{TARGET_H}; shrink the view")
+if img.size != (TARGET_W, TARGET_H):
+    canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+    canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
+    canvas.save(f"plot-{THEME}.png")
