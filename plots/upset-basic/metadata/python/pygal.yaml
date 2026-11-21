@@ -2,96 +2,109 @@ library: pygal
 language: python
 specification_id: upset-basic
 created: '2026-05-13T20:51:42Z'
-updated: '2026-05-13T21:55:04Z'
+updated: '2026-11-21T13:13:47Z'
 generated_by: claude-sonnet
-workflow_run: 25825187434
+workflow_run: 44907084283
 issue: 5250
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/pygal/plot-dark.html
-quality_score: 74
+quality_score: 82
 review:
   strengths:
-  - Correct and complete UpSet plot structure with all three required panels (set
-    bars, matrix, intersection bars)
-  - Degree-based coloring from Okabe-Ito palette is semantically meaningful and well-executed
-  - Both theme renders pass readability checks with no dark-on-dark or light-on-light
-    failures
-  - 'Realistic neutral dataset: bug report overlap across software modules'
+  - Real pygal charts (StackedBar, HorizontalBar, XY) composited with their plot areas
+    aligned to shared edges, so each intersection bar sits over its matrix column
+    and each set bar beside its row
+  - One StackedBar series per degree yields degree coloring and a native legend in
+    Imprint order
+  - Exact-combination counting via frozenset per subscriber; columns sorted by size
+    descending
+  - Both themes readable; muted non-member dots stay present and distinct from filled
+    member dots
   weaknesses:
-  - pygal library is never imported or used; the implementation is a raw SVG generator
-    using cairosvg directly — library mastery near zero
-  - No y-axis scale or tick labels for intersection bar chart making exact values
-    unreadable
-  - Count labels above intersection bars and set-size values use small font sizes
-    (18-20px) for a 4800x2700 canvas
+  - 'VQ-05 (both): the ''Intersection size'' y-axis title wraps onto two lines and
+    sits about 450 px left of its tick labels, next to a legend that floats in the
+    empty top-left corner → one line, set close to the tick labels (about −400 px
+    gap). Likely cause: pygal reserves the left margin solved by place() for the legend
+    and y_title, so the title is laid out at the far edge of that margin; set legend_at_bottom
+    or move the legend into the bar chart''s right side.'
+  - 'CQ-01 (code): seven helper functions (style, plot_rect, place, build_bars, build_matrix,
+    build_sets, inner) wrap what could be three flat chart blocks → inline the builders
+    and the style construction, keeping at most the alignment step. Likely cause:
+    the charts are built inside functions so place() can rebuild them each iteration.'
+  - 'Suggestion: an axis title on the set-size bars'' horizontal count axis (instead
+    of a vertical ''Set size'' title on the category side) would read more directly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "upset-basic · pygal · anyplot.ai" in bold dark ink; subtitle in muted ink; set labels (Frontend, Backend, Database, API Layer, Auth Module) in INK_SOFT; set size numbers in INK_MUTED; "Set Size" and "Degree:" labels in INK_SOFT; all readable
-      Data: Intersection bars use Okabe-Ito palette by degree — degree-1 (#009E73 brand green), degree-2 (#D55E00 vermillion), etc.; horizontal set bars all in #009E73; filled dots in #009E73; empty circles with INK_MUTED stroke; green vertical connecting lines
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: title "Subscription Add-on Overlap · upset-basic · python · pygal · anyplot.ai" in dark ink at the top; count axis 20-180 with dotted guides and an "Intersection size" axis title (wrapped onto two lines, far left of the ticks); set names Series/Movies/Music/Live Sports/Kids and a 0-600 count axis with "Set size"; legend "1/2/3 add-ons" at the top left. All text readable.
+      Data: 10 intersection bars sorted descending (196 … 47) colored by degree — #009E73 (1), #C475FD (2), #4467A3 (3) — with count labels; green set-size bars with page-colored counts inside (744/634/452/307/259); matrix of large filled member dots joined by degree-colored lines, small muted beige dots for non-members; bars aligned with their columns and rows.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct warm dark, not pure black
-      Chrome: Title and subtitle in light #F0EFE8 / #B8B7B0 tones; set labels in INK_SOFT light; count labels and size numbers in muted light; all clearly readable against dark background; no dark-on-dark failures detected
-      Data: Intersection bar colors identical to light render (#009E73 and #D55E00 dominate); empty circles use light gray stroke visible against dark background; brand green #009E73 clearly visible
-      Legibility verdict: PASS — all text readable; no dark-on-dark issues
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title, tick labels, axis titles, set names and legend in light ink; no dark-on-dark text; guides subtle
+      Data: bar, dot and line colors identical to the light render; non-member dots become muted dark gray, still visible; set-size counts inside the green bars are dark and readable
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Readable in both themes; count and set-size labels slightly small
-          for canvas
+        comment: Title 60 px, ticks/labels/legend 44 px, value labels 40 px on 3200x1800;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Clean layout, no collisions
+        comment: No text collisions; value labels sit clear above bars and inside
+          set-size bars
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars, dots, connecting lines all clearly visible
+        comment: Large member dots, muted non-member dots, 22 px connecting lines
+          and bars all clearly visible in both themes; legend swatches match the bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe
+        comment: Imprint green/purple/blue degree colors, CVD-safe; muted dots distinguishable
+          by size and tone
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: true
-        comment: Good proportions, panels sized well
+        passed: false
+        comment: Correct 3200x1800 canvas and aligned panels, but the 'Intersection
+          size' axis title wraps to two lines and floats about 450 px left of its
+          tick labels, beside a detached legend (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title format correct; Set Size label present; missing y-axis scale/ticks
-          for intersection bars
+        passed: true
+        comment: '''Intersection size'' and ''Set size'' axis titles with count axes'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First degree uses #009E73; correct Okabe-Ito order; backgrounds
-          #FAF8F1/#1A1A17 correct'
+        comment: 'Degrees 1-3 in Imprint positions 1-3 (#009E73 first); backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -99,20 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Degree-based coloring is meaningful; rounded bars; professional
+        comment: Degree color carried consistently from intersection bars into the
+          matrix dots and connecting lines; set-size counts printed inside the bars
+          in the page color
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle row separators, rounded corners, good whitespace
+        comment: The three pygal plot areas are solved onto shared edges so every
+          bar lines up exactly with its matrix column and row; non-member dots smaller
+          and muted
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Descending sort highlights top intersections; degree coloring tells
-          complexity story
+        comment: Data displayed sorted, degree coloring as the Notes allow; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,26 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct UpSet plot with all three panels
+        comment: Correct UpSet layout, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted descending, connected dots, set bars, intersection bars, degree
-          coloring
+        comment: Matrix rows per set, columns per intersection, top intersection bars,
+          left set-size bars, connected filled dots with muted non-members, sorted
+          descending, degree coloring
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sets and intersections correctly mapped
+        comment: Bars from zero, exact-combination counts (frozenset per subscriber),
+          columns aligned to bars
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; degree legend present
+        comment: Title 'Subscription Add-on Overlap · upset-basic · python · pygal
+          · anyplot.ai'; legend '1 add-on / 2 add-ons / 3 add-ons'
     data_quality:
       score: 15
       max: 15
@@ -151,49 +171,51 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All UpSet plot aspects shown
+        comment: Shows degrees 1-3, a dominant single-set column and a tail, 5 sets
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bug report overlap across software modules — plausible and neutral
+        comment: Streaming-service add-on subscriptions, plausible and neutral, as
+          the change request asked
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5 sets, 700 elements, realistic membership probabilities
+        comment: 'Checked: set sizes 744/634/452/307/259 of 1500 match shares 0.50/0.42/0.30/0.20/0.17;
+          intersection labels match bar heights on the count axis'
     code_quality:
       score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
         passed: false
-        comment: Five helper functions present; acceptable for SVG complexity but
-          deviates from flat-script ideal
+        comment: Seven helper functions (style, plot_rect, place, build_bars, build_matrix,
+          build_sets, inner) instead of a flat script (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: All imports used but main library (pygal) never imported despite
-          being designated library
+        passed: true
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, no fake UI
+        comment: Margin solver is the work the three-chart composite needs; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -201,33 +223,39 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 1
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: import pygal never appears; code generates raw SVG with helper functions
-          and calls cairosvg directly
+        passed: true
+        comment: pygal StackedBar, HorizontalBar, XY and Style used, but composited
+          by regex-parsing the rendered SVG
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 2
         max: 5
-        passed: false
-        comment: No pygal chart types, styles, or rendering features used
+        passed: true
+        comment: One StackedBar series per degree gives a native degree legend; print_values/value_formatter/value_colors
+          and XY stroke_style linecap
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-21T13:09:55Z'
 impl_tags:
-  dependencies:
-  - cairosvg
+  dependencies: []
   techniques:
+  - layer-composition
   - html-export
-  - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   - matrix-construction
   dataprep:
-  - normalization
-  styling: []
+  - groupby-aggregation
+  styling:
+  - minimal-chrome
+  - grid-styling
