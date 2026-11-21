@@ -2,49 +2,53 @@ library: letsplot
 language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:53:28Z'
-updated: '2026-05-13T11:29:31Z'
-generated_by: claude-haiku
-workflow_run: 25795648282
+updated: '2026-11-21T10:01:18Z'
+generated_by: claude-sonnet
+workflow_run: 44891453325
 issue: 2790
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - Theme-adaptive styling properly implemented with color tokens that correctly adapt
-    backgrounds and text between light and dark modes
-  - Clean, readable annotation approach using geom_text with nudge positioning to
-    avoid direct point overlap
-  - Realistic and neutral business data (company revenue vs profit margins) that effectively
-    demonstrates the annotation feature
-  - Proper typography hierarchy with correctly scaled fonts (title 24pt, axis labels
-    20pt, ticks 16pt, annotations 12pt) for the 4800x2700 canvas
-  - Both light and dark renders are equally professional and readable with no theme-specific
-    legibility issues
+  - 'Uses lets-plot''s native geom_text_repel with tuned point_padding/box_padding
+    and a fixed seed: all 15 labels clear of each other and of the markers, with leader
+    lines where offset'
+  - Theme tokens threaded through every chrome element; both renders are fully readable
+    and the Imprint green is identical across themes
+  - Axis titles come straight from the descriptive column constants, so the axes carry
+    units without a labs() override
+  - Canvas follows the 800x450 @ scale 4 rule and the y limit is derived from the
+    data
+  - Interactive HTML output from the same plot object
   weaknesses:
-  - Minor text label overlap in regions with clustered data (e.g., ByteWorks/SmartScale
-    area) - consider using adjustText library for automatic label repositioning
-  - Design sophistication is solid but follows conservative defaults without distinctive
-    visual emphasis - consider using size/color variation to highlight outliers (NeuraTech,
-    MegaSoft)
-  - Could enhance data storytelling through visual hierarchy - current implementation
-    treats all points equally without emphasis on key insights
+  - 'SC-02 (both): leader lines are drawn as solid INK_SOFT strokes about as heavy
+    as the label text, so they are not subtler than the markers and text (C3) → thinner
+    and lighter segments, e.g. segment_size about 0.3-0.5 and a GRID- or INK_SOFT-at-alpha
+    color. Likely cause: geom_text_repel segment_color/segment_size left at their
+    defaults (text color, default width).'
+  - 'VQ-05 (both): a four-sided frame encloses the panel, against the style guide''s
+    L-shaped spine default → keep only the left and bottom axis lines. Likely cause:
+    the panel border drawn by the theme stack (theme_minimal + axis_line) - set panel_border=element_blank()
+    and keep axis_line for x and y only.'
+  - 'Suggestion: an unused ELEVATED_BG constant could be dropped, since no legend
+    or callout box is drawn.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines. Professional and clean.
-      Chrome: Title "scatter-annotated · letsplot · anyplot.ai" is bold and clearly visible in dark text. Axis labels "Annual Revenue ($ millions)" and "Profit Margin (%)" are readable in dark gray. Tick labels and company name annotations are all legible against the light background.
-      Data: 15 data points in brand green (#009E73) with 0.7 alpha transparency. Company name annotations positioned with slight upward nudge (nudge_y=1.5) to avoid direct point overlap. Each label is readable and identifiable.
-      Legibility verdict: PASS - All text elements (title, axis labels, ticks, annotations) are clearly readable with excellent contrast against the light background.
+      Background: warm off-white #FAF8F1, subtle light-gray grid on both axes, thin dark-gray frame around the panel on all four sides.
+      Chrome: bold dark title "scatter-annotated · python · letsplot · anyplot.ai" top-left; axis titles "Annual Revenue ($ millions)" and "Profit Margin (%)" in dark ink; tick labels in INK_SOFT - all readable.
+      Data: 15 translucent #009E73 markers; each company name in dark-gray text, repelled to various sides with short dark-gray leader lines; no label collides with another label or a marker.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle grid lines visible. Professional dark theme implementation.
-      Chrome: Title is now in light text, clearly visible. Axis labels and tick labels are rendered in light gray (INK_SOFT adapted to dark theme #B8B7B0). All text elements maintain excellent contrast against the dark background - no dark-on-dark failures.
-      Data: Data point colors are identical to the light render (#009E73 green), confirming proper theme separation between data (constant) and chrome (adaptive). Company name annotations in light gray text are clearly readable.
-      Legibility verdict: PASS - All text elements are readable in the dark theme. Chrome (backgrounds, text, grid) has flipped appropriately while data colors remain constant. No dark-on-dark text visibility issues detected.
+      Background: warm near-black #1A1A17, subtle dark-gray grid, gray frame on all four sides.
+      Chrome: title and axis titles in light ink, ticks in light gray INK_SOFT - no dark-on-dark text.
+      Data: same #009E73 markers and same label layout as the light render; labels and leader lines in light gray, readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -55,73 +59,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and company annotations all clearly
-          readable in both light and dark renders
+        comment: Title 16 pt, axis titles 12 pt, ticks 10 pt, labels 4 mm (~11 pt)
+          all set explicitly and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Most labels positioned well with nudge_y, minor overlap in clustered
-          regions (ByteWorks/SmartScale)
+        comment: geom_text_repel keeps all 15 labels clear of each other and of the
+          markers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and labels clearly visible with appropriate transparency
+        comment: 15 sparse markers at size 4, alpha 0.7, clearly visible on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green (#009E73) is CVD-safe and high contrast
+        comment: Single Imprint green series, text contrast high in both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Excellent proportions, generous margins, nothing cut off
+        passed: false
+        comment: 3200x1800 canvas correct; a four-sided frame encloses the panel instead
+          of the L-shaped left/bottom spines (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels include units, title follows spec format
+        comment: Annual Revenue ($ millions), Profit Margin (%) - descriptive with
+          units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds correct (#FAF8F1 light, #1A1A17
-          dark), both renders theme-correct'
+        comment: '#009E73 first series, #FAF8F1 / #1A1A17 backgrounds, chrome flips
+          correctly'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Clean design using theme tokens and brand color, but lacks distinctive
-          visual sophistication
+        passed: true
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, Imprint green;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Minimal theme applied, subtle grid, good whitespace, but minimal
-          customization
+        comment: Subtle grid at the 15 % token; no refinement beyond the grid rules
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Scatter plot clearly shows revenue vs profit relationship with annotations,
-          but could emphasize outliers more
+        comment: All points treated equally; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -129,26 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with text annotations
+        comment: Scatter with per-point text labels
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All required features present: scatter points with text label annotations'
+        passed: false
+        comment: Repelled labels with leader lines and translucent markers present
+          (C1, C2, C4); leader lines are solid INK_SOFT strokes as heavy as the label
+          text, not subtler than markers and text (C3, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=revenue, Y=profit margin, labels=company names, all mapped correctly
+        comment: Markers at their data values; only labels are repelled
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format '{spec-id} · {library} · anyplot.ai', no
-          legend needed for single series
+        comment: Title scatter-annotated · python · letsplot · anyplot.ai; single
+          series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -158,21 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 company data points with annotations demonstrating plot type features
+        comment: 15 labeled points, offsets of different lengths and sides, two clusters
+          and outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Company revenue and profit margins realistic and neutral business
-          context
+        comment: Fictional companies, revenue vs profit margin - plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue 50-520 millions, profit margin 5-35% - realistic business
-          metrics
+        comment: 'Revenue 75-520 $M, margins 6-32 %: sensible; no Check values in
+          the spec'
     code_quality:
       score: 10
       max: 10
@@ -182,33 +188,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward implementation without unnecessary complexity
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42), repel seed=7
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used (numpy, pandas, lets_plot, os, pathlib)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate use of library features, clean theme implementation
+        comment: Native geom_text_repel instead of hand-placed offsets; limits from
+          data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with ggsave
+        comment: plot-{THEME}.png at scale 4 and plot-{THEME}.html via ggsave
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -216,24 +223,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses ggplot API idiomatically: ggplot(), geom_point, geom_text,
-          scale_y_continuous, labs, theme_minimal'
+        comment: Column constants read directly as axis titles (no labs for axes),
+          theme composition over theme_minimal
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: 'Uses letsplot-specific features: geom_text with nudge_y, element_text/line/rect/blank,
-          theme composition'
+        comment: lets-plot's native geom_text_repel with point_padding/box_padding/seed
+          tuning
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T09:57:58Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - publication-ready
   - alpha-blending
+  - grid-styling
