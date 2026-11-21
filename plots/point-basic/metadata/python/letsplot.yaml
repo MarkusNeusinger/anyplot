@@ -2,47 +2,49 @@ library: letsplot
 language: python
 specification_id: point-basic
 created: '2025-12-30T09:34:53Z'
-updated: '2026-05-11T17:33:19Z'
-generated_by: claude-haiku
-workflow_run: 25685727391
+updated: '2026-11-21T03:23:53Z'
+generated_by: claude-sonnet
+workflow_run: 44860352477
 issue: 2551
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 80
 review:
   strengths:
-  - Perfect theme implementation with consistent token usage across both renders
-  - Correct geom_pointrange choice is idiomatic for point-estimate plots
-  - Clean, professional appearance with thoughtful horizontal layout improving readability
-  - Reference line at x=0 anchors null hypothesis and provides narrative context
-  - High-quality reproducible code with seed, clean imports, and readable variable
-    names
-  - Full compliance with specification and AnyPlot style guide
+  - Capped geom_errorbar intervals with hollow shape-21 markers filled with the page
+    colour keep every estimate distinct on its interval line in both themes
+  - Horizontal coord_flip layout names every category on its own row, with one dashed
+    reference line at the null value
+  - 'Theme tokens thread through every chrome element; text is readable on both #FAF8F1
+    and #1A1A17'
+  - Column constants and a replaceable data block make the script directly adaptable
+    to a user's table
   weaknesses:
-  - 'Limited design sophistication: no custom palette variations or visual emphasis
-    techniques'
-  - 'Minimal visual refinement: grid customization present but otherwise mostly default
-    styling'
-  - 'No distinctive letsplot features: competent but doesn''t leverage advanced capabilities
-    like layer composition, custom legends, or hover interactivity'
+  - 'DE-02 (both): the panel is drawn with all four spines (a full frame) → only the
+    left and bottom axis lines, per the style guide''s L-shaped default. Likely cause:
+    lets-plot''s default panel border is kept; set panel_border=element_blank() and
+    keep axis_line.'
+  - 'DQ-02 (both): the groups are labelled ''Treatment A'', ''Treatment B'', ''Treatment
+    C'', which read as placeholders → name concrete interventions (e.g. drug or dose
+    names). Likely cause: the GROUP label list in the data block.'
+  - 'Suggestion: ordering the treatment rows by estimate would let the eye rank them
+    faster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "point-basic · letsplot · anyplot.ai" (24pt, dark INK), subtitle explaining plot (dark INK), y-axis label "Treatment Group" (20pt, dark INK), x-axis label "Effect Size (95% CI)" (20pt, dark INK), tick labels in dark INK_SOFT (#4A4A44) — all clearly visible against light background
-      Data: Five treatment groups (Treatment A/B/C, Control, Placebo) with point estimates and 95% confidence intervals rendered in brand green (#009E73); dashed reference line at x=0 in INK_SOFT; subtle vertical grid lines in RULE token (rgba opacity)
-      Legibility verdict: PASS — all text readable, no light-on-light issues, strong contrast on light surface
+      Background: warm off-white #FAF8F1 across canvas and panel
+      Chrome: title 'point-basic · python · letsplot · anyplot.ai' top-left in dark INK, y-axis title 'Treatment group', x-axis title 'Effect size (95% CI)', tick labels 0-7 in 0.5 steps and category names in INK_SOFT; subtle vertical grid at each category row; full four-sided panel frame
+      Data: five rows (Treatment A bottom, then B, C, Control, Placebo top); #009E73 horizontal error bars with vertical end caps and hollow green-outlined circles at the estimates; grey dashed reference line at 0
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title and axis labels in light INK (#F0EFE8), clearly visible against dark background; tick labels in light INK_SOFT (#B8B7B0), soft gray readable against dark surface — no dark-on-dark failures detected
-      Data: Identical point estimates and confidence intervals in same brand green (#009E73) as light render (confirming data colors are theme-independent); dashed reference line in INK_SOFT; subtle vertical grid lines in RULE token; subtitle visible
-      Legibility verdict: PASS — all text readable, proper theme adaptation, data colors identical to light render, no legibility issues
-
-    Both renders pass theme-readability check. Chrome (backgrounds, text, grid, reference line) properly adapted to light/dark themes while Okabe-Ito data colors (#009E73) remain constant.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and tick labels in light INK/INK_SOFT, all readable; no dark-on-dark text; grid and frame faint but visible
+      Data: identical #009E73 error bars, caps and hollow markers (marker fill flips to the dark page colour); dashed reference line light grey
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,73 +55,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (24pt), axis labels (20pt), tick labels (16pt) all readable
-          in both themes with proper INK/INK_SOFT tokens
+        comment: Title 16 pt, axis titles 12 pt, ticks 10 pt explicitly set; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All category labels distinct; point values and confidence intervals
-          clearly separated
+        comment: No text collisions; category labels, ticks and marks all clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points, error bars, reference line, and grid all visible and appropriately
-          sized
+        comment: Hollow shape-21 markers at size 6 with 1.5 stroke stand clearly on
+          their interval lines; caps visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 CVD-safe; adequate contrast on both light and
-          dark backgrounds'
+        comment: Single brand green on both surfaces; no colour-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape (4800×2700px); generous whitespace; nothing cut off
+        comment: 3200x1800 canvas; title ~40% of width; nothing cut off; balanced
+          axis labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Effect Size (95% CI)" with units; "Treatment Group" descriptive;
-          title correct'
+        comment: '''Effect size (95% CI)'' and ''Treatment group'' are descriptive
+          reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; backgrounds #FAF8F1/#1A1A17 ✓; theme-adaptive
-          chrome correct ✓'
+        comment: 'Single series #009E73; backgrounds #FAF8F1/#1A1A17; chrome from
+          theme tokens'
     design_excellence:
-      score: 11
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Intentional theme-aware design but straightforward without custom
-          palette or dramatic emphasis
+        passed: true
+        comment: Style-guide baseline (tokens, explicit sizes, brand green); nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 1
         max: 6
         passed: false
-        comment: Grid customization present but minimal overall styling refinement
+        comment: Panel drawn with all four spines, against the style guide's L-shaped
+          default (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Reference line provides context but no dramatic visual hierarchy
-          or emphasis
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +130,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Point estimate plot with geom_pointrange is correct
+        comment: Correct point-estimate plot; only the allowed single reference line
+          at zero
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Points, CIs, categories, reference line all present
+        comment: Horizontal layout, distinct markers, capped error bars, reference
+          line, every category named (C1-C5 met; treatments then Control and Placebo
+          is a natural order)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x→group, y→estimate, ymin/ymax→bounds; all data visible
+        comment: Markers at their estimates, intervals from lower to upper bound;
+          value axis spans every interval
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend unnecessary (single series); axis labels
-          descriptive
+        comment: Title 'point-basic · python · letsplot · anyplot.ai' correct; single
+          series needs no legend (N/A)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -158,19 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Five categories with varying effect sizes (1.8–5.8) and CI widths
+        comment: Five categories with different estimates and interval widths show
+          every aspect of the plot type
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Treatment efficacy study is realistic and neutral
+        passed: false
+        comment: Clinical effect-size context is plausible and neutral, but 'Treatment
+          A/B/C' are generic placeholder labels (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Effect sizes sensible; CI widths appropriate; x-axis scales well
+        comment: Effect sizes 1.8-5.8 with 0.6-1.1 half-widths are sensible; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -180,56 +188,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward linear flow
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, numpy, pandas, lets_plot'
+        comment: os, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Readable variable names; appropriate complexity; no fake UI
+        comment: Bounds computed from estimates and half-widths; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html; current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ggplot + aes, geom_pointrange, coord_flip, element_* theme API all
-          idiomatic
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
+        passed: true
+        comment: 'Standard ggplot grammar: geom_errorbar + geom_point + coord_flip;
+          nothing beyond the default'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
         passed: false
-        comment: Theme system demonstrates library command; lacks advanced features
-          like layer composition or custom legend
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-21T03:20:10Z'
 impl_tags:
   dependencies: []
   techniques:
+  - coord-flip
+  - error-bars
+  - reference-line
   - html-export
   patterns:
-  - data-generation
+  - explicit-dataframe
+  - column-constants
   dataprep: []
   styling:
-  - grid-styling
+  - theme-adaptive
+  - hollow-markers
+  - minimal-chrome
