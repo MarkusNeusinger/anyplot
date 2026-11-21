@@ -7,4 +7,5 @@
   the column that way instead of saying that it already is. The assistant
   never saw the paste's note about that guess, only the dates as ISO dates
   (`2024-04-03`). Now the column's profile says which order its cells were
-  read in, and the field changes when the column is re-read.
+  read in, the field changes when the column is re-read, and the assistant's
+  instructions point to that field instead of the note.
