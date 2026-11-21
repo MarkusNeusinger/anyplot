@@ -2,44 +2,51 @@ library: plotnine
 language: python
 specification_id: contour-density
 created: '2025-12-30T09:35:01Z'
-updated: '2026-05-16T03:41:11Z'
-generated_by: claude-haiku
-workflow_run: 25951577757
+updated: '2026-11-21T21:39:37Z'
+generated_by: claude-sonnet
+workflow_run: 44952198085
 issue: 2552
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and zero readability issues in
-    both themes
-  - Flawless spec compliance and data mapping
-  - Clean, reproducible code with proper KISS structure
-  - 'Expert plotnine usage: idiomatic grammar of graphics with proper layer composition'
-  - Both light and dark renders execute theme adaptation perfectly (data colors constant,
-    chrome adaptive)
-  - 'Clear data storytelling: three density clusters immediately visible and visually
-    emphasized'
-  - Realistic, neutral example data with appropriate domain scales
-  weaknesses: []
+  - Native geom_density_2d with stat_density_2d(levels=12) computes the KDE and draws
+    twelve nested contour levels; each of the three clusters sits inside its own set
+    of rings and the bridging saddles between them stay visible
+  - 'Smoothing fits the data: no islands around single points, and the three clusters
+    of different size and spread stay separate'
+  - Scatter overlay drawn as small faint INK_SOFT points (alpha 0.15) at their exact
+    values, so the contours remain the main signal in both themes
+  - 'Canonical 3200x1800 canvas and the full mandated title, with theme tokens threaded
+    through every chrome element; data color #009E73 identical in both renders'
+  - Short, linear, seeded script with the axis titles taken from the column constants
+  weaknesses:
+  - 'DE-02 (both): all four panel spines are drawn as a closed box where nothing in
+    a density contour plot requires an enclosed frame → L-shaped frame (left and bottom)
+    or none. Likely cause: panel_border=element_rect(color=INK_SOFT, fill=None).'
+  - 'DQ-02 (both): the scenario reads as generic: ''Temperature (°C)'' against ''Pressure
+    (kPa)'' names no process or system the three clusters belong to → name the concrete
+    source, e.g. ''Reactor temperature (°C)'' / ''Vessel pressure (kPa)''. Likely
+    cause: the TEMPERATURE and PRESSURE column constants.'
+  - 'Suggestion: varying the contour weight or alpha by level would make the density
+    gradient readable at a glance without a color channel.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all clearly visible in dark text
-      Data: Twelve contour lines in #009E73 (teal) showing three distinct density clusters; background points in soft gray
-      Grid: Subtle and non-competing with data
-      Legibility verdict: PASS - all text perfectly readable
+      Background: warm off-white #FAF8F1 on canvas and panel; 3200x1800 landscape
+      Chrome: title "contour-density · python · plotnine · anyplot.ai" in dark INK, ~55% of the width; axis titles "Temperature (°C)" and "Pressure (kPa)" in dark ink, tick labels (25/50/75, 20-80) in INK_SOFT; very faint grid; closed INK_SOFT panel border on all four sides
+      Data: twelve #009E73 density contour lines forming three nested ring systems (large cluster near 50 °C/44 kPa, tighter one near 75/70, small one near 30/76) joined by outer saddle contours; ~600 faint grey points at alpha 0.15; outer contours cut at the panel edge
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title, axis labels, tick labels in light text (#F0EFE8, #4A4A44), all clearly visible
-      Data: Contour colors identical to light render (#009E73); background points in lighter gray
-      Grid: Subtle and balanced
-      Legibility verdict: PASS - no dark-on-dark issues, all text readable against dark background
+      Background: warm near-black #1A1A17 on canvas and panel
+      Chrome: title and axis titles in light #F0EFE8, ticks in light grey #B8B7B0, light panel border; no dark-on-dark text
+      Data: same #009E73 contours as the light render; points in light grey at the same alpha, faint but visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,68 +57,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly sized (title 24pt, labels 20pt, ticks 16pt);
-          perfect readability in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt; all readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no text collisions
+        comment: No text collisions; point/contour overlap is translucent and expected
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 contour levels all visible; background points optimally transparent
+        comment: Contours clearly visible; ~600 points small and faint as density
+          calls for
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 has excellent contrast; CVD-safe'
+        comment: Single hue, no red-green signal, good contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70% with balanced margins
+        comment: Canonical 3200x1800 canvas, balanced margins, title ~55% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels with units; correct title format
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct for both themes; text
-          colors theme-adapted'
+        comment: '#009E73 contours, correct #FAF8F1/#1A1A17 backgrounds, chrome theme-adapted'
     design_excellence:
-      score: 16
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional polish with thoughtful transparency and theme tokens;
-          well above defaults
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 1
         max: 6
-        passed: true
-        comment: Subtle grid, minimal spines, generous whitespace
+        passed: false
+        comment: Subtle grid, but a closed four-sided panel border where an L-frame
+          or none is the baseline (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Three clusters immediately visible; visual hierarchy guides viewer
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -121,27 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D density contour plot
+        comment: Correct 2D KDE contour plot with optional scatter overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Contour lines, bivariate distribution, clusters all present
+        comment: C1 nested rings per cluster, C2 twelve levels (color does not encode
+          density, so no legend needed), C3 smoothing fits, C4 faint points; C5 n/a
+          (no fill)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show full range
+        comment: X/Y correct, marks at their values, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend appropriately omitted
+        comment: Mandated title format; legend correctly omitted for one series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -149,19 +158,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all contour-density aspects
+        comment: Three clusters of different size and spread, saddle regions and sparse
+          tails show all aspects
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Temperature vs Pressure is plausible and neutral
+        passed: false
+        comment: 'Plausible and neutral, but generic: no process named (defect line)'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually correct and realistic
+        comment: Values plausible for °C/kPa; spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -171,54 +181,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → plot → save
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png format
+        comment: Saves plot-{THEME}.png with current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Exemplary plotnine grammar of graphics
+        passed: false
+        comment: Grammar-of-graphics layering with geom_density_2d + geom_point; standard
+          usage
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses stat_density_2d with custom levels; proper layer composition
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T21:36:22Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - alpha-blending
