@@ -1,7 +1,7 @@
 """ anyplot.ai
 box-horizontal: Horizontal Box Plot
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-12
+Quality: 75/100 | Updated: 2026-05-12
 """
 
 import os
