@@ -2,54 +2,52 @@ library: plotly
 language: python
 specification_id: volcano-basic
 created: '2025-12-31T05:32:16Z'
-updated: '2026-05-14T11:15:04Z'
-generated_by: claude-haiku
-workflow_run: 25856747998
+updated: '2026-11-21T15:53:09Z'
+generated_by: claude-sonnet
+workflow_run: 44920900917
 issue: 2924
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 84
 review:
   strengths:
-  - 'Perfect visual quality: all text readable in both light and dark renders with
-    no legibility failures'
-  - 'Full spec compliance: all required features (thresholds, colors, annotations)
-    correctly implemented'
-  - 'Proper theme adaptation: theme-adaptive chrome perfectly executed; data colors
-    identical across renders'
-  - 'Excellent data quality: realistic simulated gene expression with good statistical
-    distribution'
-  - 'Professional code: clean, reproducible, well-structured, and idiomatic plotly
-    usage'
-  - 'Smart visual hierarchy: opacity (0.4 vs 0.8) and size (9px vs 12px) effectively
-    emphasize significant genes'
+  - Native add_hline/add_vline threshold lines at -log10(0.05) and ±1, dashed in INK_SOFT
+    and visible through the points in both themes
+  - 'Semantic exception applied correctly: up-regulated in matte red #AE3030, down-regulated
+    in #4467A3, gray non-significant mass at lower size and opacity'
+  - Clean six-zone adaptable script with column constants and a data block that a
+    user can swap for their own table
+  - hovertemplate carries gene name, log2FC and -log10(p) for the interactive HTML
+    view
   weaknesses:
-  - Design Excellence could be enhanced with additional visual refinement techniques
-    (marker edge colors for definition)
-  - Library Mastery could leverage more advanced plotly interactive features beyond
-    hover tooltips
+  - 'VQ-07 (both): the non-significant points use the INK_SOFT chrome token (#4A4A44
+    / #B8B7B0), a text color rather than an Imprint data color or anchor → the theme-adaptive
+    muted anchor (#6B6A63 light / #A8A79F dark). Likely cause: INK_SOFT passed as
+    the ''Not significant'' group color.'
+  - 'DQ-02 (both): the labelled features read as placeholders (Gene_354, Gene_201,
+    Gene_402, Gene_273, Gene_162) → plausible gene symbols for the features. Likely
+    cause: GENE column built as f"Gene_{i}".'
+  - 'Suggestion: a slightly darker annotation arrow color would tie the labels to
+    their points more firmly in the light render.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct)
-      Chrome: Title (28px), axis labels (22px), tick labels (18px) all rendered in dark text (INK #1A1A17) - all clearly readable against light surface
-      Data: Gray non-significant points (opacity 0.4, center); blue down-regulated (Okabe-Ito #0072B2, opacity 0.8, left); orange up-regulated (Okabe-Ito #D55E00, opacity 0.8, right). Five top genes labeled with arrows. Legend positioned upper-left with border.
-      Threshold lines: Dashed, visible (horizontal at ~1.3, vertical at ±1)
-      Legibility verdict: PASS - All text is clearly readable; no contrast failures
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'volcano-basic · python · plotly · anyplot.ai' centered in dark ink; axis titles 'log₂ fold change' and '-log₁₀(p-value)' and ticks in dark/soft ink; subtle grid; framed legend upper-left on the elevated surface (Not significant / Down-regulated / Up-regulated)
+      Data: ~500 points; gray non-significant mass at the base, blue down-regulated arm on the left, red up-regulated arm on the right; dashed threshold lines at y≈1.3 and x=±1; five top up-regulated genes labelled with arrows (Gene_354, Gene_201, Gene_402, Gene_273, Gene_162)
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct)
-      Chrome: Title, axis labels, tick labels all rendered in light text (INK #F0EFE8 for primary, INK_SOFT #B8B7B0 for secondary) - all clearly readable against dark surface
-      Data: Blue and orange colors are IDENTICAL to light render (only chrome adapted). Gray points visible with proper opacity. Gene annotations in light text, clearly distinguishable.
-      Threshold lines: Dashed, visible, consistent with light render
-      Grid: Subtle, visible, not overwhelming
-      Legibility verdict: PASS - All text is clearly readable; no dark-on-dark text failures detected. Complete theme adaptation with data color preservation.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles, ticks, legend text and gene labels in light ink; threshold lines in light gray; grid subtle; no dark-on-dark text
+      Data: red and blue identical to the light render; gray mass flips to a lighter gray with the theme
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,69 +55,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both themes with proper sizing and theme-adaptive
-          colors
+        comment: Title 16, axis titles 12, ticks 10, gene labels 10 px at scale 4;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no collisions; annotations positioned with arrows
+        comment: No text collisions; the five gene labels sit clear of each other
+          and of the colored points
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Opacity-based emphasis (0.4 vs 0.8), size variation (9px vs 12px),
-          threshold lines dashed
+        comment: '500 points: gray mass at 5 px / alpha 0.4, significant points 7
+          px / alpha 0.8; dashed threshold lines visible in both themes; legend glyphs
+          constant-sized and matching'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; not relying on red-green alone
+        comment: Red/blue split plus gray; not a red-green signal; good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, generous margins, proper whitespace
+        comment: 3200x1800 canvas, balanced margins, title ~37% of width, axis labels
+          balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format; axes descriptive with units
+        comment: log₂ fold change and -log₁₀(p-value), unitless quantities named correctly
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Correct backgrounds (#FAF8F1 light, #1A1A17 dark); data colors from
-          Okabe-Ito; both renders theme-correct'
+        comment: 'Up = #AE3030 and down = #4467A3 via the semantic exception; backgrounds
+          correct; but the non-significant gray uses the INK_SOFT chrome token instead
+          of the muted anchor (defect line)'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
         passed: true
-        comment: Professional polish with intentional color semantics and hierarchy
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, framed legend
+          on the elevated surface'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good: dashed threshold lines, legend border styling, subtle grid'
+        comment: Gene labels placed with cycled arrow offsets so neighbouring names
+          stay apart; constant legend glyph sizing
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Clear visual hierarchy; top gene annotations direct attention; effective
-          narrative
+        comment: Size and opacity hierarchy (5 px/0.4 vs 7 px/0.8) pushes the significant
+          arms forward against the gray mass
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +133,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct volcano scatter plot
+        comment: Volcano scatter; only the threshold lines, status colors and a few
+          top labels the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All thresholds, colors, opacity, labels present
+        comment: Horizontal line at 1.3, vertical lines at ±1, gray/red/blue status
+          colors, alpha, top-5 labels — all C1–C5 bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct; data properly distributed
+        comment: Points at their values; y range from data; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend matches spec
+        comment: Title 'volcano-basic · python · plotly · anyplot.ai'; legend labels
+          Not significant / Down-regulated / Up-regulated
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -157,19 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full volcano plot feature set demonstrated
+        comment: Both arms, gray base mass, empty-ish center wedge, labelled top hits
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Biologically plausible gene expression data
+        comment: Plausible differential-expression scenario, but features named Gene_0…Gene_499
+          (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Typical fold-change and p-value ranges for genomics
+        comment: 'log2FC within ±4.4, -log10(p) up to ~3.2: realistic; no Check values
+          in spec'
     code_quality:
       score: 10
       max: 10
@@ -179,33 +188,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct script, no unnecessary complexity
+        comment: Flat script in the six zones, column constants with role comments
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for determinism
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Readable and appropriate complexity
+        comment: Group table loop and native add_hline/add_vline; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file format and current API
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -213,21 +223,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper go.Figure() patterns and theme-adaptive colors
+        comment: go.Figure with one trace per status group, add_hline/add_vline for
+          the thresholds, layout dicts — idiomatic plotly
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses plotly's hover tooltips and HTML export
+        passed: false
+        comment: hovertemplate with gene name, log2FC and -log10(p) via text= for
+          the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T15:49:31Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - publication-ready
+  - grid-styling
