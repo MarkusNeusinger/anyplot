@@ -995,6 +995,21 @@ class TestLeanCode:
         assert 'Installed packages are not "dependencies" to avoid' in section
         assert "(CQ-04 includes the lean-code rule below)" in content
 
+    def test_regen_prompt_keeps_a_square_plot_square(self) -> None:
+        """Three matplotlib regenerations of 2026-11-21 replaced a trimmed square figure by the landscape pair and
+        shrank a Venn diagram and two equal-axes plots to the middle of the canvas."""
+        content = (WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md").read_text()
+        step = content[content.index("## Step 0: Canvas dimensions") : content.index("## Step 1:")]
+        assert "The orientation is not one of the historical values" in step
+        assert '(a square figure that `bbox_inches="tight"` trimmed to an odd size counts as square)' in step
+        assert "or its plot keeps a 1:1 aspect, the canonical pair is the square one" in step
+        assert "Venn diagrams, circle packing, polar charts, a plot drawn with equal axes" in step
+        for library in ("matplotlib.md", "seaborn.md"):
+            square = next(
+                line for line in (LIBRARY_PROMPTS_DIR / library).read_text().splitlines() if "# Square" in line
+            )
+            assert "only for" not in square and "Venn, polar, equal axes" in square
+
     def test_regen_prompt_applies_only_a_named_replacement(self) -> None:
         content = (WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md").read_text()
         assert "A `CQ-04` weakness names its replacement: apply exactly that replacement" in content
