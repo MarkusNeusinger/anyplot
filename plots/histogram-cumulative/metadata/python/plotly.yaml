@@ -2,44 +2,59 @@ library: plotly
 language: python
 specification_id: histogram-cumulative
 created: '2025-12-30T09:31:29Z'
-updated: '2026-05-11T22:42:04Z'
-generated_by: claude-haiku
-workflow_run: 25701351140
+updated: '2026-11-21T03:33:55Z'
+generated_by: claude-sonnet
+workflow_run: 44861199751
 issue: 2549
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 86
 review:
   strengths:
-  - Perfect text legibility across both themes
-  - Correct cumulative histogram implementation with Plotly's native feature
-  - Clear percentile reference lines and markers enhance readability
-  - Theme-adaptive styling fully correct (both renders readable)
-  - Realistic test score data with intentional distribution
-  - Proper Okabe-Ito color compliance (#009E73 brand green)
-  - Well-structured code with good reproducibility (seeded RNG)
+  - Uses Plotly's native go.Histogram with cumulative=dict(enabled=True) and histnorm='percent',
+    so binning, accumulation and normalization are computed by the library and the
+    levels reach exactly 100 % at the last bin
+  - Contiguous adjacent bars with no gaps keep every bin readable as a discrete step
+    while the shape rises monotonically from 0
+  - 'Theme tokens are threaded through every chrome element: title and axis titles
+    in INK, ticks and legend text in INK_SOFT, guides in INK_SOFT, legend on ELEVATED_BG;
+    both renders read cleanly'
+  - Quartile drop lines run from each marker to both axes, so the 25/50/75 % score
+    thresholds can be read directly off the x and y axes
+  - hovertemplate gives score threshold and cumulative percentage per bin in the HTML
+    view
+  - 'Clean adaptable structure: theme tokens, column constant, data block, plot block
+    reading only df; all imports used, seeded default_rng'
   weaknesses:
-  - Design refinement could be enhanced with custom spines or subtle grid styling
-  - Library mastery could explore more distinctive Plotly features beyond basic implementation
+  - 'VQ-02 (both): the "50%" label sits across the top-left corner of the 65–70 bin
+    and the "75%" label clips into the left edge of the 80–85 bin, so part of each
+    label is drawn over the green bars → keep the labels on the page background clear
+    of the bars. Likely cause: textposition="top left" with the 11 px textfont on
+    markers that sit inside the bars.'
+  - 'Suggestion: a single-series legend reading "Cumulative distribution" repeats
+    what the y-axis title already says; it could be dropped to free the upper-left
+    corner.'
+  - 'Suggestion: a marker fill in the page color would make the quartile markers read
+    as hollow targets instead of green-on-green.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "histogram-cumulative · plotly · anyplot.ai" clearly readable (28px dark text). Axis labels "Test Score (points)" and "Cumulative Proportion (%)" are clearly visible in 22px dark text. Tick labels (0, 20, 40, 60, 80, 100) in 18px dark text. All readable with excellent contrast.
-      Data: Green histogram bars (#009E73 brand color) showing proper monotonic increasing cumulative distribution. Three percentile reference lines (dashed, in INK_SOFT #4A4A44) at 25%, 50%, 75% with corresponding markers and text labels. Legend box contains "Cumulative Distribution".
-      Legibility verdict: PASS - All elements highly readable against light background
+      Background: warm off-white #FAF8F1 on paper and plot area, 3200x1800.
+      Chrome: title "histogram-cumulative · python · plotly · anyplot.ai" centered in dark INK; x-axis "Test score (points)" 0–100, y-axis "Cumulative proportion (%)" 0–105 with ticks 0–100 in INK_SOFT; subtle grid; boxed legend "Cumulative distribution" on an elevated fill in the empty upper-left corner. All readable.
+      Data: brand green #009E73 adjacent cumulative bars in 5-point bins from 25 to 100, rising monotonically from ~0 % to 100 % at the last bin. Dashed INK_SOFT drop lines from the 25/50/75 % quartile markers (ink outline) to both axes, labelled "25%", "50%", "75%"; the 50 % and 75 % labels partly overlap the bar tops.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title clearly visible in light text. Axis labels and tick labels all readable with excellent contrast against dark background. No dark-on-dark failures - all text uses appropriate light tokens.
-      Data: Identical green histogram bars (#009E73 - data color preserved from light render). Same reference lines and markers with appropriate visibility. Legend readable.
-      Legibility verdict: PASS - All elements readable, no dark-on-dark issues, chrome properly themed
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light INK, ticks and legend text in light INK_SOFT; legend on #242420 with light border; grid subtle but visible. No dark-on-dark text.
+      Data: identical #009E73 bars and quartile markers (light outline), light dashed drop lines; data colors match the light render exactly.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,68 +62,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable at scale in both themes - title 28px, axis labels
-          22px, ticks 18px
+        comment: Title 16 px, axis titles 13 px, ticks/legend 11 px at scale 4, at
+          or above the style-guide reference; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping elements, percentile labels well-positioned
+        passed: false
+        comment: The 50% and 75% labels partly overlap the bar tops (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, markers, and reference lines clearly visible
+        comment: Bars, drop lines and quartile markers clearly visible; legend swatch
+          matches the bars in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 is CVD-safe with good contrast'
+        comment: Single brand-green series with ink guides; strong contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, generous margins
+        comment: 3200x1800, balanced margins, title ~44 % width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, axis labels descriptive with units
+        comment: Test score (points), Cumulative proportion (%) – descriptive with
+          units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand color #009E73, correct backgrounds #FAF8F1/#1A1A17, theme-correct
-          both renders'
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, theme-correct
+          chrome'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Clean professional design with intentional percentile reference lines
-          and markers
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, two-tier INK/INK_SOFT
+          text; nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Good whitespace and subtle grid, minimal custom styling
+        passed: false
+        comment: Legend placed in the empty upper-left region away from the data instead
+          of over the bars
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Clear visual hierarchy, percentile guides aid interpretation
+        passed: false
+        comment: Quartile drop lines to both axes make the 25/50/75 % thresholds the
+          focal points, a choice beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative histogram with monotonic increasing steps
+        comment: Cumulative histogram with adjacent bars; spec is not -basic, quartile
+          guides support the percentile application
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative histogram, cumulative proportion on Y-axis, percentile
-          reference lines
+        comment: C1 monotonic per-bin levels, C2 y axis from 0 labelled cumulative
+          proportion reaching 100 %, C3 discrete bins as adjacent bars, guides distinguishable
+          – all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: test scores 0-105, Y: cumulative proportion 0-105%, all data
-          shown'
+        comment: Score on x, cumulative percent on y; all data shown, marks at their
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct, legend labels match
+        comment: Title exactly histogram-cumulative · python · plotly · anyplot.ai;
+          legend label reads for a reader
     data_quality:
       score: 15
       max: 15
@@ -148,20 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects of cumulative histogram shown with percentile reference
-          context
+        comment: Flat early run, steep middle rise and flattening top all visible
+          from the three-group mixture
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test scores with realistic bimodal distribution, clipped to 0-100
+        comment: Test scores of 500 students in three performance groups, clipped
+          to 0–100; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ranges 0-105% sensible for test score domain
+        comment: 'Checked: last bin reaches 100 %, y starts at 0, scores within 0–100;
+          no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -171,54 +195,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary abstractions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) for deterministic data
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, all used
+        comment: os, numpy, pandas, plotly.graph_objects – all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Accumulation left to the native cumulative histogram; quantiles via
+          np.percentile; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and .html output
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Good use of go.Figure, add_trace, native cumulative feature, hovertemplate
+        passed: false
+        comment: go.Histogram with cumulative and histnorm instead of precomputing
+          counts; hovertemplate per trace
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses Plotly's cumulative histogram feature and hover templates
+        passed: false
+        comment: Plotly's native cumulative histogram with histnorm='percent' and
+          rich hover templates in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T03:30:23Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
+  - binning
   - cumulative-sum
-  styling: []
+  styling:
+  - grid-styling

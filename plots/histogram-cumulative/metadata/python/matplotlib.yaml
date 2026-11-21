@@ -12,37 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 97
+quality_score: 75
 review:
   strengths:
-  - Dual histogram representation (step outline + filled area) creates sophisticated
-    visual clarity
-  - Percentile bands with carefully positioned annotations demonstrate professional
-    design thinking and add valuable context
-  - Theme adaptation is flawlessly executed with perfect legibility in both light
-    and dark renders
-  - Code is clean, idiomatic matplotlib following best practices with proper theme
-    token implementation
-  - Realistic bimodal data distribution effectively demonstrates cumulative histogram
-    use cases
-  - Comprehensive theme-adaptive styling across all elements (backgrounds, text, grid,
-    spines, legend, annotations)
-  weaknesses: []
+  - Native ax.hist(cumulative=True, density=True) in histtype='step' over 'stepfilled'
+    shows 30 discrete bins rising to 1.0
+  - Percentile guides with computed values at each crossing
+  - Theme tokens threaded through every chrome element; both renders read cleanly
+  weaknesses:
+  - 'VQ-05 (both): canvas is 4766x2670, not a canonical size → 3200x1800 (-1566 x
+    -870). Likely cause: figsize=(16, 9) with savefig dpi=300 and bbox_inches=''tight'';
+    use figsize=(8, 4.5), dpi=400 and no bbox_inches.'
+  - 'SC-04 (both): title ''histogram-cumulative · matplotlib · anyplot.ai'' lacks
+    the language segment → ''histogram-cumulative · python · matplotlib · anyplot.ai''.
+    Likely cause: the set_title string.'
+  - 'VQ-02 (both): the violet reference lines cross the percentile label boxes (the
+    58.4 vertical through the 75th and 90th boxes) → place each box clear of the dashed
+    lines. Likely cause: the hand-set xytext positions for p == 75 and p == 90.'
+  - 'CQ-01 (code): line 32 ends the Data block with `scores = np.clip(scores, 0, 100)`,
+    not a statement that binds df, there is no column constant for the numeric role,
+    and line 40 plots `scores` from the Data block → one Data block ending in df with
+    a SCORE column constant, read only df below it. Likely cause: the data is kept
+    as a bare array.'
+  - 'CQ-04 (code): `n, bins, patches` on line 39 are never used and the `if leg:`
+    guard on line 102 can never be false → drop the assignment and the guard. Likely
+    cause: leftover scaffolding.'
+  - 'Suggestion: the 75th and 90th labels sit far left of their crossings; anchoring
+    them closer would tie each label to its point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - exactly as specified, not pure white
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all dark text (INK/INK_SOFT tokens), clearly readable. Grid subtle at 15% opacity. Legend frame light elevated background. Annotation boxes with rounded corners.
-      Data: Brand green (#009E73) step line with light-filled area underneath. Orange (#D55E00) percentile markers (horizontal and vertical dashed lines). Four percentile annotations (25th, 50th, 75th, 90th) with values.
-      Legibility verdict: PASS - All text readable, no light-on-light failures, proper contrast throughout.
+      Background: warm off-white #FAF8F1, canvas 4766x2670.
+      Chrome: title 'histogram-cumulative · matplotlib · anyplot.ai' in dark ink, axis titles 'Exam Score (points)' and 'Cumulative Probability', large ticks in INK_SOFT, subtle grid, legend lower right; all readable.
+      Data: #009E73 step line with a 20 % fill rising from about 27 to 1.0 at 100, the closing edge on the right axis limit; four violet dashed percentile guides with label boxes (25th ≈ 58, 50th ≈ 69, 75th ≈ 82, 90th ≈ 88).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - exactly as specified, not pure black
-      Chrome: Title, axis labels, tick labels now light text, clearly readable against dark background. Grid subtle. Legend frame dark elevated background. Annotation boxes dark with light text.
-      Data: Brand green (#009E73) and orange (#D55E00) colors identical to light render - confirms proper theme adaptation. Only chrome has flipped.
-      Legibility verdict: PASS - All text readable, NO dark-on-dark failures detected, proper contrast throughout. Brand green remains visible and legible.
+      Background: warm near-black #1A1A17.
+      Chrome: light text throughout, dark elevated label boxes, no dark-on-dark text.
+      Data: identical green step and violet guides; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -50,74 +61,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized (24pt title, 20pt axis, 16pt ticks) and colored
-          for both themes
+        comment: Title 24 pt, axis titles 20 pt, ticks 16 pt on a 16x9 figure, all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Annotation boxes positioned carefully to avoid collisions
+        passed: false
+        comment: The violet reference lines run through the percentile label boxes;
+          the 75th label box sits on the 0.75 line (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line (linewidth=3), filled area, percentile markers all clearly
-          visible and distinguishable
+        comment: Step line at 2 px with a 20 % fill, reference lines visible but secondary;
+          legend swatch matches the step
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00), CVD-safe, no red-green-only
-          coding'
+        comment: Green step against violet references, both CVD-distinct; good contrast
+          in both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 16:9 landscape format, proper margins, tight_layout applied
+        passed: false
+        comment: Canvas 4766x2670, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units, spec-id title format correct
+        comment: Exam Score (points) with units, Cumulative Probability
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, flawless theme
-          adaptation'
+        comment: 'Step in #009E73, references in Imprint position 2, backgrounds #FAF8F1
+          / #1A1A17, chrome theme-correct'
     design_excellence:
-      score: 18
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: Dual histogram (step + stepfilled), percentile bands, custom annotation
-          boxes with rounded corners
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, nothing beyond
+          it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: L-shaped frame, subtle grid (alpha=0.15), generous whitespace, theme-adaptive
-          legend styling
+        passed: false
+        comment: Spine and grid rules met, nothing beyond; label boxes sit far from
+          their crossings
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Clear visual hierarchy, percentile annotations guide viewer, filled
-          area conveys accumulation
+        passed: false
+        comment: Quartile and 90th-percentile guides turn the curve into a threshold
+          reader, a focal choice beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -125,27 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Cumulative histogram correctly implemented with histtype=step and
-          cumulative=True
+        comment: Cumulative step histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative probability, percentile visualization, threshold determination
-          all present
+        comment: Steps contiguous and monotone, the closing edge falls on the right
+          axis limit at 100
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (0-100), Y-axis (0-1 cumulative), all data visible
+        comment: Scores on x (0-100), cumulative proportion on y, 30 contiguous bins
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Format correct: histogram-cumulative · matplotlib · anyplot.ai'
+        passed: false
+        comment: Title histogram-cumulative · matplotlib · anyplot.ai lacks the python
+          segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -155,73 +167,77 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Step function, filled area, percentile bands comprehensively demonstrate
-          plot type
+        comment: Steep middle rise, flattening top and an empty left tail show the
+          ogive shape
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Exam scores realistic, bimodal distribution plausible, neutral domain
+        comment: Exam scores from three performer groups, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 bins appropriate, y-axis scale 0-1.05 standard for cumulative
+        comment: Scores 0-100, proportion reaches 1.0 at 100; percentile labels (58/69/82/88)
+          match their crossings
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: No unnecessary functions, straightforward implementation
+        passed: false
+        comment: Data block ends in a bare array, no column constant, plot reads scores
+          directly (defect lines)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy—all necessary
+        comment: os, matplotlib.pyplot, numpy all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI, no AR-08 violations, clean matplotlib patterns
+        passed: false
+        comment: Unused n, bins, patches and a dead `if leg:` guard (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, current API
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Axes methods, spine manipulation, legend frame styling all idiomatic
-          matplotlib
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Dual histogram rendering, percentile bands, custom annotation styling
-          demonstrates library mastery
+        passed: false
+        comment: ax.hist with cumulative/density/histtype, annotate with textcoords='offset
+          points' anchored to the data crossing
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Layered histtype='step' over 'stepfilled' from the same hist call
+          family; nothing more distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
 impl_tags:
   dependencies: []
   techniques:
