@@ -320,7 +320,7 @@ the case for most specs; existing specs get their sources in later passes. The r
   Nothing else is allowed in an entry.
 - `url` is an `http` or `https` address.
 - `doi` is the bare DOI (`10.1000/xyz123`), not a resolver address.
-- `isbn` is an ISBN-10 or ISBN-13, quoted, with or without hyphens.
+- `isbn` is an ISBN-10 or ISBN-13, quoted, with or without hyphens, and its check digit must fit.
 - A key that is present has a value; leave a key out instead of writing `null`.
 
 Cite a work the way it cites itself, and name no person in the entry unless the author

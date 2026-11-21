@@ -75,6 +75,14 @@ class TestSoundBlocks:
         entry = {"title": "A book", "url": "https://example.org/b", "isbn": isbn}
         assert sources_problems({"references": [entry]}) == []
 
+    @pytest.mark.parametrize("isbn", ["9783161484101", "978-3-16-148410-9", "0-306-40615-3", "0804429570"])
+    def test_an_isbn_with_a_wrong_check_digit_fails(self, isbn: str) -> None:
+        entry = {"title": "A book", "url": "https://example.org/b", "isbn": isbn}
+        problems = sources_problems({"references": [entry]})
+        assert problems == [
+            f"sources.references[0].isbn: not an ISBN-10 or ISBN-13 with a fitting check digit: {isbn!r}"
+        ], problems
+
 
 class TestBadBlocks:
     @pytest.mark.parametrize(

@@ -26,6 +26,41 @@ from core.database.repositories import (
 pytestmark = pytest.mark.integration
 
 
+class TestSpecSourcesColumn:
+    """The storage contract of `specs.sources` that the API deploy order relies on."""
+
+    async def test_sources_round_trip_sql_null_and_loaded_only_on_request(self, test_session):
+        from sqlalchemy import inspect, text
+        from sqlalchemy.orm import undefer
+
+        from core.database.models import Spec
+
+        block = {"references": [{"title": "An example textbook", "url": "https://example.org/book"}]}
+        test_session.add_all(
+            [
+                Spec(id="with-sources", title="With sources", sources=block),
+                Spec(id="without-sources", title="Without sources", sources=None),
+            ]
+        )
+        await test_session.commit()
+        test_session.expunge_all()
+
+        # None is stored as SQL NULL, not as the JSON value null, so `IS NULL` finds exactly the spec without sources.
+        null_ids = (await test_session.execute(text("SELECT id FROM specs WHERE sources IS NULL"))).scalars().all()
+        assert set(null_ids) == {"without-sources"}
+
+        # A plain select leaves the deferred column unloaded: no existing query names it.
+        spec = (await test_session.execute(select(Spec).where(Spec.id == "with-sources"))).scalar_one()
+        assert "sources" in inspect(spec).unloaded
+        test_session.expunge_all()
+
+        # Asked for with undefer, the block comes back as stored.
+        loaded = (
+            await test_session.execute(select(Spec).where(Spec.id == "with-sources").options(undefer(Spec.sources)))
+        ).scalar_one()
+        assert loaded.sources == block
+
+
 class TestSpecRepository:
     """Integration tests for SpecRepository."""
 

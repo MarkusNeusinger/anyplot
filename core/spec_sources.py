@@ -51,6 +51,17 @@ DOI_PATTERN = re.compile(r"10\.\d{4,9}/[-._;()/:A-Za-z0-9]+")
 ISBN_PATTERN = re.compile(r"\d{9}[\dX]|\d{13}")
 
 
+def _is_isbn(value: str) -> bool:
+    """An ISBN-10 or ISBN-13 whose check digit fits, so a mistyped digit is caught and not stored as a source."""
+    digits = re.sub(r"[- ]", "", value)
+    if not ISBN_PATTERN.fullmatch(digits):
+        return False
+    if len(digits) == 10:
+        total = sum((10 - i) * (10 if char == "X" else int(char)) for i, char in enumerate(digits))
+        return total % 11 == 0
+    return sum((1 if i % 2 == 0 else 3) * int(char) for i, char in enumerate(digits)) % 10 == 0
+
+
 def _is_web_address(value: str) -> bool:
     if any(char.isspace() for char in value):
         return False
@@ -80,8 +91,8 @@ def _entry_problems(where: str, entry: object) -> list[str]:
             problems.append(f"{where}.url: not an http or https address: {value!r}")
         elif key == "doi" and not DOI_PATTERN.fullmatch(value):
             problems.append(f"{where}.doi: not a DOI of the form 10.<prefix>/<suffix> (no resolver URL): {value!r}")
-        elif key == "isbn" and not ISBN_PATTERN.fullmatch(re.sub(r"[- ]", "", value)):
-            problems.append(f"{where}.isbn: not an ISBN-10 or ISBN-13: {value!r}")
+        elif key == "isbn" and not _is_isbn(value):
+            problems.append(f"{where}.isbn: not an ISBN-10 or ISBN-13 with a fitting check digit: {value!r}")
     return problems
 
 
