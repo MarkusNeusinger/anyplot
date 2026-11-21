@@ -3,7 +3,7 @@
 The `sources` block of a spec's `specification.yaml` (core/spec_sources.py): the
 works that gave the idea for the plot (`inspired_by`), the literature its values
 follow (`references`), and where its example data comes from (`data`). The
-database sync stores the block as normalised JSON, and NULL when the spec names
+database sync stores the block as normalized JSON, and NULL when the spec names
 no source, which is every spec when this revision lands.
 
 Revision ID: 21d93eb1afd4

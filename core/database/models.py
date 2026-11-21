@@ -71,10 +71,10 @@ class Spec(Base):
     tags: Mapped[dict[str, Any] | None] = mapped_column(
         UniversalJSON, nullable=True
     )  # {plot_type, data_type, domain, features}
-    # The `sources` block in the form core/spec_sources.py normalises it to; SQL NULL when the spec names none
-    # (none_as_null, so `sources IS NULL` finds them). Deferred: only the loaders by id read it
-    # (SpecRepository.get_by_id*). The listing queries never name the column, so an API revision that is up
-    # before the migration fails only on those, not on every page.
+    # The `sources` block in the form core/spec_sources.py normalizes it to; SQL NULL when the spec names none
+    # (none_as_null, so `sources IS NULL` finds them). Deferred: a query names the column only when it asks for
+    # it with `undefer`, so an API revision that is up before the migration fails only on such queries, not on
+    # every page.
     sources: Mapped[dict[str, Any] | None] = deferred(mapped_column(UniversalJSON(none_as_null=True), nullable=True))
 
     # System

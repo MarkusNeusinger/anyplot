@@ -811,7 +811,7 @@ review:
 
 
 class TestScanSources:
-    """The `sources` block of specification.yaml reaches the spec row checked and normalised (core/spec_sources.py)."""
+    """The `sources` block of specification.yaml reaches the spec row checked and normalized (core/spec_sources.py)."""
 
     def _scan(self, tmp_path, sources_yaml: str = "") -> dict:
         plot_dir = tmp_path / "line-example"
@@ -829,7 +829,7 @@ class TestScanSources:
         assert "sources" in spec, "every spec row carries the key, so the batched insert has the same columns"
         assert spec["sources"] is None
 
-    def test_a_sound_block_is_stored_normalised(self, tmp_path):
+    def test_a_sound_block_is_stored_normalized(self, tmp_path):
         spec = self._scan(
             tmp_path,
             "sources:\n"
