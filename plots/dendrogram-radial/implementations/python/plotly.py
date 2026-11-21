@@ -1,12 +1,13 @@
 """ anyplot.ai
 dendrogram-radial: Radial Dendrogram
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 81/100 | Created: 2026-05-14
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-21
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from scipy.cluster.hierarchy import dendrogram as scipy_dendrogram
 from scipy.cluster.hierarchy import linkage
@@ -21,10 +22,17 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
-SPECIES = ["Setosa", "Versicolor", "Virginica"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: 12 samples per iris species (36 leaves total)
+# Column constants
+LABEL = "Sample"  # role: labels
+CLUSTER = "Species"  # role: clusters
+SEPAL_LENGTH = "Sepal length (cm)"  # role: extra
+SEPAL_WIDTH = "Sepal width (cm)"  # role: extra
+PETAL_LENGTH = "Petal length (cm)"  # role: extra
+PETAL_WIDTH = "Petal width (cm)"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("samples.csv")
 np.random.seed(42)
 iris = load_iris()
 picks = []
@@ -33,15 +41,17 @@ for cls in range(3):
     picks.extend(np.random.choice(idx, 12, replace=False).tolist())
 picks = np.array(picks)
 
-X = StandardScaler().fit_transform(iris.data[picks])
-y = iris.target[picks]
+species_names = ["Setosa", "Versicolor", "Virginica"]
+df = pd.DataFrame(iris.data[picks], columns=[SEPAL_LENGTH, SEPAL_WIDTH, PETAL_LENGTH, PETAL_WIDTH])
+df[CLUSTER] = [species_names[c] for c in iris.target[picks]]
+rank = df.groupby(CLUSTER, sort=False).cumcount() + 1
+df[LABEL] = df[CLUSTER].str[:2] + "-" + rank.astype(str).str.zfill(2)
 
-species_count = [0, 0, 0]
-labels = []
-for cls in y:
-    species_count[cls] += 1
-    prefix = ["Se", "Ve", "Vi"][cls]
-    labels.append(f"{prefix}-{species_count[cls]:02d}")
+# Plot
+SPECIES = list(dict.fromkeys(df[CLUSTER]))
+y = np.array([SPECIES.index(sp) for sp in df[CLUSTER]])
+labels = df[LABEL].tolist()
+X = StandardScaler().fit_transform(df.select_dtypes("number").to_numpy())
 
 # Linkage and dendrogram leaf order
 Z = linkage(X, method="ward")
@@ -101,7 +111,7 @@ for i, row in enumerate(Z):
             x=[radii[left] * np.cos(la), node_r * np.cos(la)],
             y=[radii[left] * np.sin(la), node_r * np.sin(la)],
             mode="lines",
-            line={"color": branch_color(left), "width": 2.5},
+            line={"color": branch_color(left), "width": 1.5},
             showlegend=False,
             hoverinfo="skip",
         )
@@ -114,7 +124,7 @@ for i, row in enumerate(Z):
             x=[radii[right] * np.cos(ra), node_r * np.cos(ra)],
             y=[radii[right] * np.sin(ra), node_r * np.sin(ra)],
             mode="lines",
-            line={"color": branch_color(right), "width": 2.5},
+            line={"color": branch_color(right), "width": 1.5},
             showlegend=False,
             hoverinfo="skip",
         )
@@ -129,7 +139,7 @@ for i, row in enumerate(Z):
             x=node_r * np.cos(arc_t),
             y=node_r * np.sin(arc_t),
             mode="lines",
-            line={"color": branch_color(node_id), "width": 2.5},
+            line={"color": branch_color(node_id), "width": 1.5},
             showlegend=False,
             hoverinfo="skip",
         )
@@ -142,7 +152,7 @@ traces.append(
         x=np.cos(leaf_rad),
         y=np.sin(leaf_rad),
         mode="markers",
-        marker={"color": [IMPRINT[y[i]] for i in range(n_leaves)], "size": 10, "line": {"color": PAGE_BG, "width": 1.5}},
+        marker={"color": [IMPRINT[y[i]] for i in range(n_leaves)], "size": 6, "line": {"color": PAGE_BG, "width": 1.5}},
         showlegend=False,
         hovertext=[f"{labels[i]} · {SPECIES[y[i]]}" for i in range(n_leaves)],
         hoverinfo="text",
@@ -156,8 +166,8 @@ for idx, species in enumerate(SPECIES):
             x=[None],
             y=[None],
             mode="markers+lines",
-            marker={"color": IMPRINT[idx], "size": 12},
-            line={"color": IMPRINT[idx], "width": 3},
+            marker={"color": IMPRINT[idx], "size": 8},
+            line={"color": IMPRINT[idx], "width": 2},
             name=species,
             showlegend=True,
         )
@@ -179,7 +189,7 @@ for leaf in range(n_leaves):
             "x": lx,
             "y": ly,
             "text": labels[leaf],
-            "font": {"size": 10, "color": IMPRINT[y[leaf]]},
+            "font": {"size": 8, "color": IMPRINT[y[leaf]]},
             "showarrow": False,
             "xanchor": xanchor,
             "yanchor": yanchor,
@@ -188,24 +198,32 @@ for leaf in range(n_leaves):
 
 fig.update_layout(
     title={
-        "text": "Iris Species Clustering · dendrogram-radial · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "Iris Species Clustering · dendrogram-radial · python · plotly · anyplot.ai",
+        "font": {"size": 13, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.97,
+        "y": 0.98,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     showlegend=True,
     legend={
-        "x": 0.02, "y": 0.98, "bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "borderwidth": 1, "font": {"color": INK_SOFT, "size": 16}
+        "x": 0.02,
+        "y": 0.98,
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "font": {"color": INK_SOFT, "size": 9},
     },
     xaxis={"visible": False, "scaleanchor": "y", "scaleratio": 1, "range": [-1.38, 1.38]},
     yaxis={"visible": False, "range": [-1.38, 1.38]},
     annotations=annotations,
-    margin={"l": 60, "r": 60, "t": 100, "b": 60},
+    autosize=False,
+    width=600,
+    height=600,
+    margin={"l": 20, "r": 20, "t": 50, "b": 20},
 )
 
-fig.write_image(f"plot-{THEME}.png", width=1200, height=1200, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
