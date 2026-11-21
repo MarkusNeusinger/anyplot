@@ -12,4 +12,4 @@
   only `specification.yaml` files now runs the unit tests too. The
   Postgres sync stores the block in a new column `specs.sources`
   (migration `21d93eb1afd4`), NULL for a spec that names none. No spec
-  names a source yet; existing specs get theirs in later passes.
+  names a source yet; existing specs get theirs in later passes. (#13386)

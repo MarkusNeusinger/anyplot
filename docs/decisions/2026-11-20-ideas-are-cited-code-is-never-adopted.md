@@ -11,4 +11,4 @@
   answer on the decision page, with his reason: code never needs to be taken over, because nobody
   claims the data is correct; it only has to look correct and so be illustrative, and what is taken
   over are ideas.
-- Where: `docs/reference/repository.md`, `core/spec_sources.py`
+- Where: #13386
