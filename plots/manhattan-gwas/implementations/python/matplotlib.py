@@ -1,7 +1,7 @@
 """ anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-15
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-21
 """
 
 import os
@@ -17,57 +17,38 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
 
-# Okabe-Ito palette for chromosome alternation
-CHROM_COLORS = ["#009E73", "#C475FD"]  # Brand green and vermillion, alternating
+# Imprint palette: position 1 is the brand green, positions 1 and 2 alternate across chromosomes
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
 
-# Data - Simulate GWAS results for 22 chromosomes
+# Constants
+GENOME_WIDE_P = 5e-8  # conventional genome-wide significance threshold
+SUGGESTIVE_P = 1e-5  # conventional suggestive threshold
+CHROMOSOME_GAP = 10_000_000  # base pairs of empty space between neighbouring chromosomes
+
+# Columns: set these to your table's column names
+CHROMOSOME = "Chromosome"  # role: chromosome
+POSITION = "Position (bp)"  # role: position
+P_VALUE = "p-value"  # role: p_value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("gwas.csv")
 np.random.seed(42)
-
-# Define chromosome sizes (approximate in Mb, scaled down for simulation)
-chrom_sizes = {
-    1: 249,
-    2: 243,
-    3: 198,
-    4: 191,
-    5: 182,
-    6: 171,
-    7: 159,
-    8: 146,
-    9: 141,
-    10: 136,
-    11: 135,
-    12: 134,
-    13: 115,
-    14: 107,
-    15: 103,
-    16: 90,
-    17: 81,
-    18: 78,
-    19: 59,
-    20: 63,
-    21: 48,
-    22: 51,
-}
-
-# Generate SNPs for each chromosome
+chrom_sizes_mb = [249, 243, 198, 191, 182, 171, 159, 146, 141, 136, 135, 134, 115, 107, 103, 90, 81, 78, 59, 63, 48, 51]
 chromosomes = []
 positions = []
 p_values = []
-
-for chrom, size in chrom_sizes.items():
+for chrom, size in enumerate(chrom_sizes_mb, start=1):
     n_snps = int(size * 40)
     chrom_positions = np.sort(np.random.randint(1, size * 1_000_000, n_snps))
-
     chrom_pvals = np.random.uniform(0, 1, n_snps)
 
-    # Add some significant SNPs in certain chromosomes
+    # Strong association peaks on a few chromosomes
     if chrom in [2, 6, 11, 16]:
         peak_idx = np.random.choice(n_snps, size=np.random.randint(3, 8), replace=False)
         chrom_pvals[peak_idx] = 10 ** (-np.random.uniform(8, 15, len(peak_idx)))
 
-    # Add suggestive hits in more chromosomes
+    # Suggestive hits on others
     if chrom in [1, 3, 8, 12, 19]:
         suggestive_idx = np.random.choice(n_snps, size=np.random.randint(2, 5), replace=False)
         chrom_pvals[suggestive_idx] = 10 ** (-np.random.uniform(5, 7.5, len(suggestive_idx)))
@@ -75,117 +56,80 @@ for chrom, size in chrom_sizes.items():
     chromosomes.extend([chrom] * n_snps)
     positions.extend(chrom_positions)
     p_values.extend(chrom_pvals)
+df = pd.DataFrame({CHROMOSOME: chromosomes, POSITION: positions, P_VALUE: p_values})
 
-# Create DataFrame
-df = pd.DataFrame({"chromosome": chromosomes, "position": positions, "p_value": p_values})
+# Plot: reads only df and the constants above
+neg_log_p = -np.log10(df[P_VALUE])
+genome_wide_threshold = -np.log10(GENOME_WIDE_P)
+suggestive_threshold = -np.log10(SUGGESTIVE_P)
 
-# Calculate -log10(p-value)
-df["-log10p"] = -np.log10(df["p_value"])
+# Lay chromosomes end to end: each one starts after the previous one's last position plus a gap
+chrom_end = df.groupby(CHROMOSOME, sort=False)[POSITION].max()
+chrom_start = (chrom_end + CHROMOSOME_GAP).cumsum().shift(fill_value=0)
+cumulative_pos = df[POSITION] + df[CHROMOSOME].map(chrom_start)
+chrom_centers = chrom_start + df.groupby(CHROMOSOME, sort=False)[POSITION].median()
+significant = neg_log_p >= genome_wide_threshold
 
-# Calculate cumulative position for x-axis
-df["chrom_num"] = df["chromosome"]
-df = df.sort_values(["chrom_num", "position"]).reset_index(drop=True)
-
-# Add cumulative position offset
-chrom_centers = {}
-cumulative_offset = 0
-for chrom in sorted(df["chrom_num"].unique()):
-    chrom_mask = df["chrom_num"] == chrom
-    chrom_data = df.loc[chrom_mask].copy()
-    chrom_positions = chrom_data["position"].values + cumulative_offset
-    df.loc[chrom_mask, "cumulative_pos"] = chrom_positions
-    chrom_centers[chrom] = cumulative_offset + chrom_data["position"].median()
-    cumulative_offset += chrom_data["position"].max() + 10_000_000
-
-# Define thresholds
-genome_wide_threshold = -np.log10(5e-8)
-suggestive_threshold = -np.log10(1e-5)
-
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot points by chromosome with alternating Okabe-Ito colors
-for i, chrom in enumerate(sorted(df["chrom_num"].unique())):
-    chrom_data = df[df["chrom_num"] == chrom]
-    color = CHROM_COLORS[i % 2]
+# Alternating colors by chromosome order; points above the genome-wide line are emphasised
+for i, chrom in enumerate(chrom_centers.index):
+    rows = (df[CHROMOSOME] == chrom) & ~significant
+    ax.scatter(cumulative_pos[rows], neg_log_p[rows], color=IMPRINT_PALETTE[i % 2], s=4, alpha=0.6, edgecolors="none")
+ax.scatter(
+    cumulative_pos[significant],
+    neg_log_p[significant],
+    color=BRAND,
+    s=14,
+    alpha=0.9,
+    edgecolors=INK_SOFT,
+    linewidths=0.3,
+    zorder=5,
+)
 
-    # Smaller markers for dense data
-    significant_mask = chrom_data["-log10p"] >= genome_wide_threshold
-    regular_data = chrom_data[~significant_mask]
-    significant_data = chrom_data[significant_mask]
-
-    # Plot regular points
-    ax.scatter(
-        regular_data["cumulative_pos"],
-        regular_data["-log10p"],
-        c=color,
-        s=15,
-        alpha=0.6,
-        edgecolors="none",
-        rasterized=True,
-    )
-
-    # Plot significant points with emphasis (using brand color)
-    if len(significant_data) > 0:
-        ax.scatter(
-            significant_data["cumulative_pos"],
-            significant_data["-log10p"],
-            c=BRAND,
-            s=50,
-            alpha=0.9,
-            edgecolors=INK_SOFT,
-            linewidths=0.5,
-            zorder=5,
-            rasterized=True,
-        )
-
-# Add threshold lines
+# Threshold lines
 ax.axhline(
-    y=genome_wide_threshold,
+    genome_wide_threshold,
     color=INK_SOFT,
     linestyle="--",
-    linewidth=2,
-    label="Genome-wide significance (p < 5×10⁻⁸)",
+    linewidth=1.2,
     alpha=0.6,
+    label=f"Genome-wide significance (p < {GENOME_WIDE_P:.0e})",
 )
 ax.axhline(
-    y=suggestive_threshold,
+    suggestive_threshold,
     color=INK_SOFT,
     linestyle=":",
-    linewidth=2,
-    label="Suggestive threshold (p < 1×10⁻⁵)",
-    alpha=0.4,
+    linewidth=1.2,
+    alpha=0.5,
+    label=f"Suggestive threshold (p < {SUGGESTIVE_P:.0e})",
 )
 
-# Set x-axis with chromosome labels
-ax.set_xticks([chrom_centers[c] for c in sorted(chrom_centers.keys())])
-ax.set_xticklabels([str(c) for c in sorted(chrom_centers.keys())], fontsize=16)
-ax.set_xlim(0, df["cumulative_pos"].max() * 1.01)
-
-# Set y-axis
-ax.set_ylim(0, df["-log10p"].max() * 1.1)
-
 # Style
-ax.set_xlabel("Chromosome", fontsize=20, color=INK)
-ax.set_ylabel("-log₁₀(p-value)", fontsize=20, color=INK)
-ax.set_title("manhattan-gwas · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="y", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
-ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
-
-# Spine styling
-for spine in ("left", "bottom"):
-    ax.spines[spine].set_color(INK_SOFT)
+title = "manhattan-gwas · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+# Neighbouring labels closer than 3% of the axis span alternate onto a second row
+tick_labels = []
+lowered = False
+for gap, chrom in zip(np.diff(chrom_centers.to_numpy(), prepend=-np.inf), chrom_centers.index, strict=True):
+    lowered = gap < 0.03 * cumulative_pos.max() and not lowered
+    tick_labels.append(("\n" if lowered else "") + str(chrom))
+ax.set_xticks(chrom_centers.to_numpy(), tick_labels)
+ax.set_xlim(0, cumulative_pos.max() * 1.01)
+ax.set_ylim(0, neg_log_p.max() * 1.1)
+ax.set_xlabel(CHROMOSOME, fontsize=10, color=INK)
+ax.set_ylabel(f"-log₁₀({P_VALUE})", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
 
-# Legend
-leg = ax.legend(fontsize=16, loc="upper right", frameon=True)
-if leg:
-    leg.get_frame().set_facecolor(ELEVATED_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    for text in leg.get_texts():
-        text.set_color(INK_SOFT)
+leg = ax.legend(fontsize=8, loc="upper right", frameon=True)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
