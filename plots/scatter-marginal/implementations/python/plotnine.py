@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-marginal: Scatter Plot with Marginal Distributions
-Library: plotnine 0.15.4 | Python 3.13.13
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 79/100 | Updated: 2026-11-21
 """
 
 import os
