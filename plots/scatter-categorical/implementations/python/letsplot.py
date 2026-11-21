@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-categorical: Categorical Scatter Plot
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-12
@@ -21,61 +21,58 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Plant growth by treatment type
-np.random.seed(42)
-treatment_a = np.random.normal(loc=45, scale=8, size=40)
-growth_a = treatment_a * 1.1 + np.random.normal(loc=5, scale=6, size=40)
+# Constants
+SHAPES = [21, 22, 23, 24, 25, 21, 22, 23]  # circle, square, diamond, triangle, then repeats
 
-treatment_b = np.random.normal(loc=52, scale=9, size=35)
-growth_b = treatment_b * 0.95 + np.random.normal(loc=3, scale=7, size=35)
+# Columns
+TEMPERATURE = "Temperature (°C)"  # role: x
+GROWTH = "Growth Rate (%)"  # role: y
+TREATMENT = "Treatment"  # role: category
 
-treatment_c = np.random.normal(loc=38, scale=7, size=38)
-growth_c = treatment_c * 1.25 + np.random.normal(loc=8, scale=5, size=38)
-
-treatment_d = np.random.normal(loc=55, scale=10, size=37)
-growth_d = treatment_d * 0.85 + np.random.normal(loc=2, scale=8, size=37)
-
-df = pd.DataFrame(
-    {
-        "Temperature (°C)": np.concatenate([treatment_a, treatment_b, treatment_c, treatment_d]),
-        "Growth Rate (%)": np.concatenate([growth_a, growth_b, growth_c, growth_d]),
-        "Treatment": (["Treatment A"] * 40 + ["Treatment B"] * 35 + ["Treatment C"] * 38 + ["Treatment D"] * 37),
-    }
-)
-
-# Plot with shape variation for visual hierarchy and distinction
-plot = (
-    ggplot(df, aes(x="Temperature (°C)", y="Growth Rate (%)", color="Treatment", shape="Treatment"))
-    + geom_point(size=3.5, alpha=0.8, stroke=0.8)
-    + scale_color_manual(values=IMPRINT[:4])
-    + scale_shape_manual(values=[21, 22, 23, 24])  # Circle, square, diamond, triangle
-    + labs(
-        x="Temperature (°C)",
-        y="Growth Rate (%)",
-        title="scatter-categorical · letsplot · anyplot.ai",
-        color="Treatment",
-        shape="Treatment",
+# Data: plant growth by treatment type
+rng = np.random.default_rng(42)
+groups = [  # (name, size, temp mean, temp sd, slope, offset, noise sd)
+    ("Treatment A", 40, 45, 8, 1.10, 5, 6),
+    ("Treatment B", 35, 52, 9, 0.95, 3, 7),
+    ("Treatment C", 38, 38, 7, 1.25, 8, 5),
+    ("Treatment D", 37, 55, 10, 0.85, 2, 8),
+]
+frames = []
+for name, size, mean, sd, slope, offset, noise in groups:
+    temp = rng.normal(mean, sd, size)
+    frames.append(
+        pd.DataFrame({TEMPERATURE: temp, GROWTH: temp * slope + rng.normal(offset, noise, size), TREATMENT: name})
     )
-    + ggsize(1600, 900)
+df = pd.concat(frames, ignore_index=True)
+
+# Plot
+plot = (
+    ggplot(df, aes(x=TEMPERATURE, y=GROWTH, color=TREATMENT, fill=TREATMENT, shape=TREATMENT))
+    + geom_point(size=3, alpha=0.75, stroke=0.8)
+    + scale_color_manual(values=IMPRINT_PALETTE)
+    + scale_fill_manual(values=IMPRINT_PALETTE)
+    + scale_shape_manual(values=SHAPES)
+    + labs(title="scatter-categorical · python · letsplot · anyplot.ai")
+    + ggsize(800, 450)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=None),
         panel_grid_major=element_line(color=INK_SOFT, size=0.15),
         panel_grid_minor=element_blank(),
-        axis_title=element_text(size=20, color=INK, face="bold"),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(size=24, color=INK, face="bold"),
+        plot_title=element_text(size=16, color=INK, face="bold"),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=16, color=INK, face="bold"),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
     )
 )
 
 # Save
-export_ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=3)
+export_ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
 export_ggsave(plot, filename=f"plot-{THEME}.html", path=".")
