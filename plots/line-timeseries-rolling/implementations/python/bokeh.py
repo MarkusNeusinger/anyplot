@@ -1,7 +1,7 @@
 """anyplot.ai
 line-timeseries-rolling: Time Series with Rolling Average Overlay
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-13
+Quality: pending | Updated: 2026-05-13
 """
 
 import os
