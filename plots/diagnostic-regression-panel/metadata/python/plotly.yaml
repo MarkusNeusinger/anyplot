@@ -2,51 +2,61 @@ library: plotly
 language: python
 specification_id: diagnostic-regression-panel
 created: '2026-05-13T16:04:03Z'
-updated: '2026-05-13T16:24:27Z'
+updated: '2026-11-21T10:51:44Z'
 generated_by: claude-sonnet
-workflow_run: 25810454551
+workflow_run: 44895722238
 issue: 5242
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 81
 review:
   strengths:
-  - 'Full spec compliance: all four diagnostic subplots with LOWESS smoothers, Q-Q
-    reference, Cook''s contours at 0.5 and 1.0, and top-3 influential observation
-    labels across all panels'
-  - Excellent Okabe-Ito color discipline with deliberate semantic assignment (green=data,
-    orange=smoother, pink=Cook's contours)
-  - 'Perfect theme-adaptive chrome: both light and dark renders pass legibility checks
-    with correct backgrounds and ink tokens'
-  - Realistic apartment rental regression dataset with injected outliers and high-leverage
-    points creating informative diagnostic patterns
-  - Efficient OLS implementation using np.einsum for hat matrix computation
+  - 'All four diagnostic panels with every Notes element: zero line, LOWESS smoothers,
+    Q-Q reference, mirrored Cook''s distance contours at 0.5 and 1 labeled by level,
+    and the three highest-Cook''s-D observations labeled in every panel'
+  - 'Correct statistics: internally studentized residuals, hat values and Cook''s
+    distance computed consistently, contours placed by sqrt(D*p*(1-h)/h)'
+  - Theme-correct chrome in both renders with identical Imprint data colors (green
+    points, purple smoothers, ochre contours)
+  - Idiomatic make_subplots layout with row/col axis styling and update_annotations
+    for the subplot titles; interactive HTML keeps hover inspection
   weaknesses:
-  - Marker size=9 is slightly small for a 3600x3600 canvas divided among 4 subplots;
-    increase to size=11-13 for better visibility
-  - Helper function cook_contour() breaks KISS flat structure; inline the two contour
-    calls directly
-  - Design sophistication (DE-01) could be pushed further with more open whitespace,
-    finer tick-mark removal, or a subtle subplot panel separator treatment
+  - 'VQ-02 (both): the ''D = 1'' and ''D = 0.5'' labels sit on their own dotted contour,
+    which strikes through the text, and the Q-Q label ''191'' lands on the neighbouring
+    points → clear each label of its line and of the points by a few px (e.g. yshift
+    on the contour labels, textposition ''middle left'' or ''top left'' for 191).
+    Likely cause: textposition=''top left'' anchored on the contour''s last point
+    (line 161) and one fixed textposition=''middle right'' in labeled() (line 120).'
+  - 'VQ-06 (both): ''Fitted values'' and ''Residuals'' have no unit although they
+    are monthly rents in dollars → ''Fitted rent ($/month)'' and ''Residuals ($/month)''.
+    Likely cause: the FITTED and RESIDUALS column constants (lines 33-34).'
+  - 'CQ-01 (code): a helper function labeled() (lines 112-126) wraps the four index-label
+    traces → inline them, e.g. one loop over (x, y, row, col) tuples. Likely cause:
+    the label trace factored into a function.'
+  - 'Suggestion: the hand-written OLS, hat-value and Cook''s distance block (lines
+    52-58, 65) could come from statsmodels OLS(...).fit().get_influence() (hat_matrix_diag,
+    resid_studentized_internal, cooks_distance).'
+  - 'Suggestion: the Q-Q reference uses probplot''s least-squares line; an exact y
+    = x line would match the Notes'' 45-degree wording literally.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "diagnostic-regression-panel · plotly · anyplot.ai" at 28px dark ink, centered. Subplot titles at 20px dark ink (Residuals vs Fitted, Normal Q-Q, Scale-Location, Residuals vs Leverage). Axis labels at 22px (Fitted Values, Residuals, Theoretical Quantiles, Standardized Residuals, sqrt|Standardized Residuals|, Leverage). Tick labels at 18px in INK_SOFT. All text readable.
-      Data: Scatter points in brand green #009E73 (Okabe-Ito pos 1) with white edges, opacity=0.70. LOWESS smoothers in vermillion #D55E00 (pos 2). Cook's distance contours in reddish-purple #CC79A7 (pos 4). Top-3 outliers (15, 22, 185) labeled in muted gray text.
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas.
+      Chrome: centered title 'diagnostic-regression-panel · python · plotly · anyplot.ai' in dark ink; subplot titles Residuals vs Fitted, Normal Q-Q, Scale-Location, Residuals vs Leverage; axis titles Fitted values, Residuals, Theoretical quantiles, Standardized residuals, √|Standardized residuals|, Leverage; tick labels in soft ink; subtle grid; left and bottom axis lines only. All readable.
+      Data: 200 #009E73 points (opacity 0.7, thin page-colored outline) in every panel; purple #C475FD LOWESS in panels 1 and 3; dashed ink zero/reference lines; ochre #BD8233 dotted Cook's contours mirrored above and below zero, labeled 'D = 0.5' and 'D = 1' (labels struck through by their own contour); observations 67, 22 and 191 labeled in muted ink in all four panels ('191' in the Q-Q panel sits on neighbouring points).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
-      Chrome: Title and axis labels render in #F0EFE8 (light primary ink), tick labels in #B8B7B0 (soft ink), grid lines in low-opacity rgba. All text clearly readable against dark surface. No dark-on-dark failures.
-      Data: Colors identical to light render — brand green #009E73 scatter, vermillion #D55E00 LOWESS, reddish-purple #CC79A7 Cook's contours. Only chrome flips between themes.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subplot titles and axis titles in light ink, ticks in soft light ink, grid subtle; no dark-on-dark text.
+      Data: identical colors to the light render (green points, purple smoothers, ochre contours); reference lines flip to light ink.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,72 +64,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28px, subplot titles=20px,
-          axis labels=22px, ticks=18px, annotation text=16px. Readable in both themes.'
+        comment: All sizes set explicitly (title 14, subplot titles 12, axis titles
+          11, ticks 10, index labels 10, Cook labels 9 on the 600x600@4 canvas); the
+          title is shrunk to fit the long mandated string; everything reads in both
+          themes
       - id: VQ-02
         name: No Overlap
+        score: 5
+        max: 6
+        passed: false
+        comment: The D = 1 / D = 0.5 labels are struck through by their own dotted
+          contour, and the Q-Q label '191' sits on neighbouring points (defect line)
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Text labels positioned middle right with adequate spacing; subplot
-          panels well separated.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Markers size=9, opacity=0.70 visible but slightly small for 3600x3600
-          canvas across 4 subplots.
+        comment: 200 points at size 6, opacity 0.7 with a thin page-colored outline;
+          smoothers and contours clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, high luminance contrast, CVD-safe.
+        comment: 'Green points, purple smoothers, ochre contours, ink reference lines:
+          distinct by luminance and line style, CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced 2x2 grid with generous margins, canvas well utilized.
+        comment: 2400x2400 square canvas, balanced 2x2 grid, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All axes have descriptive labels appropriate to diagnostic plots.
+        passed: false
+        comment: '''Fitted values'' and ''Residuals'' carry no unit although the scenario
+          is monthly rent in dollars (defect line); the other titles are unitless
+          quantities'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'BRAND=#009E73 for scatter, #D55E00 LOWESS, #CC79A7 Cook''s contours.
-          Backgrounds #FAF8F1/#1A1A17. Both renders theme-correct.'
+        comment: 'Points #009E73, smoothers #C475FD, contours #BD8233 (Imprint positions
+          1, 2, 4), identical in both renders; backgrounds #FAF8F1 / #1A1A17; chrome
+          theme-correct'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Intentional color hierarchy, white marker edges. Above configured-default
-          level but not yet publication-quality.
+        passed: false
+        comment: 'The style-guide baseline: Imprint palette, theme tokens, explicit
+          sizes; nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle 10% opacity grid, mirror=False (no top/right spines), showline=True,
-          generous inter-panel spacing.
+        passed: false
+        comment: 'Beyond the baseline: page-colored marker outlines, index labels
+          in the muted ink so they sit behind the data, contour line weight stepped
+          by level'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Influential outlier labels create narrative thread through all four
-          panels; LOWESS smoothers guide interpretation.
+        passed: false
+        comment: Data displayed; the labelling hierarchy is what the Notes prescribe
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: All four required diagnostic subplots in correct 2x2 arrangement.
+        comment: Correct four-panel regression diagnostic display
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Zero reference + LOWESS, Q-Q with reference line, scale-location
-          + LOWESS, Cook's contours at 0.5 and 1.0, top-3 labels in all subplots.
+        comment: 'All Notes items present: zero line + LOWESS, Q-Q with reference
+          line, scale-location with LOWESS, mirrored Cook contours at 0.5 and 1 labeled
+          by level, top-3 Cook''s D labeled in all four panels, same point style everywhere'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All x/y assignments correct for all four diagnostic plots.
+        comment: All mappings correct; marks at their computed values; leverage y-range
+          symmetric around zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'diagnostic-regression-panel · plotly · anyplot.ai' correct.
-          No legend needed.
+        comment: Title 'diagnostic-regression-panel · python · plotly · anyplot.ai'
+          is correct; no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -159,22 +177,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Injected outliers, high-leverage points, Cook's distance highlighting,
-          Q-Q deviations all present.
+        comment: High-residual outliers, high-leverage points, Q-Q tail departures
+          and points beyond D=0.5 all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Apartment rental price linear regression — neutral, real-world scenario
-          with plausible predictors.
+        comment: 'Apartment rent regressed on floor area and bedrooms: neutral, real-world'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coefficients and residual noise realistic for apartment pricing;
-          fitted values $400-$2000 plausible.
+        comment: 'Checked: hat values, internally studentized residuals and Cook''s
+          D formulas (lines 52-65); D=0.5 contour at h=0.2 reads ~2.45 = sqrt(0.5*3*0.8/0.2);
+          fitted rents 400-2050 plausible'
     code_quality:
       score: 9
       max: 10
@@ -183,53 +201,54 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: One helper function cook_contour() defined; breaks flat KISS convention.
+        passed: false
+        comment: A helper function labeled() (lines 112-126) breaks the flat structure
+          (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All six imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; np.einsum for hat matrix is efficient. No fake UI
-          elements.
+        comment: Appropriate complexity; LOWESS and Q-Q via library calls
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (3600x3600) and plot-{THEME}.html. Correct
-          naming.
+        comment: Saves plot-{THEME}.png at 600x600 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: make_subplots, update_xaxes/yaxes with row/col selectors, update_annotations
-          — idiomatic Plotly.
+        passed: false
+        comment: make_subplots with subplot_titles, update_xaxes/update_yaxes row/col
+          selectors, update_annotations to style subplot titles, mode='text' traces
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: mode='text' for annotation labels, multi-panel subplots, HTML export.
-          Could use more Plotly-distinctive features.
+        passed: false
+        comment: Generic usage; nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T10:48:01Z'
 impl_tags:
   dependencies:
   - scipy
@@ -237,11 +256,13 @@ impl_tags:
   techniques:
   - subplots
   - annotations
-  - html-export
+  - reference-lines
   patterns:
   - data-generation
+  - matrix-construction
   dataprep:
   - regression
+  - lowess
   styling:
   - alpha-blending
   - edge-highlighting
