@@ -17,7 +17,7 @@ An alluvial diagram visualizes how entities flow or transition between discrete 
 - `value` (numeric) - count or proportion of entities in each category at each time point
 - `flow` (numeric) - magnitude of transition between categories across time points
 - Size: 3-6 time points, 3-8 categories per time point
-- Example: Election data with years as time points, parties as categories, and voter counts as values
+- Example: Invented customer counts across four quarters as time points, with subscription plans (Free, Basic, Pro, Churned) as categories
 
 ## Notes
 
@@ -26,6 +26,7 @@ An alluvial diagram visualizes how entities flow or transition between discrete 
 - Band width should be proportional to flow magnitude
 - Consider using transparency for overlapping flows to improve readability
 - Labels should clearly identify both time points (column headers) and categories (node labels at every column)
+- The data is invented: no real political party, election, or politician appears in the chart
 
 ## What a good version looks like
 
