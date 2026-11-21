@@ -1,13 +1,14 @@
 """ anyplot.ai
 gain-curve: Cumulative Gains Chart
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-11
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-21
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -18,11 +19,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always #009E73)
-OI_BRAND = "#009E73"
-OI_2 = "#C475FD"
-OI_3 = "#4467A3"
-OI_NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
+# Imprint palette: canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
 
 # Configure seaborn theme
 sns.set_theme(
@@ -42,77 +41,62 @@ sns.set_theme(
     },
 )
 
-# Set seed for reproducibility
+# Columns: set these to your table's column names
+CHURNED = "Churned (1 = yes)"  # role: y_true
+CHURN_SCORE = "Predicted churn score"  # role: y_score
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-
-# Generate synthetic classification data (customer churn scenario)
 n_samples = 1000
-
-# Create synthetic true labels with ~30% positive class (churners)
+# Customer churn scenario with ~30% positive class (churners)
 y_true = np.random.choice([0, 1], size=n_samples, p=[0.7, 0.3])
-
-# Create correlated prediction scores (simulating a reasonably good model)
+# Correlated prediction scores (a reasonably good model)
 noise = np.random.normal(0, 0.15, n_samples)
 y_score = np.clip(0.3 + 0.4 * y_true + noise, 0, 1)
+df = pd.DataFrame({CHURNED: y_true, CHURN_SCORE: y_score})
 
-# Calculate cumulative gains curve
-sorted_indices = np.argsort(y_score)[::-1]
-y_true_sorted = y_true[sorted_indices]
+# Plot: reads only df and the constants above
+# Cumulative gains: rank by score (descending), accumulate captured positives
+ranked = df.sort_values(CHURN_SCORE, ascending=False)[CHURNED].to_numpy()
+total_positives = ranked.sum()
+n_rows = len(ranked)
+gains = np.insert(np.cumsum(ranked) / total_positives * 100, 0, 0)
+population_pct = np.insert(np.arange(1, n_rows + 1) / n_rows * 100, 0, 0)
 
-total_positives = np.sum(y_true)
-cum_positives = np.cumsum(y_true_sorted)
-gains = cum_positives / total_positives * 100
-
-# Population percentage (x-axis)
-population_pct = np.arange(1, len(y_true) + 1) / len(y_true) * 100
-
-# Add origin point for complete curve
-population_pct = np.insert(population_pct, 0, 0)
-gains = np.insert(gains, 0, 0)
-
-# Calculate perfect model curve
-positive_rate = total_positives / len(y_true) * 100
+# Perfect model reaches 100% at the positive class rate, flat afterwards
+positive_rate = total_positives / n_rows * 100
 perfect_gains = np.minimum(population_pct / positive_rate * 100, 100)
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot model gain curve using Okabe-Ito brand color
-sns.lineplot(x=population_pct, y=gains, ax=ax, color=OI_BRAND, linewidth=3.5, label="Churn Prediction Model")
-
-# Plot random baseline (diagonal) using neutral color
+sns.lineplot(x=population_pct, y=gains, ax=ax, color=IMPRINT_PALETTE[0], linewidth=1.75, label="Churn Prediction Model")
 sns.lineplot(
-    x=[0, 100], y=[0, 100], ax=ax, color=OI_NEUTRAL, linewidth=2.5, linestyle="--", label="Random Selection (Baseline)"
+    x=[0, 100], y=[0, 100], ax=ax, color=NEUTRAL, linewidth=1.25, linestyle="--", label="Random Selection (Baseline)"
+)
+sns.lineplot(
+    x=population_pct,
+    y=perfect_gains,
+    ax=ax,
+    color=IMPRINT_PALETTE[1],
+    linewidth=1.25,
+    linestyle=":",
+    label="Perfect Model",
 )
 
-# Plot perfect model curve using secondary Okabe-Ito color
-sns.lineplot(x=population_pct, y=perfect_gains, ax=ax, color=OI_2, linewidth=2.5, linestyle=":", label="Perfect Model")
+# Fill between model and baseline to show model lift
+ax.fill_between(population_pct, gains, population_pct, alpha=0.2, color=IMPRINT_PALETTE[0])
 
-# Fill area between model and baseline to show model lift
-ax.fill_between(population_pct, gains, population_pct, alpha=0.2, color=OI_BRAND)
-
-# Styling
-ax.set_xlabel("Customers Targeted (%)", fontsize=20, color=INK)
-ax.set_ylabel("Churners Captured (%)", fontsize=20, color=INK)
-ax.set_title("gain-curve · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Set axis limits
+# Style
+ax.set_xlabel("Customers Targeted (%)", fontsize=10, color=INK)
+ax.set_ylabel("Churners Captured (%)", fontsize=10, color=INK)
+ax.set_title("gain-curve · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.set_xlim(0, 100)
 ax.set_ylim(0, 105)
-
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
-
-# Subtle grid
+sns.despine(ax=ax)
 ax.yaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
+ax.legend(fontsize=8, loc="upper left", framealpha=0.95)
 
-# Legend in upper left to avoid data overlap
-ax.legend(fontsize=16, loc="upper left", framealpha=0.95)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
