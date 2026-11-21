@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-annotated: Annotated Scatter Plot with Text Labels
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: pending | Updated: 2026-05-13
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-21
 """
 
 import os
