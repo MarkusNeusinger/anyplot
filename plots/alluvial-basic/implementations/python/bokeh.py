@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 49/100 | Updated: 2026-11-20
@@ -27,55 +27,57 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Columns: set these to your table's column names
-FROM_POINT = "From"  # role: time_point
-TO_POINT = "To"  # role: extra
-SOURCE = "Party at start"  # role: category
-TARGET = "Party at end"  # role: extra
-FLOW = "Voters (millions)"  # role: flow
+FROM_POINT = "From quarter"  # role: time_point
+TO_POINT = "To quarter"  # role: extra
+SOURCE = "Plan at start"  # role: category
+TARGET = "Plan at end"  # role: extra
+FLOW = "Customers (thousands)"  # role: flow
+VALUE = "Plan size (thousands)"  # role: value
 
 # Data: replace this block with your own table, for example df = pd.read_csv("flows.csv")
+# Every plan block sends out exactly what it received, so bands stay inside their blocks.
 transitions = {
-    ("2012", "2016"): [
-        ("Democratic", "Democratic", 35),
-        ("Democratic", "Independent", 5),
-        ("Democratic", "Republican", 2),
-        ("Republican", "Republican", 30),
-        ("Republican", "Independent", 4),
-        ("Republican", "Democratic", 3),
-        ("Independent", "Democratic", 4),
-        ("Independent", "Republican", 3),
-        ("Independent", "Independent", 8),
-        ("Other", "Other", 3),
-        ("Other", "Independent", 2),
-        ("Other", "Democratic", 1),
+    ("Q1", "Q2"): [
+        ("Free", "Free", 28),
+        ("Free", "Basic", 6),
+        ("Free", "Pro", 1),
+        ("Free", "Churned", 5),
+        ("Basic", "Free", 2),
+        ("Basic", "Basic", 20),
+        ("Basic", "Pro", 5),
+        ("Basic", "Churned", 3),
+        ("Pro", "Basic", 2),
+        ("Pro", "Pro", 16),
+        ("Pro", "Churned", 2),
+        ("Churned", "Churned", 10),
     ],
-    ("2016", "2020"): [
-        ("Democratic", "Democratic", 38),
-        ("Democratic", "Independent", 3),
-        ("Democratic", "Republican", 2),
-        ("Republican", "Republican", 32),
-        ("Republican", "Independent", 3),
-        ("Republican", "Democratic", 2),
-        ("Independent", "Democratic", 5),
-        ("Independent", "Republican", 4),
-        ("Independent", "Independent", 8),
-        ("Other", "Other", 2),
-        ("Other", "Independent", 2),
-        ("Other", "Republican", 1),
+    ("Q2", "Q3"): [
+        ("Free", "Free", 20),
+        ("Free", "Basic", 6),
+        ("Free", "Pro", 1),
+        ("Free", "Churned", 3),
+        ("Basic", "Free", 1),
+        ("Basic", "Basic", 18),
+        ("Basic", "Pro", 5),
+        ("Basic", "Churned", 4),
+        ("Pro", "Basic", 2),
+        ("Pro", "Pro", 18),
+        ("Pro", "Churned", 2),
+        ("Churned", "Churned", 20),
     ],
-    ("2020", "2024"): [
-        ("Democratic", "Democratic", 40),
-        ("Democratic", "Independent", 4),
-        ("Democratic", "Republican", 1),
-        ("Republican", "Republican", 34),
-        ("Republican", "Independent", 2),
-        ("Republican", "Democratic", 3),
-        ("Independent", "Democratic", 4),
-        ("Independent", "Republican", 5),
-        ("Independent", "Independent", 6),
-        ("Other", "Other", 2),
-        ("Other", "Democratic", 1),
-        ("Other", "Independent", 1),
+    ("Q3", "Q4"): [
+        ("Free", "Free", 14),
+        ("Free", "Basic", 4),
+        ("Free", "Pro", 1),
+        ("Free", "Churned", 2),
+        ("Basic", "Free", 1),
+        ("Basic", "Basic", 17),
+        ("Basic", "Pro", 5),
+        ("Basic", "Churned", 3),
+        ("Pro", "Basic", 2),
+        ("Pro", "Pro", 20),
+        ("Pro", "Churned", 2),
+        ("Churned", "Churned", 29),
     ],
 }
 df = pd.DataFrame(
@@ -85,6 +87,8 @@ df = pd.DataFrame(
         for src, dst, value in rows
     ]
 )
+# Size of the source plan at the start quarter: the sum of everything it sends on
+df[VALUE] = df.groupby([FROM_POINT, SOURCE])[FLOW].transform("sum")
 
 # Plot: reads only df and the constants above
 time_points = list(dict.fromkeys(df[FROM_POINT])) + [df[TO_POINT].iloc[-1]]
@@ -100,7 +104,7 @@ for t_idx, point in enumerate(time_points):
         sizes = df[df[TO_POINT] == point].groupby(TARGET)[FLOW].sum()
     node_heights.append({cat: float(sizes.get(cat, 0)) for cat in categories})
 
-node_width = 0.12
+node_width = 0.4
 gap = 0.05 * max(sum(h.values()) for h in node_heights)
 
 node_positions = []
@@ -146,7 +150,7 @@ p.add_layout(
     Label(
         x=(len(time_points) - 1) / 2,
         y=subtitle_y,
-        text="Voter Migration Between Parties (values in millions)",
+        text="Subscription Plan Migration Across Quarters (thousands of customers)",
         text_font_size="34pt",
         text_align="center",
         text_baseline="top",
@@ -194,26 +198,33 @@ for t_idx in range(len(time_points)):
             line_color=PAGE_BG,
             line_width=2,
         )
-        text = f"{cat} ({y_end - y_start:g}M)"
-        if t_idx == 0:
-            label = Label(
-                x=t_idx - node_width / 2 - 0.03,
-                y=(y_start + y_end) / 2,
-                text=text,
-                text_align="right",
-                text_color=INK_SOFT,
+        y_mid = (y_start + y_end) / 2
+        # Category name inside its block, where no band passes
+        p.add_layout(
+            Label(
+                x=t_idx,
+                y=y_mid,
+                text=cat,
+                text_font_size="34pt",
+                text_align="center",
+                text_baseline="middle",
+                text_color="#FAF8F1" if cat == categories[2] else "#1A1A17",
             )
-        else:
-            label = Label(
-                x=t_idx + node_width / 2 + 0.03,
-                y=(y_start + y_end) / 2,
-                text=text if t_idx == last else cat,
-                text_color=INK_SOFT if t_idx == last else INK,
-                background_fill_color=None if t_idx == last else PAGE_BG,
-                background_fill_alpha=0.0 if t_idx == last else 0.7,
+        )
+        # Block value outside the first and last column
+        if t_idx in (0, last):
+            side = -1 if t_idx == 0 else 1
+            p.add_layout(
+                Label(
+                    x=t_idx + side * (node_width / 2 + 0.03),
+                    y=y_mid,
+                    text=f"{y_end - y_start:g}",
+                    text_font_size="34pt",
+                    text_align="right" if side < 0 else "left",
+                    text_baseline="middle",
+                    text_color=INK_SOFT,
+                )
             )
-        label.update(text_font_size="26pt", text_baseline="middle")
-        p.add_layout(label)
 
 # Column headers
 for t_idx, point in enumerate(time_points):
