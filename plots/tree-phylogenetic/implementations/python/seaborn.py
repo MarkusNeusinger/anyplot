@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 tree-phylogenetic: Phylogenetic Tree Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-15
@@ -8,27 +8,56 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from matplotlib.patches import Patch
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import squareform
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for 5 clades
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Imprint palette: all eight positions, one per clade in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Define primate species for phylogenetic tree
-species = ["Human", "Chimpanzee", "Gorilla", "Orangutan", "Gibbon", "Baboon", "Macaque", "Marmoset", "Lemur", "Tarsier"]
+# Columns: set these to your table's column names
+SPECIES = "Species"  # role: species_names
+CLADE = "Clade"  # role: extra
+PARTNER = "Compared with"  # role: extra
+DISTANCE = "Evolutionary distance (million years)"  # role: branch_lengths
 
-# Create evolutionary distance matrix (symmetric)
-# Based on approximate mitochondrial DNA divergence (millions of years ago)
-base_distances = np.array(
+# Data: replace this block with your own table, for example df = pd.read_csv("distances.csv")
+# One row per pair of species: the pairwise divergence (approximate mitochondrial DNA, million years)
+species_order = [
+    "Human",
+    "Chimpanzee",
+    "Gorilla",
+    "Orangutan",
+    "Gibbon",
+    "Baboon",
+    "Macaque",
+    "Marmoset",
+    "Lemur",
+    "Tarsier",
+]
+clade_of = {
+    "Human": "Great Apes",
+    "Chimpanzee": "Great Apes",
+    "Gorilla": "Great Apes",
+    "Orangutan": "Lesser Apes",
+    "Gibbon": "Lesser Apes",
+    "Baboon": "Old World Monkeys",
+    "Macaque": "Old World Monkeys",
+    "Marmoset": "New World Monkeys",
+    "Lemur": "Prosimians",
+    "Tarsier": "Prosimians",
+}
+pairwise = np.array(
     [
         [0, 6, 9, 14, 18, 25, 25, 35, 55, 58],  # Human
         [6, 0, 9, 14, 18, 25, 25, 35, 55, 58],  # Chimpanzee
@@ -42,59 +71,32 @@ base_distances = np.array(
         [58, 58, 58, 58, 58, 58, 58, 58, 50, 0],  # Tarsier
     ]
 )
+df = pd.DataFrame(
+    {
+        SPECIES: np.repeat(species_order, len(species_order)),
+        CLADE: [clade_of[s] for s in np.repeat(species_order, len(species_order))],
+        PARTNER: species_order * len(species_order),
+        DISTANCE: pairwise.ravel(),
+    }
+)
 
-# Convert distance matrix to condensed form for hierarchical clustering
-condensed_distances = squareform(base_distances)
-
-# Perform hierarchical clustering using UPGMA (average linkage)
-linkage_matrix = linkage(condensed_distances, method="average")
-
-# Map species to clade index for consistent coloring
-clade_mapping = {
-    "Human": 0,  # Great Apes -> Okabe-Ito[0]
-    "Chimpanzee": 0,
-    "Gorilla": 0,
-    "Orangutan": 1,  # Lesser Apes -> Okabe-Ito[1]
-    "Gibbon": 1,
-    "Baboon": 2,  # Old World Monkeys -> Okabe-Ito[2]
-    "Macaque": 2,
-    "Marmoset": 3,  # New World Monkeys -> Okabe-Ito[3]
-    "Lemur": 4,  # Prosimians -> Okabe-Ito[4]
-    "Tarsier": 4,
-}
-
-clade_names = ["Great Apes", "Lesser Apes", "Old World Monkeys", "New World Monkeys", "Prosimians"]
-clade_colors = [IMPRINT[i] for i in range(5)]
-
-# Build color mapping for dendrogram links
-leaf_colors = [IMPRINT[clade_mapping[s]] for s in species]
+# Plot: reads only df and the constants above
+species = list(df[SPECIES].unique())
+matrix = df.pivot_table(index=SPECIES, columns=PARTNER, values=DISTANCE, sort=False).loc[species, species]
+species_clade = df.drop_duplicates(SPECIES).set_index(SPECIES)[CLADE]
+clades = list(species_clade.unique())
+clade_color = {clade: IMPRINT_PALETTE[i] for i, clade in enumerate(clades)}
+leaf_colors = [clade_color[species_clade[s]] for s in species]
 n = len(species)
 
-# Create inline link color list for all links in dendrogram
-link_colors = []
-for i in range(len(linkage_matrix)):
-    cluster_idx = i
-    left_child = int(linkage_matrix[cluster_idx, 0])
-    right_child = int(linkage_matrix[cluster_idx, 1])
+# UPGMA tree from the pairwise distances
+linkage_matrix = linkage(squareform(matrix.to_numpy(dtype=float), checks=False), method="average")
 
-    # Get colors of both children
-    def get_color(node_id):
-        if node_id < n:
-            return leaf_colors[node_id]
-        else:
-            child_idx = int(node_id - n)
-            left_id = int(linkage_matrix[child_idx, 0])
-            right_id = int(linkage_matrix[child_idx, 1])
-            left_color = get_color(left_id)
-            right_color = get_color(right_id)
-            return left_color if left_color == right_color else INK_SOFT
-
-    left_color = get_color(left_child)
-    right_color = get_color(right_child)
-    link_colors.append(left_color if left_color == right_color else INK_SOFT)
-
-# Create figure with theme-adaptive styling
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# A branch takes its clade's color when everything below it belongs to that clade, else the neutral ink
+node_colors = list(leaf_colors)
+for left, right, _, _ in linkage_matrix:
+    left_color, right_color = node_colors[int(left)], node_colors[int(right)]
+    node_colors.append(left_color if left_color == right_color else INK_SOFT)
 
 sns.set_theme(
     style="ticks",
@@ -113,67 +115,55 @@ sns.set_theme(
     },
 )
 
-# Plot dendrogram (phylogenetic tree) with custom clade colors
-dendro = dendrogram(
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+
+dendrogram(
     linkage_matrix,
     labels=species,
     orientation="left",
     ax=ax,
-    leaf_font_size=18,
-    link_color_func=lambda k: link_colors[k - n] if k >= n else leaf_colors[k],
+    leaf_font_size=10,
+    link_color_func=lambda k: node_colors[k],
 )
+for branches in ax.collections:
+    branches.set_linewidth(1.8)
 
-# Make branch lines thicker for improved visibility
-for line_collection in ax.collections:
-    line_collection.set_linewidth(3)
-
-# Style the dendrogram
-ax.set_xlabel("Evolutionary Distance (Million Years)", fontsize=20, fontweight="bold", color=INK)
-ax.set_title("tree-phylogenetic · seaborn · anyplot.ai", fontsize=24, fontweight="bold", pad=20, color=INK)
-
-# Adjust tick parameters for readability
-ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT)
-ax.tick_params(axis="y", labelsize=18, colors=INK_SOFT)
-
-# Add subtle grid on x-axis only
-ax.grid(axis="x", alpha=0.15, linestyle="-", linewidth=0.8, color=INK_SOFT)
+# Style
+ax.set_xlabel(DISTANCE, fontsize=10, fontweight="bold", color=INK)
+ax.set_title("tree-phylogenetic · python · seaborn · anyplot.ai", fontsize=12, fontweight="bold", pad=10, color=INK)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT)
+ax.tick_params(axis="y", labelsize=9, colors=INK_SOFT)
+ax.grid(axis="x", alpha=0.15, linestyle="-", linewidth=0.5, color=INK_SOFT)
 ax.set_axisbelow(True)
 
-# Add scale bar annotation
 ax.annotate(
     "Scale: branch length = evolutionary distance",
-    xy=(0.98, 0.02),
+    xy=(0.02, 0.03),
     xycoords="axes fraction",
-    fontsize=14,
-    ha="right",
+    fontsize=7,
+    ha="left",
     va="bottom",
     style="italic",
     color=INK_SOFT,
 )
 
-# Color the species labels based on clade
+# Tip labels take their clade's color
 for label in ax.get_yticklabels():
-    species_name = label.get_text()
-    if species_name in clade_mapping:
-        label.set_color(IMPRINT[clade_mapping[species_name]])
-        label.set_fontweight("bold")
+    label.set_color(clade_color[species_clade[label.get_text()]])
+    label.set_fontweight("bold")
 
-# Add legend for clades (positioned to avoid overlap with tree)
-legend_elements = [Patch(facecolor=IMPRINT[i], edgecolor="none", label=clade_names[i]) for i in range(5)]
 ax.legend(
-    handles=legend_elements,
-    loc="upper right",
-    fontsize=14,
-    title="Clades",
-    title_fontsize=16,
+    handles=[Patch(facecolor=clade_color[clade], edgecolor="none", label=clade) for clade in clades],
+    loc="center left",
+    bbox_to_anchor=(0.2, 0.5),
+    fontsize=7,
+    title=CLADE,
+    title_fontsize=8,
     framealpha=0.9,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
 )
 
-# Remove top and right spines for cleaner look
 sns.despine(ax=ax, top=True, right=True)
-
-# Adjust layout
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.12, right=0.84, top=0.9, bottom=0.14)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
