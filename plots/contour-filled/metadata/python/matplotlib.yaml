@@ -2,44 +2,45 @@ library: matplotlib
 language: python
 specification_id: contour-filled
 created: '2025-12-30T00:02:41Z'
-updated: '2026-05-11T13:26:28Z'
-generated_by: claude-haiku
-workflow_run: 25672353177
+updated: '2026-11-21T02:18:41Z'
+generated_by: claude-sonnet
+workflow_run: 44854582335
 issue: 2500
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Flawless visual quality with perfect text legibility in both themes
-  - Excellent theme adaptation - chrome properly switches between light and dark while
-    data colors remain identical
-  - Perfect specification compliance - filled contours, overlay lines, colorbar, and
-    proper title format all present
-  - Realistic and diverse data - multiple Gaussian peaks and saddle points showcase
-    the visualization's capability
-  - Clean, idiomatic code with proper theme token usage and reproducible data generation
+  - imprint_div diverging ramp with an even band count, so zero is a band boundary
+    and the theme-adaptive midpoint sits exactly on the field's sign change
+  - contourf and contour share one level array, so the hairline contour lines run
+    exactly along the band boundaries; matplotlib's dashed negative levels double-encode
+    the sign
+  - Plausible water-ripple scenario with units on every axis and on the color bar,
+    built from a tidy df through column constants
+  - Exact 3200x1800 canvas with library-prompt font sizes and theme tokens threaded
+    through title, ticks, color bar and spines
   weaknesses:
-  - Design excellence could be elevated with more distinctive matplotlib techniques
-    or custom visual refinements beyond standard library defaults
-  - Library mastery is solid but not exceptional - could leverage more distinctive
-    features of matplotlib for contour visualization
+  - 'Suggestion: set ax.set_aspect(''equal'') so the circular ripple keeps its true
+    shape when the grid extent changes'
+  - 'Suggestion: label a few contour levels with ax.clabel in INK_SOFT so heights
+    can be read on the rings without the color bar'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) providing clean contrast
-      Chrome: Title "contour-filled · matplotlib · anyplot.ai" in dark text (24pt), axis labels "X Coordinate" and "Y Coordinate" in dark text (20pt), tick labels at 16pt all clearly readable against light background
-      Data: Viridis colormap showing filled contours with smooth color gradients from dark blue (low values ~-0.6) through teal/green (mid-range ~0.3-0.9) to bright yellow (peaks ~1.5). Three prominent Gaussian peaks are clearly visible with color bands representing level transitions. Overlay contour lines in soft gray enhance level identification. Colorbar on right side labeled "Surface Value"
-      Legibility verdict: PASS - All text is clearly readable; data elements are vibrant and well-distinguished from background; smooth color transitions make gradient visible
+      Background: warm off-white #FAF8F1 page and plot area, 3200x1800.
+      Chrome: title 'contour-filled · python · matplotlib · anyplot.ai' in dark ink at top center; axis titles 'Distance east (cm)' and 'Distance north (cm)', tick labels -8..8 and -4..4 in soft dark gray; color bar on the right labelled 'Surface height (mm)' with ticks -4.0..4.0 every 1.0. All readable.
+      Data: concentric filled rings centered near (-1, 0.5): a blue crest at the center, then alternating red troughs and blue crests that fade toward the page color with distance; 16 bands from #AE3030 through the off-white midpoint to #4467A3; thin gray contour lines, dashed for negative levels. Bands crowd near the center and broaden outward. The whole grid is covered.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) providing proper dark theme
-      Chrome: Same title and axis labels now in light text against dark background, all clearly readable. Tick labels in light gray tone. Colorbar positioned same with light text on dark background
-      Data: Identical viridis colormap - same peaks, valleys, and saddle point structure as light render. Data colors remain constant across themes (only chrome adapts). Overlay contour lines visible with appropriate opacity. Grid lines and structural elements properly lightened for dark theme visibility
-      Legibility verdict: PASS - No dark-on-dark failures; light text is clearly visible against dark background; data colors maintain integrity across theme transition; colorbar and all labels readable
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and color-bar label in light ink, ticks in light gray, spines and color-bar outline light gray. No dark-on-dark text.
+      Data: same ring geometry and same red and blue ramp endpoints; the midpoint flips to #1A1A17 as the style guide specifies, so near-zero bands are dark; contour lines in light gray, dashed negatives, visible on all bands.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,70 +51,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all explicitly sized and perfectly
-          readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and color-bar ticks 8 pt (library-prompt
+          sizes), all set explicitly and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements properly spaced with no overlaps
+        comment: No text collisions; no contour labels drawn, color bar clear of the
+          plot area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled contours and overlay lines perfectly visible at high resolution
+        comment: Bands fill the whole grid; 0.35 px contour lines at alpha 0.55 visible
+          in both themes without dominating the fill
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe with excellent contrast
+        comment: Red-blue diverging ramp is CVD-safe; sign is also carried by dashed
+          (negative) vs solid (positive) contour lines
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins
+        comment: 3200x1800 canvas, balanced margins, plot area and color bar fill
+          the canvas, title well inside the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels (X/Y Coordinate) and correct title format
+        comment: 'Distance east (cm), Distance north (cm), Surface height (mm): descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis continuous colormap correct for surface data; backgrounds
-          #FAF8F1 light / #1A1A17 dark; text colors theme-adaptive; both renders theme-correct'
+        comment: 'imprint_div (#AE3030 / theme midpoint / #4467A3) for a signed field
+          centered on zero; backgrounds #FAF8F1 and #1A1A17; chrome flips, data ramp
+          endpoints identical'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library defaults but no exceptional design choices
-          or custom polish
+        passed: true
+        comment: Even band count chosen so zero is a band boundary and the ramp midpoint
+          sits exactly on it; symmetric +/- limit derived from the data
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Overlay contour lines add refinement; spines visible and colored
-          appropriately; subtle grid
+        comment: Hairline contour lines chosen for the dense ring pattern, color-bar
+          ticks thinned to every other level with a one-decimal formatter, color-bar
+          outline tokenized
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Data clearly shows peaks, valleys, and gradients with visual hierarchy
-          through color intensity
+        comment: Off-center damped ripple makes the decay from the impact point the
+          focal story; band width reads as wave steepness
     spec_compliance:
       score: 15
       max: 15
@@ -123,28 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Filled contour plot with overlay contour lines as specified
+        comment: Filled contour plot with contourf
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: filled contours, overlay lines, colorbar,
-          sequential colormap, adequate grid resolution'
+        comment: Diverging colormap, color bar, overlaid contour lines on the same
+          levels, 16 levels, 360x200 grid; C1-C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, Z values properly color-coded, equal aspect
-          ratio appropriate
+        comment: x, y and z mapped from the pivoted df; full grid extent shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar with 'Surface Value' label serves
-          as legend for continuous data
+        comment: Title matches contour-filled · python · matplotlib · anyplot.ai;
+          color bar names the quantity
     data_quality:
       score: 15
       max: 15
@@ -154,21 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates peaks, valleys, saddle points, and smooth gradients
+        comment: Closed bands around the crest, alternating crests and troughs, narrow
+          bands on steep slopes and broad bands where the wave has decayed
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical surface appropriate for weather data, probability density,
-          or physical phenomena - neutral and plausible
+        comment: 'Ripple from a stone dropped on a water surface, in cm and mm: plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (-0.8 to 1.5) are realistic proportions; 80×80 grid resolution
-          provides smooth transitions
+        comment: 4 mm amplitude decaying over about 10 cm is a sensible scale for
+          a small water ripple; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -178,31 +186,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save; no unnecessary functions or classes
+        comment: Six zones, no functions or classes; adaptable-code check passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Deterministic function, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib.pyplot, numpy'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake UI or over-engineering
+        comment: Appropriate complexity; levels from np.linspace, no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight'
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches tight; current
+          API
     library_mastery:
       score: 6
       max: 10
@@ -212,23 +221,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct and idiomatic use of ax.contourf(), ax.contour(), plt.colorbar(),
-          and theme tokens
+        comment: contourf and contour share one level array, fig.colorbar with explicit
+          ticks, format-string shorthand for set_major_formatter
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses standard matplotlib features competently but not distinctively
-          - could leverage more advanced techniques
+        comment: Uses matplotlib's monochrome-contour convention of dashed negative
+          levels to double-encode sign
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-21T02:14:48Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - custom-colormap
+  - contour-overlay
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - dataframe-pivot
+  dataprep:
+  - pivot-table
   styling:
+  - publication-ready
   - alpha-blending
