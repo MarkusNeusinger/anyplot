@@ -2,51 +2,50 @@ library: plotly
 language: python
 specification_id: cat-box-strip
 created: '2025-12-30T16:30:35Z'
-updated: '2026-05-13T05:42:27Z'
-generated_by: claude-haiku
-workflow_run: 25780361780
+updated: '2026-11-21T08:43:49Z'
+generated_by: claude-sonnet
+workflow_run: 44885594206
 issue: 2695
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/python/plotly/plot-dark.html
-quality_score: 83
+quality_score: 82
 review:
   strengths:
-  - Clean, professional design with no visual clutter; minimalist approach effective
-  - Both renders fully readable and theme-correct with proper chrome adaptation
-  - Correct Okabe-Ito palette (#009E73) with good color choice for CVD-safe rendering
-  - Excellent data choice showing variety of distributions (normal, tight, outliers,
-    bimodal)
-  - Explicit font sizing for all elements; large canvas handled appropriately
-  - Proper jitter and transparency for point density; strip overlay clearly visible
-  - Correct output format and reproducible code with seed
+  - A single go.Box trace with boxpoints='all', jitter=0.5 and pointpos=0 draws the
+    strip directly over each box, so plotly computes the quartiles and keeps jitter
+    inside each category band
+  - 'Both renders theme-correct: #FAF8F1 / #1A1A17 surfaces, INK/INK_SOFT chrome,
+    identical #009E73 data in both'
+  - Example data shows tight, wide, outlier-bearing and bimodal groups of different
+    sizes on a shared value axis that is not forced to zero
+  - HTML export keeps plotly's native hover with per-point values and box statistics
   weaknesses:
-  - Missing x-axis label for first category (Method A) — only B, C, D labeled (VQ-07,
-    SC-02, SC-03)
-  - 'Design Excellence scores moderate — styling is functional but lacks sophistication;
-    looks like configured default, not custom design (DE-01: 4/8, DE-02: 3/6)'
-  - 'Library Mastery is basic — straightforward plotly API usage without advanced
-    features (LM-02: 2/5)'
+  - 'DQ-02 (both): the four study methods are labelled ''Method A''–''Method D'',
+    which reads as abstract placeholders → named methods such as ''Flashcards'', ''Practice
+    Tests'', ''Re-reading'', ''Group Study''. Likely cause: the keys of the groups
+    dict.'
+  - 'Suggestion: the gap between the title and the plot area (about 120 px at full
+    size) could be tightened by lowering margin t or setting title y, giving the boxes
+    more height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "cat-box-strip · plotly · anyplot.ai" in dark text, clearly readable. Y-axis "Exam Score (%)" and X-axis "Study Method" labels explicit and legible. Tick labels small but readable. NOTE: Missing label for first category (Method A); only B, C, D shown.
-      Data: Four methods visualized using #009E73 (Okabe-Ito green). Box plots show median, Q1, Q3, whiskers. Strip points overlaid with jitter and appropriate transparency. Distributions: Method A (tight ~72), Method B (higher ~85), Method C (spread with outliers), Method D (bimodal ~65 and ~80).
-      Legibility verdict: PASS (with note: missing first x-axis label slightly reduces clarity)
+      Background: warm off-white #FAF8F1 across paper and plot area.
+      Chrome: title 'cat-box-strip · python · plotly · anyplot.ai' top-left in dark ink; y-axis 'Exam Score (%)' and x-axis 'Study Method' in dark ink; tick labels 30–100 and 'Method A'–'Method D' in soft dark gray; subtle horizontal grid; left and bottom axis lines only. All text readable.
+      Data: four boxes in #009E73 outline with a 15 % green fill, median lines, whiskers with caps; about 160 jittered #009E73 points at 0.75 opacity with thin page-colored outlines drawn over each box. Method C shows outliers at 95 and 25; Method D spans 60–89 with a bimodal cloud.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: All text (title, labels, ticks) in light colors, clearly visible against dark surface. Same axis label issue (Method A missing).
-      Data: Data colors identical to light render (#009E73 throughout). All box and strip elements equally visible; no contrast issues. Brand green vibrant and legible on dark background.
-      Legibility verdict: PASS (no dark-on-dark failures; theme-adaptation correct)
-
-    Both renders pass legibility checks. Data colors consistent across themes; only chrome (background, text, grid, legend) adapts appropriately.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, clearly readable; grid subtle light lines; no dark-on-dark text.
+      Data: same #009E73 boxes and points as the light render; the box fill reads as dark green; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -54,48 +53,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: Title 16 px, axis titles 12 px, ticks 10 px, all set explicitly at
+          the style-guide reference; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all readable
+        comment: No text collisions; point overlap inside dense boxes (Method B) is
+          permitted by the spec and handled with 0.75 opacity and a page-colored outline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers optimally sized with jitter and transparency; density-appropriate
-          opacity
+        comment: 'About 160 points at 6 px with 0.75 opacity: visible, and boxes,
+          medians and whiskers stay readable through them'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety; good contrast
+        comment: Single hue; points and box outlines contrast well on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced, plot fills ~60% of canvas, generous margins
+        comment: Canvas 3200x1800 (gate passed); plot area fills about 75 % of the
+          canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units (Exam Score %)
+        comment: '''Exam Score (%)'' with unit and ''Study Method'''
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Okabe-Ito correct (#009E73); backgrounds correct; chrome theme-correct.
-          Deduction: Missing x-axis label for first category reduces clarity.'
+        passed: true
+        comment: 'Single series in #009E73; backgrounds #FAF8F1 / #1A1A17; chrome
+          theme-correct in both renders'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -103,22 +104,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Clean default styling but not distinctive; looks like well-configured
-          library default
+        comment: The style-guide baseline (Imprint brand green, theme tokens, explicit
+          sizes) and nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Minimal/no grid, L-shaped spines, adequate whitespace; limited customization
+        comment: 'L-shaped axis lines, y-only subtle grid: the spine and grid rules
+          met, nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Data choice shows distribution variety but visual hierarchy is minimal
+        comment: Data displayed; no hierarchy or focal point chosen beyond the Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -126,27 +128,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chart type (box plot with strip overlay); all subtypes present
+        comment: Box plot with strip overlay, the type the spec names
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Box and strip present; deduction for missing Method A x-axis label
+        passed: true
+        comment: C1 boxes with median/whiskers and points over the box; C2 jitter
+          stays inside each box band; C3 translucent points; C4 shared y axis not
+          forced to zero; all Notes bullets met
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: X/Y correct; deduction for incomplete axis labeling
+        passed: true
+        comment: Category on x, score on y; all four groups and every point shown
+          at its value (categorical jitter only)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend appropriately omitted (single series)
+        comment: Title 'cat-box-strip · python · plotly · anyplot.ai' correct; legend
+          N/A for a single series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -154,19 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All distribution types shown (normal, tight, outliers, bimodal)
+        comment: Different spreads (B tight, C wide), low and high outliers in C,
+          a bimodal D, unequal group sizes
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Realistic (exam scores by study method), neutral, plausible
+        passed: false
+        comment: Exam scores by study method is a neutral, real scenario, but the
+          groups are labelled 'Method A'–'Method D' (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values realistic (25-95%), distributions sensible
+        comment: 'Checked: all scores within 25–99.6 %, never above 100; group means
+          72/85/58/72 plausible'
     code_quality:
       score: 10
       max: 10
@@ -176,33 +185,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plot → save; no unnecessary functions'
+        comment: Linear zones, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary: os, numpy, pandas, plotly'
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: One go.Box trace computes quartiles and draws the strip; no hand-rolled
+          statistics
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct format (plot-{THEME}.png + .html)
+        comment: Writes plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -210,21 +220,28 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: Uses go.Box properly; straightforward but idiomatic approach
+        comment: A single go.Box trace over the tidy df with boxpoints='all', jitter
+          and pointpos=0 lets plotly compute the stats and the strip in one high-level
+          call instead of a box loop plus a scatter layer
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Generic usage; limited exploration of advanced plotly features
+        comment: Nothing beyond what the library prompt mandates and the Notes ask
+          for
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T08:40:07Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
