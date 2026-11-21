@@ -12,115 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-lin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/pygal/plot-dark.html
-quality_score: 90
+quality_score: 65
 review:
   strengths:
-  - 'Perfect theme compliance: both light and dark renders apply theme tokens correctly
-    without color/readability failures'
-  - Explicit font sizing throughout ensures text legibility at large canvas (4800×2700px)
-  - 'Okabe-Ito palette perfectly applied: first series #009E73, second #D55E00, identical
-    across themes'
-  - 'Excellent data choice: wind speed by hour reveals clear cyclical pattern and
-    comparison story'
-  - Clean, linear code structure with no over-engineering
-  - Polar (radar) chart type correctly chosen for cyclical, 24-hour data domain
+  - 'Imprint colors #009E73 and #C475FD on theme-correct backgrounds with readable
+    chrome in both renders'
+  - Plausible, neutral wind-speed scenario with two crossing-free loops of different
+    size
+  - Radar chart used directly as a polar line plot with the pygal Style object
   weaknesses:
-  - 'Design Excellence is solid but not exceptional: style is a well-configured library
-    default rather than distinctive visual polish (DE-01=5 vs. publication-level 8)'
-  - 'Library Mastery is competent but generic: could leverage more pygal-distinctive
-    features beyond Style and Radar basics (LM-02=3)'
+  - 'VQ-05 (both): canvas is 4800x2700, not one of the canonical sizes, and the polar
+    area is stretched into a wide ellipse → 2400x2400 square (−2400 × −300). Likely
+    cause: width=4800, height=2700.'
+  - 'VQ-01 (both): title at 28 px and hour, radial and legend labels at 16-18 px read
+    tiny on the 4800 px canvas → about 60 px title and 40-44 px labels at 2400 px
+    (roughly +30 px). Likely cause: title_font_size=28, label_font_size=18, major_label_font_size=16,
+    legend_font_size=16.'
+  - 'SC-03 (both): the non-square plot area stretches the radial scale horizontally,
+    so equal values (the 10 ring) sit at different distances from the centre by angle
+    → a square canvas so the rings are circles. Likely cause: width=4800, height=2700.'
+  - 'SC-04 (both): title ''polar-line · pygal · anyplot.ai'' lacks the language segment
+    → ''polar-line · python · pygal · anyplot.ai''. Likely cause: the title string.'
+  - 'SC-02 (dark): the concentric grid circles nearly vanish on #1A1A17 (C3: grid
+    visible in both themes) → circles in the muted ink tone like the radial spokes.
+    Likely cause: pygal''s default y-guide stroke not set from INK_MUTED.'
+  - 'VQ-06 (both): the radial axis never names its quantity (wind speed, m/s) → name
+    it in the chart, e.g. in a title prefix or legend title. Likely cause: no label
+    for the radius quantity.'
+  - 'CQ-01 (code): no # Data / # Plot block ending in a tidy df, no column constants
+    for the theta and radius roles, and IMPRINT lists 7 of 8 positions → follow the
+    six-zone layout with role constants and the full eight-colour palette. Likely
+    cause: hard-coded lists added straight to the chart.'
+  - 'CQ-04 (code): comments contradict the code (''Okabe-Ito palette'' above the Imprint
+    colours, ''Custom style for 4800x2700'') and stroke_style={''width'': 3} duplicates
+    stroke_width=3 → fix the comments and drop the duplicate. Likely cause: leftovers
+    from an older palette and canvas.'
+  - 'Suggestion: a descriptive title prefix would tell the reader what the loops measure.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct)
-      Chrome: Title "polar-line · pygal · anyplot.ai" prominent and readable; 24-hour labels (00:00–23:00) radially arranged and legible; legend at bottom clear with descriptive labels "Breezy Day" and "Calm Day"; all text dark (#1A1A17) and readable
-      Data: Two series in Okabe-Ito colors — Breezy Day in #009E73 (green, position 1) showing peaks ~10.8 m/s; Calm Day in #D55E00 (orange, position 2) showing peaks ~5.9 m/s; lines connected with visible dots at each of 24 points; grid subtle but visible (concentric circles and radial spokes)
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1, 4800x2700 landscape.
+      Chrome: title 'polar-line · pygal · anyplot.ai' tiny at the top; tiny hour labels around a wide ellipse; tiny radial ticks 4-10; legend Breezy Day / Calm Day tiny at the bottom left and centre. Readable only at full zoom.
+      Data: Breezy Day #009E73 and Calm Day #C475FD loops with large dots, stretched horizontally by the non-square plot area.
+      Legibility verdict: PASS (dark on light) but text very small
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct)
-      Chrome: Same title, hour labels, and legend; all text rendered in light color (#F0EFE8 or similar) and fully readable against dark background; no dark-on-dark failures
-      Data: Series colors identical to light render — #009E73 (green) and #D55E00 (orange) preserved; lines and dots clearly visible; grid adapted for dark theme and remains subtle
-      Legibility verdict: PASS
+      Background: warm near-black #1A1A17.
+      Chrome: same tiny text in light ink, no dark-on-dark text; radial spokes light grey; concentric circles nearly invisible.
+      Data: identical colours to the light render.
+      Legibility verdict: PASS (contrast) but text very small
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 19
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 2
         max: 8
-        passed: true
-        comment: All font sizes explicitly set in Style object; title 28px, labels
-          18px, ticks 16px—all perfectly readable in both renders
+        passed: false
+        comment: Title at 28 px and hour/radial/legend labels at 16-18 px on a 4800
+          px wide canvas read tiny, far below the style-guide reference (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 24 radial hour labels well-spaced; legend at bottom clear; no collisions
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dots at 16px and lines at 3px stroke width optimal for 24-point series;
-          both clear
+        comment: Lines and 16 px dots visible for 24-point series; legend swatches
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors have strong contrast; CVD-safe; no red-green-only
-          signaling
+        comment: Green and lilac are CVD-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Chart centered with generous margins; fills ~65% of 4800×2700 canvas;
-          balanced whitespace
+        passed: false
+        comment: Canvas 4800x2700 is not a canonical size (3200x1800 or 2400x2400);
+          the polar area is stretched into a wide ellipse (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title correct format; hour labels descriptive; radius axis shows
-          numeric scale
+        passed: false
+        comment: The radial quantity (wind speed, m/s) is not named anywhere (defect
+          line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds correct; text
-          theme-adaptive; both renders chrome-correct'
+        comment: '#009E73 then #C475FD; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Custom Style with explicit fonts and theme-adaptive colors; professional
-          but not publication-exceptional
+        comment: Style-guide baseline only
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: fill=False keeps lines clean; dots visible; custom inner_radius;
-          above defaults but could be more refined
+        comment: Grid and spacing at library defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Two series reveal clear narrative (breezy vs. calm day); cyclical
-          pattern obvious; wind-speed magnitude differences guide viewer
+        comment: Data displayed, no chosen focal point
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -128,25 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Pygal Radar is correct for polar line spec
+        comment: Radar chart as a polar line plot
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Lines, multiple series, cyclical layout, grid all present
+        passed: false
+        comment: Concentric grid circles nearly invisible in the dark render (C3,
+          defect line)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Angular axis=hours; radius=wind speed; all data visible
+        passed: false
+        comment: Non-square plot area stretches the radial scale horizontally, so
+          equal values sit at different distances from the centre by angle (defect
+          line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; legend labels match data
+        passed: false
+        comment: Title 'polar-line · pygal · anyplot.ai' lacks the language segment
+          'python' (defect line)
     data_quality:
       score: 15
       max: 15
@@ -156,71 +174,74 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both daily patterns, peak variations, full 24-hour cycle
+        comment: Two series over a full 24-hour cycle
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Meteorological data; neutral, real-world plausible
+        comment: 'Hourly wind speed on a breezy vs a calm day: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind values realistic (1.6–10.8 m/s); diurnal pattern matches physics
+        comment: 'Checked: 1.6-10.8 m/s with an afternoon maximum; plausible'
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Imports → Data → Style → Chart → Render; no functions/classes
+        passed: false
+        comment: 'No # Data / # Plot block structure, no column constants for theta/radius,
+          palette lists 7 of 8 positions (defect lines)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic
+        comment: Hard-coded deterministic values
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pygal, pygal.style all used; no extras
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Pythonic; theme-adaptive tokens clean; no over-engineering
+        passed: false
+        comment: Comments contradict the code ('Okabe-Ito palette', 'Custom style
+          for 4800x2700') and stroke_style duplicates stroke_width (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-{THEME}.png and .html; current API
+        comment: Writes plot-{THEME}.png and .html
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: false
-        comment: Uses Radar chart, Style object, high-level API; follows pygal conventions
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Style theming and inner_radius are pygal-specific; fairly standard
-          beyond that
+        comment: Radar chart and Style object, the expected pygal idioms
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond the mandated Style theming
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies: []
   techniques:
