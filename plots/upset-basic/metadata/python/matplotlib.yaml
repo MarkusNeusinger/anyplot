@@ -2,127 +2,128 @@ library: matplotlib
 language: python
 specification_id: upset-basic
 created: '2026-05-13T20:52:03Z'
-updated: '2026-05-13T21:09:57Z'
+updated: '2026-11-21T12:56:27Z'
 generated_by: claude-sonnet
-workflow_run: 25825186754
+workflow_run: 44905849964
 issue: 5250
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - Complete and correct UpSet plot with all three required panels (intersection bars,
-    dot matrix, set-size bars), each well-sized and aligned
-  - Degree-based color encoding via Okabe-Ito order is both spec-compliant and visually
-    sophisticated
-  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT tokens applied consistently
-    to all non-data elements in both light and dark renders'
-  - Alternating row shading in the dot matrix aids readability without distracting
-    from data
-  - Realistic software-bug scenario with plausible module names and size distributions
+  - 'Complete UpSet layout: intersection bars, dot matrix and mirrored set-size bars
+    aligned through GridSpec sharex/sharey'
+  - Filled, connected member dots against muted non-member dots stay distinguishable
+    in both themes
+  - 'Theme tokens threaded through every chrome element; correct #FAF8F1 / #1A1A17
+    surfaces'
+  - Alternating row shading guides the eye from each set-size bar across its matrix
+    row
+  - Realistic bug-report-by-module scenario with intersections computed via Counter
+    over frozensets
   weaknesses:
-  - Font sizes (title 22pt, labels 18pt, ticks 14pt) are explicitly set but fall below
-    the recommended minimums (24pt / 20pt / 16pt); increase to meet the canvas-size
-    spec
-  - The top-left empty quadrant could carry a minimal annotation (total element count
-    or sort-order label) to eliminate perceived dead space
-  - Panel boundaries are functional but could be more seamlessly integrated (shared
-    x-axis tick alignment between intersection bars and dot matrix columns)
+  - 'VQ-07 (both): intersection degree (1, 2, 3 sets) is an ordered category but is
+    drawn in categorical Imprint positions 1-3 (#009E73, #C475FD, #4467A3) as if unrelated
+    groups → discrete steps of imprint_seq in degree order (low → high), kept in that
+    order in the legend. Likely cause: degree_color indexes IMPRINT_PALETTE[deg -
+    1].'
+  - 'Suggestion: a ''Bug reports'' unit in the axis titles (e.g. ''Intersection size
+    (bug reports)'') would tie the counts to the scenario.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — not pure white, matches the theme spec
-      Chrome: Title "upset-basic · matplotlib · anyplot.ai" in dark ink at top center — clearly readable. Y-axis label "Intersection Size" and x-axis label "Set Size" both readable. Tick labels for y-axis (0-100) and set names (Frontend, Backend, Database, API, Security, Testing, DevOps) clearly visible in INK_SOFT color. Legend box uses ELEVATED_BG fill with INK_SOFT border.
-      Data: Intersection bars color-coded by degree — Degree 1 = #009E73 (brand green, first Okabe-Ito), Degree 2 = #D55E00 (vermillion), Degree 3 = #0072B2 (blue). Set size bars all in brand green. Dot matrix shows active colored dots connected by vertical lines; inactive dots are muted gray. Alternating row shading adds structure.
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: warm off-white #FAF8F1 across canvas and all panels, alternating light row bands in the matrix
+      Chrome: title 'upset-basic · python · matplotlib · anyplot.ai' in dark ink at top centre (~46% width); y-axis 'Intersection size', x-axis 'Set size', set names Frontend/Backend/Database/API/Security, ticks and count labels in INK_SOFT; framed legend 'Intersection degree' top right - all readable
+      Data: 12 intersection bars sorted descending (100 ... 22) colored by degree - 1 set #009E73, 2 sets #C475FD, 3 sets #4467A3; set-size bars in #009E73 growing leftward; filled member dots joined by colored lines, grey muted non-member dots
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — not pure black, matches the dark theme spec
-      Chrome: Title, axis labels, tick labels, and set names all render in light ink (F0EFE8 / B8B7B0) — fully readable against the dark surface. Legend box uses #242420 (ELEVATED_BG dark). No dark-on-dark failures detected.
-      Data: Colors are identical to the light render — Degree 1 = #009E73, Degree 2 = #D55E00, Degree 3 = #0072B2. Data color identity confirmed across themes.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+      Background: warm near-black #1A1A17, subtle lighter row bands
+      Chrome: title, axis titles, set names, ticks, count labels and legend all in light ink; no dark-on-dark text
+      Data: bar, dot and line colors identical to the light render; muted dots dark grey yet visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22pt, labels 18pt, ticks 14-15pt)
-          but slightly below recommended minimums (24/20/16). All text readable at
-          full resolution.
+        comment: All sizes set explicitly (title 12, axis titles 10, set names 9,
+          ticks/count labels/legend 8 pt); every text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements in either render
+        comment: No text collides; legend sits over the short tail bars without touching
+          them
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dot markers s=190-210, connecting lines linewidth=4.5, clearly visible
-          and density-appropriate
+        comment: Active dots s=60 with 2.4 px connectors, muted dots s=55 at alpha
+          0.30; legend swatches match the bars in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; inactive dots use muted alpha without
-          relying on hue alone
+        comment: Degrees differ in luminance as well as hue; active vs muted dots
+          separated by alpha and saturation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Three-panel UpSet layout fills canvas effectively; empty top-left
-          quadrant is inherent to UpSet design
+        comment: 3200x1800 canvas; three panels fill it, top-left quadrant empty as
+          the UpSet layout dictates
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Intersection Size (y-axis) and Set Size (x-axis) are descriptive
+        comment: '''Intersection size'' and ''Set size'' are descriptive count axes'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
-          #FAF8F1/#1A1A17, all chrome tokens flip correctly'
+        passed: false
+        comment: Background, chrome and theme tokens correct in both renders, but
+          the ordered intersection degree (1/2/3 sets) uses categorical positions
+          1-3 instead of ramp steps (defect line)
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: degree-based color hierarchy, alternating row shading,
-          callout annotation, subtitle providing analytical framing — above configured
-          defaults'
+        comment: Mirrored set-size bars sharing the row axis with the matrix, plural-aware
+          legend labels and a medium-weight title hierarchy go a step beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Thoughtful per-panel spine management, alpha=0.10 grid, alternating
-          row shading. Minor ceiling on panel integration.
+        comment: Alternating row shading in the matrix, tight hspace/wspace so bars
+          meet their matrix column/row, spines trimmed per panel
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Color-coded degree encoding, subtitle with analytical context, and
-          callout highlighting dominant intersection guide the viewer toward the insight
+        comment: Data displayed without a hierarchy beyond the degree coloring the
+          Notes suggest
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct UpSet plot with all three components: intersection bars,
-          dot matrix, set-size bars'
+        comment: Correct UpSet layout; degree coloring is the shading the Notes allow,
+          no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Intersections sorted descending, connected dots, horizontal set-size
-          bars, vertical intersection bars, degree-based color shading — all present
+        comment: 'Descending sort, connected filled dots, muted non-member dots, set-size
+          bars, intersection bars, count labels: all present (C1-C5)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Set sizes on left (inverted x-axis), intersection cardinality on
-          top, matrix rows=sets, columns=intersections
+        comment: Bars from zero, each column counts its exact combination; matrix
+          rows aligned via sharey, columns via sharex
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title upset-basic · matplotlib · anyplot.ai; legend correctly labels
-          Degree 1/2/3
+        comment: Title 'upset-basic · python · matplotlib · anyplot.ai'; legend 'Intersection
+          degree' with '1 set / 2 sets / 3 sets'
     data_quality:
       score: 15
       max: 15
@@ -164,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows single-set, pairwise, and triple intersections; varying bar
-          sizes; common and rare intersections
+        comment: Single, pairwise and triple intersections with a dominant one and
+          a tail (C6 permits leaving the rest out)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software bug tracking across system modules is realistic, neutral,
-          real-world scenario matching spec applications
+        comment: Bug reports across software modules - neutral, real-world, one of
+          the spec's applications
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Bug counts and intersection sizes plausible for real engineering
-          organization; module probabilities reflect realistic bug-exposure distributions
+        comment: 'Checked: set sizes (Frontend ~345 of ~770 bugs at p=0.42) match
+          the probabilities; intersection counts fall out of Counter over memberships'
     code_quality:
       score: 10
       max: 10
@@ -189,36 +190,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → theme tokens → data → figure layout → axes → save.
-          No functions or classes.'
+        comment: Linear zones, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys required for sys.path.pop(0) guard
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; defaultdict for intersection counting, list comprehensions
-          throughout
+        comment: Counter over frozensets for intersections is concise; no hand-rolled
+          algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with facecolor kwarg, current matplotlib
-          3.9+ API
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches='tight'
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -226,27 +225,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: GridSpec for multi-panel layout, ax.barh for horizontal bars, Axes
-          methods throughout — correct idiomatic patterns
+        comment: GridSpec with sharex/sharey keeps the three panels aligned instead
+          of manual limits on each axes
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: GridSpec with precise width/height ratios; mpatches.Patch for custom
-          legend handles; mixed scatter+line in dot matrix — distinctively matplotlib
+        comment: Mirrored axis via reversed set_xlim and axhspan row bands; some matplotlib-specific
+          layout control
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T12:53:05Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - annotations
   - custom-legend
-  - patches
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
