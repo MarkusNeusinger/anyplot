@@ -2,44 +2,52 @@ library: plotnine
 language: python
 specification_id: histogram-stepwise
 created: '2025-12-30T11:22:17Z'
-updated: '2026-05-12T09:33:17Z'
-generated_by: claude-haiku
-workflow_run: 25725352010
+updated: '2026-11-21T05:30:31Z'
+generated_by: claude-sonnet
+workflow_run: 44870753099
 issue: 2645
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing
-  - Flawless theme-adaptive implementation with both renders equally readable
-  - Clean, realistic example data effectively demonstrating the plot type
-  - Proper Okabe-Ito palette compliance with correct color ordering
-  - All spec requirements met
+  - Outline-only step histogram built from shared bin edges, with closing vertical
+    drops to the zero baseline at both ends
+  - Count axis anchored at zero via scale_y_continuous(expand=(0, 0, 0.06, 0)) so
+    steps sit on the baseline
+  - Theme tokens threaded through every chrome element; both renders readable
+  - 'Adaptable code: column constants, full Imprint palette with limits=VALUES keeping
+    data order (Standard gets #009E73)'
+  - Canvas exactly 3200x1800 with style-guide text sizes
   weaknesses:
-  - Design excellence limited to defaults; could benefit from more intentional aesthetic
-    choices
+  - 'VQ-05 (both): the right-hand legend frame sits about 35 px from the canvas edge
+    and the ''Optimized'' label runs to within a few px of the frame''s right border
+    → keep at least ~1 % of the width between legend and canvas edge and pad the label
+    inside the frame. Likely cause: legend_position="right" with default legend_box_margin
+    / no legend_margin.'
+  - 'Suggestion: placing the legend inside the empty upper-right panel area (legend_position=(0.95,
+    0.95)) would free the right margin for the data.'
+  - 'Suggestion: plotnine''s stat_bin with shared breaks could feed the outline instead
+    of the manual np.histogram loop, if edge-aligned steps can be kept.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 as required
-      Chrome: Title, axis labels, and tick labels clearly visible in dark text (#1A1A17 and #4A4A44)
-      Data: Green step function (#009E73) for Optimized Setup, orange (#D55E00) for Standard Setup
-      Legend: Bottom-positioned, clearly identifying both configurations
-      Legibility verdict: PASS - all text readable, proper contrast throughout
+      Background: warm off-white #FAF8F1 (sampled 250,248,241), 3200x1800.
+      Chrome: title 'histogram-stepwise · python · plotnine · anyplot.ai' in dark ink centred at top; axis titles 'Response time (ms)' and 'Count' dark; tick labels 0-50 and 100-400 in soft ink; subtle major and minor grid; full panel border; legend 'Server setup' on the right with an elevated fill and soft frame. All text readable.
+      Data: two step outlines over 30 shared bins, Standard in #009E73 (centre ~260 ms, wide) and Optimized in #C475FD (centre ~190 ms, peak 49); no fill; both close down to the zero baseline at their ends.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 as required
-      Chrome: All text (title, labels, ticks) clearly visible in light colors (#F0EFE8 and #B8B7B0)
-      Data: Identical colors to light render (green #009E73 and orange #D55E00), confirming theme-independence for data
-      Legend: Same structure as light render, fully readable
-      Legibility verdict: PASS - no dark-on-dark failures, all elements properly adapted for dark theme
+      Background: warm near-black #1A1A17 (sampled 26,26,23).
+      Chrome: title, axis titles in light ink, tick labels in soft light grey, grid subtle but visible, panel border and legend frame light; no dark-on-dark text.
+      Data: identical #009E73 and #C475FD outlines; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,47 +55,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt)
-          and perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend text 8 pt as the
+          style guide sets; dark text on light and light text on dark, all readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, no overlapping elements
+        comment: No text collisions; the two outlines share bin edges and cross, which
+          the spec permits
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step lines optimally visible, both distributions clearly distinguishable
+        comment: Step lines at size 1.4 read clearly against the page and the grid
+          in both themes; legend line samples match the outlines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety with excellent contrast
+        comment: Green vs purple separate well in luminance and hue, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Perfect 16x9 layout with ~60% canvas utilization and balanced margins
+        passed: false
+        comment: Correct 3200x1800 canvas and balanced plot area, but the legend frame
+          sits about 35 px from the right canvas edge and the 'Optimized' label nearly
+          touches the frame (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Response Time (ms)'' and ''Frequency'''
+        comment: '''Response time (ms)'' with unit and ''Count'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 in correct Okabe-Ito order;
-          backgrounds theme-correct in both renders'
+        comment: 'Standard (first group) #009E73, Optimized #C475FD; full Imprint
+          list; #FAF8F1 / #1A1A17 backgrounds; elevated legend fill'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -95,22 +107,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but no exceptional design thought or custom
-          refinements
+        comment: Style-guide baseline (sizes, tokens, palette); nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Some customization visible (subtle grid, panel border) but could
-          benefit from more aggressive refinement
+        comment: Spine and grid rules met; mitre joins are a small touch but no refinement
+          beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good visual hierarchy with two distinct step functions creating natural
-          comparison narrative
+        passed: false
+        comment: Two distributions displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -120,26 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step histogram with outline only, no fill
+        comment: Outline-only step histogram, no fill
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: step-line display, multiple distributions
-          for comparison'
+        comment: C1 outline per bin with vertical joins and closing drops to zero;
+          C2 contiguous bins on a count axis starting at 0 (expand 0 at bottom); C3
+          strong outline in both themes; C4 shared bin edges, colors, named legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly assigned; axes show full data range
+        comment: Counts sit at their bin heights; x covers the full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels proper and identified
+        comment: Title 'histogram-stepwise · python · plotnine · anyplot.ai'; legend
+          'Server setup' with Standard / Optimized
     data_quality:
       score: 15
       max: 15
@@ -149,21 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of histogram type with both tight and loose distributions
+        comment: Two overlapping distributions of different centre and spread show
+          the overlay use of the type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times (ms) are realistic domain; comparison of configurations
-          is plausible and neutral
+        comment: 'Server response times, Standard vs Optimized setup: plausible and
+          neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually correct and proportionally accurate for response
-          time distributions
+        comment: Means near 250 and 180 ms with 400 samples each; counts up to ~49
+          per bin are consistent with 30 bins over ~60-425 ms
     code_quality:
       score: 10
       max: 10
@@ -173,54 +186,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Flat script with column constants and the Data block; one loop over
+          groups, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42; fully deterministic
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        comment: np.histogram does the binning; the outline construction is a few
+          lines (no plotnine stat reproduces edge-aligned steps with closing drops)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct API
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi 400; current API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses ggplot() + geom_step() correctly with standard plotnine composition
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Straightforward usage of geom_step(); no distinctive features beyond
-          basic plotting
+        comment: 'Standard ggplot grammar: aes on column constants, geom_path, scale_color_manual
+          with limits, theme()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-21T05:26:57Z'
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - binning
-  styling: []
+  styling:
+  - alpha-blending
