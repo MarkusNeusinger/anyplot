@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: pending | Updated: 2026-11-21
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-21
 """
 
 import os
