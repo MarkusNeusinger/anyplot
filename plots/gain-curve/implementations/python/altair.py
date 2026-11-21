@@ -1,7 +1,7 @@
 """ anyplot.ai
 gain-curve: Cumulative Gains Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-11
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-21
 """
 
 import os
@@ -9,136 +9,133 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # Model curve
-SECONDARY = "#C475FD"  # Baseline reference
+# Imprint palette
+BRAND = "#009E73"  # Model curve (position 1)
 
-# Data - Simulated model predictions for fraud detection
-np.random.seed(42)
+# Setup
+TARGET_W, TARGET_H = 3200, 1800
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+
+# Column constants
+Y_TRUE = "y_true"  # role: y_true
+Y_SCORE = "y_score"  # role: y_score
+
+# Data: simulated fraud-detection scores and outcomes
+rng = np.random.default_rng(42)
 n_samples = 1500
+base_score = rng.beta(2, 5, n_samples)
+score = np.clip(base_score + rng.normal(0, 0.1, n_samples), 0, 1)
+outcome = (rng.random(n_samples) < 0.5 * score + 0.02).astype(int)
+df = pd.DataFrame({Y_TRUE: outcome, Y_SCORE: score})
 
-# Generate model scores with strong discrimination
-base_score = np.random.beta(2, 5, n_samples)
-noise = np.random.normal(0, 0.1, n_samples)
-y_score = np.clip(base_score + noise, 0, 1)
-
-# Generate actual fraud outcomes - strong correlation with scores
-fraud_prob = 0.5 * y_score + 0.02
-y_true = (np.random.random(n_samples) < fraud_prob).astype(int)
-
-# Calculate cumulative gains curve
-sorted_indices = np.argsort(y_score)[::-1]
-y_true_sorted = y_true[sorted_indices]
-
-cumulative_positives = np.cumsum(y_true_sorted)
-total_positives = y_true_sorted.sum()
-pct_population = np.arange(1, n_samples + 1) / n_samples * 100
-pct_gain = cumulative_positives / total_positives * 100
-
-# Add origin point
-pct_population = np.insert(pct_population, 0, 0)
-pct_gain = np.insert(pct_gain, 0, 0)
-
-# Subsample for smooth visual
-sample_idx = np.concatenate([[0], np.arange(15, len(pct_population) - 1, 15), [len(pct_population) - 1]])
-pct_population_smooth = pct_population[sample_idx]
-pct_gain_smooth = pct_gain[sample_idx]
-
-# Create DataFrame
-df_gains = pd.DataFrame({"population": pct_population_smooth, "gain": pct_gain_smooth, "Type": "Model"})
-df_baseline = pd.DataFrame({"population": [0, 100], "gain": [0, 100], "Type": "Baseline"})
-df_combined = pd.concat([df_gains, df_baseline], ignore_index=True)
-
-# Shaded area under model curve
-area_model = (
-    alt.Chart(df_combined[df_combined["Type"] == "Model"])
-    .mark_area(opacity=0.15, color=BRAND, interpolate="monotone")
-    .encode(x="population:Q", y="gain:Q")
+# Plot: cumulative gains, ranked by score descending
+POPULATION = "Population Targeted (%)"
+GAIN = "Positive Cases Captured (%)"
+SERIES = "Series"
+ranked = df.sort_values(Y_SCORE, ascending=False)[Y_TRUE].to_numpy()
+n_rows = len(ranked)
+gains = pd.concat(
+    [
+        pd.DataFrame(
+            {
+                POPULATION: np.arange(0, n_rows + 1) / n_rows * 100,
+                GAIN: np.concatenate([[0], np.nancumsum(ranked)]) / np.nansum(ranked) * 100,
+                SERIES: "Model",
+            }
+        ),
+        pd.DataFrame({POPULATION: [0.0, 100.0], GAIN: [0.0, 100.0], SERIES: "Random baseline"}),
+    ],
+    ignore_index=True,
 )
 
-# Model curve line
-model_curve = (
-    alt.Chart(df_combined[df_combined["Type"] == "Model"])
-    .mark_line(strokeWidth=4, color=BRAND, interpolate="monotone")
+series_order = list(gains[SERIES].unique())
+x_enc = alt.X(
+    POPULATION.translate(ESCAPE),
+    type="quantitative",
+    title=POPULATION,
+    scale=alt.Scale(domain=[0, gains[POPULATION].max()], nice=False),
+    axis=alt.Axis(tickCount=10),
+)
+y_enc = alt.Y(
+    GAIN.translate(ESCAPE),
+    type="quantitative",
+    title=GAIN,
+    scale=alt.Scale(domain=[0, gains[GAIN].max()], nice=False),
+    axis=alt.Axis(tickCount=10),
+)
+
+area = (
+    alt.Chart(gains)
+    .transform_filter(alt.datum[SERIES] == series_order[0])
+    .mark_area(opacity=0.15, color=BRAND)
+    .encode(x=x_enc, y=y_enc)
+)
+
+lines = (
+    alt.Chart(gains)
+    .mark_line(strokeWidth=4)
     .encode(
-        x=alt.X(
-            "population:Q",
-            title="Population Targeted (%)",
-            scale=alt.Scale(domain=[0, 100]),
-            axis=alt.Axis(titleFontSize=22, labelFontSize=18, tickCount=10, labelColor=INK_SOFT, titleColor=INK),
+        x=x_enc,
+        y=y_enc,
+        color=alt.Color(
+            SERIES,
+            type="nominal",
+            title=None,
+            sort=None,
+            scale=alt.Scale(domain=series_order, range=[BRAND, INK_SOFT]),
+            legend=alt.Legend(orient="bottom-right", direction="vertical", symbolStrokeWidth=4),
         ),
-        y=alt.Y(
-            "gain:Q",
-            title="Positive Cases Captured (%)",
-            scale=alt.Scale(domain=[0, 100]),
-            axis=alt.Axis(titleFontSize=22, labelFontSize=18, tickCount=10, labelColor=INK_SOFT, titleColor=INK),
+        strokeDash=alt.StrokeDash(
+            SERIES,
+            type="nominal",
+            sort=None,
+            scale=alt.Scale(domain=series_order, range=[[1, 0], [10, 6]]),
+            legend=None,
         ),
+        order=alt.value(0),
     )
 )
 
-# Baseline diagonal line
-baseline_line = (
-    alt.Chart(df_combined[df_combined["Type"] == "Baseline"])
-    .mark_line(strokeWidth=3, strokeDash=[8, 4], color=INK_SOFT)
-    .encode(x="population:Q", y="gain:Q")
-)
-
-# Legend in lower-right area (out of data overlap)
-legend_model_line = (
-    alt.Chart(pd.DataFrame({"x": [68, 68], "y": [15, 20]}))
-    .mark_line(strokeWidth=4, color=BRAND)
-    .encode(x=alt.X("x:Q", scale=alt.Scale(domain=[0, 100])), y=alt.Y("y:Q", scale=alt.Scale(domain=[0, 100])))
-)
-
-legend_model_text = (
-    alt.Chart(pd.DataFrame({"x": [72], "y": [17.5], "text": ["Model"]}))
-    .mark_text(align="left", fontSize=18, color=INK)
-    .encode(x="x:Q", y="y:Q", text="text:N")
-)
-
-legend_baseline_line = (
-    alt.Chart(pd.DataFrame({"x": [68, 68], "y": [8, 13]}))
-    .mark_line(strokeWidth=3, strokeDash=[8, 4], color=INK_SOFT)
-    .encode(x=alt.X("x:Q", scale=alt.Scale(domain=[0, 100])), y=alt.Y("y:Q", scale=alt.Scale(domain=[0, 100])))
-)
-
-legend_baseline_text = (
-    alt.Chart(pd.DataFrame({"x": [72], "y": [10.5], "text": ["Baseline"]}))
-    .mark_text(align="left", fontSize=18, color=INK)
-    .encode(x="x:Q", y="y:Q", text="text:N")
-)
-
-# Combine all layers
 chart = (
-    alt.layer(
-        area_model,
-        baseline_line,
-        model_curve,
-        legend_model_line,
-        legend_model_text,
-        legend_baseline_line,
-        legend_baseline_text,
-    )
+    alt.layer(area, lines)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title("gain-curve · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
+        title=alt.Title("gain-curve · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
-    .configure_axis(gridColor=INK_SOFT, gridOpacity=0.10, gridDash=[2, 2], domainColor=INK_SOFT, tickColor=INK_SOFT)
+    .configure_axis(
+        gridColor=INK,
+        gridOpacity=0.12,
+        gridDash=[2, 2],
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=12,
+        titleFontSize=14,
+    )
+    .configure_legend(labelColor=INK, labelFontSize=12, symbolSize=600, rowPadding=6)
     .configure_view(strokeWidth=0, fill=PAGE_BG)
-    .configure_title(color=INK)
 )
 
-# Save output
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_W or img.height > TARGET_H:
+    scale = min(TARGET_W / img.width, TARGET_H / img.height)
+    img = img.resize((int(img.width * scale), int(img.height * scale)), Image.LANCZOS)
+canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
