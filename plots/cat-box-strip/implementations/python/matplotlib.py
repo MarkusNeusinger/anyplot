@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 cat-box-strip: Box Plot with Strip Overlay
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-13
@@ -8,89 +8,90 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-BRAND = "#009E73"  # Okabe-Ito position 1
+# Imprint palette: all eight positions, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
 
-# Data - Generate groups with different distributions to showcase features
+# Constants
+MEDIAN_COLOR = "#AE3030"  # Imprint position 5, a red accent that separates the median from the green boxes
+JITTER = 0.08  # standard deviation of the sideways jitter, in category-width units
+
+# Columns: set these to your table's column names
+GROUP = "Treatment group"  # role: category
+RESPONSE = "Response value (score)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("responses.csv")
 np.random.seed(42)
+control = np.random.normal(50, 8, 35)
+treatment_a = np.random.normal(65, 12, 40)  # higher mean, more spread
+treatment_b = np.concatenate([np.random.normal(45, 5, 27), np.array([15, 80, 82])])  # tight core with outliers
+treatment_c = np.random.normal(55, 6, 45)
+df = pd.DataFrame(
+    {
+        GROUP: ["Control"] * 35 + ["Treatment A"] * 40 + ["Treatment B"] * 30 + ["Treatment C"] * 45,
+        RESPONSE: np.concatenate([control, treatment_a, treatment_b, treatment_c]),
+    }
+)
 
-categories = ["Control", "Treatment A", "Treatment B", "Treatment C"]
-n_points = [35, 40, 30, 45]  # Different sample sizes per group
+# Plot: reads only df and the constants above
+groups = list(df[GROUP].drop_duplicates())
+positions = np.arange(len(groups)) + 1
+values = [df.loc[df[GROUP] == g, RESPONSE].dropna().to_numpy() for g in groups]
 
-# Create varied distributions to show boxplot features
-data = {
-    "Control": np.random.normal(50, 8, n_points[0]),
-    "Treatment A": np.random.normal(65, 12, n_points[1]),  # Higher mean, more spread
-    "Treatment B": np.concatenate(
-        [  # Bimodal with outliers
-            np.random.normal(45, 5, n_points[2] - 3),
-            np.array([15, 80, 82]),  # Outliers
-        ]
-    ),
-    "Treatment C": np.random.normal(55, 6, n_points[3]),  # Moderate
-}
-
-# Prepare data for plotting
-box_data = [data[cat] for cat in categories]
-positions = np.arange(len(categories)) + 1
-
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Box plot
 ax.boxplot(
-    box_data,
+    values,
     positions=positions,
-    tick_labels=categories,
+    tick_labels=groups,
     widths=0.5,
     patch_artist=True,
-    boxprops={"facecolor": BRAND, "alpha": 0.4, "linewidth": 2, "edgecolor": INK_SOFT},
-    medianprops={"color": "#AE3030", "linewidth": 3},
-    whiskerprops={"color": INK_SOFT, "linewidth": 2},
-    capprops={"color": INK_SOFT, "linewidth": 2},
+    boxprops={"facecolor": BRAND, "alpha": 0.4, "linewidth": 1.2, "edgecolor": INK_SOFT},
+    medianprops={"color": MEDIAN_COLOR, "linewidth": 2},
+    whiskerprops={"color": INK_SOFT, "linewidth": 1.2},
+    capprops={"color": INK_SOFT, "linewidth": 1.2},
     flierprops={
         "marker": "o",
         "markerfacecolor": BRAND,
-        "markersize": 10,
+        "markersize": 5,
         "alpha": 0.7,
         "markeredgecolor": INK_SOFT,
-        "markeredgewidth": 1,
+        "markeredgewidth": 0.5,
     },
 )
 
-# Strip plot overlay - add jittered points
-for pos, cat in zip(positions, categories, strict=True):
-    y = data[cat]
-    # Jitter x positions
-    x = np.random.normal(pos, 0.08, len(y))
-    ax.scatter(x, y, s=100, alpha=0.6, color=BRAND, edgecolor=PAGE_BG, linewidth=1, zorder=3)
+# Strip overlay: every observation at its value, jittered sideways only
+for pos, y in zip(positions, values, strict=False):
+    x = np.random.normal(pos, JITTER, len(y))
+    ax.scatter(x, y, s=22, alpha=0.6, color=BRAND, edgecolor=PAGE_BG, linewidth=0.5, zorder=3)
 
 # Style
-ax.set_xlabel("Treatment Group", fontsize=20, color=INK)
-ax.set_ylabel("Response Value (score)", fontsize=20, color=INK)
-ax.set_title("cat-box-strip · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.set_title("cat-box-strip · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(GROUP, fontsize=10, color=INK)
+ax.set_ylabel(RESPONSE, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 
-# Spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for s in ("left", "bottom"):
-    ax.spines[s].set_color(INK_SOFT)
+low, high = df[RESPONSE].min(), df[RESPONSE].max()
+pad = (high - low) * 0.06
+ax.set_ylim(low - pad, high + pad)
 
-# Grid
+for side in ("top", "right"):
+    ax.spines[side].set_visible(False)
+for side in ("left", "bottom"):
+    ax.spines[side].set_color(INK_SOFT)
+
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
-
-# Adjust y-axis to show all data including outliers
-ax.set_ylim(0, 100)
+ax.set_axisbelow(True)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
