@@ -1,108 +1,120 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-decomposition: Time Series Decomposition Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-14
 """
 
 import os
-import sys
 
-
-# Fix sys.path to avoid circular import: remove current dir and script location
-_script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir and os.path.abspath(p) != os.getcwd()]
-sys.path.insert(0, "/usr/lib/python3.13")
-sys.path.insert(0, "/usr/local/lib/python3.13/dist-packages")
-
-import altair as alt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-from statsmodels.tsa.seasonal import seasonal_decompose  # noqa: E402
+import altair as alt
+import numpy as np
+import pandas as pd
+from PIL import Image
+from statsmodels.tsa.seasonal import seasonal_decompose
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (component colors)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: one position per component, in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Monthly airline passengers
-np.random.seed(42)
-dates = pd.date_range("2018-01-01", periods=96, freq="MS")
-trend = np.linspace(100, 180, 96)
-seasonal = 30 * np.sin(2 * np.pi * np.arange(96) / 12)
-noise = np.random.normal(0, 8, 96)
-values = trend + seasonal + noise
+# Constants
+PERIOD = 12  # seasonal cycle length in observations (monthly data, yearly cycle)
+COMPONENTS = ["Original", "Trend", "Seasonal", "Residual"]
 
-# Decompose time series
-series = pd.Series(values, index=dates)
-decomposition = seasonal_decompose(series, model="additive", period=12)
+# Columns: set these to your table's column names
+DATE = "Month"  # role: date
+PASSENGERS = "Passengers (thousands)"  # role: value
 
-# Create dataframe with all components
-df_decomp = pd.DataFrame(
-    {
-        "date": dates,
-        "Original": values,
-        "Trend": decomposition.trend,
-        "Seasonal": decomposition.seasonal,
-        "Residual": decomposition.resid,
-    }
-)
+# Data: replace this block with your own table, for example df = pd.read_csv("passengers.csv")
+rng = np.random.default_rng(42)
+months = pd.date_range("2018-01-01", periods=96, freq="MS")
+step = np.arange(len(months))
+passengers = np.linspace(100, 180, len(months)) + 30 * np.sin(2 * np.pi * step / 12) + rng.normal(0, 8, len(months))
+df = pd.DataFrame({DATE: months, PASSENGERS: passengers})
 
-# Melt for faceted plotting
-df_long = df_decomp.melt(id_vars=["date"], var_name="component", value_name="value")
+# Plot: reads only df and the constants above
+series = df.set_index(DATE)[PASSENGERS]
+period = max(2, min(PERIOD, len(series) // 2))  # the method needs two full cycles
+result = seasonal_decompose(series.interpolate(limit_direction="both"), model="additive", period=period)
+wide = pd.DataFrame(
+    {"Original": series, "Trend": result.trend, "Seasonal": result.seasonal, "Residual": result.resid}
+).reset_index()
+long = wide.melt(id_vars=DATE, var_name="component", value_name="value")
 
-# Component order
-component_order = ["Original", "Trend", "Seasonal", "Residual"]
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+date_field = DATE.translate(ESCAPE)
 
-# Color mapping using Okabe-Ito palette
-color_map = {component: IMPRINT[i] for i, component in enumerate(component_order)}
+title = "timeseries-decomposition · python · altair · anyplot.ai"
+title_size = round(16 * min(1.0, 67 / len(title)))
 
-# Base chart with encoding
-base_chart = (
-    alt.Chart(df_long)
-    .mark_line(strokeWidth=2.5)
+lines = (
+    alt.Chart(long)
+    .mark_line(strokeWidth=1.8)
     .encode(
         x=alt.X(
-            "date:T", title="Date", axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=-45, tickCount=12)
+            date_field, type="temporal", title=DATE, axis=alt.Axis(format="%b %Y", tickCount=8, labelAngle=0, grid=True)
         ),
-        y=alt.Y("value:Q", title="", axis=alt.Axis(labelFontSize=16, titleFontSize=18)),
+        y=alt.Y("value", type="quantitative", title=None, scale=alt.Scale(zero=False)),
         color=alt.Color(
-            "component:N", scale=alt.Scale(domain=component_order, range=list(color_map.values())), legend=None
+            "component",
+            type="nominal",
+            sort=COMPONENTS,
+            scale=alt.Scale(domain=COMPONENTS, range=IMPRINT_PALETTE),
+            legend=None,
         ),
-        tooltip=["date:T", "value:Q", "component:N"],
+        tooltip=[
+            alt.Tooltip(date_field, type="temporal", title=DATE),
+            alt.Tooltip("value", type="quantitative", title=PASSENGERS, format=".1f"),
+            alt.Tooltip("component", type="nominal", title="Component"),
+        ],
     )
+    .properties(width=560, height=72)
 )
 
-# Create faceted chart with grid lines
 chart = (
-    base_chart.properties(width=1600, height=200)
-    .facet(
+    lines.facet(
         row=alt.Row(
-            "component:N",
-            sort=component_order,
+            "component",
+            type="nominal",
+            sort=COMPONENTS,
             title=None,
-            header=alt.Header(
-                labelFontSize=22, labelFontWeight="bold", labelOrient="left", labelAlign="left", labelPadding=10
-            ),
-        )
+            header=alt.Header(labelFontSize=11, labelFontWeight="bold", labelOrient="left", labelPadding=8),
+        ),
+        spacing=14,
     )
-    .properties(title=alt.Title("timeseries-decomposition · altair · anyplot.ai", fontSize=28, anchor="middle", dy=-10))
-    .configure_view(strokeWidth=0, fill=PAGE_BG)
-    .configure_facet(spacing=20)
-    .configure_axis(
-        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.12, labelColor=INK_SOFT, titleColor=INK
-    )
-    .configure_title(color=INK, fontSize=28)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
     .resolve_scale(y="independent")
+    .properties(background=PAGE_BG, title=alt.Title(title, fontSize=title_size, anchor="middle", color=INK))
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.12,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
+    )
+    .configure_header(labelColor=INK)
+    .configure_title(color=INK)
     .interactive()
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) the PNG to the canonical landscape canvas
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TW or img.height > TH:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, exceeds target {TW}x{TH}; shrink width/height")
+if img.size != (TW, TH):
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - img.width) // 2, (TH - img.height) // 2))
+    canvas.save(f"plot-{THEME}.png")
