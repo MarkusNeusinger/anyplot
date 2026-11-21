@@ -1,7 +1,7 @@
 """anyplot.ai
 circos-basic: Circos Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-15
+Quality: pending | Updated: 2026-05-15
 """
 
 import os
