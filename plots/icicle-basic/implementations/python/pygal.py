@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 icicle-basic: Basic Icicle Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-13
@@ -6,12 +6,12 @@ Quality: 90/100 | Updated: 2026-05-13
 
 import os
 import sys
-import xml.etree.ElementTree as ET
 
 
 sys.path.pop(0)
 
 import cairosvg
+import pandas as pd
 from pygal.style import Style
 
 
@@ -22,219 +22,175 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-IMPRINT = (
-    "#009E73",  # bluish green (brand)
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-    "#BD8233",  # reddish purple
-    "#AE3030",  # orange
-    "#2ABCCD",  # sky blue
-    "#954477",  # yellow
+# Imprint palette: one color per hierarchy level, in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Label colors drawn inside the rectangles (fills are the same in both themes)
+LABEL_DARK = "#1A1A17"
+LABEL_LIGHT = "#FAF8F1"
+
+# Columns: set these to your table's column names
+NODE = "name"  # role: name
+PARENT = "parent"  # role: parent
+VALUE = "value"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("hierarchy.csv")
+# Organizational hierarchy (Company -> Divisions -> Departments -> Teams); values sit on the leaves
+df = pd.DataFrame(
+    [
+        ("TechCorp", None, None),
+        ("Engineering", "TechCorp", None),
+        ("Operations", "TechCorp", None),
+        ("Sales", "TechCorp", None),
+        ("Backend", "Engineering", None),
+        ("Frontend", "Engineering", None),
+        ("DevOps", "Engineering", None),
+        ("HR", "Operations", None),
+        ("Finance", "Operations", None),
+        ("APAC", "Sales", None),
+        ("EMEA", "Sales", None),
+        ("APIs", "Backend", 45),
+        ("Databases", "Backend", 50),
+        ("Services", "Backend", 40),
+        ("Web", "Frontend", 35),
+        ("Mobile", "Frontend", 30),
+        ("Infrastructure", "DevOps", 55),
+        ("Recruiting", "HR", 25),
+        ("Payroll", "HR", 15),
+        ("Accounting", "Finance", 35),
+        ("Planning", "Finance", 25),
+        ("Enterprise", "APAC", 60),
+        ("SMB", "APAC", 40),
+        ("EMEA Enterprise", "EMEA", 70),
+        ("EMEA SMB", "EMEA", 50),
+    ],
+    columns=[NODE, PARENT, VALUE],
 )
 
-# Data: Organizational hierarchy (Company -> Divisions -> Departments -> Teams)
-hierarchy_data = [
-    ("TechCorp", None, 0),
-    ("Engineering", "TechCorp", 0),
-    ("Operations", "TechCorp", 0),
-    ("Sales", "TechCorp", 0),
-    ("Backend", "Engineering", 0),
-    ("Frontend", "Engineering", 0),
-    ("DevOps", "Engineering", 0),
-    ("HR", "Operations", 0),
-    ("Finance", "Operations", 0),
-    ("APAC", "Sales", 0),
-    ("EMEA", "Sales", 0),
-    ("APIs", "Backend", 45),
-    ("Databases", "Backend", 50),
-    ("Services", "Backend", 40),
-    ("Web", "Frontend", 35),
-    ("Mobile", "Frontend", 30),
-    ("Infrastructure", "DevOps", 55),
-    ("Recruiting", "HR", 25),
-    ("Payroll", "HR", 15),
-    ("Accounting", "Finance", 35),
-    ("Planning", "Finance", 25),
-    ("Enterprise", "APAC", 60),
-    ("SMB", "APAC", 40),
-    ("EMEA_Enterprise", "EMEA", 70),
-    ("EMEA_SMB", "EMEA", 50),
-]
-
-# Build tree structure
-nodes = {}
+# Plot
+# Tree structure from the parent column
 children = {}
+for name, parent in zip(df[NODE], df[PARENT], strict=True):
+    if pd.notna(parent):
+        children.setdefault(parent, []).append(name)
+root = df.loc[df[PARENT].isna(), NODE].iloc[0]
+leaf_value = dict(zip(df[NODE], df[VALUE], strict=True))
 
-for name, parent, value in hierarchy_data:
-    nodes[name] = {"name": name, "parent": parent, "value": value}
-    if parent is not None:
-        if parent not in children:
-            children[parent] = []
-        children[parent].append(name)
 
-# Calculate total values bottom-up
-node_depths = {"TechCorp": 0}
-queue = ["TechCorp"]
-depth_order = []
-while queue:
-    current = queue.pop(0)
-    depth_order.append(current)
-    if current in children:
-        for child in children[current]:
-            node_depths[child] = node_depths[current] + 1
-            queue.append(child)
+def total(name):
+    """Value of a node: its own value for a leaf, the sum of its children otherwise."""
+    if name not in children:
+        return leaf_value[name]
+    return sum(total(child) for child in children[name])
 
-node_values = {}
-for node_name in reversed(depth_order):
-    if node_name not in children:
-        node_values[node_name] = nodes[node_name]["value"]
-    else:
-        node_values[node_name] = sum(node_values[child] for child in children[node_name])
 
-# Calculate positions (horizontal icicle layout)
-positions = {}
-positions["TechCorp"] = {"x_start": 0, "x_end": 1, "depth": 0, "value": node_values["TechCorp"]}
+# Layout: x extent as a share of the root, depth as the row
+positions = {root: (0.0, 1.0, 0)}
+order = [root]
+for name in order:
+    x0, x1, depth = positions[name]
+    cursor = x0
+    for child in children.get(name, []):
+        share = total(child) / total(name) * (x1 - x0)
+        positions[child] = (cursor, cursor + share, depth + 1)
+        cursor += share
+        order.append(child)
+max_depth = max(depth for _, _, depth in positions.values())
+# Row labels follow the number of levels; the first four are the sample's domain names
+level_labels = ["Company", "Division", "Department", "Team"]
 
-for node_name in depth_order:
-    if node_name in children:
-        pos = positions[node_name]
-        current_x = pos["x_start"]
-        total_value = node_values[node_name]
-        for child in children[node_name]:
-            child_value = node_values[child]
-            child_width = (child_value / total_value) * (pos["x_end"] - pos["x_start"])
-            positions[child] = {
-                "x_start": current_x,
-                "x_end": current_x + child_width,
-                "depth": pos["depth"] + 1,
-                "value": child_value,
-            }
-            current_x += child_width
-
-max_depth = max(pos["depth"] for pos in positions.values())
-
-# Chart dimensions
-WIDTH = 4800
-HEIGHT = 2700
-MARGIN_TOP = 140
-MARGIN_BOTTOM = 120
+# Canvas: 3200 x 1800 landscape
+WIDTH = 3200
+HEIGHT = 1800
+MARGIN_TOP = 170
+MARGIN_BOTTOM = 70
 MARGIN_LEFT = 60
-MARGIN_RIGHT = 200
+MARGIN_RIGHT = 330
 PLOT_WIDTH = WIDTH - MARGIN_LEFT - MARGIN_RIGHT
 PLOT_HEIGHT = HEIGHT - MARGIN_TOP - MARGIN_BOTTOM
+row_height = PLOT_HEIGHT / (max_depth + 1)
+GAP = 4
+LABEL_SIZE = 44
+CHAR_WIDTH = 0.66  # average glyph width as a share of the font size
+TITLE_SIZE = 66
 
-# Color by depth using Okabe-Ito subset with brand as primary
-DEPTH_COLORS = [IMPRINT[i % len(IMPRINT)] for i in range(max_depth + 1)]
-
-# Create pygal style for metadata extraction
+# pygal Style carries the theme tokens and the palette
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
+    colors=tuple(IMPRINT_PALETTE),
+    title_font_size=TITLE_SIZE,
+    label_font_size=LABEL_SIZE,
+    major_label_font_size=LABEL_SIZE,
+    legend_font_size=LABEL_SIZE,
 )
 
-# Build SVG manually (icicle requires custom rendering)
-svg_ns = "http://www.w3.org/2000/svg"
-ET.register_namespace("", svg_ns)
 
-svg_root = ET.Element("svg", xmlns=svg_ns, width=str(WIDTH), height=str(HEIGHT), viewBox=f"0 0 {WIDTH} {HEIGHT}")
-svg_root.set("style", f"background-color: {PAGE_BG};")
+def luminance(hex_color):
+    """Relative luminance of a #RRGGBB color."""
+    channels = [int(hex_color[i : i + 2], 16) / 255 for i in (1, 3, 5)]
+    lin = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
 
-# Add title
-title_elem = ET.SubElement(svg_root, "text")
-title_elem.set("x", str(WIDTH / 2))
-title_elem.set("y", "90")
-title_elem.set("text-anchor", "middle")
-title_elem.set("fill", INK)
-title_elem.set("font-size", "28")
-title_elem.set("font-family", "sans-serif")
-title_elem.set("font-weight", "500")
-title_elem.text = "icicle-basic · pygal · anyplot.ai"
 
-# Create main group for rectangles
-g = ET.SubElement(svg_root, "g")
-g.set("class", "icicle-chart")
+def label_color(fill):
+    """Pick the label color with the higher contrast against the fill."""
+    lum = luminance(fill)
+    contrast_dark = (lum + 0.05) / (luminance(LABEL_DARK) + 0.05)
+    contrast_light = (luminance(LABEL_LIGHT) + 0.05) / (lum + 0.05)
+    return LABEL_DARK if contrast_dark >= contrast_light else LABEL_LIGHT
 
-# Draw rectangles
-row_height = PLOT_HEIGHT / (max_depth + 1)
-gap = 2
 
-for node_name, pos in positions.items():
-    depth = pos["depth"]
-    x_start = pos["x_start"]
-    x_end = pos["x_end"]
-    width = x_end - x_start
+# Build the SVG by hand: pygal has no icicle chart type
+def esc(text):
+    """Escape text for SVG content."""
+    return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
-    # Calculate pixel positions
-    px_x = MARGIN_LEFT + x_start * PLOT_WIDTH
-    px_width = width * PLOT_WIDTH - gap
+
+parts = [
+    f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}">',
+    f'<rect x="0" y="0" width="{WIDTH}" height="{HEIGHT}" fill="{custom_style.background}"/>',
+    f'<text x="{WIDTH / 2}" y="105" text-anchor="middle" fill="{custom_style.foreground_strong}" '
+    f'font-size="{custom_style.title_font_size}" font-family="sans-serif" font-weight="500">'
+    "icicle-basic · python · pygal · anyplot.ai</text>",
+    '<g class="icicle-chart">',
+]
+
+for name, (x0, x1, depth) in positions.items():
+    px_x = MARGIN_LEFT + x0 * PLOT_WIDTH
+    px_width = (x1 - x0) * PLOT_WIDTH - GAP
     px_y = MARGIN_TOP + depth * row_height
-    px_height = row_height - gap
+    px_height = row_height - GAP
+    fill = custom_style.colors[depth]
+    label = str(name)
 
-    # Color by depth from Okabe-Ito
-    color = DEPTH_COLORS[depth % len(DEPTH_COLORS)]
+    parts.append(
+        f'<rect x="{px_x:.1f}" y="{px_y:.1f}" width="{max(0, px_width):.1f}" height="{px_height:.1f}" fill="{fill}">'
+        f"<title>{esc(label)}: {total(name):g}</title></rect>"
+    )
+    # Label only where the text fits inside its own rectangle
+    if len(label) * LABEL_SIZE * CHAR_WIDTH <= px_width - 24:
+        parts.append(
+            f'<text x="{px_x + px_width / 2:.1f}" y="{px_y + px_height / 2:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="{label_color(fill)}" font-size="{LABEL_SIZE}" '
+            f'font-family="sans-serif" font-weight="500">{esc(label)}</text>'
+        )
+parts.append("</g>")
 
-    # Create rectangle
-    rect = ET.SubElement(g, "rect")
-    rect.set("x", f"{px_x:.1f}")
-    rect.set("y", f"{px_y:.1f}")
-    rect.set("width", f"{max(0, px_width):.1f}")
-    rect.set("height", f"{px_height:.1f}")
-    rect.set("fill", color)
-    rect.set("stroke", PAGE_BG)
-    rect.set("stroke-width", "2")
-
-    # Add tooltip
-    title = ET.SubElement(rect, "title")
-    title.text = f"{node_name}: {pos['value']}"
-
-    # Add label if rectangle is wide enough
-    if px_width > 70:
-        label = node_name.replace("_", " ")
-        max_chars = max(3, int(px_width / 24))
-        if len(label) > max_chars:
-            label = label[: max_chars - 2] + ".."
-
-        fontsize = min(22, max(14, int(px_width / 7)))
-
-        text = ET.SubElement(g, "text")
-        text.set("x", f"{px_x + px_width / 2:.1f}")
-        text.set("y", f"{px_y + px_height / 2 + fontsize / 3:.1f}")
-        text.set("text-anchor", "middle")
-        text.set("dominant-baseline", "central")
-        text.set("fill", INK)
-        text.set("font-size", str(fontsize))
-        text.set("font-family", "sans-serif")
-        text.set("font-weight", "500")
-        text.text = label
-
-# Add depth level legend on right
-level_labels = ["Company", "Division", "Department", "Team", "Function"]
-labels_g = ET.SubElement(svg_root, "g")
-labels_g.set("class", "level-labels")
-
+# Level names on the right
+parts.append('<g class="level-labels">')
 for depth in range(max_depth + 1):
-    y_pos = MARGIN_TOP + depth * row_height + row_height / 2
-    level_label = level_labels[depth] if depth < len(level_labels) else f"Level {depth}"
-
-    text = ET.SubElement(labels_g, "text")
-    text.set("x", str(MARGIN_LEFT + PLOT_WIDTH + 30))
-    text.set("y", f"{y_pos + 6:.1f}")
-    text.set("fill", INK_SOFT)
-    text.set("font-size", "16")
-    text.set("font-family", "sans-serif")
-    text.text = level_label
-
-# Write SVG to file and render PNG
-svg_output = ET.tostring(svg_root, encoding="unicode")
+    level_label = level_labels[depth] if depth < len(level_labels) else f"Level {depth + 1}"
+    parts.append(
+        f'<text x="{MARGIN_LEFT + PLOT_WIDTH + 36}" y="{MARGIN_TOP + (depth + 0.5) * row_height:.1f}" '
+        f'dominant-baseline="central" fill="{INK_SOFT}" font-size="{LABEL_SIZE}" '
+        f'font-family="sans-serif">{esc(level_label)}</text>'
+    )
+parts.append("</g></svg>")
+svg_output = "".join(parts)
 
 with open(f"plot-{THEME}.html", "w") as f:
     f.write(svg_output)
