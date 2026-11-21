@@ -50,9 +50,10 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
 4. **Refresh the README showcase**, on the release branch. Run
    `uv run python scripts/readme_showcase.py`: it redraws `docs/assets/readme-showcase.png` from the
    live `/stats` and stops when MonoLisa or a pick's preview is missing; look at the image before
-   committing it. Then count the merged pull requests from the owner's account
-   (`gh pr list --state merged --author MarkusNeusinger --limit 5000 --json number --jq length`) and
-   update these places in one commit:
+   committing it. Then count the merged pull requests from the owner's account with the search API's
+   total
+   (`gh api -X GET search/issues -f q='repo:MarkusNeusinger/anyplot is:pr is:merged author:MarkusNeusinger' --jq .total_count`;
+   `gh pr list` stops at 1,000 results whatever its `--limit`) and update these places in one commit:
    - `MERGED_PRS_SNAPSHOT` in `tests/unit/test_readme_claims.py`: the count and today's date.
    - The floor in `README.md` and in `docs/concepts/ai-workflow.md` ("more than N pull requests from
      my account have merged"): the last multiple of 50 below the count (869 merged gave "more than
