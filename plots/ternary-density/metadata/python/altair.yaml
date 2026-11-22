@@ -2,47 +2,52 @@ library: altair
 language: python
 specification_id: ternary-density
 created: '2026-01-11T09:32:43Z'
-updated: '2026-05-19T10:41:19Z'
+updated: '2026-11-22T16:46:07Z'
 generated_by: claude-sonnet
-workflow_run: 26091386646
+workflow_run: 45044915886
 issue: 3696
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - Perfect ternary-to-Cartesian coordinate transformation with correct half-plane
-    triangle masking
-  - All theme tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT) correctly applied to every
-    chrome element in both renders
-  - 'Full spec compliance: KDE with auto bandwidth (Scott''s rule), viridis colormap,
-    ternary grid lines, vertex labels with units'
-  - Geologically realistic three-cluster sediment dataset (sandy/silty/clay-rich)
-    that tells a clear compositional story
-  - Expert Altair layer composition using idiomatic mark_rect bounds, detail encoding,
-    and X2/Y2 secondary position encodings
+  - 'Density surface now uses the imprint_seq two-stop range (#009E73 to #4467A3)
+    via alt.Scale(range=...), identical in both themes'
+  - Ternary grid layered above the density at 0.3 opacity, so all three line sets
+    stay visible over the peaks (C4)
+  - 160x160 KDE grid with slightly overlapping mark_rect cells gives a smooth, untiled
+    surface inside the triangle
+  - 'Idiomatic Altair layering: shared alt.Scale objects across four layers, X2/Y2
+    cell bounds, detail+order channels for the grid lines'
+  - Correct ternary-to-Cartesian transform with Scott-bandwidth gaussian_kde; three
+    peaks sit at the sandy, silty and clay-rich compositions
   weaknesses:
-  - 'DE-01 moderate: design is professional but lacks final aesthetic flourish — consider
-    adding sparse contour lines at key density thresholds or cluster region labels
-    near each density peak'
-  - 'VQ-05 minor: some wasted space below the triangle base; tightening Y domain or
-    switching to square canvas format could improve utilization for this symmetric
-    shape'
+  - 'SC-02 (both): a dotted teal fringe of density cells shows just outside both slanted
+    triangle edges, so density color is drawn beyond the edges (C2) → no density pixels
+    outside the outline. Likely cause: the mask margin=0.004 together with the x2/y2
+    cell overhang of dx*1.6 / dy*1.6 lets edge cells poke past the slanted sides.'
+  - 'VQ-05 (both): the chart block (title to base labels) fills only about the middle
+    70 % of the 2400 px height, leaving roughly 250 px empty above the title and 320
+    px below the vertex labels → let the triangle fill more of the square (about +60
+    px of inner view height). Likely cause: properties(width=440, height=440) with
+    Y_DOMAIN [-0.1, 1.1] while the triangle only reaches 0.87, then centre-padded.'
+  - 'Suggestion: contour lines at a few density levels, which the Notes suggest, would
+    make the peaks easier to read on the green-blue ramp.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "Sediment Composition · ternary-density · python · altair · anyplot.ai" at 28px in dark ink (#1A1A17) — clearly readable. Vertex labels "Sand (%)", "Silt (%)", "Clay (%)" at 24px bold dark ink — fully readable. Density legend title/labels in INK_SOFT tokens — readable. No text readability issues.
-      Data: Viridis colormap density heatmap inside equilateral triangle; three distinct density peaks (yellow-green hotspots) near Sand vertex (bottom-left), Silt vertex (bottom-right), and Clay vertex (top); low-density areas in deep purple; subtle ternary grid lines at 0.35 opacity visible within triangle; dark triangle outline at strokeWidth=3
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas.
+      Chrome: title 'Sediment Composition · ternary-density · python · altair · anyplot.ai' in dark ink across about 85 % of the width; bold vertex labels Sand (%) bottom-left, Silt (%) bottom-right, Clay (%) above the apex; Density legend top-right in an elevated box with labels 0 and 6. Dark triangle outline, thin dark ternary grid at 10 % steps above the density. All text readable.
+      Data: smooth green (#009E73, low) to blue (#4467A3, high) density surface inside the triangle with three blue peaks near the sand-silt base (left), the silt corner (right) and upper right edge (clay-rich). A faint dotted teal fringe shows just outside both slanted edges.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title and vertex labels rendered in light ink (#F0EFE8) — clearly readable against dark background. Triangle outline flips to light (#F0EFE8). Legend text in INK_SOFT dark tokens (#B8B7B0) — readable. No dark-on-dark text failures detected.
-      Data: Viridis colormap pattern and three density clusters are visually identical to light render — same yellow-green hotspots at Sandy/Silty/Clay-rich peaks, same purple low-density field. Only chrome elements (background, text, outline) changed between themes.
+      Background: warm near-black #1A1A17.
+      Chrome: title, vertex labels and outline in light ink; grid lines light at low opacity; legend box elevated dark with light title and soft-grey labels. No dark-on-dark text.
+      Data: density colors identical to the light render; only chrome flipped. Same dotted fringe along the slanted edges.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,74 +59,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, vertex labels 24px, legend title 20px, legend labels
-          16px — all explicitly set and readable in both themes
+        comment: Title 16, vertex labels 14 bold, legend 12/10 explicitly set; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; vertex labels cleanly positioned outside triangle
+        comment: No text collisions; vertex labels clear of the triangle and legend
+          clear of the plot
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density heatmap with three distinct clusters clearly visible; viridis
-          contrast excellent
+        comment: Density surface, outline and grid all visible in both themes; legend
+          gradient matches the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Two-stop green to blue ramp with dark/light chrome; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: true
-        comment: Good layout; triangle fills ~65% of canvas with balanced margins;
-          some inherent empty space below triangular base
+        passed: false
+        comment: Correct 2400x2400 canvas, but the padded chart leaves wide empty
+          bands above the title and below the base labels (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels include units (%) and legend labeled Density
+        comment: Vertex labels Sand/Silt/Clay (%) with unit; legend titled Density
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous density data; correct backgrounds #FAF8F1/#1A1A17;
-          all chrome tokens theme-adaptive'
+        comment: 'imprint_seq two-stop range #009E73 to #4467A3; backgrounds #FAF8F1
+          / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Strong and professional — appropriate viridis, clean triangular boundary,
-          all theme tokens — above default but not FiveThirtyEight level
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid lines at 0.35 opacity, no axes, styled legend with custom fill/stroke,
-          view strokeWidth=0
+        passed: false
+        comment: Grid above the density at low opacity as the Notes ask, no axes;
+          nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Three sediment regimes immediately visible via viridis color hierarchy;
-          viewer sees compositional separation without annotations
+        passed: false
+        comment: Density displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -129,28 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary density plot with KDE heatmap overlay
+        comment: Ternary KDE density surface in an equilateral triangle
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: KDE with Scott bandwidth, viridis, ternary grid lines, vertex labels,
-          triangle outline — all spec requirements met
+        passed: false
+        comment: 'C1, C3, C4 met (labels, uniform ramp with legend, grid visible above
+          density); C2 partly missed: a dotted teal fringe of density cells shows
+          just outside both slanted edges (defect line). Contours optional, not drawn'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sand/Silt/Clay correctly mapped to ternary Cartesian; components
-          sum to 100%
+        comment: Correct ternary to Cartesian transform; peaks sit at the three cluster
+          compositions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows {Descriptive Title} · {spec-id} · python · altair ·
-          anyplot.ai format; density legend correct
+        comment: Title 'Sediment Composition · ternary-density · python · altair ·
+          anyplot.ai'; legend Density with high end labelled
     data_quality:
       score: 15
       max: 15
@@ -160,22 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three distinct clusters (sandy, silty, clay-rich) demonstrate all
-          aspects of multi-modal compositional density
+        comment: Three separate peaks plus low-density field show the multimodal density
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sediment composition (sand/silt/clay) is a well-established geological
-          measurement domain; completely neutral
+        comment: Sand/silt/clay sediment composition, neutral and real-world
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Beta distributions produce geologically plausible proportions; normalization
-          ensures exact 100% constraint
+        comment: Components normalised to 100%; no Check values in the spec; peaks
+          near sandy, silty and clay-rich corners as generated
     code_quality:
       score: 10
       max: 10
@@ -185,65 +189,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data generation → coordinate transform → KDE →
-          DataFrame → chart layers → save'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports (os, altair, numpy, pandas, scipy.stats.gaussian_kde)
-          are used
+        comment: All imports used (PIL for the pad step)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; list comprehension for density grid; appropriate
-          complexity
+        comment: Vectorised cell frame via np.nonzero; scipy gaussian_kde for the
+          KDE
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; Altair 6.0.0 API used
-          correctly
+        comment: Saves plot-{THEME}.png padded to 2400x2400 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Expert Altair: correct encoding suffixes, alt.layer() composition,
-          configure_* chaining, alt.Scale(domain=) for axis alignment'
+        passed: false
+        comment: alt.layer with shared Scale objects, X2/Y2 secondary channels for
+          rect cells, detail+order channels to draw grouped grid lines
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: mark_rect with x1/x2/y1/y2 bounds for pixel-perfect cells, detail
-          channel for grid grouping, alt.X2/Y2 secondary encodings
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T16:42:15Z'
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
   - layer-composition
+  - colorbar
+  - annotations
   - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep:
   - kde
+  - normalization
   styling:
+  - minimal-chrome
   - custom-colormap
-  - alpha-blending
+  - grid-styling
