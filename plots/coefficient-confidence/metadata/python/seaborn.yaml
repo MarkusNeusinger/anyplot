@@ -2,52 +2,44 @@ library: seaborn
 language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:47:54Z'
-updated: '2026-05-18T12:26:04Z'
-generated_by: claude-haiku
-workflow_run: 26032787157
+updated: '2026-11-22T12:58:39Z'
+generated_by: claude-sonnet
+workflow_run: 45024543414
 issue: 3576
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - 'Flawless Visual Quality (30/30): Perfect text legibility, no overlap, excellent
-    layout and canvas utilization across both light and dark renders'
-  - 'Perfect theme adaptation: Both renders maintain identical data colors (#009E73)
-    while seamlessly switching chrome elements; no dark-on-dark or light-on-light
-    failures'
-  - 'Complete spec compliance: All required features present and correctly implemented;
-    proper title format and legend'
-  - 'Excellent code quality: Clean, reproducible, straightforward structure with proper
-    theme tokenization'
-  - 'Realistic, neutral data: Housing price scenario with descriptive variable names;
-    feature-rich (mix of positive/negative, significant/non-significant)'
+  - Points and interval lines share the significance color, and sns.scatterplot's
+    hue/palette dict produces a legend whose glyphs match the marks in both themes
+  - Variables sorted by coefficient so the largest effect sits at the top, each named
+    in full at its own row
+  - Significance is derived from whether the interval crosses zero, and the legend
+    labels say exactly that
+  - Exact 3200x1800 canvas with style-guide font sizes; chrome fully theme-adaptive
   weaknesses:
-  - 'Generic design execution: Uses default seaborn styling with theme tokens but
-    no custom aesthetic choices; plot looks like a well-configured library default,
-    not a distinctive design'
-  - 'Minimal visual refinement: Grid styling and spine handling are correct but follow
-    defaults; no advanced polish'
-  - 'Limited library leverage: Manual error bar construction bypasses seaborn''s higher-level
-    patterns; implementation is generic across plotting libraries'
+  - 'DE-02 (both): all four spines are drawn, a closed box around the plot, against
+    the style guide''s default L-shaped frame → remove the top and right spines. Likely
+    cause: sns.set_theme(style="ticks") without sns.despine() or ax.spines[''top''/''right''].set_visible(False).'
+  - 'Suggestion: sns.pointplot with errorbar=None or a native interval drawn by seaborn
+    would lean more on seaborn than ax.hlines.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with clean appearance
-      Chrome: Title "coefficient-confidence · python · seaborn · anyplot.ai" (24pt, dark text); x-axis label "Coefficient Estimate (Standardized)" (20pt); y-axis label "Predictor Variable" (20pt); tick labels all dark (#1A1A17) and clearly readable; grid subtle (alpha=0.10) with dashed zero-line reference
-      Data: Significant coefficients rendered in #009E73 (Okabe-Ito green), non-significant in neutral gray (#4A4A44); all 12 variable names fully visible; error bars (horizontal lines, 3pt width) and points (s=400) clearly distinguishable
-      Layout: 16:9 landscape, plot fills 60-70% of canvas with balanced margins; legend positioned lower right with clear labels
-      Legibility verdict: PASS - all text readable at full resolution; no light-on-light issues; excellent contrast throughout
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'coefficient-confidence · python · seaborn · anyplot.ai' dark, ~65% width; x label 'Coefficient Estimate (Standardized)', y label 'Predictor Variable', dark-gray tick labels; subtle x gridlines at ±0.2/±0.4; dashed gray zero line; four spines; legend lower right on elevated fill. All readable.
+      Data: 12 predictors sorted by coefficient (Square Footage top, Crime Rate Index bottom); 8 significant in #009E73 (markers and interval lines), 4 non-significant (Number of Bedrooms, Renovated Recently, Garage Spaces, Lot Size) in dark gray with intervals crossing zero.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with consistent theme appearance
-      Chrome: Title, axis labels, and tick labels all light-colored (#F0EFE8 for title/labels, #B8B7B0 for ticks); all clearly readable against dark background; dashed zero-line visible; legend positioned identically
-      Data: Significant coefficients remain #009E73 (identical to light render - no color shift); non-significant coefficients now in lighter gray (#B8B7B0) matching dark theme INK_SOFT token; all error bars and points clearly distinguishable; brand green (#009E73) stands out prominently on dark surface
-      Layout: Identical structure to light render; all elements properly positioned; no clipping or overlap
-      Legibility verdict: PASS - all text readable; no dark-on-dark failures; excellent contrast between data and background; data colors identical to light render (only chrome adapted)
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels light gray, spines light gray, gridlines faint, dashed zero line gray; legend on #242420 fill with light text. No dark-on-dark text.
+      Data: significant points and intervals identical #009E73; the non-significant neutral flips to light gray as the adaptive neutral anchor.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,48 +50,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 24pt, labels 20pt, ticks 16pt;
-          perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (style-guide
+          sizes); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all variable names and labels fully visible
+        comment: No text collisions; legend in the empty lower-right corner clear
+          of all intervals
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (s=400) and error bars (linewidth=3) perfectly adapted to
-          12-coefficient density
+        comment: 12 markers at s=110 with white edge and 1.8 px interval lines are
+          prominent for sparse data; legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast; CVD-safe
+        comment: Brand green vs neutral gray differ strongly in lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 16:9 layout; plot fills 60-70% of canvas with balanced margins
+        comment: 3200x1800 canvas, title ~65% of width, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context
+        comment: '''Coefficient Estimate (Standardized)'' names the effect measure;
+          ''Predictor Variable'' on y'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; all text theme-adaptive;
-          data colors identical between renders'
+        comment: 'Significant = #009E73, non-significant = adaptive INK_SOFT neutral;
+          backgrounds #FAF8F1/#1A1A17; chrome theme-adaptive'
     design_excellence:
-      score: 12
+      score: 7
       max: 20
       items:
       - id: DE-01
@@ -107,22 +102,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with theme tokens; professional but
-          not exceptional design
+        comment: Style-guide baseline with theme tokens; nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
         passed: false
-        comment: Subtle grid, proper spine handling, good margins; some polish visible
-          but follows defaults
+        comment: All four spines kept, against the style guide's default L-shaped
+          frame (defect line); x-only subtle grid otherwise baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clear visual hierarchy through color; zero reference line; good focal
-          points
+        comment: Significance coloring and magnitude ordering are what the Notes prescribe;
+          no further hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -132,26 +126,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct coefficient plot with confidence interval bars
+        comment: Horizontal coefficient plot with CI interval lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: points, CIs, zero line, significance coloring,
-          variable ordering'
+        comment: Zero line (C2), significance coloring with legend (C3), magnitude
+          ordering (C4), effect-measure axis label (C5), horizontal layout (C1) all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=coefficients, Y=variables, error bars=CIs; correct mapping
+        comment: Points at estimates, intervals from ci_lower to ci_upper; all data
+          inside the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels descriptive
+        comment: Mandated title format; legend 'CI includes zero' / 'CI excludes zero
+          (significant)' matches the significance flag
     data_quality:
       score: 15
       max: 15
@@ -161,20 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive/negative, significant/non-significant, varying CI
-          widths
+        comment: Positive and negative effects, significant and non-significant, varied
+          interval widths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price prediction; descriptive names; neutral topic
+        comment: Housing price regression with real predictor names; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values plausible for standardized regression
+        comment: Standardized coefficients between -0.31 and 0.45 plausible; no Check
+          values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -184,57 +182,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set; deterministic
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no over-engineering
+        comment: Vectorized hlines call, significance computed from the CI columns,
+          no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct format and API
+        comment: Saves plot-{THEME}.png at default bbox; current seaborn 0.13 API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Proper sns.scatterplot with hue/palette; correct patterns
+        passed: false
+        comment: sns.set_theme rc, sns.scatterplot with data=df, hue and palette dict;
+          standard usage
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic implementation; manual error bars could be replicated in
-          any library
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T12:55:28Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - manual-ticks
+  - layer-composition
+  - custom-legend
   patterns:
-  - data-generation
   - explicit-figure
   dataprep: []
   styling:
+  - alpha-blending
+  - edge-highlighting
   - grid-styling

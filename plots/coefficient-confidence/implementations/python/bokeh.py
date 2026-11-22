@@ -1,16 +1,16 @@
 """ anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-18
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-22
 """
 
 import os
 import time
 from pathlib import Path
 
-import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem, Span
+from bokeh.models import ColumnDataSource, HoverTool, Span
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -23,177 +23,153 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Regression coefficients for housing price prediction model
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-variables = [
-    "Square Footage",
-    "Number of Bedrooms",
-    "Number of Bathrooms",
-    "Age of House",
-    "Distance to City Center",
-    "Lot Size",
-    "Garage Size",
-    "School Rating",
-    "Crime Rate Index",
-    "Property Tax Rate",
-]
+# Constants
+NULL_VALUE = 0  # the null hypothesis: a coefficient of zero
+Z_95 = 1.96  # normal quantile of a 95% confidence interval
+LEGEND_LABELS = {True: "Significant (95% CI excludes zero)", False: "Not significant (95% CI crosses zero)"}
 
-# Generate realistic regression coefficients (some significant, some not)
-coefficients = np.array([0.45, 0.12, 0.18, -0.08, -0.22, 0.15, 0.09, 0.28, -0.35, -0.05])
-std_errors = np.array([0.05, 0.08, 0.06, 0.03, 0.07, 0.04, 0.06, 0.05, 0.09, 0.07])
+# Columns: set these to your table's column names
+VARIABLE = "Predictor variable"  # role: variable
+COEFFICIENT = "Coefficient estimate (standardized)"  # role: coefficient
+CI_LOWER = "95% CI lower"  # role: ci_lower
+CI_UPPER = "95% CI upper"  # role: ci_upper
+SIGNIFICANT = "Significant"  # role: significant
 
-# Calculate 95% confidence intervals
-ci_lower = coefficients - 1.96 * std_errors
-ci_upper = coefficients + 1.96 * std_errors
+# Data: replace this block with your own table, for example df = pd.read_csv("coefficients.csv")
+# Coefficients from a multiple linear regression predicting housing prices
+estimates = pd.DataFrame(
+    {
+        VARIABLE: [
+            "Square Footage",
+            "Number of Bedrooms",
+            "Number of Bathrooms",
+            "Age of House",
+            "Distance to City Center",
+            "Lot Size",
+            "Garage Size",
+            "School Rating",
+            "Crime Rate Index",
+            "Property Tax Rate",
+        ],
+        COEFFICIENT: [0.45, 0.12, 0.18, -0.08, -0.22, 0.15, 0.09, 0.28, -0.35, -0.05],
+        "std_error": [0.05, 0.08, 0.06, 0.03, 0.07, 0.04, 0.06, 0.05, 0.09, 0.07],
+    }
+)
+df = pd.DataFrame(
+    {
+        VARIABLE: estimates[VARIABLE],
+        COEFFICIENT: estimates[COEFFICIENT],
+        CI_LOWER: estimates[COEFFICIENT] - Z_95 * estimates["std_error"],
+        CI_UPPER: estimates[COEFFICIENT] + Z_95 * estimates["std_error"],
+    }
+)
+df[SIGNIFICANT] = ~((df[CI_LOWER] < NULL_VALUE) & (df[CI_UPPER] > NULL_VALUE))
 
-# Determine significance (CI does not cross zero)
-significant = ~((ci_lower < 0) & (ci_upper > 0))
+# Plot: reads only df and the constants above
+# Order the rows by coefficient magnitude, largest at the top
+df = df.sort_values(COEFFICIENT, key=abs).reset_index(drop=True)
+df[SIGNIFICANT] = df[SIGNIFICANT].astype(bool)
+df["_label"] = df[SIGNIFICANT].map(LEGEND_LABELS)
+colors = {True: IMPRINT_PALETTE[0], False: INK_SOFT}
 
-# Sort by coefficient magnitude for better visualization
-sort_idx = np.argsort(np.abs(coefficients))
-variables = [variables[i] for i in sort_idx]
-coefficients = coefficients[sort_idx]
-ci_lower = ci_lower[sort_idx]
-ci_upper = ci_upper[sort_idx]
-significant = significant[sort_idx]
-
-# Okabe-Ito palette - using brand green for significant, neutral for non-significant
-SIG_COLOR = "#009E73"
-NONSIG_COLOR = INK_SOFT
-
-colors = [SIG_COLOR if sig else NONSIG_COLOR for sig in significant]
-
-# Create figure with categorical y-axis
 p = figure(
-    width=4800,
-    height=2700,
-    y_range=variables,
+    width=3200,
+    height=1800,
+    y_range=list(df[VARIABLE]),
     title="coefficient-confidence · python · bokeh · anyplot.ai",
-    x_axis_label="Coefficient Estimate (Standardized)",
-    y_axis_label="Predictor Variable",
+    x_axis_label=COEFFICIENT,
+    y_axis_label=VARIABLE,
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Add vertical reference line at zero
-zero_line = Span(location=0, dimension="height", line_color=INK_SOFT, line_width=3, line_dash="dashed")
-p.add_layout(zero_line)
-
-# Draw confidence interval segments (error bars) with distinct colors
-for i, var in enumerate(variables):
-    color = colors[i]
-    # Main confidence interval line
-    p.line(x=[ci_lower[i], ci_upper[i]], y=[var, var], line_width=6, line_color=color, line_alpha=0.85)
-
-# Plot coefficient points - separate renderers for legend with distinct colors
-sig_indices = [i for i, s in enumerate(significant) if s]
-nonsig_indices = [i for i, s in enumerate(significant) if not s]
-
-# Create separate data sources for legend
-sig_source = ColumnDataSource(
-    data={
-        "variables": [variables[i] for i in sig_indices],
-        "coefficients": [coefficients[i] for i in sig_indices],
-        "ci_lower_fmt": [f"{ci_lower[i]:.3f}" for i in sig_indices],
-        "ci_upper_fmt": [f"{ci_upper[i]:.3f}" for i in sig_indices],
-        "coef_fmt": [f"{coefficients[i]:.3f}" for i in sig_indices],
-        "significance": ["Significant (p < 0.05)"] * len(sig_indices),
-    }
+# Vertical reference line at zero, drawn above the gridlines
+p.add_layout(
+    Span(location=NULL_VALUE, dimension="height", line_color=INK, line_width=3, line_dash="dashed", line_alpha=0.8)
 )
 
-nonsig_source = ColumnDataSource(
-    data={
-        "variables": [variables[i] for i in nonsig_indices],
-        "coefficients": [coefficients[i] for i in nonsig_indices],
-        "ci_lower_fmt": [f"{ci_lower[i]:.3f}" for i in nonsig_indices],
-        "ci_upper_fmt": [f"{ci_upper[i]:.3f}" for i in nonsig_indices],
-        "coef_fmt": [f"{coefficients[i]:.3f}" for i in nonsig_indices],
-        "significance": ["Not Significant"] * len(nonsig_indices),
-    }
+# One group per significance flag: interval segments, then points on top
+renderers = []
+for flag in (True, False):
+    rows = df[df[SIGNIFICANT] == flag]
+    if rows.empty:
+        continue
+    source = ColumnDataSource(rows)
+    p.segment(x0=CI_LOWER, x1=CI_UPPER, y0=VARIABLE, y1=VARIABLE, source=source, line_width=7, line_color=colors[flag])
+    renderers.append(
+        p.scatter(
+            x=COEFFICIENT,
+            y=VARIABLE,
+            source=source,
+            size=32,
+            color=colors[flag],
+            line_color=PAGE_BG,
+            line_width=3,
+            legend_label=LEGEND_LABELS[flag],
+        )
+    )
+
+p.add_tools(
+    HoverTool(
+        tooltips=[
+            ("Variable", f"@{{{VARIABLE}}}"),
+            ("Coefficient", f"@{{{COEFFICIENT}}}{{0.000}}"),
+            ("95% CI", f"[@{{{CI_LOWER}}}{{0.000}}, @{{{CI_UPPER}}}{{0.000}}]"),
+            ("Status", "@_label"),
+        ],
+        renderers=renderers,
+    )
 )
 
-# Render significant points with brand green
-sig_renderer = p.scatter(
-    x="coefficients", y="variables", source=sig_source, size=30, color=SIG_COLOR, line_color="white", line_width=3
-)
-
-# Render non-significant points with muted color
-nonsig_renderer = p.scatter(
-    x="coefficients", y="variables", source=nonsig_source, size=30, color=NONSIG_COLOR, line_color="white", line_width=3
-)
-
-# Add HoverTool for interactive tooltips (Bokeh distinctive feature)
-hover = HoverTool(
-    tooltips=[
-        ("Variable", "@variables"),
-        ("Coefficient", "@coef_fmt"),
-        ("95% CI", "[@ci_lower_fmt, @ci_upper_fmt]"),
-        ("Status", "@significance"),
-    ],
-    renderers=[sig_renderer, nonsig_renderer],
-)
-p.add_tools(hover)
-
-# Create legend inside the plot area (top right corner within plot bounds)
-legend = Legend(
-    items=[
-        LegendItem(label="Significant (p < 0.05)", renderers=[sig_renderer]),
-        LegendItem(label="Not Significant", renderers=[nonsig_renderer]),
-    ],
-    location="top_right",
-    label_text_font_size="24pt",
-    label_text_color=INK_SOFT,
-    glyph_width=40,
-    glyph_height=40,
-    border_line_color=INK_SOFT,
-    border_line_width=2,
-    background_fill_color=ELEVATED_BG,
-    background_fill_alpha=0.95,
-    padding=20,
-    margin=30,
-)
-p.add_layout(legend)
-
-# Style text sizes for large canvas (scaled for 4800x2700)
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "46pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "36pt"
+p.yaxis.axis_label_text_font_size = "36pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "30pt"
+p.yaxis.major_label_text_font_size = "30pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 
-# Grid styling
-p.xgrid.grid_line_alpha = 0.10
-p.xgrid.grid_line_dash = "dashed"
-p.xgrid.grid_line_color = INK
-p.ygrid.grid_line_alpha = 0.10
-p.ygrid.grid_line_dash = "dashed"
-p.ygrid.grid_line_color = INK
+p.legend.location = "top_left"
+p.legend.label_text_font_size = "28pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.glyph_width = 40
+p.legend.glyph_height = 40
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.background_fill_alpha = 0.95
+p.legend.border_line_color = INK_SOFT
+p.legend.border_line_width = 2
+p.legend.padding = 20
+p.legend.margin = 30
 
-# Background styling (theme-adaptive)
+for grid in (p.xgrid, p.ygrid):
+    grid.grid_line_color = INK
+    grid.grid_line_alpha = 0.10
+    grid.grid_line_dash = "dashed"
+
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
+for axis in (p.xaxis, p.yaxis):
+    axis.axis_line_color = INK_SOFT
+    axis.axis_line_width = 2
+    axis.major_tick_line_color = INK_SOFT
+    axis.major_tick_line_width = 2
 
-# Axis styling
-p.xaxis.axis_line_color = INK_SOFT
-p.yaxis.axis_line_color = INK_SOFT
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
-p.xaxis.major_tick_line_color = INK_SOFT
-p.yaxis.major_tick_line_color = INK_SOFT
-p.xaxis.major_tick_line_width = 2
-p.yaxis.major_tick_line_width = 2
-
-# Save plot (HTML and PNG via Selenium)
+# Save the interactive HTML, then screenshot it with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome via Selenium
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -207,6 +183,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
