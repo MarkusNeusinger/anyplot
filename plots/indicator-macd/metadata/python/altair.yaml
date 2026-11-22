@@ -2,48 +2,47 @@ library: altair
 language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:29:27Z'
-updated: '2026-05-16T10:58:15Z'
-generated_by: claude-haiku
-workflow_run: 25959914202
+updated: '2026-11-22T00:55:45Z'
+generated_by: claude-sonnet
+workflow_run: 44968479267
 issue: 3181
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 85
 review:
   strengths:
-  - Excellent visual quality with all text clearly readable in both light and dark
-    themes
-  - Proper theme adaptation with identical data colors and appropriate chrome changes
-  - Fully spec-compliant with all required MACD components (histogram, lines, zero
-    reference)
-  - Professional execution with thoughtful design details (stroke dashing, font sizes,
-    legend styling)
-  - High-quality data with realistic MACD calculations and 150 trading days of sample
-    data
-  - Clean, Pythonic code with deterministic output and proper theme-token abstraction
+  - 'Full Imprint palette compliance: #009E73/#AE3030 histogram, #4467A3/#BD8233 lines,
+    identical across themes with theme-token chrome'
+  - Signal line distinguished by both hue and dash pattern, so the MACD/signal pair
+    reads without color
+  - resolve_scale(color='independent') gives clean separate legends for histogram
+    sign and lines
+  - Parameters noted both in the subtitle and in the legend labels (MACD (12, 26),
+    Signal (9))
+  - Month-level date axis ('%b %Y', tickCount=6) and a y title with units
+  - Interactive tooltips in the HTML output for dates, histogram values and line values
   weaknesses:
-  - Design Excellence could be elevated with additional visual emphasis or data storytelling
-    techniques
-  - Library Mastery does not showcase distinctive altair features beyond standard
-    chart creation (no interactive selection or cross-filtering)
-  - Data storytelling relies on semantic coloring rather than explicit annotations
-    to highlight key trading signals
+  - 'DQ-02 (code): the dates use freq="D", so the 124 ''trading days'' include weekends,
+    which a stock MACD never has → business days. Likely cause: pd.date_range(...,
+    freq="D"); use freq="B".'
+  - 'Suggestion: the price panel the Notes allow, above the MACD panel with a shared
+    date axis (vconcat), would show what the oscillator lags.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct spec surface
-      Chrome: Title and subtitle clearly dark against light background. Axis labels, tick labels, and legend text all readable. No light-on-light issues.
-      Data: Histogram bars use green (#2E7D32, positive) and red (#C62828, negative) with clear semantic distinction. MACD line in blue (#0072B2) and signal line in orange (#E69F00) with dashed pattern. Zero reference line visible as subtle dashed gray. All data elements distinct from background.
-      Legibility verdict: PASS — Excellent readability across all elements
+      Background: warm off-white #FAF8F1, 3200x1800 canvas.
+      Chrome: bold title 'indicator-macd · python · altair · anyplot.ai' with subtitle 'MACD parameters: fast EMA 12, slow EMA 26, signal EMA 9'; y title 'MACD value (price units)' with ticks -2.5 to 2.0 in 0.5 steps; x title 'Date' with ticks Jun 2025 … Oct 2025; subtle grid; two legend boxes on the right (Histogram: Positive/Negative; Lines: MACD (12, 26) / Signal (9)). All text dark and readable.
+      Data: histogram bars green #009E73 (positive) and red #AE3030 (negative), solid blue #4467A3 MACD line, dashed amber #BD8233 signal line, dashed grey zero rule. First series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct spec surface
-      Chrome: Title and subtitle clearly light against dark background. Axis labels, tick labels, and legend text all light-colored and readable. No dark-on-dark failures.
-      Data: Histogram bars identical to light render (green positive, red negative). MACD line identical blue (#0072B2). Signal line identical orange (#E69F00) with dashed pattern. Zero reference line visible. All data colors match light render exactly — only chrome has flipped appropriately.
-      Legibility verdict: PASS — Excellent theme adaptation with no contrast failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, ticks, axis titles and legend text in light ink; legend boxes on the elevated dark fill with light frames; zero rule light grey and visible; no dark-on-dark text.
+      Data: colors identical to the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,73 +53,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, subtitle 18px, labels
-          20px, ticks 16px). Perfect readability in both themes.
+        comment: Font sizes set explicitly (title 15, subtitle 11, axis titles 13,
+          ticks 11, legend 11/12); every label reads clearly in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. All components have adequate spacing.
+        comment: No text collisions; legends sit outside the plot area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars, lines, and reference line all optimally sized and
-          clearly visible.
+        comment: 124 bars at size 3.5 and 2.2 px lines are well matched to the density;
+          legend swatches and line samples visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red for momentum, blue/orange for lines. Strong contrast and
-          CVD-safe.
+        comment: Sign is carried by position as well as green/red; lines are blue
+          vs amber and also solid vs dashed, so CVD readers can tell them apart
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900px with excellent proportions, balanced margins, legend well-positioned.
+        comment: 3200x1800 canvas, chart centred with balanced margins, title and
+          legends well proportioned, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units. Title includes spec ID and library.
-          Subtitle includes MACD parameters.
+        comment: '''Date'' and ''MACD value (price units)'' with units; ticks formatted
+          ''Jun 2025'' etc.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct backgrounds. Histogram colors follow spec requirement. Lines
-          from Okabe-Ito. Theme-adaptive chrome implemented correctly.
+        comment: 'Histogram uses Imprint #009E73 / #AE3030, lines Imprint #4467A3
+          / #BD8233; backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Professional financial chart with thoughtful design choices. Stroke
-          dashing, custom fonts, legend styling. Clearly above defaults.
+        comment: 'Above baseline: a deliberate title/subtitle hierarchy and a redundant
+          dash encoding on the signal line so the two lines differ beyond hue'
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Stroke dashing, subtle grid, styled legend boxes, axis customization.
-          Some refinement beyond defaults.
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Semantic coloring creates visual hierarchy. Zero line guides attention.
-          Lacks explicit annotations for key signals.
+        comment: A month-level date grid chosen for this chart (tickCount=6, '%b %Y')
+          instead of the default mixed weekday labels; otherwise baseline
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed with the spec's semantics; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,30 +130,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MACD technical indicator with all components.
+        comment: 'Correct MACD chart: histogram bars, MACD line, signal line, zero
+          reference'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: histogram, lines, zero reference, labels,
-          legend.'
+        comment: 'All Notes met: green/red histogram, zero line, distinct line colors,
+          parameters noted in the subtitle and legend labels (C1-C4); C5 price panel
+          is optional and not drawn'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X (temporal), value on Y (quantitative). All data points
-          displayed.
+        comment: Date on x, values on y; histogram equals MACD minus signal and changes
+          sign at each crossing; axis covers -2.5 to 2.0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data. Subtitle includes
-          parameters.
+        comment: Title 'indicator-macd · python · altair · anyplot.ai' correct; legends
+          'Histogram' (Positive/Negative) and 'Lines' (MACD (12, 26) / Signal (9))
+          read well
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -161,22 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all MACD aspects: positive/negative bars, line oscillations,
-          crossovers.'
+        comment: Shows positive and negative histogram phases, several crossovers,
+          expansion and contraction
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Realistic stock data with proper EMA. 150 trading days standard.
-          Neutral context.
+        passed: false
+        comment: Plausible stock-price MACD, but the dates run on calendar days including
+          weekends (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic price movements and MACD values. All proportions correct
-          for domain.
+        comment: MACD amplitude of about ±2.4 on a price near 100 is realistic; EMAs
+          computed with pandas ewm(12/26/9); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -186,31 +189,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save. No unnecessary functions/classes.
+        comment: 'Flat script: constants, data, plot, save, mandated pad block'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports. All used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No fake functionality.
+        comment: EMAs via pandas ewm; no hand-rolled algorithm or dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-{THEME}.png and plot-{THEME}.html.'
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current Altair
+          6 API
     library_mastery:
       score: 6
       max: 10
@@ -220,26 +224,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: High-level API usage. Proper layering and configuration. Handles
-          imports well.
+        comment: Tidy melt into a color/strokeDash-encoded line layer, layered composition,
+          escaped field constants with type= per the library prompt
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Uses strokeDash and independent color scales. Could use more advanced
-          features like selection.
+        passed: false
+        comment: resolve_scale(color='independent') to give the layered marks two
+          separate legends, strokeDash channel with a custom scale, and HTML tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T00:51:59Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - wide-to-long
   dataprep:
-  - time-series
   - rolling-window
+  - time-series
   styling:
+  - publication-ready
   - grid-styling
-  - edge-highlighting
