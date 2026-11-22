@@ -2,44 +2,55 @@ library: letsplot
 language: python
 specification_id: density-rug
 created: '2026-01-09T15:33:40Z'
-updated: '2026-05-18T00:51:43Z'
-generated_by: claude-haiku
-workflow_run: 26007420556
+updated: '2026-11-22T09:04:48Z'
+generated_by: claude-sonnet
+workflow_run: 45005224717
 issue: 3505
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality across both themes with all text elements readable and
-    properly sized
-  - Excellent theme-adaptive chrome implementation with correct color tokens throughout
-  - Spec-compliant implementation showing both KDE smoothing and raw data transparency
-  - Clean code structure with proper reproducibility (seed set) and all imports used
-  - Realistic bimodal data that effectively demonstrates the plot type
+  - Filled semi-transparent KDE with rug ticks at the foot of the curve, short (about
+    6% of the peak) and transparent so clusters read darker
+  - Rug height derived from the data's spread (0.04 / std) instead of a hard-coded
+    density value
+  - Theme tokens threaded through background, title, axis titles, ticks and axis lines;
+    both renders readable
+  - Interactive HTML export alongside the PNG gives lets-plot's native hover tooltips
+    on the density
   weaknesses:
-  - Design choices are competent but use library defaults (theme_minimal) without
-    additional visual sophistication or custom styling
-  - No distinctive library features beyond standard geom_density + geom_segment combination
+  - 'VQ-07 (both): grid lines drawn in full-opacity INK_SOFT (#4A4A44 / #B8B7B0) plus
+    a minor grid read as a dense dark mesh that competes with the fill → the style
+    guide''s grid token at 15% opacity (rgba(26,26,23,0.15) light / rgba(240,239,232,0.15)
+    dark) and no minor grid. Likely cause: panel_grid_major=element_line(color=INK_SOFT,
+    size=0.3) and panel_grid_minor set.'
+  - 'DE-02 (both): the panel has a frame on all four sides instead of the style guide''s
+    default L-shaped left and bottom axes → drop the top and right lines. Likely cause:
+    theme_minimal plus axis_line/panel border drawing a full box.'
+  - 'Suggestion: rug ticks in a slightly darker or ink-toned stroke would separate
+    them more clearly from the same-green fill in the dark render.'
+  - 'Suggestion: fewer y ticks (e.g. every 0.001) would lighten the four-decimal tick
+    column.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title, axis labels, and tick labels all dark and clearly readable against light background
-      Data: Bimodal density distribution in brand green (#009E73) with semi-transparent fill (alpha=0.4). Rug marks visible as small vertical segments below showing individual data points. Clear separation between fast (250ms) and slow (450ms) response modes.
-      Legibility verdict: PASS - All text is readable, proper contrast, no overlaps
+      Background: warm off-white #FAF8F1, 3200x1800 canvas
+      Chrome: title 'density-rug · python · letsplot · anyplot.ai' top left in dark ink; x-axis 'Response Time (ms)' (ticks 200-550), y-axis 'Density' (0-0.006); dark grid with minor lines; four-sided frame
+      Data: bimodal #009E73 KDE (peaks ~255 ms and ~440 ms) with alpha 0.4 fill; green rug ticks along the bottom, denser at 210-290 ms and 410-480 ms
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title, axis labels, and tick labels all light-colored and clearly readable against dark background. No dark-on-dark failures.
-      Data: Identical brand green (#009E73) to light render, confirming data colors remain constant across themes. Rug marks equally visible. Bimodal pattern is clear and compelling.
-      Legibility verdict: PASS - All text is readable, proper contrast, no dark-on-dark elements, both renders equally legible
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink, all readable; no dark-on-dark text; light grid
+      Data: same #009E73 curve, fill and rug ticks as the light render; only the chrome flips
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,71 +58,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16. All
-          readable in both themes.'
+        comment: Title 16 pt, axis titles 12 pt, ticks 10 pt set explicitly; all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Clean layout.
+        comment: No text collisions; overlapping rug ticks in clusters are permitted
+          by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density curve and rug marks both clearly visible and appropriately
-          sized.
+        comment: Curve 1.2 wide, rug ticks 0.8 wide at alpha 0.6, visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 is colorblind-safe with good contrast.'
+        comment: Single brand-green series, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, proper margins, nothing cut off.
+        comment: 3200x1800 canvas, balanced margins, nothing cut off; title ~45% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: ''Response Time (ms)'' and ''Density''. Descriptive.'
+        comment: '''Response Time (ms)'' with unit, ''Density'''
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Perfect: #009E73 used, correct backgrounds (#FAF8F1 light/#1A1A17
-          dark), theme-correct chrome in both renders.'
+        passed: false
+        comment: '#009E73 and correct backgrounds, but the grid is full-opacity INK_SOFT
+          instead of the 15% grid token (defect line)'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Intentional design choices with brand color and proper theme tokens,
-          but uses theme_minimal defaults. Competent but not sophisticated.
+        comment: Style-guide baseline (theme tokens, brand color), nothing beyond
+          it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: theme_minimal removes clutter, subtle grid (0.3, 0.2 sizes). Some
-          refinement but minimal customization.
+        comment: Four-sided frame instead of the L-shaped default (defect line); grid
+          not chosen for this chart
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Bimodal response time distribution tells a clear story. Rug marks
-          add perspective. Good but not exceptional.
+        comment: Bimodal data displayed, no focal hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density plot with rug marks.
+        comment: KDE with rug marks, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: KDE curve, rug marks, semi-transparent fill all present.
+        comment: Filled semi-transparent KDE, small transparent rug ticks at the foot;
+          C1, C2, C3, C5 shown; no jitter (allowed, not required)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X/Y mapping, all data visible.
+        comment: Ticks at exact values, density axis from zero, all data in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''density-rug · Python · letsplot · anyplot.ai'''
+        comment: Title 'density-rug · python · letsplot · anyplot.ai' correct; single
+          series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -149,19 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of density-rug plot type.
+        comment: Bimodal shape, dense clusters, gap around 350 ms and isolated tail
+          ticks all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Response times is real-world plausible scenario.
+        comment: Response times with fast and slow modes, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions sensible for the domain.
+        comment: 'Means 250/450 ms, sd 40/60 ms: sensible for response times; no Check
+          values in spec'
     code_quality:
       score: 10
       max: 10
@@ -171,31 +186,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple script, no functions.
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output.
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, none wasted.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation, no fake functionality.
+        comment: Concise; rug height derived from std
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and .html'
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
       score: 4
       max: 10
@@ -205,19 +220,27 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct ggplot/aes/geoms pattern but standard usage.
+        comment: Standard ggplot/aes/geom usage, geom_segment for the rug; nothing
+          beyond the default
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No distinctive library features, fairly generic approach.
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-22T09:01:03Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - alpha-blending
+  - minimal-chrome
