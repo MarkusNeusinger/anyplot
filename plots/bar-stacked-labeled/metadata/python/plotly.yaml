@@ -2,42 +2,44 @@ library: plotly
 language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:31:39Z'
-updated: '2026-05-18T01:57:43Z'
-generated_by: claude-haiku
-workflow_run: 26009144285
+updated: '2026-11-22T09:21:51Z'
+generated_by: claude-sonnet
+workflow_run: 45006506844
 issue: 3504
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/plotly/plot-dark.html
-quality_score: 94
+quality_score: 83
 review:
   strengths:
-  - Exemplary theme-adaptive styling with both renders fully readable
-  - 'Perfect palette compliance: brand green first, Okabe-Ito order maintained, colors
-    identical across themes'
-  - Complete spec implementation with all required features (stacked bars, totals,
-    segment labels)
-  - 'Strong visual hierarchy: bold total labels effectively guide viewer to key insights'
-  - Clean, reproducible code with proper theme token integration
-  - Correct annotation handling with optimal positioning and spacing
+  - Totals are computed from the pivoted table and drawn as bold annotations anchored
+    to each stack top with a pixel yshift, so they sit directly above every stack
+    in both themes
+  - 'Theme tokens thread through every chrome element; Imprint palette listed in full
+    and looked up per component, Software first in #009E73'
+  - 'Adaptable structure: column constants, a clean Data block and a Plot block that
+    reads only df; y-range derived from the data'
+  - Native go.Bar inside text with insidetextanchor='middle' places the optional segment
+    labels centred in every segment in one consistent $K format
   weaknesses:
-  - 'Minor: Design Excellence could elevate with more sophisticated treatment (e.g.,
-    exploring optional spines removal)'
+  - 'Suggestion: ordering the legend to match the stack (Maintenance on the left,
+    as plotly''s default reversed order does for stacks) would map entries to segments
+    faster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1
-      Chrome: Title, axis labels, tick labels all dark and clearly visible; legend horizontal above plot with all categories readable
-      Data: Software (#009E73 green), Hardware (#D55E00 orange), Services (#0072B2 blue), Maintenance (#CC79A7 pink); segment labels white on colored bars; total labels bold dark text above stacks
-      Legibility verdict: PASS - All text readable, no contrast issues
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: centred title 'bar-stacked-labeled · python · plotly · anyplot.ai' in dark ink; framed horizontal legend (Software, Hardware, Services, Maintenance) between title and plot; x-axis 'Quarter' with Q1 2024 - Q1 2025, y-axis 'Revenue ($ thousands)' 0-600; subtle grid. All dark text readable.
+      Data: five stacked bars, Software #009E73 at the base, Hardware #C475FD, Services #4467A3, Maintenance #BD8233 on top; white $K segment labels centred in every segment; bold dark totals $430K, $445K, $462K, $540K, $550K just above each stack.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17
-      Chrome: Title, axis labels, tick labels all light-colored and clearly visible; legend with light text and elevated dark background; no dark-on-dark failures
-      Data: Identical colors to light render - Software green, Hardware orange, Services blue, Maintenance pink; white segment labels on bars; light text total labels above stacks
-      Legibility verdict: PASS - All text readable, proper contrast, chrome correctly theme-adapted
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and totals in light ink, tick and legend text in soft light ink, legend box on the elevated dark surface with a light border; no dark-on-dark text.
+      Data: colours identical to the light render; white segment labels unchanged; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,70 +50,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, labels 22, ticks 18, annotations
-          18); readable in both light and dark themes
+        comment: Title 16 px, axis titles 12 px, ticks and legend 10 px (style-guide
+          sizes), bold 11 px totals, 9 px segment labels that read clearly; all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Total labels offset by +15 units; segment labels centered; no collisions
+        comment: 'No collisions: totals sit 3 px above each stack, segment labels
+          centred inside their segments, legend clear of the plot area'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 5 categories × 4 stacked components well-spaced and clearly visible
+        comment: 5 stacks x 4 segments, wide bars, every segment visible; legend swatches
+          match the bar fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; CVD-safe; no red-green-only dependence
+        comment: Four distinct Imprint hues, CVD-safe; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 via scale=3; proper margins (t=120, b=80, l=80, r=40)
+        comment: 3200x1800 canvas; balanced margins, room above the tallest stack,
+          title about 42% of the width; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format; axes labeled with units
+        comment: '''Quarter'' and ''Revenue ($ thousands)'' with units; title in the
+          mandated form'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds #FAF8F1/#1A1A17;
-          both themes correct'
+        comment: 'Software #009E73 first, then #C475FD, #4467A3, #BD8233 in canonical
+          order; backgrounds #FAF8F1 / #1A1A17; data colours identical across themes'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Intentional visual hierarchy with bold totals as focal point; good
-          polish for business context
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit sizes;
+          bold totals are what the Notes suggest - nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clean layout, generous whitespace, subtle grid; spines present but
-          unobtrusive
+        passed: false
+        comment: Spine and grid rules met (subtle grid, framed legend); nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear focal point on totals; stacking effectively shows composition
-          + magnitude
+        passed: false
+        comment: Data displayed with totals as the Notes require; no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart
+        comment: Correct stacked bar chart with total labels; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: stacked bars, total labels above stacks,
-          segment labels inside'
+        comment: Totals above every stack, consistent $K format, headroom above the
+          tallest stack, optional segment labels; C1-C5 all shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=quarters (categories); Y=revenue; axes show full data range
+        comment: Quarters on x, revenue on y from zero; barmode='stack'; totals computed
+          from the table
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match series
+        comment: Title 'bar-stacked-labeled · python · plotly · anyplot.ai' correct;
+          legend names the four products
     data_quality:
       score: 15
       max: 15
@@ -150,19 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of plot type
+        comment: Unequal stack heights, varying component mix, small and large segments
+          - all aspects of the type shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly product revenue is realistic and neutral
+        comment: 'Quarterly revenue by product line (Software, Hardware, Services,
+          Maintenance): plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue in $K sensible for domain
+        comment: Revenue in $ thousands at 45-260 per segment; totals 430/445/462/540/550
+          checked against the segment sums in render and code
     code_quality:
       score: 10
       max: 10
@@ -172,53 +183,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Procedural code; no unnecessary abstractions
+        comment: Flat Imports -> constants -> Data -> Plot -> Save; no functions or
+          classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, plotly.graph_objects
+        comment: os, sys, pandas, plotly.graph_objects - all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable; no fake UI
+        comment: pivot_table + sum for totals, ranges from data; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html; current API
+        comment: Saves plot-{THEME}.png at width=800, height=450, scale=4 and plot-{THEME}.html;
+          current API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper go.Figure(), go.Bar(), barmode=stack; theme tokens integrated
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of Plotly annotations, textposition, HTML export
+        comment: go.Bar traces with barmode='stack', textposition='inside' + insidetextanchor,
+          annotations with yanchor/yshift pixel offset - idiomatic graph-objects use
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates (HTML export with
+          hover is mandated)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T09:18:19Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - html-export
   patterns:
   - data-generation
+  - long-to-wide
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
