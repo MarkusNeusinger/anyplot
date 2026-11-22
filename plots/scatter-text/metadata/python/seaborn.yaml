@@ -2,54 +2,43 @@ library: seaborn
 language: python
 specification_id: scatter-text
 created: '2026-01-09T14:25:12Z'
-updated: '2026-05-17T23:35:31Z'
-generated_by: claude-haiku
-workflow_run: 26005686289
+updated: '2026-11-22T08:27:15Z'
+generated_by: claude-sonnet
+workflow_run: 45002356228
 issue: 3482
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - 'Perfect visual quality: All text sizes explicitly set (title 24pt, labels 20pt,
-    ticks 16pt, data 20pt bold), readable in both light and dark themes'
-  - 'Perfect spec compliance: Correctly implements scatter-text visualization with
-    text labels as markers'
-  - 'Perfect data quality: Real stock symbols with meaningful sector categorization'
-  - 'Perfect code quality: Clean, reproducible, deterministic Python with proper seeding'
-  - 'Exceptional theme compliance: Both renders perfectly theme-correct with theme-adaptive
-    chrome'
-  - 'Proper color palette: Okabe-Ito with first series as brand #009E73, multi-series
-    follows order'
-  - 'No legibility issues: All text elements perfectly readable in both light and
-    dark themes'
+  - Every ticker is drawn as centered bold text exactly at its (x, y) value, so the
+    word is the mark (C1), with alpha 0.9 keeping the few overlaps readable (C3)
+  - Legend placed in the empty lower-left quadrant, so no label is covered, and its
+    circles are filled with the sector colors in both themes
+  - 'Theme tokens threaded through sns.set_theme rc: correct #FAF8F1 / #1A1A17 surfaces,
+    readable chrome in both renders, Imprint data colors identical across themes'
+  - Exact 3200x1800 canvas at style-guide text sizes (12/10/8 pt), saved without bbox_inches='tight'
   weaknesses:
-  - 'DE-01: Generic styling without custom design sophistication — follows seaborn
-    defaults without exceptional aesthetic polish'
-  - 'DE-02: Visual refinement is competent but not minimalist — spines removed and
-    grid subtle, but could be more refined'
-  - 'DE-03: Data storytelling lacks emphasis — data displayed clearly but no focal
-    points or visual hierarchy to guide viewer narrative'
+  - 'DQ-02 (both): the AbbVie ticker is written ''AbbV'', which is not the real symbol,
+    beside 23 correctly written tickers → ''ABBV''. Likely cause: the tickers list.'
+  - 'Suggestion: a subtle emphasis on one sector cluster (for example a heavier weight
+    for Technology) could give the chart a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct)
-      Chrome: Title, axis labels, tick labels all dark text (#1A1A17), clearly visible against light background. No "light-on-light" failures.
-      Data: 24 stock tickers colored by sector (Technology #009E73, Cryptocurrency #D55E00, Finance #0072B2, Energy #CC79A7, Healthcare #E69F00, Retail #56B4E9). All bold 20pt, fully legible with no overlap.
-      Legend: Upper left with sector colors and markers, readable
-      Grid: Y-axis only, subtle alpha=0.10, appropriate
-      Legibility verdict: PASS — all text elements perfectly readable
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'scatter-text · python · seaborn · anyplot.ai' in dark ink, axis titles 'Market Cap Similarity (Dim 1)' / 'Growth Profile (Dim 2)', soft-ink ticks, faint horizontal grid, left/bottom spines only; legend 'Sector' with six filled circles in the empty lower-left corner. All readable.
+      Data: 24 bold ticker labels centered at their coordinates: Technology #009E73 top-left, Cryptocurrency #C475FD, Finance #4467A3 bottom-right, Energy #BD8233, Healthcare #AE3030, Retail #2ABCCD. AMZN/AAPL and TGT/RIOT partly overlap but stay legible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct)
-      Chrome: Title, axis labels render in light text (#F0EFE8), tick labels in secondary light (#B8B7B0). No dark-on-dark failures. All clearly visible.
-      Data: Stock ticker colors identical to light render. Brand green #009E73 clearly visible. All sector colors maintained with full distinction from background.
-      Legend: Dark frame background (#242420) with light text, fully readable
-      Grid: Y-axis only, subtle, appropriate
-      Legibility verdict: PASS — exceptional readability, no dark-on-dark contrast issues
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, legend on the elevated #242420 surface with light text; no dark-on-dark text.
+      Data: identical label colors and positions to the light render; the blue Finance and red Healthcare labels are dimmer than the others but readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -60,48 +49,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, axis 20pt, ticks 16pt,
-          data 20pt bold). Perfectly readable in both themes.
+        comment: 'Title 12 pt, axis titles 10 pt, ticks 8 pt, legend 8/9 pt, data
+          labels 9 pt bold: style-guide sizes, all readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 24 labels well-distributed, no collisions, complete readability.
+        comment: No text collides with the legend or other chrome; partial label overlaps
+          (AMZN/AAPL, TGT/RIOT) are permitted by the spec (C5) and stay legible with
+          alpha 0.9
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bold text labels prominent and appropriately sized. Alpha=0.85 provides
-          optimal visibility.
+        comment: 24 bold labels clearly visible; legend circles filled with the sector
+          colors and outlined, visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast ratios. CVD-safe.
+        comment: Imprint hues, sector also readable from the label itself; no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced 16:9 at 4800x2700px. Good plot utilization and margins.
+        comment: 3200x1800 canvas, balanced margins, legend in the empty lower-left
+          quadrant, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context. Title in correct format.
+        comment: Descriptive axis titles for a 2D embedding of stocks
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct. Okabe-Ito order followed. Backgrounds
-          and theme adaptation perfect.'
+        comment: 'Technology = #009E73, six sectors in canonical Imprint order, backgrounds
+          #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -109,22 +102,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults with proper palette and theme tokens. Lacks
-          custom design sophistication beyond standard library usage.
+        comment: Style-guide baseline (theme tokens, medium-weight title, bold labels);
+          nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Spines removed, grid subtle, whitespace generous. Competent but not
-          minimalist.
+        comment: Legend deliberately placed in the one empty quadrant so no label
+          is covered; y-only subtle grid
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clear visual organization by sector. Data presented clearly but lacks
-          emphasis techniques or focal points.
+        comment: Sector clusters visible from color; no focal point chosen beyond
+          that
     spec_compliance:
       score: 15
       max: 15
@@ -134,29 +127,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with text labels as visual elements instead
-          of markers.
+        comment: Text labels replace markers, centered at (x, y); color by category
+          is offered by the Notes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: coordinates, text labels, categorical
-          coloring, legible rendering.'
+        comment: 'C1 centered anchoring, C2 every isolated label readable, C3 alpha
+          0.9 in dense spots, C4 color explained by a legend: all met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned. All 24 data points visible. Axes appropriate.
+        comment: Labels sit exactly at their data values; jitter is part of data generation,
+          no displacement pass
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend properly labeled with sector names.
+        comment: Title 'scatter-text · python · seaborn · anyplot.ai' correct; legend
+          titled 'Sector' with reader-facing entries
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -164,20 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 6 sectors shown with balanced distribution (Technology 8, Crypto
-          2, Finance 4, Energy 2, Healthcare 4, Retail 4).
+        comment: Clusters, isolated items and dense overlaps all shown with 24 labels
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Real stock symbols with realistic sector assignments. Neutral context.
+        passed: false
+        comment: Real tickers in a plausible sector-embedding scenario, but ABBV is
+          written 'AbbV' (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible coordinate ranges for dimensionality reduction. Well-balanced.
+        comment: Coordinates in a plausible embedding range (about -4 to 4); no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -187,33 +183,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow. No unnecessary functions or classes.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set. Deterministic jitter.
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No fake functionality.
+        comment: Compact data block (list multiplication for sectors), single text
+          loop; nothing an available call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with proper DPI.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -221,24 +218,27 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct sns.set_theme() with comprehensive theme tokens. Does not
-          use seaborn's high-level plot functions.
+        comment: sns.set_theme with rc tokens and sns.despine; marks drawn with ax.text
+          since seaborn has no text-mark function
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Theme token system practical but generic for seaborn.
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T08:23:42Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - minimal-chrome
