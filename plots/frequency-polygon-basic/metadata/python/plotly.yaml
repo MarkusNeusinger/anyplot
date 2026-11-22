@@ -2,58 +2,49 @@ library: plotly
 language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:16:52Z'
-updated: '2026-05-17T16:31:30Z'
-generated_by: claude-haiku
-workflow_run: 25996283903
+updated: '2026-11-22T07:09:18Z'
+generated_by: claude-sonnet
+workflow_run: 44996382091
 issue: 3418
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 84
 review:
   strengths:
-  - 'Spec compliance is perfect across all dimensions: plot type, required features,
-    data mapping, and title/legend formatting'
-  - Theme-adaptive styling is correctly implemented in both light and dark renders
-    with proper use of INK, INK_SOFT, and GRID tokens
-  - Three distributions clearly visualized with distinct colors (Okabe-Ito), line
-    styles (dashed for Sleep Deprived), and semi-transparent fills that prevent obscuring
-    overlaps
-  - Data is realistic (reaction times in psychology context) with proper binning,
-    deterministic seeding, and readable axis labels with units
-  - All text elements render legibly in both themes with appropriate font sizes (28px
-    title, 22px axis labels, 18px ticks)
-  - Semi-transparent polygon fills are an effective technique for showing distribution
-    overlap while maintaining clarity
+  - The polygons close on the baseline exactly one bin width beyond the first and
+    last midpoint, computed from the shared edges
+  - One set of np.histogram edges for all groups, so every vertex sits on the same
+    x positions
+  - Groups use Imprint color plus a dashed line for the third group, with native fill='tozeroy'
+    transparency; hover in the HTML
+  - 'Adaptable layout: column constants, a Data block that binds df, and a graph-objects
+    loop over df.groupby'
+  - Theme tokens reach every chrome element, so both renders are fully legible
   weaknesses:
-  - 'Design Excellence is adequate but not exceptional: could enhance visual hierarchy
-    through strategic emphasis (e.g., highlight the peak of one distribution, adjust
-    line widths to emphasize focal points)'
-  - 'Minimal use of Plotly-specific advanced features beyond basic scatter traces:
-    could leverage hover templates for detailed frequency information, or use Plotly''s
-    native shape annotations for median lines or threshold indicators'
-  - 'Visual refinement could be improved: currently uses Plotly defaults for spines
-    and grid; more refined plot might reduce grid opacity further, adjust marker sizes
-    based on data density, or use custom fonts for typography hierarchy'
+  - 'DQ-02 (both): the third group is labelled ''Postal service'' but delivers in
+    about 30-130 minutes (median about 52 min), which a postal service does not do
+    → a courier type that delivers in that time, such as ''Car courier'' or ''Drone
+    service''. Likely cause: the COURIER label list in the Data block.'
+  - 'Suggestion: the closing points at the plot''s left and right edges show half
+    markers; a little x-axis padding would show them whole.'
+  - 'Suggestion: Bike courier and Van fleet both use solid lines; a distinct dash
+    for each group would make style a full second cue.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface at #FAF8F1 with subtle grid at ~10% opacity; provides excellent contrast for data visualization without harsh pure-white appearance.
-      Chrome: Title "frequency-polygon-basic · plotly · anyplot.ai" centered in dark text (#1A1A17); X-axis labeled "Reaction Time (ms)" and Y-axis labeled "Frequency" in matching dark text; tick labels at size 18px in softer INK_SOFT color (#4A4A44). All text is clearly readable with strong contrast against light background.
-      Data: Three frequency polygons with distinct visual treatment—Control (solid green line #009E73) peaks around 350ms, Caffeine (solid orange line #D55E00) peaks earlier at 280ms, Sleep Deprived (dashed blue line #0072B2) peaks later at 450ms with wider spread. Semi-transparent polygon fills in corresponding colors (alpha 0.2) show distribution area without obscuring overlaps. Markers (size 10) placed at bin centers. Lines extend to zero at both extremes as specified.
-      Legend: Positioned top-right with legend entries "Control", "Caffeine", "Sleep Deprived", rendered in INK_SOFT (#4A4A44) at size 16px on light elevated background (#FFFDF6) with subtle border.
-      Legibility verdict: **PASS** — All elements (title, labels, ticks, legend, data) are fully readable with excellent contrast in the light theme.
+      Background: warm off-white #FAF8F1 with subtle gray grid lines.
+      Chrome: left-aligned dark title 'frequency-polygon-basic · python · plotly · anyplot.ai'; axis titles 'Delivery time (min)' and 'Frequency (deliveries)'; INK_SOFT tick labels; framed top-right legend titled 'Courier' on an elevated background. All readable.
+      Data: three frequency polygons with markers and 0.2-alpha fills over 20 shared bins: Bike courier (solid #009E73) peaks at about 129 near 19 min; Van fleet (solid #C475FD) peaks at about 94 near 37 min; Postal service (dashed #4467A3) peaks at about 56 near 50 min with a long right tail to about 135 min. Every polygon closes on the zero baseline.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface at #1A1A17 with subtle grid at ~10% opacity; provides clean dark context for data visualization without harsh pure-black appearance.
-      Chrome: Title rendered in light text (#F0EFE8) maintains readability against dark background; X and Y axis labels in matching light color (#F0EFE8); tick labels in softer INK_SOFT dark equivalent (#B8B7B0). All text remains clearly visible against dark surface—no dark-on-dark failures detected.
-      Data: Frequency polygons display identical colors to light render (only chrome flips theme): Control solid green #009E73, Caffeine solid orange #D55E00, Sleep Deprived dashed blue #0072B2 with identical semi-transparent fills (alpha 0.2). Distribution shapes and markers identical to light render, confirming data colors are theme-independent as required. All lines and fills clearly distinguishable against dark background.
-      Legend: Positioned identically in top-right with dark elevated background (#242420) and INK_SOFT border (#B8B7B0), text in light theme (#B8B7B0) for readability.
-      Legibility verdict: **PASS** — All text elements readable in dark theme; no "dark-on-dark" issues; data colors maintain full visibility and distinction.
-
-    Both renders successfully implement theme-adaptive styling while maintaining data color consistency.
+      Background: warm near-black #1A1A17 with faint light grid.
+      Chrome: title and axis titles in light ink, ticks and legend text in light gray, legend box on #242420 with a light border. No dark-on-dark text.
+      Data: the same colors, dashes, markers and fills as the light render; only the chrome flips. Brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -64,82 +55,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28px title, 22px axis, 18px ticks). All
-          text readable in both light and dark themes with strong contrast.
+        comment: Title 16, axis titles 12, ticks and legend 10 at the library prompt's
+          sizes; all text readable on both backgrounds
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Overlapping frequency polygons are intentional for comparison. Lines
-          use different styles (solid/dashed) and semi-transparent fills prevent obscuring.
+        comment: No text collisions; the top-right legend sits over empty zero-count
+          bins
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All three distributions clearly visible. Markers at appropriate size
-          (10px). Line widths (4px) ensure visibility. Semi-transparent fill shows
-          all overlaps.
+        comment: 3 px lines and 7 px markers suit 22 vertices per group; legend glyphs
+          show line, marker and fill in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00, #0072B2) is colorblind-safe.
-          Adequate contrast between colors and background.'
+        comment: Green, purple and blue are CVD-safe, and Postal service also has
+          a dashed line
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 1600x900 with scale 3 = 4800x2700px. Legend positioned top-right
-          without data overlap. Margins (80/60/100/80) are generous. No elements cut
-          off.
+        comment: 3200x1800 canvas; balanced margins; title about 46 % of the width,
+          left-aligned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis labeled ''Reaction Time (ms)'' with units. Y-axis labeled
-          ''Frequency''. Title follows spec format: ''frequency-polygon-basic · plotly
-          · anyplot.ai''.'
+        comment: '''Delivery time (min)'' and ''Frequency (deliveries)'' give units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Control) is #009E73 (Okabe-Ito position 1). Multi-series
-          follows order (positions 2, 3). Backgrounds #FAF8F1 (light) / #1A1A17 (dark)
-          correct. Both renders theme-compliant.'
+        comment: 'Imprint positions 1-3 in canonical order, first series #009E73;
+          #FAF8F1 and #1A1A17 backgrounds; data colors the same in both themes'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Well-executed standard Plotly styling with semi-transparent fills
-          and dashed line differentiation. Lacks exceptional design touches or custom
-          palette refinement.
+        comment: Style-guide baseline plus a titled legend; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Grid is subtle and appropriate. Legend has good styling with background
-          and border. Limited spine control in Plotly. Whitespace is generous but
-          could be more refined.
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Clear visual hierarchy showing three distinct distributions. Dashed
-          line distinguishes Sleep Deprived. Color and fill transparency create focal
-          points. Could benefit from emphasized peaks or annotations.
+        passed: false
+        comment: The data shows three contrasting shapes (narrow and fast, wider,
+          right-skewed with a long tail), so speed and reliability read at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -149,31 +130,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correctly implements frequency polygon: lines connect bin midpoints,
-          extends to zero at both ends, shows distribution shape.'
+        comment: One frequency polygon per group, straight segments, no bars, density
+          curves or reference lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All specified features present: distinct line colors, different
-          styles (dashed), legend, semi-transparent fills, extended to zero.'
+        comment: 'C1-C5 all met: midpoints, closed one bin beyond each end on a zero-based
+          axis, shared edges, color plus dash, legend, markers, fill'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (100-700ms range) covers data appropriately. Y-axis frequency
-          (0-40+) correct. Consistent bins across all groups. Data fully mapped.
+        comment: Vertices at bin midpoints and counts; the axes cover all the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend clearly identifies all three groups
-          with matching colors.
+        comment: Title 'frequency-polygon-basic · python · plotly · anyplot.ai'; legend
+          titled 'Courier' with readable entries
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -181,24 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full frequency polygon capability: three distributions with
-          different locations, spreads, and modalities. Demonstrates comparative analysis
-          strength.'
+        comment: Groups differ in center, spread and skew; the lines cross
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Reaction times under experimental conditions (control, caffeine,
-          sleep deprivation) is realistic and plausible. Neutral domain appropriate
-          for demonstrations.
+        passed: false
+        comment: Bike courier and van fleet in minutes are plausible, but a 'Postal
+          service' with a 52-minute median delivery is not (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 observations per group within recommended range (50-1000). Values
-          realistic for reaction times. Bin range appropriate for data distribution.
+        comment: 'Checked: 300 per group (inside 50-1000); 20 shared bins over the
+          data range; the counts come from np.histogram. No check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -208,64 +185,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Direct numpy histogram and Plotly API usage.
-          Simple, clean, straightforward.
+        comment: 'Flat script in the six zones: column constants, a Data block that
+          binds df, then Plot'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output. Fully reproducible
-          across runs.
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Minimal imports: os, numpy, plotly.graph_objects. All used, no unused
-          imports.'
+        comment: os, numpy, pandas and plotly.graph_objects, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactive features. Appropriate complexity for task. Clean
-          implementation.
+        comment: np.histogram with shared edges in a groupby loop; no duplicated traces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with theme suffix.
-          Uses current Plotly API.
+        comment: plot-{THEME}.png at 800x450 scale 4, plus plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses go.Figure() and go.Scatter() idiomatically. Leverages update_layout()
-          for comprehensive styling. Theme tokens implementation is clean.
+        passed: false
+        comment: Graph-objects groupby loop as in the library prompt, plus rangemode='tozero'
+          and a native legend title
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses fill='tozeroy' with semi-transparent fillcolor (Plotly-specific).
-          Dashed lines for differentiation. Could leverage hover templates, annotations,
-          or shape overlays for richer interactivity.
+        comment: Native fill='tozeroy' area fills with rgba transparency; hover in
+          the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T07:05:16Z'
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep:
   - binning
   styling:
   - alpha-blending
+  - grid-styling
