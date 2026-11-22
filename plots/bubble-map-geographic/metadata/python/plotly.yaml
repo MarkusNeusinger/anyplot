@@ -12,39 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 74
 review:
   strengths:
-  - 'Full spec compliance: all required features (size encoding, transparency, geographic
-    context, size legend, hover tooltips) implemented correctly'
-  - 'Excellent theme-adaptive implementation: both renders pass legibility and color
-    checks; geographic chrome (land, ocean, coast, country) is also theme-adaptive'
-  - Real, factually accurate world city data with good geographic distribution and
-    population range (5M-37.4M)
-  - Correct area-proportional sizing (sqrt normalization + sizemode=diameter)
+  - Theme-paired basemap tokens (land, ocean, coastline, country lines) keep the basemap
+    quieter than the bubbles in both themes
+  - One Scattergeo trace per region with Imprint colors in canonical order, 0.65 opacity
+    and white outlines keep overlapping East Asian bubbles distinguishable
+  - Hover tooltips with city and exact population via hovertemplate in the HTML output
+  - Real, neutral world-city data with accurate coordinates and a 5-37M range
   weaknesses:
-  - 'DE-01/DE-03: No visual emphasis or callout on notable data points — the Asia
-    population dominance is visually obvious but not reinforced by any annotation
-    or focal treatment'
-  - 'DE-03: No subtitle or caption providing geographic insight (e.g., ''Asia hosts
-    10 of the world''s 15 largest cities'')'
-  - 'VQ-01: Size legend annotation text at 15px is just below the 16px minimum for
-    legend-level text'
+  - 'VQ-05 (both): canvas is 4800x2700 instead of 3200x1800 (+1600 x +900) → width=800,
+    height=450, scale=4. Likely cause: write_image(width=1600, height=900, scale=3).'
+  - 'VQ-07 (both): lakes render in pure #FFFFFF, glaring white patches on the dark
+    land and bright spots on the light map → hide lakes or color them with the ocean
+    token. Likely cause: showlakes left at its default with the default white lakecolor.'
+  - 'VQ-01 (both): size-legend title and labels at 15 px on the 1600-px layout (about
+    7.5 pt at the 800-px reference, below the 10 pt tick reference) read small beside
+    the 18-20 px Region legend → about 18 px on this layout (+3 px). Likely cause:
+    font size 15 on the size-legend annotations.'
+  - 'VQ-02 (both): the Region legend box covers about 40% of the Mexico City bubble,
+    and the 5M glyph and label touch the ''Population scale'' title → place the legend
+    over empty ocean that holds no bubble and leave a gap below the title. Likely
+    cause: legend x=0.02, y=0.40 and y_centers starting at 0.220 under a title at
+    0.252.'
+  - 'VQ-03 (both): size-legend reference glyphs are ellipses while the data marks
+    are circles → equal pixel radii on both axes. Likely cause: rx and ry divided
+    by FIG_W and FIG_H instead of the plot-area width and height.'
+  - 'SC-02 (both): diameter = 15 + 55*sqrt((v - vmin)/(vmax - vmin)) makes area not
+    proportional to the value (5M → 15 px, 10.6M → about 38 px) → diameter proportional
+    to sqrt(value). Likely cause: the min-max normalization in the marker_size line.'
+  - 'CQ-04 (code): line 38 np.random.seed(42) seeds nothing and line 26 calls the
+    Imprint colors ''Okabe-Ito'' → remove the seed and fix the comment. Likely cause:
+    leftovers from an older template.'
+  - 'Suggestion: derive the geo lataxis/lonaxis ranges from the data instead of typed
+    numbers.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct. Land in beige #E8E4D8, ocean in soft light-blue #D0E4F0.
-      Chrome: Title "World City Populations · bubble-map-geographic · python · plotly · anyplot.ai" at top center in dark #1A1A17 ink, 28px, fully readable. Region legend with dark INK_SOFT text in ELEVATED_BG box. Population scale box with three reference circles (5M, 20M, 35M).
-      Data: Asia bubbles in #009E73 (largest — Tokyo 37.4M, Delhi 31.2M, Shanghai 27.8M); Europe in #D55E00; North America in #0072B2; South America in #CC79A7; Africa in #E69F00; Oceania in #56B4E9. Okabe-Ito order correct. First series = #009E73.
-      Legibility verdict: PASS — all text clearly readable against light background.
+      Background: warm off-white #FAF8F1 page; natural-earth map with beige land #E8E4D8 and pale blue ocean #D0E4F0, cropped to roughly 60°S-75°N.
+      Chrome: title 'World City Populations · bubble-map-geographic · python · plotly · anyplot.ai' centered in dark ink, readable; Region legend box at left (Asia, Europe, North America, South America, Africa, Oceania) and a 'Population scale' box bottom left with 5M/20M/35M gray reference glyphs; the size-legend text is small and the 5M glyph presses against its title. Lakes are drawn in pure white.
+      Data: 30 city bubbles, Asia #009E73, Europe #C475FD, North America #4467A3, South America #BD8233, Africa #AE3030, Oceania #2ABCCD, 0.65 opacity with white outlines; the Region legend box covers the left part of the Mexico City bubble.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct. Land in dark charcoal #2E2E28, ocean in dark navy #1A2535.
-      Chrome: Title renders in light #F0EFE8 text, fully readable. Region legend text in #B8B7B0 against #242420 elevated background. No dark-on-dark failures observed.
-      Data: Bubble colors identical to light render — same green Asia cluster, orange Europe, blue North America, pink South America, yellow-orange Africa, sky-blue Oceania. Only chrome flips between themes.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues.
+      Background: warm near-black #1A1A17 page; charcoal land #2E2E28 and navy ocean #1A2535.
+      Chrome: title and legend text light on dark, readable, no dark-on-dark text; the pure-white lake patches glare against the dark land.
+      Data: bubble colors identical to the light render; only chrome flips.
+      Legibility verdict: PASS
+
+    Both renders are 4800x2700 px, not one of the canonical canvases.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 21
       max: 30
       items:
       - id: VQ-01
@@ -52,52 +71,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All rendered text has explicitly set font sizes. 15px size legend
-          annotations fall just below 16px minimum.
+        comment: Sizes set explicitly; size-legend title and labels at 15 px on a
+          1600-px layout (about 7.5 pt at the 800-px reference) read small beside
+          the 18-20 px Region legend (defect line)
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: Region legend box covers about 40% of the Mexico City bubble; the
+          5M glyph and label touch the 'Population scale' title (defect line)
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: East Asian city bubbles overlap geographically (inherent), handled
-          by 0.65 opacity and white borders. No text collision.
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: All bubbles visible, including small Oceania cities. min_size=15
-          ensures no value disappears.
+        comment: Bubbles well sized; size-legend glyphs are ellipses, not circles
+          like the marks (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Adequate contrast between all six
-          region colors and both map surfaces.
+        comment: Distinct Imprint hues, white outlines separate overlaps
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Map fills landscape canvas well. Legends well-placed in map corners.
-          Margins appropriate.
+        passed: false
+        comment: Canvas 4800x2700 instead of 3200x1800 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title present. No axis labels needed for geographic map
-          — N/A.
+        comment: N/A for axes on a map; legend titles descriptive, M units on size
+          labels
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series (Asia) = #009E73. Okabe-Ito canonical order. Background
-          #FAF8F1/#1A1A17. Theme-adaptive chrome correct in both renders.'
+        passed: false
+        comment: 'Imprint palette in canonical order, Asia #009E73, correct backgrounds;
+          but lakes render pure #FFFFFF in both themes (defect line)'
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -105,26 +123,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default 4: custom theme-adaptive geographic colors, custom
-          size legend. Below FiveThirtyEight level — no focal annotations or visual
-          emphasis on standout data.'
+        comment: Theme-paired land/ocean/coast/country tokens decided for this map
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: 'Slightly above default 2: white marker edges, 0.65 opacity, themed
-          legend boxes. Geographic maps offer limited chrome-reduction opportunities.'
+        passed: false
+        comment: Latitude crop is good, but white lakes, cramped size-legend title
+          and a legend over data leave no refinement credit
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: 'Slightly above default 2: size variation conveys Asia dominance,
-          six region colors enable instant comparison. No annotations guide viewer
-          to key insight.'
+        passed: false
+        comment: Data displayed; no hierarchy beyond the size encoding
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -132,29 +146,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: geographic bubble map with go.Scattergeo using Natural
-          Earth projection.'
+        comment: Geographic bubble map with go.Scattergeo
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Area-proportional sizing, transparency 0.65, geographic context,
-          size legend, hover tooltips — all present.
+        comment: Size legend, alpha, basemap, tooltips present; diameter = 15 + 55*sqrt((v-vmin)/(vmax-vmin))
+          is not area-proportional (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon mapped to geo coordinates, population to bubble size, region
-          to color.
+        comment: Bubbles centered on their coordinates, all present
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''World City Populations · bubble-map-geographic
-          · python · plotly · anyplot.ai''. Region legend labels match data.'
+        comment: Title format correct, legend labels match
     data_quality:
       score: 15
       max: 15
@@ -164,24 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 30 real world cities spanning all inhabited continents, wide population
-          range (5M-37.4M), six regions.
+        comment: 30 cities, six regions, 5-37.4M range, dense and sparse areas
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world world city populations — neutral, comprehensible geography
-          topic.
+        comment: Real world-city populations, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values match real-world data closely. Coordinates are
-          accurate.
+        comment: 'Checked: coordinates of Tokyo, São Paulo, Lagos, Sydney on their
+          cities; plausible metro populations'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -189,35 +198,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: theme tokens → data → sizing → plot → layout → size
-          legend → save. No functions/classes.'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is hardcoded so fully deterministic.
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, plotly.graph_objects — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, readable. sizemode=diameter with sqrt-normalized values is
-          correct for area-proportional encoding.
+        passed: false
+        comment: Unused np.random.seed(42) and a comment calling the Imprint colors
+          'Okabe-Ito' (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: plot-{THEME}.png and .html saved
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -225,18 +233,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct go.Scattergeo with hovertemplate, fig.update_layout() for
-          geo config, fig.add_shape()/add_annotation() for custom size legend in paper
-          coordinates.
+        comment: Scattergeo per region, hovertemplate, layout.geo basemap; typed lataxis/lonaxis
+          ranges
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Natural Earth geographic projection, interactive hover, HTML export,
-          paper-coordinate size legend using fig.add_shape() circles — Plotly-distinctive
-          but not exceptionally advanced.
+        passed: false
+        comment: Natural-earth projection cropped via geo axis ranges; legend itemsizing='constant'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
 impl_tags:
   dependencies: []
   techniques:
