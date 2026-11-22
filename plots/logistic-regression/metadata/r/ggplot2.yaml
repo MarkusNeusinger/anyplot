@@ -2,48 +2,56 @@ library: ggplot2
 language: r
 specification_id: logistic-regression
 created: '2026-05-18T08:44:33Z'
-updated: '2026-05-18T08:54:03Z'
-generated_by: claude-haiku
-workflow_run: 26022828815
+updated: '2026-11-22T12:24:03Z'
+generated_by: claude-sonnet
+workflow_run: 45021541860
 issue: 3550
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - Perfect visual quality with all text readable in both themes and excellent color
-    palette compliance
-  - Complete spec implementation with every required feature (curve, CI band, threshold,
-    jitter, class colors) correctly rendered
-  - Strong ggplot2 mastery with idiomatic grammar-of-graphics usage and proper theme
-    tokens
-  - Effective data storytelling with clear visual hierarchy and accuracy annotation
-    providing context
-  - Flawless theme adaptation with Okabe-Ito data colors identical between renders
-    and chrome tokens properly flipping
+  - Confidence band computed on the link scale with predict(type = "link", se.fit
+    = TRUE) and back-transformed with plogis, so it stays inside 0..1 and widens naturally
+    at the sparse ends
+  - 'Curve and band in neutral ink tokens keep the model visually separate from the
+    two Imprint class colors (#009E73, #C475FD)'
+  - Legend placed inside the panel with legend.position.inside in the empty region
+    between the two point rows
+  - Points jittered along y only, so every observation keeps its exact x value
+  - 'Chrome fully theme-adaptive: 15% ink grid, no spines, readable text in both renders'
   weaknesses:
-  - Unused dplyr import should be removed for cleaner code
-  - Design excellence could be elevated with additional polish such as intentional
-    gridline styling or legend customization
+  - 'VQ-06 (both): the x-axis title ''Biomarker level'' carries no unit → a named
+    marker with its unit, e.g. ''CRP (mg/L)''. Likely cause: the BIOMARKER column
+    constant.'
+  - 'DQ-02 (both): the predictor is the generic ''Biomarker level'' with no named
+    marker, so the medical scenario reads abstract → name a real marker (e.g. ''Serum
+    CRP'' or ''Troponin''). Likely cause: the BIOMARKER constant and the data comment.'
+  - 'DQ-03 (both): biomarker values reach about -1.0 and -0.4 on the x axis, impossible
+    for a concentration → strictly positive values, e.g. a log-normal draw (rlnorm)
+    or a mean/sd that keeps the range above 0. Likely cause: rnorm(n, mean = 5, sd
+    = 2).'
+  - 'Suggestion: a small annotation of the fitted coefficients or accuracy, which
+    the Notes allow, would add context.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clean and neutral
-      Chrome: Title "logistic-regression · r · ggplot2 · anyplot.ai" in dark text at top; axis labels "Biomarker Level" (x) and "Probability" (y) in dark text; tick labels clearly visible (0, 0.25, 0.50, 0.75, 1.00 on y-axis; 0, 4, 8 on x-axis); "Accuracy: 86.7%" annotation in lower left; "Decision threshold" legend label in upper right. All text is dark and reads perfectly on light surface.
-      Data: Green (#009E73) sigmoid curve with semi-transparent confidence band, orange (#D55E00) and green data points jittered on y-axis, dashed threshold line at y=0.5
-      Legibility verdict: PASS - All elements clearly readable
+      Background: warm off-white #FAF8F1, no spines, faint 15% ink grid.
+      Chrome: title 'logistic-regression · r · ggplot2 · anyplot.ai' top-left in dark ink (~50% width); axis titles 'Biomarker level' and 'Probability' and ticks (0, 4, 8; 0.00-1.00) in dark grey; inside legend 'Status' (No Disease / Disease) on an elevated box upper-left. All readable.
+      Data: 150 points in two jittered rows near 0 (green #009E73, No Disease) and 1 (lavender #C475FD, Disease) at alpha 0.6; near-black S-curve rising through 0.5 near x=2.9; light grey 95% band widening at the ends; dashed grey line at 0.5 across the full width.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), neutral and non-harsh
-      Chrome: Same title, axis labels, tick labels, and annotations as light render but now in light color (#F0EFE8/#B8B7B0) against dark surface. All text is light and reads perfectly on dark surface. No dark-on-dark failures anywhere.
-      Data: Green (#009E73) and orange (#D55E00) data colors are IDENTICAL to light render - only chrome has flipped. Curve and CI band are same green as light. Threshold dashed line visible.
-      Legibility verdict: PASS - All elements clearly readable, no dark-on-dark issues, data colors preserved perfectly between themes
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink; legend box on #242420 with light text; grid faint. No dark-on-dark text.
+      Data: point colors identical to the light render; curve flips to light ink #F0EFE8, band to a translucent light grey, dashed line light grey - all clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,50 +59,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24pt, axis labels 20pt, tick labels
-          16pt). All text readable in both themes.
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend text 8 pt at the
+          style-guide references; all text readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between legend, annotations, data points, or text elements.
+        comment: No text collisions; the inside legend sits in the empty upper-left
+          region clear of points, curve and band.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points sized appropriately (size=3), semi-transparent (alpha=0.65),
-          jittered on y-axis for visibility.
+        comment: 150 points at size 2.5 with alpha 0.6, prominent 1.2 linewidth curve,
+          legend glyphs visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73 green, #D55E00 orange) is CVD-safe and
-          highly distinguishable.'
+        comment: Green vs lavender differ strongly in lightness and hue; neutral ink
+          curve; no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape format, proper proportions, nothing cut off at edges.
+        comment: 3200x1800 canvas, plot fills the canvas with balanced margins; title
+          ~50% width.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Descriptive labels (Biomarker Level, Probability), correct title
-          format: logistic-regression · r · ggplot2 · anyplot.ai'
+        passed: false
+        comment: '''Biomarker level'' has no unit (defect line); ''Probability'' is
+          fine.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito 1-2). Backgrounds
-          #FAF8F1 light/#1A1A17 dark. Both renders theme-correct.'
+        comment: 'Classes use Imprint #009E73 and #C475FD; backgrounds #FAF8F1/#1A1A17;
+          grid at 15% ink; chrome theme-correct in both renders.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -102,23 +112,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean, professional styling with intentional design choices. Green
-          sigmoid focal point, confidence band adds sophistication. Uses standard
-          ggplot2 minimal without extra ornament.
+        comment: Curve and band drawn in neutral ink tokens so the model reads as
+          a separate structural layer from the two class colors; deliberate type hierarchy.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Panel border kept (acceptable), grid subtle with low opacity, whitespace
-          generous. Minimal but functional customization.
+        comment: No spines, 15% grid; legend placed inside the panel in the one empty
+          region (upper-left between the rows) instead of taking side margin.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clear visual hierarchy with green curve as focal point. Decision
-          threshold and accuracy annotation guide understanding effectively.
+        comment: 'Clear hierarchy: dark ink curve on top of the points, band and threshold
+          subordinate, so the S-curve is the focal point.'
     spec_compliance:
       score: 15
       max: 15
@@ -128,30 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct logistic regression curve with binary classification data
-          points.
+        comment: Logistic regression curve over binary observations.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: colored classes (green/orange), smooth curve,
-          95% CI band, jittered points, dashed threshold at 0.5.'
+        comment: 'All Notes and good-version bullets met: y-only jitter, two class
+          colors, smooth solid curve, semi-transparent 95% band, dashed 0.5 line across
+          the range, alpha 0.6, axes ''Probability''.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped (biomarker→x, probability→y), axes show full
-          range.
+        comment: Points at exact x values; curve and band computed from the fitted
+          glm.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match spec (No Disease, Disease).
+        comment: Title in mandated format; legend 'Status' with 'No Disease'/'Disease'.
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -159,24 +168,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All plot type aspects shown: binary outcomes, fitted curve, confidence
-          intervals, threshold line, jittered data.'
+        comment: Shows overlap zone, sparse ends with a widening band, both classes
+          and the threshold.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Medical diagnostic context (biomarker predicts disease) is plausible
-          and neutral. Accuracy annotation adds educational value.
+        passed: false
+        comment: Medical diagnostic scenario is neutral, but the predictor is an unnamed
+          generic 'Biomarker level' (defect line).
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Biomarker range 0-10 sensible, probability 0-1 correct, distribution
-          shows clear class separation.
+        passed: false
+        comment: Probabilities in 0..1 and the band computed on the link scale stay
+          inside it; but biomarker values go negative (about -1.0 and -0.4), implausible
+          for a concentration (defect line).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -184,55 +194,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward script, no unnecessary functions or classes.
+        comment: Flat script, no functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) ensures deterministic output.
+        comment: set.seed(42).
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but not used - should be removed.
+        passed: true
+        comment: ggplot2 and ragg both used; tibble namespaced.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity, clean logic flow.
+        comment: glm + predict(se.fit) + plogis is the compact native route; nothing
+          to remove.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with sprintf, modern ggplot2 API.
+        comment: ggsave plot-{THEME}.png with ragg at 8x4.5 in, 400 dpi; ggplot2 4
+          API (legend.position.inside).
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Strong idiomatic ggplot2: ggplot()+geoms, theme_minimal(), scale_color_manual(),
-          ragg device, environment-based theming.'
+        comment: Layered geoms from separate data frames, scale_color_manual, theme_minimal
+          + theme(), legend.position.inside (ggplot2 3.5+/4 idiom).
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: true
-        comment: geom_ribbon() for CI is elegant and library-specific. Theme tokens
-          system shows thoughtful design.
+        comment: Nothing distinctive beyond the mandated pattern.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T12:20:23Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
   patterns:
   - data-generation
   dataprep:
