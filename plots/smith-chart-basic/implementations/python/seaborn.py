@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: pending | Updated: 2026-05-20
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 76/100 | Updated: 2026-11-22
 """
 
 import os
