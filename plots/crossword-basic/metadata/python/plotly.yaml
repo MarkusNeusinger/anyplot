@@ -2,159 +2,162 @@ library: plotly
 language: python
 specification_id: crossword-basic
 created: '2026-01-15T21:38:22Z'
-updated: '2026-05-20T02:23:31Z'
+updated: '2026-11-22T18:04:34Z'
 generated_by: claude-sonnet
-workflow_run: 26136552709
+workflow_run: 45052433292
 issue: 3805
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 80
 review:
   strengths:
-  - Perfect spec compliance — all required crossword features present (symmetry, numbering,
-    cell types, grid lines, monochrome)
-  - Elegant two-shade cell distinction (CELL_NUMBERED pure white vs CELL_ENTRY warm
-    off-white) adds subtle visual hierarchy without violating monochrome constraint
-  - Deterministic, algorithmically correct clue number generation
-  - Correct square 2400x2400 canvas format for grid visualization
-  - Thick outer border follows traditional newspaper crossword convention
+  - Clue numbers are drawn in a fixed dark ink (#1A1A17) because the cells are white
+    in both themes, so every number reads clearly in the light and the dark render
+  - Clue numbering is computed from the grid (across/down word starts), giving 78
+    numbers in strict reading order and only in word-start cells
+  - Black-cell pattern is mirrored programmatically, so the 180-degree rotational
+    symmetry holds by construction and the 184 entry cells form one connected area
+  - Square cells pinned with Plotly's scaleanchor/scaleratio on a 2400x2400 canvas,
+    with a heavier outer frame over 1.5 px internal grid lines
+  - 'Theme chrome (title, frame and grid lines from INK/INK_SOFT) adapts correctly
+    to #FAF8F1 and #1A1A17'
   weaknesses:
-  - 'Dark-mode annotation legibility failure: clue numbers use font color=INK (#F0EFE8
-    in dark) on fixed-white cell backgrounds (#FFFFFF/#FAFAFA), creating near-1:1
-    contrast ratio — numbers become near-invisible in dark render. Fix: annotation
-    font color should always be #1A1A17 (dark) regardless of theme since cell backgrounds
-    are always white by design.'
-  - Design excellence ceiling limited by monochrome nature — no color storytelling
-    or emphasis techniques possible beyond cell shade distinction and border weight
-    variation.
+  - 'SC-01 (both): word-start cells are filled pure #FFFFFF while plain entry cells
+    are #FAFAFA, a faint tint that highlights the numbered cells, which the basic
+    variant excludes (C5: no tinted or highlighted cells) → one white fill for every
+    entry cell. Likely cause: the CELL_NUMBERED / CELL_ENTRY branch in the cell loop.'
+  - 'VQ-05 (both): an empty band of about 190 px (of 2400) sits between the one-line
+    title and the top of the grid, so the grid sits low with uneven top and bottom
+    space → top margin about 50–60 px (−30 to −40 px), per the plotly rule that t
+    is only as tall as the title needs. Likely cause: margin t=90.'
+  - 'CQ-04 (code): the CELL_ENTRY comment calls #FAFAFA a ''slightly warm off-white'',
+    but #FAFAFA is a neutral grey-white → correct the comment, or remove it with the
+    second entry fill. Likely cause: the comment on the CELL_ENTRY line.'
+  - 'Suggestion: the grid has two-letter entries (37 across and its mirror); newspaper
+    grids usually keep every entry at three letters or more.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "crossword-basic · python · plotly · anyplot.ai" centered in dark text (#1A1A17), clearly readable. No axis labels or tick marks (appropriate for crossword grid type). Thick outer border frame in grey (INK_SOFT = #4A4A44).
-      Data: 15x15 crossword grid. Black cells (#1A1A17) create symmetric pattern. Word-start cells (#FFFFFF pure white) and plain entry cells (#FAFAFA warm off-white) are cleanly separated by 1.5px grey grid lines. Clue numbers 1-78 appear as small dark text in top-left corner of word-start cells — clearly readable.
+      Background: Warm off-white #FAF8F1, correct.
+      Chrome: Title "crossword-basic · python · plotly · anyplot.ai" centered in dark ink, about 52 % of the width, readable. No axes or ticks (permitted by C6). Heavier grey (#4A4A44) outer frame, 1.5 px grey internal grid lines.
+      Data: 15x15 grid of square cells, 41 near-black (#1A1A17) blocking cells in a 180-degree symmetric pattern, white entry cells (word-start cells pure white, other entry cells a barely different #FAFAFA). Clue numbers 1–78 in dark Arial at the top-left of the word-start cells, rising in reading order, leaving room for a letter. Monochrome, no Imprint series needed.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title "crossword-basic · python · plotly · anyplot.ai" centered in light text (#F0EFE8), clearly readable against dark background. Outer border frame visible in lighter grey (INK_SOFT = #B8B7B0).
-      Data: Same grid pattern as light render (cell colors are theme-invariant by design: CELL_BLOCK=#1A1A17, CELL_NUMBERED=#FFFFFF, CELL_ENTRY=#FAFAFA). CRITICAL ISSUE: Clue numbers use font color=INK=#F0EFE8 (near-white) on CELL_NUMBERED=#FFFFFF (pure white) backgrounds — contrast ratio approximately 1.05:1. Numbers appear faint/washed-out, significantly less readable than light render. This is a near-white-on-white annotation failure.
-      Legibility verdict: PARTIAL FAIL — clue numbers poorly legible due to near-white text (#F0EFE8) on white cell backgrounds (#FFFFFF). Title and overall layout pass. The annotation color should be fixed at #1A1A17 regardless of theme since cell backgrounds are always white.
+      Background: Warm near-black #1A1A17, correct.
+      Chrome: Title in light ink (#F0EFE8), readable. Outer frame and grid lines flip to light grey (#B8B7B0), clearly visible. No dark-on-dark text.
+      Data: Cell fills and clue numbers identical to the light render (white cells, #1A1A17 blocks, dark numbers); blocking cells stay darker than entry cells and are bounded by the light grid lines against the dark page. All 78 numbers clearly readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: 'Title readable in both themes. Clue numbers clear in light mode
-          but annotation color INK=#F0EFE8 (dark theme) on fixed-white cells #FFFFFF
-          creates ~1:1 contrast — numbers near-invisible in dark render.'
+        passed: true
+        comment: Title and all 78 clue numbers readable in both themes; numbers in
+          fixed dark ink on the white cells
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Numbers sit cleanly in top-left corners; no collisions between numbers
-          or with grid lines.
+        comment: Numbers sit in the top-left corners clear of the grid lines; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Black/white cell contrast excellent. Slight deduction for diminished
-          clue number visibility in dark render.
+        comment: Blocks, entry cells, grid lines and frame clearly visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome design is inherently CVD-safe with maximum contrast between
-          black and white cells.
+        comment: Monochrome black/white, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Square 2400x2400 canvas correct for grid. Generous margins, grid
-          well-centered.
+        passed: false
+        comment: Square 2400x2400 canvas correct; about 190 px empty band between
+          title and grid from margin t=90 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels appropriate for crossword; title format correct.
+        comment: 'N/A: no data axes for a crossword (C6); title present'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1/#1A1A17). Deduction: annotation color
-          not adapted for fixed-white cell backgrounds in dark mode.'
+        passed: true
+        comment: 'Backgrounds #FAF8F1/#1A1A17, theme chrome correct; monochrome cells
+          as the spec asks'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Two distinct cell shades (CELL_NUMBERED pure white vs CELL_ENTRY
-          warm off-white) subtly distinguish word-start cells. Traditional newspaper
-          crossword aesthetic.
+        passed: false
+        comment: 'The style-guide baseline: explicit fonts, theme tokens; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: No axes/spines correct for this type. Thick outer border traditional
-          and appropriate. Internal gridlines at proper weight (1.5px vs 3px outer).
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Visual hierarchy between black cells, numbered cells, and plain cells
-          is clear. Numbering draws eye to word-start positions.
+        passed: false
+        comment: Outer frame at 3 px over 1.5 px internal lines, a weight hierarchy
+          chosen for this chart
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Grid displayed as asked; the numbered-cell tint is an unasked highlight
+          and earns no credit
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct crossword puzzle grid visualization.
+        passed: false
+        comment: 'Correct crossword grid; numbered cells tinted #FFFFFF against #FAFAFA
+          entry cells, a highlight C5 excludes (defect line)'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: White entry cells, black blocking cells, numbered word-start positions,
-          180-degree rotational symmetry, clean uniform grid lines, monochrome design,
-          1:1 cell aspect ratio — all present.
+        comment: 'All Notes and good-version bullets met: square cells, uniform lines,
+          numbers readable in both themes, symmetry, connectivity'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 15x15 grid within spec range, binary grid correctly mapped, clue
-          numbers algorithmically generated and correctly placed.
+        comment: Binary grid mapped cell for cell; numbers computed from word starts
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'crossword-basic · python · plotly · anyplot.ai'.
-          No legend needed for monochrome design.
+        comment: Title exactly 'crossword-basic · python · plotly · anyplot.ai'; legend
+          N/A
     data_quality:
       score: 15
       max: 15
@@ -164,24 +167,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all crossword grid elements: black cells, plain entry
-          cells, numbered word-start cells, outer frame, internal grid lines.'
+        comment: 'Blocks, across and down starts, symmetric pattern, one connected
+          area (checked: 184 of 184 entry cells connected)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard newspaper-style 15x15 crossword with 78 numbered clues —
-          realistic and neutral.
+        comment: Standard 15x15 newspaper-style grid, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15x15 with rotational symmetry and 78 clues is appropriate scale
-          for a standard crossword.
+        comment: 15x15 inside the 10–15 Data range; 41 blocks, symmetry checked by
+          rotating the grid, numbering 1–78 in reading order
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -189,60 +191,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; no random data.
+        comment: Deterministic grid
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used.
+        comment: os, numpy, plotly.graph_objects, all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean iteration pattern for grid shape generation; clear algorithm
-          for clue number assignment.
+        passed: false
+        comment: 'CELL_ENTRY comment calls neutral #FAFAFA ''warm'' (defect line)'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png at 600x600 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses add_shape() for cell rectangles, add_annotation() for numbers,
-          scaleanchor='y' for square aspect ratio — idiomatic Plotly patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Leverages Plotly's shape system for entire 225-cell grid, scaleanchor/scaleratio
-          for exact aspect ratio, HTML export for interactivity.
+        passed: false
+        comment: add_shape rectangles and add_annotation numbers; standard graph-objects
+          usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates (HTML export, square
+          canvas)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
+  rendered_at: '2026-11-22T18:00:44Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - patches
   - html-export
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
