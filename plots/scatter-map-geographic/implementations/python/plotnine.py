@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 97/100 | Updated: 2026-05-18
+Quality: 97/100 | Updated: 2026-11-22
 """
 
 import os
@@ -17,6 +17,8 @@ from plotnine import (
     geom_point,
     geom_polygon,
     ggplot,
+    guide_legend,
+    guides,
     labs,
     scale_color_manual,
     scale_size_continuous,
@@ -25,257 +27,117 @@ from plotnine import (
 )
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 BASEMAP_COLOR = "#E8E3D8" if THEME == "light" else "#2A2A26"
 BASEMAP_EDGE = "#C0B5A8" if THEME == "light" else "#4A4945"
-GRID_COLOR = INK if THEME == "light" else INK
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Major world cities with population and region
-cities_data = {
-    "city": [
-        "Tokyo",
-        "Delhi",
-        "Shanghai",
-        "Sao Paulo",
-        "Mexico City",
-        "Cairo",
-        "Mumbai",
-        "Beijing",
-        "Dhaka",
-        "Osaka",
-        "New York",
-        "Karachi",
-        "Buenos Aires",
-        "Chongqing",
-        "Istanbul",
-        "Kolkata",
-        "Manila",
-        "Lagos",
-        "Rio de Janeiro",
-        "Los Angeles",
-        "Moscow",
-        "Paris",
-        "Bangkok",
-        "Seoul",
-        "London",
-        "Lima",
-        "Chicago",
-        "Cape Town",
-        "Sydney",
-        "Toronto",
-    ],
-    "latitude": [
-        35.68,
-        28.61,
-        31.23,
-        -23.55,
-        19.43,
-        30.04,
-        19.08,
-        39.90,
-        23.81,
-        34.69,
-        40.71,
-        24.86,
-        -34.60,
-        29.43,
-        41.01,
-        22.57,
-        14.60,
-        6.52,
-        -22.91,
-        34.05,
-        55.76,
-        48.86,
-        13.76,
-        37.57,
-        51.51,
-        -12.05,
-        41.88,
-        -33.93,
-        -33.87,
-        43.65,
-    ],
-    "longitude": [
-        139.69,
-        77.21,
-        121.47,
-        -46.63,
-        -99.13,
-        31.24,
-        72.88,
-        116.41,
-        90.41,
-        135.50,
-        -74.01,
-        67.01,
-        -58.38,
-        106.91,
-        28.98,
-        88.36,
-        120.98,
-        3.38,
-        -43.17,
-        -118.24,
-        37.62,
-        2.35,
-        100.50,
-        127.00,
-        -0.13,
-        -77.04,
-        -87.63,
-        18.42,
-        151.21,
-        -79.38,
-    ],
-    "population": [
-        37.4,
-        32.9,
-        29.2,
-        22.4,
-        21.8,
-        21.3,
-        21.0,
-        20.9,
-        22.5,
-        19.1,
-        18.8,
-        16.8,
-        15.4,
-        16.9,
-        15.6,
-        15.1,
-        14.4,
-        15.3,
-        13.5,
-        12.5,
-        12.5,
-        11.0,
-        10.7,
-        9.9,
-        9.5,
-        11.0,
-        8.9,
-        4.8,
-        5.3,
-        6.3,
-    ],
-    "region": [
-        "Asia",
-        "Asia",
-        "Asia",
-        "S. America",
-        "N. America",
-        "Africa",
-        "Asia",
-        "Asia",
-        "Asia",
-        "Asia",
-        "N. America",
-        "Asia",
-        "S. America",
-        "Asia",
-        "Europe",
-        "Asia",
-        "Asia",
-        "Africa",
-        "S. America",
-        "N. America",
-        "Europe",
-        "Europe",
-        "Asia",
-        "Asia",
-        "Europe",
-        "S. America",
-        "N. America",
-        "Africa",
-        "Oceania",
-        "N. America",
-    ],
+# Constants: simplified continent outlines (longitudes, latitudes) for the basemap
+CONTINENT_OUTLINES = {
+    "N. America": (
+        [
+            -170,
+            -168,
+            -140,
+            -125,
+            -124,
+            -117,
+            -105,
+            -97,
+            -82,
+            -77,
+            -68,
+            -55,
+            -52,
+            -80,
+            -87,
+            -97,
+            -105,
+            -125,
+            -145,
+            -165,
+            -170,
+        ],
+        [60, 65, 70, 55, 48, 33, 25, 26, 25, 35, 45, 48, 45, 27, 30, 20, 22, 50, 60, 55, 60],
+    ),
+    "S. America": (
+        [-80, -68, -60, -50, -35, -40, -50, -55, -68, -72, -75, -80, -82, -80],
+        [10, 12, 5, 0, -5, -22, -35, -52, -55, -18, -5, 0, 8, 10],
+    ),
+    "Europe": (
+        [-10, 0, 10, 20, 30, 40, 50, 60, 50, 35, 25, 20, 10, 0, -10, -10],
+        [35, 37, 36, 35, 35, 40, 45, 55, 70, 70, 70, 65, 60, 50, 40, 35],
+    ),
+    "Africa": (
+        [-17, -5, 10, 35, 50, 52, 43, 35, 30, 15, 0, -17, -17],
+        [15, 37, 37, 32, 12, 0, -25, -35, -35, -25, 5, 20, 15],
+    ),
+    "Asia": (
+        [60, 80, 100, 120, 140, 145, 140, 130, 105, 100, 80, 60, 45, 30, 25, 30, 35, 50, 60],
+        [55, 70, 75, 70, 55, 45, 35, 30, 0, 5, 10, 25, 30, 35, 42, 55, 70, 70, 55],
+    ),
+    "Oceania": ([113, 125, 145, 153, 148, 140, 130, 115, 113], [-20, -14, -16, -28, -40, -38, -32, -34, -20]),
 }
 
-df = pd.DataFrame(cities_data)
+CITY = "City"  # role: label
+LATITUDE = "Latitude (°)"  # role: latitude
+LONGITUDE = "Longitude (°)"  # role: longitude
+POPULATION = "Population (M)"  # role: size
+REGION = "Region"  # role: value
 
-# Simplified continent outlines for basemap (closed polygons)
-continents = []
+# Data: replace this block with your own table, for example df = pd.read_csv("cities.csv")
+df = pd.DataFrame(
+    [
+        ("Tokyo", 35.68, 139.69, 37.4, "Asia"),
+        ("Delhi", 28.61, 77.21, 32.9, "Asia"),
+        ("Shanghai", 31.23, 121.47, 29.2, "Asia"),
+        ("Sao Paulo", -23.55, -46.63, 22.4, "S. America"),
+        ("Mexico City", 19.43, -99.13, 21.8, "N. America"),
+        ("Cairo", 30.04, 31.24, 21.3, "Africa"),
+        ("Mumbai", 19.08, 72.88, 21.0, "Asia"),
+        ("Beijing", 39.9, 116.41, 20.9, "Asia"),
+        ("Dhaka", 23.81, 90.41, 22.5, "Asia"),
+        ("Osaka", 34.69, 135.5, 19.1, "Asia"),
+        ("New York", 40.71, -74.01, 18.8, "N. America"),
+        ("Karachi", 24.86, 67.01, 16.8, "Asia"),
+        ("Buenos Aires", -34.6, -58.38, 15.4, "S. America"),
+        ("Chongqing", 29.43, 106.91, 16.9, "Asia"),
+        ("Istanbul", 41.01, 28.98, 15.6, "Europe"),
+        ("Kolkata", 22.57, 88.36, 15.1, "Asia"),
+        ("Manila", 14.6, 120.98, 14.4, "Asia"),
+        ("Lagos", 6.52, 3.38, 15.3, "Africa"),
+        ("Rio de Janeiro", -22.91, -43.17, 13.5, "S. America"),
+        ("Los Angeles", 34.05, -118.24, 12.5, "N. America"),
+        ("Moscow", 55.76, 37.62, 12.5, "Europe"),
+        ("Paris", 48.86, 2.35, 11.0, "Europe"),
+        ("Bangkok", 13.76, 100.5, 10.7, "Asia"),
+        ("Seoul", 37.57, 127.0, 9.9, "Asia"),
+        ("London", 51.51, -0.13, 9.5, "Europe"),
+        ("Lima", -12.05, -77.04, 11.0, "S. America"),
+        ("Chicago", 41.88, -87.63, 8.9, "N. America"),
+        ("Cape Town", -33.93, 18.42, 4.8, "Africa"),
+        ("Sydney", -33.87, 151.21, 5.3, "Oceania"),
+        ("Toronto", 43.65, -79.38, 6.3, "N. America"),
+    ],
+    columns=[CITY, LATITUDE, LONGITUDE, POPULATION, REGION],
+)
 
-# North America
-na_lon = [
-    -170,
-    -168,
-    -140,
-    -125,
-    -124,
-    -117,
-    -105,
-    -97,
-    -82,
-    -77,
-    -68,
-    -55,
-    -52,
-    -80,
-    -87,
-    -97,
-    -105,
-    -125,
-    -145,
-    -165,
-    -170,
-]
-na_lat = [60, 65, 70, 55, 48, 33, 25, 26, 25, 35, 45, 48, 45, 27, 30, 20, 22, 50, 60, 55, 60]
-for i in range(len(na_lon)):
-    continents.append({"continent": "N. America", "order": i, "lon": na_lon[i], "lat": na_lat[i]})
+# Plot
+df_continents = pd.DataFrame(
+    [
+        {"continent": name, "order": i, "lon": lon, "lat": lat}
+        for name, (lons, lats) in CONTINENT_OUTLINES.items()
+        for i, (lon, lat) in enumerate(zip(lons, lats, strict=True))
+    ]
+)
 
-# South America
-sa_lon = [-80, -68, -60, -50, -35, -40, -50, -55, -68, -72, -75, -80, -82, -80]
-sa_lat = [10, 12, 5, 0, -5, -22, -35, -52, -55, -18, -5, 0, 8, 10]
-for i in range(len(sa_lon)):
-    continents.append({"continent": "S. America", "order": i, "lon": sa_lon[i], "lat": sa_lat[i]})
-
-# Europe
-eu_lon = [-10, 0, 10, 20, 30, 40, 50, 60, 50, 35, 25, 20, 10, 0, -10, -10]
-eu_lat = [35, 37, 36, 35, 35, 40, 45, 55, 70, 70, 70, 65, 60, 50, 40, 35]
-for i in range(len(eu_lon)):
-    continents.append({"continent": "Europe", "order": i, "lon": eu_lon[i], "lat": eu_lat[i]})
-
-# Africa
-af_lon = [-17, -5, 10, 35, 50, 52, 43, 35, 30, 15, 0, -17, -17]
-af_lat = [15, 37, 37, 32, 12, 0, -25, -35, -35, -25, 5, 20, 15]
-for i in range(len(af_lon)):
-    continents.append({"continent": "Africa", "order": i, "lon": af_lon[i], "lat": af_lat[i]})
-
-# Asia
-as_lon = [60, 80, 100, 120, 140, 145, 140, 130, 105, 100, 80, 60, 45, 30, 25, 30, 35, 50, 60]
-as_lat = [55, 70, 75, 70, 55, 45, 35, 30, 0, 5, 10, 25, 30, 35, 42, 55, 70, 70, 55]
-for i in range(len(as_lon)):
-    continents.append({"continent": "Asia", "order": i, "lon": as_lon[i], "lat": as_lat[i]})
-
-# Australia/Oceania
-au_lon = [113, 125, 145, 153, 148, 140, 130, 115, 113]
-au_lat = [-20, -14, -16, -28, -40, -38, -32, -34, -20]
-for i in range(len(au_lon)):
-    continents.append({"continent": "Oceania", "order": i, "lon": au_lon[i], "lat": au_lat[i]})
-
-df_continents = pd.DataFrame(continents)
-
-# Define region colors using Okabe-Ito palette
-region_colors = {
-    "Africa": IMPRINT[0],
-    "Asia": IMPRINT[1],
-    "Europe": IMPRINT[2],
-    "N. America": IMPRINT[3],
-    "Oceania": IMPRINT[4],
-    "S. America": IMPRINT[5],
-}
-
-# Create the geographic scatter map
 plot = (
     ggplot()
     + geom_polygon(
@@ -283,25 +145,27 @@ plot = (
         data=df_continents,
         fill=BASEMAP_COLOR,
         color=BASEMAP_EDGE,
-        size=0.5,
+        size=0.25,
         alpha=0.6,
     )
-    + geom_point(aes(x="longitude", y="latitude", color="region", size="population"), data=df, alpha=0.8, stroke=0.5)
-    + scale_color_manual(values=list(region_colors.values()), name="Region")
-    + scale_size_continuous(range=(4, 20), name="Population (M)")
-    + labs(title="scatter-map-geographic · python · plotnine · anyplot.ai", x="Longitude (°)", y="Latitude (°)")
+    + geom_point(aes(x=LONGITUDE, y=LATITUDE, color=REGION, size=POPULATION), data=df, alpha=0.8, stroke=0.25)
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=sorted(df[REGION].unique()))
+    + scale_size_continuous(range=(2, 10))
+    + labs(title="scatter-map-geographic · python · plotnine · anyplot.ai", x=LONGITUDE, y=LATITUDE)
+    + guides(size=guide_legend(override_aes={"color": INK_SOFT}))
     + coord_fixed(ratio=1.0, xlim=(-180, 180), ylim=(-60, 80))
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
+        figure_size=(8, 4.5),
+        plot_title=element_text(size=12, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
         legend_position="right",
-        panel_grid_major=element_line(color=GRID_COLOR, size=0.3, alpha=0.08),
+        panel_grid_major=element_line(color=INK, size=0.15, alpha=0.08),
         panel_grid_minor=element_blank(),
         panel_background=element_rect(fill=PAGE_BG, color=None),
         plot_background=element_rect(fill=PAGE_BG, color=None),
@@ -309,5 +173,4 @@ plot = (
     )
 )
 
-# Save PNG
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
