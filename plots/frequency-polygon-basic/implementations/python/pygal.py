@@ -1,7 +1,7 @@
 """anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 91/100 | Updated: 2026-11-22
+Quality: pending | Updated: 2026-11-22
 """
 
 import os
