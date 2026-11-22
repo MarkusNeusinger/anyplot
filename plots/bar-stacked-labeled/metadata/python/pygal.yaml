@@ -2,45 +2,57 @@ library: pygal
 language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:35:45Z'
-updated: '2026-05-18T02:06:00Z'
-generated_by: claude-haiku
-workflow_run: 26009368297
+updated: '2026-11-22T09:25:24Z'
+generated_by: claude-sonnet
+workflow_run: 45007001658
 issue: 3504
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 79
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing across all themes
-  - Flawless spec compliance and data quality
-  - Clean, reproducible code using idiomatic pygal
-  - Both light and dark renders pass readability checks with proper theme adaptation
-  - Realistic, well-chosen business data scenario
+  - Totals computed with table.sum(axis=1) and attached as per-point formatters on
+    the top series, so each label is exactly the stack sum in one $NNNK format
+  - Theme tokens threaded through Style (background, foreground, value_colors) — all
+    text readable in both renders
+  - 15% range headroom keeps the tallest total inside the plot area
+  - Clean six-zone layout with column constants and a tidy df pivoted via pivot_table(sort=False)
+  - Interactive HTML output with pygal's native hover tooltips
   weaknesses:
-  - Design excellence is competent but relies on library defaults without exceptional
-    aesthetic choices
-  - Library mastery is basic; doesn't leverage distinctive pygal features creatively
-  - Data storytelling relies solely on total labels without additional visual hierarchy
-    or emphasis
+  - 'VQ-07 (both): the segment fills render translucent (pygal''s default fill opacity),
+    so the page shows through and the same Imprint hue looks pale in light and muddy
+    in dark (Clothing #4467A3 reads near-navy on #1A1A17) → solid fills identical
+    in both themes (opacity 1). Likely cause: Style(...) without opacity=''1'' / opacity_hover.'
+  - 'VQ-02 (both): the total labels rest directly on the stack tops — the ''$'' descenders
+    touch the top edge of each Accessories segment and $500K sits on the 500 gridline
+    → clear the stack top by at least 8 px. Likely cause: print_values_position=''top''
+    anchors the text baseline at the bar edge; raise the label (e.g. a larger range
+    headroom with a value-label offset in the style''s value CSS) rather than moving
+    bars.'
+  - 'VQ-05 (both): y tick labels come in two sizes — the major ticks 0 and 500 at
+    44 px beside 100–400 at 56 px → one tick size on the axis (major ≥ minor). Likely
+    cause: major_label_font_size=44 smaller than label_font_size=56.'
+  - 'Suggestion: a bold or slightly larger total label (the Notes'' optional emphasis)
+    would set totals apart from the tick labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 (not pure white)
-      Chrome: Title, axis labels (Quarter, Revenue $K), tick labels Q1-Q4, and legend are all dark and clearly readable
-      Data: Four stacked segments with colors #009E73 (green), #D55E00 (orange), #0072B2 (blue), #CC79A7 (pink). Total labels above bars ($312K, $310K, $408K, $500K) are clearly visible in dark text. Grid lines are subtle dotted guides.
-      Legibility verdict: PASS - All text is clearly readable, no overlap, proper contrast
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'bar-stacked-labeled · python · pygal · anyplot.ai' centered top, dark ink; y title 'Revenue ($K)', x title 'Quarter'; y ticks 0-500 (0 and 500 smaller than 100-400); Q1-Q4 x ticks; legend top-left (Electronics, Furniture, Clothing, Accessories); dotted y guides. All dark text readable.
+      Data: four stacks Q1-Q4, Electronics #009E73 at the base, then Furniture purple, Clothing blue, Accessories ochre, consistent order; fills slightly translucent. Totals $312K, $330K, $408K, $500K in dark text resting on each stack top.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17 (not pure black)
-      Chrome: Title, axis labels, tick labels, and legend text are light-colored and clearly visible on dark background. No dark-on-dark failures.
-      Data: Same colors as light render - #009E73 (green), #D55E00 (orange), #0072B2 (blue), #CC79A7 (pink) are identical. Total labels are readable light text. Grid lines remain subtle.
-      Legibility verdict: PASS - All text is clearly readable with proper light-colored text, no dark-on-dark failures, data colors identical to light render
+      Background: warm near-black #1A1A17.
+      Chrome: same layout; title, axis titles, ticks, legend and totals in light ink, all readable; no dark-on-dark.
+      Data: same hex colors in the same order, but the translucent fills blend with the dark page so the segments read darker (Clothing near navy).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -48,46 +60,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28/22/18/16px); all readable in both themes
+        comment: Title 66, axis titles 56, ticks/legend 44, totals 48 px; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping elements; clear spacing throughout
+        passed: false
+        comment: Total labels sit on the stack tops; the $ descenders touch the top
+          edge and $500K rests on the 500 gridline (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four segments visible and well-sized
+        comment: Four solid segments per stack, clearly visible; legend swatches visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; colorblind-safe; good contrast
+        comment: Imprint hues distinct in lightness and hue; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 60-70% canvas utilization; balanced margins; proper whitespace
+        passed: false
+        comment: Canonical 3200x1800 canvas, good proportions; y tick labels in two
+          sizes (0 and 500 smaller than 100-400) (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title format correct
+        comment: '''Quarter'' and ''Revenue ($K)'' with units; descriptive'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds #FAF8F1/#1A1A17;
-          theme-correct chrome'
+        passed: false
+        comment: 'Imprint order from #009E73, correct backgrounds and chrome; but
+          pygal''s default fill opacity lets the page show through so segment colors
+          differ between themes (defect line)'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -95,19 +112,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults; professional but not exceptional
+        comment: Style-guide baseline type sizes and palette; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid, generous whitespace; fairly standard refinement
+        comment: Subtle dotted y guides, x guides off; the spine/grid rules met, nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Total labels tell the story; functional but not creative beyond spec
+        comment: Totals displayed as the spec asks; no hierarchy chosen beyond the
+          Notes
     spec_compliance:
       score: 15
       max: 15
@@ -117,25 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: StackedBar chart type correct
+        comment: pygal.StackedBar, correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stacked bars and total labels present and working
+        comment: Totals above every stack (C2), 15% headroom (C3), one $NNNK format
+          (C4), legend + consistent order (C5), zero baseline (C1)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show all data
+        comment: Quarters on x, revenue on y, axis from 0, segments stacked at their
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title matches the mandated format; legend names the four product
+          categories
     data_quality:
       score: 15
       max: 15
@@ -145,19 +167,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All products and quarters shown with meaningful variation
+        comment: Four quarters x four components with varying stack heights and composition
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly revenue scenario; neutral and real-world appropriate
+        comment: Quarterly revenue by product category; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible; proportions logical and factually consistent
+        comment: 'Checked totals: Q1 312, Q2 330, Q3 408, Q4 500 = sum of segments
+          (computed via table.sum)'
     code_quality:
       score: 10
       max: 10
@@ -167,7 +190,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow; no functions or classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -179,40 +202,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary
+        comment: os, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; justified sys.path cleanup; no fake functionality
+        comment: Concise; totals computed with pandas; per-point formatter only on
+          the top series
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format; current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal 3 API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: StackedBar and Style usage correct; fairly standard approach
+        comment: Standard StackedBar + Style usage; per-point dict formatter is the
+          library prompt's pattern level
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Basic formatter usage; doesn't leverage distinctive pygal features
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-22T09:21:52Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - html-export
+  - hover-tooltips
   patterns:
-  - data-generation
+  - long-to-wide
+  - iteration-over-groups
   dataprep: []
   styling: []
