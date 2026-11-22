@@ -2,54 +2,51 @@ library: altair
 language: python
 specification_id: ohlc-bar
 created: '2026-01-08T16:06:25Z'
-updated: '2026-05-17T10:44:46Z'
-generated_by: claude-haiku
-workflow_run: 25988553434
+updated: '2026-11-22T04:50:20Z'
+generated_by: claude-sonnet
+workflow_run: 44986376565
 issue: 3293
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/altair/plot-dark.html
-quality_score: 94
+quality_score: 80
 review:
   strengths:
-  - Perfect spec compliance - all OHLC features correctly implemented with proper
-    open/high/low/close mapping
-  - Theme-adaptive styling correctly applied throughout - both light and dark renders
-    are legible and maintain brand green across themes
-  - Proper use of Okabe-Ito palette with meaningful color distinction between Up (#009E73)
-    and Down (#D55E00) bars
-  - Clean code structure with deterministic data generation (seed=42) and proper KISS
-    principle adherence
-  - Excellent text legibility in both themes - all titles, axis labels, and tick labels
-    clearly readable
-  - Effective use of altair's layer composition (mark_rule for verticals, transform_calculate
-    for tick positioning)
+  - Layered mark_rule charts with x/x2 and y/y2 build the high-low line and the open/close
+    ticks natively, with tick length derived from the median bar gap (42%) so neighbouring
+    ticks never touch
+  - 'Theme tokens threaded through axis, title, legend and view: both renders are
+    fully legible and the Imprint up/down colors are identical across themes'
+  - Pad-only step lands exactly on the 3200x1800 canvas without cropping
+  - .interactive() adds zoom and pan in the HTML view
   weaknesses:
-  - 'DE-01/DE-02: Visual refinement could be enhanced with more sophisticated styling
-    (e.g., custom spine configuration, refined typography hierarchy) to elevate from
-    baseline professional to publication-ready'
+  - 'VQ-02 (both): the legend title ''Direction'' fills the legend box edge to edge,
+    its first and last letters touching the frame → at least ~4 px of padding inside
+    the frame. Likely cause: legend titleFontSize=12 with default legend padding;
+    use titleFontSize=10 as the library prompt suggests or set padding on configure_legend.'
+  - 'CQ-04 (code): the ESCAPE translation table (line 59) is defined but never used,
+    since the chart reads renamed lower-case columns → remove it or use it on the
+    column constants. Likely cause: template line kept after switching to the renamed
+    ''bars'' frame.'
+  - 'Suggestion: tooltips with open/high/low/close would make the HTML view richer.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "ohlc-bar · altair · anyplot.ai" in dark text (clearly visible), axis titles "Date" and "Price (USD)" readable, tick labels on both axes clearly visible against light background
-      Data: 50 OHLC bars with green (#009E73) vertical lines for Up direction, orange (#D55E00) for Down direction, left horizontal ticks for open price, right ticks for close price, high-low range shown as vertical bars with 2px width
-      Legend: "Direction" legend showing Up/Down with correct colors
-      Grid: Subtle grid lines at opacity 0.10
-      Legibility verdict: PASS - All text and data elements are clearly readable, no overlap, good spacing
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'ohlc-bar · python · altair · anyplot.ai' centred in dark ink, axis titles 'Date' and 'Price (USD)', '%b %d' weekly date ticks and 5-USD price ticks in INK_SOFT; subtle grid behind the bars; legend 'Direction' on an elevated box at upper right — title touches the frame
+      Data: 50 OHLC bars, Up #009E73 and Down #AE3030, thin high-low rules with short left (open) and right (close) ticks; weekend gaps
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title in light text (clearly visible on dark), axis titles and tick labels all readable (light text on dark background), no dark-on-dark failures
-      Data: OHLC bars maintain identical colors to light render (green for Up, orange for Down) - only chrome flips themes as expected, vertical bars and ticks clearly distinguishable
-      Legend: Visible with light text on dark background
-      Grid: Subtle grid lines visible
-      Legibility verdict: PASS - All elements readable in dark theme, no text contrast issues, data colors consistent with light render
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink, readable; no dark-on-dark; grid subtle; legend box #242420 with light text
+      Data: identical green/red colors and positions as the light render
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,70 +54,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes follow style guide (title 28px, axis labels 22px,
-          ticks 18px) and are readable in both themes
+        comment: Explicit sizes (title 16, axis titles 12, ticks/legend labels 10
+          at scale 4) per the library prompt; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: All text clearly readable, no collisions, legend positioned well
+        passed: false
+        comment: The legend title 'Direction' runs edge to edge into the legend frame
+          (defect line); no other text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: OHLC bars clearly visible, 50 data points well-distributed, no crowding
+        comment: 50 bars with 1.5 px rules, ticks clearly visible; legend line glyphs
+          match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito safe, green and orange distinct, good contrast in both
-          themes
+        comment: 'Green/red pair is not the sole signal: direction also reads from
+          the left/right ticks'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 proportions good, nothing cut off, adequate margins
+        comment: 3200x1800 canvas, plot fills the canvas well, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id/library/domain, axes labeled with units
+        comment: '''Date'' and ''Price (USD)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Okabe-Ito pos 1), second #D55E00 (pos 2),
-          backgrounds correct for both themes, data colors identical across themes'
+        comment: 'Up #009E73, Down #AE3030 (Imprint), backgrounds #FAF8F1/#1A1A17,
+          data colors identical across themes'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful color coding for Up/Down, professional technical analysis
-          representation, theme-aware design
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clean grid and whitespace, but minimal customization beyond defaults
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy, direction encoding guides understanding,
-          effective color distinction
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OHLC bar implementation with vertical bars and horizontal
-          ticks
+        comment: 'Correct OHLC bars: high-low rule, left open tick, right close tick'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: thin vertical lines, left open ticks, right close
-          ticks, up/down coloring, grid'
+        comment: Thin lines, left/right ticks, up/down colors, '%b %d' date axis,
+          grid behind bars; C1-C4 all met (ticks at 42% of the bar gap, never touching
+          neighbours)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price with proper scale, high/low mapped to y/y2
+        comment: Marks at their data values; price axis not forced to zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match encoding
+        comment: Title 'ohlc-bar · python · altair · anyplot.ai'; legend 'Direction'
+          Up/Down
     data_quality:
       score: 15
       max: 15
@@ -160,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All OHLC components shown, 50 trading days, realistic demonstration
+        comment: Up and down days, long and short ranges, doji-like bars, weekend
+          gaps
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price range $120-$174 plausible, random walk with volatility
-          realistic, neutral data
+        comment: 50 business days of a stock in USD, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price scale sensible, date range appropriate, volatility realistic
+        comment: Prices 123-173 USD with ~2% daily moves; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -183,56 +181,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes, straightforward script
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, altair, numpy, pandas'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, readable, no fake interactivity
+        passed: false
+        comment: ESCAPE translation table defined but never used (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html with scale_factor=3.0
+        comment: plot-{THEME}.png + .html, pad-only canvas step, current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Proper use of alt.Chart, mark_rule, layering, color encoding, configure_*
-          methods
+        passed: false
+        comment: Layered mark_rule charts with x/x2 and y/y2; default level
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Good use of transform_calculate, mark_rule with y2, layer composition,
-          interactive mode
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T04:46:59Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - html-export
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
