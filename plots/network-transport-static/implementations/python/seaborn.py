@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-transport-static: Static Transport Network Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-18
@@ -9,19 +9,20 @@ import os
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (positions 1-3 for route types)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Set seaborn style with theme-adaptive colors
 sns.set_theme(
     style="white",
     rc={
@@ -38,176 +39,205 @@ sns.set_theme(
     },
 )
 
-# Station data with coordinates
-stations = [
-    {"id": "A", "label": "Central Station", "x": 0.5, "y": 0.9},
-    {"id": "B", "label": "North Terminal", "x": 0.2, "y": 0.7},
-    {"id": "C", "label": "East Hub", "x": 0.8, "y": 0.7},
-    {"id": "D", "label": "West Junction", "x": 0.1, "y": 0.45},
-    {"id": "E", "label": "Park Station", "x": 0.4, "y": 0.55},
-    {"id": "F", "label": "Market Square", "x": 0.6, "y": 0.55},
-    {"id": "G", "label": "Airport", "x": 0.9, "y": 0.45},
-    {"id": "H", "label": "Industrial Zone", "x": 0.15, "y": 0.2},
-    {"id": "I", "label": "University", "x": 0.5, "y": 0.25},
-    {"id": "J", "label": "Harbor", "x": 0.85, "y": 0.15},
+# Constants
+ROUTE_TYPE_NAMES = {"regional": "Regional Express (RE)", "local": "Local Service (S)", "express": "Express (EX)"}
+
+# Columns: set these to your table's column names
+SOURCE = "source_id"  # role: routes
+TARGET = "target_id"  # role: extra
+ROUTE_ID = "route_id"  # role: extra
+DEPARTURE = "departure_time"  # role: extra
+ARRIVAL = "arrival_time"  # role: extra
+ROUTE_TYPE = "route_type"  # role: extra
+SOURCE_LABEL = "source_label"  # role: stations
+SOURCE_X = "source_x"  # role: extra
+SOURCE_Y = "source_y"  # role: extra
+TARGET_LABEL = "target_label"  # role: extra
+TARGET_X = "target_x"  # role: extra
+TARGET_Y = "target_y"  # role: extra
+STATION_ID = "id"  # role: extra
+STATION_LABEL = "label"  # role: extra
+STATION_X = "x"  # role: extra
+STATION_Y = "y"  # role: extra
+
+# Data: replace this block with your own table, one row per route with its stations' label and x/y
+# coordinates, for example df = pd.read_csv("routes.csv")
+nodes = pd.DataFrame(
+    {
+        STATION_ID: list("ABCDEFGHIJ"),
+        STATION_LABEL: [
+            "Central Station",
+            "North Terminal",
+            "East Hub",
+            "West Junction",
+            "Park Station",
+            "Market Square",
+            "Airport",
+            "Industrial Zone",
+            "University",
+            "Harbor",
+        ],
+        STATION_X: [0.5, 0.2, 0.8, 0.1, 0.4, 0.6, 0.9, 0.15, 0.5, 0.85],
+        STATION_Y: [0.9, 0.7, 0.7, 0.45, 0.55, 0.55, 0.45, 0.2, 0.25, 0.15],
+    }
+).set_index(STATION_ID)
+routes = pd.DataFrame(
+    {
+        SOURCE: list("AABCDGBEFDEFAHI"),
+        TARGET: list("BCDGHJEFCEIIGIJ"),
+        ROUTE_ID: ["RE 01", "RE 02", "RE 01", "RE 02", "RE 01", "RE 02"]
+        + ["S 10", "S 10", "S 10", "S 20", "S 20", "S 10", "EX 99", "S 30", "S 30"],
+        DEPARTURE: ["06:00", "06:15", "06:22", "06:40", "06:50", "07:10"]
+        + ["07:00", "07:15", "07:28", "07:30", "07:52", "08:00", "08:00", "08:15", "08:45"],
+        ARRIVAL: ["06:18", "06:35", "06:45", "07:05", "07:15", "07:40"]
+        + ["07:12", "07:25", "07:42", "07:48", "08:10", "08:18", "08:35", "08:40", "09:15"],
+        ROUTE_TYPE: ["regional"] * 6 + ["local"] * 5 + ["local", "express", "local", "local"],
+    }
+)
+df = routes.join(nodes.add_prefix("source_"), on=SOURCE).join(nodes.add_prefix("target_"), on=TARGET)
+
+# Plot: reads only df and the constants above
+# One row per station, derived from the route table
+station_cols = [STATION_ID, STATION_LABEL, STATION_X, STATION_Y]
+ends = [
+    df[[SOURCE, SOURCE_LABEL, SOURCE_X, SOURCE_Y]].set_axis(station_cols, axis=1),
+    df[[TARGET, TARGET_LABEL, TARGET_X, TARGET_Y]].set_axis(station_cols, axis=1),
 ]
+stations = pd.concat(ends).drop_duplicates(STATION_ID).reset_index(drop=True)
+station_pos = stations.set_index(STATION_ID)[[STATION_X, STATION_Y]]
+route_types = list(dict.fromkeys(df[ROUTE_TYPE]))
+type_colors = {kind: IMPRINT_PALETTE[i] for i, kind in enumerate(route_types)}
+x_span = station_pos[STATION_X].max() - station_pos[STATION_X].min()
+y_span = station_pos[STATION_Y].max() - station_pos[STATION_Y].min()
 
-# Route data - directed edges with times and route IDs
-routes = [
-    {"source": "A", "target": "B", "route_id": "RE 01", "dep": "06:00", "arr": "06:18", "type": "regional"},
-    {"source": "A", "target": "C", "route_id": "RE 02", "dep": "06:15", "arr": "06:35", "type": "regional"},
-    {"source": "B", "target": "D", "route_id": "RE 01", "dep": "06:22", "arr": "06:45", "type": "regional"},
-    {"source": "C", "target": "G", "route_id": "RE 02", "dep": "06:40", "arr": "07:05", "type": "regional"},
-    {"source": "D", "target": "H", "route_id": "RE 01", "dep": "06:50", "arr": "07:15", "type": "regional"},
-    {"source": "G", "target": "J", "route_id": "RE 02", "dep": "07:10", "arr": "07:40", "type": "regional"},
-    {"source": "B", "target": "E", "route_id": "S 10", "dep": "07:00", "arr": "07:12", "type": "local"},
-    {"source": "E", "target": "F", "route_id": "S 10", "dep": "07:15", "arr": "07:25", "type": "local"},
-    {"source": "F", "target": "C", "route_id": "S 10", "dep": "07:28", "arr": "07:42", "type": "local"},
-    {"source": "D", "target": "E", "route_id": "S 20", "dep": "07:30", "arr": "07:48", "type": "local"},
-    {"source": "E", "target": "I", "route_id": "S 20", "dep": "07:52", "arr": "08:10", "type": "local"},
-    {"source": "F", "target": "I", "route_id": "S 10", "dep": "08:00", "arr": "08:18", "type": "local"},
-    {"source": "A", "target": "G", "route_id": "EX 99", "dep": "08:00", "arr": "08:35", "type": "express"},
-    {"source": "H", "target": "I", "route_id": "S 30", "dep": "08:15", "arr": "08:40", "type": "local"},
-    {"source": "I", "target": "J", "route_id": "S 30", "dep": "08:45", "arr": "09:15", "type": "local"},
-]
-
-# Create lookup for station positions
-station_pos = {s["id"]: (s["x"], s["y"]) for s in stations}
-
-# Color mapping for route types using Okabe-Ito palette
-route_colors = {
-    "regional": IMPRINT[0],  # #009E73 - brand green
-    "local": IMPRINT[1],  # #C475FD - vermillion
-    "express": IMPRINT[2],  # #4467A3 - blue
-}
-
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Draw edges (routes) first so nodes appear on top
-edge_counter = {}  # Track edges between same station pairs for offset
+# Routes first so nodes sit on top; parallel routes between one pair are offset sideways
+pair_count = {}
+label_gap = 0.075 * y_span
 
-for route in routes:
-    src = route["source"]
-    tgt = route["target"]
-    x1, y1 = station_pos[src]
-    x2, y2 = station_pos[tgt]
+# Approximate label boxes in data units (cx, cy, half width, half height): station names, nodes, placed route labels
+obstacles = []
+for s in stations.itertuples(index=False):
+    sx, sy = s[stations.columns.get_loc(STATION_X)], s[stations.columns.get_loc(STATION_Y)]
+    name_half_w = (0.0065 * len(s[stations.columns.get_loc(STATION_LABEL)]) + 0.012) * x_span
+    obstacles.append((sx, sy + label_gap + 0.04 * y_span, name_half_w, 0.06 * y_span))
+    obstacles.append((sx, sy, 0.04 * x_span, 0.05 * y_span))
 
-    # Track edge count for parallel routes
-    edge_key = tuple(sorted([src, tgt]))
-    edge_counter[edge_key] = edge_counter.get(edge_key, 0) + 1
-    offset = (edge_counter[edge_key] - 1) * 0.025
 
-    # Calculate perpendicular offset for parallel routes
-    dx = x2 - x1
-    dy = y2 - y1
-    length = np.sqrt(dx**2 + dy**2)
-    if length > 0:
-        perp_x = -dy / length * offset
-        perp_y = dx / length * offset
-    else:
-        perp_x, perp_y = 0, 0
+def overlap(a, b):
+    ox = min(a[0] + a[2], b[0] + b[2]) - max(a[0] - a[2], b[0] - b[2])
+    oy = min(a[1] + a[3], b[1] + b[3]) - max(a[1] - a[3], b[1] - b[3])
+    return max(ox, 0) * max(oy, 0)
 
-    # Apply offset
-    x1_off, y1_off = x1 + perp_x, y1 + perp_y
-    x2_off, y2_off = x2 + perp_x, y2 + perp_y
 
-    color = route_colors[route["type"]]
+for route in df.itertuples(index=False):
+    src, tgt = route[df.columns.get_loc(SOURCE)], route[df.columns.get_loc(TARGET)]
+    x1, y1 = station_pos.loc[src]
+    x2, y2 = station_pos.loc[tgt]
 
-    # Draw arrow
+    pair = frozenset((src, tgt))
+    pair_count[pair] = pair_count.get(pair, 0) + 1
+    offset = (pair_count[pair] - 1) * 0.025 * max(x_span, y_span)
+
+    dx, dy = x2 - x1, y2 - y1
+    length = np.hypot(dx, dy)
+    perp_x, perp_y = (-dy / length * offset, dx / length * offset) if length > 0 else (0.0, 0.0)
+    x1o, y1o, x2o, y2o = x1 + perp_x, y1 + perp_y, x2 + perp_x, y2 + perp_y
+
+    color = type_colors[route[df.columns.get_loc(ROUTE_TYPE)]]
     ax.annotate(
         "",
-        xy=(x2_off, y2_off),
-        xytext=(x1_off, y1_off),
-        arrowprops={"arrowstyle": "-|>", "color": color, "lw": 2.5, "shrinkA": 25, "shrinkB": 25, "mutation_scale": 20},
+        xy=(x2o, y2o),
+        xytext=(x1o, y1o),
+        arrowprops={"arrowstyle": "-|>", "color": color, "lw": 1.4, "shrinkA": 13, "shrinkB": 13, "mutation_scale": 11},
     )
 
-    # Edge label position (middle of edge)
-    mid_x = (x1_off + x2_off) / 2
-    mid_y = (y1_off + y2_off) / 2
-
-    # Create edge label
-    label_text = f"{route['route_id']}\n{route['dep']}→{route['arr']}"
-
-    # Add label with background
+    label_text = (
+        f"{route[df.columns.get_loc(ROUTE_ID)]}\n"
+        f"{route[df.columns.get_loc(DEPARTURE)]}→{route[df.columns.get_loc(ARRIVAL)]}"
+    )
+    # Slide the label along its own edge to the spot that collides least with what is already placed
+    candidates = []
+    for t in np.linspace(0.3, 0.7, 17):
+        box = (x1o + t * (x2o - x1o), y1o + t * (y2o - y1o), 0.07 * x_span, 0.06 * y_span)
+        candidates.append((sum(overlap(box, other) for other in obstacles), abs(t - 0.5), box))
+    box = min(candidates, key=lambda c: c[:2])[2]
+    obstacles.append(box)
     ax.text(
-        mid_x,
-        mid_y,
+        box[0],
+        box[1],
         label_text,
-        fontsize=11,
+        fontsize=6.5,
         ha="center",
         va="center",
+        color=INK,
+        zorder=5,
         bbox={
-            "boxstyle": "round,pad=0.3",
+            "boxstyle": "round,pad=0.25",
             "facecolor": ELEVATED_BG,
             "edgecolor": color,
             "alpha": 0.92,
-            "linewidth": 1.5,
+            "linewidth": 0.9,
         },
-        color=INK,
-        zorder=5,
     )
 
-# Draw station nodes
-station_x = [s["x"] for s in stations]
-station_y = [s["y"] for s in stations]
-
-# Use seaborn scatterplot for nodes with Okabe-Ito brand green
+# Station nodes
 sns.scatterplot(
-    x=station_x,
-    y=station_y,
-    s=1600,
-    color=IMPRINT[0],
+    data=stations,
+    x=STATION_X,
+    y=STATION_Y,
+    s=420,
+    color=IMPRINT_PALETTE[0],
     edgecolor=INK_SOFT,
-    linewidth=2.5,
+    linewidth=1.3,
     ax=ax,
     zorder=10,
     legend=False,
 )
 
-# Add station labels and IDs
-for s in stations:
-    # Station label above node
+for station in stations.itertuples(index=False):
+    sx, sy = station[stations.columns.get_loc(STATION_X)], station[stations.columns.get_loc(STATION_Y)]
     ax.text(
-        s["x"],
-        s["y"] + 0.065,
-        s["label"],
-        fontsize=13,
+        sx,
+        sy + label_gap,
+        station[stations.columns.get_loc(STATION_LABEL)],
+        fontsize=7.5,
         fontweight="bold",
         ha="center",
         va="bottom",
         color=INK,
         bbox={
-            "boxstyle": "round,pad=0.35",
+            "boxstyle": "round,pad=0.3",
             "facecolor": ELEVATED_BG,
             "edgecolor": INK_SOFT,
             "alpha": 0.94,
-            "linewidth": 1,
+            "linewidth": 0.6,
         },
         zorder=11,
     )
-    # Station ID inside node
-    ax.text(s["x"], s["y"], s["id"], fontsize=16, fontweight="bold", color=PAGE_BG, ha="center", va="center", zorder=11)
+    ax.text(
+        sx,
+        sy,
+        station[stations.columns.get_loc(STATION_ID)],
+        fontsize=9,
+        fontweight="bold",
+        color=PAGE_BG,
+        ha="center",
+        va="center",
+        zorder=11,
+    )
 
-# Create legend
 legend_handles = [
-    mpatches.Patch(color=IMPRINT[0], label="Regional Express (RE)"),
-    mpatches.Patch(color=IMPRINT[1], label="Local Service (S)"),
-    mpatches.Patch(color=IMPRINT[2], label="Express (EX)"),
+    mpatches.Patch(color=type_colors[kind], label=ROUTE_TYPE_NAMES.get(kind, kind)) for kind in route_types
 ]
-ax.legend(handles=legend_handles, loc="lower right", fontsize=15, framealpha=0.92, edgecolor=INK_SOFT)
+ax.legend(handles=legend_handles, loc="upper left", fontsize=8, framealpha=0.92, edgecolor=INK_SOFT)
 
-# Styling
-ax.set_xlim(-0.05, 1.05)
-ax.set_ylim(0.0, 1.05)
-ax.set_aspect("equal")
+# Style
+ax.set_xlim(station_pos[STATION_X].min() - 0.08 * x_span, station_pos[STATION_X].max() + 0.08 * x_span)
+ax.set_ylim(station_pos[STATION_Y].min() - 0.1 * y_span, station_pos[STATION_Y].max() + 0.2 * y_span)
 ax.axis("off")
+ax.set_title("network-transport-static · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 
-# Title
-ax.set_title(
-    "network-transport-static · python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20
-)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
