@@ -2,53 +2,55 @@ library: bokeh
 language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:26:17Z'
-updated: '2026-05-17T22:36:05Z'
-generated_by: claude-haiku
-workflow_run: 26004469698
+updated: '2026-11-22T08:02:32Z'
+generated_by: claude-sonnet
+workflow_run: 45000404442
 issue: 3485
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 83
 review:
   strengths:
-  - Excellent text legibility across both light and dark themes with proper 4800×2700
-    font sizing (28pt title, 22pt axes, 18pt ticks)
-  - 'Correct Okabe-Ito palette usage with first series as #009E73, maintaining color
-    consistency between renders'
-  - Proper theme-adaptive chrome tokens applied to all elements (backgrounds, text
-    colors, grid lines, legend)
-  - Clean, readable code with deterministic seeding (np.random.seed(42)) and idiomatic
-    Bokeh patterns
-  - Well-structured grouped lollipop layout with clear visual separation between regional
-    categories and series
+  - Uses bokeh.transform.dodge on a categorical x range so each series is offset within
+    its region without hand-computed positions
+  - Stems as segment glyphs from a shared zero baseline on an untruncated 0-105 axis,
+    so stem lengths compare directly
+  - 'Theme tokens threaded through every chrome element: both renders are fully readable,
+    data colors identical'
+  - Page-colored marker ring cleanly separates each dot from its stem in both themes
+  - Column constants with role comments and the full eight-position Imprint palette
+    make the code adaptable to new data
   weaknesses:
-  - 'LM-02 LOW: No interactive features leveraged despite using Bokeh (an interactive
-    library) - consider adding hover tooltips to show exact values'
-  - 'DE-01/DE-03 LOW: Minimal design sophistication - follows defaults without distinctive
-    visual enhancements or data storytelling emphasis'
+  - 'VQ-03 (both): legend glyphs render as ~6 px dots next to 30 px data markers,
+    so the swatches are barely visible → glyphs near marker size (~24-30 px, about
+    +20 px). Likely cause: the legend draws the scatter renderer with its line_color=PAGE_BG
+    ring scaled into glyph_height/glyph_width=30, leaving only a tiny fill; raise
+    glyph_height/glyph_width or render the legend from a dedicated larger glyph.'
+  - 'SC-02 (both): regions are shown in the fixed North, South, East, West order (totals
+    230, 243, 229, 244 $M), so the C4 property ''categories in a meaningful order''
+    is missed → sort the regions by total revenue (e.g. West, South, North, East).
+    Likely cause: regions = list(df[REGION].unique()) without sorting by a metric.'
+  - 'Suggestion: a HoverTool showing region, product line and revenue would add exact
+    values in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), exactly as specified.
-      Chrome: Title "lollipop-grouped · Python · bokeh · anyplot.ai" in dark text (INK token), axis labels "Region" and "Revenue ($ Million)" in dark text, x-axis category names and y-axis tick labels in softer gray (INK_SOFT token). All text is clearly readable against the light surface.
-      Data: Four Okabe-Ito colors used in correct order: #009E73 (Electronics, green), #D55E00 (Clothing, orange), #0072B2 (Food, blue), #CC79A7 (Home, pink). Thin colored stems (alpha 0.85) with circular markers (alpha 0.95, white edges). Four categories (North, South, East, West) with four series arranged side-by-side in groups.
-      Legend: Top-right corner, light elevated background (#FFFDF6), dark text labels, properly spaced with 15pt padding.
-      Grid: Subtle y-axis grid lines at 10% opacity, not competing with data.
-      Legibility verdict: PASS - all text readable, proper contrast, data colors distinct and saturated.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: bold title 'lollipop-grouped · python · bokeh · anyplot.ai' in near-black at top left (~50% of width); italic axis titles 'Region' and 'Revenue ($ million)'; tick labels North/South/East/West and 0-100 in dark gray; faint horizontal grid, no vertical grid; legend top right on #FFFDF6 with italic title 'Product line'. All text readable.
+      Data: four regions, each with four vertical lollipops (Electronics #009E73, Clothing #C475FD, Food #4467A3, Home #BD8233) in the same order, thin stems from 0 to circular markers with a page-colored ring; wider gaps between regions than within. Legend glyphs are tiny dots.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), exactly as specified.
-      Chrome: Title and axis labels in light text (INK token #F0EFE8), tick labels in gray (INK_SOFT token #B8B7B0). All text clearly visible against the dark surface. No dark-on-dark failures.
-      Data: Colors are **identical** to light render—#009E73, #D55E00, #0072B2, #CC79A7. Only chrome (background, text, grid) flips between themes. Stems and markers maintain their visual distinction and saturation.
-      Legend: Dark elevated background (#242420) with light text labels, properly contrasted and readable.
-      Grid: Subtle y-axis grid lines visible against dark background.
-      Legibility verdict: PASS - all text readable, no contrast failures, data colors match light render perfectly.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, tick labels in light gray, faint grid, legend on #242420 with light text. No dark-on-dark text.
+      Data: identical data colors and geometry to the light render; brand green clearly visible; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,78 +58,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes 28pt (title), 22pt (axes), 18pt (ticks) are properly scaled
-          for 4800×2700. All text readable in both light and dark themes.
+        comment: Title 50pt, axis titles 42pt, ticks 34pt, legend 30pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Lollipops well-spaced in grouped layout, no text collisions or marker
-          overlap.
+        comment: No text collisions; legend sits in empty top-right space above the
+          West group
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: All markers and stems clearly visible. Alpha transparency (0.85 stems,
-          0.95 markers) is density-appropriate.
+        passed: false
+        comment: Data markers 30px are prominent, but legend glyphs render as ~6px
+          dots (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe. No red-green as sole signal.
+        comment: Imprint positions 1-4 are CVD-distinct; no red-green pair
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off. Appropriate margins and whitespace
-          around plot area.
+        comment: 3200x1800, balanced margins, title ~50% of width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Axis labels are descriptive (Region, Revenue
-          $ Million).
+        comment: '''Region'' and ''Revenue ($ million)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓. Multi-series in canonical Okabe-Ito order
-          ✓. Backgrounds #FAF8F1 (light) and #1A1A17 (dark) ✓. Both renders theme-correct
-          ✓.'
+        comment: 'Electronics #009E73 first, canonical Imprint order, #FAF8F1/#1A1A17
+          backgrounds, chrome flips correctly'
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Uses Okabe-Ito palette and theme-adaptive styling (good fundamentals),
-          but design is straightforward without distinctive polish. Markers have white
-          edges (good), but no beyond-default refinements.
+        comment: 'Style-guide baseline: theme tokens, explicit font sizes, italic
+          legend title; nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: L-shaped frame, subtle 10% grid, generous whitespace, well-styled
-          legend with elevated background. Good baseline refinement.
+        passed: false
+        comment: Markers carry a page-colored ring that separates each dot from its
+          stem; x-grid and outline dropped so the groups read as clusters
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data presented clearly but lacks visual hierarchy or focal point.
-          No emphasis technique to guide viewer or reveal insight.
+        comment: Data displayed evenly; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,29 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Grouped lollipop chart correctly implemented with 4 categories and
-          4 series.
+        comment: Vertical grouped lollipop chart, no unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All required features present: thin stems, circular markers, distinct
-          colors per series, legend.'
+        passed: false
+        comment: 'Thin stems, circular markers, side-by-side offset, legend all present;
+          C4 missed: regions in fixed North/South/East/West order, not sorted by a
+          metric (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis = regions (categories), Y-axis = revenue values (numeric).
-          All data correctly mapped.
+        comment: Stems from a shared 0 baseline, y axis 0-104.65 untruncated, marks
+          at their values via dodge offsets
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format: ''lollipop-grouped · Python · bokeh · anyplot.ai''
-          ✓. Legend labels match series names.'
+        comment: Title 'lollipop-grouped · python · bokeh · anyplot.ai'; legend titled
+          'Product line' with readable entries
     data_quality:
       score: 15
       max: 15
@@ -167,22 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of grouped lollipop type with 4 regions and 4 product
-          lines. Complete coverage.
+        comment: 4 categories x 4 series, rank swaps between regions (Clothing beats
+          Electronics in South/West)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Revenue by region and product line is realistic and neutral. Real-world
-          plausible scenario.
+        comment: 'Revenue by product line across sales regions: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 35-91 for revenue millions is sensible. Y-axis 0-105 range
-          is appropriate.
+        comment: Revenue 35-91 $M per region/line is sensible; no Check values in
+          the spec
     code_quality:
       score: 10
       max: 10
@@ -192,64 +188,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward code, no unnecessary functions. Loop-based multi-series
-          is clean and readable.
+        comment: Flat script in the adaptable-code zones, column constants with role
+          comments, full palette
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports. Path-shadowing workaround is documented and
-          justified.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or interactive faking. Appropriate complexity for the
-          task.
+        comment: One segment + one scatter per series with dodge; no hand-rolled positions
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Uses Bokeh 3.9.0
-          current API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png, current bokeh 3.9 API,
+          toolbar hidden
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses ColumnDataSource, figure creation, scatter/line methods idiomatically.
-          Custom x-axis ticks with major_label_overrides shows both good understanding
-          and some workaround behavior.
+        passed: false
+        comment: Categorical FactorRange x axis with bokeh.transform.dodge and ColumnDataSource
+          per series, segment glyphs for stems, legend_label
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Bokeh is interactive but no distinctive interactive features used
-          (no hover tooltips, callbacks, selection). Treats interactive library as
-          static renderer. HTML+PNG output is basic.
+        comment: dodge() transform on a categorical range is a bokeh-specific idiom;
+          no HoverTool for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-22T07:58:51Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - manual-ticks
+  - layer-composition
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
+  - columndatasource
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
+  - grid-styling
+  - alpha-blending
