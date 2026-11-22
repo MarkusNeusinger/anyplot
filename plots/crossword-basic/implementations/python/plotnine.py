@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -30,7 +30,13 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Create 15x15 crossword grid with 180-degree rotational symmetry
+# Columns
+COLUMN = "Column"  # role: grid
+ROW = "Row"  # role: extra
+CELL_TYPE = "Cell type"  # role: extra
+LABEL = "Clue number"  # role: numbers
+
+# Data: 15x15 crossword layout; black cells listed for one half, mirrored by 180-degree rotation
 size = 15
 
 grid = np.zeros((size, size), dtype=int)
@@ -72,10 +78,11 @@ for r, c in black_positions:
 data = []
 for r in range(size):
     for c in range(size):
-        data.append({"col": c + 1, "row": size - r, "cell_type": "blocked" if grid[r, c] == 1 else "entry"})
+        data.append({COLUMN: c + 1, ROW: size - r, CELL_TYPE: "blocked" if grid[r, c] == 1 else "entry"})
 
 df = pd.DataFrame(data)
 
+# Plot
 # Determine word start positions (cells beginning an across or down word)
 word_starts = {}
 num = 1
@@ -91,21 +98,21 @@ for r in range(size):
 
 number_data = []
 for (r, c), clue_num in word_starts.items():
-    number_data.append({"col": c + 1, "row": size - r, "label": str(clue_num)})
+    number_data.append({COLUMN: c + 1, ROW: size - r, LABEL: str(clue_num)})
 
 numbers_df = pd.DataFrame(number_data)
 
 # Cell fills: crossword convention — entry cells use a warm tint in light mode for visual depth
-ENTRY_FILL = "#F5F3EC" if THEME == "light" else "#FFFFFF"
+ENTRY_FILL = "#F5F3EC" if THEME == "light" else "#F0EEE7"
 BLOCKED_FILL = "#1A1A1A"
 
 plot = (
-    ggplot(df, aes(x="col", y="row", fill="cell_type"))
+    ggplot(df, aes(x=COLUMN, y=ROW, fill=CELL_TYPE))
     + geom_tile(color=INK_SOFT, size=0.4)
     + scale_fill_manual(values={"entry": ENTRY_FILL, "blocked": BLOCKED_FILL})
     + geom_text(
         data=numbers_df,
-        mapping=aes(x="col", y="row", label="label"),
+        mapping=aes(x=COLUMN, y=ROW, label=LABEL),
         size=6,
         ha="left",
         va="top",
@@ -119,7 +126,7 @@ plot = (
     + coord_fixed(ratio=1)
     + labs(
         title="crossword-basic · python · plotnine · anyplot.ai",
-        subtitle="180° rotational symmetry · 79 numbered positions",
+        subtitle=f"180° rotational symmetry · {len(numbers_df)} numbered positions",
     )
     + theme(
         figure_size=(6, 6),
