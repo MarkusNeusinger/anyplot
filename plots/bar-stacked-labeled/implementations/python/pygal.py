@@ -1,7 +1,7 @@
 """anyplot.ai
 bar-stacked-labeled: Stacked Bar Chart with Total Labels
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 88/100 | Updated: 2026-11-22
+Quality: pending | Updated: 2026-11-22
 """
 
 import os
