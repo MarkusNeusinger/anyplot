@@ -2,52 +2,60 @@ library: seaborn
 language: python
 specification_id: windrose-basic
 created: '2025-12-24T22:16:59Z'
-updated: '2026-05-07T03:33:08Z'
-generated_by: claude-haiku
-workflow_run: 25474192715
+updated: '2026-11-22T10:54:47Z'
+generated_by: claude-sonnet
+workflow_run: 45013921556
 issue: 1880
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 79
 review:
   strengths:
-  - 'Perfect visual quality: All 8 VQ criteria at maximum with explicit font sizing
-    and flawless theme adaptation'
-  - 'Impeccable readability in both themes: Light and dark renders both fully legible
-    with zero dark-on-dark or light-on-light issues'
-  - 'Complete spec compliance: All windrose features present and correct with proper
-    title and legend formatting'
-  - 'Excellent data quality: Realistic meteorological data with plausible Weibull-distributed
-    speeds and natural prevailing wind patterns'
-  - 'Thoughtful design choices: Alpha variation (0.90 dominant, 0.65 weaker) creates
-    visual hierarchy emphasizing prevailing SW winds'
-  - 'Clean, reproducible code: Deterministic data generation with explicit seed and
-    straightforward structure'
-  - 'Professional presentation: Proper typography hierarchy (24pt/18pt/14pt), balanced
-    layout, well-positioned legend on elevated background'
+  - Sectors centered on their compass points (wind_dir + sector_width/2), so every
+    spoke sits under its N/NE/... label
+  - pd.cut + pd.crosstab(normalize=True) compute the speed/direction frequency table
+    in two calls
+  - Ring step derived from the data (1/2/5 x 10^n), giving clean 5 % rings from zero
+  - Ring labels at 112.5 degrees in the empty quadrant, clear of every spoke
+  - Theme tokens threaded through sns.set_theme rc, legend and ticks; both renders
+    fully readable
+  - Correct 2400x2400 canvas with explicit figsize x dpi and no bbox_inches='tight'
   weaknesses:
-  - 'Limited distinctive seaborn features: Wind rose requires custom matplotlib implementation;
-    seaborn''s role is primarily theming rather than leveraging distinctive plotting
-    capabilities (FacetGrid, hue patterns, etc.)'
+  - 'VQ-07, SC-02 (both): the five ordered speed bins use the categorical Imprint
+    hues (green, purple, blue, ochre, red) that neither form one ramp nor run cool
+    to warm, so the bin order is hidden → discrete steps of one Imprint ramp (imprint_seq)
+    in bin order, calm to strong. Likely cause: colors = IMPRINT_PALETTE[: len(speed_order)].'
+  - 'VQ-02 (both): the ''45%'' ring label sits exactly on the outer polar spine, which
+    runs through its glyphs → keep the outermost ring label off the spine (e.g. limit
+    the ring labels to rings inside the rim or set ylim one step above the top ring).
+    Likely cause: max_freq equals the top tick, so the last yticklabel is drawn on
+    the spine.'
+  - 'CQ-01 (code): the missing_number smoke perturbation fails with ValueError: ''vertices''
+    must be 2D ... shape (0,) at line 141 → a NaN frequency must leave its segment
+    out instead of breaking the draw. Likely cause: NaN handling below the Data block
+    — table.fillna(0) fills a drawn value with zero (against prompts/adaptable-code.md)
+    while the stacking and the ring computation are not NaN-safe.'
+  - 'Suggestion: a light radial axis note such as ''Frequency (%)'' near the ring
+    labels would name the radial quantity explicitly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)
-      Chrome: Title in 24pt dark text, direction labels in 18pt dark, radial labels in 14pt soft gray — all clearly readable
-      Data: Green (#009E73, 0-3 m/s innermost), orange (#D55E00), blue (#0072B2), pink (#CC79A7), yellow (#E69F00, 15+ m/s outermost); SW sector dominates with full opacity (0.90), weaker sectors at reduced opacity (0.65); stacked composition clearly visible
-      Legibility verdict: PASS - All text crisp and fully readable; no overlap; contrast excellent
+      Background: warm off-white #FAF8F1, polar spine in INK_SOFT
+      Chrome: title 'windrose-basic · python · seaborn · anyplot.ai' dark at top; compass labels N..NW dark around the rim; ring labels 5%..45% in soft gray along 112.5 deg; 'Wind speed' legend lower right on an elevated light frame — all readable
+      Data: 8 spokes centered on the compass points, N at top clockwise; stacked 0-3 green #009E73, 3-6 purple, 6-10 blue, 10-15 ochre, 15+ red; SW spoke dominant (~44 %), NE ~21 %, W ~14 %, small elsewhere. The '45%' label sits on the outer spine
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)
-      Chrome: Title in light text (#F0EFE8), direction labels in light text, radial labels in soft light gray (#B8B7B0) — all clearly visible against dark background; critically, NO dark-on-dark text failures present
-      Data: Identical colors to light render (green, orange, blue, pink, yellow in same positions); opacity variation (0.90 dominant, 0.65 weaker) preserved
-      Legibility verdict: PASS - All elements visible; legend readable on elevated dark background (#242420); theme adaptation flawless; both renders equally readable
+      Background: warm near-black #1A1A17, spine light gray
+      Chrome: title, compass labels and legend text light; ring labels soft light gray; legend on #242420 frame — no dark-on-dark text
+      Data: identical bin colors and geometry to the light render; segment separators now dark page color
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,70 +63,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt, 18pt, 14pt); perfectly readable
-          in both themes
+        comment: Title 12 pt, compass labels 11 pt, ring labels and legend 8 pt, all
+          set explicitly; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping text; all labels fully separated
+        passed: false
+        comment: The '45%' ring label sits on the outer polar spine, which runs through
+          its glyphs (defect line); other labels clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bars clearly visible; colors distinct; opacity variation
-          optimal
+        comment: Stacked segments clearly visible with thin page-colored separators;
+          legend swatches match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; adequate contrast
+        comment: Good contrast; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Polar plot fills canvas beautifully; balanced margins
+        comment: 2400x2400 square canvas; rose centered, legend outside the rim, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; labels descriptive with units
+        comment: Compass labels and percent ring labels; legend titled 'Wind speed'
+          with units in the entries
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73; colors follow Okabe-Ito; backgrounds #FAF8F1
-          and #1A1A17; theme-adaptive chrome in both'
+        passed: false
+        comment: Backgrounds and chrome correct in both themes and data colors identical,
+          but the ordered speed bins use the categorical Imprint hues instead of steps
+          of one Imprint ramp (defect line)
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful design with alpha variation; above defaults but not exceptional
+        passed: false
+        comment: 'Style-guide baseline: clean typography hierarchy, nothing beyond
+          it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Custom grid styling; theme-aware spines; elegant legend frame
+        passed: false
+        comment: Ring labels placed at 112.5 degrees in the empty ESE quadrant, clear
+          of all spokes; page-colored segment separators
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy through opacity guides reader to dominant SW winds
+        passed: false
+        comment: Data displayed; the lopsided SW rose reads on its own, no hierarchy
+          chosen beyond that
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -126,25 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct wind rose with 8 directions and 5 speed bins
+        comment: Standard wind rose; no highlights, reference rings or callouts
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: sectors, bins, stacking, legend, percentages'
+        passed: false
+        comment: 8 sectors centered on compass points, N at top clockwise, stacked
+          bins, percent rings, legend; the bins do not run cool to warm (C4, defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Polar angle = direction; radial = frequency; all data visible
+        comment: Sector angle = direction bin center, radial = cumulative frequency
+          from 0; all data within range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend correct format
+        comment: Title 'windrose-basic · python · seaborn · anyplot.ai' correct; legend
+          entries are readable speed ranges
     data_quality:
       score: 15
       max: 15
@@ -154,53 +173,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of wind rose
+        comment: Prevailing SW, secondary NE and W, nearly empty sectors elsewhere,
+          all five speed bins present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic weather data with plausible distributions
+        comment: 'A year of hourly station measurements with Weibull speeds: plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds and proportions physically realistic
+        comment: 'Checked: 8760 hourly observations, percentages sum to 100 (crosstab
+          normalize=True), SW spoke about 44 % matches the direction weights (~45
+          % of mass in 200-240 deg), speeds clipped at 25 m/s'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Linear: imports→data→plot→save'
+        passed: false
+        comment: Static layout passes, but the missing-number smoke perturbation crashes
+          the script (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (42); fully deterministic
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, plt, np, pd, sns all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: pd.cut + pd.crosstab compute the bins; no hand-written algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'
     library_mastery:
       score: 4
       max: 10
@@ -209,24 +233,33 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Proper seaborn theming, but wind rose requires matplotlib
+        passed: false
+        comment: sns.set_theme rc for theme tokens; plotting is matplotlib polar bars
+          as a wind rose needs
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Limited distinctive seaborn usage; wind rose necessitates matplotlib
+        comment: Nothing seaborn-specific beyond the mandated theming
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T10:50:15Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
+  - layer-composition
   - manual-ticks
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - binning
+  - normalization
+  - long-to-wide
   styling:
   - grid-styling
-  - alpha-blending
+  - edge-highlighting

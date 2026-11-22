@@ -1,13 +1,14 @@
 """ anyplot.ai
 windrose-basic: Wind Rose Chart
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-07
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 79/100 | Updated: 2026-11-22
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -18,31 +19,41 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for speed ranges (cool to warm progression)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Imprint palette, in canonical order: one color per speed bin
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Configure seaborn
 sns.set_theme(
     style="ticks",
     rc={
         "figure.facecolor": PAGE_BG,
         "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
         "axes.labelcolor": INK,
         "text.color": INK,
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK_SOFT,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.25,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
+# Constants
+SPEED_EDGES = [0, 3, 6, 10, 15, np.inf]
+SPEED_LABELS = ["0-3 m/s", "3-6 m/s", "6-10 m/s", "10-15 m/s", "15+ m/s"]
+COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+
+# Columns
+DIRECTION = "direction"  # role: direction
+SPEED_BIN = "speed_bin"  # role: speed
+FREQUENCY = "frequency"  # role: frequency
+
 # Data
-np.random.seed(42)
+rng = np.random.default_rng(42)
 n_obs = 8760
 
-# Simulate prevailing winds with realistic distribution
+# Prevailing winds from the SW, with weaker NE and W components
 direction_weights = np.zeros(360)
 direction_weights[200:240] = 3.0
 direction_weights[30:60] = 1.5
@@ -50,110 +61,81 @@ direction_weights[260:290] = 1.0
 direction_weights += 0.2
 direction_weights /= direction_weights.sum()
 
-directions = np.random.choice(360, size=n_obs, p=direction_weights)
-directions = (directions + np.random.uniform(-10, 10, n_obs)) % 360
+wind_dir = (rng.choice(360, size=n_obs, p=direction_weights) + rng.uniform(-10, 10, n_obs)) % 360
 
-# Wind speeds by direction
-speeds = np.zeros(n_obs)
-for i, d in enumerate(directions):
-    if 200 <= d <= 240:
-        speeds[i] = np.random.weibull(2.2) * 8 + 2
-    elif 30 <= d <= 60:
-        speeds[i] = np.random.weibull(2.0) * 6 + 1
-    else:
-        speeds[i] = np.random.weibull(1.8) * 4 + 0.5
-speeds = np.clip(speeds, 0, 25)
+# Stronger winds from the prevailing sectors (Weibull-distributed speeds)
+sw = (wind_dir >= 200) & (wind_dir <= 240)
+ne = (wind_dir >= 30) & (wind_dir <= 60)
+shape = np.where(sw, 2.2, np.where(ne, 2.0, 1.8))
+scale = np.where(sw, 8.0, np.where(ne, 6.0, 4.0))
+offset = np.where(sw, 2.0, np.where(ne, 1.0, 0.5))
+wind_speed = np.clip(rng.weibull(shape) * scale + offset, 0, 25)
 
-# 8-direction bins (N, NE, E, SE, S, SW, W, NW)
-n_dir_bins = 8
-dir_bins = np.linspace(0, 360, n_dir_bins + 1)
-dir_centers = (dir_bins[:-1] + dir_bins[1:]) / 2
-dir_width = 2 * np.pi / n_dir_bins
-
-# Speed bins
-speed_bins = [0, 3, 6, 10, 15, 25]
-speed_labels = ["0-3 m/s", "3-6 m/s", "6-10 m/s", "10-15 m/s", "15+ m/s"]
-
-# Calculate frequencies
-frequencies = np.zeros((n_dir_bins, len(speed_labels)))
-for i in range(n_dir_bins):
-    dir_min, dir_max = dir_bins[i], dir_bins[i + 1]
-    in_dir = (directions >= dir_min) & (directions < dir_max)
-
-    for j in range(len(speed_labels)):
-        speed_min = speed_bins[j]
-        speed_max = speed_bins[j + 1]
-        in_speed = (speeds >= speed_min) & (speeds < speed_max)
-        frequencies[i, j] = np.sum(in_dir & in_speed)
-
-frequencies = frequencies / n_obs * 100
+# Frequency of observations per direction sector (centered on its compass point) and speed bin, in percent
+sector_width = 360 / len(COMPASS)
+sector = (((wind_dir + sector_width / 2) % 360) // sector_width).astype(int)
+speed_bin = pd.cut(wind_speed, bins=SPEED_EDGES, labels=SPEED_LABELS, right=False)
+freq = pd.crosstab(sector, speed_bin, normalize=True) * 100
+freq = freq.reindex(index=range(len(COMPASS)), columns=SPEED_LABELS, fill_value=0)
+df = freq.rename_axis(index=DIRECTION, columns=SPEED_BIN).stack().rename(FREQUENCY).reset_index()
+df[DIRECTION] = df[DIRECTION] * sector_width
 
 # Plot
-fig = plt.figure(figsize=(12, 12), facecolor=PAGE_BG)
-ax = fig.add_subplot(111, projection="polar")
+table = df.pivot(index=DIRECTION, columns=SPEED_BIN, values=FREQUENCY).sort_index().fillna(0)
+speed_order = list(df[SPEED_BIN].drop_duplicates())
+angles = table.index.to_numpy(dtype=float)
+n_sectors = len(table)
+sector_deg = np.diff(angles).min() if n_sectors > 1 else 360.0
 
+fig = plt.figure(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax = fig.add_subplot(111, projection="polar")
 ax.set_facecolor(PAGE_BG)
 ax.set_theta_zero_location("N")
 ax.set_theta_direction(-1)
 
-theta = np.deg2rad(dir_centers)
+theta = np.deg2rad(angles)
+colors = IMPRINT_PALETTE[: len(speed_order)]
 
-# Identify prevailing wind sectors (highest frequency) for visual emphasis
-total_freq = frequencies.sum(axis=1)
-dominant_threshold = np.percentile(total_freq, 75)
-is_dominant = total_freq > dominant_threshold
-
-# Plot stacked bars with Okabe-Ito palette
-bottoms = np.zeros(n_dir_bins)
-for j, (label, color) in enumerate(zip(speed_labels, IMPRINT, strict=False)):
-    # Use full alpha for dominant sectors, reduced for weaker ones
-    alpha_per_sector = np.where(is_dominant, 0.90, 0.65)
-
-    # Plot all sectors in one call, then manually adjust alpha if possible
-    bars = ax.bar(
+bottom = np.zeros(n_sectors)
+for label, color in zip(speed_order, colors, strict=False):
+    ax.bar(
         theta,
-        frequencies[:, j],
-        width=dir_width * 0.9,
-        bottom=bottoms,
+        table[label].to_numpy(),
+        width=np.deg2rad(sector_deg) * 0.92,
+        bottom=bottom,
         color=color,
         edgecolor=PAGE_BG,
-        linewidth=0.5,
+        linewidth=0.4,
         label=label,
-        alpha=0.85,
     )
+    bottom += table[label].to_numpy()
 
-    # Adjust individual bar alpha for dominant directions
-    for bar, alpha_val in zip(bars, alpha_per_sector, strict=False):
-        bar.set_alpha(alpha_val)
-
-    bottoms += frequencies[:, j]
-
-# Style
-ax.set_title("windrose-basic · seaborn · anyplot.ai", fontsize=24, pad=20, fontweight="medium", color=INK)
-
-max_freq = np.ceil(bottoms.max() / 5) * 5
+# Axes: frequency rings from zero, compass labels around the rim
+total_max = float(np.nanmax(bottom)) if n_sectors else 1.0
+magnitude = 10 ** np.floor(np.log10(total_max / 9))
+ring_step = next(m * magnitude for m in (1, 2, 5, 10) if m * magnitude >= total_max / 9)
+max_freq = np.ceil(total_max / ring_step) * ring_step
+rings = np.arange(ring_step, max_freq + ring_step / 2, ring_step)
 ax.set_ylim(0, max_freq)
-ax.set_yticks(np.arange(0, max_freq + 1, 5))
-ax.set_yticklabels([f"{int(y)}%" for y in np.arange(0, max_freq + 1, 5)], fontsize=14, color=INK_SOFT)
+ax.set_yticks(rings)
+ax.set_yticklabels([f"{r:g}%" for r in rings], fontsize=8, color=INK_SOFT)
+ax.set_rlabel_position(112.5)
+ax.set_xticks(np.deg2rad(angles))
+compass = {i * 45.0: name for i, name in enumerate(COMPASS)}
+ax.set_xticklabels([compass.get(a, f"{a:g}°") for a in angles], fontsize=11, fontweight="medium", color=INK)
+ax.tick_params(axis="x", pad=6)
+ax.grid(True, linewidth=0.6, color=INK_SOFT, alpha=0.25)
+ax.spines["polar"].set_color(INK_SOFT)
+ax.spines["polar"].set_linewidth(0.8)
 
-direction_labels = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
-ax.set_xticks(np.deg2rad(np.arange(0, 360, 45)))
-ax.set_xticklabels(direction_labels, fontsize=18, fontweight="medium", color=INK)
-
-# Enhanced grid styling with subtle radial emphasis
-ax.grid(True, alpha=0.12, linestyle="-", linewidth=0.8, color=INK_SOFT)
-for spine in ax.spines.values():
-    spine.set_color(INK_SOFT)
-    spine.set_linewidth(1.1)
+ax.set_title("windrose-basic · python · seaborn · anyplot.ai", fontsize=12, pad=18, fontweight="medium", color=INK)
 
 legend = ax.legend(
-    title="Wind Speed", loc="lower right", bbox_to_anchor=(1.15, 0), fontsize=14, title_fontsize=16, framealpha=0.95
+    title="Wind speed", loc="lower right", bbox_to_anchor=(1.18, -0.02), fontsize=8, title_fontsize=9, framealpha=0.95
 )
-legend.get_frame().set_facecolor(ELEVATED_BG)
-legend.get_frame().set_edgecolor(INK_SOFT)
 legend.get_title().set_color(INK)
 for text in legend.get_texts():
     text.set_color(INK)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.84, top=0.88, bottom=0.08)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
