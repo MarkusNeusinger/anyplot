@@ -2,40 +2,43 @@ library: letsplot
 language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:53:39Z'
-updated: '2026-05-17T02:02:47Z'
-generated_by: claude-haiku
-workflow_run: 25978445461
+updated: '2026-11-22T02:23:13Z'
+generated_by: claude-sonnet
+workflow_run: 44975352301
 issue: 3340
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - 'Excellent theme adaptation: both light and dark renders are perfectly readable
-    with no legibility issues'
-  - Correct chessboard pattern with proper corner orientation (light square at h1)
-  - Clean, well-organized code with proper use of theme tokens (INK, INK_SOFT, PAGE_BG)
-  - All spec requirements met precisely
-  - Proper file naming and output format (plot-light.png, plot-dark.png, HTML exports)
+  - 'Correct standard orientation: light squares at h1 and a8, files a-h along the
+    bottom and ranks 1-8 on the left, each centered on its square'
+  - coord_fixed(ratio=1) with discrete axis limits gives true squares in the data's
+    own order
+  - Theme tokens thread through title and labels; board colors identical across light
+    and dark
+  - 'Clean chrome: ticks, axis lines and panel border removed so the board stands
+    alone'
+  - Canonical 2400x2400 square canvas via ggsize(600, 600) and scale=4
   weaknesses:
-  - Design Excellence is solid but not exceptional—uses traditional chessboard colors
-    without exploring palette variations or visual refinement beyond the basic requirements
+  - 'Suggestion: a slightly heavier outer edge around the board would frame it more
+    like a physical board.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white or dark
-      Chrome: Title "chessboard-basic · letsplot · anyplot.ai" is clearly visible in dark ink (#1A1A17). Row labels (1-8) and column labels (a-h) are rendered in secondary text color (#4A4A44) and are fully readable
-      Data: Alternating cream (#F5DEB3) and brown (#8B4513) squares with subtle brown borders. Proper 1:1 aspect ratio, light square at h1 corner per chess standard
-      Legibility verdict: PASS - All text is clearly readable with good contrast against the light background
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas
+      Chrome: title 'chessboard-basic · python · letsplot · anyplot.ai' in dark ink top-left; rank labels 1-8 on the left and file labels a-h along the bottom in dark grey, all readable; no ticks, axis lines or grid
+      Data: 8x8 board of cream (#F5DEB3) and brown (#8B4513) squares with thin dark-brown borders, 1:1 aspect; light squares at h1 and a8. Spec asks for classic cream/brown, so no Imprint series colors apply
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black or light
-      Chrome: Title is now in light ink (#F0EFE8) and remains clearly visible. Row and column labels are rendered in light secondary text (#B8B7B0) and are fully readable against the dark background
-      Data: Identical cream and brown square colors to the light render—only background and text have adapted. No dark-on-dark issues detected
-      Legibility verdict: PASS - All text is clearly readable; data colors remain identical to light render (only chrome adapted)
+      Background: warm near-black #1A1A17
+      Chrome: title in light ink, labels in light grey, all readable; no dark-on-dark text
+      Data: square and border colors identical to the light render; only background and text flipped; the board stands out clearly from the dark page
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -46,65 +49,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: Title 14 pt and file/rank labels 12 pt set explicitly; dark ink on
+          light, light ink on dark, readable in both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Perfect grid layout, no collisions
+        comment: No text collisions; labels sit clear of the board
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All tiles and borders clearly distinguishable
+        comment: All 64 squares and their dark-brown borders clearly visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Excellent contrast, not red-green dependent
+        comment: Cream vs brown differ strongly in lightness; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format appropriate, nothing cut off
+        comment: 2400x2400 square canvas; board fills the canvas with balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with attribution, standard algebraic notation
+        comment: N/A for axis titles (board labels are the standard notation); title
+          present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Backgrounds match style guide, data colors consistent
+        comment: 'Backgrounds #FAF8F1 / #1A1A17; square colors identical across themes;
+          classic two-tone scheme the spec asks for instead of categorical palette'
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Uses traditional default colors, no custom palette
+        comment: Style-guide baseline with the classic cream/brown wood scheme the
+          spec suggests; nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Minimal but effective, borders add definition
+        passed: false
+        comment: 'Beyond the baseline: tick marks, axis lines and panel border removed
+          so the board stands alone on the page, with tile borders in a matching dark
+          brown'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear, well-organized presentation
+        passed: false
+        comment: Fixed grid; no hierarchy to choose beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -114,25 +125,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 8x8 chess board grid
+        comment: Correct empty 8x8 chessboard, no added layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: rows, columns, colors, labels, aspect ratio'
+        comment: 'C1-C5 all met: 1:1 squares, light at h1 and a8, a-h bottom / 1-8
+          left centered, two-tone, empty board'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct mapping with proper corner orientation
+        comment: Files a-h left to right, ranks 1-8 bottom to top via discrete limits
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend hidden appropriately
+        comment: Title 'chessboard-basic · python · letsplot · anyplot.ai' correct;
+          legend hidden (N/A)
     data_quality:
       score: 15
       max: 15
@@ -142,19 +155,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete 8x8 board with all squares and labels
+        comment: Full board with every square and both label sets
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard chess board is realistic and neutral
+        comment: Standard chessboard, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proper proportions for chess board
+        comment: 'Checked: h1 (f_idx 7 + r_idx 0 = odd) and a8 (0 + 7) are light,
+          a1 dark, in code and render'
     code_quality:
       score: 10
       max: 10
@@ -164,53 +178,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct implementation
+        comment: Flat script with column constants, Data and Plot blocks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data generation
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code
+        comment: Comprehension builds the 64 rows directly; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png at 2400x2400 and plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of geom_tile, aes, scales, theme
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: coord_fixed used well, mostly straightforward
+        comment: Idiomatic geom_tile + scale_fill_manual + discrete limits + coord_fixed;
+          standard grammar, nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; HTML export is the
+          default interactive output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-22T02:19:52Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
+  - matrix-construction
   dataprep: []
   styling:
-  - theme-adaptive-chrome
+  - minimal-chrome
+  - edge-highlighting
