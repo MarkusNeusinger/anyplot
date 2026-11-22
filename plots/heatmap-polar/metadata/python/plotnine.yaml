@@ -12,41 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 74
 review:
   strengths:
-  - Creative polygon-based polar construction achieves the spec natively in plotnine
-    without fallbacks or matplotlib workarounds
-  - Perfect spec compliance — cyclic hour axis, radial day-of-week rings, viridis
-    colorbar, time labels at cardinal directions, peak annotation, and thin cell borders
-    all present
-  - Perfect data quality — realistic website traffic scenario with plausible weekday
-    morning/lunch/evening peaks vs. weekend midday peak
-  - Clean, reproducible code with proper theme-adaptive tokens throughout (INK/INK_SOFT/PAGE_BG/ELEVATED_BG
-    correctly wired to all chrome elements)
+  - Cyclic angular axis closes with no seam, hours clockwise from the top
+  - Wedges built as geom_polygon cells give equal angular widths and concentric rings
+    with Mon innermost
+  - Theme tokens threaded through all chrome
   weaknesses:
-  - Day labels (Mon–Sun) are placed at x=0, y>0 (midnight position of each ring) where
-    viridis renders dark-purple cells; in light render the dark INK (#1A1A17) text
-    on dark-purple cells gives reduced legibility — consider adding a semi-transparent
-    label background or using INK_SOFT for day labels
-  - Design excellence is functional but not visually distinctive — the viridis-on-circular-grid
-    look is utilitarian; the overall composition lacks the typographic hierarchy and
-    spacing polish needed to score above 85
+  - 'VQ-07 (both): continuous traffic is colored with scale_fill_cmap(''viridis''),
+    a forbidden colormap → imprint_seq, scale_fill_gradient(low=''#009E73'', high=''#4467A3'').
+    Likely cause: scale_fill_cmap(cmap_name=''viridis'').'
+  - 'VQ-05 (both): canvas is 3600x3600, not a canonical size → 2400x2400 (-1200 x
+    -1200); stray axis tick marks show at the left edge and bottom → none. Likely
+    cause: figure_size=(12, 12) with dpi=300, and axis_ticks not set to element_blank().'
+  - 'SC-04 (both): title ''Website Traffic · heatmap-polar · plotnine · anyplot.ai''
+    lacks the language segment → ''… · heatmap-polar · python · plotnine · anyplot.ai''.
+    Likely cause: labs(title=...).'
+  - 'VQ-01 (light): ring labels Sun, Sat and Thu in dark ink over dark-purple cells
+    read faintly, and the peak caption at size 12 sits below the 16 pt hour labels
+    → a contrasting ink or plate for ring labels, caption at the tick-label size (+4).
+    Likely cause: geom_text(color=INK) and annotate(size=12).'
+  - 'Suggestion: a stronger typographic hierarchy between title, hour labels and ring
+    labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white.
-      Chrome: Title "Website Traffic · heatmap-polar · plotnine · anyplot.ai" in dark ink, clearly readable at top. Time labels (12am top, 6am right, 12pm bottom, 6pm left) in INK_SOFT, readable. Day labels (Mon–Sun) in dark INK at x=0 inside each ring — readable overall but with reduced contrast at the midnight/12am position where viridis renders dark purple cells.
-      Data: All 168 cells (7 days × 24 hours) visible with viridis palette — dark purple for low overnight traffic, transitioning through teal/green to bright yellow-green for weekday morning peaks (~9–13h). Weekend rings show a gentler single midday peak. "Peak 9am–1pm weekdays" annotation in INK_SOFT in lower-right, readable. Colorbar legend "Visits/hr" with range ~200–700 on right side.
-      Legibility verdict: PASS (minor: day label contrast slightly reduced on dark-purple cells, but still readable)
+      Background: warm off-white #FAF8F1, 3600x3600.
+      Chrome: title 'Website Traffic · heatmap-polar · plotnine · anyplot.ai' in dark ink; hour labels 12am/6am/12pm/6pm in INK_SOFT; Mon-Sun plain dark text along the 12am spoke; colorbar 'Visits/hr' at right; small stray axis tick marks at the left edge and bottom.
+      Data: 168 wedges in viridis — dark purple overnight to yellow at the weekday 9am-1pm peak; thin light borders; caption 'Peak 9am–1pm weekdays' outside the disc.
+      Legibility verdict: PASS with reservations (Sun/Sat/Thu labels faint on dark-purple cells)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light #F0EFE8, clearly readable against dark background. Time labels in INK_SOFT (#B8B7B0), clearly visible. Day labels now in light INK (#F0EFE8) on dark viridis cells — good contrast. Legend background uses ELEVATED_BG (#242420), legend text readable. No dark-on-dark failures observed.
-      Data: Data colors are identical to light render — same viridis gradient, same peak position, same weekday/weekend pattern. The yellow-green peak is equally prominent in both themes. Colorbar readable with light text.
+      Background: warm near-black #1A1A17.
+      Chrome: title, hour labels, ring labels and colorbar text in light ink; no dark-on-dark text; faint stray tick marks at left and bottom.
+      Data: identical viridis cell colors; borders dark.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 22
       max: 30
       items:
       - id: VQ-01
@@ -54,80 +57,71 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, day labels 14pt, time
-          labels 16pt, legend 16pt). Day labels have mildly reduced contrast in light
-          render where dark INK text overlaps dark viridis cells at midnight position.
+        comment: Ring labels Sun/Sat/Thu in dark ink over dark-purple viridis cells
+          read faintly in the light render; peak caption below the tick-label size
+          (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements — time labels, day labels, peak annotation,
-          and colorbar are all well-separated.
+        comment: No text collisions; ring labels overlay cells without hiding them
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 168 polygon cells clearly visible, viridis colormap provides
-          excellent perceptual differentiation.
+        comment: All 168 cells visible; borders subordinate
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe and perceptually uniform. Adequate contrast throughout.
+        comment: Viridis is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 0
         max: 4
-        passed: true
-        comment: Square 12×12in at 300dpi = 3600×3600px. Chart fills canvas well;
-          minor corner whitespace inherent to circular plots.
+        passed: false
+        comment: Canvas 3600x3600, not a canonical size (hard rule); stray axis tick
+          marks left and bottom (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct, angular axis labeled with time of day, radial with
-          days, colorbar labeled Visits/hr.
+        comment: Hour labels, ring labels and colorbar title present
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Viridis sequential for continuous single-polarity data. Background
-          #FAF8F1 light / #1A1A17 dark — both correct. All chrome tokens theme-adaptive.'
+        passed: false
+        comment: scale_fill_cmap('viridis') — not imprint_seq, forbidden (defect line)
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above default: polygon-based polar construction shows design sophistication,
-          thin cell borders add polish. Overall look is functional and clean but not
-          visually distinctive.'
+        comment: Baseline theme tokens and explicit sizes, nothing decided beyond
       - id: DE-02
         name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Axis chrome removed — baseline
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: 'Above default: grid removed, axis text/lines hidden, thin ELEVATED_BG
-          cell borders, clean whitespace. Not exceptional but clearly refined beyond
-          defaults.'
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: 'Above default: viridis gradient creates clear focal point on weekday
-          peaks, ''Peak 9am–1pm weekdays'' annotation guides interpretation. Weekday
-          vs weekend contrast tells a clear story.'
+        comment: 'Above default: ''Peak 9am–1pm weekdays'' caption points to the focal
+          peak'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,29 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar heatmap with angular hour axis and radial day-of-week
-          axis.
+        comment: Polar heatmap with hours angular, days radial
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: cyclic wrapping, colorbar, time labels at
-          cardinal directions, cell borders, peak annotation, radial day labels.'
+        comment: Cyclic closure, ring labels, cardinal hour labels, sequential colormap,
+          colorbar, borders
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hours correctly mapped to angular position (clockwise, 12am at top),
-          days to radial rings, traffic value to color.
+        comment: Wedges at their hour and day
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Title: ''Website Traffic · heatmap-polar · plotnine · anyplot.ai''
-          — correct format. Colorbar labeled ''Visits/hr''.'
+        comment: Title lacks the language segment 'python' (defect line)
     data_quality:
       score: 15
       max: 15
@@ -167,22 +158,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows weekday vs weekend patterns, multiple daily peaks (morning,
-          lunch, evening), overnight lows — full coverage of cyclic heatmap features.
+        comment: Weekday vs weekend patterns, overnight lows across the seam
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic by hour and day of week — neutral, realistic business
-          scenario.
+        comment: Website traffic — neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Traffic range ~140–700 visits/hr plausible for mid-size website;
-          weekday peaks at 9am/1pm/8pm realistic.
+        comment: ~120-760 visits/hr plausible; peak caption matches the generated
+          9h/13h peaks
     code_quality:
       score: 10
       max: 10
@@ -192,53 +181,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → constants → data → polygon rows → labels
-          → plot → save.'
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for manual polygon polar construction.
+        comment: Appropriate polygon construction
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly.
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Above default: ggplot grammar used correctly with geom_polygon +
-          coord_equal + scale_fill_cmap. Creative but correct application of plotnine''s
-          layer-based API.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Above default: manually constructed polygon wedges using plotnine''s
-          geom_polygon as a polar-chart workaround demonstrates deep grammar-of-graphics
-          knowledge specific to plotnine.'
+        comment: geom_polygon + coord_equal grammar — default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond the mandated API
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-bf70a1c05e
 impl_tags:
   dependencies: []
   techniques:

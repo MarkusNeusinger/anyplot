@@ -1,154 +1,179 @@
 """ anyplot.ai
 heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 82/100 | Created: 2026-05-13
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-22
 """
 
 import math
 import os
-import sys
+
+import cairosvg
+import numpy as np
+import pandas as pd
+import pygal
+from pygal.style import Style
 
 
-def _plot():
-    # Remove current directory from sys.path to prevent self-import of this file (pygal.py)
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    sys.path[:] = [p for p in sys.path if os.path.realpath(p) != os.path.realpath(this_dir)]
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-    import cairosvg
-    import matplotlib.cm as cm
-    import numpy as np
-    import pygal
-    from pygal.style import Style
+# Imprint palette: all eight positions, one per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-    THEME = os.getenv("ANYPLOT_THEME", "light")
-    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-    INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-    INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-    INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+# Constants
+SEQ_LOW, SEQ_HIGH = "#009E73", "#4467A3"  # imprint_seq: brand green -> blue
 
-    # Data: monthly household energy consumption (kWh) across 5 years
-    np.random.seed(42)
-    years = [2019, 2020, 2021, 2022, 2023]
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    n_years, n_months = len(years), len(months)
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: angular
+YEAR = "Year"  # role: radial
+VISITORS = "Visitors (thousand)"  # role: value
 
-    base = np.array([90, 85, 74, 63, 58, 65, 74, 71, 63, 67, 78, 92], dtype=float)
-    data = np.zeros((n_years, n_months))
-    for i in range(n_years):
-        data[i] = base * (1.0 + i * 0.018) + np.random.normal(0, 2.5, n_months)
+# Data: replace this block with your own table, for example df = pd.read_csv("arrivals.csv")
+# Monthly tourist arrivals at a Mediterranean coastal resort: summer peak, quiet winter, steady growth
+np.random.seed(42)
+month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+season = np.array([22, 24, 38, 58, 84, 118, 152, 160, 112, 66, 30, 28], dtype=float)
+year_list = [2017, 2018, 2019, 2020, 2021, 2022]
+df = pd.DataFrame(
+    [
+        (m, y, season[j] * (1 + 0.04 * i) + np.random.normal(0, 3.0))
+        for i, y in enumerate(year_list)
+        for j, m in enumerate(month_names)
+    ],
+    columns=[MONTH, YEAR, VISITORS],
+)
 
-    vmin, vmax = data.min(), data.max()
+# Plot
+table = df.pivot_table(index=YEAR, columns=MONTH, values=VISITORS, sort=False)
+months = table.columns.tolist()
+years = table.index.tolist()
+vmin, vmax = np.nanmin(table.to_numpy()), np.nanmax(table.to_numpy())
 
-    def val_to_hex(val):
-        t = float(np.clip((val - vmin) / (vmax - vmin), 0, 1))
-        r, g, b, _ = cm.viridis(t)
-        return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
 
-    # Representative viridis color per year for pygal legend swatches
-    year_colors = tuple(val_to_hex(float(data[i].mean())) for i in range(n_years))
+def lerp_hex(c0, c1, t):
+    """Linear RGB interpolation between two hex colors."""
+    a = [int(c0[i : i + 2], 16) for i in (1, 3, 5)]
+    b = [int(c1[i : i + 2], 16) for i in (1, 3, 5)]
+    return "#" + "".join(f"{round(x + (y - x) * t):02X}" for x, y in zip(a, b, strict=True))
 
-    # pygal Style: all chrome derived from ANYPLOT_THEME tokens
-    custom_style = Style(
-        background=PAGE_BG,
-        plot_background=PAGE_BG,
-        foreground=INK,
-        foreground_strong=INK,
-        foreground_subtle=INK_MUTED,
-        colors=year_colors,
-        title_font_size=54,
-        legend_font_size=38,
-        label_font_size=36,
-        value_font_size=32,
+
+def val_to_hex(val):
+    if np.isnan(val):  # a missing cell stays visibly empty, in the muted tone
+        return INK_MUTED
+    return lerp_hex(SEQ_LOW, SEQ_HIGH, float(np.clip((val - vmin) / (vmax - vmin), 0, 1)))
+
+
+# pygal's Pie draws one series as a single ring (inner_radius sets the hole) with equal sectors,
+# starting at 12 o'clock and running clockwise. A multi-series Pie would lay the series out as
+# consecutive sectors instead of rings, so each year is its own single-series Pie, scaled to
+# its ring radius and nested in one SVG. Ring 0 (the first year) is innermost.
+SIZE = 2400
+CX, CY = SIZE / 2, 1170
+R_HOLE, R_OUT = 230, 860
+ring_w = (R_OUT - R_HOLE) / len(years)
+PIE_BASE = 1000  # side of each pie chart; its outer radius is 0.9 * PIE_BASE / 2
+PIE_R = 0.9 * PIE_BASE / 2
+
+ring_svgs = []
+for i, y in enumerate(years):
+    r0, r1 = R_HOLE + i * ring_w, R_HOLE + (i + 1) * ring_w
+    ring_style = Style(
+        background="transparent",
+        plot_background="transparent",
+        colors=tuple(val_to_hex(table.loc[y, m]) for m in months),
+        opacity=1,
+        opacity_hover=1,
+        stroke_width=4,
     )
-
-    # pygal.Pie with multiple series renders as concentric rings (inner → outer per year)
-    # value=1 for every sector ensures equal angular width (heatmap: color encodes kWh, not size)
-    chart = pygal.Pie(
-        width=4800,
-        height=2700,
-        style=custom_style,
-        inner_radius=0.22,
-        title="heatmap-polar · pygal · anyplot.ai",
-        legend_at_bottom=True,
+    ring = pygal.Pie(
+        width=PIE_BASE,
+        height=PIE_BASE,
+        style=ring_style,
+        inner_radius=0.9 * r0 / r1,  # pygal measures the hole against the pie's full radius, not its 0.9 outer edge
+        show_legend=False,
         print_values=False,
-        show_legend=True,
-        half_pie=False,
+        margin=0,
     )
-
-    for i, year in enumerate(years):
-        chart.add(
-            str(year),
-            [
-                {"value": 1, "color": val_to_hex(data[i, j]), "label": f"{months[j]}: {data[i, j]:.0f} kWh"}
-                for j in range(n_months)
-            ],
+    for m in months:
+        ring.add(f"{m} {y}: {table.loc[y, m]:.0f}k", 1)  # equal sectors; colour carries the value
+    inner = ring.render().decode("utf-8")
+    inner = inner[inner.index("<svg") :]
+    side = 2 * r1 * (PIE_BASE / 2) / PIE_R
+    ring_svgs.append(
+        inner.replace(
+            "<svg", f'<svg x="{CX - side / 2:.2f}" y="{CY - side / 2:.2f}" width="{side:.2f}" height="{side:.2f}"', 1
         )
-
-    # Render pygal chart to SVG (includes interactive JS for HTML output)
-    svg_bytes = chart.render()
-    svg_str = svg_bytes.decode("utf-8")
-
-    # SVG post-processing: add subtitle, month labels, and colorbar
-    # Estimated pie layout on 4800×2700 with title (~100px) and bottom legend (~130px):
-    # chart area height ≈ 2470px → radius ≈ 1080, center ≈ (2400, 1280)
-    CX, CY, R_OUTER = 2400, 1280, 1080
-
-    subtitle_svg = (
-        f'<text x="{CX}" y="138" text-anchor="middle" '
-        f'fill="{INK_SOFT}" font-size="36" font-family="sans-serif">'
-        f"Monthly Household Energy Consumption by Year (kWh)</text>"
     )
 
-    # Month labels outside the outermost ring, clockwise from 12 o'clock
-    month_labels_svg = []
-    for j, month in enumerate(months):
-        angle = (j + 0.5) * 2 * math.pi / n_months  # radians clockwise from north
-        lx = CX + (R_OUTER + 88) * math.sin(angle)
-        ly = CY - (R_OUTER + 88) * math.cos(angle)
-        month_labels_svg.append(
-            f'<text x="{lx:.0f}" y="{ly:.0f}" text-anchor="middle" dominant-baseline="middle" '
-            f'fill="{INK}" font-size="42" font-weight="500" font-family="sans-serif">{month}</text>'
-        )
-
-    # Colorbar: SVG linearGradient (far right — viridis, top=vmax, bottom=vmin)
-    cb_x, cb_y_top, cb_h, cb_w = 4420, 320, 1900, 72
-    grad_stops = "".join(
-        f'<stop offset="{k * 5}%" style="stop-color:{val_to_hex(vmax - (k / 20) * (vmax - vmin))};stop-opacity:1"/>'
-        for k in range(21)
+# Overlay text: title, subtitle, month labels around the rim, year labels along the 12 o'clock seam
+FONT = "DejaVu Sans, sans-serif"
+# Thin page-coloured borders between cells: ring circles and radial seams, drawn over the pies
+borders = "".join(
+    f'<circle cx="{CX}" cy="{CY}" r="{R_HOLE + k * ring_w:.1f}" fill="none" stroke="{PAGE_BG}" stroke-width="5"/>'
+    for k in range(len(years) + 1)
+) + "".join(
+    f'<line x1="{CX + R_HOLE * math.sin(j * 2 * math.pi / len(months)):.1f}" '
+    f'y1="{CY - R_HOLE * math.cos(j * 2 * math.pi / len(months)):.1f}" '
+    f'x2="{CX + R_OUT * math.sin(j * 2 * math.pi / len(months)):.1f}" '
+    f'y2="{CY - R_OUT * math.cos(j * 2 * math.pi / len(months)):.1f}" stroke="{PAGE_BG}" stroke-width="5"/>'
+    for j in range(len(months))
+)
+texts = [
+    f'<text x="{CX}" y="100" text-anchor="middle" fill="{INK}" font-size="60" font-weight="bold" font-family="{FONT}">'
+    "heatmap-polar · python · pygal · anyplot.ai</text>",
+    f'<text x="{CX}" y="170" text-anchor="middle" fill="{INK_SOFT}" font-size="42" font-family="{FONT}">'
+    f"Monthly tourist arrivals; rings run from {years[0]} (inner) to {years[-1]} (outer)</text>",
+]
+for j, month in enumerate(months):
+    angle = (j + 0.5) * 2 * math.pi / len(months)
+    lx, ly = CX + (R_OUT + 95) * math.sin(angle), CY - (R_OUT + 95) * math.cos(angle)
+    texts.append(
+        f'<text x="{lx:.0f}" y="{ly:.0f}" text-anchor="middle" dominant-baseline="central" fill="{INK}" '
+        f'font-size="46" font-weight="500" font-family="{FONT}">{month}</text>'
     )
-    colorbar_svg = f"""
-<defs>
-  <linearGradient id="cbGrad" x1="0" y1="0" x2="0" y2="1">
-    {grad_stops}
-  </linearGradient>
-</defs>
-<rect x="{cb_x}" y="{cb_y_top}" width="{cb_w}" height="{cb_h}" fill="url(#cbGrad)"/>
-<rect x="{cb_x}" y="{cb_y_top}" width="{cb_w}" height="{cb_h}" fill="none" stroke="{INK_MUTED}" stroke-width="2" opacity="0.4"/>
-<text x="{cb_x + cb_w // 2}" y="{cb_y_top - 28}" text-anchor="middle" fill="{INK_MUTED}" font-size="30" font-family="sans-serif">kWh</text>
-<text x="{cb_x + cb_w + 18}" y="{cb_y_top}" dominant-baseline="hanging" fill="{INK_SOFT}" font-size="30" font-family="sans-serif">{vmax:.0f}</text>
-<text x="{cb_x + cb_w + 18}" y="{cb_y_top + cb_h // 2}" dominant-baseline="middle" fill="{INK_SOFT}" font-size="30" font-family="sans-serif">{(vmin + vmax) / 2:.0f}</text>
-<text x="{cb_x + cb_w + 18}" y="{cb_y_top + cb_h}" dominant-baseline="auto" fill="{INK_SOFT}" font-size="30" font-family="sans-serif">{vmin:.0f}</text>
+for i, y in enumerate(years):
+    ly = CY - (R_HOLE + (i + 0.5) * ring_w)
+    texts.append(
+        f'<text x="{CX}" y="{ly:.0f}" text-anchor="middle" dominant-baseline="central" fill="{INK}" '
+        f'font-size="40" font-weight="bold" '
+        f'font-family="{FONT}">{y}</text>'
+    )
+
+# Colour bar (pygal has none): horizontal gradient from the same two-stop colormap
+cb_w, cb_h = 700, 48
+cb_x, cb_y = CX - cb_w / 2, 2250
+grad_stops = "".join(
+    f'<stop offset="{k * 10}%" stop-color="{lerp_hex(SEQ_LOW, SEQ_HIGH, k / 10)}"/>' for k in range(11)
+)
+colorbar = f"""
+<defs><linearGradient id="cbGrad" x1="0" y1="0" x2="1" y2="0">{grad_stops}</linearGradient></defs>
+<rect x="{cb_x}" y="{cb_y}" width="{cb_w}" height="{cb_h}" fill="url(#cbGrad)"/>
+<rect x="{cb_x}" y="{cb_y}" width="{cb_w}" height="{cb_h}" fill="none" stroke="{INK_MUTED}" stroke-width="2"/>
+<text x="{cb_x}" y="{cb_y + cb_h + 46}" text-anchor="middle" fill="{INK_SOFT}" font-size="38" font-family="{FONT}">{vmin:.0f}</text>
+<text x="{CX}" y="{cb_y - 20}" text-anchor="middle" fill="{INK_SOFT}" font-size="38" font-family="{FONT}">{VISITORS}</text>
+<text x="{cb_x + cb_w}" y="{cb_y + cb_h + 46}" text-anchor="middle" fill="{INK_SOFT}" font-size="38" font-family="{FONT}">{vmax:.0f}</text>
 """
 
-    extra = subtitle_svg + "\n" + "\n".join(month_labels_svg) + colorbar_svg
+svg_str = (
+    f'<svg xmlns="http://www.w3.org/2000/svg" width="{SIZE}" height="{SIZE}" viewBox="0 0 {SIZE} {SIZE}">'
+    f'<rect width="{SIZE}" height="{SIZE}" fill="{PAGE_BG}"/>'
+    + "".join(ring_svgs)
+    + borders
+    + "".join(texts)
+    + colorbar
+    + "</svg>"
+)
 
-    # Inject before the last </svg> tag
-    parts = svg_str.rsplit("</svg>", 1)
-    svg_str = parts[0] + extra + "\n</svg>" + parts[1]
-
-    # Save HTML (pygal's interactive SVG-in-browser output format)
-    html_str = (
-        f"<!DOCTYPE html><html><head><meta charset='utf-8'>"
-        f"<style>body{{margin:0;background:{PAGE_BG};}}</style></head>"
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(
+        f"<!DOCTYPE html><html><head><meta charset='utf-8'><style>body{{margin:0;background:{PAGE_BG};}}</style></head>"
         f"<body>{svg_str}</body></html>"
     )
-    with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
-        f.write(html_str)
 
-    # Save PNG via cairosvg (same pipeline as pygal.render_to_png internally)
-    cairosvg.svg2png(
-        bytestring=svg_str.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=4800, output_height=2700
-    )
-
-
-_plot()
+cairosvg.svg2png(
+    bytestring=svg_str.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=SIZE, output_height=SIZE
+)
