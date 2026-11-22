@@ -2,47 +2,49 @@ library: letsplot
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:34:36Z'
-updated: '2026-05-19T21:30:18Z'
+updated: '2026-11-22T17:13:53Z'
 generated_by: claude-sonnet
-workflow_run: 26125496603
+workflow_run: 45047506203
 issue: 3188
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 81
 review:
   strengths:
-  - 'Perfect theme adaptation in both renders: correct backgrounds (#FAF8F1 / #1A1A17),
-    all chrome tokens applied, data colors theme-invariant'
-  - Dual encoding of series (color + line style) improves accessibility and readability
-  - Expanding CI bands with nested 80%/95% levels clearly communicate forecast uncertainty
-    growth over horizon
-  - Tasteful dotted vertical boundary marker at forecast start
-  - Idiomatic letsplot grammar with distinctive layer_tooltips() API for rich interactive
-    CI content in HTML
-  - Complete spec coverage including all required features
-  - 'Excellent data quality: realistic energy demand scenario with authentic seasonal
-    pattern and expanding uncertainty'
+  - 'All four required legend roles present: Historical, Forecast, 80% CI and 95%
+    CI, built by mapping fill and alpha to the band column'
+  - Theme-correct chrome in both renders with identical data colors; dark theme raises
+    band alpha so the two bands stay apart
+  - Dual encoding of history vs forecast (green solid vs purple dashed) and a dotted
+    forecast-start marker at Jan 2026
+  - layer_tooltips() gives formatted MWh hover values in the HTML output
   weaknesses:
-  - CI confidence levels (80%, 95%) not represented as legend entries — only in the
-    small caption. Adding ribbon/band legend entries would satisfy the spec requirement
-    more directly.
-  - Title fontsize=18 slightly above scale-based guide recommendation (16px); not
-    visually problematic but could align better with style guide.
+  - 'DE-02 (both): all four panel spines are drawn, a full box around the panel where
+    the plot type needs none → only the left and bottom axis lines. Likely cause:
+    panel_background=element_rect(fill=PAGE_BG) keeps the default border color; set
+    color=PAGE_BG or panel_border=element_blank().'
+  - 'VQ-03 (both): the 80% CI and 95% CI legend swatches have a thick dark INK_SOFT
+    outline that the outline-free ribbons do not have → swatches without an outline,
+    matching the bands. Likely cause: geom_ribbon size=0 does not reach the legend
+    key; set color=None/''transparent'' on the ribbons or override the key outline.'
+  - 'Suggestion: theme the legend keys (legend_key fill = ELEVATED_BG) so the Historical
+    and Forecast line keys do not sit on visibly different tiles inside the legend
+    frame.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "timeseries-forecast-uncertainty · python · letsplot · anyplot.ai" in dark ink, clearly readable. Y-axis label "Energy Demand (MWh)" and X-axis label "Date" in dark text. Tick labels (2023-2027, 400-620) in slightly softer dark tone. All text clearly readable against light background.
-      Data: Historical line in #009E73 (brand green), solid, showing upward trend with seasonal oscillation over 2023-2025. Forecast line in #D55E00 (orange), dashed, from 2026-2027. Nested CI bands in orange: darker for 80% (higher alpha), lighter for 95% (lower alpha), with bands expanding rightward. Dotted vertical boundary line at Jan 2026.
+      Background: warm off-white #FAF8F1, panel framed by a full four-sided dark box.
+      Chrome: title "timeseries-forecast-uncertainty · python · letsplot · anyplot.ai" in dark ink (~66% width), axis titles "Date" and "Energy Demand (MWh)", ticks 2023-2027 and 400-620, subtle horizontal grid; legend at the bottom on an elevated tile with 80% CI, 95% CI, Historical, Forecast. All text readable.
+      Data: historical #009E73 solid line Jan 2023-Dec 2025; dashed #C475FD forecast 2026 inside nested purple ribbons (80% darker inside 95% lighter), widening with the horizon; dotted grey vertical line at Jan 2026.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and axis labels in light text (#F0EFE8 / #B8B7B0 range), clearly readable against dark background. Tick labels in lighter tone. No dark-on-dark text failures detected. Legend and caption both visible.
-      Data: Colors identical to light render — #009E73 historical line, #D55E00 forecast + CI bands. CI bands appear slightly more vibrant on dark surface (theme-adaptive higher alpha) but remain clearly layered. Data colors are theme-invariant as required.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, grid subtle; legend tile #242420 with light text. No dark-on-dark text.
+      Data: identical #009E73 and #C475FD; bands at higher alpha, inner 80% band clearly brighter than the outer 95% band; dashed forecast visible on the band.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -51,80 +53,74 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=18, axis_title=14, axis_text=12,
-          legend_text=12, caption=11). Both themes readable. Minor: title=18 slightly
-          above scale-based guide recommendation of 16px.'
+        comment: Title 16, axis titles 12, ticks/legend 10 pt; all readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No text collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Lines well-sized at size=1.2 for ~48 data points. CI bands clearly
-          layered with appropriate alpha.
+        passed: false
+        comment: Lines at size 1.2 suit 48 points; the CI legend swatches carry a
+          thick dark outline the outline-free bands do not have (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe. Dual encoding (color + line style)
-          adds redundancy.
+        comment: 'Green vs purple plus solid vs dashed: redundant encoding, CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend at bottom, caption
-          bottom-right.
+        comment: 3200x1800, balanced margins, title ~66% width, legend centred below
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Energy Demand (MWh)' with units; X-axis 'Date' appropriate.
+        comment: '''Energy Demand (MWh)'' with units, ''Date'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00. Light #FAF8F1, dark #1A1A17.
-          Data colors identical across themes.'
+        comment: 'Historical #009E73, forecast and bands #C475FD; backgrounds #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above default: theme_classic with full chrome customization, dual-encoded
-          series, nested CI bands. Professionally clean but not publication-ready.'
+        comment: Style-guide baseline typography and tokens, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
         passed: true
-        comment: theme_classic removes top/right spines. Y-axis-only grid at 10% opacity.
-          Dotted boundary line tasteful. Good but not fully polished.
+        comment: All four panel spines drawn where nothing requires them (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Visual hierarchy clear: green solid vs orange dashed. Expanding
-          uncertainty bands tell forecast degradation story. Boundary marker reinforces
-          transition.'
+        comment: Data displayed with the Notes' hierarchy; no focal point chosen beyond
+          it
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,28 +128,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: time series with historical + forecast + nested uncertainty
-          bands.'
+        comment: Historical line + forecast + nested CI ribbons, forecast-start marker
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All features present. Minor: spec requires legend identifying confidence
-          levels; CI bands explained only via caption, not legend entries.'
+        comment: C1 solid vs dashed, C2 dotted vline at Jan 2026, C3 nested bands
+          darker inner, C4 semi-transparent fills, C5 legend names Historical, Forecast,
+          80% CI, 95% CI
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, Energy Demand (MWh) on Y, all data visible.
+        comment: Date on x, MWh on y, all data visible, marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels 'Historical' and 'Forecast' match
-          data.
+        comment: Mandated title format; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -163,21 +158,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: trend, seasonality, noise, forecast continuation,
-          80% CI, 95% CI, expanding uncertainty.'
+        comment: Trend, seasonality, noise, widening 80%/95% bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly energy demand — neutral, real-world, comprehensible.
+        comment: Monthly regional energy demand, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 400-620 MWh plausible for regional grid. Uncertainty widening ±18
-          to ±68 MWh over 12 months realistic.
+        comment: 400-620 MWh; checked 80% band +/-18 to +/-45 and 95% band +/-28 to
+          +/-68 widening in render and code; no Check values in spec
     code_quality:
       score: 10
       max: 10
@@ -187,59 +181,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot — all used.
+        comment: os, numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. No fake UI elements.
+        comment: Long-form frames feed the legend; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html.
+        comment: plot-{THEME}.png and .html via ggsave
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Fully idiomatic: geom_ribbon for CI bands, geom_vline for boundary,
-          scale_color_manual, theme_classic() + theme() overrides, labs().'
+        comment: 'Grammar-native legend: fill and alpha both mapped to the band column
+          with scale_alpha_manual so the CI levels get legend keys without stand-ins'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses layer_tooltips() with structured CI content — distinctive letsplot
-          feature. HTML export alongside PNG. Millisecond timestamp for datetime geom_vline.
+        comment: layer_tooltips() with formatted MWh values in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
+  rendered_at: '2026-11-22T17:10:17Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
+  - wide-to-long
   dataprep:
   - time-series
   styling:
   - alpha-blending
+  - grid-styling
