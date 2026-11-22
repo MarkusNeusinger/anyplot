@@ -2,96 +2,107 @@ library: bokeh
 language: python
 specification_id: network-weighted
 created: '2026-01-08T15:57:06Z'
-updated: '2026-05-17T14:44:38Z'
-generated_by: claude-haiku
-workflow_run: 25993761647
+updated: '2026-11-22T06:28:48Z'
+generated_by: claude-sonnet
+workflow_run: 44993352770
 issue: 3290
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/bokeh/plot-dark.html
-quality_score: 91
+quality_score: 86
 review:
   strengths:
-  - Excellent visual quality with perfect readability in both light and dark themes
-  - 'Flawless theme adaptation: data colors identical, chrome properly inverted'
-  - 'Correct palette compliance: brand green throughout, proper backgrounds'
-  - 'Full spec compliance: all required features present and working'
-  - 'Strong code quality: clean structure, reproducible, idiomatic Bokeh usage'
-  - 'Thoughtful design: force-directed layout naturally clusters countries, node sizing
-    reveals hubs'
+  - Edge widths and the legend samples come from the same width function, so the 40/360/680
+    samples agree exactly with the drawn edges
+  - Weight is double-encoded by width and an opacity ramp, which pushes light links
+    back and lets the USA-Mexico/Canada/China corridors read first
+  - Node labels sit above each node offset by its own radius (column-driven LabelSet
+    y_offset), clear of nodes and edges in both themes
+  - Vectorized ColumnDataSource drives a single p.segment call; HoverTool on the node
+    renderer adds country and total trade in the HTML
   weaknesses:
-  - Design Excellence could be enhanced with more distinctive visual sophistication
-    or unique aesthetic choices
-  - Limited use of Bokeh-specific advanced features like network-specific renderers
-    or callbacks
+  - 'VQ-01 (both): node labels at 26pt bold sit below the 34pt tick/legend reference
+    and read a little small for the plot''s main content → 32-34pt (+6 to +8 pt).
+    Likely cause: LabelSet text_font_size="26pt".'
+  - 'VQ-03 (dark): the lightest edges (e.g. Brazil-India, 40 B USD) at alpha 0.35
+    render as a faint dark green on #1A1A17 and nearly vanish, as does the 40 sample
+    in the legend → raise the floor alpha to about 0.55 (+0.2). Likely cause: edge_alpha
+    floor 0.35.'
+  - 'CQ-01 (code): two helper functions edge_width() and edge_alpha() (lines 103-110)
+    → inline them as array expressions on weights and reuse them for the three legend
+    samples. Likely cause: helpers written for the legend loop.'
+  - 'Suggestion: the dark render shows a thin frame around the plot area that the
+    light render lacks; matching the two would tidy the chrome.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 - correct theme surface
-      Chrome: Title "network-weighted · bokeh · anyplot.ai" in dark text (28pt), legend title "Trade Volume (B USD)" in dark text (22pt), weight labels in soft dark text (18pt), node labels in bold dark text (16pt) - all clearly readable
-      Data: All 25 edges in brand green (#009E73) with thickness from 2-20px showing trade volumes (40-680 B USD), 15 nodes sized by weighted degree, all in green, node labels readable
-      Legibility verdict: PASS - all elements readable, no text overlaps, proper contrast
+      Background: warm off-white #FAF8F1, no axes or grid.
+      Chrome: centered bold title 'network-weighted · python · bokeh · anyplot.ai' in near-black; bold node names above every node; legend lower-left with bold title 'Trade volume (B USD)', three sample lines labeled 40 / 360 / 680 and italic caption 'Node size: total trade volume'. All readable.
+      Data: 15 #009E73 nodes with dark-grey outlines sized by weighted degree (USA and China largest); 25 #009E73 edges 3-18 px with an opacity ramp; thick USA-Mexico, USA-Canada, USA-China corridors.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17 - correct dark theme surface
-      Chrome: Title in light text (#F0EFE8), legend text in secondary light color (#B8B7B0), node labels in light text - all clearly readable against dark background, no dark-on-dark failures
-      Data: All 25 edges in brand green (#009E73) identical to light render, same thickness scaling, 15 nodes in green identical to light render - data colors perfectly preserved between themes
-      Legibility verdict: PASS - all text readable against dark background, proper dark-theme adaptation, brand green maintains visibility
+      Background: warm near-black #1A1A17, a thin grey frame around the plot area.
+      Chrome: title, node labels and legend title in light ink, legend values and caption in soft light grey; no dark-on-dark text.
+      Data: same #009E73 nodes and edges as light, node outlines flip to light grey; the lightest edges are faint on the dark surface but present.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text sizes explicitly set (title 28pt, labels 16pt, legend 22pt,
-          weights 18pt), readable in both themes
+        comment: All sizes set explicitly (title 50pt, legend title 34pt, legend values
+          30pt); node labels at 26pt bold sit 8pt below the 34pt tick/legend reference
+          and read a little small for the plot's main content (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No colliding elements, legend clear of plot area, all labels spaced
-          appropriately
+        comment: Labels lifted above each node by its radius, clear of nodes and of
+          each other; legend in the empty lower-left corner
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All nodes visible, edges scale 2-20px with alpha 0.3-0.8, weak and
-          strong connections both visible
+        comment: 'Nodes 60-140 px, edges 3-18 px; in the dark render the lightest
+          edges (alpha 0.35) are faint against #1A1A17 (defect line)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single Okabe-Ito color with high contrast, CVD-safe, no red-green
-          sole signal
+        comment: Single hue, weight double-encoded by width and alpha, no hue-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape 4800x2700 appropriate, 0.15 padding, good proportions,
-          nothing cut off
+        comment: 3200x1800, network fills the canvas, legend tucked into the open
+          corner, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format, legend explains weight scale clearly
+        comment: No axes by design; legend title 'Trade volume (B USD)' carries the
+          unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand #009E73 used, backgrounds #FAF8F1/#1A1A17 correct, both renders
-          theme-correct'
+        comment: '#009E73 for nodes and edges in both themes; #FAF8F1 / #1A1A17 backgrounds;
+          theme-correct text'
     design_excellence:
       score: 13
       max: 20
@@ -101,22 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean professional design, force-directed layout, node sizing adds
-          information, lacks distinctive visual innovation
+        comment: 'Typographic hierarchy decided for this chart: bold node names, bold
+          legend title, italic soft-ink caption; weight double-encoded by width and
+          an opacity ramp'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minimal chrome, generous whitespace, subtle alpha blending, round
-          line caps, clean legend
+        comment: Labels offset by each node's own radius, round line caps, legend
+          placed in the empty corner, x stretched to the 16:9 canvas so the layout
+          uses the full width
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clearly shows strong vs weak relationships, reveals trading hubs,
-          good visual hierarchy, could use annotations
+        comment: The opacity ramp pushes light links back so the USA-Mexico/Canada/China
+          corridors and the two hubs read first
     spec_compliance:
       score: 15
       max: 15
@@ -126,27 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct weighted network graph, edge thickness represents weight
+        comment: Weighted network with edge thickness by weight
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: nodes with labels, weighted edges, force-directed
-          layout, weighted degree sizing, legend'
+        comment: C1 thickness grows with weight; C2 force layout, no axes/grid; C3
+          legend samples drawn with the same width function and labeled 40/360/680;
+          C4 node size named in a caption; C5 edges under nodes and labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 15 nodes visible, all 25 edges shown, weights correctly mapped
-          to widths (2-20px)
+        comment: All 15 nodes and 25 edges shown; layout-positioned type
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend labels weight scale clearly
+        comment: Title 'network-weighted · python · bokeh · anyplot.ai'; legend values
+          match the edge range
     data_quality:
       score: 15
       max: 15
@@ -156,86 +170,88 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: weighted edges (40-680 B USD), network structure,
-          hubs, diverse connections'
+        comment: Hubs, heavy corridors, many light links, peripheral single-link nodes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world trade network, plausible volumes, globally diverse, neutral
-          factual data
+        comment: Bilateral trade among 15 real economies, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 nodes ideal, 25 edges sufficient, trade volumes realistic, smooth
-          scaling
+        comment: 'Checked: weights 40-680 B USD; USA-Mexico/Canada/China at 680/620/580
+          are the right order of magnitude; legend min/mid/max equal the data min,
+          midpoint and max'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear code, no unnecessary abstractions, clear force-directed algorithm
+        comment: Two helper functions edge_width / edge_alpha (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42), all deterministic
+        comment: default_rng(42), fixed data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unnecessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, real HoverTool interactivity, appropriate complexity
+        comment: Vectorized force layout and weighted degree with np.add.at; nothing
+          available (no networkx) computes the layout
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html correctly, current API
+        comment: plot-{THEME}.html and .png via Selenium, Bokeh 3 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, high-level API, HoverTool, LabelSet, Range1d,
-          round line caps
+        comment: One vectorized p.segment driven by ColumnDataSource columns for line_width
+          and line_alpha; LabelSet with a column-driven y_offset
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Leverages HoverTool and segment() effectively, could explore network-specific
-          renderers
+        passed: false
+        comment: HoverTool restricted to the node renderer with a weighted-degree
+          tooltip in the HTML artifact
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-22T06:24:49Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - custom-legend
   - hover-tooltips
   - html-export
+  - custom-legend
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
-  - matrix-construction
   - columndatasource
   dataprep:
   - normalization
