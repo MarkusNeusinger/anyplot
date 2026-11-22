@@ -2,122 +2,125 @@ library: ggplot2
 language: r
 specification_id: network-hierarchical
 created: '2026-05-17T06:30:27Z'
-updated: '2026-05-17T06:39:46Z'
-generated_by: claude-haiku
-workflow_run: 25983482699
+updated: '2026-11-22T03:40:55Z'
+generated_by: claude-sonnet
+workflow_run: 44981289229
 issue: 3343
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 82
 review:
   strengths:
-  - Perfect theme-adaptive chrome handling in both light and dark renders
-  - Excellent text legibility - title and all node labels clearly readable at full
-    size in both themes
-  - Clean hierarchical tree layout with proper level-based positioning that clearly
-    conveys organizational structure
-  - Correct Okabe-Ito palette compliance (#009E73 for nodes, theme-adaptive text colors)
-  - Realistic and plausible organizational data with proper parent-child relationships
-    across four levels
-  - No text overlap or element collision issues
-  - Proper margin and whitespace allocation for canvas clarity
+  - 'Clean layered tree: root at top, each level on its own row, siblings grouped
+    under their parent and every child below it, in both themes'
+  - 'Labels placed inside large #009E73 nodes keep every label on its own node with
+    no collisions across the 8-node bottom row'
+  - Edges in theme-adaptive INK_SOFT at alpha 0.6 and 0.5 mm stay thinner and lighter
+    than the nodes and remain traceable parent to child
+  - Theme tokens threaded through title and background; data colour identical in both
+    renders
+  - Correct 3200x1800 canvas via ragg::agg_png at 8x4.5 in, 400 dpi
   weaknesses:
-  - Unused tidyr import should be removed to clean up dependencies
-  - Generic node styling with no visual hierarchy - all nodes identical size/color
-    despite different organizational roles; CEO could visually stand out more
-  - No visual emphasis or storytelling to distinguish hierarchy levels - minimal design
-    sophistication
+  - 'VQ-01 (both): node labels at geom_text size 2.2 mm (about 6 pt) are below the
+    library prompt''s 2.5 mm annotation floor and read small beside the 12 pt title
+    → 2.5-2.8 mm (+0.3 to +0.6 mm), with the node size raised to keep ''VP Engineering''
+    inside its circle. Likely cause: geom_text(size = 2.2) with geom_point(size =
+    17).'
+  - 'Suggestion: give the root or each management level a distinct emphasis (size
+    or a second Imprint hue) so depth reads at a glance.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white. Proper theme-compliant surface.
-      Chrome: Title "network-hierarchical · ggplot2 · anyplot.ai" in dark text (#1A1A17) is clearly readable. All 18 node labels in dark text are fully legible at size 3.2pt. Axis elements hidden appropriately.
-      Data: Nodes use Okabe-Ito color #009E73 (bluish green). Edges use INK_SOFT (#4A4A44) at 0.6 alpha, providing subtle visual structure without competing with nodes. Hierarchical tree structure is immediately clear with CEO at top, three VPs at level 1, six managers at level 2, and nine individual contributors at level 3.
-      Legibility verdict: PASS - All text is readable, no overlap, no contrast issues.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'network-hierarchical · r · ggplot2 · anyplot.ai' centred in dark ink, about 46% of the width; no axes or grid. Node labels in dark ink inside the nodes, all readable though small.
+      Data: 18 #009E73 nodes on four rows (CEO; 3 VPs; 6 leads/managers; 8 developers, engineers and reps), straight grey edges without arrows, thinner and lighter than nodes. Nothing clipped.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black. Properly maintains theme compliance.
-      Chrome: Title in light text (#F0EFE8) clearly readable against dark background. All node labels in light text are fully legible. No dark-on-dark text failures.
-      Data: Node color #009E73 is IDENTICAL to light render (data colors do not change between themes, only chrome). Edges use adapted INK_SOFT (#B8B7B0) at 0.6 alpha, providing appropriate visibility. Hierarchical structure is equally clear with perfect spatial consistency to light render.
-      Legibility verdict: PASS - All text readable, data colors match light render, no theme adaptation failures.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, node labels in light #F0EFE8 ink on the green nodes, readable; no dark-on-dark text.
+      Data: node colour identical #009E73, edges in the lighter INK_SOFT; same layout as light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: Title and all node labels clearly readable in both light and dark
-          themes
+        passed: false
+        comment: Title and axis-free chrome readable in both themes; node labels at
+          geom_text size 2.2 mm (~6 pt) sit below the library prompt's 2.5 mm annotation
+          floor and read small (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps or element collisions visible; clean layout
+        comment: Labels sit inside their own nodes, no text collides with other text
+          or edges
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 18 nodes at appropriate density, all edges and markers clearly distinguishable
+        comment: 18 large nodes, thin translucent edges, all clearly visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 is CVD-safe with strong contrast on both backgrounds'
+        comment: Single green series with strong contrast on both surfaces; nothing
+          relies on hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins (30,40,30,40 pt), nothing cut
-          off
+        comment: 3200x1800 canvas, tree fills the panel with balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Proper title format with library attribution; axes appropriately
-          hidden for network graph
+        comment: 'N/A: network layout has no axes; title present'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First color #009E73, background #FAF8F1/#1A1A17, chrome properly
-          theme-adaptive, both renders correct'
+        comment: 'Nodes #009E73, backgrounds #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Generic styling - all nodes identical color/size with no visual hierarchy
-          despite different roles
+        passed: true
+        comment: 'Style-guide baseline: one green, theme tokens, explicit sizes; nothing
+          beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Minimal customization beyond theme_minimal; no special visual refinements
+        passed: true
+        comment: Labels placed inside generously sized nodes with even level spacing
+          and wide row gaps, a placement chosen for this chart
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Hierarchy is structurally clear but visually all nodes equal; lacks
-          emphasis on CEO or organizational levels
+        comment: Structure displayed, no focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -127,28 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hierarchical network graph with proper tree layout
+        comment: Hierarchical tree, root at top, four levels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: nodes, edges, hierarchical levels, organizational
-          context'
+        comment: C1 levels on rows, C2 layered layout with siblings grouped and no
+          axes/grid, C3 straight edges without arrows, thinner and lighter than nodes,
+          C4 nodes and labels apart
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X positions calculated per level, Y positions based on depth; all
-          data visible
+        comment: Each node at its level row; every parent-child edge drawn, all nodes
+          inside the panel
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format, no legend needed for single organizational
-          hierarchy
+        comment: Title 'network-hierarchical · r · ggplot2 · anyplot.ai' correct;
+          legend N/A for a single node class
     data_quality:
       score: 15
       max: 15
@@ -158,23 +162,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of organizational hierarchy across four management
-          levels
+        comment: Shows branching factors 1-3, a branch ending at level 2 (Finance
+          Manager), subtrees of unequal size
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible corporate structure with CEO, VPs, managers, individual
-          contributors
+        comment: Plausible, neutral org chart (CEO, VPs, leads, developers, reps)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 18 nodes across 4 levels is sensible for readable static visualization
+        comment: 18 nodes in the spec's 10-50 range across 4 levels; no Check values
+          in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -182,32 +186,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct script with no functions/classes; clean and readable
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) ensures deterministic output
+        comment: Deterministic data, set.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: tidyr is imported but never used; dplyr, ragg used correctly
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake interactivity or unnecessary features
+        comment: Appropriate complexity; ggraph is out of scope per library prompt,
+          so the per-level layout by hand is justified
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-light.png and plot-dark.png using ragg device; 16x9
-          @ 300dpi correct
+        comment: ggsave plot-{THEME}.png via ragg at 8x4.5 in, 400 dpi
     library_mastery:
       score: 4
       max: 10
@@ -217,22 +221,27 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot2 idioms correctly but applies them creatively to networks
-          (non-standard domain)
+        comment: Idiomatic layered geoms, dplyr joins for edge coordinates, expansion()
+          padding
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Only basic geoms (geom_segment, geom_point, geom_text); no distinctive
-          ggplot2 features leveraged
+        comment: Only basic geoms
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T03:37:20Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - data-generation
+  - groupby-aggregation
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending

@@ -1,11 +1,10 @@
 #' anyplot.ai
 #' network-hierarchical: Hierarchical Network Graph with Tree Layout
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 81/100 | Created: 2026-05-17
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 82/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(dplyr)
-library(tidyr)
 library(ragg)
 
 set.seed(42)
@@ -52,16 +51,16 @@ edges <- data.frame(
               "vp_fin",
               "be_lead", "be_lead",
               "fe_lead",
-              "eng_mgr",
-              "sales1", "sales1", "sales2", "sales2"),
+              "eng_mgr", "eng_mgr",
+              "sales1", "sales1", "sales2"),
   to_id = c("vp_eng", "vp_sales", "vp_fin",
             "be_lead", "fe_lead", "eng_mgr",
             "sales1", "sales2",
             "fin_mgr",
             "dev1", "dev2",
             "dev3",
-            "eng1",
-            "rep1", "rep2", "rep3", "rep2")
+            "eng1", "eng2",
+            "rep1", "rep2", "rep3")
 )
 
 # Calculate horizontal positions for each level
@@ -93,23 +92,23 @@ p <- ggplot() +
   geom_segment(
     data = edges,
     aes(x = x_from, y = y_from, xend = x_to, yend = y_to),
-    color = INK_SOFT, linewidth = 0.75, alpha = 0.6
+    color = INK_SOFT, linewidth = 0.5, alpha = 0.6
   ) +
   # Draw nodes
   geom_point(
     data = nodes,
     aes(x = x, y = y),
-    color = IMPRINT[1], size = 12, alpha = 0.9
+    color = IMPRINT[1], size = 17
   ) +
   # Add node labels
   geom_text(
     data = nodes,
     aes(x = x, y = y, label = label),
-    size = 3.2, color = INK, vjust = 0.5, hjust = 0.5,
+    size = 2.2, color = INK, vjust = 0.5, hjust = 0.5,
     lineheight = 0.9, fontface = "plain"
   ) +
   labs(
-    title = "network-hierarchical · ggplot2 · anyplot.ai",
+    title = "network-hierarchical · r · ggplot2 · anyplot.ai",
     x = "", y = ""
   ) +
   theme_minimal(base_size = 14) +
@@ -121,20 +120,21 @@ p <- ggplot() +
     axis.title = element_blank(),
     axis.ticks = element_blank(),
     plot.title = element_text(
-      color = INK, size = 24, hjust = 0.5,
-      margin = margin(b = 25, t = 15)
+      color = INK, size = 12, hjust = 0.5,
+      margin = margin(b = 8, t = 6)
     ),
-    plot.margin = margin(30, 40, 30, 40, "pt")
+    plot.margin = margin(10, 20, 10, 20, "pt")
   ) +
-  coord_cartesian(expand = FALSE)
+  scale_x_continuous(expand = expansion(add = 0.8)) +
+  scale_y_continuous(expand = expansion(add = 0.9))
 
 # --- Save -------------------------------------------------------------------
 ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot = p,
   device = ragg::agg_png,
-  width = 16,
-  height = 9,
+  width = 8,
+  height = 4.5,
   units = "in",
-  dpi = 300
+  dpi = 400
 )

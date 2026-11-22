@@ -2,97 +2,115 @@ library: pygal
 language: python
 specification_id: network-hierarchical
 created: '2026-01-08T22:56:16Z'
-updated: '2026-05-17T06:35:00Z'
-generated_by: claude-haiku
-workflow_run: 25983368953
+updated: '2026-11-22T03:39:12Z'
+generated_by: claude-sonnet
+workflow_run: 44981060889
 issue: 3343
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 78
 review:
   strengths:
-  - 'Perfect visual and spec compliance: text fully readable in both themes, all spec
-    requirements met'
-  - 'Excellent palette implementation: correct Okabe-Ito order with identical data
-    colors across light/dark, proper theme-adaptive chrome'
-  - 'Clean code structure: KISS design, deterministic data, properly themed with explicit
-    font sizes'
-  - 'Strong theme consistency: backgrounds, text colors, and edge colors all correctly
-    adapt to light/dark'
+  - 'Tidy-tree layout derived from the df alone: leaves take consecutive slots and
+    each parent is centred over its children, so siblings are grouped and no edge
+    crosses another'
+  - Edges drawn as one continuous pygal XY walk in muted ink, thinner and lighter
+    than the nodes, traceable from parent to child with no spurious links
+  - Axes, guides and tick labels switched off, so position reads only as depth, as
+    the spec asks
+  - 'Theme tokens threaded through pygal''s Style: chrome flips cleanly while the
+    Imprint tier colors stay identical in both renders'
+  - Per-point {'value','label'} dicts give every node its own label in the PNG and
+    a tooltip in the interactive HTML
   weaknesses:
-  - 'Generic design sophistication: uses library defaults with minimal artistic customization'
-  - 'Limited library mastery: XY positioning is functional but not distinctive; could
-    be implemented in matplotlib or other libraries similarly'
-  - 'No visual storytelling: organizational chart is clear but doesn''t emphasize
-    patterns or insights'
+  - 'VQ-02 (both): each node label sits directly below its node, where the edges to
+    its children leave, so edges run through the text of ''CEO'', ''VP Engineering'',
+    ''VP Sales'', ''Dir Frontend'', ''Dir Backend'', ''Dir Americas'', ''Dir EMEA''
+    → labels clear of every edge (for example above the node or beside it on the side
+    away from the child edges). Likely cause: pygal''s default point-label position
+    under the dot combined with child edges leaving the dot downward.'
+  - 'VQ-01 (both): node labels at 30px, below the style guide''s 44px tick/legend
+    reference, read small next to the 44px legend → about 40-44px (+10 to +14px),
+    with node spacing kept so neighbours on the manager row stay apart. Likely cause:
+    the inline css rule font-size:30px.'
+  - 'CQ-01 (code): two helper functions place() and trace() (recursive) plus the mutable
+    next_leaf=[0] counter break the Imports → Data → Plot → Save structure → compute
+    leaf slots and parent centers with flat loops over depth (deepest level first)
+    and build the edge list as one loop over df rows with None separators. Likely
+    cause: recursive tree-walk design.'
+  - 'Suggestion: a larger node label font could carry tier names directly and let
+    the legend shrink to the edge layer.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title, axis labels, and tick labels clearly visible with dark text
-      Data: CEO node in brand green (#009E73), three VPs in orange (#D55E00), seven Directors in blue (#0072B2), eleven Managers in reddish-purple (#CC79A7); edges in muted tan
-      Layout: Well-balanced margins, descriptive axis labels with units
-      Legibility verdict: PASS - all text readable and well-spaced
+      Background: warm off-white #FAF8F1, no axes, no grid.
+      Chrome: title "network-hierarchical · python · pygal · anyplot.ai" in dark ink at top centre (~62% of width); bottom legend in dark ink (Reporting line, Executive, Vice presidents, Directors, Managers) with visible swatches. All text readable; node labels (30px monospace) are small and several are crossed by the grey edges leaving their node.
+      Data: top-down tree, CEO (#009E73) at top, three VPs (#C475FD), seven Directors (#4467A3), eleven Managers (#BD8233) on four evenly spaced rows; straight muted-grey edges, each parent centred over its children.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title, axis labels, and tick labels clearly visible with light text; edge lines in light tan
-      Data: Identical colors to light render - green CEO, orange VPs, blue Directors, purple Managers (data color consistency verified)
-      Layout: Same composition as light render; no dark-on-dark failures
-      Legibility verdict: PASS - all text readable on dark surface with no contrast failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, legend text and node labels in light ink, all readable; no dark-on-dark text. Edges flip to a lighter grey that stays subtle.
+      Data: node colors identical to the light render (#009E73, #C475FD, #4467A3, #BD8233); same layout and same label/edge crossings.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
-        passed: true
-        comment: Title 28px, labels 22px, ticks 18px; all explicitly sized and readable
-          in both themes
+        passed: false
+        comment: Title 66, legend 44 match the style guide and read in both themes;
+          node labels forced to 30px, below the 44px reference, read small next to
+          the 44px legend (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: All markers and labels fully readable with no collisions
+        passed: false
+        comment: Node labels sit directly under each node where the outgoing child
+          edges start, so edges cut through 'CEO', 'VP Engineering', 'Dir Frontend',
+          'Dir Backend', 'Dir Americas', 'Dir EMEA' (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 22 nodes with dots_size=28 appropriately sized; edges subtle but
-          clear
+        comment: 22 nodes at dots_size=24 are prominent; edges 3px muted ink; legend
+          swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with good contrast
+        comment: Imprint tier colors are CVD-safe; tier is also encoded by row position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 65-70% of canvas with balanced margins
+        comment: 3200x1800, tree fills the width, nothing cut off, title ~62% of the
+          width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context; title in correct format
+        comment: N/A for axes (layout-positioned, none drawn); title correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds correct;
-          data colors identical between renders'
+        comment: 'Executive tier #009E73, then #C475FD, #4467A3, #BD8233 in Imprint
+          order; edges INK_MUTED; backgrounds #FAF8F1 / #1A1A17; data colors identical
+          in both renders'
     design_excellence:
       score: 8
       max: 20
@@ -102,21 +120,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional looking but uses library defaults with minimal artistic
-          customization
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Guides disabled for clarity; standard library styling with minimal
-          customization
+        comment: Axes and guides removed as the spec requires; label placement collides
+          with edges, nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Hierarchy clear through positioning but no visual emphasis on insights
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,29 +143,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hierarchical network graph with tree layout
+        comment: Top-down hierarchical tree layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: nodes with labels, edges, 4 levels, correct
-          positioning'
+        comment: C1 levels on rows, C2 tree layout with no axes and siblings grouped,
+          C3 straight muted edges without arrows, C4 nodes spaced and labelled beside
+          their own node
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = horizontal position, Y = management level; all data visible and
-          correct
+        comment: Layout-positioned; every parent-child pair in df drawn once, no spurious
+          links
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows all four levels with proper labels
+        comment: Title 'network-hierarchical · python · pygal · anyplot.ai'; legend
+          names the edge layer and the four tiers in reader text
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -156,79 +175,88 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: single root, multiple nodes per level, clear
-          branching'
+        comment: Single root, varying fan-out (3/3/2/2 and 1-2 children), unequal
+          subtrees
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Organizational chart is realistic but somewhat generic
+        comment: Plausible company org chart with concrete departments and regions;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Organizational structure is realistic with proper proportions
+        comment: 'Checked: 22 nodes inside the 10-50 range, 4 levels, every edge in
+          the render matches the Reports-to column'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Simple linear structure: imports → constants → hierarchy → layout
-          → plot → save'
+        passed: false
+        comment: Two recursive helper functions place() and trace() plus a mutable
+          next_leaf counter (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic hierarchy; fully reproducible
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only imports used: os, shutil, subprocess, pygal, Style'
+        comment: os, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering or fake functionality
+        comment: Appropriate complexity; no available call computes a tree layout
+          (networkx not installed)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+        comment: render_to_png to plot-{THEME}.png and plot-{THEME}.html; current
+          pygal 3 API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct use of XY chart and Style object; standard approach without
-          advanced features
+        comment: pygal.XY with per-point {'value','label'} dicts, print_labels, series-level
+          show_dots/stroke overrides, Style tokens
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic XY positioning; could be replicated in other libraries; no
-          library-specific features
+        comment: 'pygal''s css= list with an inline: rule to restyle the point-label
+          overlay; interactive HTML tooltips per node'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-22T03:34:43Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
