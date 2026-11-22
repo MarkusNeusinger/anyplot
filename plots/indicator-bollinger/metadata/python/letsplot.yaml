@@ -12,34 +12,235 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/letsplot/plot-dark.html
-quality_score: 92
+quality_score: 73
 review:
   strengths:
-  - Perfect palette compliance with both light and dark renders
-  - Excellent text legibility with explicitly sized elements across all themes
-  - Clean, well-structured code with proper theme-adaptive styling
-  - Comprehensive Bollinger Bands visualization showing volatility envelope, price,
-    and SMA
-  - Realistic financial data with volatility clustering demonstrating band squeeze
-    and expansion
-  - Professional minimal styling with thoughtful visual hierarchy
+  - Close price drawn clearly thicker than the band edges, which sit at alpha 0.7
+    behind it
+  - Translucent shared-color fill keeps price and SMA visible in both themes
+  - Theme tokens threaded through all chrome; both renders readable
+  - Example data shows band expansion, a May squeeze and band piercings
   weaknesses:
-  - Design sophistication could be enhanced with additional visual refinement or custom
-    styling
-  - Could leverage more distinctive letsplot features beyond standard layer composition
+  - 'VQ-05 (both): the canvas is 4800x2700, not one of the canonical sizes → 3200x1800
+    (−1600 × −900). Likely cause: ggsize(1600, 900) with ggsave scale=3 instead of
+    ggsize(800, 450) with scale=4.'
+  - 'SC-04 (both): the title reads ''indicator-bollinger · letsplot · anyplot.ai''
+    without the language segment → ''indicator-bollinger · python · letsplot · anyplot.ai''.
+    Likely cause: the labs(title=...) string.'
+  - 'SC-04 (both): no legend is drawn, so the price, the SMA and the band lines cannot
+    be identified → a legend naming the close price, the 20-day SMA and the ±2σ bands.
+    Likely cause: aes(color="...") mappings overridden by fixed color= and fill= arguments
+    in every geom.'
+  - 'DE-02 (both): the panel is boxed on all four sides and a dense full-opacity INK
+    grid with minor lines runs on both axes, short of the L-frame and subtle-grid
+    baseline → no top/right frame and a y-only grid at about 15 % opacity. Likely
+    cause: panel_background element_rect default border and panel_grid_major/minor
+    color=INK.'
+  - 'CQ-03 (code): ''from lets_plot import *'' with ''# ruff: noqa: F403, F405'' imports
+    every name → explicit imports of the used functions. Likely cause: the star import
+    on line 17.'
+  - 'CQ-04 (code): lines 6–11 repeat the docstring header, and the aes(color=...,
+    fill=...) mappings on lines 61–70 are overridden by fixed colors and have no effect;
+    the comments call the palette ''Okabe-Ito'' → remove the second header and the
+    dead mappings, name the palette Imprint. Likely cause: leftovers from an earlier
+    version.'
+  - 'Suggestion: classic Bollinger Bands use the population standard deviation (ddof=0).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and readable
-      Chrome: Title "indicator-bollinger · letsplot · anyplot.ai" clearly visible in dark text; axis labels "Date" (x) and "Price (USD)" (y) with units; tick labels visible at appropriate sizes (24pt title, 20pt labels, 16pt ticks)
-      Data: Green line (Close Price, #009E73) is prominent and clearly distinguished; blue ribbon (Bollinger Bands, #0072B2) with 20% transparency shows the envelope; blue dashed line shows 20-SMA reference. Grid lines are subtle and don't interfere with readability
-      Legibility verdict: PASS - All text is clearly readable against the light background with excellent contrast
+      Background: warm off-white #FAF8F1 on a 4800x2700 canvas.
+      Chrome: title 'indicator-bollinger · letsplot · anyplot.ai' top-left in dark ink; 'Date' and 'Price (USD)' axis titles; weekly date ticks (Jan 22–Jun 17) and price ticks every 2 USD; all readable. Four-sided panel frame and a dense black major+minor grid on both axes. No legend.
+      Data: thick green #009E73 close price, thin blue #4467A3 band edges at alpha 0.7 with a translucent blue fill, dashed blue SMA. Bands widen in Feb–Mar and squeeze in May.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and readable
-      Chrome: Title and axis labels appear in light text; all text elements are clearly visible against the dark surface; grid lines are appropriately subtle; no dark-on-dark contrast failures
-      Data: Green and blue data colors are identical to light render; volatility envelope is equally clear in dark theme. The color palette maintains its identity across both renders while chrome (background, text, grid) properly flips
-      Legibility verdict: PASS - All text is clearly readable in dark theme with no dark-on-dark failures; proper theme adaptation throughout
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, readable; no dark-on-dark text; grid light grey.
+      Data: same green and blue as the light render; price and SMA visible through the fill.
+      Legibility verdict: PASS
   verdict: APPROVED
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 24, axis titles 20, ticks 16 at scale 3 set explicitly; readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Dense weekly date ticks but no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Price at 1.8 prominent, band edges 1.0 at alpha 0.7, all visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Green price vs blue bands plus dashed SMA: hue and stroke both separate
+          the series'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 0
+        max: 4
+        passed: false
+        comment: Canvas 4800x2700, not one of the two canonical sizes (defect line)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Price (USD)'' with unit, ''Date'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Price #009E73, bands Imprint #4467A3, identical across themes; #FAF8F1
+          / #1A1A17 backgrounds and token chrome'
+    design_excellence:
+      score: 7
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Style-guide baseline (tokens, Imprint, explicit sizes), nothing decided
+          beyond it
+      - id: DE-02
+        name: Visual Refinement
+        score: 1
+        max: 6
+        passed: false
+        comment: 'Below baseline: four-sided panel frame and a dense full-opacity
+          INK major+minor grid on both axes (defect line)'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Bollinger Bands chart with price, SMA and both bands on one axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Price thicker than the bands, translucent fill, dashed SMA; standard
+          parameters so no note required
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Every line at its computed rolling value; bands start after the 20-period
+          warm-up
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: Title lacks the 'python' segment and the chart has no legend to identify
+          price, SMA and bands (defect lines)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows expansion (Feb–Mar), squeeze (May), band touches and piercings
+          (Mar low, Apr high)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily stock closing prices in USD over 120 business days
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Checked: SMA = rolling(20).mean, bands = SMA ± 2·rolling std (lines
+          46–49); SMA midway between bands; prices 76–112 USD plausible'
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: Star import 'from lets_plot import *' with a noqa suppression (defect
+          line)
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Duplicated docstring header and aes(color=/fill=) mappings overridden
+          by fixed colors, with no effect (defect line)
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Layered geoms with correct grammar; default
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
 impl_tags:
   dependencies: []
   techniques:
