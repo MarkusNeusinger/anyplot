@@ -2,49 +2,49 @@ library: letsplot
 language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:20:31Z'
-updated: '2026-05-19T05:18:50Z'
+updated: '2026-11-22T16:13:55Z'
 generated_by: claude-sonnet
-workflow_run: 26077017260
+workflow_run: 45041916411
 issue: 3652
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/letsplot/plot-dark.html
-quality_score: 92
+quality_score: 83
 review:
   strengths:
-  - Perfect theme-adaptive chrome — all six token variables (PAGE_BG, ELEVATED_BG,
-    INK, INK_SOFT, RULE) threaded through every element; both renders pass readability
-    checks
-  - 'Strong spec compliance — all required features implemented: dual EMA overlay,
-    line weight hierarchy, crossover annotations, proper legend labeling'
-  - Excellent letsplot library mastery — layer_tooltips() with custom title/line format
-    is genuinely library-distinctive; HTML export is correctly included
-  - Realistic financial data with correct EMA calculation using pandas ewm(span=...,
-    adjust=False)
-  - Clean KISS code structure with reproducible seed
+  - Theme tokens threaded through every chrome element; both renders read cleanly
+    with identical Imprint data colors
+  - 'Clear line hierarchy: price at size 1.2 dominates, EMAs at 0.8 in distinct Imprint
+    hues, legend labels each EMA with its period'
+  - Crossovers found vectorised from the sign of the EMA gap and drawn as faint dashed
+    vlines in semantic green (bullish) and red (bearish), explained in the subtitle
+  - 'Idiomatic lets-plot: tidy melt, named-dict scale_color_manual, scale_x_datetime
+    on real dates, layer_tooltips() for the HTML hover view'
   weaknesses:
-  - 'DE-01 (5/8): Not yet publication-ready — could improve typography hierarchy (e.g.,
-    bolder title weight, subtitle in lighter muted tone), and add a focal annotation
-    at the most notable crossover event'
-  - 'DE-02 (4/6): Legend border could use a thinner/subtler rule; consider removing
-    the axis spine lines for a cleaner minimal look while keeping the axis labels'
-  - 'DE-03 (4/6): Storytelling is good but could be elevated — highlighting the longest
-    trend segment or annotating the most significant crossover with a text label would
-    create a stronger focal point'
+  - 'SC-02 (both): a red bearish dashed line on Jan 03 marks a crossover that never
+    happens: both EMAs start equal at the first close and the short one only moves
+    below → no marker where the gap merely leaves zero on the first bars (C5). Likely
+    cause: np.sign(gap) is 0 on row 0, so np.diff counts the 0→-1 step as a flip;
+    ignore zero-sign rows when looking for flips.'
+  - 'DE-02 (both): the panel is framed on all four sides → left and bottom axis lines
+    only (style-guide Spines: L-shaped by default). Likely cause: the panel border
+    from theme_minimal() is not set to element_blank() (panel_border=element_blank()).'
+  - 'Suggestion: the legend title ''Series'' tells the reader nothing; the legend
+    could drop it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "indicator-ema · python · letsplot · anyplot.ai" in dark ink (#1A1A17), subtitle in secondary ink (#4A4A44), axis labels and ticks in secondary ink — all readable
-      Data: Three lines — Close Price #009E73 (size 2.5), EMA 12 #D55E00 (size 1.5), EMA 26 #0072B2 (size 1.5). Vertical dashed crossover lines in green (bullish) and orange (bearish). Y-only subtle grid.
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'indicator-ema · python · letsplot · anyplot.ai' in dark ink, grey subtitle explaining green/red dashed crossover lines, 'Date' and 'Price (USD)' axis titles, Jan 01-Jun 01 and 96-114 ticks, subtle horizontal grid, four-sided panel frame, legend 'Series' on an elevated cream box at the right - all readable
+      Data: Close Price thick #009E73 line, EMA 12 thinner #C475FD, EMA 26 thinner #4467A3; seven faint dashed vlines (green bullish, red bearish), the first red one on Jan 03 next to the lines' common start
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and subtitle in light ink (#F0EFE8 / #B8B7B0), axis labels and ticks in secondary light ink — all readable, no dark-on-dark failures detected
-      Data: Identical colors to light render — Close Price #009E73, EMA 12 #D55E00, EMA 26 #0072B2. Crossover dashed lines same colors. Legend box uses elevated dark fill (#242420).
+      Background: warm near-black #1A1A17
+      Chrome: title, subtitle, axis titles and ticks in light ink, grid subtle, legend on #242420 box with light text - no dark-on-dark text
+      Data: same colors as the light render (green price, purple EMA 12, blue EMA 26); dashed crossover lines dimmer but visible
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -56,77 +56,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
-          legend_text=16, legend_title=18. Both renders fully readable.'
+        comment: Sizes set explicitly (title 16, subtitle 11, axis titles 12, ticks/legend
+          10); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Date ticks spaced every 20 periods, no overlap; legend on right does
-          not crowd data area.
+        comment: No text collisions; legend sits outside the panel
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line (size=2.5) dominant; EMA lines (size=1.5) distinctly thinner
-          and fully visible.
+        comment: Price line 1.2 vs EMA lines 0.8, all clearly visible in both themes;
+          legend line samples match the lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-3; CVD-safe; adequate luminance contrast on
-          both backgrounds.
+        comment: Imprint hues with distinct luminance; crossover direction is also
+          stated in the subtitle
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 canvas. Plot fills canvas well, balanced margins, legend
-          integrated.
+        comment: 3200x1800 canvas; title about 48% of width, balanced axis labels,
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Price (USD)' with units; X-axis 'Date' descriptive.
+        comment: '''Price (USD)'' with unit, ''Date'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, EMA 12 #D55E00, EMA 26 #0072B2 (canonical
-          Okabe-Ito). Light bg #FAF8F1, dark bg #1A1A17. Data colors identical across
-          themes.'
+        comment: 'Close Price #009E73, EMA 12 #C475FD, EMA 26 #4467A3 in canonical
+          order; semantic green/red for bullish/bearish; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Intentional line weight hierarchy, semantic crossover colors, alpha
-          transparency, informative subtitle. Above defaults but not FiveThirtyEight-level.
+        passed: false
+        comment: Style-guide baseline typography and tokens, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
-        passed: true
-        comment: Y-only grid with RULE token, panel backgrounds set, legend box styled,
-          theme_minimal() removes spines. Good refinement.
+        passed: false
+        comment: Closed four-sided panel frame breaks the style guide's L-shaped spine
+          rule (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Visual hierarchy guides the eye; dashed crossover vlines highlight
-          signal events; subtitle tells the viewer what to look for.
+        passed: false
+        comment: Semantic green-bullish / red-bearish coding of crossovers, explained
+          in the subtitle, is a reading aid beyond what the Notes prescribe
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -134,29 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct EMA overlay chart: price line + two EMA lines with crossover
-          annotations.'
+        comment: Price line with two EMA overlays on one price axis
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Price prominent, two EMA periods (12, 26), EMA lines thinner, distinct
-          colors, crossover highlights, legend with periods.
+        passed: false
+        comment: 'C1-C4 met; C5 missed once: a bearish marker on Jan 03 where no crossover
+          happens (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, Price (USD) on Y, all three series mapped correctly over
-          120 trading days.
+        comment: Real dates on x, all lines at their computed ewm values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'indicator-ema · python · letsplot · anyplot.ai' correct. Legend
-          'Series' with 'Close Price', 'EMA 12', 'EMA 26'.
+        comment: Title in mandated format; legend 'Close Price', 'EMA 12', 'EMA 26'
+          labels each EMA with its period
     data_quality:
       score: 15
       max: 15
@@ -166,22 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both EMAs shown, multiple bullish and bearish crossovers, realistic
-          trending then ranging price action.
+        comment: Trend up, sideways stretch and decline with bullish and bearish crossovers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price starting at $100 over 120 trading days (~6 months), proper
-          EMA formula via pandas ewm.
+        comment: Daily close of a stock over 120 business days with 12/26 EMAs, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Returns N(0.001, 0.015) give realistic ~1.5% daily vol; price range
-          ~87-108 (~20%) over 6 months is plausible.
+        comment: 'Checked: prices about 96-114 USD from 1.5% daily volatility; EMAs
+          via ewm(span, adjust=False); no Check values in the Notes'
     code_quality:
       score: 10
       max: 10
@@ -191,66 +184,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → tokens → data → EMA calc → crossover
-          detection → long-format prep → theme → plot → save.'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot (wildcard with noqa), ggsave alias —
-          all used.
+        comment: os, numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity. Crossover loop is necessary and
-          minimal.
+        comment: Crossover detection vectorised with np.sign/np.diff; no hand-rolled
+          algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct letsplot API
-          with scale=3.
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert ggplot grammar: layered geom_line() calls, scale_color_manual()
-          with named dict, theme_minimal() + custom theme override, ggsize(), ggsave()
-          with scale.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: layer_tooltips().title(...).line(...) for custom interactive tooltips
-          is letsplot-exclusive; HTML output alongside PNG leverages letsplot's interactive
-          HTML render.
+        passed: false
+        comment: Tidy melt + named-dict scale_color_manual + scale_x_datetime(format=...)
+          on a real datetime column
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: layer_tooltips() with title and formatted price line for the HTML
+          view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
+  rendered_at: '2026-11-22T16:09:54Z'
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
-  - html-export
   - layer-composition
+  - custom-legend
+  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - wide-to-long
   dataprep:
+  - rolling-window
   - time-series
   styling:
   - alpha-blending
+  - minimal-chrome
