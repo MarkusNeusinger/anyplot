@@ -1,7 +1,7 @@
 """ anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-19
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-22
 """
 
 import os
@@ -35,67 +35,73 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID_COLOR = "#C0BFBA" if THEME == "light" else "#484844"
+GRID_COLOR = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette — first series always #009E73
-COLORS = {"Close": "#009E73", "SMA 20": "#C475FD", "SMA 50": "#4467A3", "SMA 200": "#BD8233"}
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close"  # role: close
+SMA_SHORT = "SMA 20"  # role: sma_short
+SMA_MEDIUM = "SMA 50"  # role: sma_medium
+SMA_LONG = "SMA 200"  # role: sma_long
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_periods = 300
-dates = pd.date_range(start="2024-01-02", periods=n_periods, freq="B")
 returns = np.random.normal(0.0005, 0.015, n_periods)
-price_series = 100 * np.cumprod(1 + returns)
-
-sma_20 = pd.Series(price_series).rolling(window=20).mean()
-sma_50 = pd.Series(price_series).rolling(window=50).mean()
-sma_200 = pd.Series(price_series).rolling(window=200).mean()
-
-df = pd.DataFrame({"date": dates, "Close": price_series, "SMA 20": sma_20, "SMA 50": sma_50, "SMA 200": sma_200})
-
-df_long = df.melt(
-    id_vars=["date"], value_vars=["Close", "SMA 20", "SMA 50", "SMA 200"], var_name="series", value_name="price"
+prices = pd.Series(100 * np.cumprod(1 + returns))
+df = pd.DataFrame(
+    {
+        DATE: pd.date_range(start="2024-01-02", periods=n_periods, freq="B"),
+        CLOSE: prices,
+        SMA_SHORT: prices.rolling(window=20).mean(),
+        SMA_MEDIUM: prices.rolling(window=50).mean(),
+        SMA_LONG: prices.rolling(window=200).mean(),
+    }
 )
 
-# Separate data for line-weight hierarchy: Close thicker, SMAs thinner
-df_sma = df_long[df_long["series"] != "Close"]
-df_close = df_long[df_long["series"] == "Close"]
+# Plot: reads only df and the constants above
+series = [CLOSE, SMA_SHORT, SMA_MEDIUM, SMA_LONG]
+colors = {name: IMPRINT_PALETTE[i] for i, name in enumerate(series)}
+df_long = df.melt(id_vars=[DATE], value_vars=series, var_name="Series", value_name="Price (USD)")
 
-# Plot
+# Line-weight hierarchy: close thicker, SMAs thinner
+df_sma = df_long[df_long["Series"] != CLOSE]
+df_close = df_long[df_long["Series"] == CLOSE]
+
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major_y=element_line(color=GRID_COLOR, size=0.5),
     panel_grid_major_x=element_blank(),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_title=element_text(color=INK, size=12),
+    axis_text=element_text(color=INK_SOFT, size=10),
     axis_line=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24),
-    plot_subtitle=element_text(color=INK_SOFT, size=16),
+    plot_title=element_text(color=INK, size=16),
+    plot_subtitle=element_text(color=INK_SOFT, size=11),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=16),
-    legend_title=element_text(color=INK, size=18),
+    legend_text=element_text(color=INK_SOFT, size=10),
+    legend_title=element_text(color=INK, size=11),
 )
 
 plot = (
-    ggplot(df_long, aes(x="date", y="price", color="series"))
-    + geom_line(data=df_sma, size=1.3)
-    + geom_line(data=df_close, size=2.0)
-    + scale_color_manual(values=COLORS)
+    ggplot(df_long, aes(x=DATE, y="Price (USD)", color="Series"))
+    + geom_line(data=df_sma, size=1.0)
+    + geom_line(data=df_close, size=1.8)
+    + scale_color_manual(values=colors, breaks=series)
     + scale_x_datetime(format="%b '%y")
     + labs(
         title="indicator-sma · python · letsplot · anyplot.ai",
         subtitle="Close price (bold) vs. 20 / 50 / 200-day SMAs — watch for golden/death cross signals",
-        x="Date",
-        y="Price (USD)",
-        color="Series",
     )
     + theme_minimal()
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
