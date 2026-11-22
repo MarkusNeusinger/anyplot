@@ -2,41 +2,45 @@ library: altair
 language: python
 specification_id: bar-permutation-importance
 created: '2025-12-31T10:55:08Z'
-updated: '2026-05-17T12:30:56Z'
-generated_by: claude-haiku
-workflow_run: 25990778704
+updated: '2026-11-22T05:37:07Z'
+generated_by: claude-sonnet
+workflow_run: 44989786463
 issue: 2998
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 84
 review:
   strengths:
-  - Excellent theme adaptation with proper token usage in both renders
-  - Effective use of viridis colormap for continuous importance values
-  - Clean layer composition combining bars, error bars, and reference line
-  - Well-sized typography that remains readable at large canvas
-  - Error bars meaningfully convey uncertainty across permutation repeats
-  - Specification requirements fully met with professional polish
+  - 'Imprint sequential ramp (#009E73 to #4467A3) mapped to importance, so color and
+    bar length tell the same ranking in both themes'
+  - Native mark_errorbar with ticks=True draws capped error bars centered on each
+    bar end, in INK so they stay visible on every fill
+  - One EncodingSortField shared by bars and error bars keeps the highest importance
+    at the top without pre-sorting the data
+  - Full-height dashed zero rule separates the two negative importances clearly
+  - Tooltips and .interactive() zoom add inspection value in the HTML output
+  - 'Canvas contract met: view 620x320 at scale 4 padded to exactly 3200x1800'
   weaknesses:
-  - Design could be more distinctive with custom color palette or visual emphasis
-    technique
-  - Whitespace margins could be more generous for premium visual refinement
+  - 'Suggestion: emphasise the top two features (for example a heavier label weight)
+    so the clear gap to the rest reads at once.'
+  - 'Suggestion: give the error-bar caps the same INK color as the error line; the
+    caps currently render a softer grey.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "bar-permutation-importance · altair · anyplot.ai" is clearly visible in dark text (28px). Y-axis label "Feature" and X-axis label "Mean Decrease in Model Score" are readable in 22px dark ink. Tick labels are in 18px dark ink. All axes and labels are legible against light background.
-      Data: Horizontal bars colored with viridis colormap (yellow at top for highest importance "Location Score", transitioning through lime green, cyan, blue, purple for lower importance). Each bar has symmetric error bars in lighter color (INK_SOFT). Dashed reference line at x=0 visible. Grid lines subtle. All data elements clearly distinguishable.
-      Legibility verdict: PASS - all text readable, no contrast issues, all elements visible
+      Background: warm off-white #FAF8F1, 3200x1800, chart centred with balanced margins
+      Chrome: title 'bar-permutation-importance · python · altair · anyplot.ai' in dark ink; x-axis title 'Mean decrease in model score', y-axis title 'Feature'; tick labels -0.02..0.16 and 15 feature names in INK_SOFT, all readable; subtle vertical grid
+      Data: 15 horizontal bars sorted highest (Location Score) at top to Pool Presence at bottom; imprint_seq gradient from brand green #009E73 (weakest/negative) to blue #4467A3 (strongest); near-black capped error bars centred on each bar end; dashed near-black zero line full height; Basement Area and Pool Presence extend left of zero
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title is clearly visible in light text (28px). Y-axis and X-axis labels readable in light ink. Tick labels clearly visible. No dark-on-dark issues. Grid lines subtle but visible. Reference line clearly visible.
-      Data: Viridis colormap bars identical to light render - yellow, lime, cyan, blue, purple in exact same order. Error bars visible in light color. All data elements distinguished from dark background.
-      Legibility verdict: PASS - all text readable in light colors, no dark-on-dark failures, data colors identical to light render
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels in light grey; no dark-on-dark text; grid subtle but visible
+      Data: bar colors identical to the light render; error bars and zero line flip to light ink and stay visible on every bar fill; brand green weakest bars clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -47,73 +51,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are large and explicitly sized
-          for visibility in both themes
+        comment: Title 16, axis titles 13, ticks 11 at scale 4 meet the altair reference
+          sizes; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Feature names and values display without collision; all text is readable
+        comment: No text collisions; error bars sit inside their rows
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, error bars, and reference line all clearly visible and appropriately
-          styled
+        comment: Bars sized for 15 rows; ink error bars with caps visible on every
+          bar fill in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is colorblind-safe; bars distinguished by position
-          and value
+        comment: Green-to-blue ramp is CVD-safe and redundant with bar length
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 (4800×2700 at 3.0 scale) provides good proportions; nothing
-          cut off
+        comment: 3200x1800 canvas; plot fills most of it with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format; axes are descriptive with semantic meaning
+        comment: '''Mean decrease in model score'' and ''Feature'' are reader-facing'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses viridis (per spec); backgrounds are #FAF8F1
-          (light) and #1A1A17 (dark); both renders theme-correct'
+        comment: 'imprint_seq #009E73 to #4467A3 for the continuous importance; #FAF8F1
+          / #1A1A17 backgrounds'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Viridis mapping is appropriate and professional; theme tokens show
-          design intent, but no highly distinctive visual treatment
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Grid is subtle and well-integrated; whitespace adequate though could
-          be more generous; error bars and reference line add refinement
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy through sort order and color gradient; error
-          bars and reference line effectively communicate uncertainty and context
+        comment: Sort, gradient and zero line come from the Notes; no hierarchy chosen
+          beyond them
     spec_compliance:
       score: 15
       max: 15
@@ -123,28 +123,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart for permutation importance
+        comment: Horizontal permutation-importance bars with negative bars left of
+          zero
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bars sorted by importance; error bars present; color gradient mapped
-          to values; reference line at x=0
+        comment: 'C1-C5 all met: sorted highest at top, centered error bars, full-height
+          zero line, sequential gradient'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows features; X-axis shows importance mean; color encodes
-          importance; appropriate data ranges
+        comment: Bars at their means; axis covers all error bars
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; legend appropriately omitted for single continuous
-          encoding
+        comment: Title in the mandated format; color legend omitted as redundant with
+          bar length
     data_quality:
       score: 15
       max: 15
@@ -154,22 +154,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 features provide good coverage of importance spectrum (positive
-          and negative)
+        comment: 15 features, a long tail near zero and two negative importances
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price prediction model is plausible and neutral; importance
-          values realistic
+        comment: Housing price model features, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ranges appropriate for permutation importance context; 15 features
-          readable
+        comment: Importances 0.14 down to -0.008 with std 0.002-0.018 fit an R^2 decrease;
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -179,33 +177,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; straightforward implementation
+        comment: Flat script in the adaptable-code zones
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for determinism
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous code
+        comment: os, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; no simulated interactivity
+        comment: Appropriate complexity; mandated escape and pad blocks only
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html; no bare plot.png
+        comment: plot-{THEME}.png padded to target and plot-{THEME}.html; Altair 6
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -213,25 +212,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct alt.Chart, mark_bar, mark_errorbar patterns; proper encoding
-          syntax; configure methods used well
+        comment: Declarative EncodingSortField sort shared by both layers instead
+          of a pandas pre-sort; x/x2 errorbar encoding
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses layer composition and multiple mark types effectively; mark_errorbar
-          and mark_rule are distinctive but implementation is fairly standard
+        comment: Native mark_errorbar composite mark with ticks=True caps
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T05:33:44Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - hover-tooltips
   - layer-composition
+  - custom-colormap
+  - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
-  - custom-colormap
+  - gradient-fill
+  - minimal-chrome
   - grid-styling
