@@ -2,115 +2,141 @@ library: plotly
 language: python
 specification_id: network-transport-static
 created: '2026-01-09T23:48:59Z'
-updated: '2026-05-18T14:33:50Z'
-generated_by: claude-haiku
-workflow_run: 26039304382
+updated: '2026-11-22T13:28:33Z'
+generated_by: claude-sonnet
+workflow_run: 45026985505
 issue: 3463
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 81
 review:
   strengths:
-  - 'Perfect visual quality: all text readable in both themes, explicit font sizing'
-  - 'Excellent spec compliance: all required features implemented'
-  - Flawless theme-adaptive design with proper dark/light variants
-  - Clean, reproducible code structure (KISS principle)
-  - Realistic, plausible transport network data
+  - Every station sits at its provided coordinates and carries a bordered name label
+    placed on the side with the fewest edges, so no name sits on an edge
+  - Route labels run along their own edges with the route id in bold over the times,
+    boxed in the route color, so each label is plainly tied to its edge and clear
+    of the nodes
+  - Arrowheads stop just outside the destination node border and stay visible in both
+    themes
+  - Theme tokens threaded through text, label boxes, node fills and the legend; data
+    colors identical in both renders
+  - 'Native plotly interactivity: hovertext with full route details on every edge,
+    station names on hover, and legendgroup toggling all routes of a type in the HTML'
   weaknesses:
-  - Design sophistication is competent but not exceptional
-  - Library mastery limited to generic network patterns (could leverage plotly shapes
-    API)
-  - Minimal visual data storytelling or emphasis on key insights
+  - 'VQ-01 (both): route labels at 7.5 px and station labels at 9 px sit below the
+    style guide''s 10 px reference, and the route times read small beside the 18 px
+    title → route labels about 9 px (+1.5 px), station labels 10 px (+1 px). Likely
+    cause: font=dict(size=7.5) on the route annotations and size=9 on the station
+    annotations.'
+  - 'VQ-02 (both): the RE 12 (East Harbor → Downtown) label box and the EX 01 (Downtown
+    → Airport) label box touch at their corners right of Downtown → leave at least
+    3 px between them. Likely cause: LABEL_PX=12 places both labels on the same side
+    of two converging edges near the hub.'
+  - 'CQ-01 (code): a label_shift() helper function wraps the station-label side choice
+    → inline the loop at the station-label annotation. Likely cause: the side search
+    was written as a function.'
+  - 'CQ-04 (code): every entry of sides carries a constant 0.0 third element that
+    the min key adds (+ c[2]) to no effect → drop the third element and the addition.
+    Likely cause: a removed per-side penalty left behind.'
+  - 'Suggestion: emphasise the Downtown hub, for example with a slightly larger node,
+    to give the map a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, station labels, route labels all readable with dark text; elevated background boxes provide clear contrast
-      Data: Express routes #009E73 (green), Regional #D55E00 (orange), Local #0072B2 (blue); all clearly visible with proper arrows and edge labels
-      Legibility verdict: PASS - all text readable, no overlaps, proper contrast
+      Background: Warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: Title "network-transport-static · python · plotly · anyplot.ai" centered in dark ink at ~51% width; framed legend top-left titled "Route type" (Express, Regional, Local); station names in bold dark text in bordered light boxes beside each node; all readable.
+      Data: 11 hollow circular nodes with dark outlines at schematic coordinates; 19 straight directed edges with arrowheads at the destination border — Express #009E73 (first series), Regional #C475FD, Local #4467A3. Each edge carries a rotated label (bold route id, then departure→arrival) boxed in the route color. RE 12 and EX 01 label boxes near Downtown touch at their corners.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: All text light-colored and fully readable; elevated boxes in dark-theme variant (#242420); no dark-on-dark failures
-      Data: Data colors identical to light render (green, orange, blue); theme independence confirmed
-      Legibility verdict: PASS - all text readable, proper theme adaptation, no contrast failures
+      Background: Warm near-black #1A1A17.
+      Chrome: Title, legend text, station names and route label text all flip to light ink on #242420 boxes; no dark-on-dark text anywhere; node outlines light.
+      Data: Edge and arrow colors identical to the light render (#009E73, #C475FD, #4467A3); brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 14px, node IDs
-          16px); all readable in both themes
+        comment: All text readable in both themes with INK text on ELEVATED_BG boxes;
+          route labels at 7.5 px and station labels at 9 px sit below the 10 px reference
+          and the route labels read small (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions; station labels, route annotations perfectly positioned
+        comment: Station labels clear of edges; the RE 12 (East Harbor → Downtown)
+          and EX 01 (Downtown → Airport) label boxes touch at their corners (defect
+          line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes (size 40), arrows (width 2.5), lines (width 3) ideally sized
-          for network density
+        comment: 11 nodes at 16 px with ink outline, 1.6 px edges and arrowheads clearly
+          visible in both themes; legend line samples match the edges
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette inherently colorblind-safe; adequate contrast across
-          both themes
+        comment: Green / lavender / blue are CVD-distinguishable; route id text also
+          carries the type (EX/RE/LO)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of 4800×2700px canvas; balanced margins
+        comment: 3200x1800, network fills the canvas width with balanced margins;
+          title ~51% of width; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; network appropriately omits axis labels
+        comment: N/A for axes (schematic network, axes hidden); title correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Express #009E73, Regional #D55E00, Local #0072B2; backgrounds #FAF8F1/#1A1A17;
-          theme-correct chrome'
+        comment: 'Imprint canonical order: Express #009E73, Regional #C475FD, Local
+          #4467A3; backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Strong design with intentional hierarchy and color-coding; not publication-ready
+        passed: true
+        comment: Route label boxes are bordered in their route's color with ink text,
+          tying each label to its edge while keeping text neutral; bold route id over
+          lighter times gives a clear two-level hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinement: elevated label boxes, subtle borders; could be
-          more polished'
+        passed: true
+        comment: Route labels rotated along their edges and offset to one side; each
+          station name placed on the side the fewest edges leave toward, keeping names
+          off the edges
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Displays network clearly; minimal emphasis on insights or patterns
+        comment: Network displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -120,26 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct directed network diagram
+        comment: Directed transport network with labeled stations and labeled route
+          edges
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: labeled nodes, directed arrows, edge labels
-          with times/IDs, offset edges'
+        comment: C1 stations at given x/y; C2 every station labeled beside its node;
+          C3 arrowheads at destination borders; C4 id + times along each edge, clear
+          of nodes; C5 offset logic present (data has no shared pairs), route types
+          in a titled legend; hover tooltips on edges and nodes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 11 stations and 19 routes correctly positioned; no mapping errors
+        comment: Nodes at their provided coordinates; no layout algorithm
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title 'network-transport-static · python · plotly · anyplot.ai';
+          legend titled 'Route type' with Express/Regional/Local
     data_quality:
       score: 15
       max: 15
@@ -149,82 +179,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple route types, varying times, offset edge
-          handling'
+        comment: Three route types, hub (Downtown) convergence, varied edge lengths;
+          the shared-pair condition is not met by the data, so no deduction
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible regional train network with realistic station names and
-          times
+        comment: Plausible fictional regional rail network with neutral station names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 11 stations, 19 routes, 15-25min journeys all plausible; no factual
-          errors
+        comment: 11 stations / 19 routes inside the 8-20 / 15-60 range; 12-25 min
+          journeys, morning departures; arrivals after departures checked
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Clean linear structure; no unnecessary functions
+        comment: A label_shift() helper function (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, numpy, plotly); all used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity; elegant edge offset and rotation
-          logic
+        comment: A constant 0.0 third element on every side tuple, added in the min
+          key (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format (plot-{THEME}.png/html)
+        comment: plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: false
-        comment: Correct use of go.Figure(), go.Scatter(), annotations; high-level
-          API
+        passed: true
+        comment: go.Figure with Scatter traces and add_annotation arrows; standard
+          usage
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Generic network patterns; could leverage plotly shapes API more creatively
+        passed: true
+        comment: legendgroup lets one legend click toggle every route of a type in
+          the HTML, plus hovertext on edges and stations
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
+  rendered_at: '2026-11-22T13:24:32Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - hover-tooltips
+  - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
+  - minimal-chrome
