@@ -1,7 +1,7 @@
 """ anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-18
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-22
 """
 
 import os
@@ -22,6 +22,7 @@ from plotnine import (
     labs,
     position_jitter,
     scale_color_manual,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -34,94 +35,80 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# imprint semantic anchors
-FAIL_COLOR = "#AE3030"  # imprint red - fail
-PASS_COLOR = "#009E73"  # imprint green - pass
-CURVE_COLOR = "#4467A3"  # imprint blue - regression curve
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Exam score vs Pass/Fail outcome
-np.random.seed(42)
-n_samples = 150
+# Constants
+THRESHOLD = 0.5  # default decision threshold of a logistic classifier
+CI_ALPHA = 0.05  # 95% confidence band
 
-# Generate exam scores with different distributions for pass/fail
-scores_fail = np.random.normal(45, 12, 60)  # Lower scores tend to fail
-scores_pass = np.random.normal(70, 10, 90)  # Higher scores tend to pass
-scores = np.concatenate([scores_fail, scores_pass])
-outcomes = np.concatenate([np.zeros(60), np.ones(90)])
+# Columns: set these to your table's column names
+HOURS = "Monthly usage (hours)"  # role: x
+RENEWED = "Renewed (0/1)"  # role: y
+PROBABILITY = "Predicted probability"  # role: probability
+CI_LOWER = "Lower 95% bound"  # role: ci_lower
+CI_UPPER = "Upper 95% bound"  # role: ci_upper
 
-# Add some noise to outcomes for realism
-flip_indices = np.random.choice(n_samples, size=15, replace=False)
-outcomes[flip_indices] = 1 - outcomes[flip_indices]
+# Data: replace this block with your own table, for example df = pd.read_csv("subscriptions.csv")
+rng = np.random.default_rng(42)
+np.random.seed(42)  # plotnine jitter draws from the global generator
+usage = np.clip(rng.gamma(shape=4.0, scale=3.2, size=180), 0.5, None)
+p_renew = 1 / (1 + np.exp(-0.2 * (usage - 11)))
+df = pd.DataFrame({HOURS: usage.round(1), RENEWED: rng.binomial(1, p_renew)})
 
-# Clip scores to reasonable range
-scores = np.clip(scores, 20, 100)
+# Plot: reads only df and the constants above
+observed = df.dropna(subset=[HOURS, RENEWED])
+observed = observed.assign(_hit=(observed[RENEWED] > observed[RENEWED].min()).astype(int))
+model = sm.Logit(observed["_hit"], sm.add_constant(observed[HOURS])).fit(disp=0)
 
-# Fit logistic regression using statsmodels
-X = sm.add_constant(scores)
-model = sm.Logit(outcomes, X).fit(disp=0)
-
-# Create smooth curve for predictions with confidence intervals
-x_curve = np.linspace(20, 100, 200)
-X_curve = sm.add_constant(x_curve)
-predictions = model.get_prediction(X_curve)
-y_pred = predictions.predicted
-conf_int = predictions.conf_int(alpha=0.05)
-y_lower = conf_int[:, 0]
-y_upper = conf_int[:, 1]
-
-# Create dataframes
-df_points = pd.DataFrame(
-    {"score": scores, "outcome": outcomes, "class": ["Fail" if o == 0 else "Pass" for o in outcomes]}
+x_curve = np.linspace(df[HOURS].min(), df[HOURS].max(), 200)
+prediction = model.get_prediction(sm.add_constant(x_curve, has_constant="add"))
+interval = np.clip(prediction.conf_int(alpha=CI_ALPHA), 0, 1)
+curve = pd.DataFrame(
+    {HOURS: x_curve, PROBABILITY: prediction.predicted, CI_LOWER: interval[:, 0], CI_UPPER: interval[:, 1]}
 )
 
-df_curve = pd.DataFrame({"score": x_curve, "probability": y_pred, "lower": y_lower, "upper": y_upper})
+# Class labels in descending outcome order, so the first class gets palette position 1
+OUTCOME = "Outcome"
+labels = {1: "Renewed", 0: "Not renewed"}
+points = observed.copy()
+points[OUTCOME] = points["_hit"].map(labels)
+classes = [labels[v] for v in sorted(points["_hit"].unique(), reverse=True)]
+curve_color = IMPRINT_PALETTE[len(classes)]
 
-# Theme
 anyplot_theme = theme(
-    figure_size=(16, 9),
+    figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.08),
-    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.04),
-    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
-    axis_title=element_text(size=20, color=INK),
-    axis_text=element_text(size=16, color=INK_SOFT),
-    axis_line=element_line(color=INK_SOFT, size=0.5),
-    plot_title=element_text(size=24, color=INK),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(size=16, color=INK_SOFT),
-    legend_title=element_text(size=18, color=INK),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    axis_title=element_text(size=10, color=INK),
+    axis_text=element_text(size=8, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT),
+    plot_title=element_text(size=12, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+    legend_key=element_rect(fill=ELEVATED_BG, color="none"),
+    legend_text=element_text(size=8, color=INK_SOFT),
+    legend_title=element_text(size=9, color=INK),
 )
 
-# Create plot
 plot = (
     ggplot()
-    # Confidence interval ribbon
-    + geom_ribbon(data=df_curve, mapping=aes(x="score", ymin="lower", ymax="upper"), alpha=0.25, fill=CURVE_COLOR)
-    # Fitted logistic curve
-    + geom_line(data=df_curve, mapping=aes(x="score", y="probability"), color=CURVE_COLOR, size=2)
-    # Decision threshold line at p=0.5
-    + geom_hline(yintercept=0.5, linetype="dashed", color=INK_SOFT, size=1, alpha=0.6)
-    # Data points with jitter
+    + geom_ribbon(data=curve, mapping=aes(x=HOURS, ymin=CI_LOWER, ymax=CI_UPPER), alpha=0.25, fill=curve_color)
+    + geom_line(data=curve, mapping=aes(x=HOURS, y=PROBABILITY), color=curve_color, size=1.2)
+    + geom_hline(yintercept=THRESHOLD, linetype="dashed", color=INK_SOFT, size=0.6, alpha=0.7)
     + geom_point(
-        data=df_points,
-        mapping=aes(x="score", y="outcome", color="class"),
-        size=4,
+        data=points,
+        mapping=aes(x=HOURS, y="_hit", color=OUTCOME),
+        size=2.5,
         alpha=0.6,
         position=position_jitter(width=0, height=0.03),
     )
-    # Colors
-    + scale_color_manual(values={"Fail": FAIL_COLOR, "Pass": PASS_COLOR})
-    # Labels
-    + labs(
-        title="logistic-regression · python · plotnine · anyplot.ai",
-        x="Exam Score (points)",
-        y="Probability of Passing",
-        color="Outcome",
-    )
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=classes)
+    + scale_y_continuous(limits=(-0.08, 1.08), breaks=[0, 0.25, 0.5, 0.75, 1])
+    + labs(title="logistic-regression · python · plotnine · anyplot.ai", y="Probability of renewal")
     + theme_minimal()
     + anyplot_theme
 )
 
-# Save
-plot.save(f"plot-{THEME}.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
