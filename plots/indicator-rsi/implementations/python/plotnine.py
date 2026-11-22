@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-16
@@ -10,13 +10,13 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
     element_blank,
     element_line,
     element_rect,
     element_text,
     geom_hline,
     geom_line,
+    geom_rect,
     ggplot,
     labs,
     scale_x_datetime,
@@ -29,74 +29,82 @@ from plotnine import (
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
 
-# Data - Generate RSI values for 120 trading days
-np.random.seed(42)
-n_days = 120
-period = 14
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Generate synthetic price changes to calculate RSI
-price_changes = np.random.normal(0, 1.5, n_days + period)
+# Constants
+PERIOD = 14  # standard RSI lookback
+OVERBOUGHT = 70
+OVERSOLD = 30
+CENTERLINE = 50
 
-# Calculate RSI using 14-period lookback
-rsi_values = []
-for i in range(period, len(price_changes)):
-    window = price_changes[i - period : i]
-    gains = np.maximum(window, 0)
-    losses = np.abs(np.minimum(window, 0))
-    avg_gain = np.mean(gains)
-    avg_loss = np.mean(losses)
-    if avg_loss == 0:
-        rsi = 100
-    else:
-        rs = avg_gain / avg_loss
-        rsi = 100 - (100 / (1 + rs))
-    rsi_values.append(rsi)
-rsi_values = np.array(rsi_values)
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+RSI = "RSI (14-day)"  # role: rsi
 
-# Create date range (business days)
-dates = pd.date_range(start="2024-01-01", periods=n_days, freq="B")
-
-df = pd.DataFrame({"date": dates, "rsi": rsi_values})
+# Data: replace this block with your own table, for example df = pd.read_csv("rsi.csv")
+# Synthetic daily ETH/USD closes (a 24/7 market) with alternating trend and
+# chop regimes, turned into Wilder's RSI.
+rng = np.random.default_rng(2718)
+n_days = 150
+regime_drift = np.repeat([0.004, -0.001, -0.005, 0.0, 0.006, -0.002], 30 + PERIOD // 6)[: n_days + PERIOD]
+daily_returns = regime_drift + rng.normal(0, 0.026, n_days + PERIOD)
+close = pd.Series(3200 * np.exp(np.cumsum(daily_returns)))
+change = close.diff()
+avg_gain = change.clip(lower=0).ewm(alpha=1 / PERIOD, min_periods=PERIOD, adjust=False).mean()
+avg_loss = (-change.clip(upper=0)).ewm(alpha=1 / PERIOD, min_periods=PERIOD, adjust=False).mean()
+rsi = 100 - 100 / (1 + avg_gain / avg_loss)
+dates = pd.date_range("2024-09-02", periods=len(close), freq="D")
+df = pd.DataFrame({DATE: dates, RSI: rsi}).dropna().reset_index(drop=True)
 
 # Plot
+x_min, x_max = df[DATE].min(), df[DATE].max()
+overbought = pd.DataFrame({"xmin": [x_min], "xmax": [x_max], "ymin": [OVERBOUGHT], "ymax": [100]})
+oversold = pd.DataFrame({"xmin": [x_min], "xmax": [x_max], "ymin": [0], "ymax": [OVERSOLD]})
+zone_colors = {"overbought": IMPRINT_PALETTE[4], "oversold": IMPRINT_PALETTE[2]}
+
 plot = (
-    ggplot(df, aes(x="date", y="rsi"))
-    # Overbought zone (70-100) - light red shading
-    + annotate("rect", xmin=dates.min(), xmax=dates.max(), ymin=70, ymax=100, fill="#FF6B6B", alpha=0.2)
-    # Oversold zone (0-30) - light green shading
-    + annotate("rect", xmin=dates.min(), xmax=dates.max(), ymin=0, ymax=30, fill="#4ECDC4", alpha=0.2)
-    # Threshold lines
-    + geom_hline(yintercept=70, color="#D62828", size=1, linetype="dashed", alpha=0.8)
-    + geom_hline(yintercept=30, color="#2A9D8F", size=1, linetype="dashed", alpha=0.8)
-    + geom_hline(yintercept=50, color=INK_SOFT, size=0.8, linetype="dotted", alpha=0.6)
-    # RSI line in brand color
-    + geom_line(color=BRAND, size=1.5, alpha=0.9)
-    # Axis settings
-    + scale_y_continuous(limits=(0, 100), breaks=range(0, 101, 10))
-    + scale_x_datetime(date_breaks="1 month", date_labels="%b %Y")
-    # Labels
-    + labs(title="indicator-rsi · plotnine · anyplot.ai", x="Date", y="RSI (14-period)")
-    # Base theme
+    ggplot(df, aes(x=DATE, y=RSI))
+    # Overbought and oversold zones, lightly shaded
+    + geom_rect(
+        overbought,
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+        fill=zone_colors["overbought"],
+        alpha=0.16,
+        inherit_aes=False,
+    )
+    + geom_rect(
+        oversold,
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+        fill=zone_colors["oversold"],
+        alpha=0.16,
+        inherit_aes=False,
+    )
+    # Threshold lines and centerline
+    + geom_hline(yintercept=OVERBOUGHT, color=zone_colors["overbought"], size=0.7, linetype="dashed")
+    + geom_hline(yintercept=OVERSOLD, color=zone_colors["oversold"], size=0.7, linetype="dashed")
+    + geom_hline(yintercept=CENTERLINE, color=INK_SOFT, size=0.5, linetype="dotted", alpha=0.7)
+    # RSI line in the first Imprint color
+    + geom_line(color=IMPRINT_PALETTE[0], size=1.0)
+    + scale_y_continuous(limits=(0, 100), breaks=range(0, 101, 10), expand=(0, 0))
+    + scale_x_datetime(date_breaks="1 month", date_labels="%b %Y", expand=(0, 0))
+    + labs(title="ETH/USD · indicator-rsi · python · plotnine · anyplot.ai")
     + theme_minimal()
-    # Theme-adaptive styling
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.08),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.1),
         panel_grid_minor=element_blank(),
         panel_border=element_blank(),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(size=24, weight="bold", color=INK),
+        plot_title=element_text(size=12, weight="bold", color=INK),
     )
 )
 
-# Save
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
