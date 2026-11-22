@@ -2,47 +2,53 @@ library: plotly
 language: python
 specification_id: contour-3d
 created: '2026-01-07T20:19:46Z'
-updated: '2026-05-16T12:44:54Z'
-generated_by: claude-haiku
-workflow_run: 25962076692
+updated: '2026-11-22T01:17:22Z'
+generated_by: claude-sonnet
+workflow_run: 44969757431
 issue: 3230
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 83
 review:
   strengths:
-  - Excellent text legibility with explicit font sizing across all themes
-  - Elegant 3D surface visualization with contour projection that directly addresses
-    the spec
-  - 'Perfect theme-aware chrome handling: backgrounds, text colors, and grid all properly
-    adapted'
-  - Thoughtful colorbar design with appropriate styling and sizing
-  - Clean, maintainable code following KISS principles with proper deterministic data
-    generation
-  - Leverages plotly's distinctive 3D and interactive features effectively
-  - All visual elements perfectly readable in both light and dark themes
+  - Level curves at 12 regular intervals from native contours.z (start/end/size) drawn
+    in the INK token, black on the light surface and light on the dark one, with project.z
+    repeating them on the base plane
+  - 'Imprint sequential ramp #009E73 -> #4467A3 tied to height, with a colorbar naming
+    ''Water surface height (mm)'' over the full range'
+  - Theme tokens threaded through title, scene axes, grid and colorbar; both renders
+    are theme-correct
+  - Plausible water-ripple scenario with units on every axis, read from a tidy table
+    via pivot_table
+  - Rotatable HTML scene with a concise hovertemplate
   weaknesses:
-  - Design excellence could be elevated with more sophisticated color harmony or intentional
-    visual hierarchy
+  - 'VQ-05 (both): the 3D scene fills only about the central 45 % of the width and
+    55 % of the height, leaving an empty band of about a quarter of the canvas above
+    the cube and a wide gap between the scene and the colorbar → let the scene fill
+    most of the plot area (about +25 % in each direction). Likely cause: default scene
+    domain with camera eye (1.4, -1.4, 0.9) and aspectratio z=0.55 keeping the cube
+    small.'
+  - 'Suggestion: a slightly lower camera would show the depth of the first ripple
+    trough more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and readable
-      Chrome: Title "contour-3d · plotly · anyplot.ai" (28px dark text), axis labels "X Coordinate", "Y Coordinate", "Height (z)" (22px), tick labels (18px) - all clearly readable
-      Data: 3D surface with contour lines and base projection, viridis colormap (purple to yellow), shows two peaks and a valley with smooth gradients, colorbar titled "Height (z)"
-      Legibility verdict: PASS - All text perfectly readable, surface geometry clearly visible
+      Background: warm off-white #FAF8F1, scene backgrounds the same
+      Chrome: title 'contour-3d · python · plotly · anyplot.ai' centred in dark ink; axis titles 'Position x (cm)', 'Position y (cm)', 'Water surface height (mm)'; ticks in INK_SOFT; subtle grid; colorbar on an elevated panel with ticks 0-4. All readable
+      Data: sinc-shaped water ripple with a sharp central peak and concentric troughs/crests, coloured from #009E73 (low) to #4467A3 (high); 12 thin black level curves ring the peak and ripples, projected rings faintly visible on the base edges. Scene sits small in the centre with empty space above and to the right
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and readable
-      Chrome: Title and labels rendered in light text with perfect contrast against dark background, subtle gray grid lines visible but not intrusive
-      Data: Identical viridis colors to light render, surface structure equally clear, contour projection visible
-      Legibility verdict: PASS - No dark-on-dark failures, all text highly readable, no contrast issues
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink; grid subtle grey; colorbar panel #242420 with light ticks. No dark-on-dark text
+      Data: identical green-to-blue surface colours; level curves flip to light ink and stay visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,68 +56,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly set: Title 28px, labels 22px, ticks 18px, all
-          perfectly readable'
+        comment: Title 16, axis/colorbar titles 12, ticks 10 (library-prompt sizes);
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements clearly separated
+        comment: No text collisions; axis titles clear of ticks and the scene
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3D surface, contours, colorbar optimally sized and visible
+        comment: Surface and INK contour lines (width 2) visible in both themes; colorbar
+          clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap perceptually uniform and colorblind-safe
+        comment: Green-to-blue sequential ramp, no red-green signal, good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Well-balanced margins with appropriate asymmetry for colorbar
+        passed: false
+        comment: 3200x1800 canvas correct, but the 3D scene fills only the centre
+          with a wide empty band above and a gap to the colorbar (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context
+        comment: 'Position x (cm), Position y (cm), Water surface height (mm): descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct, backgrounds #FAF8F1/#1A1A17, theme chrome properly
-          adapted'
+        comment: 'imprint_seq #009E73 -> #4467A3; backgrounds #FAF8F1 / #1A1A17; chrome
+          theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful colorbar design and elegant contour projection, follows
-          standard patterns
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint ramp, explicit sizes;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Excellent refinement with subtle grid and generous whitespace
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Data displays features but lacks explicit visual emphasis
+        comment: Subtle grid and backgrounds per the style guide; nothing chosen beyond
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: The central peak is the natural focal point of the data; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D contour plot with all subtypes
+        comment: 'Correct 3D contour plot: surface with lifted level curves'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: surface, contour lines, projection, colorbar'
+        comment: 'Notes: sequential colormap, regular contour lines (12 levels), base-plane
+          projection, rotation in HTML, colorbar - all present; C1-C5 met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped
+        comment: x/y/z mapped from the pivoted table; full grid shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar labeled
+        comment: Title 'contour-3d · python · plotly · anyplot.ai' correct; colorbar
+          titled with quantity and unit
     data_quality:
       score: 15
       max: 15
@@ -149,19 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows peaks, valleys, saddle points
+        comment: Shows a sharp summit, concentric troughs and crests, and level rings
+          at every height
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic mathematical/scientific scenario
+        comment: Ripples from a drop in a water tank - plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges and proportions
+        comment: 'Heights -0.8 to 4 mm over a 12 cm tank patch; checked: z range and
+          12 equal levels computed from z_min/z_max (lines 51-53). No check values
+          in the spec'
     code_quality:
       score: 10
       max: 10
@@ -171,57 +186,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Flat Imports -> constants -> Data -> Plot -> Save; adaptability static
+          check passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data generation
+        comment: Deterministic analytic surface
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, sys, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant, Pythonic, no fake functionality
+        comment: pivot_table reshapes the tidy table; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: write_image 800x450 scale 4 to plot-{THEME}.png plus HTML; autosize=False
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Proper go.Surface, scene config, camera control
+        passed: false
+        comment: go.Surface with native contours.z (start/end/size, project.z) instead
+          of extra traces; lighting dict
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Leverages 3D surfaces, contour projections, interactive rotation,
-          custom colorbar
+        passed: false
+        comment: Native surface contour projection onto the base plane and rotatable
+          HTML scene with hovertemplate
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T01:13:45Z'
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - colorbar
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - long-to-wide
   dataprep: []
   styling:
   - custom-colormap
+  - grid-styling
