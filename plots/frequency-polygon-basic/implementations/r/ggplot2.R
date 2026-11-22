@@ -1,76 +1,80 @@
 #' anyplot.ai
 #' frequency-polygon-basic: Frequency Polygon for Distribution Comparison
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 86/100 | Created: 2026-05-17
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 82/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(ragg)
 
-set.seed(42)
-
-# --- Theme tokens -----------------------------------------------------------
+# Theme tokens
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
-                 "#AE3030", "#2ABCCD", "#954477")
+GRID        <- if (THEME == "light") "#D0CECA" else "#3D3D39"
 
-# --- Data -------------------------------------------------------------------
-df <- data.frame(
-  score = c(
-    rnorm(200, mean = 72, sd = 8),   # Group A
-    rnorm(200, mean = 78, sd = 10),  # Group B
-    rnorm(200, mean = 75, sd = 7)    # Group C
+# Imprint palette
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                     "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Columns: set these to your table's column names
+SCORE <- "Test score"  # role: value
+GROUP <- "Cohort"      # role: group
+
+# Data: replace this block with your own table, for example df <- read.csv("scores.csv", check.names = FALSE)
+set.seed(42)
+df <- tibble::tibble(
+  !!SCORE := c(
+    rnorm(200, mean = 72, sd = 8),
+    rnorm(200, mean = 78, sd = 10),
+    rnorm(200, mean = 75, sd = 7)
   ),
-  group = rep(c("Cohort A", "Cohort B", "Cohort C"), each = 200)
+  !!GROUP := rep(c("Cohort A", "Cohort B", "Cohort C"), each = 200)
 )
 
-# --- Calculate group means for reference lines ---
-group_means <- aggregate(score ~ group, data = df, FUN = mean)
+# Plot: reads only df and the constants above
+df[[GROUP]] <- factor(df[[GROUP]], levels = unique(df[[GROUP]]))
+BIN_WIDTH <- 3
+BIN_START <- floor(min(df[[SCORE]]) / BIN_WIDTH) * BIN_WIDTH
 
-# --- Plot -------------------------------------------------------------------
-p <- ggplot(df, aes(x = score, color = group, fill = group)) +
-  geom_freqpoly(binwidth = 3, linewidth = 1.2, alpha = 0.3) +
-  geom_vline(
-    data = group_means,
-    aes(xintercept = score, color = group),
-    linetype = "dashed",
-    linewidth = 0.8,
-    alpha = 0.6,
-    show.legend = FALSE
-  ) +
-  scale_color_manual(values = IMPRINT[1:3]) +
-  scale_fill_manual(values = IMPRINT[1:3]) +
+p <- ggplot(df, aes(x = .data[[SCORE]], color = .data[[GROUP]], fill = .data[[GROUP]])) +
+  geom_area(stat = "bin", binwidth = BIN_WIDTH, boundary = BIN_START, pad = TRUE,
+            position = "identity", alpha = 0.18, color = NA) +
+  geom_freqpoly(binwidth = BIN_WIDTH, boundary = BIN_START, pad = TRUE, linewidth = 1.0) +
+  geom_point(stat = "bin", binwidth = BIN_WIDTH, boundary = BIN_START, pad = TRUE, size = 1.8) +
+  scale_color_manual(values = IMPRINT_PALETTE) +
+  scale_fill_manual(values = IMPRINT_PALETTE) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.06))) +
   labs(
-    title = "frequency-polygon-basic · ggplot2 · anyplot.ai",
-    x = "Test Score",
+    title = "frequency-polygon-basic · r · ggplot2 · anyplot.ai",
+    x = SCORE,
     y = "Frequency",
-    color = "Group",
-    fill = "Group"
+    color = GROUP,
+    fill = GROUP
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.border      = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.5),
-    panel.grid.major  = element_line(color = if (THEME == "light") "#D0CECA" else "#3D3D39", linewidth = 0.2),
+    panel.grid.major  = element_line(color = GRID, linewidth = 0.25),
     panel.grid.minor  = element_blank(),
-    axis.title        = element_text(color = INK, size = 20),
-    axis.text         = element_text(color = INK_SOFT, size = 16),
-    plot.title        = element_text(color = INK, size = 24),
+    axis.line         = element_line(color = INK_SOFT, linewidth = 0.4),
+    axis.title        = element_text(color = INK, size = 10),
+    axis.text         = element_text(color = INK_SOFT, size = 8),
+    plot.title        = element_text(color = INK, size = 12),
     legend.background = element_rect(fill = PAGE_BG, color = NA),
-    legend.text       = element_text(color = INK_SOFT, size = 16),
-    legend.title      = element_text(color = INK, size = 18)
+    legend.key        = element_rect(fill = PAGE_BG, color = NA),
+    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.title      = element_text(color = INK, size = 10)
   )
 
-# --- Save -------------------------------------------------------------------
+# Save
 ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
