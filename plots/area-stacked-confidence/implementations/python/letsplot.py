@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked-confidence: Stacked Area Chart with Confidence Bands
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-18
@@ -19,113 +19,97 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette (first series always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions, one per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Quarterly energy consumption forecast by source with uncertainty
+# Constants
+Y_LABEL = "Energy Consumption (TWh)"  # axis title shared by all series
+
+# Columns: set these to your table's column names
+QUARTER = "Quarter"  # role: x
+# Series are stacked in VALUE order, the first at the bottom
+VALUE = ["Solar", "Wind", "Hydro"]  # role: y
+LOWER = ["Solar lower", "Wind lower", "Hydro lower"]  # role: y_lower
+UPPER = ["Solar upper", "Wind upper", "Hydro upper"]  # role: y_upper
+
+# Data: replace this block with your own table, for example df = pd.read_csv("energy.csv")
+# One row per quarter: each series' own (unstacked) value and its own 90% interval bounds.
 np.random.seed(42)
-quarters = pd.date_range("2023-Q1", periods=24, freq="QE")
-n = len(quarters)
+n_quarters = 24
+growth = np.linspace(1, 2.5, n_quarters)  # forecast uncertainty widens over time
+solar = np.linspace(50, 120, n_quarters) + np.random.normal(0, 5, n_quarters)
+wind = np.linspace(80, 150, n_quarters) + np.random.normal(0, 8, n_quarters)
+hydro = np.linspace(100, 110, n_quarters) + np.random.normal(0, 3, n_quarters)
+columns = {QUARTER: [f"{2023 + i // 4}-Q{i % 4 + 1}" for i in range(n_quarters)]}
+for col, lo, hi, base, spread in zip(VALUE, LOWER, UPPER, (solar, wind, hydro), (8, 12, 5), strict=True):
+    columns |= {col: base, lo: base - spread * growth, hi: base + spread * growth}
+df = pd.DataFrame(columns)
 
-# Base trends for 3 energy sources (TWh)
-solar_base = np.linspace(50, 120, n) + np.random.normal(0, 5, n)
-wind_base = np.linspace(80, 150, n) + np.random.normal(0, 8, n)
-hydro_base = np.linspace(100, 110, n) + np.random.normal(0, 3, n)
+# Plot
+quarter_order = list(df[QUARTER])
+tick_step = max(1, len(quarter_order) // 6)
 
-# Confidence intervals (uncertainty grows over time for forecasts)
-time_factor = np.linspace(1, 2.5, n)
-solar_lower = solar_base - 8 * time_factor
-solar_upper = solar_base + 8 * time_factor
-wind_lower = wind_base - 12 * time_factor
-wind_upper = wind_base + 12 * time_factor
-hydro_lower = hydro_base - 5 * time_factor
-hydro_upper = hydro_base + 5 * time_factor
+# Stack in column order: each layer starts where the one below ends
+edge = df[VALUE].cumsum(axis=1)
+layers = []
+for i, col in enumerate(VALUE):
+    layers.append(
+        pd.DataFrame(
+            {
+                "x": np.arange(len(df)),
+                "source": col,
+                "edge": edge[col],
+                "base": edge[col] - df[col],
+                "band_lo": edge[col] - (df[col] - df[LOWER[i]]),
+                "band_hi": edge[col] + (df[UPPER[i]] - df[col]),
+            }
+        )
+    )
+plot_df = pd.concat(layers, ignore_index=True)
+sources = list(VALUE)
+fills = dict(zip(sources, IMPRINT_PALETTE, strict=False))
 
-# Create stacked values (cumulative)
-solar_stack = solar_base
-wind_stack = solar_base + wind_base
-hydro_stack = solar_base + wind_base + hydro_base
-
-# Stacked confidence bounds
-solar_lower_stack = solar_lower
-solar_upper_stack = solar_upper
-wind_lower_stack = solar_base + wind_lower
-wind_upper_stack = solar_base + wind_upper
-hydro_lower_stack = solar_base + wind_base + hydro_lower
-hydro_upper_stack = solar_base + wind_base + hydro_upper
-
-# Convert dates to numeric for lets-plot
-x_numeric = np.arange(n)
-x_labels = [f"{q.year}-Q{(q.month - 1) // 3 + 1}" for q in quarters]
-
-# Central line data
-df_lines = pd.DataFrame(
-    {
-        "x": np.tile(x_numeric, 3),
-        "y": np.concatenate([solar_stack, wind_stack, hydro_stack]),
-        "source": np.concatenate([["Solar"] * n, ["Wind"] * n, ["Hydro"] * n]),
-    }
-)
-
-# Main areas data (for stacked area)
-df_areas = pd.DataFrame(
-    {
-        "x": np.tile(x_numeric, 3),
-        "y_min": np.concatenate([np.zeros(n), solar_stack, wind_stack]),
-        "y_max": np.concatenate([solar_stack, wind_stack, hydro_stack]),
-        "source": np.concatenate([["Solar"] * n, ["Wind"] * n, ["Hydro"] * n]),
-    }
-)
-
-# Confidence band data
-df_conf = pd.DataFrame(
-    {
-        "x": np.tile(x_numeric, 3),
-        "y_lower": np.concatenate([solar_lower_stack, wind_lower_stack, hydro_lower_stack]),
-        "y_upper": np.concatenate([solar_upper_stack, wind_upper_stack, hydro_upper_stack]),
-        "source": np.concatenate([["Solar"] * n, ["Wind"] * n, ["Hydro"] * n]),
-    }
-)
-
-# Theme-adaptive plot styling
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major_y=element_line(color=INK, size=0.3),
+    panel_grid_major_y=element_line(color=GRID, size=0.3),
+    panel_grid_major_x=element_blank(),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_title=element_text(color=INK, size=12),
+    axis_text=element_text(color=INK_SOFT, size=10),
     axis_line=element_line(color=INK_SOFT, size=0.4),
-    plot_title=element_text(color=INK, size=24),
+    plot_title=element_text(color=INK, size=16),
+    plot_caption=element_text(color=INK_SOFT, size=10),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=16),
-    legend_title=element_text(color=INK, size=18),
+    legend_text=element_text(color=INK_SOFT, size=10),
+    legend_title=element_text(color=INK, size=12),
     legend_position="right",
 )
 
-# Create plot with stacked areas and confidence ribbons
 plot = (
-    ggplot()
-    + geom_ribbon(aes(x="x", ymin="y_lower", ymax="y_upper", fill="source"), data=df_conf, alpha=0.25)
-    + geom_ribbon(aes(x="x", ymin="y_min", ymax="y_max", fill="source"), data=df_areas, alpha=0.7)
-    + geom_line(aes(x="x", y="y", color="source"), data=df_lines, size=1.5)
-    + scale_fill_manual(values=IMPRINT, name="Energy Source")
-    + scale_color_manual(values=IMPRINT, guide="none")
-    + scale_x_continuous(breaks=list(range(0, n, 4)), labels=[x_labels[i] for i in range(0, n, 4)])
+    ggplot(plot_df)
+    + geom_ribbon(aes(x="x", ymin="band_lo", ymax="band_hi", fill="source"), alpha=0.25, size=0)
+    + geom_ribbon(aes(x="x", ymin="base", ymax="edge", fill="source"), alpha=0.7, size=0)
+    + geom_line(aes(x="x", y="edge", color="source"), size=1.0)
+    + scale_fill_manual(values=[fills[s] for s in sources], breaks=sources, name="Energy Source")
+    + scale_color_manual(values=[fills[s] for s in sources], breaks=sources, guide="none")
+    + scale_x_continuous(
+        breaks=list(range(0, len(quarter_order), tick_step)),
+        labels=[quarter_order[i] for i in range(0, len(quarter_order), tick_step)],
+    )
     + labs(
-        title="area-stacked-confidence · Python · letsplot · anyplot.ai",
-        x="Quarter",
-        y="Energy Consumption (TWh)",
-        caption="Shaded bands show 90% prediction intervals",
+        title="area-stacked-confidence · python · letsplot · anyplot.ai",
+        x=QUARTER,
+        y=Y_LABEL,
+        caption="Lighter shaded bands around each stacked edge show the 90% prediction interval of that series",
     )
     + theme_minimal()
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save PNG (scale 3x for 4800x2700)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
-
-# Save HTML for interactive viewing
+# Save PNG (scale 4x for 3200 x 1800 px) and HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
