@@ -2,117 +2,135 @@ library: pygal
 language: python
 specification_id: scatter-map-geographic
 created: '2026-05-18T18:03:31Z'
-updated: '2026-05-18T18:27:04Z'
-generated_by: claude-haiku
-workflow_run: 26051062985
+updated: '2026-11-22T14:13:07Z'
+generated_by: claude-sonnet
+workflow_run: 45030761057
 issue: 3617
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-dark.html
-quality_score: 61
+quality_score: 84
 review:
   strengths:
-  - Realistic earthquake data with accurate geographic coordinates
-  - Theme-adaptive styling correctly implements light/dark chrome
-  - Clean code structure with proper reproducibility (seed set)
-  - Text properly sized and readable in both light and dark themes
-  - Correct title format
+  - 'Real basemap in a Robinson projection: coastlines and a graticule projected with
+    the same function as the points, so every epicenter sits at its latitude and longitude
+    on the map'
+  - 'Basemap kept deliberately quieter than the data in both themes (COAST and GRATICULE
+    tokens), while depth classes use ordered steps of the imprint_seq ramp from #009E73
+    to #4467A3'
+  - Size encodes magnitude and color encodes depth, with a depth legend naming its
+    variable and its bins
+  - 'Native pygal idioms: XY series with allow_interruptions and (x, None) pen lifts
+    for the multi-ring coastline, per-point node radius and tooltip labels, x_value_formatter/value_formatter
+    for hemisphere tick labels'
+  - Interactive HTML output with per-event tooltips (magnitude and depth) for the
+    detail view
+  - 'Fully theme-adaptive chrome; all text legible on both #FAF8F1 and #1A1A17'
   weaknesses:
-  - Size encoding for magnitude is computed but never applied to chart (dead code)
-  - 'Color encoding for depth is broken: colors_depth array always contains same color
-    and is never used'
-  - Implementation fails to demonstrate multi-dimensional encoding capability - only
-    shows lat/lon positioning
-  - No design sophistication or visual hierarchy - generic library defaults
-  - Data preparation code (sizes, depth normalization) suggests intended features
-    not actually implemented
+  - 'SC-02 (both): the size legend is a single grey square labelled ''Marker size
+    = magnitude'' with no reference circles, so a reader cannot map marker size back
+    to magnitude values (spec: a size legend when size varies) → show two or three
+    reference markers at e.g. M6, M7, M8 drawn with the same node radius formula as
+    the data. Likely cause: chart.add(''Marker size = magnitude'', []) as an empty
+    placeholder series.'
+  - 'CQ-01 (code): three helper functions (robinson, to_path, hemisphere) break the
+    flat script structure → inline the projection as vectorized expressions and the
+    tick formatting as a dict lookup. Likely cause: the projection and path building
+    written as reusable helpers.'
+  - 'Suggestion: drop ''Graticule'' and ''Coastlines'' from the legend so it only
+    explains the data encodings.'
+  - 'Suggestion: pygal draws its zero guide through the 0° meridian beyond the map
+    outline at top and bottom; hiding it would give the map a cleaner frame.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "scatter-map-geographic · python · pygal · anyplot.ai" clearly visible. Axis labels "Longitude (°)" and "Latitude (°)" readable. Tick labels visible. Grid lines subtle and present.
-      Data: 12 earthquake epicenter points plotted across Ring of Fire region. Points clearly distinguishable from light background.
-      Legibility verdict: PASS - All text readable, good contrast, proper sizing
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "scatter-map-geographic · python · pygal · anyplot.ai" dark and centered; axis titles "Latitude" and "Longitude (Robinson projection)"; ticks 60°S–60°N and 180°W–180°E in hemisphere notation; bottom legend in three columns (Graticule, Coastlines, three depth classes, Marker size = magnitude). All text readable.
+      Data: Robinson world map with grey coastlines and a light graticule; 60 earthquake epicenters clustered around Japan, the Marianas, Philippines, Indonesia, Vanuatu, New Zealand, Chile and Costa Rica; color by depth class #009E73 (<40 km), #4B8294 (40–80 km), #4467A3 (>80 km); marker size by magnitude, alpha 0.72. First series #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title and axis labels rendered in light text, clearly visible against dark background. Tick labels readable. Grid lines visible and appropriate.
-      Data: Same 12 epicenter points with identical positioning and colors to light render (only chrome adapted). Points clearly visible on dark surface.
-      Legibility verdict: PASS - All text is light-colored and readable, no dark-on-dark failures, good contrast maintained
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick and legend labels in light ink, clearly readable; graticule dim but visible, coastlines mid-grey; no dark-on-dark text.
+      Data: identical point positions and depth colors to the light render; only basemap tones and chrome flip. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28/22/18), readable in both themes
+        comment: Title 66, ticks 40, legend 44, axis titles readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text collisions; overlapping epicenters in the Japan cluster stay
+          distinguishable through alpha
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Points visible but no size variation to encode magnitude
+        comment: 60 points with radius 9–35 px, clearly visible against the quiet
+          basemap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, theme-correct
+        comment: Green-to-blue depth steps differ in hue and lightness; good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Decent use of space, some room for optimization
+        comment: 3200x1800, map fills the plot area, legend close below
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels with units, title correct
+        comment: Longitude (Robinson projection), Latitude with degree tick labels
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Background correct, but color encoding feature not implemented despite
-          data prep
+        passed: true
+        comment: 'Ordered depth classes as imprint_seq steps from #009E73 to #4467A3;
+          correct backgrounds'
     design_excellence:
-      score: 6
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 5
         max: 8
-        passed: false
-        comment: Generic defaults, no custom design choices
+        passed: true
+        comment: Basemap tones chosen per theme to sit beneath the data, hemisphere-notation
+          tick labels
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Minimal customization beyond library defaults
+        passed: true
+        comment: Default pygal guides replaced by a projected 60°/30° graticule
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: Data displayed; no hierarchy chosen beyond the encodings
     spec_compliance:
-      score: 10
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -120,104 +138,115 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter chart
+        comment: Geographic scatter on a world basemap
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 3
         max: 4
-        passed: false
-        comment: Size/color encoding partially intended but broken implementation
+        passed: true
+        comment: Projection, basemap, depth legend, alpha present; size legend has
+          no reference sizes (defect line)
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly mapped, doesn't use all data dimensions
+        comment: Points and basemap projected with the same Robinson function; no
+          displacement
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend present but incomplete
+        comment: Title format correct; legend entries readable
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Only demonstrates position encoding, not size/color capabilities
+        passed: true
+        comment: 60 points, clustering, size and color encodings
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Ring of Fire earthquake scenario, plausible magnitudes/depths
+        comment: M6+ Ring of Fire earthquakes at real subduction zones
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually plausible earthquake coordinates and values
+        comment: Magnitudes 6.0–8.2, depths 5–300 km, coordinates on the Pacific rim;
+          no Check values in the spec
     code_quality:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: Three helper functions (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set to 42
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dead code: size_normalized and colors_depth computed but never used'
+        passed: true
+        comment: Coastline table and projection needed since no map package is available
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-light.png and plot-dark.html'
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: XY chart with allow_interruptions pen lifts and value formatters
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Basic chart creation and styling, doesn't leverage advanced features
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic XY scatter, no library-specific features used
+        comment: Per-point node radius and tooltip labels in the interactive SVG
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-2a7b04a927
+  rendered_at: '2026-11-22T14:09:03Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - normalization
+  - iteration-over-groups
   dataprep:
-  - normalization
-  styling: []
+  - binning
+  styling:
+  - alpha-blending
+  - minimal-chrome
