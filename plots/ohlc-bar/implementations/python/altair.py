@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-17
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -18,116 +19,105 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-UP_COLOR = "#009E73"  # Okabe-Ito position 1 (brand green)
-DOWN_COLOR = "#AE3030"  # imprint red — down days
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Generate 50 trading days of OHLC data
+# Constants
+UP, DOWN = "Up", "Down"  # direction of a period: close at or above the open, or below it
+DIRECTION_COLORS = {UP: IMPRINT_PALETTE[0], DOWN: IMPRINT_PALETTE[4]}
+TICK_SHARE = 0.42  # tick length as a share of the typical gap between bars
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+OPEN = "Open (USD)"  # role: open
+HIGH = "High (USD)"  # role: high
+LOW = "Low (USD)"  # role: low
+CLOSE = "Close (USD)"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv", parse_dates=[DATE])
 np.random.seed(42)
 n_days = 50
-dates = pd.date_range("2024-01-02", periods=n_days, freq="B")  # Business days
-
-# Start price and random walk
-start_price = 150.0
+dates = pd.date_range("2024-01-02", periods=n_days, freq="B")
 returns = np.random.normal(0.001, 0.02, n_days)
 
-# Generate OHLC data
-prices = [start_price]
+prices = [150.0]
 for r in returns[:-1]:
     prices.append(prices[-1] * (1 + r))
 
-opens = []
-highs = []
-lows = []
-closes = []
-
+opens, highs, lows, closes = [], [], [], []
 for base_price in prices:
     daily_volatility = abs(np.random.normal(0, 0.015))
     intraday_move = np.random.normal(0, 0.01)
 
     open_price = base_price * (1 + np.random.normal(0, 0.005))
     close_price = open_price * (1 + intraday_move)
-    high_price = max(open_price, close_price) * (1 + daily_volatility)
-    low_price = min(open_price, close_price) * (1 - daily_volatility)
-
     opens.append(open_price)
-    highs.append(high_price)
-    lows.append(low_price)
     closes.append(close_price)
+    highs.append(max(open_price, close_price) * (1 + daily_volatility))
+    lows.append(min(open_price, close_price) * (1 - daily_volatility))
 
-df = pd.DataFrame({"date": dates, "open": opens, "high": highs, "low": lows, "close": closes})
+df = pd.DataFrame({DATE: dates, OPEN: opens, HIGH: highs, LOW: lows, CLOSE: closes})
 
-# Add direction indicator
-df["direction"] = ["Up" if c >= o else "Down" for o, c in zip(df["open"], df["close"], strict=True)]
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+tick_length = TICK_SHARE * df[DATE].diff().median()
+bars = pd.DataFrame(
+    {
+        "date": df[DATE],
+        "open": df[OPEN],
+        "high": df[HIGH],
+        "low": df[LOW],
+        "close": df[CLOSE],
+        "open_start": df[DATE] - tick_length,
+        "close_end": df[DATE] + tick_length,
+        "direction": np.where(df[CLOSE] >= df[OPEN], UP, DOWN),
+    }
+)
 
-# High-Low vertical lines
+color = alt.Color(
+    "direction:N",
+    title="Direction",
+    scale=alt.Scale(domain=list(DIRECTION_COLORS), range=list(DIRECTION_COLORS.values())),
+    legend=alt.Legend(titleFontSize=12, labelFontSize=10),
+)
+price_axis = alt.Axis(labelFontSize=10, titleFontSize=12)
+
+# High-low range: one vertical line per period
 hl_lines = (
-    alt.Chart(df)
-    .mark_rule(strokeWidth=2)
+    alt.Chart(bars)
+    .mark_rule(strokeWidth=1.5)
     .encode(
-        x=alt.X("date:T", title="Date", axis=alt.Axis(labelFontSize=18, titleFontSize=22, format="%b %d")),
-        y=alt.Y(
-            "low:Q", title="Price (USD)", scale=alt.Scale(zero=False), axis=alt.Axis(labelFontSize=18, titleFontSize=22)
-        ),
+        x=alt.X("date:T", title=DATE, axis=alt.Axis(labelFontSize=10, titleFontSize=12, format="%b %d")),
+        y=alt.Y("low:Q", title="Price (USD)", scale=alt.Scale(zero=False), axis=price_axis),
         y2="high:Q",
-        color=alt.Color(
-            "direction:N",
-            scale=alt.Scale(domain=["Up", "Down"], range=[UP_COLOR, DOWN_COLOR]),
-            legend=alt.Legend(title="Direction", titleFontSize=18, labelFontSize=16),
-        ),
+        color=color,
     )
 )
 
-# Open ticks (left side)
-open_rules = (
-    alt.Chart(df)
-    .transform_calculate(
-        open_start="datum.date - 10*60*60*1000"  # 10 hours offset in milliseconds
-    )
-    .mark_rule(strokeWidth=2)
-    .encode(
-        x="open_start:T",
-        x2="date:T",
-        y="open:Q",
-        color=alt.Color(
-            "direction:N", scale=alt.Scale(domain=["Up", "Down"], range=[UP_COLOR, DOWN_COLOR]), legend=None
-        ),
-    )
+# Open tick to the left of the bar
+open_ticks = (
+    alt.Chart(bars)
+    .mark_rule(strokeWidth=1.5)
+    .encode(x="open_start:T", x2="date:T", y=alt.Y("open:Q", scale=alt.Scale(zero=False)), color=color.legend(None))
 )
 
-# Close ticks (right side)
-close_rules = (
-    alt.Chart(df)
-    .transform_calculate(
-        close_end="datum.date + 10*60*60*1000"  # 10 hours offset in milliseconds
-    )
-    .mark_rule(strokeWidth=2)
-    .encode(
-        x="date:T",
-        x2="close_end:T",
-        y="close:Q",
-        color=alt.Color(
-            "direction:N", scale=alt.Scale(domain=["Up", "Down"], range=[UP_COLOR, DOWN_COLOR]), legend=None
-        ),
-    )
+# Close tick to the right of the bar
+close_ticks = (
+    alt.Chart(bars)
+    .mark_rule(strokeWidth=1.5)
+    .encode(x="date:T", x2="close_end:T", y=alt.Y("close:Q", scale=alt.Scale(zero=False)), color=color.legend(None))
 )
 
-# Layer all components and apply theme-adaptive styling
 chart = (
-    alt.layer(hl_lines, open_rules, close_rules)
+    alt.layer(hl_lines, open_ticks, close_ticks)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title("ohlc-bar · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
+        title=alt.Title("ohlc-bar · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
     .configure_axis(
-        domainColor=INK_SOFT,
-        tickColor=INK_SOFT,
-        gridColor=INK_SOFT,
-        gridOpacity=0.10,
-        labelColor=INK_SOFT,
-        titleColor=INK,
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.15, labelColor=INK_SOFT, titleColor=INK
     )
     .configure_title(color=INK)
     .configure_view(strokeWidth=0, fill=PAGE_BG)
@@ -136,5 +126,16 @@ chart = (
 )
 
 # Save as PNG and HTML with theme-suffixed filenames
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) the PNG up to the canonical 3200 x 1800 canvas
+TARGET_W, TARGET_H = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TARGET_W or h > TARGET_H:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TARGET_W}x{TARGET_H}; shrink width/height")
+if (w, h) != (TARGET_W, TARGET_H):
+    canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+    canvas.paste(img, ((TARGET_W - w) // 2, (TARGET_H - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
