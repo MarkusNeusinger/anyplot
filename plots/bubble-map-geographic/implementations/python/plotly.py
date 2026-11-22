@@ -1,7 +1,7 @@
 """anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-11-22
+Quality: pending | Updated: 2026-11-22
 """
 
 import os
