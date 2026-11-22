@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-19
@@ -20,95 +20,98 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito colors for Close Price, EMA 12, EMA 26
-COLORS = {"Close Price": "#009E73", "EMA 12": "#C475FD", "EMA 26": "#4467A3"}
+# Imprint palette: all eight positions, one per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
-np.random.seed(42)
-dates = pd.date_range("2024-01-02", periods=120, freq="B")
-returns = np.random.normal(0.001, 0.015, 120)
-price = 100 * np.cumprod(1 + returns)
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close Price"  # role: close
+EMA_SHORT = "EMA 12"  # role: ema_short
+EMA_LONG = "EMA 26"  # role: ema_long
 
-price_series = pd.Series(price)
-ema_12 = price_series.ewm(span=12, adjust=False).mean().values
-ema_26 = price_series.ewm(span=26, adjust=False).mean().values
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv", parse_dates=[DATE])
+rng = np.random.default_rng(42)
+returns = rng.normal(0.001, 0.015, 120)
+close = 100 * np.cumprod(1 + returns)
+df = pd.DataFrame({DATE: pd.date_range("2024-01-02", periods=120, freq="B"), CLOSE: close})
+df[EMA_SHORT] = df[CLOSE].ewm(span=12, adjust=False).mean()
+df[EMA_LONG] = df[CLOSE].ewm(span=26, adjust=False).mean()
 
-df = pd.DataFrame({"date_num": range(120), "close": price, "ema_12": ema_12, "ema_26": ema_26})
+# Plot: reads only df and the constants above
+series = [CLOSE, EMA_SHORT, EMA_LONG]
+colors = dict(zip(series, IMPRINT_PALETTE, strict=False))
+long_df = df.melt(id_vars=DATE, value_vars=series, var_name="Series", value_name="Price (USD)")
+long_df["Series"] = pd.Categorical(long_df["Series"], categories=series, ordered=True)
 
-# Detect EMA-12/EMA-26 crossovers for signal annotations
-diff = ema_12 - ema_26
-sign_changes = np.where(np.diff(np.sign(diff)) != 0)[0]
-bullish_crosses = [int(i) for i in sign_changes if diff[i + 1] > 0]
-bearish_crosses = [int(i) for i in sign_changes if diff[i + 1] < 0]
+# Crossovers of the short EMA over/under the long EMA, found from the sign of their gap
+gap = (df[EMA_SHORT] - df[EMA_LONG]).to_numpy()
+flips = np.where(np.diff(np.sign(gap)) != 0)[0] + 1
+bullish = df.iloc[[i for i in flips if gap[i] > 0]][[DATE]]
+bearish = df.iloc[[i for i in flips if gap[i] < 0]][[DATE]]
 
-df_price = df[["date_num", "close"]].rename(columns={"close": "value"}).copy()
-df_price["series"] = "Close Price"
-
-df_ema12 = df[["date_num", "ema_12"]].rename(columns={"ema_12": "value"}).copy()
-df_ema12["series"] = "EMA 12"
-
-df_ema26 = df[["date_num", "ema_26"]].rename(columns={"ema_26": "value"}).copy()
-df_ema26["series"] = "EMA 26"
-
-df_ema_only = pd.concat([df_ema12, df_ema26], ignore_index=True)
-
-date_labels = {i: dates[i].strftime("%b %d") for i in range(0, 120, 20)}
-
-# Theme — Y-axis-only major grid (style guide: line charts use Y grid only)
 anyplot_theme = theme(  # noqa: F405
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
     panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
-    panel_grid_major_y=element_line(color=RULE, size=0.5),  # noqa: F405
+    panel_grid_major_y=element_line(color=RULE, size=0.4),  # noqa: F405
     panel_grid_major_x=element_blank(),  # noqa: F405
     panel_grid_minor=element_blank(),  # noqa: F405
-    axis_title=element_text(size=20, color=INK),  # noqa: F405
-    axis_text=element_text(size=16, color=INK_SOFT),  # noqa: F405
+    axis_title=element_text(size=12, color=INK),  # noqa: F405
+    axis_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
     axis_line=element_line(color=INK_SOFT),  # noqa: F405
-    plot_title=element_text(size=24, color=INK),  # noqa: F405
-    plot_subtitle=element_text(size=16, color=INK_SOFT),  # noqa: F405
+    plot_title=element_text(size=16, color=INK),  # noqa: F405
+    plot_subtitle=element_text(size=11, color=INK_SOFT),  # noqa: F405
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
-    legend_text=element_text(size=16, color=INK_SOFT),  # noqa: F405
-    legend_title=element_text(size=18, color=INK),  # noqa: F405
+    legend_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
+    legend_title=element_text(size=11, color=INK),  # noqa: F405
     legend_position="right",
 )
 
-# Plot — crossover vlines first so lines render on top; interactive tooltips (letsplot-exclusive)
 plot = (
-    ggplot(mapping=aes(x="date_num", y="value", color="series"))  # noqa: F405
-    + geom_line(  # noqa: F405
-        data=df_price,
-        size=2.5,
-        alpha=0.85,
-        tooltips=layer_tooltips().title("Close Price").line("$@value"),  # noqa: F405
+    ggplot(long_df, aes(x=DATE, y="Price (USD)", color="Series"))  # noqa: F405
+    + geom_vline(  # noqa: F405
+        aes(xintercept=DATE),  # noqa: F405
+        data=bullish,
+        inherit_aes=False,
+        color=IMPRINT_PALETTE[0],
+        linetype="dashed",
+        size=0.5,
+        alpha=0.5,
+    )
+    + geom_vline(  # noqa: F405
+        aes(xintercept=DATE),  # noqa: F405
+        data=bearish,
+        inherit_aes=False,
+        color=IMPRINT_PALETTE[4],
+        linetype="dashed",
+        size=0.5,
+        alpha=0.5,
     )
     + geom_line(  # noqa: F405
-        data=df_ema_only,
-        size=1.5,
-        tooltips=layer_tooltips().title("@series").line("$@value"),  # noqa: F405
+        data=long_df[long_df["Series"] == CLOSE],
+        size=1.2,
+        alpha=0.9,
+        tooltips=layer_tooltips().title("@Series").line("$@{Price (USD)}"),  # noqa: F405
     )
-    + scale_color_manual(values=COLORS, name="Series")  # noqa: F405
-    + scale_x_continuous(  # noqa: F405
-        breaks=list(date_labels.keys()), labels=list(date_labels.values())
+    + geom_line(  # noqa: F405
+        data=long_df[long_df["Series"] != CLOSE],
+        size=0.8,
+        tooltips=layer_tooltips().title("@Series").line("$@{Price (USD)}"),  # noqa: F405
     )
+    + scale_color_manual(values=colors, name="Series")  # noqa: F405
+    + scale_x_datetime(format="%b %d")  # noqa: F405
     + labs(  # noqa: F405
-        x="Date",
+        x=DATE,
         y="Price (USD)",
         title="indicator-ema · python · letsplot · anyplot.ai",
-        subtitle="EMA-12 × EMA-26 crossovers — dashed lines mark bullish ↑ and bearish ↓ signals",
+        subtitle="Dashed lines mark EMA crossovers: green bullish (short crosses above), red bearish (short crosses below)",
     )
     + theme_minimal()  # noqa: F405
     + anyplot_theme
-    + ggsize(1600, 900)  # noqa: F405
+    + ggsize(800, 450)  # noqa: F405
 )
 
-# Annotate crossover signals after base plot is built
-for x in bullish_crosses:
-    plot = plot + geom_vline(xintercept=x, color="#009E73", linetype="dashed", size=0.8, alpha=0.4)  # noqa: F405
-for x in bearish_crosses:
-    plot = plot + geom_vline(xintercept=x, color="#C475FD", linetype="dashed", size=0.8, alpha=0.4)  # noqa: F405
-
 # Save
-export_ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+export_ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 export_ggsave(plot, f"plot-{THEME}.html", path=".")
