@@ -1,40 +1,24 @@
 """ anyplot.ai
 pdp-basic: Partial Dependence Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-15
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 79/100 | Updated: 2026-11-22
 """
 
-import importlib
-import sys
+import os
+import time
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, Span
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from sklearn.datasets import make_friedman1
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.inspection import partial_dependence
 
-# Remove current directory from sys.path to avoid shadowing bokeh package
-sys.path = [p for p in sys.path if Path(p).resolve() != Path(__file__).resolve().parent]
-
-# Import bokeh module and its submodules
-bokeh_io = importlib.import_module("bokeh.io")  # noqa: E402
-bokeh_models = importlib.import_module("bokeh.models")  # noqa: E402
-bokeh_plotting = importlib.import_module("bokeh.plotting")  # noqa: E402
-
-import os  # noqa: E402
-import time  # noqa: E402
-
-import numpy as np  # noqa: E402
-from selenium import webdriver  # noqa: E402
-from selenium.webdriver.chrome.options import Options  # noqa: E402
-from sklearn.datasets import make_friedman1  # noqa: E402
-from sklearn.ensemble import GradientBoostingRegressor  # noqa: E402
-from sklearn.inspection import partial_dependence  # noqa: E402
-
-
-# Use imported modules
-output_file = bokeh_io.output_file
-save = bokeh_io.save
-Band = bokeh_models.Band
-ColumnDataSource = bokeh_models.ColumnDataSource
-Span = bokeh_models.Span
-figure = bokeh_plotting.figure
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -43,124 +27,111 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-BRAND = "#009E73"  # Okabe-Ito position 1
-ACCENT = "#C475FD"  # Okabe-Ito position 2
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Train a model and compute partial dependence
-np.random.seed(42)
+# Constants
+CI_LOW, CI_HIGH = 10, 90  # percentiles of the ICE curves that bound the band
+GRID_POINTS = 100
 
-# Use Friedman #1 dataset which has known non-linear relationships
+# Columns: set these to your table's column names
+FEATURE = "Feature X₀ value"  # role: feature_values
+PD = "Partial dependence (centered, predicted units)"  # role: partial_dependence
+LOWER = "Lower bound (10th percentile)"  # role: confidence_interval
+UPPER = "Upper bound (90th percentile)"  # role: extra
+FEATURE_1 = "Feature X₁"  # role: extra
+FEATURE_2 = "Feature X₂"  # role: extra
+FEATURE_3 = "Feature X₃"  # role: extra
+FEATURE_4 = "Feature X₄"  # role: extra
+TARGET = "Target"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("training_data.csv")
 X, y = make_friedman1(n_samples=500, n_features=5, noise=0.5, random_state=42)
+df = pd.DataFrame(X, columns=[FEATURE, FEATURE_1, FEATURE_2, FEATURE_3, FEATURE_4])
+df[TARGET] = y
 
-# Train a gradient boosting model
+# Plot: reads only df and the constants above
+features = [c for c in df.columns if c != TARGET]
 model = GradientBoostingRegressor(n_estimators=100, max_depth=4, random_state=42)
-model.fit(X, y)
+model.fit(df[features], df[TARGET])
 
-# Compute partial dependence for feature 0 (has sin relationship)
-feature_idx = 0
-grid_resolution = 100
+pdp_results = partial_dependence(model, df[features], features=[FEATURE], kind="both", grid_resolution=GRID_POINTS)
+ice = pdp_results["individual"][0]
+average = pdp_results["average"][0]
+center = average.mean()
 
-# Compute partial dependence using sklearn
-pdp_results = partial_dependence(model, X, features=[feature_idx], kind="both", grid_resolution=grid_resolution)
+pdp = pd.DataFrame(
+    {
+        FEATURE: pdp_results["grid_values"][0],
+        PD: average - center,
+        LOWER: np.percentile(ice, CI_LOW, axis=0) - center,
+        UPPER: np.percentile(ice, CI_HIGH, axis=0) - center,
+    }
+)
+source = ColumnDataSource(pdp)
 
-# Extract values
-avg_predictions = pdp_results["average"][0]
-individual_predictions = pdp_results["individual"][0]  # ICE lines
-grid_values = pdp_results["grid_values"][0]
+# Rug: observed feature values as short ticks just below the band
+span = pdp[UPPER].max() - pdp[LOWER].min()
+rug_y = pdp[LOWER].min() - 0.12 * span
+rug_source = ColumnDataSource({FEATURE: df[FEATURE], "rug_y": np.full(len(df), rug_y)})
 
-# Calculate confidence interval (percentiles of ICE lines)
-lower_bound = np.percentile(individual_predictions, 10, axis=0)
-upper_bound = np.percentile(individual_predictions, 90, axis=0)
-
-# Center partial dependence at zero for easier interpretation
-center_val = avg_predictions.mean()
-avg_centered = avg_predictions - center_val
-lower_centered = lower_bound - center_val
-upper_centered = upper_bound - center_val
-
-# Get training data distribution for rug plot
-rug_x = X[:, feature_idx]
-
-# Create data source for main line and band
-source = ColumnDataSource(data={"x": grid_values, "y": avg_centered, "lower": lower_centered, "upper": upper_centered})
-
-# Create data source for rug plot - position at bottom of plot area
-y_min = lower_centered.min() - 1.5
-rug_source = ColumnDataSource(data={"x": rug_x, "y": np.full_like(rug_x, y_min + 0.3)})
-
-# Plot
 p = figure(
-    width=4800,
-    height=2700,
-    title="pdp-basic · bokeh · anyplot.ai",
-    x_axis_label="Feature X₀ Value",
-    y_axis_label="Partial Dependence (centered)",
+    width=3200,
+    height=1800,
+    title="pdp-basic · python · bokeh · anyplot.ai",
+    x_axis_label=FEATURE,
+    y_axis_label=PD,
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Add confidence band
-band = Band(
-    base="x",
-    lower="lower",
-    upper="upper",
+# Confidence band, behind the line
+p.varea(
+    x=FEATURE,
+    y1=LOWER,
+    y2=UPPER,
     source=source,
-    fill_color=BRAND,
+    fill_color=IMPRINT_PALETTE[0],
     fill_alpha=0.25,
-    line_color=BRAND,
-    line_alpha=0.4,
+    legend_label="80% band (ICE 10th–90th pct)",
 )
-p.add_layout(band)
-
-# Add horizontal line at y=0 for reference
-zero_line = Span(location=0, dimension="width", line_color=INK_SOFT, line_width=3, line_dash="dashed", line_alpha=0.6)
-p.add_layout(zero_line)
-
-# Add invisible patch for confidence band legend entry
-p.patch([], [], fill_color=BRAND, fill_alpha=0.25, line_color=BRAND, line_alpha=0.4, legend_label="80% CI")
-
-# Add main PDP line
-p.line("x", "y", source=source, line_width=5, line_color=BRAND, legend_label="Average PD")
-
-# Add rug plot for data distribution
+p.add_layout(Span(location=0, dimension="width", line_color=INK_SOFT, line_width=3, line_dash="dashed", line_alpha=0.6))
+p.line(
+    FEATURE, PD, source=source, line_width=8, line_color=IMPRINT_PALETTE[0], legend_label="Average partial dependence"
+)
 p.scatter(
-    "x",
-    "y",
+    FEATURE,
+    "rug_y",
     source=rug_source,
-    size=25,
-    color=ACCENT,
-    alpha=0.6,
+    size=40,
+    color=IMPRINT_PALETTE[1],
+    alpha=0.5,
     line_width=3,
-    angle=1.5708,
+    angle=np.pi / 2,
     marker="dash",
-    legend_label="Data Distribution",
+    legend_label="Training data (rug)",
 )
 
-# Style - Text sizing
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-
-# Axis styling
-p.xaxis.axis_line_width = 3
-p.yaxis.axis_line_width = 3
-p.xaxis.axis_line_color = INK_SOFT
-p.yaxis.axis_line_color = INK_SOFT
-p.xaxis.major_tick_line_width = 3
-p.yaxis.major_tick_line_width = 3
-p.xaxis.major_tick_line_color = INK_SOFT
-p.yaxis.major_tick_line_color = INK_SOFT
-p.xaxis.minor_tick_line_width = 2
-p.yaxis.minor_tick_line_width = 2
-p.xaxis.minor_tick_line_color = INK_SOFT
-p.yaxis.minor_tick_line_color = INK_SOFT
-
-# Grid styling
+for axis in (p.xaxis, p.yaxis):
+    axis.axis_line_width = 3
+    axis.axis_line_color = INK_SOFT
+    axis.major_tick_line_width = 3
+    axis.major_tick_line_color = INK_SOFT
+    axis.minor_tick_line_color = None
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
@@ -168,32 +139,29 @@ p.ygrid.grid_line_alpha = 0.10
 p.xgrid.grid_line_dash = "dashed"
 p.ygrid.grid_line_dash = "dashed"
 
-# Legend styling
-p.legend.location = "bottom_right"
-p.legend.label_text_font_size = "18pt"
+p.legend.location = "top_left"
+p.legend.label_text_font_size = "30pt"
 p.legend.label_text_color = INK_SOFT
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.background_fill_alpha = 0.9
 p.legend.border_line_color = INK_SOFT
 p.legend.border_line_alpha = 0.5
 p.legend.border_line_width = 2
-p.legend.glyph_height = 50
+p.legend.glyph_height = 40
 p.legend.glyph_width = 50
-p.legend.spacing = 20
-p.legend.padding = 25
-p.legend.margin = 40
+p.legend.spacing = 14
+p.legend.padding = 20
+p.legend.margin = 30
 
-# Background and border
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
-# Save HTML
+# Save HTML, then screenshot it with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -208,6 +176,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)  # let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
