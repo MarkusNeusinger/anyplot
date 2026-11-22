@@ -1,7 +1,7 @@
 """anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-17
+Quality: pending | Updated: 2026-05-17
 """
 
 import os
