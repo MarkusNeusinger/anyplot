@@ -2,56 +2,64 @@ library: altair
 language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:25:21Z'
-updated: '2026-05-17T15:45:16Z'
-generated_by: claude-haiku
-workflow_run: 25995055408
+updated: '2026-11-22T06:55:18Z'
+generated_by: claude-sonnet
+workflow_run: 44995235211
 issue: 3415
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 81
 review:
   strengths:
-  - Accurate Voronoi computation with proper cell clipping and boundary handling
-  - Correct theme-adaptive rendering with all tokens properly threaded (background,
-    text, grid, legend)
-  - Interactive tooltips enhance usability for seed point inspection
-  - Okabe-Ito palette correctly applied and ordered; first series correctly green
-    (#009E73)
-  - Clear visual hierarchy and fully readable text in both light and dark themes
-  - Proper data representation with seed points clearly marked and labeled
+  - 'Exact clipping: mirroring every seed across the four box edges makes scipy''s
+    Voronoi cells end exactly at the bounding box, so the 15 cells tile it without
+    gaps or overlaps'
+  - Greedy neighbour coloring over vor.ridge_points guarantees that cells sharing
+    an edge get different Imprint colors
+  - Seeds drawn in INK with a page-colored halo stand out from every fill in both
+    themes
+  - 'Idiomatic Altair polygons: mark_line(filled=True, interpolate=''linear-closed'')
+    with detail and order encodings, identity colors via scale=None'
+  - Seed tooltips (station, x, y) add inspection in the HTML output
   weaknesses:
-  - Station label positioning could be further optimized to eliminate overlap in very
-    dense regions (minor issue)
-  - Design excellence is solid but somewhat conservative—could explore more sophisticated
-    refinements
-  - Could leverage more advanced Altair features for enhanced visual storytelling
-  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
-    \ (#FAF8F1), not pure white, correct\n  Chrome: Title \"voronoi-basic · altair\
-    \ · anyplot.ai\", axis labels \"X Coordinate\" and \"Y Coordinate\", tick labels,\
-    \ legend \"Weather Stations\" all in dark text (INK color #1A1A17)\n  Data: Voronoi\
-    \ cells colored with Okabe-Ito palette (green #009E73 for first station, followed\
-    \ by orange, blue, purple, yellow, sky blue); cells semi-transparent (opacity\
-    \ 0.50) with clear boundaries; seed points marked with circles and white stroke;\
-    \ station labels positioned above points\n  Grid: Subtle at 10% opacity, not competing\
-    \ with data\n  Legibility verdict: PASS - All text clearly readable against light\
-    \ background, no \"light on light\" issues\n\nDark render (plot-dark.png):\n \
-    \ Background: Warm near-black (#1A1A17), not pure black, correct\n  Chrome: Title,\
-    \ axis labels, tick labels, legend text all in light color (INK #F0EFE8); grid\
-    \ uses 10% opacity light ink\n  Data: Voronoi cells retain identical Okabe-Ito\
-    \ colors from light render (green #009E73, orange, blue, etc.); cell boundaries\
-    \ visible in INK_SOFT (#B8B7B0); seed points with white stroke still visible;\
-    \ station labels visible in light text\n  Brand green (#009E73): Visible and readable\
-    \ on dark background\n  Legibility verdict: PASS - All text clearly readable against\
-    \ dark background, no \"dark on dark\" issues observed\n  \nTheme consistency:\
-    \ Data colors identical between renders, only chrome (background, text, grid)\
-    \ adapted. Both renders theme-correct and readable."
+  - 'SC-02 (both): the x domain spans about 99 units and the y domain about 80 units
+    on a 440x440 view, so y is stretched about 1.25x and cell edges are not drawn
+    at right angles to the lines joining their seeds (spec bullet C2), e.g. the Station
+    6 / Station 14 edge → equal units per pixel on both axes (view height/width proportional
+    to the y/x box spans, or a square clipping box). Likely cause: width=440, height=440
+    with box_min/box_max taken from the seeds'' own x and y spans.'
+  - 'VQ-02 (both): the labels of Station 4, 6, 8, 10 and 14 are crossed by the 2 px
+    cell-edge strokes, which run through their letters → labels clear of the edge
+    strokes (smaller fontSize or a page-colored halo stroke on the text). Likely cause:
+    mark_text dy=-14/16 with fontSize=11 next to seeds that sit close to an edge.'
+  - 'VQ-06 (both): axis titles ''X coordinate'' and ''Y coordinate'' carry no unit
+    → a unit for the area, e.g. ''Easting (km)'' / ''Northing (km)''. Likely cause:
+    the X and Y column constants.'
+  - 'DQ-02 (both): the seeds are labelled ''Station 1'' … ''Station 15'' on abstract
+    X/Y coordinates, which reads generic → real-sounding station names (e.g. ''Hillcrest'',
+    ''Riverside''). Likely cause: the STATION label list f"Station {i + 1}".'
+  - 'CQ-01 (code): a label_layer() helper function (lines 129-138) where two inline
+    layers would do → inline the two mark_text layers. Likely cause: the above/below
+    label split.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas with the chart centered.
+      Chrome: title "voronoi-basic · python · altair · anyplot.ai" in dark ink, centered; axis titles "X coordinate" / "Y coordinate" bold dark; ticks 10-90 and 5-80 in INK_SOFT; no grid; view framed by a gray stroke. All readable.
+      Data: 15 Voronoi cells clipped to the box, filled with Imprint green #009E73, lilac #C475FD, blue #4467A3 and one ochre #BD8233 cell at 0.55 opacity with 2 px gray edges; no two neighbouring cells share a color. 15 near-black seeds with off-white halos, each labelled "Station N" above or below. Some labels (Station 4, 6, 8, 10, 14) are crossed by edge strokes.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles light ink, ticks light gray, frame light gray; no dark-on-dark text.
+      Data: same cell geometry and the same Imprint hues (they read deeper over the dark page through the 0.55 opacity); light-gray edges; seeds flip to off-white with dark halos; labels light ink. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -59,47 +67,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes
+        comment: Title 20, axis titles 14, ticks 12, seed labels 11 bold at scale
+          4; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Station labels positioned above points; minimal overlap in dense
-          regions
+        comment: Several seed labels (Station 4, 6, 8, 10, 14) are crossed by cell-edge
+          strokes (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 15 seed points visible, cells clear, semi-transparent fill allows
-          layering
+        comment: 15 seeds at size 130 with a page-colored halo stand out from every
+          fill; edges 2 px INK_SOFT visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (colorblind-safe), good contrast
+        comment: Fills from Imprint at 0.55 opacity, edges carry the distinction too;
+          no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 @ 3× = 4800×2700 px, correct proportions, nothing cut off
+        comment: 2400x2400 square canvas, plot centered, title ~65% width, balanced
+          axis labels
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title and axis labels match spec requirements
+        passed: false
+        comment: '''X coordinate'' / ''Y coordinate'' carry no unit (defect line)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito in order, backgrounds correct, both renders theme-correct
+        comment: 'Imprint colors in canonical order starting with #009E73; #FAF8F1
+          / #1A1A17 backgrounds; fills identical across themes'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -107,21 +119,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional execution but limited enhancement beyond spec
+        comment: Ink seeds with a page-colored halo against translucent fills give
+          a clear marker/fill hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, elevated legend background
+        comment: Axis domain set exactly to the clipping box so the view frame is
+          the cell boundary; labels placed on the side away from the nearest seed
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear hierarchy, geometric pattern guides viewer
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -129,27 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Voronoi diagram with proper clipping
+        comment: Correct Voronoi partition, no extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Cells, seed points, labels, color differentiation all present
+        comment: 'C1, C3, C4, C6 met; C2 missed in the render: unequal x/y scale (x
+          ~99 units, y ~80 units on a 440x440 view) means edges are not visually at
+          right angles to the seed-joining lines (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, axes show full range
+        comment: Seeds at exact coordinates; cells computed exactly via mirrored seeds
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format matches spec
+        comment: Title 'voronoi-basic · python · altair · anyplot.ai'; legend N/A
+          (direct seed labels)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -157,55 +174,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete partition demonstrates concept well
+        comment: Large border cells, small crowded cells (Stations 3/10/13, 6/14),
+          clipping at the box all shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Weather stations realistic and neutral
+        comment: Weather-station network is plausible and neutral, but 'Station 1..15'
+          and abstract 'X/Y coordinate' read generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 points, 0-100 range sensible
+        comment: 15 seeds within the 10-50 range on a 0-100 area; no Check values
+          in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Direct implementation, no unnecessary abstractions
+        comment: A label_layer() helper function (lines 129-138) (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42), deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Voronoi algorithm properly handled, theme-aware
+        comment: scipy Voronoi with mirrored seeds gives exact box clipping; greedy
+          neighbour coloring is compact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png/html, current API
+        comment: Saves plot-{THEME}.png padded to 2400x2400 and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -213,25 +234,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Multi-layer composition, proper encodings, tooltips
+        comment: Layered charts, mark_line(filled=True, interpolate='linear-closed')
+          with detail/order encodings, identity color via scale=None
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses detail encoding, filled marks, interactive output
+        comment: Vega-Lite closed-path interpolation for polygons and tooltips on
+          seeds in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T06:51:05Z'
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
   - layer-composition
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - voronoi-tessellation
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling

@@ -2,47 +2,51 @@ library: matplotlib
 language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:44:06Z'
-updated: '2026-05-17T15:42:39Z'
-generated_by: claude-haiku
-workflow_run: 25994860847
+updated: '2026-11-22T06:49:46Z'
+generated_by: claude-sonnet
+workflow_run: 44995004286
 issue: 3415
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 80
 review:
   strengths:
-  - 'Perfect visual quality: all text explicitly sized and readable across both themes;
-    no overlap; excellent palette compliance with Okabe-Ito and theme-correct chrome'
-  - Correct Voronoi implementation with mirror-point technique for finite regions;
-    all spec features present and working
-  - Clean, reproducible code with KISS structure, seeded randomness, and efficient
-    PolyCollection rendering
-  - 'Professional theme handling: data colors identical between light and dark renders,
-    chrome fully adapted, no dark-on-dark failures'
+  - 'Every pair of neighbouring cells differs in color: a greedy coloring over scipy''s
+    ridge_points uses Imprint positions 1-4, so C4 holds without extra hues'
+  - Bounded cells built idiomatically by mirroring the seeds across the box edges
+    before scipy.spatial.Voronoi, drawn as one PolyCollection
+  - Theme tokens threaded through title, labels, ticks, spines, grid and edges; fills
+    identical in both renders and all text readable on both backgrounds
+  - 'Adaptable layout: column constants, a Data block binding df, and limits derived
+    from the data'
   weaknesses:
-  - 'Design Excellence is modest (12/20): implementation is competent default rather
-    than exceptional; design choices are correct but not surprising'
-  - 'Library Mastery conservative: uses efficient PolyCollection but could leverage
-    more distinctive matplotlib features for greater sophistication'
+  - 'VQ-06, DQ-02 (both): the scenario is anonymous random seeds and the axes read
+    ''X coordinate'' / ''Y coordinate'' with no unit → a real scenario from the spec''s
+    Applications, e.g. store locations with ''Easting (km)'' / ''Northing (km)''.
+    Likely cause: the X/Y constants and the uniform random data block.'
+  - 'Suggestion: the box padding leaves a band of empty canvas above and below the
+    square axes; a box matched to the canvas aspect would use the space better.'
+  - 'Suggestion: the np.clip on the polygon vertices is a no-op after mirroring and
+    could be dropped.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme
-      Chrome: Title (fontsize=24), axis labels (20), tick labels (16) all explicitly sized and clearly readable in dark text (INK=#1A1A17); grid lines subtle (alpha=0.12)
-      Data: Voronoi regions filled with Okabe-Ito palette colors; seed points marked with green circles (#009E73) with white edges (s=350); cell edges visible (linewidth=2.5, color=INK_SOFT)
-      Legibility verdict: PASS — all text crisp and readable; no light-on-light failures
+      Background: warm off-white #FAF8F1 on a 2400x2400 canvas.
+      Chrome: title 'voronoi-basic · python · matplotlib · anyplot.ai' in dark INK, axis titles 'X coordinate'/'Y coordinate' in INK, ticks in INK_SOFT, subtle horizontal grid, left/bottom spines only; all readable.
+      Data: 15 Voronoi cells tiling the padded seed box (x≈0.2-9.8, y≈0.4-8.3), filled with Imprint green, purple, blue and one ochre cell at alpha 0.6 so that neighbours always differ; INK_SOFT edges; #009E73 seeds with white rings at their exact coordinates.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct for dark theme
-      Chrome: Title, axis labels, and tick labels all light-colored (INK=#F0EFE8, INK_SOFT=#B8B7B0) and fully readable on dark surface; grid lines adapt subtly
-      Data: Voronoi cell colors identical to light render (data colors are theme-invariant) — confirmed Okabe-Ito positions preserved; seed points retain #009E73 green with white edges
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome is correctly theme-adapted; excellent readability on dark surface
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light INK, ticks in INK_SOFT, grid subtle; no dark-on-dark text.
+      Data: identical fill colors and seeds (fills read darker through alpha over the dark page); light-grey edges clearly visible; seeds stand out via white rings.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,50 +54,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
-          perfectly readable in both themes'
+        comment: Title 12 pt, labels 10 pt, ticks 8 pt per the library prompt; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; labels, ticks, title have proper spacing
+        comment: No text collisions; seeds sit clear of every label
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Voronoi cells distinct; seed points prominent (s=350); cell edges
-          visible (linewidth=2.5)
+        comment: 15 seeds at s=70 with white rings stand out on every fill; 1.2 lw
+          edges visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe; white edges on green markers provide
-          contrast
+        comment: Distinct Imprint hues plus visible edges; white seed rings give contrast
+          on every fill
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Optimal 16:9 layout; plot fills canvas well; balanced margins; tight_layout
-          applied
+        comment: 2400x2400 square canvas (gate passed); equal-aspect box well centred,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title in spec format; axis labels descriptive (X/Y Coordinate)
+        passed: false
+        comment: Axis titles 'X/Y coordinate' carry no unit or real-world meaning
+          (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green); Okabe-Ito palette used; backgrounds
-          #FAF8F1/#1A1A17; both renders theme-correct; no dark-on-dark failures'
+        comment: 'Palette positions 1-4 from the canonical list, first is #009E73;
+          backgrounds #FAF8F1/#1A1A17; fills identical across themes'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -101,22 +106,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default; clean professional rendering, but not exceptional
-          or surprising
+        comment: 'Style-guide baseline: Imprint fills at alpha 0.6, INK_SOFT edges,
+          white-ringed seeds; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed (L-shaped); subtle grid; balanced whitespace; cell
-          edges styled with INK_SOFT
+        passed: false
+        comment: 'Top/right spines removed and a subtle grid: the baseline, nothing
+          beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Voronoi clearly shows spatial partitioning; seed points in brand
-          green create focal points; visual hierarchy present
+        passed: false
+        comment: Partition displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,29 +130,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Voronoi diagram with cells clipped to bounding box and prominent
-          seed points
+        comment: Correct Voronoi diagram, single partition, no overlays (C6 met)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: cells clipped, visually distinguishable via colors,
-          seed points marked'
+        comment: 'All Notes bullets and C1-C4, C6 met: box-clipped tiling, seeds marked,
+          neighbouring cells differ in color via greedy coloring'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to 0-10 range; all data visible
+        comment: Seeds at their exact x/y (C3); cells computed by scipy Voronoi with
+          mirrored seeds, edges straight bisectors (C2)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend not required for Voronoi regions
+        comment: Title 'voronoi-basic · python · matplotlib · anyplot.ai' correct;
+          no legend needed (N/A)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -156,22 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All Voronoi aspects shown: spatial partitioning, seed influence,
-          boundary effects, density variation'
+        comment: 15 seeds show clustered small cells, large clipped border cells and
+          off-center seeds
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Plausible scenario (service areas, territorial boundaries); neutral,
-          non-controversial
+        passed: false
+        comment: Generic random seeds with 'X/Y coordinate' labels; no real scenario
+          (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 points in 10x10 space provides good density; scale sensible for
-          Voronoi; factually correct
+        comment: No check values in the spec; checked visually that each seed lies
+          in its own cell and edges bisect neighbouring seeds
     code_quality:
       score: 10
       max: 10
@@ -181,55 +186,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save; no functions/classes; linear
-          flow
+        comment: Imports → constants → Data block binding df → Plot → Save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib, numpy, scipy.spatial'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; mirror-point technique standard; PolyCollection efficient;
-          no over-engineering
+        comment: scipy.spatial.Voronoi with mirrored seeds; PolyCollection for all
+          cells; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct DPI and facecolor
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches='tight'
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses Axes methods correctly; theme-aware via environment variable;
-          follows best practices
+        passed: false
+        comment: Axes API throughout; all cells drawn as one PolyCollection via ax.add_collection,
+          equal aspect
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Uses PolyCollection (matplotlib-specific) but primarily standard
-          usage; could leverage more distinctive features
-    score_caps:
-      applied: false
-      description: No caps triggered
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-22T06:46:15Z'
 impl_tags:
   dependencies:
   - scipy
@@ -237,8 +240,9 @@ impl_tags:
   - patches
   patterns:
   - data-generation
-  - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
