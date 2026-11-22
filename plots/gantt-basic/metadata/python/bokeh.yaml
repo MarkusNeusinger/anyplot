@@ -2,45 +2,55 @@ library: bokeh
 language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:24:09Z'
-updated: '2026-05-10T22:36:25Z'
-generated_by: claude-haiku
-workflow_run: 25641543860
+updated: '2026-11-22T00:01:08Z'
+generated_by: claude-sonnet
+workflow_run: 44963809961
 issue: 2377
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Perfect theme adaptation in both light and dark renders with correct color preservation
-  - 'Excellent visual hierarchy: color-coding by category and timeline clearly communicate
-    project progression'
-  - 'Professional typography: all font sizes explicitly set and readable at 4800×2700px'
-  - Clean, idiomatic Bokeh code using ColumnDataSource, custom legends, and theme
-    tokens
-  - Realistic software project data demonstrates actual Gantt use case with overlapping
-    tasks
+  - One hbar renderer per category with legend_label, so bokeh builds the titled 'Phase'
+    legend natively
+  - 'Theme tokens threaded through title, axis, grid and legend: both renders read
+    cleanly'
+  - Tasks sorted by start date, giving a clear staircase from Planning to Deployment
+  - Canvas exactly 3200x1800 with toolbar disabled and CDP viewport override
   weaknesses:
-  - Design Excellence could be elevated beyond well-configured defaults to publication-ready
-    polish with more custom refinement
+  - 'VQ-05 (both): the x-range starts about 24 % of the span before the first task
+    (≈ Dec 10) to make room for task names drawn as data-space text, so the Jan 01
+    gridline and the axis run under the labels → put the names on a categorical y-axis
+    (FactorRange of task names, y tick labels) and start the x-range at the first
+    start date minus a few days. Likely cause: Range1d(df[START].min() - span * 0.24,
+    …) plus p.text labels.'
+  - 'VQ-06 (both): neither the axis title ''Timeline'' nor the ticks ''Jan 01'' …
+    ''Apr 01'' state the year 2025 → axis title such as ''Date (2025)'' or a year
+    in the tick format. Likely cause: x_axis_label=''Timeline'' with formatter ''%b
+    %d''.'
+  - 'Suggestion: weekly minor ticks or gridlines would make each bar''s start and
+    end easier to read than four monthly ticks.'
+  - 'Suggestion: a month-only tick format (''%b'') would drop the redundant ''01''
+    on monthly ticks.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, not pure white. Perfect warm tone.
-      Chrome: Title "gantt-basic · bokeh · anyplot.ai" (28pt), axis label "Timeline" (22pt), tick labels (18pt), task names (28pt)—all dark text (INK color) with excellent contrast against light background. All clearly readable.
-      Data: Twelve tasks with color-coded bars: Planning=#009E73 (brand green), Development=#D55E00 (orange), Testing=#0072B2 (blue), Deployment=#CC79A7 (purple). Bars show varying durations (2–4 weeks), overlapping tasks visible. Legend top-right with category labels and color swatches. Subtle vertical grid lines at 10% alpha.
-      Legibility verdict: PASS ✓
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: bold title 'gantt-basic · python · bokeh · anyplot.ai' top left (~40% width); task names right-aligned left of the bars in dark ink; x-axis ticks 'Jan 01', 'Feb 01', 'Mar 01', 'Apr 01' in INK_SOFT; italic axis title 'Timeline'; faint vertical gridlines at month starts; legend top right titled 'Phase' on an elevated box. All text readable.
+      Data: 12 horizontal bars in staircase order by start date; Planning #009E73, Development #C475FD, Testing #4467A3, Deployment #BD8233; uniform thickness with clear row gaps.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, not pure black. Correct warm tone.
-      Chrome: Title, axis label, tick labels, and task names now in light text (INK=#F0EFE8, INK_SOFT=#B8B7B0). All perfectly readable against dark background. Zero dark-on-dark failures.
-      Data: Identical to light render—Planning=#009E73, Development=#D55E00, Testing=#0072B2, Deployment=#CC79A7. Data colors preserved exactly. Legend background now #242420 with light-colored labels. Grid lines remain subtle and visible.
-      Legibility verdict: PASS ✓
+      Background: warm near-black #1A1A17.
+      Chrome: title, task names, ticks, axis title and legend all in light ink; no dark-on-dark text; gridlines subtle; legend box #242420.
+      Data: bar colors identical to the light render; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -48,47 +58,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
-          all perfectly readable in both themes
+        comment: Title 50pt, axis title 42pt, ticks 34pt, task names 32pt, legend
+          30pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text collisions; task names, dates, legend properly spaced
+        comment: No text collides with text or bars; legend sits over empty space
+          top right
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar height 0.65 and spacing optimal for 12 tasks; all clearly visible
+        comment: 12 bars at height 0.62 with clear gaps; legend swatches visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; colorblind-safe; excellent contrast
+        comment: Four Imprint hues, distinct under CVD; no red-green pairing
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Plot fills 60–70% of canvas; balanced margins; excellent utilization
+        passed: false
+        comment: x-range padded 24% before the first task so the task labels sit inside
+          the plot area; the Jan 01 gridline runs through the labels (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title format correct; "Timeline" is descriptive and appropriate
+        passed: false
+        comment: Axis title 'Timeline' and ticks 'Jan 01' never state the year 2025
+          (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect Okabe-Ito order; backgrounds #FAF8F1/#1A1A17; theme-adaptive
-          chrome correct in both renders'
+        comment: 'Imprint positions 1-4 in order, first #009E73; backgrounds #FAF8F1
+          / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -96,21 +110,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional palette and theme adaptation; follows Bokeh defaults
-          without extraordinary custom touches
+        comment: 'Style-guide baseline: clean typography and theme tokens, nothing
+          beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid, y-axis hidden, styled legend, generous whitespace
+        passed: false
+        comment: Page-colored bar outlines separate touching bars cleanly and the
+          hidden y-axis leaves a tidy label column
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy; color-coding and timeline show project progression
-          effectively
+        passed: false
+        comment: Staircase order shows the schedule; no hierarchy chosen beyond the
+          Notes
     spec_compliance:
       score: 15
       max: 15
@@ -120,25 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart type
+        comment: Correct Gantt chart, task bars only
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: bars, dates, labels, categories, legend'
+        comment: Horizontal bars on a datetime axis, date formatting, category colors,
+          start-date order, row gaps (C1-C5 met); no current-date line, not applicable
+          to a 2025 schedule
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: Each bar runs from its start to its end date
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend format correct
+        comment: Title 'gantt-basic · python · bokeh · anyplot.ai'; legend titled
+          'Phase' with readable entries
     data_quality:
       score: 15
       max: 15
@@ -148,19 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Gantt aspects: varying durations, overlapping tasks, categories'
+        comment: Overlapping tasks, varied durations, four phases
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic software project with specific task names and phases
+        comment: Plausible software project with specific task names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic dates and durations; logical progression
+        comment: Checked Requirements Analysis Jan 06-17 and Training Apr 07-18 against
+          the axis; durations 1-5 weeks plausible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -170,13 +189,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no unnecessary functions
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -188,43 +207,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: One vectorized p.text call, legend_label per renderer
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Expert use of Bokeh patterns: figure(), ColumnDataSource, hbar(),
-          datetime axis'
+        passed: false
+        comment: 'Default: ColumnDataSource per category, legend_label, datetime axis
+          formatter'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Uses ColumnDataSource, custom Legend/LegendItem, theme tokens, Selenium
-          export workflow
+        passed: false
+        comment: 'Default: nothing beyond the library prompt'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-21T23:55:44Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - custom-legend
   - annotations
   patterns:
+  - iteration-over-groups
   - columndatasource
-  - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
-  - publication-ready
+  - minimal-chrome
+  - edge-highlighting
   - grid-styling
