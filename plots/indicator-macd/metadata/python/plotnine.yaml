@@ -2,51 +2,50 @@ library: plotnine
 language: python
 specification_id: indicator-macd
 created: '2026-05-16T10:51:22Z'
-updated: '2026-05-16T11:00:45Z'
-generated_by: claude-haiku
-workflow_run: 25960004306
+updated: '2026-11-22T01:01:12Z'
+generated_by: claude-sonnet
+workflow_run: 44968966970
 issue: 3181
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 83
 review:
   strengths:
-  - Complete implementation of all MACD components with correct specification mapping
-  - 'Proper color usage: Okabe-Ito palette for lines with intuitive green/red histogram
-    coding'
-  - Excellent theme adaptation with readable light and dark renders; data colors preserved
-    across themes
-  - Clean code structure with proper deterministic data generation and zero reference
-    line
-  - Clear axis labels, title formatting, and legend with good positioning
-  - Grid styling is subtle and supports readability without competing with data
-  - Data range produces meaningful MACD patterns with visible crossovers
+  - Histogram, both lines and the zero line composed as separate layers with their
+    own data frames, the grammar-of-graphics way
+  - scale_x_datetime with monthly breaks and '%b %Y' labels reads more cleanly than
+    default ISO dates
+  - Parameters 12, 26 and 9 are carried in the legend labels, so the chart notes them
+    without an extra annotation
+  - Theme tokens threaded through every chrome element; both renders are fully readable
+  - EMAs, signal and histogram computed with pandas ewm from a seeded price series
   weaknesses:
-  - 'Design Excellence LOW: Generic styling without custom design choices; lacks visual
-    hierarchy or focal point; minimal refinement beyond functional requirements'
-  - 'Library Mastery LOW: No distinctive plotnine features; standard geom composition
-    without advanced techniques; opportunity for more sophisticated visual design'
-  - Spines present (not removed per best practices for clean design)
-  - No visual hierarchy to guide viewer attention through key MACD patterns
+  - 'VQ-02 (both): the legend entry ''MACD (12, 26)'' runs up to and touches the legend
+    frame''s right edge, its closing parenthesis on the border → keep at least ~4
+    px of padding inside the frame. Likely cause: legend_position=(0.02, 0.97) with
+    default legend box margin; set legend_box_margin / legend_margin or a slightly
+    smaller legend_text.'
+  - 'Suggestion: a price panel above the MACD panel sharing the date axis would place
+    the oscillator in its usual context.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface color
-      Chrome: Title 'indicator-macd · plotnine · anyplot.ai' in dark INK (#1A1A17), axis labels 'Date' and 'Value' clearly visible, tick labels in INK_SOFT (#4A4A44) with strong contrast, legend in upper-left with box frame
-      Data: Histogram bars in green (positive) and red (negative) with 0.7 alpha; MACD line in teal (#0072B2); Signal line in orange (#D55E00); zero reference line at y=0 in soft gray
-      Legibility verdict: PASS - All text is fully readable, no contrast issues, proper sizing for 4800x2700px render
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'indicator-macd · python · plotnine · anyplot.ai' in dark ink centred at the top; x title 'Date' with monthly ticks 'Jan 2024'..'Jun 2024'; y title 'MACD value (price units)' with ticks -3..1; subtle major grid; no axis lines or ticks; framed legend at top-left on #FFFDF6 with 'MACD (12, 26)' (blue) and 'Signal (9)' (ochre). The legend's first label touches the frame's right edge.
+      Data: 150 daily histogram bars, Imprint green #009E73 above zero and red #AE3030 below at alpha 0.75; MACD line #4467A3 and signal line #BD8233 drawn over the bars; dark zero line. Bars change sign where the lines cross.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct surface color
-      Chrome: Title and axis labels in light INK (#F0EFE8) with strong contrast against dark background; tick labels in soft INK_SOFT (#B8B7B0); legend frame uses elevated background (#242420); no dark-on-dark issues detected
-      Data: Histogram colors identical to light render (green positive, red negative); MACD line in teal (same #0072B2); Signal line in orange (same #D55E00); zero reference line visible and appropriately styled
-      Legibility verdict: PASS - All text is readable on dark background, proper light-text-on-dark rendering, no legibility failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, legend on #242420 with light-grey frame and text; grid subtle; no dark-on-dark text.
+      Data: same blue/ochre lines and green/red bars as the light render (bars look deeper because alpha 0.75 blends with the dark page); light zero line clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,49 +53,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All text sized for 4800x2700px: title 24pt, axis_title 20pt, axis_text
-          16pt, legend_text 16pt; readable in both themes'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt per the plotnine
+          guide; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping elements; date labels well-spaced; legend positioned
-          with separation
+        passed: false
+        comment: Legend entry 'MACD (12, 26)' runs into the legend frame's right edge
+          (defect line); no other collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars clearly visible with distinct colors; lines prominent
-          and distinguishable; reference line visible
+        comment: 150 bars and two 0.9 lines clearly visible in both themes; legend
+          line samples match the lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; red-green reinforced by line styling
+        comment: Red/green histogram is reinforced by position above/below zero; blue
+          vs ochre lines are CVD-distinct
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio; generous whitespace; 4800x2700px at 300dpi
+        comment: 3200x1800 canvas, title ~50% width, balanced axis labels, nothing
+          overflows the canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive
+        comment: '''Date'' and ''MACD value (price units)'' are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: MACD=#0072B2, Signal=#D55E00, histogram green/red from Okabe-Ito;
-          backgrounds correct; theme adaptation proper
+        comment: 'Imprint #009E73/#AE3030 for the semantic histogram signs, #4467A3/#BD8233
+          for the lines; backgrounds #FAF8F1/#1A1A17'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -104,22 +105,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic styling; standard colors from palette but no custom design
-          thinking; lacks refined visual hierarchy
+        comment: 'The style-guide baseline: clean typography and tokens, nothing beyond
+          it'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Spines present (not removed); minimal customization; grid subtle
-          but unrefined
+        comment: 'Grid density chosen for this chart: monthly date breaks with ''%b
+          %Y'' labels, minor grid, ticks and axis lines removed'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Functional representation; lacks visual hierarchy or focal point;
-          no emphasis to guide viewer
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -129,25 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MACD indicator chart with all three components
+        comment: MACD chart with MACD line, signal line and histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Histogram green/red, distinct line colors, zero line, 150 periods
+        comment: Green/red histogram, zero line, distinct blue/ochre lines, parameters
+          12, 26, 9 noted in the legend (C1-C4 met; C5 optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, MACD/Signal/histogram on y-axis; all data displayed
+        comment: Bars from zero to MACD-signal, sign changes at the line crossings;
+          all 150 dates shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend identifies lines properly
+        comment: Title 'indicator-macd · python · plotnine · anyplot.ai'; legend labels
+          name both lines with their parameters
     data_quality:
       score: 15
       max: 15
@@ -157,19 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all MACD components: lines and histogram with proper calculation'
+        comment: Expansions, contractions, multiple crossovers, positive and negative
+          regimes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price simulation; standard parameters; neutral domain
+        comment: Simulated daily closing prices for 150 trading days; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible MACD ranges; EMA produces realistic technical analysis output
+        comment: MACD swings of about ±3 on a ~100 price level are plausible; histogram
+          computed as macd - signal from pandas ewm
     code_quality:
       score: 10
       max: 10
@@ -179,55 +184,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward procedural code; no unnecessary complexity
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42); deterministic calculations
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; includes sys.path workaround
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; clean data organization
+        comment: EMAs via pandas ewm, no hand-rolled algorithms, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current API
+        comment: plot.save to plot-{THEME}.png at 400 dpi, current API
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses ggplot API idiomatically but without sophisticated techniques
+        comment: Per-layer data in a grammar composition, scale_x_datetime(date_breaks,
+          date_labels), guides(fill='none'), scale limits for order
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Standard geoms and scales; no advanced plotnine features
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-22T00:57:48Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - wide-to-long
+  dataprep:
+  - rolling-window
+  - cumulative-sum
+  - time-series
   styling:
   - alpha-blending
   - grid-styling
