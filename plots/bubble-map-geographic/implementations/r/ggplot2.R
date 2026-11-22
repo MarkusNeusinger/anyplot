@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bubble-map-geographic: Bubble Map with Sized Geographic Markers
-#' Library: ggplot2 | R
-#' Quality: pending | Created: 2026-05-18
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 85/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(ragg)
