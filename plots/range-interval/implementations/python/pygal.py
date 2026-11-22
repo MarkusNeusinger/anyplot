@@ -1,20 +1,14 @@
 """ anyplot.ai
 range-interval: Range Interval Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-18
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-22
 """
 
 import os
-import sys
 
-
-# Avoid importing local pygal.py file; ensure we get the installed pygal package
-script_dir = os.path.dirname(os.path.abspath(__file__))
-if script_dir in sys.path:
-    sys.path.remove(script_dir)
-
-import pygal  # noqa: E402
-from pygal.style import Style  # noqa: E402
+import pandas as pd
+import pygal
+from pygal.style import Style
 
 
 # Theme tokens
@@ -23,61 +17,67 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Monthly temperature ranges (daily high/low averages)
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-temp_min = [-2, 0, 4, 8, 13, 17, 19, 18, 14, 9, 4, 0]
-temp_max = [6, 8, 12, 16, 21, 25, 28, 27, 22, 16, 10, 7]
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: category
+TEMP_MIN = "Daily low (°C)"  # role: min_value
+TEMP_MAX = "Daily high (°C)"  # role: max_value
 
-# Calculate the range for stacked bar visualization
-temp_range = [high - low for low, high in zip(temp_min, temp_max, strict=True)]
+# Data: replace this block with your own table, for example df = pd.read_csv("ranges.csv")
+# Perth, Western Australia: average daily low and high per month (southern hemisphere, summer in Jan)
+df = pd.DataFrame(
+    {
+        MONTH: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        TEMP_MIN: [18, 18, 17, 14, 11, 9, 8, 8, 9, 11, 14, 16],
+        TEMP_MAX: [31, 32, 30, 26, 22, 19, 18, 19, 21, 24, 27, 29],
+    }
+)
 
-# Custom style with theme-adaptive tokens
-custom_style = Style(
+# Plot: pygal takes plain lists, built from df
+span = (df[TEMP_MAX] - df[TEMP_MIN]).tolist()
+
+# The first series is an invisible base up to each minimum, so the visible bar floats from min to max
+style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
+    colors=("transparent", *IMPRINT_PALETTE),
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
 )
 
-# Create stacked bar chart (first series base, second series visible range)
+axis_low = int(df[TEMP_MIN].min() // 5 * 5) - 5
+axis_high = int(-(-df[TEMP_MAX].max() // 5) * 5) + 5
+
 chart = pygal.StackedBar(
-    width=4800,
-    height=2700,
-    style=custom_style,
+    width=3200,
+    height=1800,
+    style=style,
     title="range-interval · python · pygal · anyplot.ai",
-    x_title="Month",
+    x_title=MONTH,
     y_title="Temperature (°C)",
-    show_legend=True,
-    legend_at_bottom=True,
+    show_legend=False,
     show_y_guides=True,
     show_x_guides=False,
-    print_values=False,
-    spacing=40,
-    margin=80,
-    margin_bottom=150,
-    margin_left=150,
+    range=(axis_low, axis_high),
+    spacing=30,
+    margin=60,
 )
+chart.x_labels = df[MONTH].tolist()
+chart.add(TEMP_MIN, df[TEMP_MIN].tolist())
+chart.add("Range low to high (°C)", span)
 
-# Set x-axis labels
-chart.x_labels = months
-
-# Add invisible base (from 0 to min_value)
-chart.add("", temp_min, show_dots=False)
-
-# Add visible range bars (from min to max) in brand color
-chart.add("Temperature Range (°C)", temp_range, show_dots=False)
-
-# Render to PNG and HTML
+# Save
 chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
