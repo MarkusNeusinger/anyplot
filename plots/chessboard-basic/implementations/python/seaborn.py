@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chessboard-basic: Chess Board Grid Visualization
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-17
@@ -17,25 +17,11 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Chess colors - distinct from other libraries (cornsilk and sienna)
+# Board colors (classic two-tone, identical in both themes)
 LIGHT_SQUARE = "#FFF8DC"  # Cornsilk
 DARK_SQUARE = "#A0522D"  # Sienna
 
-# Data - Create 8x8 chessboard pattern
-# 0 = dark square, 1 = light square
-# Standard chess: h1 (bottom-right) is light
-board = np.zeros((8, 8))
-for i in range(8):
-    for j in range(8):
-        # Light square when (row + col) is even
-        if (i + j) % 2 == 0:
-            board[i, j] = 1
-
-# Column labels (a-h) and row labels (1-8)
-columns = list("abcdefgh")
-rows = list("12345678")[::-1]  # Reversed so 8 is at top
-
-# Set seaborn theme
+# Library setup
 sns.set_theme(
     style="ticks",
     rc={
@@ -49,41 +35,38 @@ sns.set_theme(
     },
 )
 
-# Create figure with 1:1 aspect ratio for square format
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+# Data: board parameters (generated plot, no table)
+N_FILES = 8  # columns, labeled a-h
+N_RANKS = 8  # rows, labeled 1-8
+files = list("abcdefgh"[:N_FILES])
+ranks = [str(r) for r in range(N_RANKS, 0, -1)]  # rank 8 at the top
 
-# Plot heatmap using seaborn
+# Plot
+# 1 = light square, 0 = dark square; row 0 is rank 8, so a8 and h1 come out light
+row_idx, col_idx = np.indices((N_RANKS, N_FILES))
+board = ((row_idx + col_idx) % 2 == 0).astype(int)
+
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+
 sns.heatmap(
     board,
     ax=ax,
     cmap=[DARK_SQUARE, LIGHT_SQUARE],
     cbar=False,
     square=True,
-    linewidths=2,
+    linewidths=1,
     linecolor=INK_SOFT,
-    xticklabels=columns,
-    yticklabels=rows,
+    xticklabels=files,
+    yticklabels=ranks,
 )
 
-# Style adjustments
-ax.set_xlabel("File", fontsize=20, color=INK)
-ax.set_ylabel("Rank", fontsize=20, color=INK)
-ax.set_title("chessboard-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
-
-# Make tick labels larger and position them correctly
-ax.tick_params(axis="both", labelsize=16, length=0, colors=INK_SOFT)
-ax.xaxis.set_ticks_position("bottom")
-ax.xaxis.set_label_position("bottom")
-
-# Move x-axis ticks to center of squares
-ax.set_xticks([i + 0.5 for i in range(8)])
-ax.set_xticklabels(columns)
-ax.set_yticks([i + 0.5 for i in range(8)])
-ax.set_yticklabels(rows)
-
-# Set spine colors for theme
+# Style
+ax.set_xlabel("File", fontsize=10, color=INK)
+ax.set_ylabel("Rank", fontsize=10, color=INK)
+ax.set_title("chessboard-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
+ax.tick_params(axis="both", labelsize=8, length=0, colors=INK_SOFT)
+ax.tick_params(axis="y", labelrotation=0)
 for spine in ax.spines.values():
     spine.set_color(INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
