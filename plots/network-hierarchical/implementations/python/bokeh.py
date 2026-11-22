@@ -1,24 +1,19 @@
-""" anyplot.ai
+"""anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 95/100 | Updated: 2026-05-17
 """
 
 import os
-import sys
 import time
 from pathlib import Path
 
-
-# Ensure we import the real bokeh, not this script
-sys.path = [p for p in sys.path if p not in ("", os.path.dirname(__file__))]
-
-import numpy as np  # noqa: E402
-from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, HoverTool, LabelSet, Legend, LegendItem  # noqa: E402
-from bokeh.plotting import figure  # noqa: E402
-from selenium import webdriver  # noqa: E402
-from selenium.webdriver.chrome.options import Options  # noqa: E402
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet, Legend, LegendItem
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 # Theme tokens
@@ -28,227 +23,161 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for level differentiation
-LEVEL_COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: one position per hierarchy level
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Software project team hierarchy (24 employees, 4 levels)
-np.random.seed(42)
+# Columns: set these to your table's column names
+EDGE_COLUMNS = ["Parent", "Child"]  # role: edges
 
-nodes = [
-    # Level 0 - CEO
-    {"id": 0, "label": "CEO", "level": 0},
-    # Level 1 - VPs
-    {"id": 1, "label": "VP Engineering", "level": 1},
-    {"id": 2, "label": "VP Product", "level": 1},
-    {"id": 3, "label": "VP Operations", "level": 1},
-    # Level 2 - Directors/Managers
-    {"id": 4, "label": "Frontend Dir.", "level": 2},
-    {"id": 5, "label": "Backend Dir.", "level": 2},
-    {"id": 6, "label": "PM Lead", "level": 2},
-    {"id": 7, "label": "UX Lead", "level": 2},
-    {"id": 8, "label": "IT Manager", "level": 2},
-    {"id": 9, "label": "HR Manager", "level": 2},
-    # Level 3 - Team Members
-    {"id": 10, "label": "FE Dev 1", "level": 3},
-    {"id": 11, "label": "FE Dev 2", "level": 3},
-    {"id": 12, "label": "BE Dev 1", "level": 3},
-    {"id": 13, "label": "BE Dev 2", "level": 3},
-    {"id": 14, "label": "BE Dev 3", "level": 3},
-    {"id": 15, "label": "PM 1", "level": 3},
-    {"id": 16, "label": "PM 2", "level": 3},
-    {"id": 17, "label": "Designer 1", "level": 3},
-    {"id": 18, "label": "Designer 2", "level": 3},
-    {"id": 19, "label": "IT Support 1", "level": 3},
-    {"id": 20, "label": "IT Support 2", "level": 3},
-    {"id": 21, "label": "HR Spec 1", "level": 3},
-    {"id": 22, "label": "HR Spec 2", "level": 3},
-    {"id": 23, "label": "Recruiter", "level": 3},
-]
+# Data: replace this block with your own edge list, for example df = pd.read_csv("reports_to.csv")
+# Software company org chart, 24 people over 4 management levels (parent -> child)
+reports = {
+    "CEO": ["VP Engineering", "VP Product", "VP Operations"],
+    "VP Engineering": ["Frontend Dir.", "Backend Dir."],
+    "VP Product": ["PM Lead", "UX Lead"],
+    "VP Operations": ["IT Manager", "HR Manager"],
+    "Frontend Dir.": ["FE Dev 1", "FE Dev 2"],
+    "Backend Dir.": ["BE Dev 1", "BE Dev 2", "BE Dev 3"],
+    "PM Lead": ["PM 1", "PM 2"],
+    "UX Lead": ["Designer 1", "Designer 2"],
+    "IT Manager": ["IT Support 1", "IT Support 2"],
+    "HR Manager": ["HR Spec 1", "HR Spec 2", "Recruiter"],
+}
+df = pd.DataFrame([(parent, child) for parent, children in reports.items() for child in children], columns=EDGE_COLUMNS)
 
-edges = [
-    # CEO to VPs
-    (0, 1),
-    (0, 2),
-    (0, 3),
-    # VP Engineering to Directors
-    (1, 4),
-    (1, 5),
-    # VP Product to Leads
-    (2, 6),
-    (2, 7),
-    # VP Operations to Managers
-    (3, 8),
-    (3, 9),
-    # Directors to Team Members
-    (4, 10),
-    (4, 11),
-    (5, 12),
-    (5, 13),
-    (5, 14),
-    (6, 15),
-    (6, 16),
-    (7, 17),
-    (7, 18),
-    (8, 19),
-    (8, 20),
-    (9, 21),
-    (9, 22),
-    (9, 23),
-]
+# Plot: reads only df and the constants above
+PARENT, CHILD = EDGE_COLUMNS
+# Depth of each node below the root (the one node that is never a child), in order of appearance
+root = next(p for p in df[PARENT].unique() if p not in set(df[CHILD]))
+depth = {root: 0}
+for parent, child in zip(df[PARENT], df[CHILD], strict=True):
+    depth[child] = depth[parent] + 1
+nodes = pd.DataFrame({"label": list(depth), "level": list(depth.values())})
+n_levels = nodes["level"].max() + 1
 
-# Compute hierarchical layout positions
-# Group nodes by level
-levels = {}
-for node in nodes:
-    lvl = node["level"]
-    if lvl not in levels:
-        levels[lvl] = []
-    levels[lvl].append(node)
+# Tree layout: one row per level, nodes of a level spread evenly and centered
+SPACING = 1.6
+Y_STEP = 2.0
+nodes["y"] = -nodes["level"] * Y_STEP
+children = df.groupby(PARENT, sort=False)[CHILD].apply(list).to_dict()
+x_of = {}
 
-# Calculate positions: levels spread vertically, nodes at each level spread horizontally
-positions = {}
-y_spacing = 2.0
-for lvl in sorted(levels.keys()):
-    nodes_at_level = levels[lvl]
-    n = len(nodes_at_level)
-    spread = max(n * 1.4, 6)
-    x_positions = np.linspace(-spread / 2, spread / 2, n)
-    y_pos = -lvl * y_spacing
-    for i, node in enumerate(nodes_at_level):
-        positions[node["id"]] = (x_positions[i], y_pos)
 
-# Prepare node data
-node_x = [positions[n["id"]][0] for n in nodes]
-node_y = [positions[n["id"]][1] for n in nodes]
-node_labels = [n["label"] for n in nodes]
-node_levels = [n["level"] for n in nodes]
+def place(name):
+    """Leaves take the next slot left to right; a parent sits over the mean of its children."""
+    if name not in children:
+        x_of[name] = sum(1 for n in x_of if n not in children) * SPACING
+    else:
+        x_of[name] = sum(place(c) for c in children[name]) / len(children[name])
+    return x_of[name]
 
-# Color by level using Okabe-Ito
-node_colors = [LEVEL_COLORS[lvl] for lvl in node_levels]
 
-# Node sizes based on level - larger for better visibility at Level 3
-size_map = {0: 95, 1: 80, 2: 70, 3: 65}
-node_sizes = [size_map[lvl] for lvl in node_levels]
+place(root)
+centre = (max(x_of.values()) + min(x_of.values())) / 2
+nodes["x"] = [x_of[label] - centre for label in nodes["label"]]
+nodes["size"] = 70 - 7 * nodes["level"]
+nodes["color"] = [IMPRINT_PALETTE[lvl] for lvl in nodes["level"]]
+pos = nodes.set_index("label")[["x", "y"]]
 
-# Prepare edge data
-edge_x0 = [positions[e[0]][0] for e in edges]
-edge_y0 = [positions[e[0]][1] for e in edges]
-edge_x1 = [positions[e[1]][0] for e in edges]
-edge_y1 = [positions[e[1]][1] for e in edges]
-
-# Create figure
-p = figure(
-    width=4800,
-    height=2700,
-    title="network-hierarchical · bokeh · anyplot.ai",
-    x_axis_label="",
-    y_axis_label="",
-    tools="",
-    toolbar_location=None,
+edges = pd.DataFrame(
+    {
+        "x0": pos.loc[df[PARENT], "x"].to_numpy(),
+        "y0": pos.loc[df[PARENT], "y"].to_numpy(),
+        "x1": pos.loc[df[CHILD], "x"].to_numpy(),
+        "y1": pos.loc[df[CHILD], "y"].to_numpy(),
+    }
 )
 
-# Apply theme-adaptive styling
+W, H = 3200, 1800
+p = figure(
+    width=W,
+    height=H,
+    title="network-hierarchical · python · bokeh · anyplot.ai",
+    tools="",
+    toolbar_location=None,
+    min_border_left=60,
+    min_border_right=60,
+    min_border_bottom=60,
+    min_border_top=110,
+    x_range=(nodes["x"].min() - 1.4, nodes["x"].max() + 1.4),
+    y_range=(nodes["y"].min() - 1.4, nodes["y"].max() + 1.6),
+)
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
-
-# Hide axes for cleaner network visualization
+p.outline_line_color = PAGE_BG
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 
-# Draw edges
-edge_source = ColumnDataSource(data={"x0": edge_x0, "y0": edge_y0, "x1": edge_x1, "y1": edge_y1})
-p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=edge_source, line_width=4, line_color=INK_SOFT, line_alpha=0.4)
+# Edges: thinner and lighter than the nodes
+p.segment(
+    x0="x0",
+    y0="y0",
+    x1="x1",
+    y1="y1",
+    source=ColumnDataSource(edges),
+    line_width=3,
+    line_color=INK_SOFT,
+    line_alpha=0.45,
+)
 
-# Draw nodes by level
-renderers_by_level = {}
-level_names = ["CEO", "VPs", "Directors", "Team Members"]
-
-for lvl in range(4):
-    lvl_indices = [i for i, n in enumerate(nodes) if n["level"] == lvl]
-    lvl_x = [node_x[i] for i in lvl_indices]
-    lvl_y = [node_y[i] for i in lvl_indices]
-    lvl_labels = [node_labels[i] for i in lvl_indices]
-    lvl_sizes = [node_sizes[i] for i in lvl_indices]
-
-    source = ColumnDataSource(
-        data={"x": lvl_x, "y": lvl_y, "labels": lvl_labels, "sizes": lvl_sizes, "level": [lvl] * len(lvl_indices)}
-    )
+# Nodes: one renderer per level for the legend
+legend_items = []
+for lvl in range(n_levels):
+    rows = nodes[nodes["level"] == lvl]
     renderer = p.scatter(
         x="x",
         y="y",
-        source=source,
-        size="sizes",
-        fill_color=LEVEL_COLORS[lvl],
+        source=ColumnDataSource(rows),
+        size="size",
+        fill_color="color",
         line_color=INK_SOFT,
-        line_width=3,
-        alpha=0.9,
+        line_width=2,
+        alpha=0.95,
     )
-    renderers_by_level[lvl] = renderer
+    name = f"Level {lvl}: {rows['label'].iloc[0]}" if len(rows) == 1 else f"Level {lvl}"
+    legend_items.append(LegendItem(label=name, renderers=[renderer]))
 
-# Create legend with theme-adaptive styling
-legend_items = [
-    LegendItem(label=f"Level {lvl}: {level_names[lvl]}", renderers=[renderers_by_level[lvl]]) for lvl in range(4)
-]
 legend = Legend(
     items=legend_items,
     location="top_right",
-    label_text_font_size="26pt",
+    label_text_font_size="24pt",
     label_text_color=INK_SOFT,
-    glyph_height=45,
-    glyph_width=45,
-    spacing=12,
-    padding=25,
+    glyph_height=40,
+    glyph_width=40,
+    spacing=10,
+    padding=22,
     border_line_color=INK_SOFT,
     border_line_width=2,
     background_fill_color=ELEVATED_BG,
     background_fill_alpha=0.95,
 )
-p.add_layout(legend, "right")
+p.add_layout(legend, "center")
 
-# Prepare node data for labels and hover
-all_node_source = ColumnDataSource(data={"x": node_x, "y": node_y, "labels": node_labels, "levels": node_levels})
-
-# Add labels to nodes with improved visibility
-labels = LabelSet(
-    x="x",
-    y="y",
-    text="labels",
-    source=all_node_source,
-    text_font_size="26pt",
-    text_color=INK,
-    text_align="center",
-    y_offset=60,
+# Labels above their own node
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="label",
+        source=ColumnDataSource(nodes),
+        text_font_size="22pt",
+        text_color=INK,
+        text_align="center",
+        y_offset=42,
+    )
 )
-p.add_layout(labels)
+p.add_tools(HoverTool(tooltips=[("Role", "@label"), ("Level", "@level")]))
 
-# Add hover tool for interactivity
-hover = HoverTool(tooltips=[("Role", "@labels"), ("Level", "@level")], mode="mouse")
-p.add_tools(hover)
-
-# Style title
-p.title.text_font_size = "28pt"
+p.title.text_font_size = "44pt"
 p.title.text_color = INK
 p.title.align = "center"
 
-# Set plot range with balanced padding
-x_vals = list(node_x)
-y_vals = list(node_y)
-x_padding = 1.0
-y_padding = 1.5
-p.x_range.start = min(x_vals) - x_padding
-p.x_range.end = max(x_vals) + x_padding
-p.y_range.start = min(y_vals) - y_padding
-p.y_range.end = max(y_vals) + y_padding
-
-# Save HTML output
+# Save
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with Selenium for PNG output
-W, H = 4800, 2700
 opts = Options()
 for arg in (
     "--headless=new",
@@ -262,6 +191,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
