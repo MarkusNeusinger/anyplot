@@ -1,20 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-18
 """
 
 import os
-import sys
 
-
-# Work around matplotlib.py shadowing (remove script dir from path)
-script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
-
-import matplotlib.pyplot as plt  # noqa: E402
-import pandas as pd  # noqa: E402
-import seaborn as sns  # noqa: E402
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
 
 # Theme tokens
@@ -24,10 +18,29 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always brand green)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette (first series always brand green)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Simplified world coastline polygons
+# Seaborn theme (setup belongs in the head)
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Constants
+# Simplified world coastline polygons (basemap, longitude/latitude pairs)
 WORLD_COASTLINES = [
     # North America
     [
@@ -157,265 +170,241 @@ WORLD_COASTLINES = [
     ],
 ]
 
-# Data: Major world cities with population
-cities_data = {
-    "city": [
-        "Tokyo",
-        "New York",
-        "London",
-        "Sydney",
-        "Paris",
-        "Dubai",
-        "Singapore",
-        "Mumbai",
-        "Cairo",
-        "São Paulo",
-        "Toronto",
-        "Shanghai",
-        "Moscow",
-        "Seoul",
-        "Los Angeles",
-        "Berlin",
-        "Bangkok",
-        "Jakarta",
-        "Cape Town",
-        "Buenos Aires",
-        "Mexico City",
-        "Istanbul",
-        "Lagos",
-        "Chicago",
-        "Hong Kong",
-    ],
-    "latitude": [
-        35.7,
-        40.7,
-        51.5,
-        -33.9,
-        48.9,
-        25.2,
-        1.3,
-        19.1,
-        30.0,
-        -23.6,
-        43.7,
-        31.2,
-        55.8,
-        37.6,
-        34.1,
-        52.5,
-        13.8,
-        -6.2,
-        -33.9,
-        -34.6,
-        19.4,
-        41.0,
-        6.5,
-        41.9,
-        22.3,
-    ],
-    "longitude": [
-        139.7,
-        -74.0,
-        -0.1,
-        151.2,
-        2.4,
-        55.3,
-        103.8,
-        72.9,
-        31.2,
-        -46.6,
-        -79.4,
-        121.5,
-        37.6,
-        127.0,
-        -118.2,
-        13.4,
-        100.5,
-        106.8,
-        18.4,
-        -58.4,
-        -99.1,
-        29.0,
-        3.4,
-        -87.6,
-        114.2,
-    ],
-    "population": [
-        37.4,
-        18.8,
-        9.5,
-        5.3,
-        11.0,
-        3.4,
-        5.7,
-        21.0,
-        20.9,
-        22.4,
-        6.3,
-        27.8,
-        12.5,
-        9.8,
-        12.5,
-        3.7,
-        10.7,
-        10.6,
-        4.6,
-        15.4,
-        21.8,
-        15.5,
-        15.4,
-        8.9,
-        7.5,
-    ],
-    "region": [
-        "Asia",
-        "North America",
-        "Europe",
-        "Oceania",
-        "Europe",
-        "Asia",
-        "Asia",
-        "Asia",
-        "Africa",
-        "South America",
-        "North America",
-        "Asia",
-        "Europe",
-        "Asia",
-        "North America",
-        "Europe",
-        "Asia",
-        "Asia",
-        "Africa",
-        "South America",
-        "North America",
-        "Europe",
-        "Africa",
-        "North America",
-        "Asia",
-    ],
-}
+# Columns: set these to your table's column names
+LATITUDE = "Latitude (°)"  # role: latitude
+LONGITUDE = "Longitude (°)"  # role: longitude
+VOLCANO_TYPE = "Volcano type"  # role: value
+ELEVATION = "Summit elevation (m)"  # role: size
+NAME = "Volcano"  # role: label
 
-df = pd.DataFrame(cities_data)
-
-# Create figure with seaborn styling
-sns.set_theme(
-    style="ticks",
-    rc={
-        "figure.facecolor": PAGE_BG,
-        "axes.facecolor": PAGE_BG,
-        "axes.edgecolor": INK_SOFT,
-        "axes.labelcolor": INK,
-        "text.color": INK,
-        "xtick.color": INK_SOFT,
-        "ytick.color": INK_SOFT,
-        "grid.color": INK,
-        "grid.alpha": 0.10,
-    },
+# Data: replace this block with your own table, for example df = pd.read_csv("volcanoes.csv")
+df = pd.DataFrame(
+    {
+        NAME: [
+            "Fuji",
+            "Etna",
+            "Vesuvius",
+            "Kilimanjaro",
+            "Mauna Loa",
+            "Kilauea",
+            "Popocatépetl",
+            "Cotopaxi",
+            "Villarrica",
+            "Mount St. Helens",
+            "Rainier",
+            "Krakatau",
+            "Merapi",
+            "Tambora",
+            "Pinatubo",
+            "Yellowstone",
+            "Eyjafjallajökull",
+            "Teide",
+            "Piton de la Fournaise",
+            "Nyiragongo",
+            "Ol Doinyo Lengai",
+            "Taal",
+            "Ngauruhoe",
+            "Aso",
+            "Sakurajima",
+            "Santorini",
+            "Fogo",
+            "Fernandina",
+            "Katla",
+        ],
+        LATITUDE: [
+            35.36,
+            37.75,
+            40.82,
+            -3.07,
+            19.48,
+            19.42,
+            19.02,
+            -0.68,
+            -39.42,
+            46.20,
+            46.85,
+            -6.10,
+            -7.54,
+            -8.25,
+            15.13,
+            44.43,
+            63.63,
+            28.27,
+            -21.24,
+            -1.52,
+            -2.76,
+            14.00,
+            -39.16,
+            32.88,
+            31.59,
+            36.40,
+            14.95,
+            -0.37,
+            63.63,
+        ],
+        LONGITUDE: [
+            138.73,
+            14.99,
+            14.43,
+            37.35,
+            -155.60,
+            -155.29,
+            -98.62,
+            -78.44,
+            -71.93,
+            -122.18,
+            -121.76,
+            105.42,
+            110.44,
+            118.00,
+            120.35,
+            -110.67,
+            -19.62,
+            -16.64,
+            55.71,
+            29.25,
+            35.91,
+            120.99,
+            175.63,
+            131.10,
+            130.66,
+            25.40,
+            -24.35,
+            -91.55,
+            -19.05,
+        ],
+        ELEVATION: [
+            3776,
+            3357,
+            1281,
+            5895,
+            4169,
+            1247,
+            5426,
+            5897,
+            2847,
+            2549,
+            4392,
+            813,
+            2910,
+            2850,
+            1486,
+            2805,
+            1651,
+            3715,
+            2632,
+            3470,
+            2962,
+            311,
+            2291,
+            1592,
+            1117,
+            367,
+            2829,
+            1476,
+            1512,
+        ],
+        VOLCANO_TYPE: [
+            "Stratovolcano",
+            "Stratovolcano",
+            "Stratovolcano",
+            "Stratovolcano",
+            "Shield",
+            "Shield",
+            "Stratovolcano",
+            "Stratovolcano",
+            "Stratovolcano",
+            "Stratovolcano",
+            "Stratovolcano",
+            "Caldera",
+            "Stratovolcano",
+            "Caldera",
+            "Stratovolcano",
+            "Caldera",
+            "Stratovolcano",
+            "Stratovolcano",
+            "Shield",
+            "Stratovolcano",
+            "Stratovolcano",
+            "Caldera",
+            "Stratovolcano",
+            "Caldera",
+            "Stratovolcano",
+            "Caldera",
+            "Stratovolcano",
+            "Shield",
+            "Caldera",
+        ],
+    }
 )
 
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot: reads only df and the constants above
+types = df[VOLCANO_TYPE].unique()
+type_colors = {t: IMPRINT_PALETTE[i] for i, t in enumerate(types)}
 
-# Set map extent
-ax.set_xlim(-180, 180)
-ax.set_ylim(-75, 85)
-ax.set_aspect("equal")
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Land background color (theme-adaptive)
+# Basemap: quiet land masses behind the points
 land_color = "#E8E8E0" if THEME == "light" else "#2A2A26"
 land_edge = "#A8A7A0" if THEME == "light" else "#505050"
-
-# Draw coastlines
 for coastline in WORLD_COASTLINES:
-    if len(coastline) > 2:
-        lons = [p[0] for p in coastline]
-        lats = [p[1] for p in coastline]
-        ax.fill(lons, lats, color=land_color, edgecolor=land_edge, linewidth=0.8, alpha=0.7, zorder=1)
+    lons = [lon for lon, _ in coastline]
+    lats = [lat for _, lat in coastline]
+    ax.fill(lons, lats, color=land_color, edgecolor=land_edge, linewidth=0.4, alpha=0.7, zorder=1)
 
-# Create color palette: Asia (position 1, green), Europe (2, orange), Africa (3, blue), Americas (4, purple), Oceania (5, sky blue)
-region_colors = {
-    "Asia": IMPRINT[0],  # #009E73 (brand green)
-    "Europe": IMPRINT[1],  # #C475FD (orange)
-    "Africa": IMPRINT[2],  # #4467A3 (blue)
-    "South America": IMPRINT[3],  # #BD8233 (reddish purple)
-    "North America": IMPRINT[1],  # #C475FD (orange, same as Europe for Americas)
-    "Oceania": IMPRINT[5],  # #2ABCCD (sky blue)
-}
-
-# Add region color to dataframe
-df["color"] = df["region"].map(region_colors)
-
-# Scale population for marker sizes
-min_pop, max_pop = df["population"].min(), df["population"].max()
-df["marker_size"] = 100 + (df["population"] - min_pop) / (max_pop - min_pop) * 600
-
-# Plot points with seaborn
 sns.scatterplot(
     data=df,
-    x="longitude",
-    y="latitude",
-    hue="region",
-    size="population",
-    sizes=(100, 700),
-    palette=region_colors,
-    alpha=0.75,
+    x=LONGITUDE,
+    y=LATITUDE,
+    hue=VOLCANO_TYPE,
+    size=ELEVATION,
+    sizes=(20, 160),
+    palette=type_colors,
+    alpha=0.8,
     edgecolor=PAGE_BG,
-    linewidth=1.2,
+    linewidth=0.5,
     ax=ax,
     zorder=3,
 )
 
-# Customize legend - only show region legend
+# Split seaborn's combined legend into a type legend and an elevation legend
 handles, labels = ax.get_legend_handles_labels()
-# Get region legend items (skip title and size legend)
-legend1 = ax.legend(
-    handles[0:6],
-    labels[0:6],
-    loc="lower left",
-    fontsize=16,
-    title="Region",
-    title_fontsize=18,
-    framealpha=0.9,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
+split = labels.index(ELEVATION)
+type_legend = ax.legend(
+    handles[1:split], labels[1:split], loc="lower left", fontsize=7, title_fontsize=8, framealpha=0.9
 )
-ax.add_artist(legend1)
-
-# Add size legend
-size_legend_elements = [
-    plt.scatter([], [], s=100, c=INK_SOFT, alpha=0.6, label="5M people"),
-    plt.scatter([], [], s=350, c=INK_SOFT, alpha=0.6, label="20M people"),
-    plt.scatter([], [], s=700, c=INK_SOFT, alpha=0.6, label="35M+ people"),
-]
+ax.add_artist(type_legend)
+type_legend.set_title(VOLCANO_TYPE)
 size_legend = ax.legend(
-    handles=size_legend_elements,
-    loc="lower right",
-    fontsize=14,
-    title="Population",
-    title_fontsize=16,
+    handles[split + 1 :],
+    labels[split + 1 :],
+    title=ELEVATION,
+    loc="lower center",
+    bbox_to_anchor=(0.6, 0),
+    ncol=len(labels) - split - 1,
+    fontsize=7,
+    title_fontsize=8,
     framealpha=0.9,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
 )
+# Size keys are neutral grey: visible on both surfaces
+for key in size_legend.legend_handles:
+    key.set_markerfacecolor(INK_SOFT)
+    key.set_markeredgecolor(INK_SOFT)
+    key.set_alpha(0.7)
 
-# Labels and title
-ax.set_xlabel("Longitude (°)", fontsize=20, color=INK)
-ax.set_ylabel("Latitude (°)", fontsize=20, color=INK)
-ax.set_title(
-    "scatter-map-geographic · python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20
-)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Map extent in degrees (fixed domain of the coordinates)
+ax.set_xlim(-180, 180)
+ax.set_ylim(-60, 85)
+ax.set_aspect("equal")
 
-# Grid styling
-ax.grid(True, alpha=0.10, linestyle="-", linewidth=0.6, color=INK_SOFT)
+ax.set_title("scatter-map-geographic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(LONGITUDE, fontsize=10)
+ax.set_ylabel(LATITUDE, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+
+ax.grid(True, alpha=0.10, linestyle="-", linewidth=0.5, color=INK_SOFT)
 ax.set_axisbelow(True)
-
-# Spine styling
-for spine in ["top", "right"]:
-    ax.spines[spine].set_visible(False)
-for spine in ["left", "bottom"]:
-    ax.spines[spine].set_color(INK_SOFT)
+sns.despine(ax=ax)
 
 plt.tight_layout()
-output_path = os.path.join(os.path.dirname(__file__), f"plot-{THEME}.png")
-plt.savefig(output_path, dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
