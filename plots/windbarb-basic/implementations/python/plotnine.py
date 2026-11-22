@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-19
@@ -42,33 +42,34 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
+BRAND = "#009E73"  # Imprint palette position 1
 
-# Data - Surface wind observations from a grid of weather stations
+# Columns: set these to your table's column names
+LONGITUDE = "Longitude (°E)"  # role: x
+LATITUDE = "Latitude (°N)"  # role: y
+U_WIND = "Zonal wind u (kt)"  # role: u
+V_WIND = "Meridional wind v (kt)"  # role: v
+
+# Constants
+CALM_KT = 2.5  # winds below this speed are drawn as an open circle
+
+# Data: replace this block with your own table, for example df = pd.read_csv("winds.csv")
 np.random.seed(42)
+xx, yy = np.meshgrid(np.linspace(0, 10, 6), np.linspace(0, 8, 5))
+u = np.random.uniform(-30, 30, xx.size)
+v = np.random.uniform(-25, 25, xx.size)
+# Two calm stations and two strong ones with pennants
+u[[0, 5, 15, 20]] = [0.5, 1.0, 45, 55]
+v[[0, 5, 15, 20]] = [0.3, -0.8, 35, 10]
+df = pd.DataFrame({LONGITUDE: xx.flatten(), LATITUDE: yy.flatten(), U_WIND: u, V_WIND: v})
 
-# Create a grid of observation points (6x5 grid = 30 stations)
-x_coords = np.linspace(0, 10, 6)
-y_coords = np.linspace(0, 8, 5)
-xx, yy = np.meshgrid(x_coords, y_coords)
-x = xx.flatten()
-y = yy.flatten()
-
-# Generate wind components (u: east-west, v: north-south) in knots
-u = np.random.uniform(-30, 30, len(x))
-v = np.random.uniform(-25, 25, len(x))
-
-# Force calm conditions (< 2.5 knots)
-u[0] = 0.5
-v[0] = 0.3
-u[5] = 1.0
-v[5] = -0.8
-
-# Force high winds with pennants (50+ knots)
-u[15] = 45
-v[15] = 35
-u[20] = 55
-v[20] = 10
+# Plot: reads only df and the constants above
+x = df[LONGITUDE].to_numpy()
+y = df[LATITUDE].to_numpy()
+u = df[U_WIND].to_numpy()
+v = df[V_WIND].to_numpy()
+x_span = np.nanmax(x) - np.nanmin(x)
+y_span = np.nanmax(y) - np.nanmin(y)
 
 # Calculate wind speed and direction
 wind_speed = np.sqrt(u**2 + v**2)
@@ -82,18 +83,21 @@ pennant_records = []
 calm_records = []
 
 scale = 0.06  # Scale factor for staff length
+staff_max = 0.3 * y_span  # longest staff in data units
 
 for i in range(len(x)):
     speed = wind_speed[i]
 
-    if speed < 2.5:
+    if np.isnan(speed):
+        continue
+    if speed < CALM_KT:
         calm_records.append({"x": x[i], "y": y[i], "speed": speed})
     else:
         dir_rad = wind_direction_rad[i]
         ux = -np.sin(dir_rad)
         uy = -np.cos(dir_rad)
 
-        staff_len = min(speed * scale, 2.5)
+        staff_len = min(speed * scale, staff_max)
         x2 = x[i] + ux * staff_len
         y2 = y[i] + uy * staff_len
         staff_records.append({"x": x[i], "y": y[i], "xend": x2, "yend": y2, "speed": speed})
@@ -159,15 +163,21 @@ barb_df = pd.DataFrame(barb_records) if barb_records else pd.DataFrame(columns=[
 pennant_df = pd.DataFrame(pennant_records) if pennant_records else pd.DataFrame(columns=["x", "y", "group", "order"])
 calm_df = pd.DataFrame(calm_records) if calm_records else pd.DataFrame(columns=["x", "y", "speed"])
 
+# Axis limits enclose every drawn mark, so no staff or barb is dropped at the border
+x_all = np.concatenate([x, staff_df["xend"], barb_df["xend"], pennant_df["x"]]).astype(float)
+y_all = np.concatenate([y, staff_df["yend"], barb_df["yend"], pennant_df["y"]]).astype(float)
+x_lo, x_hi = np.nanmin(x_all), np.nanmax(x_all)
+y_lo, y_hi = np.nanmin(y_all), np.nanmax(y_all)
+
 # Plot - layer composition using grammar of graphics
 plot = (
     ggplot()
-    + geom_segment(data=staff_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=BRAND, size=1.5)
-    + geom_point(data=staff_df, mapping=aes(x="x", y="y"), color=BRAND, size=3)
+    + geom_segment(data=staff_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=BRAND, size=1.2)
+    + geom_point(data=staff_df, mapping=aes(x="x", y="y"), color=BRAND, size=1.5)
 )
 
 if len(barb_df) > 0:
-    plot = plot + geom_segment(data=barb_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=BRAND, size=1.5)
+    plot = plot + geom_segment(data=barb_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=BRAND, size=1.2)
 
 if len(pennant_df) > 0:
     plot = plot + geom_polygon(
@@ -175,19 +185,19 @@ if len(pennant_df) > 0:
     )
 
 if len(calm_df) > 0:
-    plot = plot + geom_point(data=calm_df, mapping=aes(x="x", y="y"), color=BRAND, fill=PAGE_BG, size=6, stroke=1.5)
+    plot = plot + geom_point(data=calm_df, mapping=aes(x="x", y="y"), color=BRAND, fill=PAGE_BG, size=3.5, stroke=1.0)
 
 # Legend annotation positioned in the right margin outside the data area
-legend_text = "Wind Barb Key:\n○  Calm (< 2.5 kt)\n╲  Half barb = 5 kt\n╲╲ Full barb = 10 kt\n▲  Pennant = 50 kt"
+legend_text = f"Wind Barb Key:\n○  Calm (< {CALM_KT} kt)\n╲  Half barb = 5 kt\n╲╲ Full barb = 10 kt\n▲  Pennant = 50 kt"
 
 plot = (
     plot
     + annotate(
         "label",
-        x=13.8,
-        y=4.0,
+        x=x_hi + 0.4 * x_span,
+        y=np.nanmin(y) + 0.5 * y_span,
         label=legend_text,
-        size=11,
+        size=8,
         ha="right",
         va="center",
         fill=ELEVATED_BG,
@@ -195,23 +205,23 @@ plot = (
         label_padding=0.5,
         color=INK_SOFT,
     )
-    + scale_x_continuous(limits=(-0.5, 14))
-    + scale_y_continuous(limits=(-0.5, 8.5))
-    + labs(x="Longitude (°E)", y="Latitude (°N)", title="windbarb-basic · python · plotnine · anyplot.ai")
+    + scale_x_continuous(limits=(x_lo - 0.03 * x_span, x_hi + 0.45 * x_span))
+    + scale_y_continuous(limits=(y_lo - 0.03 * y_span, y_hi + 0.03 * y_span))
+    + labs(x=LONGITUDE, y=LATITUDE, title="windbarb-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
-        text=element_text(size=14, color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
+        axis_line=element_line(color=INK_SOFT),
+        text=element_text(size=7, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=12, color=INK),
         panel_grid_major=element_line(color=INK_SOFT, size=0.3, alpha=0.12),
         panel_grid_minor=element_line(color=INK_SOFT, size=0.15, alpha=0.06),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, verbose=False)
