@@ -2,47 +2,59 @@ library: altair
 language: python
 specification_id: violin-swarm
 created: '2026-01-09T16:50:28Z'
-updated: '2026-05-18T04:59:56Z'
-generated_by: claude-haiku
-workflow_run: 26014096206
+updated: '2026-11-22T10:15:47Z'
+generated_by: claude-sonnet
+workflow_run: 45010824848
 issue: 3526
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/altair/plot-dark.html
-quality_score: 93
+quality_score: 83
 review:
   strengths:
-  - Both light and dark renders are fully legible with flawless theme adaptation—Okabe-Ito
-    colors unchanged, chrome properly inverted
-  - 'Excellent spec compliance: violin shapes with KDE, swarm points with jitter,
-    overlaid transparently with perfect title format'
-  - Thoughtful use of transparency and sizing allows violin shapes and swarm points
-    to coexist without obscuring each other
-  - Clean, professional design with subtle grid (10% opacity) and generous whitespace;
-    no chartjunk
-  - Deterministic, reproducible code with proper theme tokens and high-resolution
-    output (scale_factor=3.0)
+  - 'True swarm layout: each point takes the smallest sideways offset clear of its
+    neighbours, so all 50 observations per group stay individually visible while sitting
+    at their exact values'
+  - Violins are evaluated only one bandwidth past each group's own range, so tails
+    end near the data and the shared y axis is not forced to zero
+  - Translucent violins (opacity 0.4) with opaque, page-outlined points read clearly
+    in both themes, with identical Imprint colours
+  - 'Native Altair layering: mark_area(orient=''horizontal'') with x/x2 for mirrored
+    violins and labelExpr for category labels on a quantitative axis'
+  - Tooltips with condition and value on every swarm point in the HTML view
+  - 'Adaptable structure: column constants, one Data block, and the plot code reads
+    only df'
   weaknesses:
-  - 'Minor: Some swarm points overlap with violin shapes, but this is inherent to
-    the plot type and well-managed with jitter and transparency'
+  - 'SC-02 (both): in Condition D''s widest rows (about 400-420 ms) the outermost
+    swarm points sit on or past the violin outline, half their disc outside the fill,
+    against C2 (staying inside the violin''s outline) → every point inside the outline
+    (about -0.05 category units at the widest row). Likely cause: swarm offsets are
+    not checked against the KDE half-width at that value; VIOLIN_HALF_WIDTH 0.4 is
+    too narrow for POINT_SIZE 40 at 50 points.'
+  - 'DQ-02 (both): the groups are labelled ''Condition A''-''Condition D'', which
+    read as placeholders → named conditions of a reaction-time study (e.g. ''Control'',
+    ''Dual task'', ''Sleep deprived'', ''Caffeine''). Likely cause: the label list
+    in the Data block.'
+  - 'Suggestion: a sample size per group (n = 50) under the category labels would
+    make the transparency claim of the plot explicit.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified. Clean, professional appearance.
-      Chrome: Title "violin-swarm · Python · altair · anyplot.ai" in dark text (28px), Y-axis label "Reaction Time (ms)" in dark text (22px), tick labels and condition labels all in appropriate dark tones (#1A1A17 for primary, #4A4A44 for secondary). All text clearly readable against light background.
-      Data: Four violin shapes with overlaid swarm points. Colors follow Okabe-Ito palette: Condition A #009E73 (green), B #D55E00 (orange), C #0072B2 (blue), D #CC79A7 (pink). Violins have opacity=0.4; swarm points have opacity=0.85. All elements clearly distinguishable.
-      Legibility verdict: PASS — all text is readable, no light-on-light failures, grid is subtle but visible.
+      Background: warm off-white #FAF8F1, 3200x1800, chart centred with page-coloured padding.
+      Chrome: title 'violin-swarm · python · altair · anyplot.ai' bold dark at top centre; y-axis title 'Reaction time (ms)' with ticks 200-700; x-axis title 'Condition' with labels Condition A-D; subtle horizontal grid; left and bottom domain lines in INK_SOFT. All text dark and readable.
+      Data: four translucent violins (green #009E73, purple #C475FD, blue #4467A3, ochre #BD8233) at opacity 0.4, each with 50 opaque swarm points in the same hue with a thin off-white outline; A normal around 310, B right-skewed with a tail to 700, C bimodal at about 290 and 400, D tight around 410. Points spread sideways in packed rows; in D's widest rows the outermost points touch or cross the violin outline.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified. Professional and consistent with light render.
-      Chrome: Title in light text (#F0EFE8), axis labels and tick labels in light (#F0EFE8) and secondary light (#B8B7B0) tones. All text clearly readable against dark background. No dark-on-dark failures detected.
-      Data: Data colors are identical to light render (Okabe-Ito 1-4). Only chrome (background, text, grid) has inverted theme tokens. Brand green (#009E73) in Condition A is clearly visible on dark background.
-      Legibility verdict: PASS — all text is readable, proper contrast throughout, theme adaptation is flawless.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light #F0EFE8, tick labels in #B8B7B0, grid subtle; no dark-on-dark text.
+      Data: identical hues and positions to the light render; violins darker through the translucent fill on the dark page, point outlines now near-black; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -50,77 +62,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all explicitly sized 22-28px and
-          themed correctly. Readable in both renders.
+        comment: Explicit sizes (title 16, axis titles 12, ticks 10 at scale 4, the
+          library prompt's values); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minimal overlap between swarm points and violins; inherent to plot
-          type but well-managed with jitter and transparency.
+        comment: No text collisions; packed swarm points separated by a thin page-coloured
+          outline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violin shapes and swarm points both clearly visible. Sizing (area
-          opacity=0.4, point size=100, point opacity=0.85) is well-balanced.
+        comment: 50 points per group at size 40 with outline are individually visible
+          on the translucent violins in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (positions 1-4) is CVD-safe with good contrast
-          between categories.
+        comment: Four distinct Imprint hues on separate categories; no red-green as
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 1600x900px scales to 4800x2700px. Balanced proportions, generous
-          margins, nothing cut off.
+        comment: 3200x1800 canvas (padded, not cropped), balanced axis titles and
+          ticks, nothing cut off; title ~38% of width is no deduction
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Y-axis 'Reaction Time (ms)' includes units.
-          X-axis shows condition names A-D.
+        comment: '''Reaction time (ms)'' with unit, ''Condition'' for the category
+          axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓. Okabe-Ito order 1-4 ✓. Backgrounds #FAF8F1/#1A1A17
-          ✓. Both renders theme-correct ✓.'
+        comment: 'Imprint positions 1-4 in order, first #009E73; backgrounds #FAF8F1
+          / #1A1A17; data colours identical across themes'
     design_excellence:
-      score: 16
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Clean, professional design. Intentional transparency, correct palette,
-          smooth interpolation, well-balanced layout. Raises above generic defaults.
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit font
+          sizes; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid (10% opacity), clean view border, generous whitespace.
-          Minimalist with good typography hierarchy.
+        passed: false
+        comment: 'Raised by one: page-coloured 0.5 px marker outlines that separate
+          edge-to-edge points, tick marks removed on the category axis with label
+          padding, view stroke removed'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear focal point. Distribution via violins, observations via points.
-          Color reinforces categories. Good visual hierarchy.
+        passed: false
+        comment: Distributions displayed; no hierarchy or focal point chosen beyond
+          the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,30 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: violin plot with overlaid swarm points.'
+        comment: Violin with overlaid swarm, correct type
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Violin shapes (KDE), swarm points, transparency (0.4 opacity), horizontal
-          jitter all present.
+        passed: false
+        comment: 'C1, C3, C4, C5 met; C2 partly missed: the widest swarm rows of Condition
+          D reach past the violin outline (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: categories. Y: reaction times. Color: condition. All correct
-          and show all data.'
+        comment: Points at their values; sideways offsets are swarm layout (exempt);
+          y not forced to zero, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed (x-axis labels serve this
-          purpose).
+        comment: Title 'violin-swarm · python · altair · anyplot.ai' correct; no legend
+          needed (categories on the axis), N/A
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -159,22 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: distributions (violin shapes), observations (swarm),
-          4 conditions with varied distributions.'
+        comment: Normal, right-skewed, bimodal and tight groups show every aspect
+          of the type
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Reaction time data (200-450ms) plausible for experimental psychology.
-          Neutral, appropriate context.
+        passed: false
+        comment: Plausible reaction-time study, neutral, but groups labelled 'Condition
+          A-D' read as generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range sensible. 50 observations per condition realistic. Distribution
-          variety demonstrates plot type well.
+        comment: Reaction times 240-700 ms plausible for a choice-RT task; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -184,53 +197,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Direct execution.
+        comment: Imports -> tokens -> constants -> Data block -> Plot -> Save; no
+          functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set twice. Deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, altair, numpy, pandas, scipy.stats.'
+        comment: All imports used (os, altair, numpy, pandas, PIL.Image, scipy.stats)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake interactivity. Clean code organization.
+        comment: KDE via scipy.stats.gaussian_kde; the swarm layout loop has no available
+          call that computes it for altair
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the PAD-only block;
+          current Altair 6 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses Chart(), mark_area(), mark_circle(), encode(), layer(), Scale()
-          idiomatically. Clean theme handling.
+        passed: false
+        comment: 'Raised by one: layered charts with shared scales, mark_area(orient=''horizontal'')
+          with x/x2 for the mirrored violin, labelExpr for category labels on a quantitative
+          axis'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Theme tokens via os.environ, KDE via scipy, manual jittering, fine-grained
-          axis control, scale_factor=3.0.
+        passed: false
+        comment: 'Raised by one: Vega-Lite tooltips on the swarm points for the HTML
+          view'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T10:11:40Z'
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
@@ -242,4 +263,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - publication-ready
+  - edge-highlighting
