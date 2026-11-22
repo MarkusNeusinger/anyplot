@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-20
@@ -17,6 +17,14 @@ LetsPlot.setup_html()
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+
+# Columns: names used by the cell and clue-number tables
+X = "x"  # role: extra
+Y = "y"  # role: extra
+BLOCKED = "blocked"  # role: extra
+CELL_TYPE = "cell_type"  # role: extra
+LABEL = "label"  # role: extra
+CLUE = "clue"  # role: extra
 
 # Data — 15x15 crossword grid with 180-degree rotational symmetry
 grid_size = 15
@@ -68,7 +76,7 @@ cells_data = []
 for r in range(grid_size):
     for c in range(grid_size):
         cell_type = "Blocked" if grid[r, c] == 1 else "Entry"
-        cells_data.append({"x": c, "y": grid_size - 1 - r, "blocked": grid[r, c], "cell_type": cell_type})
+        cells_data.append({X: c, Y: grid_size - 1 - r, BLOCKED: grid[r, c], CELL_TYPE: cell_type})
 
 df_cells = pd.DataFrame(cells_data)
 
@@ -83,12 +91,7 @@ for (r, c), num in numbers.items():
     if starts_down:
         direction_parts.append("Down")
     number_labels.append(
-        {
-            "x": c + 0.05,
-            "y": grid_size - 1 - r + 0.35,
-            "label": str(num),
-            "clue": f"Clue {num}: {' / '.join(direction_parts)}",
-        }
+        {X: c + 0.05, Y: grid_size - 1 - r + 0.35, LABEL: str(num), CLUE: f"Clue {num}: {' / '.join(direction_parts)}"}
     )
 
 df_numbers = pd.DataFrame(number_labels)
@@ -97,35 +100,36 @@ df_numbers = pd.DataFrame(number_labels)
 plot = (
     ggplot()
     + geom_tile(
-        data=df_cells[df_cells["blocked"] == 0],
-        mapping=aes(x="x", y="y"),
+        data=df_cells[df_cells[BLOCKED] == 0],
+        mapping=aes(x=X, y=Y),
         fill="white",
         color="black",
         size=0.8,
         width=0.98,
         height=0.98,
-        tooltips=layer_tooltips().line("@cell_type cell"),
+        tooltips=layer_tooltips().line(f"@{CELL_TYPE} cell"),
     )
     + geom_tile(
-        data=df_cells[df_cells["blocked"] == 1],
-        mapping=aes(x="x", y="y"),
+        data=df_cells[df_cells[BLOCKED] == 1],
+        mapping=aes(x=X, y=Y),
         fill="black",
         color="black",
         size=0.8,
         width=0.98,
         height=0.98,
-        tooltips=layer_tooltips().line("@cell_type cell"),
+        tooltips=layer_tooltips().line(f"@{CELL_TYPE} cell"),
     )
     + geom_text(
         data=df_numbers,
-        mapping=aes(x="x", y="y", label="label"),
+        mapping=aes(x=X, y=Y, label=LABEL),
         size=8,
         color="#1A1A17",
         hjust=0,
         vjust=1,
         fontface="bold",
-        tooltips=layer_tooltips().line("@clue"),
+        tooltips=layer_tooltips().line(f"@{CLUE}"),
     )
+    + scale_x_continuous(expand=[0.0, 0.6])
     + coord_fixed(ratio=1)
     + labs(title="crossword-basic · python · letsplot · anyplot.ai")
     + theme_void()
