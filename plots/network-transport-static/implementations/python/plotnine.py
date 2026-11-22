@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-transport-static: Static Transport Network Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-18
@@ -13,180 +13,174 @@ from plotnine import (
     arrow,
     element_rect,
     element_text,
+    geom_label,
     geom_point,
     geom_segment,
-    geom_text,
     ggplot,
     labs,
     scale_color_manual,
+    scale_x_continuous,
+    scale_y_continuous,
     theme,
     theme_void,
 )
 
 
-np.random.seed(42)
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Station data - regional rail network
-stations = pd.DataFrame(
+# Imprint palette: all eight positions, one per route type in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+TYPE_NAMES = {"VE": "VE (Valley express)", "R": "R (Regional)", "CB": "CB (Cog railway)", "SK": "SK (Ski shuttle)"}
+LANE_GAP = 0.6  # distance between parallel edges of one station pair, in map units
+NODE_RADIUS = 0.3  # edges stop this far from a station centre so arrowheads stay visible
+
+# Columns: set these to your tables' column names
+STATIONS = ["id", "label", "x", "y"]  # role: stations
+ROUTES = ["source_id", "target_id", "route_id", "departure_time", "arrival_time"]  # role: routes
+NODE_ID, NODE_LABEL, X, Y = STATIONS
+SOURCE, TARGET, ROUTE, DEPARTURE, ARRIVAL = ROUTES
+
+# Data: replace this block with your own tables, for example df = pd.read_csv("routes.csv")
+# An alpine valley line: schematic station coordinates, one row per directed service
+nodes = pd.DataFrame(
     {
-        "id": ["CTR", "NTH", "STH", "EST", "WST", "NE", "NW", "SE", "SW", "AIR", "UNI", "IND"],
-        "label": [
-            "Central",
-            "North",
-            "South",
-            "East",
-            "West",
-            "Northeast",
-            "Northwest",
-            "Southeast",
-            "Southwest",
-            "Airport",
-            "University",
-            "Industrial",
+        NODE_ID: ["TAL", "SEE", "SON", "ALM", "LAR", "GLE", "BER", "KRE", "HOC", "EIS", "WIE"],
+        NODE_LABEL: [
+            "Talbach",
+            "Seewald",
+            "Sonnalp",
+            "Almdorf",
+            "Larchau",
+            "Gletscherhof",
+            "Bergstein",
+            "Kreuzjoch",
+            "Hochmoos",
+            "Eisbach",
+            "Wiesental",
         ],
-        "x": [0.5, 0.5, 0.5, 0.85, 0.15, 0.75, 0.25, 0.75, 0.25, 0.95, 0.05, 0.5],
-        "y": [0.5, 0.85, 0.15, 0.5, 0.5, 0.75, 0.75, 0.25, 0.25, 0.65, 0.65, 0.0],
+        X: [7.5, 2.8, 1.6, 4.6, 4.5, 8.0, 10.6, 12.0, 14.2, 9.6, 14.0],
+        Y: [4.2, 3.6, 6.9, 6.0, 1.6, 7.9, 6.4, 4.0, 7.2, 1.4, 2.0],
     }
 )
 
-# Route data - train services with times
-routes_data = [
-    # Express routes (RE)
-    ("CTR", "NTH", "RE1", "06:00", "06:25"),
-    ("NTH", "CTR", "RE1", "06:30", "06:55"),
-    ("CTR", "STH", "RE2", "06:15", "06:40"),
-    ("STH", "CTR", "RE2", "06:45", "07:10"),
-    ("CTR", "EST", "RE3", "07:00", "07:20"),
-    ("EST", "CTR", "RE3", "07:30", "07:50"),
-    ("CTR", "WST", "RE4", "07:15", "07:35"),
-    ("WST", "CTR", "RE4", "07:45", "08:05"),
-    # Regional routes (RB)
-    ("NTH", "NE", "RB1", "08:00", "08:15"),
-    ("NE", "EST", "RB1", "08:20", "08:40"),
-    ("NTH", "NW", "RB2", "08:00", "08:15"),
-    ("NW", "WST", "RB2", "08:20", "08:40"),
-    ("STH", "SE", "RB3", "08:00", "08:15"),
-    ("SE", "EST", "RB3", "08:20", "08:40"),
-    ("STH", "SW", "RB4", "08:00", "08:15"),
-    ("SW", "WST", "RB4", "08:20", "08:40"),
-    # Airport Express (AE)
-    ("CTR", "EST", "AE1", "09:00", "09:15"),
-    ("EST", "AIR", "AE1", "09:20", "09:35"),
-    ("AIR", "EST", "AE1", "10:00", "10:15"),
-    ("EST", "CTR", "AE1", "10:20", "10:35"),
-    # Local routes (S)
-    ("CTR", "UNI", "S1", "08:30", "08:50"),
-    ("UNI", "NW", "S1", "08:55", "09:10"),
-    ("CTR", "IND", "S2", "09:00", "09:25"),
-    ("IND", "STH", "S2", "09:30", "09:45"),
+services = [
+    ("SEE", "TAL", "VE1", "06:40", "07:05"),
+    ("TAL", "KRE", "VE1", "07:10", "07:38"),
+    ("KRE", "TAL", "VE2", "08:00", "08:28"),
+    ("TAL", "SEE", "VE2", "08:33", "08:58"),
+    ("TAL", "BER", "VE3", "10:00", "10:24"),
+    ("TAL", "ALM", "R1", "07:15", "07:35"),
+    ("ALM", "SON", "R1", "07:40", "07:58"),
+    ("ALM", "TAL", "R2", "08:10", "08:30"),
+    ("TAL", "LAR", "R3", "07:45", "08:05"),
+    ("LAR", "SEE", "R3", "08:10", "08:30"),
+    ("TAL", "EIS", "R4", "09:00", "09:22"),
+    ("EIS", "WIE", "R4", "09:27", "09:52"),
+    ("WIE", "KRE", "R5", "10:05", "10:25"),
+    ("KRE", "BER", "R5", "10:30", "10:50"),
+    ("HOC", "BER", "R6", "11:00", "11:25"),
+    ("BER", "GLE", "CB1", "08:20", "08:42"),
+    ("GLE", "BER", "CB1", "09:10", "09:31"),
+    ("KRE", "HOC", "CB2", "09:15", "09:40"),
+    ("HOC", "KRE", "CB2", "10:05", "10:30"),
+    ("TAL", "GLE", "SK1", "08:00", "08:35"),
+    ("GLE", "TAL", "SK1", "16:00", "16:35"),
+    ("TAL", "BER", "SK2", "10:10", "10:38"),
+    ("BER", "TAL", "SK2", "11:00", "11:24"),
+    ("SON", "SEE", "SK3", "12:00", "12:26"),
 ]
+df = pd.DataFrame(services, columns=[SOURCE, TARGET, ROUTE, DEPARTURE, ARRIVAL])
 
-routes = pd.DataFrame(routes_data, columns=["source", "target", "route_id", "dep", "arr"])
+# Plot: reads only df, nodes and the constants above
+coords = nodes.set_index(NODE_ID)[[X, Y]]
+edges = df.copy()
+edges["x0"] = edges[SOURCE].map(coords[X])
+edges["y0"] = edges[SOURCE].map(coords[Y])
+edges["x1"] = edges[TARGET].map(coords[X])
+edges["y1"] = edges[TARGET].map(coords[Y])
+edges["route_type"] = edges[ROUTE].str.extract(r"^([A-Za-z]+)")[0]
+types = edges["route_type"].unique().tolist()
 
-# Create station lookup
-station_coords = stations.set_index("id")[["x", "y"]]
+# Parallel services of one station pair get their own lane, centred on the straight line
+pair_key = edges[[SOURCE, TARGET]].apply(lambda r: "|".join(sorted(r)), axis=1)
+lane = edges.groupby(pair_key).cumcount() - (edges.groupby(pair_key)[SOURCE].transform("size") - 1) / 2
+canon_forward = (edges[SOURCE] < edges[TARGET]).map({True: 1.0, False: -1.0})
+dx = edges["x1"] - edges["x0"]
+dy = edges["y1"] - edges["y0"]
+length = np.hypot(dx, dy)
+ux, uy = dx / length, dy / length
+shift = lane * LANE_GAP * canon_forward
+px, py = -uy * shift, ux * shift
 
-# Add coordinates to routes
-routes["x"] = routes["source"].map(station_coords["x"])
-routes["y"] = routes["source"].map(station_coords["y"])
-routes["xend"] = routes["target"].map(station_coords["x"])
-routes["yend"] = routes["target"].map(station_coords["y"])
+edges["xs"] = edges["x0"] + px + ux * NODE_RADIUS
+edges["ys"] = edges["y0"] + py + uy * NODE_RADIUS
+edges["xe"] = edges["x1"] + px - ux * NODE_RADIUS
+edges["ye"] = edges["y1"] + py - uy * NODE_RADIUS
 
-# Route type for coloring
-routes["route_type"] = routes["route_id"].str.extract(r"([A-Z]+)")[0]
+# Label sits on its own edge, at staggered positions so neighbours do not stack
+t = 0.5 + 0.14 * lane * canon_forward
+edges["lx"] = edges["xs"] + (edges["xe"] - edges["xs"]) * t
+edges["ly"] = edges["ys"] + (edges["ye"] - edges["ys"]) * t
+edges["tag"] = edges[ROUTE] + "  " + edges[DEPARTURE] + "→" + edges[ARRIVAL]
 
-# Offset overlapping routes
-route_pairs = routes.groupby(["source", "target"]).cumcount()
-offset_amount = 0.025
+x_pad = (nodes[X].max() - nodes[X].min()) * 0.06
+y_pad = (nodes[Y].max() - nodes[Y].min()) * 0.14
 
-# Calculate perpendicular offset for multiple routes
-dx = routes["xend"] - routes["x"]
-dy = routes["yend"] - routes["y"]
-length = np.sqrt(dx**2 + dy**2)
-perpx = -dy / length * offset_amount * route_pairs
-perpy = dx / length * offset_amount * route_pairs
-
-routes["x"] = routes["x"] + perpx
-routes["y"] = routes["y"] + perpy
-routes["xend"] = routes["xend"] + perpx
-routes["yend"] = routes["yend"] + perpy
-
-# Shorten edges so arrows don't overlap with nodes
-shorten = 0.04
-dx = routes["xend"] - routes["x"]
-dy = routes["yend"] - routes["y"]
-length = np.sqrt(dx**2 + dy**2)
-routes["x"] = routes["x"] + dx / length * shorten
-routes["y"] = routes["y"] + dy / length * shorten
-routes["xend"] = routes["xend"] - dx / length * shorten
-routes["yend"] = routes["yend"] - dy / length * shorten
-
-# Calculate edge label positions - stagger along edge to reduce overlaps
-label_offset = np.where(routes.index % 2 == 0, 0.4, 0.6)
-routes["label_x"] = routes["x"] + (routes["xend"] - routes["x"]) * label_offset
-routes["label_y"] = routes["y"] + (routes["yend"] - routes["y"]) * label_offset
-routes["edge_label"] = routes["route_id"] + " | " + routes["dep"] + "→" + routes["arr"]
-
-# Color palette for route types
-route_colors = {
-    "RE": "#4467A3",  # Blue - Express
-    "RB": "#AE3030",  # Orange - Regional
-    "AE": "#C475FD",  # Vermillion - Airport
-    "S": "#009E73",  # Green - Local (first series brand color)
-}
-
-# Create the plot
 plot = (
     ggplot()
-    # Draw route edges with arrows
     + geom_segment(
-        data=routes,
-        mapping=aes(x="x", y="y", xend="xend", yend="yend", color="route_type"),
-        size=1.5,
-        arrow=arrow(length=0.15, type="closed", angle=25),
+        data=edges,
+        mapping=aes(x="xs", y="ys", xend="xe", yend="ye", color="route_type"),
+        size=0.8,
+        arrow=arrow(length=0.07, type="closed", angle=25),
     )
-    # Draw station nodes
-    + geom_point(data=stations, mapping=aes(x="x", y="y"), size=12, fill=PAGE_BG, color=INK, stroke=2)
-    # Station labels
-    + geom_text(
-        data=stations, mapping=aes(x="x", y="y", label="label"), size=12, fontweight="bold", color=INK, nudge_y=0.06
-    )
-    # Edge labels (route and times) - improved size and positioning
-    + geom_text(
-        data=routes,
-        mapping=aes(x="label_x", y="label_y", label="edge_label", color="route_type"),
-        size=9,
-        nudge_y=0.04,
+    + geom_point(data=nodes, mapping=aes(x=X, y=Y), size=6, fill=ELEVATED_BG, color=INK, stroke=1)
+    + geom_label(
+        data=edges,
+        mapping=aes(x="lx", y="ly", label="tag", color="route_type"),
+        size=5.5,
+        fill=PAGE_BG,
+        label_size=0,
+        label_padding=0.08,
         fontweight="bold",
         show_legend=False,
     )
-    # Color scale
-    + scale_color_manual(
-        values=route_colors,
-        name="Route Type",
-        labels={"RE": "RE (Express)", "RB": "RB (Regional)", "AE": "AE (Airport)", "S": "S (Local)"},
-        limits=["RE", "RB", "AE", "S"],
+    + geom_label(
+        data=nodes,
+        mapping=aes(x=X, y=Y, label=NODE_LABEL),
+        size=8,
+        fontweight="bold",
+        color=INK,
+        fill=PAGE_BG,
+        label_size=0,
+        label_padding=0.1,
+        nudge_y=0.62,
     )
-    # Labels and theme
+    + scale_color_manual(
+        values=IMPRINT_PALETTE, limits=types, labels=[TYPE_NAMES.get(name, name) for name in types], name="Route type"
+    )
+    + scale_x_continuous(limits=(nodes[X].min() - x_pad, nodes[X].max() + x_pad))
+    + scale_y_continuous(limits=(nodes[Y].min() - y_pad, nodes[Y].max() + y_pad))
     + labs(title="network-transport-static · python · plotnine · anyplot.ai")
     + theme_void()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
+        plot_title=element_text(size=12, ha="center", weight="bold", color=INK),
         legend_position="right",
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=16, weight="bold", color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_title=element_text(size=9, weight="bold", color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
     )
 )
 
-# Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
