@@ -1,22 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 waffle-basic: Basic Waffle Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-05
 """
 
 import os
-import sys
 
+import altair as alt
 import pandas as pd
-
-
-# Fix import conflict: import from parent directory to avoid local module shadowing
-original_path = sys.path[:]
-sys.path = [p for p in sys.path if not p.endswith("python")]
-try:
-    import altair as alt
-finally:
-    sys.path = original_path
+from PIL import Image
 
 
 # Theme tokens
@@ -26,64 +18,84 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series is #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Budget allocation with 5 categories including a small one
-categories = ["Engineering", "Marketing", "Operations", "Design", "Legal"]
-values = [40, 28, 18, 10, 4]  # Percentages (sum to 100)
+# Constants
+GRID_SIDE = 10  # standard 10x10 waffle: every square is 1% of the whole
 
-# Build 10x10 grid (100 squares, each = 1%)
+# Columns: set these to your table's column names
+CATEGORY = "Category"  # role: category
+VALUE = "Share of budget (%)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("budget.csv")
+df = pd.DataFrame({CATEGORY: ["Engineering", "Marketing", "Operations", "Design", "Legal"], VALUE: [40, 28, 18, 10, 4]})
+
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+LEGEND_LABEL = "Category (share)"
+ROW, COL = "row", "col"
+
+# Whole squares per category: cumulative rounding keeps the grid exactly full
+cells = GRID_SIDE * GRID_SIDE
+table = df.dropna(subset=[VALUE]).reset_index(drop=True)
+shares = table[VALUE].astype(float) / table[VALUE].astype(float).sum()
+edges = (shares.cumsum() * cells).round().astype(int).tolist()
+counts = pd.Series(edges).diff().fillna(edges[0]).astype(int).tolist()
+
 squares = []
-square_idx = 0
-for cat, val, color in zip(categories, values, IMPRINT, strict=True):
-    for _ in range(val):
-        row = square_idx // 10
-        col = square_idx % 10
-        squares.append({"category": cat, "row": row, "col": col, "color": color})
-        square_idx += 1
+for name, value, count in zip(table[CATEGORY], shares, counts, strict=True):
+    for _ in range(count):
+        idx = len(squares)
+        squares.append(
+            {CATEGORY: name, LEGEND_LABEL: f"{name} ({value:.0%})", ROW: idx // GRID_SIDE, COL: idx % GRID_SIDE}
+        )
+grid = pd.DataFrame(squares)
+legend_order = [f"{name} ({value:.0%})" for name, value in zip(table[CATEGORY], shares, strict=True)]
 
-df = pd.DataFrame(squares)
+title = "Budget Allocation · waffle-basic · python · altair · anyplot.ai"
 
-# Create waffle chart
 chart = (
-    alt.Chart(df)
-    .mark_rect(stroke="white", strokeWidth=2, cornerRadius=4)
+    alt.Chart(grid)
+    .mark_rect(stroke=PAGE_BG, strokeWidth=4, cornerRadius=5)
     .encode(
-        x=alt.X("col:O", axis=None),
-        y=alt.Y("row:O", axis=None, sort="descending"),
+        x=alt.X(f"{COL}:O", axis=None),
+        y=alt.Y(f"{ROW}:O", axis=None),
         color=alt.Color(
-            "category:N",
-            scale=alt.Scale(domain=categories, range=IMPRINT),
+            LEGEND_LABEL.translate(ESCAPE),
+            type="nominal",
+            title=LEGEND_LABEL,
+            sort=None,
+            scale=alt.Scale(domain=legend_order, range=IMPRINT_PALETTE[: len(legend_order)]),
             legend=alt.Legend(
-                title="Category",
-                titleFontSize=22,
-                labelFontSize=18,
-                symbolSize=300,
+                titleFontSize=18,
+                labelFontSize=16,
+                symbolType="square",
+                symbolSize=500,
                 orient="right",
-                labelExpr="datum.label + ' (' + {"
-                + ", ".join([f"'{cat}': '{val}%'" for cat, val in zip(categories, values, strict=True)])
-                + "}[datum.label] + ')'",
+                padding=12,
+                rowPadding=8,
             ),
         ),
-        tooltip=["category:N"],
+        tooltip=[alt.Tooltip(CATEGORY.translate(ESCAPE), title=CATEGORY)],
     )
     .properties(
-        width=1600,
-        height=900,
-        background=PAGE_BG,
-        title=alt.Title(
-            "Budget Allocation · waffle-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK
-        ),
+        width=340, height=340, background=PAGE_BG, title=alt.Title(title, fontSize=15, anchor="middle", color=INK)
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
-    .configure_axis(
-        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
-    )
+    .configure_view(fill=None, stroke=None)
     .configure_title(color=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK, titleColor=INK)
 )
 
-# Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save outputs, padded (never cropped) to the 2400 x 2400 square canvas
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+TARGET = 2400
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET or img.height > TARGET:
+    # Other data can widen the legend or title: shrink to fit, never crop
+    fit = min(TARGET / img.width, TARGET / img.height)
+    img = img.resize((int(img.width * fit), int(img.height * fit)), Image.LANCZOS)
+canvas = Image.new("RGB", (TARGET, TARGET), PAGE_BG)
+canvas.paste(img, ((TARGET - img.width) // 2, (TARGET - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
 chart.save(f"plot-{THEME}.html")
