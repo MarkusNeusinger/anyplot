@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' area-stacked-confidence: Stacked Area Chart with Confidence Bands
 #' Library: ggplot2 | R
-#' Quality: 87/100 | Updated: 2026-11-22
+#' Quality: pending | Updated: 2026-11-22
 
 library(ggplot2)
 library(dplyr)
