@@ -2,120 +2,148 @@ library: letsplot
 language: python
 specification_id: network-transport-static
 created: '2026-01-09T23:51:50Z'
-updated: '2026-05-18T14:49:46Z'
-generated_by: claude-haiku
-workflow_run: 26039987062
+updated: '2026-11-22T13:43:58Z'
+generated_by: claude-sonnet
+workflow_run: 45028321854
 issue: 3463
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 78
 review:
   strengths:
-  - Perfect spec compliance with all required features implemented
-  - Excellent visual quality and theme adaptation with no readability failures
-  - Clean idiomatic letsplot code using proper ggplot2 grammar
-  - Proper handling of complex network topology with offset edges for multiple routes
-  - Correct Okabe-Ito palette compliance and theme tokens across both renders
+  - Every station sits exactly at its provided schematic x/y coordinate; edges are
+    trimmed with a vectorized clearance (NODE_CLEARANCE / length) so the closed arrowheads
+    stop short of the destination node
+  - The two Central → East routes (RE2, RE5) fan out as parallel offset edges via
+    a groupby rank/size spread, each with its own arrowhead, and each label sits on
+    the outer side of its own edge
+  - Edge labels follow the 'RE 42 | 08:15 → 09:30' format and are colored like their
+    edge, with the Route Type legend naming Express / Regional / Local in canonical
+    Imprint order
+  - layer_tooltips() builders give edges (route, from → to, departure, arrival, type)
+    and stations their own hover cards in the HTML export
+  - Canonical 3200×1800 canvas with theme tokens threaded through page, title, station
+    labels and legend; both renders theme-correct
   weaknesses:
-  - Edge label crowding in high-density areas around Central station causes slight
-    overlaps
-  - Design Excellence somewhat generic; lacks distinctive visual hierarchy or custom
-    refinement beyond defaults
-  - Color contrast for Regional (orange) and Local (blue) routes could be stronger
-    on dark theme for accessibility
+  - 'VQ-02 (both): the S1 and S2 edge labels (''10:12'', ''10:30'') run across the
+    purple RB4 edge line, and the West, Central and East station labels sit on their
+    own outgoing vertical edges → labels clear of every edge line by at least a few
+    px. Likely cause: station labels placed with nudge_y=-0.055 straight into the
+    path of the vertical edges, and LABEL_OFFSET=0.055 too small for the S1/S2 labels
+    next to the RB4 edge; a smaller label offset into empty space or nudge_x for station
+    labels fixes it without moving any node.'
+  - 'SC-02 (both): the RE1, RB7 and RB3 arrowheads end inside the North, University
+    and Airport name labels instead of at the border of the destination node (C3)
+    → arrowhead clear of the label at the node''s border. Likely cause: station labels
+    nudged below the node (nudge_y=-0.055) on stations that receive an edge from below.'
+  - 'VQ-03 (both): the Route Type legend draws a letter ''a'' over every line sample,
+    a glyph from the edge-label text layer that matches no mark → line samples only.
+    Likely cause: geom_text(... color=ROUTE_TYPE) without show_legend=False.'
+  - 'VQ-01 (both): legend text at 8 pt and legend title at 9 pt, below the library
+    prompt''s 10 pt legend reference, read small beside the 14 pt bold station names
+    → 10 pt (+2 pt) and 11 pt (+2 pt). Likely cause: legend_text=element_text(size=8),
+    legend_title=element_text(size=9).'
+  - 'DQ-02 (both): five of ten stations are named by compass direction only (Central,
+    North, East, South, West), which reads as a generic placeholder network → town
+    or district names (e.g. ''Hauptbahnhof'', ''Nordstadt''). Likely cause: the station_table
+    labels.'
+  - 'Suggestion: line width or weight could separate Express from Local routes as
+    a second cue beside color.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) providing excellent contrast for all elements
-      Chrome: Title in 24pt dark text, station labels in 9pt bold dark ink, clearly readable; legend with light background (#FFFDF6) with dark text
-      Data: 10 station nodes in green (#009E73), 17 colored directional arrows (green/orange/blue by route type), edge labels with route ID and times in matching colors, all elements clearly visible
-      Legibility verdict: PASS - All text readable, no light-on-light failures
+      Background: warm off-white #FAF8F1 across the full 3200×1800 canvas, no axes (theme_void).
+      Chrome: bold dark title "network-transport-static · python · letsplot · anyplot.ai" centered at the top (~55% of the width); station names in bold dark ink below each node; Route Type legend at the right on an elevated #FFFDF6 box with an INK_SOFT frame. All text readable.
+      Data: 10 green (#009E73) station nodes with white outline at schematic coordinates (central hub with cross arms, four corners, Stadium south-east of Central); 16 directed edges with closed arrowheads colored by type — Express #009E73, Regional #C475FD, Local #4467A3; two parallel offset Central → East edges (RE2, RE5); every edge labeled "ID | dep → arr" in its color. S1/S2 labels cross the RB4 line; RE1/RB7/RB3 arrowheads end in the North/University/Airport labels; legend keys show a stray 'a' glyph.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) properly adapted for dark theme
-      Chrome: Title in light text, station labels in off-white (#F0EFE8), clearly visible; legend with elevated background (#242420) and light text
-      Data: Station nodes as green circles with white outlines, colored arrows identical to light render (#009E73, #D55E00, #0072B2), all labels visible and readable, no dark-on-dark failures
-      Legibility verdict: PASS - Perfect theme adaptation, no legibility issues, data colors identical to light render
+      Background: warm near-black #1A1A17 over the full canvas.
+      Chrome: title and station names in light #F0EFE8, legend on #242420 with light text; no dark-on-dark text anywhere.
+      Data: node, edge and label colors identical to the light render (#009E73 / #C475FD / #4467A3); white node outlines read strongly; same label/edge collisions and same legend 'a' glyph.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All text clearly readable in both renders; title 24pt, station labels
-          9pt, edge labels 6pt
+        passed: false
+        comment: Title 14 pt, station names ~14 pt bold, edge labels ~10 pt readable
+          in both themes; legend text 8 pt / title 9 pt below the 10 pt reference
+          (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Minor crowding around Central hub but all labels readable
+        passed: false
+        comment: S1/S2 labels cross the RB4 line; West/Central/East labels sit on
+          their outgoing vertical edges (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: All markers, arrows, labels prominently visible; appropriate density
-          sizing
+        passed: false
+        comment: Edges, arrowheads and nodes clearly visible; legend keys carry a
+          stray 'a' text glyph (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety with strong contrast
+        comment: Green/purple/blue Imprint trio distinct; route ID prefixes (RE/RB/S)
+          back up color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 resolution correct; balanced proportions, nothing cut off
+        comment: 3200×1800, network fills the canvas, title ~55% width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; X/Y empty labels appropriate for network
+        comment: N/A for axes (schematic network); title present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito order correct, backgrounds #FAF8F1/#1A1A17, both renders
-          theme-correct'
+        comment: 'Express #009E73 first, then #C475FD, #4467A3 in canonical order;
+          backgrounds #FAF8F1/#1A1A17'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Clean professional execution; standard palette, functional but not
-          exceptional
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, bold station
+          names; nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: theme_void() and basic styling; minimal visual refinement beyond
-          defaults
+        comment: theme_void and the spine/grid rules met; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Color coding provides narrative; network structure clear but limited
-          emphasis
+        comment: Data displayed with color by type as the Notes suggest; no hierarchy
+          chosen beyond that
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -123,28 +151,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct directed network graph with labeled nodes and edges
+        comment: Directed transport network with labeled nodes and edges
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: labels, arrows, time info, offset edges, color
-          coding'
+        passed: false
+        comment: C1, C2, C4, C5 met; C3 missed for RE1/RB7/RB3, whose arrowheads end
+          inside the destination's name label (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stations use x/y coords; routes display source→target correctly
+        comment: Stations at their given coordinates; edges trimmed only along their
+          own direction, parallel pair offset as the Notes ask
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Mandated title format; legend 'Route Type' with Express/Regional/Local
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -152,20 +181,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects covered: nodes, arrows, labels, time, types, multiple
-          routes'
+        comment: Directed edges, times, route IDs, a parallel pair, route-type colors,
+          hub with converging routes
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Plausible rail network; realistic names, times, route IDs
+        passed: false
+        comment: Plausible regional rail timetable, but half the stations are bare
+          compass names (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 stations, 17 routes within spec; optimal size
+        comment: 10 stations, 16 routes (spec 8-20 / 15-60); 12-30 min trip times
+          plausible; no Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -175,49 +206,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; direct execution
+        comment: No functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake interactivity
+        comment: Vectorized pandas offsets via groupby size/cumcount; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png/.html output with scale=3
+        comment: plot-{THEME}.png at scale=4 and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Proper ggplot grammar, geom composition, aes mappings, theme customization
+        passed: false
+        comment: Layered grammar with per-layer data, scale_color_manual with breaks,
+          arrow() on geom_segment; per-layer tooltip builders
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: layer_tooltips, arrow, ggsize, HTML export used; could showcase more
-          capabilities
+        comment: layer_tooltips() .title()/.line() builders for edges and stations
+          are lets-plot specific
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
+  rendered_at: '2026-11-22T13:39:58Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -227,5 +262,9 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - groupby-aggregation
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
