@@ -1,13 +1,13 @@
 """ anyplot.ai
 bar-permutation-importance: Permutation Feature Importance Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-17
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-22
 """
 
 import os
 import sys
 
-import numpy as np
+import pandas as pd
 
 
 # Temporarily remove current directory from path to avoid name collision with pygal module
@@ -26,98 +26,111 @@ sys.path.insert(0, _cwd)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+GRID = "#C9C7BD" if THEME == "light" else "#3A3A35"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Simulated permutation importance results
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-features = [
-    "Year Built",
-    "Bathrooms",
-    "Garage Size",
-    "Lot Area",
-    "Bedrooms",
-    "Basement Area",
-    "Total Rooms",
-    "Living Area",
-    "Neighborhood",
-    "Overall Quality",
-]
+# Columns: set these to your table's column names
+FEATURE = "Feature"  # role: feature
+IMPORTANCE = "Mean decrease in R² score"  # role: importance_mean
+IMPORTANCE_STD = "Std of decrease across shuffles"  # role: importance_std
 
-importance_mean = np.array([0.002, 0.008, 0.015, 0.024, 0.032, 0.048, 0.067, 0.095, 0.128, 0.185])
-importance_std = np.array([0.003, 0.005, 0.008, 0.011, 0.014, 0.018, 0.022, 0.028, 0.035, 0.042])
+# Data: replace this block with your own table, for example df = pd.read_csv("importance.csv")
+df = pd.DataFrame(
+    {
+        FEATURE: [
+            "Year Built",
+            "Bathrooms",
+            "Garage Size",
+            "Lot Area",
+            "Bedrooms",
+            "Basement Area",
+            "Total Rooms",
+            "Living Area",
+            "Neighborhood",
+            "Overall Quality",
+        ],
+        IMPORTANCE: [0.002, 0.008, 0.015, 0.024, 0.032, 0.048, 0.067, 0.095, 0.128, 0.185],
+        IMPORTANCE_STD: [0.003, 0.005, 0.008, 0.011, 0.014, 0.018, 0.022, 0.028, 0.035, 0.042],
+    }
+)
 
-# Generate viridis color gradient for importance values
-# Inline color generation without helper function
-min_imp = importance_mean.min()
-max_imp = importance_mean.max()
-imp_range = max_imp - min_imp if max_imp != min_imp else 1.0
-viridis_stops = [(0.0, 68, 1, 84), (0.25, 58, 82, 139), (0.5, 32, 144, 140), (0.75, 94, 201, 97), (1.0, 253, 231, 36)]
+# Plot: reads only df and the constants above
+# pygal draws the first label at the bottom, so ascending order puts the highest importance on top
+table = df.dropna(subset=[IMPORTANCE]).sort_values(IMPORTANCE, ascending=True).reset_index(drop=True)
+means = table[IMPORTANCE].astype(float)
+stds = table[IMPORTANCE_STD].astype(float).fillna(0)
 
+# Imprint sequential ramp (green -> blue) mapped to importance
+SEQ_START, SEQ_END = IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]
+span = means.max() - means.min()
 bar_colors = []
-for imp in importance_mean:
-    t = (imp - min_imp) / imp_range
-    for j in range(len(viridis_stops) - 1):
-        t0, r0, g0, b0 = viridis_stops[j]
-        t1, r1, g1, b1 = viridis_stops[j + 1]
-        if t0 <= t <= t1:
-            seg_t = (t - t0) / (t1 - t0)
-            r = int(r0 + (r1 - r0) * seg_t)
-            g = int(g0 + (g1 - g0) * seg_t)
-            b = int(b0 + (b1 - b0) * seg_t)
-            bar_colors.append(f"#{r:02x}{g:02x}{b:02x}")
-            break
-    else:
-        bar_colors.append("#fde724")
+for mean in means:
+    t = (mean - means.min()) / span if span else 0.0
+    channels = [
+        round(int(SEQ_START[i : i + 2], 16) + (int(SEQ_END[i : i + 2], 16) - int(SEQ_START[i : i + 2], 16)) * t)
+        for i in (1, 3, 5)
+    ]
+    bar_colors.append(f"#{channels[0]:02X}{channels[1]:02X}{channels[2]:02X}")
 
-# Custom style with theme-adaptive colors and large fonts
+lo = min(0.0, (means - stds).min())
+hi = (means + stds).max()
+pad = (hi - lo) * 0.06
+
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_SOFT,
-    colors=tuple(bar_colors),
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
+    colors=tuple(IMPRINT_PALETTE),
+    title_font_size=44,
+    label_font_size=40,
+    major_label_font_size=36,
+    legend_font_size=32,
+    value_font_size=32,
     stroke_width=3,
+    guide_stroke_color=GRID,
+    guide_stroke_dasharray="4,6",
+    opacity=1.0,
+    opacity_hover=0.85,
 )
 
-# Create horizontal bar chart
 chart = pygal.HorizontalBar(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="bar-permutation-importance · pygal · anyplot.ai",
-    x_title="Mean Decrease in R² Score",
+    title="bar-permutation-importance · python · pygal · anyplot.ai",
+    x_title=IMPORTANCE,
     show_legend=False,
-    print_values=True,
-    print_values_position="top",
+    print_values=False,
     show_y_guides=False,
     show_x_guides=True,
-    range=(0, importance_mean.max() + importance_std.max() + 0.02),
-    margin_bottom=120,
-    margin_left=360,
-    margin_right=80,
-    margin_top=80,
+    range=(lo - pad if lo < 0 else -pad, hi + pad),
+    margin_bottom=40,
+    margin_left=420,
+    margin_right=200,
+    margin_top=40,
 )
+chart.x_labels = table[FEATURE].tolist()
+chart.value_formatter = lambda x: f"{x:.2f}"
 
-# Set feature labels
-chart.x_labels = features
-
-# Add mean importance bars with viridis gradient colors
 chart.add(
-    "Importance",
+    IMPORTANCE,
     [
-        {"value": mean, "color": color, "xlink": {"href": "#"}, "label": f"Mean: {mean:.3f} ± {std:.3f}"}
-        for mean, std, color in zip(importance_mean, importance_std, bar_colors, strict=True)
+        {
+            "value": mean,
+            "color": color,
+            "ci": {"low": mean - std, "high": mean + std},
+            "label": f"{mean:.3f} ± {std:.3f}",
+        }
+        for mean, std, color in zip(means, stds, bar_colors, strict=True)
     ],
-    formatter=lambda x: f"{x:.3f}" if x else "",
+    formatter=lambda x: f"{x:.3f}",
 )
 
-# Save outputs
+# Save
 chart.render_to_file(f"plot-{THEME}.html")
 chart.render_to_png(f"plot-{THEME}.png")
