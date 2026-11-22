@@ -1,6 +1,6 @@
 #' anyplot.ai
 #' crossword-basic: Crossword Puzzle Grid
-#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Library: ggplot2 4.0.3 | R 4.6.1
 #' Quality: 89/100 | Created: 2026-05-20
 
 library(ggplot2)
