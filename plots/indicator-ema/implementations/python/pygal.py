@@ -1,16 +1,10 @@
 """ anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-19
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-22
 """
 
 import os
-import sys
-
-
-# Prevent the local pygal.py from shadowing the installed pygal package
-_here = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _here]
 
 import numpy as np
 import pandas as pd
@@ -18,78 +12,101 @@ import pygal
 from pygal.style import Style
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
-np.random.seed(42)
-dates = pd.date_range(start="2024-01-02", periods=120, freq="B")
-initial_price = 150.0
-returns = np.random.normal(0.0008, 0.018, 120)
-prices = initial_price * np.cumprod(1 + returns)
+# Constants
+SHORT_SPAN = 12  # fast EMA period in trading days
+LONG_SPAN = 26  # slow EMA period in trading days
+LABEL_EVERY = 20  # one major x label per this many trading days
 
-close = prices
-ema_12 = pd.Series(close).ewm(span=12, adjust=False).mean().values
-ema_26 = pd.Series(close).ewm(span=26, adjust=False).mean().values
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close price (USD/bbl)"  # role: close
+EMA_SHORT = "EMA 12-day"  # role: ema_short
+EMA_LONG = "EMA 26-day"  # role: ema_long
 
-# Detect EMA crossover points
-crossover_vals = [None] * len(close)
-for i in range(1, len(ema_12)):
-    prev_diff = ema_12[i - 1] - ema_26[i - 1]
-    curr_diff = ema_12[i] - ema_26[i]
-    if prev_diff * curr_diff < 0:
-        crossover_vals[i] = float(close[i])
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
+# A commodity (crude oil) trading in a range for months, then breaking out upward late in the period.
+rng = np.random.default_rng(7)
+n_days = 150
+n_range = 105
+noise = rng.normal(0, 0.9, n_days)
+level = np.empty(n_days)
+level[0] = 78.0
+for t in range(1, n_days):
+    pull = 0.12 * (78.0 - level[t - 1]) if t < n_range else 0.0
+    drift = 0.0 if t < n_range else 0.55
+    level[t] = level[t - 1] + pull + drift + noise[t]
+close_series = pd.Series(level)
+df = pd.DataFrame(
+    {
+        DATE: pd.date_range("2024-01-02", periods=n_days, freq="B"),
+        CLOSE: close_series.round(2),
+        EMA_SHORT: close_series.ewm(span=SHORT_SPAN, adjust=False).mean().round(2),
+        EMA_LONG: close_series.ewm(span=LONG_SPAN, adjust=False).mean().round(2),
+    }
+)
 
-# Style
+# Plot
+gap = df[EMA_SHORT] - df[EMA_LONG]
+crossed = (gap * gap.shift(1)) < 0
+crossovers = df[CLOSE].where(crossed).tolist()
+crossovers = [None if pd.isna(v) else float(v) for v in crossovers]
+
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=48,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
+    colors=(IMPRINT_PALETTE[0], IMPRINT_PALETTE[2], IMPRINT_PALETTE[3], IMPRINT_PALETTE[4]),
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=36,
     tooltip_font_size=36,
     stroke_width=6,
-    opacity=0.9,
+    opacity=1.0,
     opacity_hover=1.0,
 )
 
-# Chart
 chart = pygal.Line(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     title="indicator-ema · python · pygal · anyplot.ai",
-    x_title="Date",
-    y_title="Price ($)",
+    x_title=DATE,
+    y_title=CLOSE,
     show_dots=False,
-    show_x_guides=True,
+    show_x_guides=False,
     show_y_guides=True,
-    stroke_style={"width": 6},
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
-    x_label_rotation=45,
-    truncate_label=10,
+    stroke_style={"width": 6},
+    truncate_label=-1,
+    x_label_rotation=0,
     show_minor_x_labels=False,
-    dots_size=10,
+    range=(float(np.floor(df[[CLOSE, EMA_SHORT, EMA_LONG]].min().min() / 5) * 5), None),
 )
 
-chart.x_labels = [d.strftime("%Y-%m-%d") for d in dates]
-chart.x_labels_major = [dates[i].strftime("%Y-%m-%d") for i in range(0, len(dates), 20)]
+dates = df[DATE].dt.strftime("%b %d")
+chart.x_labels = dates.tolist()
+chart.x_labels_major = dates.iloc[::LABEL_EVERY].tolist()
 
-chart.add("Close Price", close.tolist(), stroke_style={"width": 8})
-chart.add("EMA 12-day", ema_12.tolist(), stroke_style={"width": 5, "dasharray": "10,5"})
-chart.add("EMA 26-day", ema_26.tolist(), stroke_style={"width": 5, "dasharray": "5,5"})
-chart.add("Crossovers", crossover_vals, show_dots=True, stroke=False)
+chart.add("Close price", df[CLOSE].tolist(), stroke_style={"width": 6})
+chart.add(EMA_SHORT, df[EMA_SHORT].tolist(), stroke_style={"width": 4, "dasharray": "14,8"})
+chart.add(EMA_LONG, df[EMA_LONG].tolist(), stroke_style={"width": 4})
+chart.add("EMA crossover", crossovers, show_dots=True, stroke=False, dots_size=9)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
