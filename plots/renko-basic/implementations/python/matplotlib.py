@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 renko-basic: Basic Renko Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-17
@@ -6,9 +6,9 @@ Quality: 88/100 | Updated: 2026-05-17
 
 import os
 
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
@@ -18,100 +18,83 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# imprint semantic anchors
-BULLISH = "#009E73"  # green — upward
-BEARISH = "#AE3030"  # red — downward
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BULLISH = IMPRINT_PALETTE[0]  # green: price up
+BEARISH = IMPRINT_PALETTE[4]  # red: price down
 
-# Generate synthetic price data
+# Constants
+BRICK_SIZE = 2.0  # price movement that draws one brick
+BRICK_GAP = 0.12  # share of a column left empty between neighbouring bricks
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close price ($)"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_points = 200
-
-# Start price and simulate daily returns
-start_price = 100
 returns = np.random.normal(0.001, 0.02, n_points)
-prices = start_price * np.cumprod(1 + returns)
+df = pd.DataFrame({DATE: pd.bdate_range("2024-01-02", periods=n_points), CLOSE: 100 * np.cumprod(1 + returns)})
 
-# Renko brick calculation
-brick_size = 2.0
+# Plot: reads only df and the constants above
+# Renko construction: a brick is added only when the close moves a full brick beyond the last brick
+closes = df[CLOSE].to_numpy()
+last_top = np.floor(closes[0] / BRICK_SIZE) * BRICK_SIZE
+last_bottom = last_top
+bottoms, bullish = [], []
+for close in closes:
+    while close >= last_top + BRICK_SIZE:
+        bottoms.append(last_top)
+        bullish.append(True)
+        last_bottom, last_top = last_top, last_top + BRICK_SIZE
+    while close <= last_bottom - BRICK_SIZE:
+        bottoms.append(last_bottom - BRICK_SIZE)
+        bullish.append(False)
+        last_top, last_bottom = last_bottom, last_bottom - BRICK_SIZE
 
+bricks = pd.DataFrame({"bottom": bottoms, "bullish": bullish})
+bricks["index"] = np.arange(1, len(bricks) + 1)
 
-def calculate_renko_bricks(close_prices, brick_size):
-    """Calculate Renko bricks from close prices."""
-    bricks = []
-    if len(close_prices) == 0:
-        return bricks
-
-    current_price = np.floor(close_prices[0] / brick_size) * brick_size
-
-    for price in close_prices:
-        diff = price - current_price
-        num_bricks = int(abs(diff) // brick_size)
-
-        if num_bricks > 0:
-            direction = 1 if diff > 0 else -1
-            for _ in range(num_bricks):
-                brick_bottom = current_price if direction > 0 else current_price - brick_size
-                bricks.append({"bottom": brick_bottom, "top": brick_bottom + brick_size, "direction": direction})
-                current_price += direction * brick_size
-
-    return bricks
-
-
-# Calculate Renko bricks
-bricks = calculate_renko_bricks(prices, brick_size)
-
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Draw bricks
-brick_width = 0.8
-gap = 0.1
-
-for i, brick in enumerate(bricks):
-    color = BULLISH if brick["direction"] > 0 else BEARISH
-    edge_color = INK_SOFT
-
-    rect = mpatches.Rectangle(
-        (i + gap / 2, brick["bottom"]),
-        brick_width,
-        brick_size,
-        linewidth=1.5,
-        edgecolor=edge_color,
-        facecolor=color,
-        alpha=0.9,
+for is_bullish, label in ((True, "Bullish (price up)"), (False, "Bearish (price down)")):
+    rows = bricks[bricks["bullish"] == is_bullish]
+    ax.bar(
+        rows["index"],
+        BRICK_SIZE,
+        bottom=rows["bottom"],
+        width=1 - BRICK_GAP,
+        color=BULLISH if is_bullish else BEARISH,
+        edgecolor=PAGE_BG,
+        linewidth=0.6,
+        label=label,
+        zorder=3,
     )
-    ax.add_patch(rect)
 
-# Set axis limits
-ax.set_xlim(-1, len(bricks) + 1)
-all_prices = [b["bottom"] for b in bricks] + [b["top"] for b in bricks]
-ax.set_ylim(min(all_prices) - brick_size, max(all_prices) + brick_size)
+ax.set_xlim(0, len(bricks) + 1)
+ax.set_ylim(bricks["bottom"].min() - BRICK_SIZE, bricks["bottom"].max() + 5 * BRICK_SIZE)
+ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True, nbins=12))
 
-# Labels and styling
-ax.set_xlabel("Brick Number", fontsize=20, color=INK)
-ax.set_ylabel("Price ($)", fontsize=20, color=INK)
-ax.set_title("renko-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+title = "renko-basic · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel("Brick index", fontsize=10, color=INK)
+ax.set_ylabel(CLOSE, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Subtle grid for price levels
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Spine styling
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-for s in ("left", "bottom"):
-    ax.spines[s].set_color(INK_SOFT)
+for side in ("left", "bottom"):
+    ax.spines[side].set_color(INK_SOFT)
 
-# Legend with theme-adaptive styling
-bullish_patch = mpatches.Patch(color=BULLISH, label="Bullish (Price Up)")
-bearish_patch = mpatches.Patch(color=BEARISH, label="Bearish (Price Down)")
-leg = ax.legend(handles=[bullish_patch, bearish_patch], loc="upper left", fontsize=16)
-if leg:
-    leg.get_frame().set_facecolor(ELEVATED_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    plt.setp(leg.get_texts(), color=INK_SOFT)
+leg = ax.legend(loc="upper left", fontsize=8)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
