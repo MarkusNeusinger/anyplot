@@ -2,125 +2,126 @@ library: matplotlib
 language: python
 specification_id: contour-3d
 created: '2026-01-07T20:19:14Z'
-updated: '2026-05-16T12:38:15Z'
-generated_by: claude-haiku
-workflow_run: 25961993078
+updated: '2026-11-22T01:08:15Z'
+generated_by: claude-sonnet
+workflow_run: 44969508297
 issue: 3230
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 84
 review:
   strengths:
-  - Perfect theme adaptation in both light and dark renders with readable text throughout
-  - Sophisticated 3D visualization combining surface mesh, contour lines on surface,
-    and projected contours on base plane
-  - 'All spec requirements implemented: sequential colormap (viridis), 12 contour
-    levels, base plane projections, and colorbar'
-  - Clean KISS code structure with proper theme tokens (PAGE_BG, INK, INK_SOFT) and
-    reproducibility via seed
-  - Professional styling with correct font sizes (24pt title, 20pt labels, 16pt ticks)
-    and appropriate element spacing
+  - Imprint sequential colormap (imprint_seq) ties surface, base-plane contours and
+    colorbar to elevation identically in both themes
+  - Lifted level curves drawn in the INK token stay distinguishable from the colored
+    surface in both renders, while the base-plane copies carry the colormap
+  - Base plane dropped 12% below the minimum so the projected contours lie flat and
+    clear beneath the surface
+  - 'Idiomatic mplot3d: ax.contour with zdir=''z'' and offset for the projection,
+    pane styling and view_init(30, 45) keeping both peaks and the valley in view'
+  - Theme-adaptive chrome throughout; correct 3200x1800 canvas and mandated title
   weaknesses:
-  - 'DE-01 slightly below maximum: while the 3D visualization shows sophistication,
-    additional color customization or refined styling could elevate to publication-ready'
-  - 'DE-03 at 5/6: no annotations highlighting specific terrain features (peaks, valleys)
-    that could enhance visual storytelling'
+  - 'VQ-01 (both): axis titles at 9 pt and tick labels at 7 pt sit below the style
+    guide''s 10 pt axis-title and 8 pt tick references and read small beside the 12
+    pt title → 10 pt axis titles (+1 pt) and 8 pt tick and colorbar labels (+1 pt).
+    Likely cause: set_xlabel/set_ylabel/set_zlabel fontsize=9 and tick_params labelsize=7.'
+  - 'Suggestion: a different data domain (electrostatic potential, response surface
+    or loss landscape), as the change request asked, would set this implementation
+    apart from the other libraries'' terrain scenarios.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct and professional
-      Chrome: Title, axis labels (Distance East/North in km, Elevation in m), and tick labels all rendered in appropriate dark text (INK color) — all clearly readable against light background
-      Data: 3D terrain surface with viridis colormap (yellow/green peaks at 120-130m, purple valleys at 70-80m), contour lines on surface (12 levels) clearly visible, projected contours on base plane provide spatial reference
-      Colorbar: "Elevation (m)" label present with readable scale
-      Legibility verdict: PASS — all elements readable with excellent contrast
+      Background: warm off-white #FAF8F1, panes faintly tinted
+      Chrome: title 'contour-3d · python · matplotlib · anyplot.ai' in dark ink at the top; axis titles Distance East (km), Distance North (km), Elevation (m) and tick labels 0–10 / 70–130 in dark gray; colorbar 'Elevation (m)' 80–130 on the right — all readable
+      Data: semi-transparent terrain surface in imprint_seq (green #009E73 valleys → blue #4467A3 peaks) with two ridges and a valley; 12 lifted level curves in dark ink on the surface; the same levels projected flat onto the base plane in the green→blue ramp
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct and professional
-      Chrome: Title and axis labels rendered in light text (INK color for light theme equivalent), all clearly readable without dark-on-dark failures — tick labels use INK_SOFT for secondary text
-      Data: 3D surface colors identical to light render — viridis colormap unchanged (data colors stay constant across themes, only chrome flips)
-      Contours: Surface and base plane contours maintain identical visibility and appearance to light render
-      Colorbar: Readable with appropriate color adaptation
-      Legibility verdict: PASS — all text readable, no dark-on-dark issues, proper theme adaptation confirmed
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles in light ink, ticks and colorbar labels in light gray; grid light gray — no dark-on-dark
+      Data: surface, colorbar and projected contours in identical imprint_seq colors; lifted level curves flip to light ink and remain visible on the surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks),
-          all text readable in both light and dark themes
+        passed: false
+        comment: All text readable in both themes, but axis titles at 9 pt and tick
+          labels at 7 pt sit below the style guide's 10 pt / 8 pt (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements properly spaced with labelpad=15, no collisions
+        comment: No text collisions; axis titles, ticks, colorbar and title all clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Surface (alpha=0.6), contours (linewidth=2 on surface, 1.5 base),
-          projected contours all optimally visible for density
+        comment: Surface, ink-colored lifted contours and base-plane contours all
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and CVD-safe with good contrast
+        comment: Green-to-blue sequential ramp is CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figsize (16,9), 300 DPI → 4800x2700px, nothing cut off, perfect
-          proportions
+        comment: 3200x1800 canvas (gate passed); plot and colorbar fill the frame,
+          title well proportioned, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, axes descriptive with units (Distance in km,
-          Elevation in m)
+        comment: 'Descriptive labels with units: Distance East (km), Distance North
+          (km), Elevation (m)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous data, backgrounds #FAF8F1 (light)
-          and #1A1A17 (dark), text theme-adaptive in both renders'
+        comment: 'imprint_seq for surface and projections; backgrounds #FAF8F1 / #1A1A17;
+          chrome theme-adaptive'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Sophisticated 3D visualization with surface + contours + projected
-          contours shows intentional design beyond defaults
+        passed: false
+        comment: Lifted contours drawn in the INK token rather than the colormap,
+          so level curves separate from the colored surface while the base-plane copy
+          carries the color — a deliberate two-layer hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle panes (alpha=0.1), differentiated contour linewidths, generous
-          labelpad spacing show good refinement
+        passed: false
+        comment: Base plane dropped 12% below z_min so projections sit clear of the
+          surface; levels inset from the extremes so no degenerate rings; panes softened
+          to alpha 0.1
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 3D surface provides overall shape, contours enable precise value
-          reading, view angle (elev=30, azim=45) guides viewer, clear focal points
+        passed: false
+        comment: Data displayed, no focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,29 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D contour plot using plot_surface() and contour() in 3D
-          projection
+        comment: 'Correct 3D contour plot: surface with lifted level curves in a 3D
+          projection'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: sequential colormap (viridis), 12 contour levels,
-          base plane projections, colorbar'
+        comment: Sequential colormap, 12 regular contour levels, base-plane projection
+          and colorbar all present; C1–C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly assigned, axes show full data range (0-10 km, 70-130m
-          elevation)
+        comment: X/Y/Z mapped correctly from the table via pivot_table; full 0–10
+          km range and 70–131 m shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct (contour-3d · matplotlib · anyplot.ai), colorbar
-          label (Elevation m) appropriate
+        comment: Title 'contour-3d · python · matplotlib · anyplot.ai' correct; colorbar
+          labelled Elevation (m)
     data_quality:
       score: 15
       max: 15
@@ -162,22 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all 3D terrain aspects: peaks, valleys, elevation zones with
-          multiple perspectives'
+        comment: Shows peaks, valleys and a saddle with tight and open contour spacing
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic terrain elevation (100-130m range typical for mountainous
-          regions), neutral geography domain
+        comment: Terrain elevation over a 10 km area, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 40x40 grid provides good detail, elevation range 70-130m sensible,
-          12 contour levels appropriate
+        comment: Elevations 70–131 m and 40x40 grid within the spec's range; no Check
+          values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -187,60 +186,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Direct script structure: imports → data generation → 3D plotting
-          → save, no functions/classes'
+        comment: Flat script; column constants and a Data block per the adapter contract
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib.pyplot, numpy — all used'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no simulated interactivity, appropriate complexity with
-          theme tokens
+        comment: Appropriate complexity; levels computed with np.linspace
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, no bare plot.png, current API usage
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of matplotlib 3D API: projection=''3d'', pane configuration,
-          view_init for camera angle, theme tokens for chrome'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: 'Uses distinctive matplotlib 3D features: offset parameter for base
-          plane contour projection, semi-transparent surface (alpha), pane alpha styling'
+        passed: false
+        comment: 'Idiomatic mpl_toolkits 3D: plot_surface, ax.contour with zdir/offset,
+          pane styling, view_init, fig.colorbar on the surface mappable'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the spec Notes and the library prompt ask for
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-22T01:04:41Z'
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - colorbar
+  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - explicit-figure
+  - matrix-construction
+  dataprep:
+  - long-to-wide
   styling:
   - custom-colormap
   - alpha-blending
+  - minimal-chrome
