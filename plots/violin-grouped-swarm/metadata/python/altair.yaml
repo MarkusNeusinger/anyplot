@@ -2,54 +2,63 @@ library: altair
 language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:48:07Z'
-updated: '2026-05-18T03:17:33Z'
-generated_by: claude-haiku
-workflow_run: 26011445656
+updated: '2026-11-22T09:47:46Z'
+generated_by: claude-sonnet
+workflow_run: 45008563170
 issue: 3529
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Perfect text legibility with explicit sizing across both light and dark themes—no
-    readability failures in either render
-  - 'Exemplary Okabe-Ito palette compliance: first series is #009E73 (brand green),
-    second is #D55E00 (orange); theme-adaptive chrome (text, grid, backgrounds) correctly
-    applied in both renders'
-  - 'Complete spec compliance: all required features present and working (grouped
-    violins, color differentiation, swarm overlay, transparency 0.5, jittered dodging)'
-  - 'Advanced Altair techniques: transform_density() for kernel density estimation,
-    transform_calculate() with custom jitter formula, faceting with independent x-scale
-    resolution—demonstrates library mastery'
-  - Realistic, well-crafted example data showing full distribution variation, different
-    spreads for expertise levels, and clear task-complexity progression
-  - Clean, deterministic code structure with proper seed setting and minimal imports;
-    zero redundancy
+  - Violins are computed in the Vega-Lite spec with transform_density and drawn as
+    x/x2 areas around a dodged position, so each group's mirrored violin sits centred
+    on its own swarm
+  - 'Clean faceted layout: bottom-placed category labels replace the x axis, tuned
+    facet spacing and an elevated legend panel read as one chart'
+  - Theme tokens threaded through title, axes, headers and legend; both renders theme-correct
+    with identical Imprint data colours
+  - Canvas padded (never cropped) to exactly 3200x1800 with a shrink-to-fit guard
+    for wider data
   weaknesses:
-  - 'Design excellence falls short of publication-exceptional: styling follows well-configured
-    library defaults without unique aesthetic touches, custom color palettes, or intentional
-    typographic hierarchy beyond standard sizes'
+  - 'VQ-03 (both): swarm dots at size 110 (about 24 px) fill the narrow violins and
+    fuse into one blob in Simple/Expert, so single observations cannot be told apart
+    → about size 60 (-50). Likely cause: mark_circle(size=110).'
+  - 'SC-02 (both): the swarm is uniform random jitter (±0.09), so dots stack on top
+    of each other while free space stays empty; C4 asks for swarm points that fit
+    the violins → spread dots by local density (offset scaled by each point''s KDE
+    width) so they fill the violin. Likely cause: np.random.default_rng(7).uniform(-JITTER,
+    JITTER).'
+  - 'DQ-01 (both): violins end in flat cuts at the pooled data extent (Complex/Novice
+    top at 11.2 s, Simple violins at 0.5 s) instead of tapering → set the density
+    extent per group with some padding. Likely cause: transform_density without extent.'
+  - 'DQ-03 (both): np.clip(…, 0.5, 15) piles several Simple-task observations onto
+    exactly 0.5 s, a flat row of dots → generate positive times without clipping (e.g.
+    a lognormal). Likely cause: np.clip on normal draws.'
+  - 'CQ-04 (code): the colour encoding (lines 68-75 vs 104-111) and the y encoding
+    (line 76 vs 93) are written twice → define them once and reuse with .legend(None)
+    / the shared y_enc. Likely cause: separate encodings per layer.'
+  - 'Suggestion: placing the ''Task type'' header title at the bottom with its labels
+    would keep the category axis in one place.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - CORRECT
-      Chrome: Title (28px, dark), axis labels (22px, dark), tick labels (18px, dark)—all perfectly readable against light background
-      Data: Violins show distribution shapes with opacity 0.5; swarm points are clearly visible with opacity 0.85 and size 120; two colors used—green (#009E73) for Novice, orange (#D55E00) for Expert (correct Okabe-Ito positions 1 and 2)
-      Grid: Subtle, low opacity (0.15), non-intrusive
-      Legibility verdict: PASS - all elements readable, no dark-on-light issues
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, chart centred.
+      Chrome: bold title 'violin-grouped-swarm · python · altair · anyplot.ai', facet header 'Task type' above, category labels Simple / Moderate / Complex below; y axis 'Response time (s)' 0-12 with subtle horizontal grid; legend 'Expertise' (Novice, Expert) in an elevated box at the right. All text dark and readable.
+      Data: three facets, each with a green #009E73 Novice violin (alpha 0.5) and a lavender #C475FD Expert violin side by side with clear space; same-hue swarm dots at opacity 0.9 jittered over each violin. Dots are large and fuse in Simple/Expert; violins are flat-cut at 0.5 s and at 11.2 s (Complex/Novice).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - CORRECT
-      Chrome: Title (light text), axis labels (light INK_SOFT color), tick labels (light)—all perfectly readable against dark background
-      Data: Identical colors to light render—green (#009E73) for Novice, orange (#D55E00) for Expert; violins and swarm points maintain same appearance
-      Grid: Subtle, appropriate opacity, matching dark-theme styling
-      Legibility verdict: PASS - no dark-on-dark failures, all text and data clearly visible, theme adaptation flawless
+      Background: warm near-black #1A1A17.
+      Chrome: title, header, category labels, axis title light; tick labels soft grey; grid subtle; legend box #242420 with light text. No dark-on-dark text.
+      Data: identical green and lavender data colours to the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,73 +66,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks);
-          readable in both themes
+        comment: Title 28, header 22-24, axis title 22, ticks 18, legend 20-22 px;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text; ample spacing for all elements
+        comment: No text collisions; point overlap is the permitted edge-to-edge packing
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Violins (0.5 opacity) and swarm (0.85 opacity, size 120) perfectly
-          adapted; jitter prevents overlap
+        comment: Swarm dots at size 110 are large for the narrow violins and merge
+          into one blob in Simple/Expert (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; excellent green-orange contrast
+        comment: Green vs lavender separate by lightness and hue; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas; faceting spacing 40px; balanced margins
+        comment: 3200x1800 canvas, chart centred, legend clear of the facets, title
+          about 80 % of width (mandated length)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Response Time (s)'''
+        comment: '''Response time (s)'' with unit; ''Task type'' header'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (correct); second #D55E00 (correct); backgrounds
-          #FAF8F1 / #1A1A17; theme chrome correct in both renders'
+        comment: 'Novice #009E73, Expert #C475FD in canonical order; #FAF8F1 / #1A1A17
+          backgrounds; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default; lacks custom design flourishes or
-          intentional hierarchy
+        passed: true
+        comment: Clear typographic hierarchy (title > header > axis), bottom-placed
+          facet labels replace the x axis, elevated legend panel
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Some refinement visible (violin opacity, subtle grid, generous spacing);
-          room for enhancement
+        comment: Category axis fully removed (no ticks, labels, domain), facet spacing
+          tuned so the three panels read as one chart
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy; faceting and colors create emphasis; excellent
-          story through layout
+        passed: false
+        comment: Data displayed; no focal point chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,52 +140,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped violin plot with swarm overlay
+        comment: Grouped violins with swarm overlay
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features present: grouping, color, swarm, transparency, jitter
-          dodging'
+        comment: 'C1-C3 and C5 met; C4: one dot size, but uniform random jitter instead
+          of a swarm layout leaves dots stacked on each other (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (Task Type), Y-axis (Response Time), Color (Expertise)—all
-          correct
+        comment: Value axis carries data values; dodged x offsets are the layout the
+          Notes ask for
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend accurate
+        comment: Mandated title exact; legend 'Expertise' with Novice / Expert
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All aspects shown: distributions, variation, expertise differences,
-          outliers'
+        comment: Violins are cut flat at the pooled data extent instead of tapering
+          (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world plausible; neutral topic; sensible labels
+        comment: 'Response times by task complexity and expertise: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Realistic response times; correct proportions; no factual violations
+        comment: Seconds 0.5-11 sensible; np.clip piles several observations onto
+          exactly 0.5 s (defect line)
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -184,59 +194,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure; no functions/classes
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42; fully deterministic
+        comment: Seeded generators
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no redundancy
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, readable, no fake functionality
+        comment: Colour and y encodings written out twice instead of reusing one object
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html with scale_factor=3.0
+        comment: plot-{THEME}.png padded to 3200x1800 and plot-{THEME}.html
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Textbook Altair patterns: Chart, transforms, encode, facet, layer,
-          resolve_scale, configure chains'
+        comment: Layer + facet + transform_density/transform_calculate in the Vega-Lite
+          spec, escaped fields with explicit types
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Uses Altair-specific transform_density, custom jitter formula, independent
-          facet scales
+        passed: false
+        comment: Violin built in-browser with transform_density and x/x2 areas; interactive
+          HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T09:44:00Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
+  - pillow
   techniques:
-  - faceting
   - layer-composition
+  - faceting
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - kde
+  - jitter
   styling:
   - alpha-blending
+  - theme-tokens
