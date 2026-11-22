@@ -1,7 +1,7 @@
 """anyplot.ai
 violin-swarm: Violin Plot with Overlaid Swarm Points
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-11-22
+Quality: pending | Updated: 2026-11-22
 """
 
 import os
