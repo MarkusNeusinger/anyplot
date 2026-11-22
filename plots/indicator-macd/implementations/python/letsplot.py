@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-macd: MACD Technical Indicator Chart
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-16
@@ -20,87 +20,82 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # First series (green)
-SECONDARY = "#BD8233"  # imprint ochre — signal line (categorical contrast)
+# Imprint palette
+POSITIVE = "#009E73"  # position 1: positive histogram bars
+NEGATIVE = "#AE3030"  # imprint red: negative histogram bars
+MACD_COLOR = "#4467A3"  # imprint blue: MACD line
+SIGNAL_COLOR = "#BD8233"  # imprint ochre: signal line
 
-# Generate realistic stock price data with momentum
+# Constants
+FAST, SLOW, SIGNAL_SPAN = 12, 26, 9
+
+# Column names
+DATE = "date"  # role: date
+MACD = "macd"  # role: macd
+SIGNAL = "signal"  # role: signal
+HISTOGRAM = "histogram"  # role: histogram
+
+# Data
 np.random.seed(42)
 n_days = 120
+warmup = 35
+dates = pd.date_range(start="2024-01-01", periods=n_days + warmup, freq="B")
+returns = np.random.normal(0.0005, 0.015, n_days + warmup)
+returns = returns + np.sin(np.linspace(0, 4 * np.pi, n_days + warmup)) * 0.012
+prices = pd.Series(100 * np.cumprod(1 + returns))
 
-# Simulate stock prices with trend and volatility (more realistic)
-dates = pd.date_range(start="2024-01-01", periods=n_days + 35, freq="B")
-returns = np.random.normal(0.0005, 0.015, n_days + 35)
-# Add trending behavior
-trend = np.sin(np.linspace(0, 4 * np.pi, n_days + 35)) * 0.012
-returns = returns + trend
-prices = 100 * np.cumprod(1 + returns)
+macd_full = prices.ewm(span=FAST, adjust=False).mean() - prices.ewm(span=SLOW, adjust=False).mean()
+signal_full = macd_full.ewm(span=SIGNAL_SPAN, adjust=False).mean()
+df = pd.DataFrame({DATE: dates, MACD: macd_full, SIGNAL: signal_full, HISTOGRAM: macd_full - signal_full}).iloc[warmup:]
 
-# Calculate EMAs using pandas ewm
-ema_12 = pd.Series(prices).ewm(span=12, adjust=False).mean().values
-ema_26 = pd.Series(prices).ewm(span=26, adjust=False).mean().values
+# Plot
+df = df.reset_index(drop=True)
+df["day"] = np.arange(len(df))
+df["direction"] = np.where(df[HISTOGRAM] >= 0, "Positive", "Negative")
+df_lines = df.melt(id_vars="day", value_vars=[MACD, SIGNAL], var_name="line", value_name="value")
+df_lines["line"] = df_lines["line"].map({MACD: "MACD line", SIGNAL: "Signal line"})
 
-# Calculate MACD components
-macd_line = ema_12 - ema_26
-signal_line = pd.Series(macd_line).ewm(span=9, adjust=False).mean().values
-histogram = macd_line - signal_line
-
-# Use the last n_days (after warmup period)
-start_idx = 35
-df = pd.DataFrame(
-    {
-        "date": dates[start_idx:],
-        "macd": macd_line[start_idx:],
-        "signal": signal_line[start_idx:],
-        "histogram": histogram[start_idx:],
-    }
-)
-
-# Convert dates to numeric for plotting
-df["day_num"] = range(len(df))
-df["hist_color"] = np.where(df["histogram"] >= 0, "Positive", "Negative")
-
-# Create separate dataframes for lines
-df_lines = pd.melt(
-    df[["day_num", "macd", "signal"]],
-    id_vars=["day_num"],
-    value_vars=["macd", "signal"],
-    var_name="line_type",
-    value_name="value",
-)
-df_lines["line_type"] = df_lines["line_type"].map({"macd": "MACD Line", "signal": "Signal Line"})
-
-# Create the MACD chart
 plot = (
     ggplot()
     + geom_bar(
-        data=df, mapping=aes(x="day_num", y="histogram", fill="hist_color"), stat="identity", width=0.8, alpha=0.8
+        data=df,
+        mapping=aes(x="day", y=HISTOGRAM, fill="direction"),
+        stat="identity",
+        width=0.8,
+        alpha=0.8,
+        color=PAGE_BG,
+        size=0.2,
     )
-    + geom_hline(yintercept=0, color=INK_SOFT, size=0.8, linetype="dashed")
-    + geom_line(data=df_lines, mapping=aes(x="day_num", y="value", color="line_type"), size=1.5)
-    + scale_fill_manual(values={"Positive": "#2ABCCD", "Negative": "#AE3030"}, name="Histogram")  # imprint red for negative bars
-    + scale_color_manual(values={"MACD Line": BRAND, "Signal Line": SECONDARY}, name="Lines")
-    + labs(x="Trading Day", y="MACD Value", title="indicator-macd · letsplot · anyplot.ai")
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.5, linetype="dashed")
+    + geom_line(data=df_lines, mapping=aes(x="day", y="value", color="line"), size=1.0)
+    + scale_fill_manual(values={"Positive": POSITIVE, "Negative": NEGATIVE}, name="Histogram")
+    + scale_color_manual(values={"MACD line": MACD_COLOR, "Signal line": SIGNAL_COLOR}, name="Lines")
+    + labs(
+        x="Trading Day",
+        y="MACD value",
+        title="indicator-macd · python · letsplot · anyplot.ai",
+        subtitle=f"MACD parameters: fast EMA {FAST}, slow EMA {SLOW}, signal EMA {SIGNAL_SPAN}",
+    )
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.2),
+        panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
+        plot_title=element_text(size=16, color=INK),
+        plot_subtitle=element_text(size=12, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=12, color=INK),
         legend_position="right",
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale=3 gives 4800x2700)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
-
-# Save interactive HTML version
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
