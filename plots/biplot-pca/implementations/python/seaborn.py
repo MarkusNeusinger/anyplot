@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-17
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from sklearn.datasets import load_wine
 
@@ -19,42 +20,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Load Wine dataset
-wine = load_wine()
-feature_names = wine.feature_names
-X = wine.data
-target = wine.target
-
-# Standardize features (z-score normalization)
-X_mean = X.mean(axis=0)
-X_std = X.std(axis=0)
-X_scaled = (X - X_mean) / X_std
-
-# Perform PCA using numpy (eigenvalue decomposition of covariance matrix)
-cov_matrix = np.cov(X_scaled.T)
-eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)
-
-# Sort eigenvectors by eigenvalues in descending order
-idx = np.argsort(eigenvalues)[::-1]
-eigenvalues = eigenvalues[idx]
-eigenvectors = eigenvectors[:, idx]
-
-# Get first 2 principal components
-pc_vectors = eigenvectors[:, :2]
-
-# Project data onto principal components (scores)
-scores = X_scaled @ pc_vectors
-
-# Loadings are the eigenvectors
-loadings = pc_vectors
-
-# Calculate variance explained
-var_explained = eigenvalues[:2] / eigenvalues.sum() * 100
-
-# Create figure with seaborn theme
 sns.set_theme(
     style="ticks",
     rc={
@@ -72,127 +40,119 @@ sns.set_theme(
     },
 )
 
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
+# Columns: set these to your table's column names
+WINE_CLASS = "Wine class"  # role: labels
 
-# Prepare data for seaborn
-score_df = {"PC1": scores[:, 0], "PC2": scores[:, 1], "Wine Class": target}
+# Data: replace this block with your own table, for example df = pd.read_csv("wine.csv")
+# (every column except the class column is a numeric feature)
+wine = load_wine()
+feature_names = [
+    "Alcohol",
+    "Malic acid",
+    "Ash",
+    "Alkalinity of ash",
+    "Magnesium",
+    "Total phenols",
+    "Flavanoids",
+    "Nonflavanoid phenols",
+    "Proanthocyanins",
+    "Color intensity",
+    "Hue",
+    "OD280/OD315",
+    "Proline",
+]
+df = pd.DataFrame(wine.data, columns=feature_names)
+df[WINE_CLASS] = [f"Class {t}" for t in wine.target]
 
-# Map target labels to class names
-class_names = ["Class 0", "Class 1", "Class 2"]
-score_df["Wine Class"] = [class_names[int(t)] for t in score_df["Wine Class"]]
+# Plot: reads only df and the constants above
+df = df.dropna()
+FEATURES = list(df.columns.drop(WINE_CLASS))
+X = df[FEATURES].to_numpy()
+X_scaled = (X - X.mean(axis=0)) / X.std(axis=0)
 
-# Plot observation scores with seaborn using Okabe-Ito colors
+# PCA by eigendecomposition of the covariance matrix of the standardized features
+eigenvalues, eigenvectors = np.linalg.eigh(np.cov(X_scaled.T))
+order = np.argsort(eigenvalues)[::-1]
+eigenvalues, eigenvectors = eigenvalues[order], eigenvectors[:, order]
+loadings = eigenvectors[:, :2]
+var_explained = eigenvalues[:2] / eigenvalues.sum() * 100
+
+pc1 = f"PC1 ({var_explained[0]:.1f}% variance)"
+pc2 = f"PC2 ({var_explained[1]:.1f}% variance)"
+scores = pd.DataFrame(X_scaled @ loadings, columns=[pc1, pc2])
+scores[WINE_CLASS] = df[WINE_CLASS]
+
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+
+n_classes = df[WINE_CLASS].nunique()
 sns.scatterplot(
-    x="PC1",
-    y="PC2",
-    hue="Wine Class",
-    data=score_df,
-    palette=IMPRINT[:3],
-    s=200,
-    alpha=0.7,
+    data=scores,
+    x=pc1,
+    y=pc2,
+    hue=WINE_CLASS,
+    palette=IMPRINT_PALETTE[:n_classes],
+    s=38,
+    alpha=0.75,
     edgecolor=PAGE_BG,
-    linewidth=1,
+    linewidth=0.5,
     ax=ax,
 )
 
-# Scale loadings to be visible but not overwhelming
-score_max = np.abs(scores).max()
-loading_scale = score_max * 1.2
+# One common factor scales every loading arrow to the spread of the scores
+score_max = np.abs(scores[[pc1, pc2]].to_numpy()).max()
+loading_scale = 0.8 * score_max / np.linalg.norm(loadings, axis=1).max()
+tips = loadings * loading_scale
 
-# Draw loading arrows and labels
-arrow_color = INK_SOFT
-feature_labels = [f.replace(" ", "\n") for f in feature_names[:13]]
+# Labels on the same side whose tips sit closer than a text line are spread apart vertically
+# (labels move, arrows and points never do)
+label_shift = dict.fromkeys(FEATURES, 0.0)
+min_gap = 0.07 * np.abs(tips).max()
+for side in (tips[:, 0] < 0, tips[:, 0] >= 0):
+    members = sorted(np.flatnonzero(side), key=lambda k: -tips[k, 1])
+    for prev, cur in zip(members, members[1:], strict=False):
+        gap = tips[prev, 1] - tips[cur, 1]
+        if gap < min_gap and abs(tips[cur, 0] - tips[prev, 0]) < 0.35 * np.abs(tips).max():
+            label_shift[FEATURES[cur]] = label_shift[FEATURES[prev]] - 7.5
 
-# Store arrow endpoints for label positioning
-arrow_ends = []
-for i, feature in enumerate(feature_labels):
-    x_load = loadings[i, 0] * loading_scale
-    y_load = loadings[i, 1] * loading_scale
-    arrow_ends.append((x_load, y_load, feature))
-
-    # Draw arrow from origin to loading position
+for (x_tip, y_tip), name in zip(tips, FEATURES, strict=True):
     ax.annotate(
         "",
-        xy=(x_load, y_load),
+        xy=(x_tip, y_tip),
         xytext=(0, 0),
-        arrowprops={"arrowstyle": "->", "color": arrow_color, "lw": 2.0, "mutation_scale": 18},
+        arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 1.1, "mutation_scale": 8, "shrinkA": 0, "shrinkB": 0},
     )
-
-# Add labels with smart positioning to avoid overlap
-for _i, (x_load, y_load, feature) in enumerate(arrow_ends):
-    # Offset text beyond arrow tip
-    text_offset = 1.12
-    x_text = x_load * text_offset
-    y_text = y_load * text_offset
-
-    # Adjust horizontal alignment based on position
-    if x_load > 0.3:
-        ha = "left"
-    elif x_load < -0.3:
-        ha = "right"
-    else:
-        ha = "center"
-
-    # Adjust vertical alignment based on position
-    if y_load > 0.5:
-        va = "bottom"
-    elif y_load < -0.5:
-        va = "top"
-    else:
-        va = "center"
-
-    ax.text(
-        x_text,
-        y_text,
-        feature,
-        fontsize=12,
+    # Label sits just past the tip, pushed outward along the arrow's own direction
+    angle = np.arctan2(y_tip, x_tip)
+    ax.annotate(
+        name,
+        xy=(x_tip, y_tip),
+        xytext=(4 * np.cos(angle), 4 * np.sin(angle) + label_shift[name]),
+        textcoords="offset points",
+        ha="left" if np.cos(angle) > 0.3 else "right" if np.cos(angle) < -0.3 else "center",
+        va="bottom" if np.sin(angle) > 0.3 else "top" if np.sin(angle) < -0.3 else "center",
+        fontsize=6.5,
         fontweight="bold",
-        ha=ha,
-        va=va,
         color=INK,
-        bbox={
-            "boxstyle": "round,pad=0.3",
-            "facecolor": ELEVATED_BG,
-            "alpha": 0.85,
-            "edgecolor": INK_SOFT,
-            "linewidth": 0.5,
-        },
+        bbox={"boxstyle": "round,pad=0.15", "facecolor": ELEVATED_BG, "alpha": 0.8, "edgecolor": "none"},
     )
 
-# Draw reference lines at origin
-ax.axhline(y=0, color=INK_SOFT, linestyle="--", linewidth=1, alpha=0.3)
-ax.axvline(x=0, color=INK_SOFT, linestyle="--", linewidth=1, alpha=0.3)
+ax.axhline(0, color=INK_SOFT, linestyle="--", linewidth=0.7, alpha=0.4)
+ax.axvline(0, color=INK_SOFT, linestyle="--", linewidth=0.7, alpha=0.4)
 
-# Styling
-ax.set_xlabel(f"PC1 ({var_explained[0]:.1f}%)", fontsize=20, color=INK)
-ax.set_ylabel(f"PC2 ({var_explained[1]:.1f}%)", fontsize=20, color=INK)
-ax.set_title("biplot-pca · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for spine in ["left", "bottom"]:
-    ax.spines[spine].set_color(INK_SOFT)
-
-# Add subtle grid
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
-
-# Legend styling
-legend = ax.legend(title="Wine Class", fontsize=14, title_fontsize=16, loc="lower right")
-legend.get_frame().set_facecolor(ELEVATED_BG)
-legend.get_frame().set_edgecolor(INK_SOFT)
-legend.get_frame().set_alpha(0.95)
-legend.get_title().set_color(INK)
-for text in legend.get_texts():
-    text.set_color(INK)
-
-# Set balanced axis limits
-max_range = max(np.abs(scores).max(), loading_scale) * 1.25
-ax.set_xlim(-max_range, max_range)
-ax.set_ylim(-max_range, max_range)
+# Style
+limit = max(score_max, np.abs(tips).max()) * 1.3
+ax.set_xlim(-limit, limit)
+ax.set_ylim(-limit, limit)
 ax.set_aspect("equal")
+ax.set_title("biplot-pca · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(pc1, fontsize=10)
+ax.set_ylabel(pc2, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.yaxis.grid(True, linewidth=0.6)
+sns.despine(ax=ax)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+legend = ax.legend(title=WINE_CLASS, fontsize=8, title_fontsize=9, loc="lower right")
+legend.get_frame().set_alpha(0.95)
+
+fig.subplots_adjust(left=0.12, right=0.97, top=0.93, bottom=0.09)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
