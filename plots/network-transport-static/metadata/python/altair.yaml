@@ -2,137 +2,137 @@ library: altair
 language: python
 specification_id: network-transport-static
 created: '2026-01-09T23:49:56Z'
-updated: '2026-05-18T14:37:53Z'
-generated_by: claude-haiku
-workflow_run: 26039534393
+updated: '2026-11-22T13:35:31Z'
+generated_by: claude-sonnet
+workflow_run: 45027523984
 issue: 3463
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 84
 review:
   strengths:
-  - 'Perfect palette compliance: Okabe-Ito colors (#009E73, #D55E00, #0072B2) correctly
-    applied with first series as brand green'
-  - 'Exceptional theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders
-    are readable with identical data colors and theme-correct chrome'
-  - 'Complete spec compliance: all 12 stations with labels, 24 directed routes, offset
-    edges for parallel routes, time/route-id labels, color-coded by type'
-  - 'Clean data quality: realistic regional rail network with bidirectional routes,
-    varying journey times, hub-and-spoke pattern'
-  - 'Sophisticated implementation: smart offset calculation for parallel edges, angle-based
-    arrow rotation, layer composition with 6 marks'
-  - 'Strong code quality: KISS structure, seed reproducibility, idiomatic Altair patterns
-    with proper Scale/Color encoding'
+  - Every one of the 24 routes carries its 'ID | dep→arr' label rotated along its
+    own edge over a page-colored halo, kept upright for any heading
+  - Arrowheads land at each destination node's border via trimmed edges and an angle
+    channel with scale=None
+  - Parallel routes of a station pair are offset perpendicular to each other with
+    direction-aware sign, each with its own arrowhead and label
+  - Equal-aspect explicit scales computed from the station box keep the schematic
+    geometry true
+  - Station names are placed on the side of each node that its routes leave free
+  - Native Altair tooltips with route, departure, arrival and type in the HTML output
   weaknesses:
-  - 'Design Excellence limited: uses default Altair styling with theme tokens (functional
-    but not visually sophisticated) - could improve with custom refinements like spine
-    styling, grid tuning, typography hierarchy'
-  - 'Visual Refinement minimal: no additional design polish beyond color scheme -
-    legend could have custom styling details, whitespace could be more generous'
-  - 'Edge label clutter: only subset of edge labels shown (indices 0,2,6,12,15,18)
-    to avoid overlap - could explore better label positioning or rotation strategies'
+  - 'VQ-02 (both): the RB2 (Tech Campus → East Junction) route label crosses both
+    RE2 labels where the edges intersect, hiding part of ''RE2 | 08:00→08:45'' → no
+    label-on-label collision. Likely cause: every label sits at its edge midpoint
+    (mid_x/mid_y) regardless of crossings; shift that label''s position along its
+    own edge (e.g. a per-edge fraction other than 0.5) rather than moving any station.'
+  - 'VQ-01 (both): the 24 route labels at fontSize 7.5 (≈30 source px) sit below the
+    10 px reference for annotation text and read small beside the 9.5–11 px station
+    text → about 9 px (+1.5). Likely cause: mark_text(fontSize=7.5) in label_halo/label_text.'
+  - 'CQ-01 (code): the helper function `xy()` at lines 169–170 breaks the no-functions
+    structure rule → inline the two encodings or bind x/y channel objects to constants.
+    Likely cause: the def xy(x, y) helper.'
+  - 'Suggestion: the RE2 (Central Station ↔ Airport) pair could take a distinct emphasis
+    as the longest express link.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title (28px), station labels (15px bold), station IDs (18px bold) - all dark (#1A1A17), perfectly readable
-      Data: Three route types color-coded with Okabe-Ito palette - Express (#009E73 brand green), Regional (#D55E00 orange), Local (#0072B2 blue). Arrows indicate direction. Edge labels show route ID and times. Node IDs in bright green with excellent contrast.
-      Layout: 12 stations with geographic coordinates, 24 routes with offset curves for parallel edges, legend on right
-      Legibility verdict: PASS - All text is clearly visible and readable against light background
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas
+      Chrome: dark title 'network-transport-static · python · altair · anyplot.ai' centered on top; framed 'Route type' legend top-left on the elevated surface; 12 station nodes with bold IDs A–L inside and bold station names beside them; all dark text readable
+      Data: 24 directed routes in Imprint colors — Express #009E73, Regional #C475FD, Local #4467A3 — each with a triangle arrowhead at the destination node border and an 'ID | dep→arr' label rotated along the edge over a page-colored halo; opposite-direction pairs drawn as offset parallel edges. The RB2 (I→C) label crosses the two RE2 labels near Tech Campus
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title, station labels, station IDs all light-colored (#F0EFE8), clearly visible. No dark-on-dark failures detected.
-      Data: Identical colors to light render - Express (#009E73), Regional (#D55E00), Local (#0072B2) - confirming proper theme adaptation where only chrome flips, not data colors
-      Layout: Identical structure and positioning to light render
-      Legibility verdict: PASS - All text is clearly visible and readable against dark background. Station IDs in bright green maintain excellent contrast.
+      Background: warm near-black #1A1A17
+      Chrome: title, legend text, station IDs and names and route labels in light ink, all readable; nodes and legend on the #242420 elevated surface with light outlines; no dark-on-dark text
+      Data: identical edge and arrowhead colors to the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (Title 28px, Labels 15px, IDs 18px,
-          Edge labels 12px). Fully readable in both themes.
+        passed: false
+        comment: Title, legend and station names readable in both themes; the 24 route
+          labels at fontSize 7.5 sit below the 10 px reference and read small (defect
+          line)
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
-        passed: true
-        comment: Minimal overlap. Station labels offset above nodes (dy=-38), edge
-          labels offset below (dy=-14). Subset shown to reduce clutter. Minor proximity
-          risk but acceptable.
+        passed: false
+        comment: Route labels sit on their own edges with halos; the RB2 (I→C) label
+          collides with both RE2 labels where the edges cross, hiding part of '08:45'
+          (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes (size=2000), edges (strokeWidth=3, opacity=0.8), arrows (size=220)
-          all clearly visible and well-adapted to network density.
+        comment: Nodes, 1.6 px edges and triangle heads all visible; legend stroke
+          swatches match the edge colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety. Good contrast between all three
-          route types. No red-green as sole signal.
+        comment: Green, violet and blue are CVD-distinguishable; good contrast on
+          both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 1600x900 (4800x2700 at 3x scale). Plot fills 60-70% of canvas.
-          Balanced margins. Nothing cut off.
+        comment: Canonical 2400x2400 canvas, network fills the square with balanced
+          margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'network-transport-static · python · altair · anyplot.ai' follows
-          spec format. Station names and IDs serve as labels.
+        comment: N/A — axes hidden by design for a schematic network; title present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (#009E73), follows Okabe-Ito order (#D55E00, #0072B2).
-          Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Data colors identical
-          in both renders. Text colors theme-correct.'
+        comment: 'Express #009E73 first, then #C475FD, #4467A3 in Imprint order; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured library defaults with Okabe-Ito compliance. Professional
-          appearance but no exceptional design refinements. Looks like 'well-configured
-          defaults' rather than custom palette or intentional hierarchy.
+        comment: 'Raised: two-level type hierarchy (bold station IDs in nodes, bold
+          names beside, smaller rotated route labels), elevated-surface node fill,
+          framed legend in ELEVATED_BG'
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Raised: page-colored halos under every label, route labels rotated
+          upright along their edges, edges trimmed to the node border, station names
+          placed on the side their routes leave free'
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Default Altair styling with theme tokens. No grid (good), but minimal
-          customization beyond required color/background. Whitespace adequate but
-          not generous.
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Clear visual hierarchy through color-coding (three route types).
-          Central hub visually apparent. Arrows guide eye. Color contrast creates
-          emphasis and visual structure.
+        comment: 'Default: hub structure comes from the data; no focal point chosen
+          beyond the Notes'
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +142,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct directed network diagram. All subtypes present.
+        comment: Directed transport network with labeled nodes and directed edges
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Station labels ✓, directed arrows ✓, edge labels with times ✓, offset
-          curves for parallel routes ✓, color-coding ✓, tooltips ✓
+        comment: 'All Notes and C1–C5 met: stations at given x/y, names beside nodes,
+          arrowheads at the destination border, every route labeled along its edge,
+          parallel routes offset with own arrowhead and label, route type colors in
+          a legend, tooltips in HTML'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates properly mapped. Y-axis reversed for geographic correctness.
-          All 12 stations and 24 routes visible.
+        comment: Equal-scale x/y domains centred on the station box; stations at their
+          coordinates, y reversed for screen orientation
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''network-transport-static · python · altair
-          · anyplot.ai''. Legend shows Route Type with correct labels.'
+        comment: Title 'network-transport-static · python · altair · anyplot.ai' correct;
+          legend 'Route type' with Express/Regional/Local
     data_quality:
       score: 15
       max: 15
@@ -173,89 +175,91 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: bidirectional routes, three route types, varying
-          journey times, hub-and-spoke pattern, complex routing.'
+        comment: Bidirectional pairs, chained lines, hub convergence, three service
+          types, all 24 routes labeled
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Regional rail network is real, comprehensible scenario. Realistic
-          station names and times. Neutral (no controversial content).
+        comment: Plausible fictional regional rail network with RE/RB/S line ids;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Station coordinates form logical geographic layout. Times realistic
-          for regional service (15-45 min journeys). Proportions match reality.
+        comment: Journey times 12–45 min fit the distances; 12 stations and 24 routes
+          inside the spec's 8–20 / 15–60 range; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Linear script: imports → constants → data → processing → visualization
-          → save. No functions/classes.'
+        passed: false
+        comment: A helper function `xy()` (lines 169–170) breaks the no-functions
+          rule (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Fully deterministic.
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, altair, numpy, pandas.'
+        comment: os, sys, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Smart offset calculation for parallel edges. No
-          fake functionality. Appropriate complexity.
+        comment: Vectorised offset/trim geometry; complexity matches the task
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Scale factor 3.0
-          for high resolution.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, Altair 6 API, pad-only
+          canvas block
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Proper use of alt.Chart, .encode(), .properties(), layering, Scales,
-          Color encoding. Follows recommended Altair patterns. Could leverage more
-          advanced features like selections.
+        passed: false
+        comment: 'Raised: layered charts with shared explicit equal-aspect scales,
+          escaped fields with typed encodings, alt.Tooltip lists, configure_* for
+          chrome'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: 'Uses Altair-specific features: angle encoding for arrow rotation,
-          point mark with triangle shape, complex mark composition. Goes beyond generic
-          usage.'
+        passed: false
+        comment: 'Raised: angle channel with scale=None drives both triangle arrowheads
+          and upright rotated text labels; native HTML tooltips'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T13:31:26Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - manual-ticks
   - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
