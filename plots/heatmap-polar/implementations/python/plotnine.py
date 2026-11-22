@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 86/100 | Created: 2026-05-13
+Quality: 74/100 | Created: 2026-05-13
 """
 
 import os
