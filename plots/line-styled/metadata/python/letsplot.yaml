@@ -2,45 +2,56 @@ library: letsplot
 language: python
 specification_id: line-styled
 created: '2025-12-30T10:44:00Z'
-updated: '2026-05-12T07:38:31Z'
-generated_by: claude-haiku
-workflow_run: 25720018856
+updated: '2026-11-22T11:00:06Z'
+generated_by: claude-sonnet
+workflow_run: 45014465305
 issue: 2598
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 79
 review:
   strengths:
-  - Perfect visual quality with excellent theme adaptation in both light and dark
-    renders
-  - Complete specification compliance with all required line styles (solid, dashed,
-    dotted, dash-dot) and proper legend mapping
-  - Clean, reproducible code with deterministic data generation and proper use of
-    Okabe-Ito palette
-  - Realistic rainfall data from multiple cities with appropriate scaling and context
-  - Proper theme-adaptive chrome throughout with correct background colors and text
-    contrast in both themes
+  - Four series drawn in the spec's four standard styles in its order (solid, dashed,
+    dotted, dash-dot) at one line width (geom_line size=1.2), so the chart reads in
+    monochrome
+  - Color and linetype mapped to the same City column, so lets-plot merges them into
+    one legend whose 60 px swatches (legend_key_width=60) show each full dash pattern
+  - Dotted and dash-dot patterns stay recognizable along the whole line in both themes;
+    no markers interrupt them
+  - Theme tokens threaded through every chrome element; grid at INK 15 % via rgba();
+    Imprint palette in canonical order identical across themes
+  - Canonical 3200x1800 canvas (ggsize 800x450, scale=4) with text at the style guide's
+    lets-plot sizes (16/12/10/10)
+  - Interactive HTML export alongside the PNG gives per-point tooltips
   weaknesses:
-  - Generic aesthetic design with standard theme defaults and no visual refinement
-    beyond requirements
-  - No visual hierarchy or data storytelling elements to create focal points
-  - Minimal use of distinctive letsplot features beyond basic API
+  - 'DE-02 (both): the panel is drawn with a four-sided frame where the style guide
+    asks for the L-shaped left and bottom spines only → remove the top and right edges.
+    Likely cause: lets-plot''s default panel border, not turned off in anyplot_theme
+    (e.g. panel_border=element_blank() with axis_line kept).'
+  - 'DQ-03 (both): daily rainfall never drops to zero and stays at 18-22 mm every
+    day for 30 days in Seattle (real daily mean about 2-5 mm) and 4-5 mm every day
+    in Athens → daily rainfall with dry days and realistic city magnitudes, or relabel
+    the y axis as a quantity that does vary smoothly (e.g. cumulative rainfall or
+    daily temperature). Likely cause: the random-walk generator 15/5/20/8 + cumsum(...)/5
+    labelled as daily rainfall.'
+  - 'Suggestion: a slightly heavier line (size about 1.5) would give the dotted Seattle
+    pattern more presence against the grid.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines
-      Chrome: Title "line-styled · letsplot · anyplot.ai" clearly readable in dark text; x-axis labeled "Day of Month" (0-30), y-axis "Rainfall (mm)" (3-22 range); all tick labels and axis titles in dark INK color; legend positioned right with city names
-      Data: Four rainfall series distinguished by line styles (Paris solid green #009E73, Athens dashed orange #D55E00, Seattle dotted blue #0072B2, Delhi dash-dot purple #CC79A7); data points added with alpha=0.7; all colors match Okabe-Ito first-series green as primary
-      Legibility verdict: PASS - all text is readable against light background, data lines are clearly distinguishable by style
+      Background: warm off-white #FAF8F1 (pixel check 250,248,241); legend box on the elevated #FFFDF6.
+      Chrome: title "line-styled · python · letsplot · anyplot.ai" top-left in dark INK at about 40 % of the width; axis titles "Day of month" and "Rainfall (mm)", tick labels 0-30 and 4-22 in INK_SOFT, all clearly readable; soft grid; a four-sided dark panel frame; legend "City" on the right.
+      Data: four lines at one width - Paris solid #009E73, Athens dashed #C475FD, Seattle dotted #4467A3, Delhi dash-dot #BD8233; patterns clearly recognizable along each line and in the 60 px legend swatches.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle grid lines
-      Chrome: Title clearly visible in light text (#F0EFE8); x-axis and y-axis labels readable; tick labels in INK_SOFT color (#B8B7B0); legend positioned identically to light render with good contrast
-      Data: All four data colors are identical to light render (confirming proper theme-independence for data); line styles (solid, dashed, dotted, dash-dot) are clearly visible; data points maintain alpha=0.7
-      Legibility verdict: PASS - no dark-on-dark contrast issues; all text is readable; data lines are clearly distinguishable against dark background; grid provides subtle reference without competing with data
+      Background: warm near-black #1A1A17 (pixel check 26,26,23); legend box on #242420.
+      Chrome: title, axis titles and tick labels in light INK/INK_SOFT, all readable; no dark-on-dark text; soft light grid; grey four-sided panel frame.
+      Data: identical colors and line styles to the light render; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,48 +62,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axis_title=20, axis_text=16);
-          all readable in both themes
+        comment: Sizes set explicitly at the lets-plot references (title 16, axis
+          titles 12, ticks and legend 10); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text readable; legend well-positioned; no collisions
+        comment: No text collisions; legend clear of the panel
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Four line styles clearly distinguishable; data points visible with
-          alpha=0.7
+        comment: Lines at size 1.2, patterns readable; legend swatches visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used correctly; CVD-safe
+        comment: Series separated by line style, not hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 base (scaled 3x) with good proportions; nothing cut off
+        comment: Canonical 3200x1800 canvas; panel fills most of it; legend next to
+          the panel
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units (Day of Month, Rainfall (mm))
+        comment: Rainfall (mm), Day of month
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds for both
-          themes'
+        comment: 'Imprint canonical order starting #009E73; correct backgrounds and
+          chrome in both themes'
     design_excellence:
-      score: 8
+      score: 7
       max: 20
       items:
       - id: DE-01
@@ -100,19 +112,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic styling with standard palette; no distinctive design thought
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 1
         max: 6
         passed: false
-        comment: Minimal customization beyond requirements
+        comment: Soft grid meets the baseline, but the four-sided panel frame falls
+          short of the L-shaped spine rule (defect line)
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: No visual hierarchy or focal point created
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,28 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with multiple styled series
+        comment: Multi-series styled line plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All line styles present (solid, dashed, dotted, dash-dot); legend
-          shows mapping
+        comment: Solid, dashed, dotted, dash-dot in that order; one width; legend
+          with full-pattern swatches (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct; axes show all data range
+        comment: Day on x, rainfall on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels match data
+        comment: Mandated title format; legend 'City' with city names
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -151,20 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects of line plotting shown; trends clear
+        comment: Four series with distinct levels and trends; enough length to show
+          each pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Rainfall data realistic (Paris, Athens, Seattle, Delhi); neutral
-          context
+        comment: Real cities, neutral weather context
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Values (3-22 mm/day) sensible for rainfall domain
+        passed: false
+        comment: 'Checked against the domain: daily rainfall never zero and Seattle
+          18-22 mm every day is implausible (defect line); no check values in the
+          spec'
     code_quality:
       score: 10
       max: 10
@@ -174,33 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward code
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Explicit imports, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Tidy melt, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html correctly
+        comment: plot-{THEME}.png and .html via ggsave, current API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -208,22 +223,26 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Standard ggplot2-style grammar; correct but not exceptional
+        comment: Correct grammar-of-graphics usage, nothing beyond the library prompt's
+          patterns
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses scale_linetype_manual for line styles; good use of distinctive
-          feature
+        comment: Generic usage; scale_linetype_manual is what the spec requires
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
+  rendered_at: '2026-11-22T10:55:51Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - wide-to-long
+  dataprep:
+  - cumulative-sum
   styling:
-  - alpha-blending
+  - grid-styling
