@@ -1,170 +1,169 @@
 """ anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-17
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-22
 """
 
 import os
-import sys
+
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 
-# Remove current directory from path to avoid matplotlib module conflict
-sys.path = [p for p in sys.path if p != "" and not p.endswith(os.path.dirname(__file__))]
-
-import matplotlib.patches as mpatches  # noqa: E402
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-
-
-# Theme configuration
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: one position per level, in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Software Module Hierarchy (24 nodes, 4 levels)
-np.random.seed(42)
+# Constants
+LEVEL_NAMES = ["Root module", "Core modules", "Sub-modules", "Leaf modules"]  # legend text per level, root first
+TEXT_ON_NODE = ["#FFFFFF", "#1A1A17", "#FFFFFF", "#1A1A17"]  # label color with enough contrast on each level's fill
+NODE_AREA = [1500, 1250, 1100, 750]  # marker area in points^2 per level, shrinking with depth
+LABEL_SIZE = [10, 9, 7, 7]  # label font size in points per level
 
-nodes = [
-    # Level 0 - Root
-    ("app", "App", 0, None),
-    # Level 1 - Core modules (4 nodes)
-    ("core", "Core", 1, "app"),
-    ("ui", "UI", 1, "app"),
-    ("data", "Data", 1, "app"),
-    ("utils", "Utils", 1, "app"),
-    # Level 2 - Sub-modules (8 nodes - 2 per parent)
-    ("auth", "Auth", 2, "core"),
-    ("config", "Config", 2, "core"),
-    ("widgets", "Widget", 2, "ui"),
-    ("themes", "Theme", 2, "ui"),
-    ("models", "Models", 2, "data"),
-    ("store", "Store", 2, "data"),
-    ("logger", "Logger", 2, "utils"),
-    ("helpers", "Helper", 2, "utils"),
-    # Level 3 - Leaf modules (11 nodes)
-    ("login", "Login", 3, "auth"),
-    ("session", "Sess", 3, "auth"),
-    ("buttons", "Btns", 3, "widgets"),
-    ("forms", "Forms", 3, "widgets"),
-    ("grid", "Grid", 3, "themes"),
-    ("user", "User", 3, "models"),
-    ("product", "Prod", 3, "models"),
-    ("cache", "Cache", 3, "store"),
-    ("db", "DB", 3, "store"),
-    ("rest", "REST", 3, "logger"),
-    ("format", "Fmt", 3, "helpers"),
-]
+# Columns: set these to your table's column names
+MODULE = "Module"  # role: nodes
+PARENT = "Parent module"  # role: edges
+LEVEL = "Level"  # role: level
 
-# Create lookup dictionaries
-hierarchy = {n[0]: (n[1], n[2], n[3]) for n in nodes}
+# Data: replace this block with your own table, for example df = pd.read_csv("modules.csv")
+# One row per node; the parent column holds the parent's name (empty for the root).
+df = pd.DataFrame(
+    {
+        MODULE: [
+            "App",
+            "Core",
+            "UI",
+            "Data",
+            "Utils",
+            "Auth",
+            "Config",
+            "Widget",
+            "Theme",
+            "Models",
+            "Store",
+            "Logger",
+            "Helper",
+            "Login",
+            "Sess",
+            "Btns",
+            "Forms",
+            "Grid",
+            "User",
+            "Prod",
+            "Cache",
+            "DB",
+            "REST",
+            "Fmt",
+        ],
+        PARENT: [
+            None,
+            "App",
+            "App",
+            "App",
+            "App",
+            "Core",
+            "Core",
+            "UI",
+            "UI",
+            "Data",
+            "Data",
+            "Utils",
+            "Utils",
+            "Auth",
+            "Auth",
+            "Widget",
+            "Widget",
+            "Theme",
+            "Models",
+            "Models",
+            "Store",
+            "Store",
+            "Logger",
+            "Helper",
+        ],
+        LEVEL: [0] + [1] * 4 + [2] * 8 + [3] * 11,
+    }
+)
 
-# Group nodes by level
-levels = {0: [], 1: [], 2: [], 3: []}
-for node_id, _label, level, _parent in nodes:
-    levels[level].append(node_id)
+# Plot: tree layout computed from df only
+children = {name: [] for name in df[MODULE]}
+for name, parent in zip(df[MODULE], df[PARENT], strict=True):
+    if pd.notna(parent):
+        children[parent].append(name)
+roots = df.loc[df[PARENT].isna(), MODULE].tolist()
+level_of = dict(zip(df[MODULE], df[LEVEL], strict=True))
+max_level = int(df[LEVEL].max())
 
-# Calculate positions using breadth-first approach
-positions = {}
-y_positions = {0: 8.5, 1: 6.0, 2: 3.5, 3: 1.0}
+# Leaves take consecutive slots in depth-first order; each parent centers over its children
+pos = {}
+leaves = []
 
-# Position level 3 (leaves) first with even spacing
-level3_nodes = levels[3]
-n_leaves = len(level3_nodes)
-x_positions_l3 = np.linspace(1, 15.5, n_leaves)
-for i, node_id in enumerate(level3_nodes):
-    positions[node_id] = (x_positions_l3[i], y_positions[3])
 
-# Position level 2 - center each parent over its children
-for node_id in levels[2]:
-    children = [n[0] for n in nodes if n[3] == node_id]
-    if children:
-        child_xs = [positions[c][0] for c in children]
-        positions[node_id] = (np.mean(child_xs), y_positions[2])
+def place(name):
+    if children[name]:
+        xs = [place(child) for child in children[name]]
+        x = float(np.mean(xs))
     else:
-        idx = levels[2].index(node_id)
-        positions[node_id] = (2 + idx * 1.6, y_positions[2])
+        x = float(len(leaves))
+        leaves.append(name)
+    pos[name] = (x, max_level - level_of[name])
+    return x
 
-# Position level 1 - center each parent over its children
-for node_id in levels[1]:
-    children = [n[0] for n in nodes if n[3] == node_id]
-    if children:
-        child_xs = [positions[c][0] for c in children]
-        positions[node_id] = (np.mean(child_xs), y_positions[1])
 
-# Position level 0 - center over children
-for node_id in levels[0]:
-    children = [n[0] for n in nodes if n[3] == node_id]
-    if children:
-        child_xs = [positions[c][0] for c in children]
-        positions[node_id] = (np.mean(child_xs), y_positions[0])
+for root in roots:
+    place(root)
+slot = len(leaves)
 
-# Use Okabe-Ito palette for levels
-level_colors = {
-    0: IMPRINT[0],  # Brand green (#009E73)
-    1: IMPRINT[1],  # Vermillion (#C475FD)
-    2: IMPRINT[2],  # Blue (#4467A3)
-    3: IMPRINT[3],  # Reddish purple (#BD8233)
-}
-level_names = ["Root Module", "Core Modules", "Sub-modules", "Leaf Modules"]
+title = "Software Module Hierarchy · network-hierarchical · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Draw edges (parent-child connections)
-for node_id, _label, _level, parent_id in nodes:
-    if parent_id is not None:
-        x1, y1 = positions[parent_id]
-        x2, y2 = positions[node_id]
-        ax.plot([x1, x2], [y1, y2], color=INK_SOFT, linewidth=2.5, alpha=0.4, zorder=1)
+# Edges: thin, soft straight lines from parent to child
+for name, parent in zip(df[MODULE], df[PARENT], strict=True):
+    if pd.notna(parent):
+        (x1, y1), (x2, y2) = pos[parent], pos[name]
+        ax.plot([x1, x2], [y1, y2], color=INK_SOFT, linewidth=1.2, alpha=0.45, zorder=1, solid_capstyle="round")
 
-# Draw nodes by level
-for level in [3, 2, 1, 0]:
-    level_node_ids = levels[level]
-    for node_id in level_node_ids:
-        x, y = positions[node_id]
-        label = hierarchy[node_id][0]
-        color = level_colors[level]
+# Nodes and labels, colored and sized by level
+for name, (x, y) in pos.items():
+    level = level_of[name]
+    ax.scatter(
+        x, y, s=NODE_AREA[level], color=IMPRINT_PALETTE[level], edgecolors=PAGE_BG, linewidths=1.2, zorder=10 + level
+    )
+    ax.text(
+        x,
+        y,
+        name,
+        ha="center",
+        va="center",
+        fontsize=LABEL_SIZE[level],
+        fontweight="bold",
+        color=TEXT_ON_NODE[level],
+        zorder=20 + level,
+    )
 
-        # Node size based on level
-        node_size = {0: 3200, 1: 2400, 2: 1800, 3: 1300}[level]
+legend_handles = [
+    mpatches.Patch(color=IMPRINT_PALETTE[level], label=LEVEL_NAMES[level]) for level in range(max_level + 1)
+]
+leg = ax.legend(handles=legend_handles, loc="upper left", fontsize=8, frameon=True, framealpha=1.0)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-        ax.scatter(x, y, s=node_size, c=color, edgecolors="white", linewidths=2.5, zorder=10 + level, alpha=0.95)
-
-        # Add label inside node
-        font_size = {0: 16, 1: 14, 2: 12, 3: 10}[level]
-        text_color = "white"
-
-        ax.annotate(
-            label,
-            (x, y),
-            ha="center",
-            va="center",
-            fontsize=font_size,
-            fontweight="bold",
-            color=text_color,
-            zorder=20 + level,
-        )
-
-# Create legend
-legend_handles = [mpatches.Patch(color=level_colors[i], label=level_names[i]) for i in range(4)]
-leg = ax.legend(
-    handles=legend_handles, loc="upper left", fontsize=16, frameon=True, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
-)
-for text in leg.get_texts():
-    text.set_color(INK_SOFT)
-
-# Styling
-ax.set_title("Software Module Hierarchy", fontsize=24, fontweight="medium", color=INK, pad=20)
-ax.set_xlim(-0.5, 17)
-ax.set_ylim(-0.5, 10)
+# Style
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=10)
+ax.set_xlim(-0.8, slot - 1 + 0.8)
+ax.set_ylim(-0.6, max_level + 0.6)
 ax.axis("off")
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.92, bottom=0.03)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
