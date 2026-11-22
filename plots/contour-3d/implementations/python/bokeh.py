@@ -1,282 +1,251 @@
 """ anyplot.ai
 contour-3d: 3D Contour Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-16
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-22
 """
 
 import os
-import sys
 import time
 from pathlib import Path
 
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-if sys.path and (sys.path[0] == "" or sys.path[0] == script_dir):
-    sys.path.pop(0)
-
-os.chdir(script_dir)
-
-import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColorBar, LinearColorMapper, Range1d
-from bokeh.palettes import Viridis256
+from bokeh.models import Arrow, ColorBar, FixedTicker, LinearColorMapper, PrintfTickFormatter, VeeHead
 from bokeh.plotting import figure
-from selenium import webdriver  # noqa: E402
-from selenium.webdriver.chrome.options import Options  # noqa: E402
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-np.random.seed(42)
+# Imprint palette (single-polarity ramp below uses positions 1 and 3)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-n_points = 40
-x = np.linspace(-3, 3, n_points)
-y = np.linspace(-3, 3, n_points)
-X, Y = np.meshgrid(x, y)
 
-Z = 1.0 * np.exp(-(X**2 + Y**2) / 1.5) + 0.6 * np.exp(-((X - 1.5) ** 2 + (Y + 1.2) ** 2) / 0.8)
+def lerp_hex(c0, c1, t):
+    a = [int(c0[i : i + 2], 16) for i in (1, 3, 5)]
+    b = [int(c1[i : i + 2], 16) for i in (1, 3, 5)]
+    return "#" + "".join(f"{round(p + (q - p) * t):02X}" for p, q in zip(a, b, strict=True))
 
-z_min, z_max = Z.min(), Z.max()
 
-elev_rad = np.radians(25)
-azim_rad = np.radians(45)
-cos_azim = np.cos(azim_rad)
-sin_azim = np.sin(azim_rad)
-sin_elev = np.sin(elev_rad)
-cos_elev = np.cos(elev_rad)
+IMPRINT_SEQ = [lerp_hex(IMPRINT_PALETTE[0], IMPRINT_PALETTE[2], t / 255) for t in range(256)]
 
-Z_scaled = (Z - z_min) / (z_max - z_min) * 2
+# Constants
+N_LEVELS = 10  # regular contour levels between the lowest and highest height
+VIEW_ELEVATION = 28  # degrees above the base plane
+VIEW_AZIMUTH = 45  # degrees of rotation about the vertical axis
+Z_SPAN = 0.55  # drawn height of the surface as a share of the x-y extent
+LIFT = 0.35  # gap between base plane and surface foot, as a share of the drawn height
 
-X_proj = np.zeros_like(X)
-Z_proj = np.zeros_like(X)
-Depth = np.zeros_like(X)
+# Columns: set these to your table's column names
+X = "x"  # role: x
+Y = "y"  # role: y
+AMPLITUDE = "Amplitude (a.u.)"  # role: z
 
-for i in range(n_points):
-    for j in range(n_points):
-        x_3d, y_3d, z_3d = X[i, j], Y[i, j], Z_scaled[i, j]
-        x_rot = x_3d * cos_azim - y_3d * sin_azim
-        y_rot = x_3d * sin_azim + y_3d * cos_azim
-        X_proj[i, j] = x_rot
-        Z_proj[i, j] = y_rot * sin_elev + z_3d * cos_elev
-        Depth[i, j] = y_rot * cos_elev - z_3d * sin_elev
+# Data: replace this block with your own table, for example df = pd.read_csv("field.csv")
+grid = np.linspace(-3, 3, 40)
+gx, gy = np.meshgrid(grid, grid)
+gz = np.exp(-(gx**2 + gy**2) / 1.5) + 0.6 * np.exp(-((gx - 1.5) ** 2 + (gy + 1.2) ** 2) / 0.8)
+df = pd.DataFrame({X: gx.ravel(), Y: gy.ravel(), AMPLITUDE: gz.ravel()})
 
-n_levels = 10
-levels = np.linspace(z_min, z_max, n_levels)
+# Plot: reads only df and the constants above
+field = df.pivot(index=Y, columns=X, values=AMPLITUDE)
+xs, ys, zgrid = field.columns.to_numpy(), field.index.to_numpy(), field.to_numpy()
+z_min, z_max = np.nanmin(zgrid), np.nanmax(zgrid)
+x_lo, x_hi, y_lo, y_hi = xs.min(), xs.max(), ys.min(), ys.max()
+z_scale = Z_SPAN * max(x_hi - x_lo, y_hi - y_lo) / (z_max - z_min)
+lift = LIFT * (z_max - z_min) * z_scale
 
-color_mapper = LinearColorMapper(palette=Viridis256, low=z_min, high=z_max)
+cos_a, sin_a = np.cos(np.radians(VIEW_AZIMUTH)), np.sin(np.radians(VIEW_AZIMUTH))
+cos_e, sin_e = np.cos(np.radians(VIEW_ELEVATION)), np.sin(np.radians(VIEW_ELEVATION))
 
-surface_quads = []
-for i in range(n_points - 1):
-    for j in range(n_points - 1):
-        xs = [X_proj[i, j], X_proj[i + 1, j], X_proj[i + 1, j + 1], X_proj[i, j + 1]]
-        ys = [Z_proj[i, j], Z_proj[i + 1, j], Z_proj[i + 1, j + 1], Z_proj[i, j + 1]]
 
-        avg_depth = (Depth[i, j] + Depth[i + 1, j] + Depth[i + 1, j + 1] + Depth[i, j + 1]) / 4
-        avg_z = (Z[i, j] + Z[i + 1, j] + Z[i + 1, j + 1] + Z[i, j + 1]) / 4
+def project(px, py, height):
+    """Orthographic oblique view: screen x, screen y and depth (larger = farther from the viewer)."""
+    px, py, height = np.broadcast_arrays(np.asarray(px, float), np.asarray(py, float), np.asarray(height, float))
+    rot_x = px * cos_a - py * sin_a
+    rot_y = px * sin_a + py * cos_a
+    return rot_x, rot_y * sin_e + height * cos_e, rot_y * cos_e - height * sin_e
 
-        idx = int((avg_z - z_min) / (z_max - z_min) * 255)
-        idx = max(0, min(255, idx))
-        color = Viridis256[idx]
 
-        surface_quads.append((avg_depth, xs, ys, color))
+def ramp_color(value):
+    idx = np.clip(((value - z_min) / (z_max - z_min) * 255).astype(int), 0, 255)
+    return [IMPRINT_SEQ[i] for i in np.atleast_1d(idx)]
 
-surface_quads.sort(key=lambda q: q[0], reverse=True)
 
-fig_temp, ax_temp = plt.subplots()
-contour_set = ax_temp.contour(x, y, Z, levels=levels)
-plt.close(fig_temp)
+levels = np.linspace(z_min, z_max, N_LEVELS + 2)[1:-1]
 
-contour_lines_3d = []
-base_contours = []
 
-for level_idx, level in enumerate(levels):
-    z_height = (level - z_min) / (z_max - z_min) * 2
+def level_segments(level):
+    """Marching squares: the contour at `level` as an (n, 2, 2) array of segment end points in data units."""
+    segments = []
+    for i in range(len(ys) - 1):
+        for j in range(len(xs) - 1):
+            # Cell corners counter-clockwise, then the crossing of each edge that straddles the level
+            pts = [(xs[j], ys[i], zgrid[i, j]), (xs[j + 1], ys[i], zgrid[i, j + 1])]
+            pts += [(xs[j + 1], ys[i + 1], zgrid[i + 1, j + 1]), (xs[j], ys[i + 1], zgrid[i + 1, j])]
+            cross = []
+            for (x0, y0, z0), (x1, y1, z1) in zip(pts, pts[1:] + pts[:1], strict=True):
+                if (z0 - level) * (z1 - level) < 0:
+                    t = (level - z0) / (z1 - z0)
+                    cross.append((x0 + t * (x1 - x0), y0 + t * (y1 - y0)))
+            for k in range(0, len(cross) - 1, 2):
+                segments.append((cross[k], cross[k + 1]))
+    return np.array(segments).reshape(-1, 2, 2)
 
-    paths = contour_set.get_paths()
-    for path in paths:
-        vertices = path.vertices
-        if len(vertices) > 1:
-            line_xs = []
-            line_ys = []
-            line_depths = []
-            for pt in vertices:
-                x_pt, y_pt = pt
-                x_rot = x_pt * cos_azim - y_pt * sin_azim
-                y_rot = x_pt * sin_azim + y_pt * cos_azim
-                line_xs.append(x_rot)
-                line_ys.append(y_rot * sin_elev + z_height * cos_elev)
-                line_depths.append(y_rot * cos_elev - z_height * sin_elev)
 
-            if len(line_xs) > 1:
-                avg_depth = np.mean(line_depths)
-                contour_lines_3d.append((avg_depth, line_xs, line_ys))
+# Surface quads: screen polygon, depth and color per grid cell
+gxx, gyy = np.meshgrid(xs, ys)
+sx, sy, sd = project(gxx, gyy, (zgrid - z_min) * z_scale + lift)
+corners = [(slice(None, -1), slice(None, -1)), (slice(1, None), slice(None, -1)), (slice(1, None), slice(1, None))]
+corners.append((slice(None, -1), slice(1, None)))
+quad_x = np.stack([sx[c] for c in corners], axis=-1).reshape(-1, 4)
+quad_y = np.stack([sy[c] for c in corners], axis=-1).reshape(-1, 4)
+quad_depth = np.mean([sd[c] for c in corners], axis=0).ravel()
+quad_color = ramp_color(np.mean([zgrid[c] for c in corners], axis=0).ravel())
 
-            line_xs_base = []
-            line_ys_base = []
-            line_depths_base = []
-            for pt in vertices:
-                x_pt, y_pt = pt
-                x_rot = x_pt * cos_azim - y_pt * sin_azim
-                y_rot = x_pt * sin_azim + y_pt * cos_azim
-                line_xs_base.append(x_rot)
-                line_ys_base.append(y_rot * sin_elev)
-                line_depths_base.append(y_rot * cos_elev)
+# Contour segments lifted to their level height, nudged toward the viewer so they sit on the surface
+seg_x, seg_y, seg_depth = [], [], []
+base_lines = []
+for level in levels:
+    seg = level_segments(level)
+    lx, ly, ld = project(seg[..., 0], seg[..., 1], (level - z_min) * z_scale + lift)
+    seg_x += lx.tolist()
+    seg_y += ly.tolist()
+    seg_depth += list(ld.mean(axis=1) - 0.04)
+    bx, by, _ = project(seg[..., 0], seg[..., 1], 0)
+    base_lines.append((bx.tolist(), by.tolist(), ramp_color(np.array([level]))[0]))
+seg_depth = np.array(seg_depth)
 
-            if len(line_xs_base) > 1:
-                avg_depth = np.mean(line_depths_base)
-                idx = int(level_idx * 255 / (n_levels - 1))
-                color = Viridis256[idx]
-                base_contours.append((avg_depth, line_xs_base, line_ys_base, color))
-
+# Figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="contour-3d · bokeh · anyplot.ai",
-    toolbar_location="right",
-    tools="pan,wheel_zoom,box_zoom,reset,save",
+    width=3200,
+    height=1800,
+    title="contour-3d · python · bokeh · anyplot.ai",
+    toolbar_location=None,
+    match_aspect=True,
+    min_border_left=60,
+    min_border_right=60,
+    min_border_top=110,
+    min_border_bottom=60,
 )
-
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
+p.outline_line_alpha = 0
 p.xaxis.visible = False
 p.yaxis.visible = False
+p.xgrid.visible = False
+p.ygrid.visible = False
 
-for _depth, xs, ys, color in sorted(base_contours, key=lambda c: c[0], reverse=True):
-    p.line(x=xs, y=ys, line_color=color, line_width=3.5, line_alpha=0.65, line_dash="dashed")
+# Base-plane contours first: flat, dashed, colored by their level
+for bx, by, color in base_lines:
+    p.multi_line(bx, by, line_color=color, line_width=5, line_alpha=0.85)
 
-for _depth, xs, ys, color in surface_quads:
-    p.patch(x=xs, y=ys, fill_color=color, line_color=INK_SOFT, line_width=0.5, line_alpha=0.3, alpha=0.9)
+# Surface and surface contours interleaved by depth slice, far to near, so nearer relief hides what is behind it
+n_slices = 90
+d_all = np.concatenate([quad_depth, seg_depth])
+edges = np.linspace(d_all.min(), d_all.max(), n_slices + 1)
+quad_bin = np.minimum(np.searchsorted(edges, quad_depth, side="right") - 1, n_slices - 1)
+seg_bin = np.minimum(np.searchsorted(edges, seg_depth, side="right") - 1, n_slices - 1)
+for b in range(n_slices - 1, -1, -1):
+    q = np.where(quad_bin == b)[0]
+    q = q[np.argsort(-quad_depth[q])]
+    if len(q):
+        p.patches(
+            xs=quad_x[q].tolist(),
+            ys=quad_y[q].tolist(),
+            fill_color=[quad_color[i] for i in q],
+            line_color=[quad_color[i] for i in q],
+            line_width=1.5,
+        )
+    s = np.where(seg_bin == b)[0]
+    if len(s):
+        p.multi_line(
+            xs=[seg_x[i] for i in s], ys=[seg_y[i] for i in s], line_color=INK, line_width=3.5, line_alpha=0.85
+        )
 
-for _depth, xs, ys in sorted(contour_lines_3d, key=lambda c: c[0], reverse=False):
-    p.line(x=xs, y=ys, line_color=INK, line_width=2.5, line_alpha=0.8)
+# 3D axes drawn along the base-plane edges, with a vertical axis rising from the left corner
+pad = 0.12 * max(x_hi - x_lo, y_hi - y_lo)
+ax_x0, ax_x1, ax_y0, ax_y1 = x_lo - pad, x_hi + pad, y_lo - pad, y_hi + pad
+z_top = (z_max - z_min) * z_scale * 1.25 + lift
+origin = project(ax_x0, ax_y0, 0)
+x_end = project(ax_x1, ax_y0, 0)
+y_end = project(ax_x0, ax_y1, 0)
+z_base = project(ax_x0, ax_y1, 0)
+z_end = project(ax_x0, ax_y1, z_top)
 
-all_x_coords = [x for quad in surface_quads for x in quad[1]]
-all_y_coords = [y for quad in surface_quads for y in quad[2]]
+for back in (project([ax_x1, ax_x1], [ax_y0, ax_y1], 0), project([ax_x0, ax_x1], [ax_y1, ax_y1], 0)):
+    p.line(back[0], back[1], line_color=INK_SOFT, line_width=3, line_alpha=0.45)
 
-x_min_plot, x_max_plot = min(all_x_coords), max(all_x_coords)
-y_min_plot, y_max_plot = min(all_y_coords), max(all_y_coords)
+axes = [(origin, x_end), (origin, y_end), (z_base, z_end)]
+for start, end in axes:
+    p.add_layout(
+        Arrow(
+            end=VeeHead(size=38, fill_color=INK_SOFT, line_color=INK_SOFT),
+            x_start=float(start[0]),
+            y_start=float(start[1]),
+            x_end=float(end[0]),
+            y_end=float(end[1]),
+            line_color=INK_SOFT,
+            line_width=7,
+        )
+    )
 
-x_pad = (x_max_plot - x_min_plot) * 0.15
-y_pad = (y_max_plot - y_min_plot) * 0.12
-
-p.x_range = Range1d(x_min_plot - x_pad * 1.2, x_max_plot + x_pad * 2.0)
-p.y_range = Range1d(y_min_plot - y_pad * 0.8, y_max_plot + y_pad * 1.4)
-
-ox, oy, oz = -3.5, -3.5, 0
-origin_x = ox * cos_azim - oy * sin_azim
-origin_y = (ox * sin_azim + oy * cos_azim) * sin_elev + oz * cos_elev
-
-axis_color = INK_SOFT
-axis_width = 6
-
-ax, ay, az = 3.5, -3.5, 0
-x_axis_end_x = ax * cos_azim - ay * sin_azim
-x_axis_end_y = (ax * sin_azim + ay * cos_azim) * sin_elev + az * cos_elev
-p.line(x=[origin_x, x_axis_end_x], y=[origin_y, x_axis_end_y], line_color=axis_color, line_width=axis_width)
-
-bx, by, bz = -3.5, 3.5, 0
-y_axis_end_x = bx * cos_azim - by * sin_azim
-y_axis_end_y = (bx * sin_azim + by * cos_azim) * sin_elev + bz * cos_elev
-p.line(x=[origin_x, y_axis_end_x], y=[origin_y, y_axis_end_y], line_color=axis_color, line_width=axis_width)
-
-cx, cy, cz = -3.5, -3.5, 2.5
-z_axis_end_x = cx * cos_azim - cy * sin_azim
-z_axis_end_y = (cx * sin_azim + cy * cos_azim) * sin_elev + cz * cos_elev
-p.line(x=[origin_x, z_axis_end_x], y=[origin_y, z_axis_end_y], line_color=axis_color, line_width=axis_width)
-
-arrow_size = 0.25
-
-x_dir = np.array([x_axis_end_x - origin_x, x_axis_end_y - origin_y])
-x_dir = x_dir / np.linalg.norm(x_dir)
-x_perp = np.array([-x_dir[1], x_dir[0]])
-p.patch(
-    x=[
-        x_axis_end_x,
-        x_axis_end_x - arrow_size * x_dir[0] + arrow_size * 0.5 * x_perp[0],
-        x_axis_end_x - arrow_size * x_dir[0] - arrow_size * 0.5 * x_perp[0],
-    ],
-    y=[
-        x_axis_end_y,
-        x_axis_end_y - arrow_size * x_dir[1] + arrow_size * 0.5 * x_perp[1],
-        x_axis_end_y - arrow_size * x_dir[1] - arrow_size * 0.5 * x_perp[1],
-    ],
-    fill_color=axis_color,
-    line_color=axis_color,
+label_pad = 0.45
+# Invisible anchor points so the automatic range also covers the axes and their labels
+extent = [origin, x_end, y_end, z_end, project(ax_x1, ax_y1, 0)]
+p.scatter(
+    x=[float(e[0]) for e in extent] + [float(x_end[0]) + 2 * label_pad, float(z_end[0]) - 2 * label_pad],
+    y=[float(e[1]) for e in extent] + [float(z_end[1]) + 2 * label_pad] * 2,
+    alpha=0,
+)
+p.text(
+    x=[float(x_end[0]) + label_pad, float(y_end[0]) - label_pad, float(z_end[0]) + label_pad * 0.2],
+    y=[float(x_end[1]) - label_pad * 0.2, float(y_end[1]) + label_pad * 0.2, float(z_end[1]) + label_pad * 0.9],
+    text=[X, Y, AMPLITUDE.split(" (")[0]],
+    text_color=INK,
+    text_font_size="40pt",
+    text_font_style="italic",
+    text_align="center",
+    text_baseline="middle",
 )
 
-y_dir = np.array([y_axis_end_x - origin_x, y_axis_end_y - origin_y])
-y_dir = y_dir / np.linalg.norm(y_dir)
-y_perp = np.array([-y_dir[1], y_dir[0]])
-p.patch(
-    x=[
-        y_axis_end_x,
-        y_axis_end_x - arrow_size * y_dir[0] + arrow_size * 0.5 * y_perp[0],
-        y_axis_end_x - arrow_size * y_dir[0] - arrow_size * 0.5 * y_perp[0],
-    ],
-    y=[
-        y_axis_end_y,
-        y_axis_end_y - arrow_size * y_dir[1] + arrow_size * 0.5 * y_perp[1],
-        y_axis_end_y - arrow_size * y_dir[1] - arrow_size * 0.5 * y_perp[1],
-    ],
-    fill_color=axis_color,
-    line_color=axis_color,
-)
-
-z_dir = np.array([z_axis_end_x - origin_x, z_axis_end_y - origin_y])
-z_dir = z_dir / np.linalg.norm(z_dir)
-z_perp = np.array([-z_dir[1], z_dir[0]])
-p.patch(
-    x=[
-        z_axis_end_x,
-        z_axis_end_x - arrow_size * z_dir[0] + arrow_size * 0.5 * z_perp[0],
-        z_axis_end_x - arrow_size * z_dir[0] - arrow_size * 0.5 * z_perp[0],
-    ],
-    y=[
-        z_axis_end_y,
-        z_axis_end_y - arrow_size * z_dir[1] + arrow_size * 0.5 * z_perp[1],
-        z_axis_end_y - arrow_size * z_dir[1] - arrow_size * 0.5 * z_perp[1],
-    ],
-    fill_color=axis_color,
-    line_color=axis_color,
-)
-
+# Color bar covering the contour range, ticked at the contour levels
+color_mapper = LinearColorMapper(palette=IMPRINT_SEQ, low=z_min, high=z_max)
 color_bar = ColorBar(
     color_mapper=color_mapper,
-    width=80,
-    location=(0, 0),
-    title="Amplitude (a.u.)",
+    ticker=FixedTicker(ticks=[float(v) for v in levels]),
+    formatter=PrintfTickFormatter(format="%.2f"),
+    title=AMPLITUDE,
     title_text_font_size="40pt",
-    major_label_text_font_size="32pt",
+    title_text_color=INK,
+    title_text_font_style="normal",
     title_standoff=30,
-    margin=50,
-    padding=25,
+    major_label_text_font_size="34pt",
+    major_label_text_color=INK_SOFT,
+    major_tick_line_color=INK_SOFT,
+    major_tick_line_width=3,
+    bar_line_color=None,
+    background_fill_color=PAGE_BG,
+    width=70,
+    padding=30,
+    margin=40,
 )
 p.add_layout(color_bar, "right")
 
-p.title.text_font_size = "28pt"
-p.title.text_color = INK
-
-p.background_fill_color = PAGE_BG
-p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
-
-p.xgrid.grid_line_color = INK
-p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.10
-p.ygrid.grid_line_alpha = 0.10
-
-if p.legend:
-    p.legend.background_fill_color = ELEVATED_BG
-    p.legend.border_line_color = INK_SOFT
-    p.legend.label_text_color = INK_SOFT
-
+# Output
 output_file(f"plot-{THEME}.html")
 save(p)
 
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -290,6 +259,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
