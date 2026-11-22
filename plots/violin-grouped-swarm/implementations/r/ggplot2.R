@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
 #' Library: ggplot2 | R
-#' Quality: 88/100 | Created: 2026-05-18
+#' Quality: pending | Created: 2026-05-18
 
 library(ggplot2)
 library(ragg)
