@@ -2,46 +2,55 @@ library: matplotlib
 language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:53:32Z'
-updated: '2026-05-18T06:41:12Z'
-generated_by: claude-haiku
-workflow_run: 26017282700
+updated: '2026-11-22T11:41:12Z'
+generated_by: claude-sonnet
+workflow_run: 45018002166
 issue: 3549
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 79
 review:
   strengths:
-  - Perfect palette compliance with correct Okabe-Ito sequence and theme-aware chrome
-  - Excellent data quality with realistic energy consumption scenario and visible
-    uncertainty bands
-  - All text explicitly sized and readable in both light and dark renders
-  - Clean code structure with proper matplotlib idioms and deterministic data generation
-  - Strong spec compliance with all required features present
-  - Sophisticated visual layering with zorder management and confidence band visualization
+  - Stacked edges and bands derived from the table with pandas cumsum and shift, so
+    each band follows its own series' stacked edge at every x (C1, C3, C4)
+  - Theme tokens threaded through title, ticks, spines, legend and callout box; both
+    renders read cleanly
+  - Legend title states what the shading means (90% CI bands)
+  - 'Adaptable-code layout: column constants, a replaceable data block and a plot
+    block that reads only df'
   weaknesses:
-  - Design Excellence could be elevated with more intentional visual hierarchy and
-    emphasis techniques
-  - Annotation placement is functional but not optimally positioned for focal point
-    guidance
+  - 'VQ-03, SC-02 (both): each confidence band is drawn at zorder 2 under the layers
+    at alpha 0.85, so inside the stack only a faint tint of each band shows and the
+    band reads clearly only above the Natural Gas edge (C2) → draw the bands above
+    the layer fills (bands at a higher zorder than the fills, with alpha 0.2 to 0.4)
+    so each band shows over the layer above it. Likely cause: fill_between zorder=2
+    for the bands against zorder=3 and alpha=0.85 for the layers.'
+  - 'VQ-02 (both): the upper-left legend box covers the Natural Gas top edge and its
+    band from 2016 to about 2018 (values 190 to 220 TWh) → keep the legend clear of
+    the data, for example more y headroom or a legend outside the axes. Likely cause:
+    loc=''upper left'' with ylim top at only 1.05 times the highest band.'
+  - 'Suggestion: the ''Solar up 200%'' callout sits at 2020 while it describes the
+    whole period; anchoring it at the last quarter would make the claim easier to
+    read.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), perfect
-      Chrome: Title, axis labels, tick labels all clearly readable in dark text; grid is subtle at alpha=0.1
-      Data: Four stacked areas with correct Okabe-Ito colors (Solar green #009E73, Wind orange #D55E00, Hydro blue #0072B2, Natural Gas reddish-purple #CC79A7); confidence bands visible as lighter transparent fills with dotted boundary lines
-      Legibility verdict: PASS — all elements clearly readable at full resolution
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'area-stacked-confidence · python · matplotlib · anyplot.ai' in dark ink at about 60 % width; axis titles 'Quarter' and 'Energy consumption (TWh)'; rotated year ticks 2016-2023 and y ticks 0-250 in INK_SOFT; subtle grid; legend upper left on an elevated panel titled 'Energy source (shaded: 90% CI bands)'.
+      Data: four stacked layers Solar #009E73, Wind #C475FD, Hydro #4467A3, Natural Gas #BD8233 from a zero baseline, each with a solid edge line; bands show as faint darker tints inside the layers and a clear tan band above the gas edge; a 'Solar up 200%' callout box with an arrow into the Solar layer near 2020. The legend box covers the gas top edge for 2016-2018.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), perfect
-      Chrome: All text is light-colored and readable against dark background; no dark-on-dark failures; grid remains visible and subtle
-      Data: Okabe-Ito colors identical to light render (only chrome flips); confidence bands maintain visual hierarchy with proper transparency
-      Legibility verdict: PASS — all elements clearly readable; excellent theme adaptation
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, all readable; no dark-on-dark text; legend panel #242420 with light text.
+      Data: same four colors as the light render; only the chrome flips. Bands again mostly hidden inside the stack, the gas band visible as a brown halo above the top edge.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -49,75 +58,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          perfect readability in both themes'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt as the style
+          guide sets; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping text; all elements distinct and readable
+        passed: false
+        comment: The upper-left legend box covers the Natural Gas top edge and its
+          band for 2016 to 2018 (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: All stacked areas, confidence bands, and boundary lines clearly visible
-          and well-sized
+        passed: false
+        comment: The bands sit at zorder 2 under layers at alpha 0.85, so inside the
+          stack only a faint tint of each band shows (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with good contrast throughout
+        comment: Imprint colors with distinct lightness; no red-green pair as the
+          only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins and generous whitespace
+        comment: 3200x1800 canvas; title at about 60 % of the width; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Energy Consumption (TWh)''; correct
-          title format'
+        comment: '''Quarter'' and ''Energy consumption (TWh)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect compliance: first series is #009E73, multi-series follows
-          Okabe-Ito order, backgrounds are #FAF8F1 (light) and #1A1A17 (dark), theme
-          chrome correct in both renders'
+        comment: 'Solar #009E73 first, then Imprint order; #FAF8F1 / #1A1A17 backgrounds;
+          chrome correct in both themes'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Okabe-Ito palette and theme-aware styling show professional polish,
-          but execution is more 'well-configured defaults' than exceptional design
+        passed: true
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit sizes;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Good refinement: spines removed, subtle grid, generous whitespace,
-          legend and annotation styling; could be stronger'
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clear data display with annotation; visual hierarchy is present but
-          not compelling; lacks strong focal point or visual emphasis
+        comment: The Solar callout is the implementation's own focal point, but it
+          is an annotation layer the spec does not request and earns no credit
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,27 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart with all confidence band subtypes
+        comment: Correct stacked area chart with confidence bands
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: stacked areas, confidence bands, distinct
-          colors, legend with band explanation'
+        passed: false
+        comment: 'C1, C3, C4, C5 met; C2 only partly: the bands are mostly hidden
+          under the layers stacked above them (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly assigned; all data visible and properly stacked
+        comment: Stacked edges and bands computed from the data with cumsum/shift;
+          full x range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format perfect; legend labels match data and explain confidence
-          bands
+        comment: Title in the mandated format; the legend names each source and says
+          the shading is 90% CI bands
     data_quality:
       score: 15
       max: 15
@@ -155,22 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all plot type aspects: stacking, uncertainty bands, growth
-          trends, different uncertainty levels'
+        comment: Shows stacking, bands per series, widening bands, and series of different
+          thickness
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world energy consumption scenario; neutral and comprehensible;
-          realistic patterns (renewable growth, gas decline)
+        comment: Quarterly energy consumption by source is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TWh values, proportions, and 8-year timeframe all realistic for energy
-          domain
+        comment: Values of 20 to 80 TWh per source per quarter are sensible; no Check
+          values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -180,52 +188,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → styling → save; no
-          functions/classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; fully deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib.pyplot, numpy, pandas'
+        comment: 'os, matplotlib.pyplot, numpy, pandas: all used'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; matplotlib idioms correct; no fake functionality;
-          well-organized
+        comment: One loop over the series, stacking derived with cumsum/shift; no
+          dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: Saves plot-{THEME}.png at figsize 8x4.5, dpi 400, without bbox_inches='tight'
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expertly uses high-level API with ax methods, proper zorder layering,
-          theme-aware implementation
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
+        passed: true
+        comment: Axes methods and fill_between as the library prompt asks; nothing
+          beyond the default
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
         passed: false
-        comment: Uses fill_between for stacked confidence bands and custom zorder;
-          theme-adaptive chrome; good but not maximal leverage of matplotlib uniqueness
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-22T11:37:30Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -233,8 +242,10 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
