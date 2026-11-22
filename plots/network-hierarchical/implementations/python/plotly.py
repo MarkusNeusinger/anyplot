@@ -1,7 +1,7 @@
 """anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
 Library: plotly 7.1.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-17
+Quality: pending | Updated: 2026-05-17
 """
 
 import os
