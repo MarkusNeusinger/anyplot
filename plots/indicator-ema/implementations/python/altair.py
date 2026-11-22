@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-19
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -18,68 +19,79 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
+# Constants
+SHORT_SPAN = 12  # periods of the fast EMA
+LONG_SPAN = 26  # periods of the slow EMA
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close Price"  # role: close
+EMA_SHORT = "EMA 12"  # role: ema_short
+EMA_LONG = "EMA 26"  # role: ema_long
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv", parse_dates=[DATE])
 np.random.seed(42)
 n_days = 120
-dates = pd.date_range(start="2024-01-01", periods=n_days, freq="B")
-returns = np.random.normal(0.0005, 0.02, n_days)
-price = 100 * np.cumprod(1 + returns)
+price = 100 * np.cumprod(1 + np.random.normal(0.0005, 0.02, n_days))
+df = pd.DataFrame({DATE: pd.date_range(start="2024-01-01", periods=n_days, freq="B"), CLOSE: price})
+df[EMA_SHORT] = df[CLOSE].ewm(span=SHORT_SPAN, adjust=False).mean()
+df[EMA_LONG] = df[CLOSE].ewm(span=LONG_SPAN, adjust=False).mean()
 
-df = pd.DataFrame({"date": dates, "close": price})
-df["ema_12"] = df["close"].ewm(span=12, adjust=False).mean()
-df["ema_26"] = df["close"].ewm(span=26, adjust=False).mean()
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+SERIES = "Series"
+VALUE = "Price (USD)"
+series_order = [CLOSE, EMA_SHORT, EMA_LONG]
 
-# Detect EMA crossover points (sign change in ema_12 - ema_26)
-diff = df["ema_12"] - df["ema_26"]
-crossover_mask = (diff.shift(1) * diff < 0) & diff.shift(1).notna()
-crossover_df = df[crossover_mask][["date", "ema_12"]].rename(columns={"ema_12": "value"})
+# Crossover points: sign change of the short minus the long EMA
+diff = df[EMA_SHORT] - df[EMA_LONG]
+crossovers = df[(diff.shift(1) * diff < 0)][[DATE, EMA_SHORT]].rename(columns={EMA_SHORT: VALUE})
 
-# Melt into long format for multi-series chart
-df_price = df[["date", "close"]].rename(columns={"close": "value"})
-df_price["series"] = "Close Price"
-df_ema12 = df[["date", "ema_12"]].rename(columns={"ema_12": "value"})
-df_ema12["series"] = "EMA 12"
-df_ema26 = df[["date", "ema_26"]].rename(columns={"ema_26": "value"})
-df_ema26["series"] = "EMA 26"
-df_long = pd.concat([df_price, df_ema12, df_ema26], ignore_index=True)
+# Long format for the multi-series line layer
+df_long = df.melt(id_vars=DATE, value_vars=series_order, var_name=SERIES, value_name=VALUE)
 
-# Scales
-color_scale = alt.Scale(domain=["Close Price", "EMA 12", "EMA 26"], range=IMPRINT)
-stroke_scale = alt.Scale(domain=["Close Price", "EMA 12", "EMA 26"], range=[3.5, 2.5, 2.5])
+color_scale = alt.Scale(domain=series_order, range=IMPRINT_PALETTE)
+stroke_scale = alt.Scale(domain=series_order, range=[1.6, 1.0, 1.0])
 
-# Line chart layer
 lines = (
     alt.Chart(df_long)
     .mark_line()
     .encode(
-        x=alt.X("date:T", title="Date", axis=alt.Axis(format="%b %Y", labelAngle=-45)),
-        y=alt.Y("value:Q", title="Price (USD)", scale=alt.Scale(zero=False)),
-        color=alt.Color("series:N", scale=color_scale, legend=alt.Legend(title="Series", orient="top-right")),
-        strokeWidth=alt.StrokeWidth("series:N", scale=stroke_scale, legend=None),
+        x=alt.X(DATE.translate(ESCAPE), type="temporal", title=DATE, axis=alt.Axis(format="%b %Y", tickCount="month")),
+        y=alt.Y(VALUE.translate(ESCAPE), type="quantitative", title=VALUE, scale=alt.Scale(zero=False)),
+        color=alt.Color(SERIES, type="nominal", title=SERIES, scale=color_scale, legend=alt.Legend(orient="right")),
+        strokeWidth=alt.StrokeWidth(SERIES, type="nominal", scale=stroke_scale, legend=None),
         tooltip=[
-            alt.Tooltip("date:T", title="Date", format="%Y-%m-%d"),
-            alt.Tooltip("series:N", title="Series"),
-            alt.Tooltip("value:Q", title="Price", format="$.2f"),
+            alt.Tooltip(DATE.translate(ESCAPE), type="temporal", title=DATE, format="%Y-%m-%d"),
+            alt.Tooltip(SERIES, type="nominal", title=SERIES),
+            alt.Tooltip(VALUE.translate(ESCAPE), type="quantitative", title=VALUE, format="$.2f"),
         ],
     )
 )
 
-# Crossover markers (diamond points where EMA 12 crosses EMA 26)
+# Diamonds where the short EMA crosses the long one
 crossover_markers = (
-    alt.Chart(crossover_df)
-    .mark_point(size=300, shape="diamond", filled=True, color="#BD8233", opacity=0.85)
+    alt.Chart(crossovers)
+    .mark_point(size=60, shape="diamond", filled=True, color=IMPRINT_PALETTE[3], opacity=0.9)
     .encode(
-        x=alt.X("date:T"), y=alt.Y("value:Q"), tooltip=[alt.Tooltip("date:T", title="EMA Crossover", format="%Y-%m-%d")]
+        x=alt.X(DATE.translate(ESCAPE), type="temporal"),
+        y=alt.Y(VALUE.translate(ESCAPE), type="quantitative"),
+        tooltip=[alt.Tooltip(DATE.translate(ESCAPE), type="temporal", title="EMA crossover", format="%Y-%m-%d")],
     )
 )
 
-# Compose and style
 chart = (
     alt.layer(lines, crossover_markers)
-    .properties(width=1600, height=900, title="indicator-ema · python · altair · anyplot.ai", background=PAGE_BG)
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .properties(
+        width=520,
+        height=320,
+        title=alt.Title("indicator-ema · python · altair · anyplot.ai", fontSize=16),
+        background=PAGE_BG,
+    )
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -87,23 +99,34 @@ chart = (
         gridOpacity=0.10,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=18,
-        titleFontSize=22,
-        tickSize=10,
+        labelFontSize=10,
+        titleFontSize=12,
     )
-    .configure_title(fontSize=28, color=INK, anchor="middle")
+    .configure_title(color=INK, anchor="middle")
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
         labelColor=INK_SOFT,
         titleColor=INK,
-        titleFontSize=20,
-        labelFontSize=18,
-        symbolStrokeWidth=4,
-        symbolSize=200,
+        titleFontSize=11,
+        labelFontSize=10,
+        symbolStrokeWidth=2,
+        symbolSize=120,
+        padding=6,
     )
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the 3200 x 1800 target
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair vl-convert produced {w}x{h}, exceeds target {TW}x{TH}; shrink width/height")
+if w < TW or h < TH:
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
