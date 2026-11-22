@@ -1,27 +1,22 @@
-""" anyplot.ai
+"""anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-18
 """
 
 import os
-
-# Remove the current directory from sys.path to avoid circular imports with bokeh.py
-import sys
 import time
 from pathlib import Path
 
-
-sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd(), os.path.dirname(__file__))]
-
-import numpy as np  # noqa: E402
-from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, Label, Span  # noqa: E402
-from bokeh.plotting import figure  # noqa: E402
-from selenium import webdriver  # noqa: E402
-from selenium.webdriver.chrome.options import Options  # noqa: E402
-from sklearn.datasets import make_classification  # noqa: E402
-from sklearn.linear_model import LogisticRegression  # noqa: E402
+import numpy as np
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, Label, Span
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
 
 
 # Theme tokens
@@ -31,152 +26,166 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito colors
-COLOR_0 = "#009E73"  # Class 0 - bluish green (brand color)
-COLOR_1 = "#C475FD"  # Class 1 - vermillion
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Generate binary classification data
-np.random.seed(42)
+# Constants
+THRESHOLD = 0.5  # default decision threshold of a binary classifier
+Z_95 = 1.96  # two-sided 95 % normal quantile
+
+# Columns: set these to your table's column names
+TEST_SCORE = "Test Score"  # role: x
+PASSED = "Passed"  # role: y
+PROBABILITY = "Fitted probability"  # role: probability
+CI_LOWER = "CI lower"  # role: ci_lower
+CI_UPPER = "CI upper"  # role: ci_upper
+
+# Data: replace this block with your own table, for example df = pd.read_csv("exam.csv")
 X, y = make_classification(
     n_samples=200, n_features=1, n_informative=1, n_redundant=0, n_clusters_per_class=1, flip_y=0.1, random_state=42
 )
-x = X.flatten()
+score = X.flatten()
+df = pd.DataFrame({TEST_SCORE: (score - score.min()) / (score.max() - score.min()) * 60 + 20, PASSED: y})
 
-# Scale x to meaningful range (e.g., test score 20-80)
-x = (x - x.min()) / (x.max() - x.min()) * 60 + 20
+# Plot: reads only df and the constants above
+df = df.dropna(subset=[TEST_SCORE, PASSED])
+x = df[TEST_SCORE].to_numpy(dtype=float)
+outcome = df[PASSED].to_numpy(dtype=float)
+classes = sorted(df[PASSED].unique())
 
-# Fit logistic regression
-model = LogisticRegression()
-model.fit(x.reshape(-1, 1), y)
-
-# Generate smooth curve for logistic regression
+# Fit the model and a Wald 95 % band on the logit scale (delta method)
+model = LogisticRegression(C=1e6)
+model.fit(x.reshape(-1, 1), outcome)
 x_curve = np.linspace(x.min() - 2, x.max() + 2, 300)
-prob_curve = model.predict_proba(x_curve.reshape(-1, 1))[:, 1]
+design = np.column_stack([np.ones_like(x_curve), x_curve])
+beta = np.array([model.intercept_[0], model.coef_[0, 0]])
+design_fit = np.column_stack([np.ones_like(x), x])
+p_fit = 1 / (1 + np.exp(-design_fit @ beta))
+cov = np.linalg.inv(design_fit.T @ (design_fit * (p_fit * (1 - p_fit))[:, None]))
+logit = design @ beta
+logit_se = np.sqrt(np.einsum("ij,jk,ik->i", design, cov, design))
+curve = pd.DataFrame(
+    {
+        TEST_SCORE: x_curve,
+        PROBABILITY: 1 / (1 + np.exp(-logit)),
+        CI_LOWER: 1 / (1 + np.exp(-(logit - Z_95 * logit_se))),
+        CI_UPPER: 1 / (1 + np.exp(-(logit + Z_95 * logit_se))),
+    }
+)
+source_curve = ColumnDataSource(curve)
 
-# Compute confidence intervals (using asymptotic approximation)
-p_val = prob_curve
-se = np.sqrt(p_val * (1 - p_val) / len(x))
-z = 1.96
-ci_lower = np.clip(prob_curve - z * se * 3, 0, 1)
-ci_upper = np.clip(prob_curve + z * se * 3, 0, 1)
+# Jitter the binary outcome along y only, so the classes stay readable
+jitter = np.random.default_rng(42).uniform(-0.03, 0.03, len(df))
+df = df.assign(jittered=outcome + jitter)
+accuracy = model.score(x.reshape(-1, 1), outcome)
 
-# Jitter y values for visibility
-jitter = np.random.uniform(-0.03, 0.03, len(y))
-y_jittered = y + jitter
-
-# Separate data by class
-class_0_mask = y == 0
-class_1_mask = y == 1
-
-# Create data sources
-source_class0 = ColumnDataSource(data={"x": x[class_0_mask], "y": y_jittered[class_0_mask]})
-source_class1 = ColumnDataSource(data={"x": x[class_1_mask], "y": y_jittered[class_1_mask]})
-source_curve = ColumnDataSource(data={"x": x_curve, "prob": prob_curve, "ci_lower": ci_lower, "ci_upper": ci_upper})
-
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     title="logistic-regression · python · bokeh · anyplot.ai",
-    x_axis_label="Test Score",
+    x_axis_label=TEST_SCORE,
     y_axis_label="Probability of Passing",
     x_range=(x.min() - 5, x.max() + 5),
     y_range=(-0.08, 1.08),
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Confidence interval band
+# 95 % confidence band
 p.varea(
-    x="x", y1="ci_lower", y2="ci_upper", source=source_curve, fill_color=COLOR_0, fill_alpha=0.15, legend_label="95% CI"
+    x=TEST_SCORE,
+    y1=CI_LOWER,
+    y2=CI_UPPER,
+    source=source_curve,
+    fill_color=IMPRINT_PALETTE[0],
+    fill_alpha=0.25,
+    legend_label="95% CI",
 )
 
-# Logistic curve
-p.line(x="x", y="prob", source=source_curve, line_color=COLOR_0, line_width=5, legend_label="Logistic Curve")
+# Observations per class
+class_names = {0: "Class 0 (Failed)", 1: "Class 1 (Passed)"}
+for i, cls in enumerate(classes):
+    p.scatter(
+        x=TEST_SCORE,
+        y="jittered",
+        source=ColumnDataSource(df[df[PASSED] == cls]),
+        size=22,
+        fill_color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+        fill_alpha=0.6,
+        line_color=PAGE_BG,
+        line_width=2,
+        legend_label=class_names.get(int(cls), f"Class {cls}"),
+    )
 
-# Data points - Class 0
-p.scatter(
-    x="x",
-    y="y",
-    source=source_class0,
-    size=20,
-    fill_color=COLOR_0,
-    fill_alpha=0.6,
-    line_color=PAGE_BG,
-    line_width=2,
-    legend_label="Class 0 (Failed)",
+# Fitted curve on top of band and points
+p.line(
+    x=TEST_SCORE,
+    y=PROBABILITY,
+    source=source_curve,
+    line_color=IMPRINT_PALETTE[0],
+    line_width=7,
+    legend_label="Logistic Curve",
 )
 
-# Data points - Class 1
-p.scatter(
-    x="x",
-    y="y",
-    source=source_class1,
-    size=20,
-    fill_color=COLOR_1,
-    fill_alpha=0.6,
-    line_color=PAGE_BG,
-    line_width=2,
-    legend_label="Class 1 (Passed)",
+# Decision threshold
+p.add_layout(Span(location=THRESHOLD, dimension="width", line_color=INK_SOFT, line_width=4, line_dash="dashed"))
+p.add_layout(
+    Label(
+        x=x.max() + 4,
+        y=THRESHOLD + 0.03,
+        text=f"Decision Threshold (p={THRESHOLD})",
+        text_font_size="30pt",
+        text_color=INK_SOFT,
+        text_align="right",
+    )
 )
-
-# Decision threshold line at p=0.5
-threshold = Span(location=0.5, dimension="width", line_color=INK_SOFT, line_width=4, line_dash="dashed")
-p.add_layout(threshold)
-
-# Add threshold label
-threshold_label = Label(
-    x=x.max() - 5,
-    y=0.53,
-    text="Decision Threshold (p=0.5)",
-    text_font_size="20pt",
-    text_color=INK_SOFT,
-    text_align="right",
-)
-p.add_layout(threshold_label)
 
 # Model accuracy annotation
-accuracy = model.score(x.reshape(-1, 1), y)
-accuracy_label = Label(
-    x=x.min() + 2, y=0.92, text=f"Model Accuracy: {accuracy:.1%}", text_font_size="22pt", text_color=INK
+p.add_layout(
+    Label(
+        x=x.min() - 4,
+        y=THRESHOLD + 0.22,
+        text=f"Model Accuracy: {accuracy:.1%}",
+        text_font_size="34pt",
+        text_color=INK,
+        text_font_style="bold",
+    )
 )
-p.add_layout(accuracy_label)
 
-# Styling
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-
-# Axis styling
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-
-# Grid styling
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
-# Legend styling - repositioned to top-left to avoid data overlap
-p.legend.location = "top_left"
-p.legend.label_text_font_size = "18pt"
+p.legend.location = "center_left"
+p.legend.label_text_font_size = "30pt"
 p.legend.label_text_color = INK_SOFT
-p.legend.glyph_height = 35
-p.legend.glyph_width = 35
+p.legend.glyph_height = 40
+p.legend.glyph_width = 40
 p.legend.spacing = 12
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.background_fill_alpha = 0.9
 p.legend.border_line_color = INK_SOFT
-p.legend.padding = 15
+p.legend.padding = 18
 
-# Background
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
@@ -185,8 +194,8 @@ p.outline_line_color = INK_SOFT
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with Selenium
-W, H = 4800, 2700
+# Screenshot with headless Chrome
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -200,6 +209,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
