@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-transport-static: Static Transport Network Diagram
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-11-22
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 74/100 | Updated: 2026-11-22
 """
 
 import os
