@@ -2,48 +2,57 @@ library: bokeh
 language: python
 specification_id: waffle-basic
 created: '2025-12-24T09:51:07Z'
-updated: '2026-05-05T18:14:26Z'
-generated_by: claude-haiku
-workflow_run: 25393236128
+updated: '2026-11-22T10:31:32Z'
+generated_by: claude-sonnet
+workflow_run: 45012106473
 issue: 998
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 82
 review:
   strengths:
-  - Excellent visual quality with proper color contrast and readability in both light
-    and dark themes
-  - Clean, minimal design with thoughtful square styling and clear spacing
-  - Correct waffle chart implementation with proper data mapping (100 squares for
-    100%)
-  - Proper theme-adaptive tokens throughout (backgrounds, text colors)
-  - Idiomatic bokeh patterns using ColumnDataSource and custom Legend styling
-  - Interactive hover tooltips for category and percentage information
+  - Correct 10x10 waffle with genuinely square cells via match_aspect=True and even
+    page-colored gaps
+  - 'Imprint palette in canonical order with #009E73 first; data colors identical
+    across themes, chrome flips correctly'
+  - Legend names each category with its percentage at 34pt with 60px swatches matching
+    the squares
+  - Squares derived directly from the tidy df with df.index.repeat, filled row by
+    row from the bottom
+  - HoverTool tooltips expose category and share in the interactive HTML
   weaknesses:
-  - Title format includes extra context prefix beyond {spec-id} · {library} · anyplot.ai
-    spec requirement
-  - Design excellence is competent but lacks visual sophistication or strategic emphasis
-  - Legend styling is functional but could be more refined (consider custom borders
-    or slightly elevated background emphasis)
+  - 'VQ-05 (both): the legend sits about 550 px right of the grid, 40 px from the
+    right canvas edge, while about 570 px of empty page sits left of the grid, so
+    the legend floats isolated and the whitespace is unbalanced → place the legend
+    next to the grid (gap under ~100 px) and balance the margins around the grid+legend
+    group. Likely cause: match_aspect=True centers the square grid inside a ~2600
+    px wide frame while the legend is laid out in the separate ''right'' panel.'
+  - 'VQ-05 (dark): a 1 px pale line (about #535350) outlines the plot frame at x=60
+    and a near-white 1 px line runs along the canvas edge, visible on #1A1A17 → no
+    frame or edge line. Likely cause: a seam at the frame/border-fill boundary and
+    the HTML page background (default white body) showing at the canvas edge; set
+    the document/body background to PAGE_BG or shrink the frame so no seam renders.'
+  - 'Suggestion: the title sits only about 15 px above the top row of squares; a little
+    more breathing room would ease the top edge.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly applied, not pure white
-      Chrome: Title "Renewable Energy Sources · waffle-basic · bokeh · anyplot.ai" in 28pt dark text (#1A1A17), clearly centered and readable. Legend in top-right with dark label text on elevated background (#FFFDF6), category labels and percentages all readable.
-      Data: 10×10 waffle grid with colors: Solar in brand green (#009E73) dominating 48 squares, Wind in orange (#D55E00) at 25 squares, Hydro in blue (#0072B2) at 18 squares, Geothermal in pink (#CC79A7) at 9 squares. Square borders in background color with 0.88 width and 2.5pt gaps create excellent separation and readability.
-      Legibility verdict: PASS — all text readable, all data clearly visible, excellent contrast throughout
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: bold dark title 'Renewable Energy Sources · waffle-basic · python · bokeh · anyplot.ai' (~68% width) at top; no axes or grid lines; legend at the far right on an elevated #FFFDF6 box with thin INK_SOFT border, dark 34pt labels 'Solar (48%)', 'Wind (25%)', 'Hydro (18%)', 'Geothermal (9%)'. All text readable.
+      Data: 10x10 grid of equal square cells with even page-colored gaps, filled row by row from the bottom-left: 48 green #009E73 (Solar), 25 purple #C475FD (Wind), 18 blue #4467A3 (Hydro), 9 ochre #BD8233 (Geothermal). Grid is centered in the frame with ~570 px empty left of it and ~550 px gap to the legend on the right.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly applied, not pure black
-      Chrome: Title in light text (#F0EFE8) readable against dark background. Legend text (#B8B7B0) readable on elevated dark background (#242420). No dark-on-dark failures detected.
-      Data: Identical colors to light render (Solar #009E73, Wind #D55E00, Hydro #0072B2, Geothermal #CC79A7). Square borders now darker/black, still providing clear separation. Layout and proportions identical to light render.
-      Legibility verdict: PASS — all text readable, no dark-on-dark issues, brand green (#009E73) clearly visible, all elements distinguishable
+      Background: warm near-black #1A1A17.
+      Chrome: title in light #F0EFE8, legend box #242420 with light labels; all text readable, no dark-on-dark. A faint 1 px pale frame line outlines the plot frame and a near-white 1 px line runs along the canvas edge.
+      Data: identical square colors and layout to the light render; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -51,71 +60,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28pt, clearly readable in both themes, no size issues
+        comment: Title 47pt bold (~68% width) and legend labels 34pt explicitly set;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text and elements well-spaced, no collisions
+        comment: No text collisions; legend clear of the grid
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 100 squares clearly visible and distinguishable by color
+        comment: 100 large squares with even page-colored gaps; legend swatches 60px
+          and match the squares in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe, strong contrast between categories
+        comment: Four Imprint hues with clear luminance spacing; no red-green pairing
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing cut off
+        comment: 3200x1800; legend isolated at the right edge with unbalanced whitespace,
+          and a pale frame line in the dark render (defect lines)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Clear descriptive title, no axes needed for waffle
+        comment: 'N/A: a waffle has no axes; descriptive title prefix present'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand), Okabe-Ito order followed, correct
-          backgrounds, both themes proper'
+        comment: 'Imprint positions 1-4 in canonical order starting with #009E73;
+          #FAF8F1 / #1A1A17 backgrounds; identical data colors in both themes'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Clean minimal design, adequate styling but lacks sophisticated polish
-          or custom refinement
+        passed: true
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Axes hidden, thoughtful square gaps, minimal chrome, could be more
-          refined
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clear proportion display through color, but no additional visual
-          hierarchy or emphasis
+        comment: Axes and grid hidden as the spec requires; nothing beyond
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -123,25 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 10×10 waffle chart
+        comment: Single 10x10 waffle grid, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Proportions in grid, distinct colors, legend with percentages
+        comment: C1 equal square cells (match_aspect) with even gaps, no axes; C2
+          whole squares filling the grid; C3 contiguous blocks filled row by row;
+          C4 distinct colors and legend with percentages; C5 single grid
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to grid, all data visible, sums to 100
+        comment: 48/25/18/9 squares counted from the data; all 100 cells visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title includes extra context prefix beyond spec format requirement
+        passed: true
+        comment: '''Renewable Energy Sources · waffle-basic · python · bokeh · anyplot.ai'';
+          legend ''Solar (48%)'' etc.'
     data_quality:
       score: 15
       max: 15
@@ -151,19 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 categories shown, 100% coverage
+        comment: Four categories of very different size, including a block ending
+          partway through a row
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible renewable energy percentages, neutral topic
+        comment: 'Renewable energy mix by source: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentages 0-100%, grid 10×10 = 100 squares, appropriate
+        comment: 'Shares sum to 100 and map 1:1 to squares (checked: 48+25+18+9=100,
+          side=isqrt(100)=10)'
     code_quality:
       score: 10
       max: 10
@@ -173,33 +187,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple direct implementation, no unnecessary abstraction
+        comment: Imports, tokens, column constants, Data block, Plot, Save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data, fully reproducible
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant structure, appropriate complexity, no fake UI
+        comment: df.index.repeat builds the squares in one line; no hand-rolled algorithms
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output files plot-{THEME}.png and .html
+        comment: plot-{THEME}.html + plot-{THEME}.png at 3200x1800 with CDP viewport
+          pin
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -207,26 +222,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ColumnDataSource, figure creation with parameters, HoverTool,
-          custom Legend
+        comment: match_aspect=True keeps rect cells square without hand-tuned ranges;
+          one ColumnDataSource per category built from the tidy df
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: HoverTool and Selenium screenshot show library awareness but somewhat
-          standard patterns
+        comment: HoverTool with brace-quoted column names shows category and share
+          in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-22T10:27:19Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
-  - custom-legend
   - html-export
+  - custom-legend
+  - minimal-chrome
   patterns:
-  - data-generation
+  - columndatasource
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
+  - edge-highlighting
