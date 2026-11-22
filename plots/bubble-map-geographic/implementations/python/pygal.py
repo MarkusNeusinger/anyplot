@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-18
@@ -93,7 +93,7 @@ coastlines = [
 
 # Continuous bubble sizing: area ∝ population → dots_size ∝ sqrt(population)
 pops = {name: data[2] for name, data in cities.items()}
-k_scale = 78.0 / max(pops.values()) ** 0.5
+k_scale = 52.0 / max(pops.values()) ** 0.5
 city_sizes = {name: round(k_scale * pop**0.5) for name, pop in pops.items()}
 
 # Size legend reference markers placed in south Pacific (open ocean)
@@ -118,27 +118,27 @@ custom_style = Style(
     colors=colors_tuple,
     opacity=0.72,
     opacity_hover=0.9,
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=40,
-    legend_font_size=40,
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=36,
     tooltip_font_size=36,
-    stroke_width=2,
+    stroke_width=2.5,
 )
 
 # Plot
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     title="bubble-map-geographic · python · pygal · anyplot.ai",
     x_title="Longitude (°)",
     y_title="Latitude (°)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
-    legend_box_size=40,
+    legend_at_bottom_columns=10,
+    legend_box_size=30,
     stroke=False,
     dots_size=3,
     show_x_guides=False,
