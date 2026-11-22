@@ -2,50 +2,59 @@ library: plotnine
 language: python
 specification_id: scatter-map-geographic
 created: '2026-01-10T06:02:56Z'
-updated: '2026-05-18T18:06:21Z'
-generated_by: claude-haiku
-workflow_run: 26050750874
+updated: '2026-11-22T13:57:34Z'
+generated_by: claude-sonnet
+workflow_run: 45029699053
 issue: 3617
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 97
+quality_score: 80
 review:
   strengths:
-  - 'Perfect palette compliance: first series is #009E73, full Okabe-Ito order followed'
-  - 'Exceptional theme adaptation: both light and dark renders fully readable with
-    proper color tokens'
-  - 'Excellent geographic visualization: uses coord_fixed correctly for proper lat/long
-    aspect ratio'
-  - 'Complete feature implementation: all spec requirements met (color, size, basemap,
-    legends)'
-  - 'Strong library mastery: demonstrates understanding of plotnine''s grammar through
-    custom polygon layers'
-  - 'Real, neutral data: 30 major cities with realistic populations'
-  - 'Clean, reproducible code: deterministic with no random state needed'
+  - 'Size legend glyphs themed with guides(size=guide_legend(override_aes={''color'':
+    INK_SOFT})) and readable in both renders'
+  - Correct canonical 3200x1800 canvas with library-baseline font sizes
+  - 'Real, neutral data: 30 megacities with plausible populations, every point at
+    its true latitude and longitude'
+  - Region color in canonical Imprint order with Africa on brand green, identical
+    across themes
+  - Layered grammar with a separate data frame per layer and coord_fixed keeping degrees
+    square
   weaknesses:
-  - Design Excellence slightly below maximum (17/20) — could add more visual hierarchy
-    or sophisticated refinements
-  - Visual storytelling could be enhanced with annotations or more dramatic visual
-    emphasis
+  - 'VQ-05 (both): the map fills only a middle band of the 3200x1800 canvas, leaving
+    about 190 px above the title area and about 270 px below the x-axis title empty
+    → let the panel use the height (e.g. ylim from about -58 to 78 with a slightly
+    smaller xlim, or the square 6x6 canvas is not needed; reduce the dead top/bottom
+    margin by ~70%). Likely cause: coord_fixed(ratio=1.0) on a 360x140 degree extent
+    inside the 16:9 figure, with the right-hand legend narrowing the panel.'
+  - 'SC-02 (both): the basemap is six hand-drawn coarse continent polygons with no
+    coastlines or country boundaries; Cape Town, Sydney, Lima and Los Angeles sit
+    in the ''sea'' outside their continent shapes → a real coastline/country basemap
+    (e.g. Natural Earth admin-0 polygons via geopandas and geom_map). Likely cause:
+    CONTINENT_OUTLINES constant with 9-21 vertices per continent.'
+  - 'Suggestion: label the five or six largest cities with geom_text to give the map
+    a focal point.'
+  - 'Suggestion: draw the basemap in a projection closer to Robinson or Natural Earth
+    by projecting the coordinates before plotting.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with continent outlines in light beige
-      Chrome: Title, axis labels, and tick labels all dark text, clearly readable against light surface
-      Data: Points color-coded by region using Okabe-Ito (Africa #009E73, Asia #D55E00, Europe #0072B2, N. America #CC79A7, Oceania #E69F00, S. America #56B4E9); sizes encode population (4-20px range)
-      Legibility verdict: PASS - all text fully readable, no light-on-light failures
+      Background: warm off-white #FAF8F1 page and panel; continents as pale beige #E8E3D8 polygons with thin taupe edges, quieter than the points.
+      Chrome: title 'scatter-map-geographic · python · plotnine · anyplot.ai' centered, dark ink; axis titles 'Longitude (°)' and 'Latitude (°)'; ticks -100/0/100 and -40/0/40/80 in INK_SOFT; borderless elevated legend panel at right with 'Region' (6 entries) and 'Population (M)' (10/20/30 grey circles). All readable.
+      Data: 30 city bubbles sized by population, alpha 0.8: Africa #009E73, Asia #C475FD, Europe #4467A3, N. America #BD8233, Oceania #AE3030, S. America #2ABCCD. Dense Asian cluster distinguishable. Large empty bands above the title and below the x-axis title; Cape Town, Sydney, Lima, Los Angeles fall outside the coarse continent shapes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with continent outlines in darker gray
-      Chrome: Title, axis labels, tick labels appear in light gray/off-white, all clearly readable; no dark-on-dark failures
-      Data: Colors identical to light render (#009E73 for Africa, etc.); only chrome has flipped themes
-      Legibility verdict: PASS - excellent contrast, all elements distinguishable, brand green visible
+      Background: warm near-black #1A1A17; continents in #2A2A26 with grey edges, quieter than the points.
+      Chrome: title, axis titles in light ink, ticks and legend text in light grey INK_SOFT; legend panel #242420; size-legend circles light grey and clearly visible. No dark-on-dark text.
+      Data: identical bubble colors to the light render; brand green Africa visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,69 +62,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts properly sized and readable in both light and dark themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend text 8 pt (library
+          baseline); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with acceptable geographic data clustering; no interference
+        comment: No text collisions; overlapping Asian city bubbles stay distinguishable
+          through alpha 0.8
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers clearly visible and distinct by color and size
+        comment: Bubbles 2-10 sized for 30 points; size-legend circles drawn in INK_SOFT
+          and visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with color+size redundancy
+        comment: Imprint hues separable; region also readable from position, population
+          from size
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 16:9 aspect ratio well-suited for global map; generous margins
+        passed: false
+        comment: 'Map occupies only the middle band of the canvas: roughly the top
+          17% and bottom 15% of the 3200x1800 canvas are empty (defect line)'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axes labeled with units
+        comment: Latitude (°) / Longitude (°) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order, correct backgrounds, identical
-          colors between themes'
+        comment: 'Africa (first alphabetic group) #009E73, others in canonical Imprint
+          order; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 17
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: Custom basemap, theme-adaptive design, professional typography
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, borderless elevated
+          legend panel; nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clean minimal style, subtle grid, custom legend background
+        passed: false
+        comment: Subtle grid, no spines; no refinement chosen beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear geographic distribution, good visual hierarchy, color and size
-          encoding
+        passed: false
+        comment: Points displayed with color and size; no focal point chosen
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -123,25 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter map with lat/long positioning
+        comment: Geographic scatter map with lat/long-positioned points
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Color, size, basemap, and legends all present
+        passed: false
+        comment: 'Notes basemap bullet / C1 only partly met: six hand-drawn coarse
+          continent polygons, no coastlines or country boundaries, several coastal
+          cities fall outside the land shapes (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude and latitude correctly mapped
+        comment: Longitude on x, latitude on y, no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; region labels and population scale displayed
+        comment: Mandated title; Region and Population (M) legends named for a reader
     data_quality:
       score: 15
       max: 15
@@ -151,20 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects of scatter-map-geographic shown with 30 cities across
-          6 regions
+        comment: Color, size, clustering in Asia and sparse southern hemisphere all
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real world cities with realistic populations; neutral data selection
+        comment: 30 real megacities with plausible metro populations; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population range 4.8M-37.4M; sizes 4-20px appropriate for visibility
+        comment: Coordinates checked for Tokyo, Sydney, Cape Town, New York against
+          real positions; populations 4.8-37.4 M plausible
     code_quality:
       score: 10
       max: 10
@@ -174,55 +191,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; direct execution; straightforward and readable
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic; no randomness
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Theme handling via environment variables; no fake UI
+        comment: Compact; continent outlines built with one comprehension
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with DPI 300
+        comment: plot-{THEME}.png at 8x4.5 in, dpi 400; current API
     library_mastery:
-      score: 10
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Proper ggplot composition, correct geom usage, coord_fixed for mapping
+        passed: false
+        comment: Grammar composition with separate data per layer, coord_fixed, guides(size=guide_legend(override_aes=...))
+          to theme the size keys
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Custom polygon basemap, theme-adaptive design, coordinate projection
-          mastery
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-bf70a1c05e
+  rendered_at: '2026-11-22T13:54:14Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
   - alpha-blending
