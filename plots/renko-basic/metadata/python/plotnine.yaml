@@ -2,43 +2,42 @@ library: plotnine
 language: python
 specification_id: renko-basic
 created: '2026-01-08T16:03:21Z'
-updated: '2026-05-17T11:50:44Z'
-generated_by: claude-haiku
-workflow_run: 25989766255
+updated: '2026-11-22T05:21:25Z'
+generated_by: claude-sonnet
+workflow_run: 44988634739
 issue: 3294
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 82
 review:
   strengths:
-  - Correct Renko algorithm with proper up/down directionality
-  - Perfect theme-adaptive colors matching Okabe-Ito spec
-  - All text fully readable in both light and dark themes
-  - Explicit font sizing (24/20/16pt) for high-resolution output
-  - 'Complete feature coverage: bullish/bearish bricks, trend reversals, subtle grid'
+  - 'Correct Renko construction from the closes: fixed $2 bricks, two-brick reversal
+    rule, one column per brick so runs read as clean diagonal staircases'
+  - Bricks drawn natively with geom_rect and a mapped fill scale; scale_fill_manual
+    limits keep the legend in data order (Bullish, Bearish)
+  - Theme tokens threaded through every chrome element; data colors identical in both
+    renders and all text readable on both surfaces
+  - Data block ends in a tidy df with DATE/CLOSE column constants, and the brick size
+    is derived from the data
   weaknesses:
-  - Design lacks visual hierarchy or emphasis on key insights (trend direction changes)
-  - No custom design choices—feels like well-configured library defaults
-  - Could benefit from visual storytelling techniques beyond basic data display
-  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
-    \ (#FAF8F1) with subtle texture\n  Chrome: Title, axis labels (Brick Index, Price\
-    \ ($)), and tick labels all dark (#1A1A17), clearly readable against light background\n\
-    \  Data: Green bricks (#009E73) represent bullish movements, orange bricks (#D55E00)\
-    \ represent bearish movements. Approximately 50 bricks showing trend reversals\
-    \ and price oscillation. Subtle horizontal grid aids price level identification.\n\
-    \  Legibility verdict: PASS - All elements perfectly readable\n\nDark render (plot-dark.png):\n\
-    \  Background: Warm near-black (#1A1A17) \n  Chrome: Title and axis labels in\
-    \ light cream text (#F0EFE8), tick labels in softer light gray (#B8B7B0), all\
-    \ clearly visible against dark background with no dark-on-dark failures\n  Data:\
-    \ Green bullish bricks (#009E73) and orange bearish bricks (#D55E00) are identical\
-    \ in color to light render—only chrome has flipped. Grid lines are visible but\
-    \ subtle, supporting price-level reference.\n  Legibility verdict: PASS - All\
-    \ text readable, no contrast failures, data colors perfectly preserved from light\
-    \ render"
+  - 'Suggestion: date-range tick labels under the brick columns would tie the brick
+    index back to time, as the Notes allow'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1, 3200x1800 canvas
+      Chrome: title 'renko-basic · python · plotnine · anyplot.ai', axis titles 'Brick Index' / 'Price ($)', tick labels 0-40 and 90-110 in dark ink; subtle major/minor grid; legend 'Direction' (Bullish, Bearish) on an elevated box — all readable
+      Data: ~55 bricks each spanning $2, one per column with small gaps; bullish #009E73, bearish #AE3030, thin dark outline; staircase down from ~108 to ~82, then up to ~112 and a short decline
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks in soft light gray, grid subtle but visible, legend box elevated dark — no dark-on-dark text
+      Data: identical brick colors to the light render; outlines flip to light soft ink
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,46 +48,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set; all text readable in both themes
+        comment: Explicit sizes (title 12, axis titles 10, ticks 8 pt at 400 dpi);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text collisions; bricks separated by gaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bricks clearly visible, density-appropriate spacing
+        comment: ~55 bricks well sized with thin outline; legend swatches match the
+          bricks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, high contrast, CVD-safe
+        comment: Green/red direction is also carried by the staircase position; strong
+          contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good utilization, balanced margins
+        comment: 3200x1800 canvas, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: '''Brick Index'' and ''Price ($)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-2, correct theme backgrounds, chrome properly
-          adapted
+        comment: 'Bullish #009E73, bearish #AE3030 identical across themes; backgrounds
+          #FAF8F1/#1A1A17'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -96,19 +98,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults, no custom design thought
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid, minimal customization
+        passed: false
+        comment: Subtle grid and thin panel border as the style guide sets, nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or insight emphasis
+        comment: Data displayed, no hierarchy chosen beyond the Notes (correct for
+          a -basic spec)
     spec_compliance:
       score: 15
       max: 15
@@ -118,25 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Renko chart
+        comment: Correct Renko chart, bricks alone
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: green/red bricks, uniform size, gaps, grid'
+        comment: Green/red bricks, uniform size with gaps, brick-index axis, subtle
+          grid; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, all data visible
+        comment: Each brick at its computed price band, one column per brick
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match
+        comment: Title 'renko-basic · python · plotnine · anyplot.ai'; legend Bullish/Bearish
     data_quality:
       score: 15
       max: 15
@@ -146,19 +151,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: bullish, bearish, reversals'
+        comment: Up runs, down runs, 2-brick reversals and revisited levels all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible stock price scenario
+        comment: Plausible daily stock closes around $100 over 250 days
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic price range and brick size
+        comment: $2 brick on a ~$83-112 range gives ~55 bricks, inside the spec's
+          20-50ish range; matches the spec's $2 example
     code_quality:
       score: 10
       max: 10
@@ -168,55 +174,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no over-engineering
+        comment: Constants → Data block binding df → derived bricks → Plot → Save,
+          no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Renko construction loop has no library call to replace it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct format
+        comment: Saves plot-{THEME}.png, current plotnine API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Good grammar-of-graphics usage
+        passed: false
+        comment: Grammar-of-graphics geom_rect with mapped fill; nothing beyond the
+          library prompt's patterns
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic patterns, no library-specific creativity
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-22T05:18:31Z'
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
-  - theme-adaptive
-  - alpha-blending
+  - minimal-chrome
+  - grid-styling
