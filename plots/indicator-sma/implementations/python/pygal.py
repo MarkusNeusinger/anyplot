@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-19
@@ -18,22 +18,41 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — geometric Brownian motion for realistic stock price simulation
+# Constants
+LABEL_EVERY = 30  # one dated x label per this many rows
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close Price"  # role: close
+SMA_SHORT = "SMA 20"  # role: sma_short
+SMA_MEDIUM = "SMA 50"  # role: sma_medium
+SMA_LONG = "SMA 200"  # role: sma_long
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
+# Geometric Brownian motion for a realistic stock price; each SMA is a rolling mean of the close
 np.random.seed(42)
 dates = pd.date_range("2025-01-02", periods=300, freq="B")
-initial_price = 150.0
 returns = np.random.normal(0.0003, 0.015, len(dates))
-prices = initial_price * np.cumprod(1 + returns)
+prices = 150.0 * np.cumprod(1 + returns)
+df = pd.DataFrame({DATE: dates, CLOSE: prices})
+df[SMA_SHORT] = df[CLOSE].rolling(window=20).mean()
+df[SMA_MEDIUM] = df[CLOSE].rolling(window=50).mean()
+df[SMA_LONG] = df[CLOSE].rolling(window=200).mean()
 
-df = pd.DataFrame({"date": dates, "close": prices})
-df["sma_20"] = df["close"].rolling(window=20).mean()
-df["sma_50"] = df["close"].rolling(window=50).mean()
-df["sma_200"] = df["close"].rolling(window=200).mean()
+# Plot: pygal takes plain lists built from df; NaN warm-up values become None so each SMA starts where its window is full
+x_labels = [d.strftime("%Y-%m-%d") if i % LABEL_EVERY == 0 else "" for i, d in enumerate(df[DATE])]
 
-# X-axis labels — show date every 30 trading days, blank otherwise
-x_labels = [d.strftime("%Y-%m-%d") if i % 30 == 0 else "" for i, d in enumerate(dates)]
+
+def to_list(column):
+    return [None if pd.isna(v) else float(v) for v in df[column]]
+
+
+# Tooltip label on the lowest close (visible in the interactive HTML)
+min_idx = int(df[CLOSE].idxmin())
+close_annotated = [{"value": v, "label": "Lowest close"} if i == min_idx else v for i, v in enumerate(to_list(CLOSE))]
 
 # Style
 custom_style = Style(
@@ -42,56 +61,44 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=48,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=36,
-    stroke_width=5,
+    stroke_width=3,
     opacity=".9",
     opacity_hover=".95",
 )
 
-# Chart — cubic interpolation smooths the SMA lines for better readability
+# Chart
 chart = pygal.Line(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     title="indicator-sma · python · pygal · anyplot.ai",
-    x_title="Date",
+    x_title=DATE,
     y_title="Price (USD)",
     show_x_guides=False,
     show_y_guides=True,
     x_label_rotation=45,
     show_dots=False,
     legend_at_bottom=True,
-    legend_box_size=45,
-    margin=60,
-    spacing=30,
-    interpolate="cubic",
+    legend_box_size=36,
+    margin=40,
+    spacing=20,
     value_formatter=lambda x: f"${x:.2f}",
 )
-
 chart.x_labels = x_labels
 
-# Convert NaN periods (before SMA window fills) to None for pygal
-close_list = [float(v) for v in df["close"]]
-sma_20_list = [None if pd.isna(v) else float(v) for v in df["sma_20"]]
-sma_50_list = [None if pd.isna(v) else float(v) for v in df["sma_50"]]
-sma_200_list = [None if pd.isna(v) else float(v) for v in df["sma_200"]]
-
-# Annotate market bottom with a tooltip label to guide the viewer's eye
-min_idx = int(df["close"].idxmin())
-close_annotated = [
-    {"value": float(v), "label": "Market Bottom"} if i == min_idx else float(v) for i, v in enumerate(df["close"])
-]
-
-# Close price as bold solid line; heavier width creates clear primary/secondary hierarchy
-chart.add("Close Price", close_annotated, stroke_style={"width": 7})
-chart.add("SMA 20", sma_20_list, stroke_style={"width": 3, "dasharray": "8, 4"})
-chart.add("SMA 50", sma_50_list, stroke_style={"width": 4, "dasharray": "16, 6"})
-chart.add("SMA 200", sma_200_list, stroke_style={"width": 5, "dasharray": "24, 8"})
+# The close is the heavy solid line; the SMAs are thinner and dashed, longer periods with longer dashes
+chart.add(CLOSE, close_annotated, stroke_style={"width": 5})
+chart.add(SMA_SHORT, to_list(SMA_SHORT), stroke_style={"width": 3, "dasharray": "6, 3"})
+chart.add(SMA_MEDIUM, to_list(SMA_MEDIUM), stroke_style={"width": 3, "dasharray": "12, 4"})
+chart.add(SMA_LONG, to_list(SMA_LONG), stroke_style={"width": 4, "dasharray": "18, 6"})
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
