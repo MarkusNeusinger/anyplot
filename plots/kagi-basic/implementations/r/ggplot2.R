@@ -1,216 +1,134 @@
 #' anyplot.ai
 #' kagi-basic: Basic Kagi Chart
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 95/100 | Created: 2026-05-17
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 82/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(dplyr)
 library(tibble)
 library(ragg)
 
+# --- Theme tokens (Imprint palette) -------------------------------------------
+THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
+PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                     "#AE3030", "#2ABCCD", "#954477", "#99B314")
+COLOR_YANG <- IMPRINT_PALETTE[1]  # thick, rising above the previous shoulder
+COLOR_YIN  <- IMPRINT_PALETTE[5]  # thin, falling below the previous waist
+
+# Constants
+REVERSAL_PCT <- 0.04   # direction changes after a 4% move against the line
+WIDTH_YANG   <- 2.4    # line width in mm
+WIDTH_YIN    <- 0.8
+
+# Columns: set these to your table's column names
+DATE  <- "date"   # role: time
+CLOSE <- "close"  # role: value
+
+# Data: replace this block with your own table, for example df <- read.csv("prices.csv")
 set.seed(42)
-
-# --- Theme tokens -----------------------------------------------------------
-THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
-PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
-INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-
-# Kagi-specific colors: yang (uptrend) uses brand green, yin (downtrend) uses vermillion
-COLOR_YANG  <- "#009E73"  # Okabe-Ito position 1 — uptrend
-COLOR_YIN   <- "#AE3030"  # imprint red — downtrend
-
-# --- Generate price data -----------------------------------------------------
-# Daily closing prices over ~6 months with realistic volatility
 n_days <- 150
-dates <- seq(as.Date("2025-10-01"), by = "day", length.out = n_days)
-
-# Random walk with slight upward drift
-price_changes <- rnorm(n_days, mean = 0.003, sd = 0.02)
-prices <- 100 * exp(cumsum(price_changes))
-
-df_raw <- tibble::tibble(
-  date = dates,
-  close = prices
+df <- tibble::tibble(
+  !!DATE  := seq(as.Date("2025-10-01"), by = "day", length.out = n_days),
+  !!CLOSE := 100 * exp(cumsum(rnorm(n_days, mean = 0.003, sd = 0.02)))
 )
 
-# --- Calculate Kagi segments -------------------------------------------------
-# Reversal threshold: 4% of current price
-reversal_pct <- 0.04
-
-kagi_data <- list()
-line_idx <- 0
-direction <- NA  # "up" or "down"
-line_start_idx <- 1
-line_start_price <- df_raw$close[1]
-last_reversal_price <- df_raw$close[1]
-
-for (i in 2:nrow(df_raw)) {
-  price <- df_raw$close[i]
-
-  # Determine trend direction based on reversal threshold
-  if (is.na(direction)) {
-    # Initial direction: assume uptrend if price goes up
-    if (price > line_start_price * (1 + reversal_pct)) {
-      direction <- "up"
-      last_reversal_price <- line_start_price
-    } else if (price < line_start_price * (1 - reversal_pct)) {
-      direction <- "down"
-      last_reversal_price <- line_start_price
+# --- Kagi construction ----------------------------------------------------------
+# One vertical line per column: it extends while price keeps going the same way and
+# a new column starts once price reverses by REVERSAL_PCT of the line's end.
+prices <- df[[CLOSE]]
+cols <- list()
+dir <- NA_character_
+start <- prices[1]
+end <- prices[1]
+for (p_i in prices[-1]) {
+  if (is.na(dir)) {
+    if (p_i >= start * (1 + REVERSAL_PCT)) { dir <- "up"; end <- p_i }
+    else if (p_i <= start * (1 - REVERSAL_PCT)) { dir <- "down"; end <- p_i }
+  } else if (dir == "up") {
+    if (p_i > end) {
+      end <- p_i
+    } else if (p_i <= end * (1 - REVERSAL_PCT)) {
+      cols[[length(cols) + 1]] <- list(dir = dir, from = start, to = end)
+      start <- end; end <- p_i; dir <- "down"
     }
-  } else if (direction == "up") {
-    # In uptrend, check if price reverses down
-    if (price < last_reversal_price * (1 - reversal_pct)) {
-      # Reversal: end current up line, start down line
-      line_idx <- line_idx + 1
-      kagi_data[[line_idx]] <- tibble::tibble(
-        line_id = line_idx,
-        line_num = line_idx,
-        price_start = line_start_price,
-        price_end = last_reversal_price,
-        idx_start = line_start_idx,
-        idx_end = i - 1,
-        trend = "up"
-      )
-
-      direction <- "down"
-      line_start_price <- last_reversal_price
-      line_start_idx <- i - 1
-      last_reversal_price <- price
-    } else if (price > last_reversal_price) {
-      # Continue up, update high
-      last_reversal_price <- price
-    }
-  } else {  # direction == "down"
-    # In downtrend, check if price reverses up
-    if (price > last_reversal_price * (1 + reversal_pct)) {
-      # Reversal: end current down line, start up line
-      line_idx <- line_idx + 1
-      kagi_data[[line_idx]] <- tibble::tibble(
-        line_id = line_idx,
-        line_num = line_idx,
-        price_start = line_start_price,
-        price_end = last_reversal_price,
-        idx_start = line_start_idx,
-        idx_end = i - 1,
-        trend = "down"
-      )
-
-      direction <- "up"
-      line_start_price <- last_reversal_price
-      line_start_idx <- i - 1
-      last_reversal_price <- price
-    } else if (price < last_reversal_price) {
-      # Continue down, update low
-      last_reversal_price <- price
+  } else {
+    if (p_i < end) {
+      end <- p_i
+    } else if (p_i >= end * (1 + REVERSAL_PCT)) {
+      cols[[length(cols) + 1]] <- list(dir = dir, from = start, to = end)
+      start <- end; end <- p_i; dir <- "up"
     }
   }
 }
+cols[[length(cols) + 1]] <- list(dir = dir, from = start, to = end)  # open last line
 
-# Add final segment
-if (!is.na(direction)) {
-  line_idx <- line_idx + 1
-  kagi_data[[line_idx]] <- tibble::tibble(
-    line_id = line_idx,
-    line_num = line_idx,
-    price_start = line_start_price,
-    price_end = last_reversal_price,
-    idx_start = line_start_idx,
-    idx_end = nrow(df_raw),
-    trend = direction
-  )
-}
-
-kagi_df <- bind_rows(kagi_data)
-
-# --- Create line segments for plotting ----------------------------------------
-segments <- list()
-seg_idx <- 1
-
-for (i in 1:nrow(kagi_df)) {
-  segment <- kagi_df[i, ]
-
-  # Create vertical line segment
-  segments[[seg_idx]] <- tibble::tibble(
-    x = segment$line_num,
-    y_start = segment$price_start,
-    y_end = segment$price_end,
-    trend = segment$trend,
-    color = if_else(segment$trend == "up", COLOR_YANG, COLOR_YIN),
-    width = if_else(segment$trend == "up", 1.2, 0.6)
-  )
-
-  seg_idx <- seg_idx + 1
-
-  # Add horizontal segment (shoulder/waist) connecting to next line
-  if (i < nrow(kagi_df)) {
-    next_start <- kagi_df$price_start[i + 1]
-    segments[[seg_idx]] <- tibble::tibble(
-      x = c(segment$line_num, segment$line_num + 0.5),
-      y_start = c(segment$price_end, segment$price_end),
-      y_end = c(segment$price_end, segment$price_end),
-      trend = NA,
-      color = INK_SOFT,
-      width = 0.3
-    )
-    seg_idx <- seg_idx + 1
+# Split every column where it breaks the previous shoulder (turns yang) or waist
+# (turns yin), then join consecutive columns with horizontal connectors.
+state <- if (cols[[1]]$dir == "up") "yang" else "yin"
+pieces <- list()
+for (k in seq_along(cols)) {
+  cl <- cols[[k]]
+  if (k > 1) {
+    prev_level <- cols[[k - 1]]$from  # previous shoulder (going up) or waist (going down)
+    if (cl$dir == "up" && cl$to > prev_level) {
+      lo <- max(cl$from, min(prev_level, cl$to))
+      pieces[[length(pieces) + 1]] <- tibble(x = k, y = cl$from, yend = lo, state = state)
+      pieces[[length(pieces) + 1]] <- tibble(x = k, y = lo, yend = cl$to, state = "yang")
+      state <- "yang"
+    } else if (cl$dir == "down" && cl$to < prev_level) {
+      hi <- min(cl$from, max(prev_level, cl$to))
+      pieces[[length(pieces) + 1]] <- tibble(x = k, y = cl$from, yend = hi, state = state)
+      pieces[[length(pieces) + 1]] <- tibble(x = k, y = hi, yend = cl$to, state = "yin")
+      state <- "yin"
+    } else {
+      pieces[[length(pieces) + 1]] <- tibble(x = k, y = cl$from, yend = cl$to, state = state)
+    }
+  } else {
+    pieces[[length(pieces) + 1]] <- tibble(x = k, y = cl$from, yend = cl$to, state = state)
+  }
+  if (k < length(cols)) {
+    pieces[[length(pieces) + 1]] <- tibble(x = k, y = cl$to, yend = cl$to, state = state, xend = k + 1)
   }
 }
+kagi <- bind_rows(pieces) |>
+  mutate(xend = coalesce(xend, x), state = factor(state, levels = c("yang", "yin")))
 
-# --- Plot -------------------------------------------------------------------
-# Build base data for geom_segment calls
-plot_lines <- list()
-
-# Draw vertical lines
-for (i in 1:nrow(kagi_df)) {
-  segment <- kagi_df[i, ]
-  color <- if_else(segment$trend == "up", COLOR_YANG, COLOR_YIN)
-  width <- if_else(segment$trend == "up", 1.2, 0.6)
-
-  plot_lines[[i]] <- tibble::tibble(
-    x = segment$line_num,
-    xend = segment$line_num,
-    y = segment$price_start,
-    yend = segment$price_end,
-    trend = segment$trend,
-    color = color,
-    linewidth = width
-  )
-}
-
-plot_data <- bind_rows(plot_lines)
-
-p <- ggplot() +
+# --- Plot -----------------------------------------------------------------------
+p <- ggplot(kagi) +
   geom_segment(
-    data = plot_data,
-    aes(x = x, xend = xend, y = y, yend = yend, color = trend, linewidth = trend),
-    show.legend = FALSE
+    aes(x = x, xend = xend, y = y, yend = yend, color = state, linewidth = state),
+    lineend = "square", show.legend = FALSE
   ) +
-  scale_color_manual(values = c("up" = COLOR_YANG, "down" = COLOR_YIN)) +
-  scale_linewidth_manual(values = c("up" = 1.2, "down" = 0.6)) +
+  scale_color_manual(values = c(yang = COLOR_YANG, yin = COLOR_YIN)) +
+  scale_linewidth_manual(values = c(yang = WIDTH_YANG, yin = WIDTH_YIN)) +
+  scale_x_continuous(breaks = scales::breaks_pretty(n = 8), expand = expansion(add = 0.6)) +
   labs(
-    title = "kagi-basic · ggplot2 · anyplot.ai",
-    x = "Line Index",
-    y = "Price"
+    title = "kagi-basic · r · ggplot2 · anyplot.ai",
+    x = "Line index (4% reversal)",
+    y = "Closing price (USD)"
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
-    plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG),
+    plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major = element_line(color = INK_SOFT, linewidth = 0.3),
+    panel.grid.major = element_line(color = INK_SOFT, linewidth = 0.1),
     panel.grid.minor = element_blank(),
-    axis.title = element_text(color = INK, size = 20),
-    axis.text = element_text(color = INK_SOFT, size = 16),
-    plot.title = element_text(color = INK, size = 24, face = "plain")
+    axis.title       = element_text(color = INK, size = 10),
+    axis.text        = element_text(color = INK_SOFT, size = 8),
+    plot.title       = element_text(color = INK, size = 12)
   )
 
-# --- Save -------------------------------------------------------------------
+# --- Save -----------------------------------------------------------------------
 ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot = p,
   device = ragg::agg_png,
-  width = 16,
-  height = 9,
+  width = 8,
+  height = 4.5,
   units = "in",
-  dpi = 300
+  dpi = 400
 )

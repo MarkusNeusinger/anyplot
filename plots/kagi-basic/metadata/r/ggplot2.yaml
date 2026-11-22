@@ -2,51 +2,239 @@ library: ggplot2
 language: r
 specification_id: kagi-basic
 created: '2026-05-17T08:12:16Z'
-updated: '2026-05-17T08:17:51Z'
-generated_by: claude-haiku
-workflow_run: 25985491480
+updated: '2026-11-22T03:56:46Z'
+generated_by: claude-sonnet
+workflow_run: 44982443057
 issue: 3341
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 82
 review:
   strengths:
-  - Flawless visual quality across all criteria—text legibility, color accessibility,
-    element visibility perfectly executed in both light and dark themes
-  - 'Proper Kagi chart implementation with intuitive visual distinction: line thickness
-    (1.2 vs. 0.6) and color (#009E73 yang, #D55E00 yin) effectively communicate trend
-    direction'
-  - 'Excellent theme-adaptive design: correctly applies environment-based color tokens
-    (INK, INK_SOFT, PAGE_BG) ensuring consistency across themes'
-  - 'Clean, professional code: minimal but complete, properly seeded, idiomatic ggplot2
-    patterns, AR-08 compliant'
+  - 'Correct Kagi construction: one unbroken line whose thickness switches exactly
+    where it breaks the previous shoulder (yang) or waist (yin), not merely on each
+    line''s direction'
+  - Single geom_segment maps the yang/yin state to both colour and linewidth via scale_color_manual
+    and scale_linewidth_manual, so colour always agrees with thickness
+  - Theme tokens threaded through every chrome element; both renders readable, Imprint
+    green/red identical across themes
+  - Column constants and a replaceable data block keep the 4% reversal construction
+    reusable on any price table
   weaknesses:
-  - Design Excellence score (16/20) reflects functional but restrained design—could
-    explore additional visual sophistication (e.g., custom line endpoints, gradient
-    effects, or annotation of key reversal points) while maintaining minimalism
+  - 'VQ-07 (both): grid lines are drawn in INK_SOFT at full opacity, more prominent
+    than the style guide''s 15% grid token → INK at about 15% alpha (rgba(26,26,23,0.15)
+    light / rgba(240,239,232,0.15) dark). Likely cause: panel.grid.major = element_line(color
+    = INK_SOFT) without alpha().'
+  - 'Suggestion: drop the vertical grid lines, since the line index carries no value
+    between columns.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "kagi-basic · ggplot2 · anyplot.ai" rendered in dark text (INK); axis labels "Price" and "Line Index" clearly visible; tick labels (110-150 on Y, 5-10 on X) in soft gray (INK_SOFT); grid lines subtle but visible
-      Data: Vertical line segments in two colors - thick green lines (#009E73) for uptrends (yang), thin orange lines (#D55E00) for downtrends (yin); horizontal connector segments at price reversals in soft gray; all lines clearly distinguishable from background
-      Legibility verdict: PASS - all elements readable with proper contrast and sizing
+      Background: warm off-white #FAF8F1
+      Chrome: title 'kagi-basic · r · ggplot2 · anyplot.ai' in dark ink top-left; axis titles 'Line index (4% reversal)' and 'Closing price (USD)'; ticks 2-12 and 110-150 in soft gray; thin full-opacity gray grid, a bit prominent but not competing with the line
+      Data: one unbroken Kagi line over 13 columns, thick #009E73 yang with horizontal shoulders/waists, turning thin #AE3030 yin at column 4 (below the 110.5 waist) and at column 12 (below 148), thick again at column 5 above the 121 shoulder; last thin line open at ~146
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title rendered in light text (INK at #F0EFE8); axis labels and tick labels in soft light gray (INK_SOFT at #B8B7B0); all text clearly readable against dark background - no dark-on-dark failures detected; grid lines visible
-      Data: Identical colors to light render (#009E73 green, #D55E00 orange) - only chrome inverted as required; all line styles preserved
-      Legibility verdict: PASS - full readability across themes; theme-adaptive tokens correctly applied; brand green maintains visibility on dark surface
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks in light gray; no dark-on-dark text; grid light gray
+      Data: identical #009E73 / #AE3030 line and weights as light; only chrome flipped; green clearly visible
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt per the ggplot2 prompt;
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; the Kagi line never overlaps itself
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Yang 2.4 mm vs yin 0.8 mm, clearly different in weight in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green is doubled by line thickness, so not the sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800, balanced margins, title ~40% width, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Closing price (USD)'' with unit; ''Line index (4% reversal)''
+          names the construction'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: true
+        comment: 'Imprint #009E73 yang and #AE3030 yin, correct backgrounds; grid
+          drawn at full INK_SOFT opacity instead of the 15% grid token (defect line)'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: 'Style-guide baseline: theme_minimal, theme tokens, Imprint colors;
+          nothing beyond'
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: No spines, minor grid removed; the baseline and nothing beyond
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: The data is displayed; no hierarchy chosen beyond the Notes
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'A true Kagi chart: one unbroken line of verticals joined by shoulders
+          and waists; no extra layers'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thick yang / thin yin, 4% reversal, horizontal shoulders/waists,
+          line-index x-axis, green/red (C1-C5 all met)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Line turns thick exactly where it breaks the previous shoulder (e.g.
+          column 5 at ~121) and thin where it breaks the previous waist (column 4
+          at ~110.5, column 12 at ~148)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'kagi-basic · r · ggplot2 · anyplot.ai'; legend N/A (two line
+          states explained by the Kagi convention, spec asks for none)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows yang runs, two yin transitions, a recovery to yang, shoulders,
+          waists and an open last line
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 150 daily closes of a stock drifting from ~103 to ~157 USD; neutral
+          and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Checked: each reversal is >=4% of the line''s end (e.g. 124 -> 110,
+          157 -> 147.5); 150 observations inside the 100-500 range'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tibble, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Construction loop is the Kagi algorithm itself (no library call computes
+          it); one geom_segment draws everything
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave plot-{THEME}.png with ragg, linewidth aesthetic (current API)
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: One geom_segment with state mapped to both colour and linewidth through
+          scale_color_manual/scale_linewidth_manual; expansion(add=) and scales::breaks_pretty
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T03:53:18Z'
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - theme-adaptive
+  dataprep:
+  - time-series
+  styling: []
