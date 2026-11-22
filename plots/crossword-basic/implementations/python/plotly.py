@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-20
@@ -114,7 +114,7 @@ for (r, c), num in numbers.items():
         y=y,
         text=str(num),
         showarrow=False,
-        font={"size": 11, "color": INK, "family": "Arial"},
+        font={"size": 11, "color": CELL_BLOCK, "family": "Arial"},
         xanchor="left",
         yanchor="top",
     )
@@ -122,7 +122,10 @@ for (r, c), num in numbers.items():
 # Style
 fig.update_layout(
     title={
-        "text": "crossword-basic · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"
+        "text": "crossword-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
     },
     xaxis={
         "showgrid": False,
@@ -136,6 +139,9 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
+    autosize=False,
+    width=600,
+    height=600,
     margin={"l": 50, "r": 50, "t": 90, "b": 50},
 )
 
