@@ -1,7 +1,7 @@
 """ anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-17
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-22
 """
 
 import os
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon, Rectangle
 from scipy.spatial import Voronoi
 
 
@@ -25,37 +25,13 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
 
-# Okabe-Ito palette (canonical order) — define as seaborn-compatible list
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data generation with spatial context
-np.random.seed(42)
-n_points = 20
-x = np.random.uniform(10, 90, n_points)
-y = np.random.uniform(10, 90, n_points)
-points = np.column_stack([x, y])
-bbox = [0, 100, 0, 100]
-
-# Mirror points for infinite region handling
-margin = 200
-mirror_points = []
-for px, py in points:
-    mirror_points.extend([[px, -margin], [px, 100 + margin], [-margin, py], [100 + margin, py]])
-all_points = np.vstack([points, mirror_points])
-
-# Compute Voronoi tessellation
-vor = Voronoi(all_points)
-
-# Configure seaborn with sophisticated theming
-sns.set_theme(style="ticks")
-sns.set_palette(IMPRINT)  # Set global palette to Okabe-Ito
-sns.set_context("talk", font_scale=1.1)  # Enhanced font sizing via seaborn context
-
-# Apply theme-adaptive rendering context
-plt.rcParams.update(
-    {
+sns.set_theme(
+    style="ticks",
+    rc={
         "figure.facecolor": PAGE_BG,
         "axes.facecolor": PAGE_BG,
         "axes.edgecolor": INK_SOFT,
@@ -63,62 +39,78 @@ plt.rcParams.update(
         "text.color": INK,
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
-        "grid.color": INK,
-        "grid.alpha": 0.10,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
-    }
+    },
 )
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
+# Constants
+BOX = (0, 100)  # visible bounding box, same range on both axes
 
-# Get seaborn's color palette for dynamic color cycling
-pal = sns.color_palette(IMPRINT)
+# Columns: set these to your table's column names
+X = "X coordinate (km)"  # role: x
+Y = "Y coordinate (km)"  # role: y
 
-# Draw Voronoi regions with dynamic color cycling from seaborn palette
-for i in range(n_points):
-    region_idx = vor.point_region[i]
-    region = vor.regions[region_idx]
-    if not region or -1 in region:
-        continue
+# Data: replace this block with your own table, for example df = pd.read_csv("seeds.csv")
+rng = np.random.default_rng(42)
+n_seeds = 20
+df = pd.DataFrame({X: rng.uniform(10, 90, n_seeds), Y: rng.uniform(10, 90, n_seeds)})
 
-    polygon_vertices = vor.vertices[region].copy()
-    polygon_vertices[:, 0] = np.clip(polygon_vertices[:, 0], bbox[0], bbox[1])
-    polygon_vertices[:, 1] = np.clip(polygon_vertices[:, 1], bbox[2], bbox[3])
+# Plot: reads only df and the constants above
+seeds = df[[X, Y]].dropna().to_numpy(dtype=float)
+lo, hi = BOX
+span = hi - lo
 
-    # Use seaborn's palette cycling for color selection
-    color = pal[i % len(pal)]
-    poly = Polygon(polygon_vertices, facecolor=color, edgecolor=INK_SOFT, linewidth=2.5, alpha=0.7)
-    ax.add_patch(poly)
+# Distant helper seeds above, below and beside every seed make all real cells finite
+far = 2 * span
+helpers = np.vstack(
+    [
+        np.column_stack([seeds[:, 0], np.full(len(seeds), lo - far)]),
+        np.column_stack([seeds[:, 0], np.full(len(seeds), hi + far)]),
+        np.column_stack([np.full(len(seeds), lo - far), seeds[:, 1]]),
+        np.column_stack([np.full(len(seeds), hi + far), seeds[:, 1]]),
+    ]
+)
+vor = Voronoi(np.vstack([seeds, helpers]))
 
-# Draw Voronoi edges with seaborn-styled aesthetics
-for ridge_idx, (p1, p2) in enumerate(vor.ridge_points):
-    if p1 < n_points and p2 < n_points:
-        v1, v2 = vor.ridge_vertices[ridge_idx]
-        if v1 >= 0 and v2 >= 0:
-            x_coords = np.clip([vor.vertices[v1, 0], vor.vertices[v2, 0]], bbox[0], bbox[1])
-            y_coords = np.clip([vor.vertices[v1, 1], vor.vertices[v2, 1]], bbox[2], bbox[3])
-            ax.plot(x_coords, y_coords, color=INK_SOFT, linewidth=2.5, alpha=0.9)
+# Neighbouring cells share an edge: give each cell the first palette color its neighbours do not use
+neighbours = {i: set() for i in range(len(seeds))}
+for a, b in vor.ridge_points:
+    if a < len(seeds) and b < len(seeds):
+        neighbours[a].add(b)
+        neighbours[b].add(a)
+cell_color = {}
+for i in range(len(seeds)):
+    used = {cell_color[j] for j in neighbours[i] if j in cell_color}
+    cell_color[i] = next(k for k in range(len(IMPRINT_PALETTE)) if k not in used)
 
-# Plot seed points with enhanced seaborn styling
-df = pd.DataFrame({"x": x, "y": y})
-sns.scatterplot(data=df, x="x", y="y", s=350, color=BRAND, edgecolor=INK, linewidth=2.5, ax=ax, zorder=10)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+frame = Rectangle((lo, lo), span, span, transform=ax.transData)
 
-# Labels with seaborn-compatible font sizing
-ax.set_xlabel("X Coordinate (km)", fontsize=20, color=INK)
-ax.set_ylabel("Y Coordinate (km)", fontsize=20, color=INK)
-ax.set_title("voronoi-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.set_xlim(bbox[0], bbox[1])
-ax.set_ylim(bbox[2], bbox[3])
+for i in range(len(seeds)):
+    cell = Polygon(
+        vor.vertices[vor.regions[vor.point_region[i]]],
+        facecolor=IMPRINT_PALETTE[cell_color[i]],
+        edgecolor=INK_SOFT,
+        linewidth=1.2,
+        alpha=0.75,
+        joinstyle="round",
+    )
+    ax.add_patch(cell)
+    cell.set_clip_path(frame)  # outer cells are cut at the bounding box
+
+sns.scatterplot(data=df, x=X, y=Y, s=60, color=INK, edgecolor=PAGE_BG, linewidth=1.0, ax=ax, zorder=5)
+
+# Style
+ax.set_title("voronoi-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(X, fontsize=10)
+ax.set_ylabel(Y, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.set_xlim(lo, hi)
+ax.set_ylim(lo, hi)
 ax.set_aspect("equal")
-
-# Spine styling with seaborn theme-adaptive colors
 for spine in ax.spines.values():
-    spine.set_edgecolor(INK_SOFT)
-    spine.set_linewidth(2)
+    spine.set_linewidth(1.2)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.12, right=0.95, top=0.93, bottom=0.1)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
