@@ -12,118 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-h
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 71
 review:
   strengths:
-  - Flawless palette compliance with perfect Okabe-Ito implementation and theme-adaptive
-    chrome in both renders
-  - Successfully implements network visualization in plotnine without matplotlib workaround,
-    using native geoms creatively
-  - All text legible and readable in both light and dark themes with proper contrast
-    and sizing
-  - Clean, well-structured code with appropriate complexity and zero unnecessary engineering
-  - Excellent data quality with real-world organizational scenario showing complete
-    hierarchy
-  - Proper visual hierarchy through node positioning, sizing by level, and color encoding
+  - Theme tokens threaded through title, labels, legend and edges; both renders theme-correct
+  - Node size steps down with depth, making the root the focal point
+  - 'Legend entries name the role of each level (Level 0: CEO … Level 3: Team)'
   weaknesses:
-  - Library Mastery score is lower due to manual position calculation being a workaround
-    rather than distinctive plotnine patterns (inherent to the network-graph approach)
-  - Level 3 team member nodes could be slightly larger (currently 6pt, could increase
-    to 8pt for better visibility)
-  - Design Excellence could improve with additional visual emphasis or focal points
-    to push toward publication-ready level
+  - 'VQ-05 (both): the render is saved at 4800×2700, not a canonical canvas → 3200×1800
+    (−1600 × −900). Likely cause: figure_size=(16, 9) with plot.save(dpi=300) instead
+    of figure_size=(8, 4.5), dpi=400.'
+  - 'VQ-02 (both): every label sits above its node, so the incoming edge crosses most
+    leaf labels (FE Dev 2, BE Dev 2, PM 1, Designer, SysAdmin, DevOps, Recruiter,
+    Payroll) and the labels above VP Product, Frontend Dir, HR Manager → labels clear
+    of every edge, e.g. leaf labels below their nodes. Likely cause: one geom_text
+    with va=''bottom'', nudge_y=0.025 for all nodes.'
+  - 'VQ-01 (both): node labels at 9 pt on a 16 in figure (≈4.5 pt at the standard
+    canvas) read small beside the 16 pt legend text → 8 pt at the standard 8 in canvas.
+    Likely cause: geom_text(size=9) on the doubled figure.'
+  - 'SC-04 (both): the title ''network-hierarchical · plotnine · anyplot.ai'' lacks
+    the language segment → ''network-hierarchical · python · plotnine · anyplot.ai''.
+    Likely cause: the labs(title=...) string.'
+  - 'VQ-07 (both): hierarchy depth is an ordered category but is colored with four
+    unrelated categorical hues → discrete steps of imprint_seq from root to leaves.
+    Likely cause: scale_color_manual(values=level_colors).'
+  - 'Suggestion: centring each parent over its children (a tidy-tree layout) would
+    shorten the long diagonal edges.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct per style guide, not pure white)
-      Chrome: Title, node labels, and legend all rendered in dark INK color (#1A1A17), clearly visible and readable. No illegible text.
-      Data: CEO node in brand green #009E73, VPs in orange #D55E00, Directors in blue #0072B2, Team in reddish purple #CC79A7. All nodes positioned in clear hierarchical levels with connecting edges in subtle gray. Legend at bottom clearly labeled "Hierarchy Level" with 4 level entries.
-      Legibility verdict: PASS - All text readable, no overlaps, proper contrast
+      Background: warm off-white #FAF8F1; saved at 4800x2700.
+      Chrome: title 'network-hierarchical · plotnine · anyplot.ai' centred in dark ink; no axes or grid; bottom legend 'Hierarchy Level' with 'Level 0: CEO' … 'Level 3: Team' in a framed elevated box. Node labels in dark ink above every node, small; edges cross many leaf labels.
+      Data: CEO root #009E73 largest at top, VPs #C475FD, managers #4467A3, 12 leaves #BD8233; grey straight edges, no arrows.
+      Legibility verdict: PASS (small labels, crossed by edges, still readable)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct per style guide, not pure black)
-      Chrome: Title and labels rendered in light INK color (#F0EFE8), clearly visible against dark background. Legend background is elevated surface #242420 with light text. No dark-on-dark failures detected.
-      Data: All data colors identical to light render—CEO still #009E73 (brand green clearly visible), VPs still #D55E00, Directors still #0072B2, Team still #CC79A7. Edges rendered in light gray, visible and not hidden. Theme-adaptive chrome properly applied.
-      Legibility verdict: PASS - All text readable, proper theme adaptation, no dark-on-dark issues, data colors maintain identity across themes
+      Background: warm near-black #1A1A17.
+      Chrome: title, labels and legend in light ink; legend box #242420; no dark-on-dark text.
+      Data: node colors identical to the light render; edges light grey and visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 19
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
-        passed: true
-        comment: 'All fonts explicitly sized: title 24pt, labels 16pt, node names
-          9pt. Readable in both themes.'
+        passed: false
+        comment: Title 24 pt and legend 16–18 pt on a 16×9 in figure; node labels
+          9 pt on 16 in (≈4.5 pt at the standard 8 in canvas), below the 8 pt reference
+          (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Minor crowding in middle levels (directors) but no text collisions
-          or unreadable elements.
+        passed: false
+        comment: Every label sits above its node, so incoming edges cross most leaf
+          labels (FE Dev 2, BE Dev 2, PM 1, Designer, SysAdmin, DevOps, Recruiter,
+          Payroll) and the internal labels above VP Product, Frontend Dir, HR Manager
+          (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes scaled 16-6pt by level. Deepest level slightly small but still
-          visible.
+        comment: Nodes 16→6 by depth all visible; legend glyphs visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe, adequate contrast across all
-          series.
+        comment: Distinct hues plus position and size
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 4800x2700 landscape. Plot fills ~70% of canvas with balanced, generous
-          margins.
+        passed: false
+        comment: Saved at 4800×2700, not one of the canonical canvases (defect line);
+          proportions otherwise balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. No axis elements (appropriate for network).
+        comment: N/A axes; legend title readable
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Perfect Okabe-Ito: CEO=#009E73, VPs=#D55E00, Directors=#0072B2,
-          Team=#CC79A7. Backgrounds and chrome correct in both themes.'
+        passed: false
+        comment: Chrome correct in both themes, but ordered depth levels colored with
+          unrelated categorical hues (defect line)
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional color choice and intentional hierarchy. Looks like well-configured
-          default, not custom/publication-level.
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: No grid/axes (appropriate). Clean edges, generous whitespace, legend
-          well-positioned with border.
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Clear hierarchy through positioning and sizing. Org structure immediately
-          apparent. Could emphasize focal points more.
+        passed: false
+        comment: Node size shrinks with depth, root is the focal point
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,26 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hierarchical network with tree layout.
+        comment: Hierarchical tree, root on top
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: nodes, edges, labels, hierarchy levels.'
+        comment: C1–C4 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 22 nodes visible, 20 edges correct, positioning proper across
-          levels.
+        comment: All 22 nodes and 21 edges drawn
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct. Legend labels match data accurately.
+        passed: false
+        comment: Title 'network-hierarchical · plotnine · anyplot.ai' lacks the language
+          segment (defect line); legend entries clear
     data_quality:
       score: 15
       max: 15
@@ -160,21 +164,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all hierarchy aspects: CEO, VPs, Directors, Team across 4
-          levels.'
+        comment: 4 levels with unequal branching
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real organizational scenario, neutral, credible roles and structure.
+        comment: Neutral software-company org chart
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Node counts realistic (1-3-6-12). Proportions reflect typical org
-          structure.
+        comment: 22 nodes in range; no Check values
     code_quality:
       score: 10
       max: 10
@@ -184,33 +186,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → positions → plot → save. No functions/classes.'
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, no randomness.
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, pandas, plotnine). All used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity. No fake UI.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly.
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -218,16 +220,16 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct ggplot + geoms pattern. Manual positioning is workaround
-          rather than leveraging library patterns.
+        comment: Standard ggplot layer pattern
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Generic geom combination (point, segment, text). Same approach would
-          work in matplotlib.
+        comment: Nothing beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies: []
   techniques:
