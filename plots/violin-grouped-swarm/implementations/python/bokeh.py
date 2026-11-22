@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-18
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-22
 """
 
 import os
