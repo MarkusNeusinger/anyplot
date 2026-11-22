@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
@@ -24,9 +24,16 @@ from pygal.style import Style
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Crossword paper stays a printed puzzle in both themes: light entry cells, solid black blocking cells
+ENTRY_BG = "#FFFDF6"
+BLOCK_BG = "#1A1A17" if THEME == "light" else "#0B0B09"
+CELL_INK = "#1A1A17"
+CELL_LINE = "#4A4A44" if THEME == "light" else "#6B6A63"
+
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 CANVAS = 2400
 CELL = 140
@@ -43,7 +50,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_SOFT,
-    colors=("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"),
+    colors=IMPRINT_PALETTE,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -52,8 +59,7 @@ custom_style = Style(
     stroke_width=2.5,
 )
 
-# Crossword grid data — 15×15 with 180° rotational symmetry
-np.random.seed(42)
+# Data: replace this block with your own puzzle layout (grid of 0 = entry, 1 = blocked)
 grid = np.zeros((GRID_SIZE, GRID_SIZE), dtype=int)
 
 black_positions_top = [
@@ -93,13 +99,12 @@ for row in range(GRID_SIZE):
                 numbers[(row, col)] = clue_num
                 clue_num += 1
 
+# Plot: custom pygal chart type that reads only grid and numbers
+
 
 class CrosswordGrid(Graph):
-    """Custom pygal chart type that renders a crossword puzzle grid.
-
-    Subclasses Graph to use pygal's SVG infrastructure (style, background,
-    title, render pipeline) while drawing grid cells via pygal's SVG node API.
-    """
+    # Custom pygal chart type: reuses pygal's style, title and render pipeline
+    # and draws the grid cells through its SVG node API.
 
     def _compute(self):
         pass
@@ -124,24 +129,20 @@ class CrosswordGrid(Graph):
         self._plot()
 
     def _plot(self):
-        """Render crossword cells using pygal's SVG node API.
-
-        Coordinates are relative to the plot group (margin already applied),
-        so (0, 0) maps to the top-left corner of the grid area on the canvas.
-        """
+        # Coordinates are relative to the plot group, so (0, 0) is the grid's top-left corner.
         plot = self.nodes["plot"]
         for row in range(GRID_SIZE):
             for col in range(GRID_SIZE):
                 x = col * CELL
                 y = row * CELL
-                fill = INK if grid[row, col] == 1 else ELEVATED_BG
+                fill = BLOCK_BG if grid[row, col] == 1 else ENTRY_BG
 
                 rect = self.svg.node(plot, "rect", x=x, y=y, width=CELL, height=CELL, fill=fill)
-                rect.set("stroke", INK_SOFT)
+                rect.set("stroke", CELL_LINE)
                 rect.set("stroke-width", "2")
 
                 if (row, col) in numbers:
-                    txt = self.svg.node(plot, "text", x=x + 6, y=y + NUM_SZ + 3, fill=INK)
+                    txt = self.svg.node(plot, "text", x=x + 6, y=y + NUM_SZ + 3, fill=CELL_INK)
                     txt.set("font-family", "Arial, sans-serif")
                     txt.set("font-size", str(NUM_SZ))
                     txt.text = str(numbers[(row, col)])
