@@ -2,47 +2,51 @@ library: altair
 language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:32:10Z'
-updated: '2026-05-18T02:01:37Z'
-generated_by: claude-haiku
-workflow_run: 26009255681
+updated: '2026-11-22T09:23:42Z'
+generated_by: claude-sonnet
+workflow_run: 45006758233
 issue: 3504
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 85
 review:
   strengths:
-  - All text is explicitly sized and readable in both light and dark themes (8/8 VQ-01)
-  - Perfect palette compliance with correct Okabe-Ito ordering and theme-adaptive
-    chrome (2/2 VQ-07)
-  - 'Thoughtful design choices: white bar strokes for definition, bold total labels
-    for visual emphasis, reference line for context'
-  - Expert idiomatic use of Altair's layer composition (mark_bar + mark_text + mark_rule)
-    and theme-aware configuration
-  - Proper spec compliance with accurate data mapping, clear title format, and all
-    required total labels prominently displayed
+  - All four stacks rise from a shared zero baseline on an untruncated axis; the bold
+    total labels ($250K, $295K, $325K, $360K) equal the segment sums and sit inside
+    the plot thanks to the data-derived 12 % headroom (alt.Scale(domain=[0, max*1.12],
+    nice=False))
+  - Segments are separated by a stroke in the page color, so the boundaries read cleanly
+    in both themes instead of a fixed white outline
+  - Stack order is pinned to the data order with an alt.Order channel driven by a
+    Vega expression (transform_calculate with indexof), so Software sits at the base
+    of every bar and the order is the same in every stack
+  - Native Altair tooltips with readable titles add segment-level inspection in the
+    HTML output
+  - Column constants are escaped once and every encoding carries type= and title=,
+    so the chart survives column names with dots, brackets or colons
+  - 'Theme tokens are threaded through view, axes, title and legend; both renders
+    are fully legible on #FAF8F1 and #1A1A17'
   weaknesses:
-  - 'Design Excellence could be elevated: reference line adds context but the overall
-    aesthetic is well-executed defaults rather than publication-grade sophistication'
-  - 'Library Mastery: while idiomatic, the implementation uses fairly standard Altair
-    patterns rather than distinctive library-specific techniques'
+  - 'Suggestion: list the legend entries in stack order (Services on top, Software
+    at the bottom) so the legend reads the same way as the bars.'
+  - 'Suggestion: a slightly larger total-label font would give the totals more presence
+    beside the 13 pt axis titles.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with clean appearance
-      Chrome: Title "bar-stacked-labeled · Python · altair · anyplot.ai" in dark text (INK #1A1A17), axis labels "Quarter" and "Revenue ($K)" clearly visible with units, tick labels in soft gray (INK_SOFT #4A4A44), all fully readable against light background
-      Data: Three-color stacked bars (Software #009E73, Hardware #D55E00, Services #0072B2) with white strokes separating segments; total labels above each bar ($250K, $295K, $325K, $360K) in bold dark text (fontSize=24, fontWeight="bold"); legend on right showing product categories
-      Grid: Subtle dashed reference line at average total (~305K), providing context without overwhelming the visualization
-      Legibility verdict: PASS — all elements are clearly readable with excellent contrast
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas, view framed by a thin INK_SOFT stroke.
+      Chrome: centered bold title "bar-stacked-labeled · python · altair · anyplot.ai" in dark ink; y-axis title "Revenue ($K)" and x-axis title "Quarter" in bold dark ink; tick labels (0-400 by 50, Q1-Q4 horizontal) in soft gray; subtle horizontal grid; legend "Product" on the right in an elevated off-white box. All text readable.
+      Data: four stacked bars Q1-Q4, Software #009E73 at the base, Hardware #C475FD in the middle, Services #4467A3 on top, separated by thin page-colored strokes. Bold dark total labels $250K, $295K, $325K, $360K directly above each stack, all inside the plot area with headroom above the $360K stack.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with matching aesthetic
-      Chrome: Title in light text (INK #F0EFE8), axis labels and tick labels in light gray (INK_SOFT #B8B7B0), all easily readable against dark background; no dark-on-dark failures
-      Data: All three data colors are IDENTICAL to light render (#009E73, #D55E00, #0072B2) — only chrome adapted for dark theme; white bar strokes remain visible; total labels in light text with same bold styling
-      Grid: Same subtle dashed reference line, appropriate opacity for dark surface
-      Legibility verdict: PASS — theme adaptation is correct, all text readable, data colors maintain integrity across themes
+      Background: warm near-black #1A1A17, view frame in light soft gray.
+      Chrome: title, axis titles and total labels in light ink #F0EFE8; tick labels in light gray; grid subtle but visible; legend box on the dark elevated surface with light text. No dark-on-dark text anywhere.
+      Data: identical segment colors (#009E73, #C475FD, #4467A3) and positions as the light render; the segment strokes flip to the dark page color. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,72 +57,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly sized: title 28px, labels 22px, ticks 18px,
-          total labels 24px bold; perfectly readable in both themes'
+        comment: 'Explicit sizes: title 16, axis titles 13, ticks 11, legend 11/12,
+          bold totals 13 at scale 4; readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; clear spacing between all text
+        comment: Total labels clear of the stacks and of each other; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar segments clearly distinguishable with white strokes; all elements
-          visible and well-adapted to data
+        comment: Wide bars with page-colored separators; legend swatches match the
+          fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (colorblind-safe); adequate contrast; white strokes
-          provide definition
+        comment: Green, lavender and blue are distinct in lightness and hue; no red-green
+          pair
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions (1600×900); balanced margins; nothing cut off
+        comment: Canvas gate passed (3200x1800); balanced margins, horizontal tick
+          labels, title well inside the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; axes descriptive with units
+        comment: '''Quarter'' and ''Revenue ($K)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; positions 2-3 follow Okabe-Ito; theme chrome
-          correct; identical data colors both renders'
+        comment: 'First component #009E73, then Imprint positions 2-3; theme backgrounds
+          correct; data colors identical across renders'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Thoughtful choices (white strokes, reference line, bold labels) beyond
-          defaults; Okabe-Ito required; above generic but not publication-grade
+        comment: Style-guide baseline with bold totals as the Notes suggest; nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: White strokes and custom configuration show refinement; subtle reference
-          line; overall execution clean but uses mostly library patterns
+        comment: Segment separators in the page color, so the gaps adapt per theme,
+          and data-derived headroom with nice=False instead of a padded tick range
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Total labels create focal point; reference line adds context; visual
-          hierarchy clear through color and bold emphasis
+        comment: Data displayed with the totals the spec asks for; no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -128,25 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart with all variants
+        comment: Stacked bar chart with total labels, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Total labels prominently displayed above stacks; clear formatting
+        comment: Totals above every stack (C2), headroom (C3), one format $NNNK (C4),
+          consistent component order and legend (C5), shared zero baseline (C1)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=quarters, Y=revenue, stacked by product; all data visible
+        comment: X = quarter, Y = stacked revenue from zero; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title exactly 'bar-stacked-labeled · python · altair · anyplot.ai';
+          legend 'Product' with readable entries
     data_quality:
       score: 15
       max: 15
@@ -156,21 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 4 quarters, 3 product categories, varying revenues
-          with clear totals'
+        comment: 4 categories x 3 components with growing, unequal stack heights and
+          differing segment sizes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic scenario (quarterly revenue breakdown); neutral context
+        comment: Quarterly revenue by Software/Hardware/Services; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (120-185K) sensible; proportions plausible; no impossible
-          data
+        comment: 'Checked totals: 120+85+45=250, 145+92+58=295, 165+88+72=325, 185+95+80=360,
+          computed via groupby and matching the labels and the axis'
     code_quality:
       score: 10
       max: 10
@@ -180,59 +187,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple script; straightforward data→plot→save flow
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, pandas, os, sys; all necessary
+        comment: os, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant; appropriate complexity; no fake functionality
+        comment: Totals via groupby, order via Vega expression; the view-shrink loop
+          serves the adaptable-code contract
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: plot-{THEME}.png and plot-{THEME}.html'
+        comment: plot-{THEME}.png padded to 3200x1800 and plot-{THEME}.html; current
+          Altair 6 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Expert use of mark_bar, mark_text, mark_rule; proper encoding channels;
-          theme-aware configuration; layer composition
+        passed: false
+        comment: Layered charts (bars + text) sharing encodings, alt.Order for stack
+          order, alt.Tooltip with titles, configure_* for theming
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Layer composition and custom color scales used; fairly standard Altair
-          patterns rather than distinctive techniques
+        comment: transform_calculate with a Vega expression (indexof) to drive the
+          stack order channel
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T09:20:07Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - annotations
-  - custom-legend
+  - hover-tooltips
+  - html-export
   patterns:
-  - data-generation
   - groupby-aggregation
   dataprep: []
   styling:
   - edge-highlighting
+  - grid-styling
