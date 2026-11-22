@@ -2,48 +2,51 @@ library: seaborn
 language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:46:03Z'
-updated: '2026-05-18T03:11:59Z'
-generated_by: claude-haiku
-workflow_run: 26011288570
+updated: '2026-11-22T09:35:56Z'
+generated_by: claude-sonnet
+workflow_run: 45007815693
 issue: 3529
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 83
 review:
   strengths:
-  - Perfect theme-adaptive chrome implementation with no readability issues in either
-    light or dark render
-  - Excellent use of transparency and dodging to show individual data points while
-    maintaining violin distribution visibility
-  - Idiomatic seaborn API usage with proper parameter configuration (violinplot +
-    swarmplot overlay with dodge)
-  - Clean, reproducible code with explicit theme tokens and proper seed management
-  - 'All required spec features implemented correctly: grouped violins by category,
-    secondary grouping by hue, swarm overlay with matching colors'
-  - 'Proper color palette (Okabe-Ito with #009E73 first series) consistently applied
-    across both renders'
+  - Axes-level sns.violinplot and sns.swarmplot share hue and palette, with dodge=True
+    so every swarm column sits centered on its own group's violin
+  - legend=False on the swarm layer keeps a single legend built from the violin patches,
+    placed in the empty lower-right corner clear of all data
+  - 'Theme tokens threaded through sns.set_theme rc and explicit tick/label colors:
+    both renders are fully readable and the data colors are identical'
+  - Exact 3200x1800 canvas from figsize=(8, 4.5) at dpi=400, with the style guide's
+    12/10/8 pt text
+  - Tidy data with column constants and a compact profiles table that is easy to swap
+    for a real table
   weaknesses:
-  - Design Excellence limited to well-configured defaults rather than distinctive
-    aesthetic innovation - consider more intentional typography hierarchy or custom
-    refinements to spine styling
+  - 'SC-03 (both): the violin KDE tails run past the data range, up to about 116 at
+    Pattern Recognition Novice and down to about 8, although every score is clipped
+    to 20-100, so the violins show scores no test taker can have → cut the density
+    at the observed extremes (cut=0). Likely cause: sns.violinplot with the default
+    cut=2.'
+  - 'Suggestion: a slightly larger swarm marker (size 2.5-3) would let the green points
+    read more strongly on the dark-green fill in the dark render.'
+  - 'Suggestion: an inner quartile or median mark would add a summary layer the swarm
+    alone does not give.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle color depth.
-      Chrome: Title in dark text (INK color) is clearly readable. X-axis label "Test Type" and Y-axis label "Score" are legible with proper sizing (20pt). Tick labels are in INK_SOFT color and readable at full resolution. Legend box has elevated background (#FFFDF6) with clear labels "Novice" and "Expert".
-      Data: Three test types (Reading Comprehension, Arithmetic, Pattern Recognition) on x-axis, each showing two violin plots (Novice in #009E73 teal, Expert in #D55E00 orange). Swarm points are clearly visible and dodged within their respective violins, matching the hue colors. Violin transparency (alpha=0.5) allows point visibility.
-      Legibility verdict: PASS - All text is readable against the light background, data colors are distinct and visible.
+      Background: warm off-white #FAF8F1, canvas 3200x1800 px.
+      Chrome: title 'violin-grouped-swarm · python · seaborn · anyplot.ai' (12 pt, dark ink, about 55 % of the width), axis titles 'Test Type' and 'Score' (10 pt), soft-ink ticks (8 pt), subtle horizontal grid, top/right spines removed; legend 'Experience' (Novice, Expert) on an elevated box in the empty lower-right corner. All text readable.
+      Data: Reading Comprehension, Arithmetic and Pattern Recognition each carry a green #009E73 Novice violin and a purple #C475FD Expert violin side by side at alpha 0.5, with small dodged swarm points in the matching hue centered on each violin. Novice violins are wider and lower, Expert violins narrow and high. KDE tails extend to about 116 and 8 although scores are clipped to 20-100.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) matching the dark theme.
-      Chrome: Title in light text (#F0EFE8) is clearly readable against dark background. Axis labels and tick labels are light-colored (INK_SOFT = #B8B7B0) and fully visible. Legend box has dark elevated background (#242420) with light text. No dark-on-dark failures detected.
-      Data: Identical data colors to light render - Novice in #009E73 (teal remains vibrant on dark), Expert in #D55E00 (orange remains vibrant). Swarm points maintain color identity. Grid lines visible at 10% opacity.
-      Legibility verdict: PASS - All text is readable against dark background, data colors identical to light render with proper visibility on dark surface, no text-on-dark failures.
-
-    Both renders maintain complete color consistency for data elements (only chrome/background changes theme), confirming proper theme-adaptive implementation.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, readable; no dark-on-dark text; legend on the dark elevated box with light text; grid subtle but visible.
+      Data: identical green and purple data colors; translucent fills read darker on the dark surface, swarm points remain visible on them.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,76 +57,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
-          perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, legend 8/9 pt as the
+          style guide sets them; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all labels fully readable
+        comment: No text collisions; the legend sits in the empty lower-right corner
+          clear of every violin
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers perfectly adapted to data density, swarm points clearly visible
-          with dodging, optimal sizing
+        comment: Swarm points small (size=2) but visible on the translucent fills
+          in both themes; legend swatches match the violin fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette is CVD-safe, good contrast between #009E73 and
-          #D55E00'
+        comment: 'Green #009E73 against purple #C475FD differ in hue and lightness;
+          CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins, plot fills 50-80% of canvas,
-          no wasted space
+        comment: 3200x1800 canvas, balanced margins, title about 55 % of the width,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Test Type'' and ''Score'', title in correct
-          format'
+        comment: '''Test Type'', ''Score'' and the title in the mandated form'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect Okabe-Ito compliance: first series #009E73, backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark), chrome theme-correct in both renders'
+        comment: 'Imprint positions 1-2 in canonical order, #FAF8F1 / #1A1A17 backgrounds,
+          chrome flips correctly, data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Well above defaults with clean styling, but not publication-ready
-          exceptional
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid, appropriate spine removal, generous whitespace, well-polished
-          overall
+        passed: false
+        comment: Legend placed in the one empty corner of the axes, below the lowest
+          violin tails and clear of all data; otherwise the spine/grid baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good visual hierarchy showing expertise effect on score distributions;
-          could emphasize insight more strongly
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,27 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped violin plot with swarm overlay
+        comment: Grouped violins with a dodged swarm overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: grouped violins, secondary grouping by
-          hue, swarm overlay with dodging'
+        comment: 'All Notes bullets and C1-C5 met: distinct group colors with legend,
+          alpha 0.5 violins, small swarm points in their own hue, dodged onto their
+          violin, violins well spaced'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X=Test Type, Y=Score, hue=Experience, all axes show complete data
+        passed: false
+        comment: x = test type, y = score, hue = experience; but the KDE tails extend
+          to about 116 and 8 although every score is clipped to 20-100 (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''violin-grouped-swarm · Python · seaborn
-          · anyplot.ai'', legend labels accurate'
+        comment: Title 'violin-grouped-swarm · python · seaborn · anyplot.ai' correct;
+          legend 'Experience' with Novice / Expert
     data_quality:
       score: 15
       max: 15
@@ -161,21 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple test types, expertise levels, distribution
-          shapes, variance differences'
+        comment: Three categories x two groups, skewed and different-width shapes,
+          overlapping ranges and a clear expertise effect
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cognitive test performance is real, neutral, and comprehensible scenario
+        comment: 'Cognitive test scores by experience level: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Score ranges and distributions are factually plausible for cognitive
-          testing domain
+        comment: Scores on a 0-100 scale, novice means 58-72 and expert means 82-88,
+          plausible; no Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -185,63 +188,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → tokens → data → plot → save, no
-          unnecessary abstraction'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, matplotlib, numpy, pandas, seaborn) are used in
-          code
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no over-engineering, proper theme token pattern
+        comment: Profiles table replaces the if/elif chain; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, uses current seaborn API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          seaborn 0.13 API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert seaborn patterns: sns.set_theme() for theme management, sns.violinplot()
-          + sns.swarmplot() overlay with proper parameters, set_axisbelow()'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses seaborn's distinctive swarmplot with dodge for multi-series
-          display, layer composition showcases seaborn strengths
-    score_caps: []
-    total_score: 93
-    total_max: 100
+        passed: false
+        comment: Axes-level violinplot + swarmplot on the tidy df with column constants,
+          hue/dodge, legend=False on the second layer to avoid a duplicate legend,
+          palette sized from nunique
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the spec and the library prompt require
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T09:32:46Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  - explicit-figure
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - kde
   styling:
-  - grid-styling
   - alpha-blending
+  - minimal-chrome
