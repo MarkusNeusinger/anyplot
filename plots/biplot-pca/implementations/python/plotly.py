@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-17
@@ -7,6 +7,7 @@ Quality: 86/100 | Updated: 2026-05-17
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from sklearn.datasets import load_iris
 from sklearn.decomposition import PCA
@@ -19,72 +20,55 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette (first series is always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Load data
+# Columns: set these to your table's column names
+SEPAL_LENGTH = "sepal length"  # role: features
+SEPAL_WIDTH = "sepal width"  # role: extra
+PETAL_LENGTH = "petal length"  # role: extra
+PETAL_WIDTH = "petal width"  # role: extra
+SPECIES = "Species"  # role: labels
+
+# Data: replace this block with your own table, for example df = pd.read_csv("measurements.csv")
 iris = load_iris()
-X = iris.data
-y = iris.target
-feature_names = iris.feature_names
-target_names = iris.target_names
+df = pd.DataFrame(iris.data, columns=[SEPAL_LENGTH, SEPAL_WIDTH, PETAL_LENGTH, PETAL_WIDTH])
+df[SPECIES] = pd.Categorical.from_codes(iris.target, [name.capitalize() for name in iris.target_names])
 
-# Standardize and perform PCA
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+# Plot: reads only df and the constants above
+FEATURES = [SEPAL_LENGTH, SEPAL_WIDTH, PETAL_LENGTH, PETAL_WIDTH]
+df = df.dropna(subset=FEATURES).reset_index(drop=True)  # PCA needs complete rows
+X = StandardScaler().fit_transform(df[FEATURES])
 pca = PCA(n_components=2)
-scores = pca.fit_transform(X_scaled)
+scores = pca.fit_transform(X)
 loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
-
-# Variance explained
 var_explained = pca.explained_variance_ratio_ * 100
 
-# Create figure
+# One common factor scales every loading arrow to the spread of the scores
+scale_factor = np.abs(scores).max() / np.abs(loadings).max() * 0.9
+
 fig = go.Figure()
 
-# Plot scores for each group
-for i, target in enumerate(target_names):
-    mask = y == i
+for i, (group, rows) in enumerate(df.groupby(SPECIES, sort=False, observed=True)):
     fig.add_trace(
         go.Scatter(
-            x=scores[mask, 0],
-            y=scores[mask, 1],
+            x=scores[rows.index, 0],
+            y=scores[rows.index, 1],
             mode="markers",
-            marker={"size": 14, "color": IMPRINT[i], "opacity": 0.8, "line": {"width": 1, "color": PAGE_BG}},
-            name=target.capitalize(),
-            legendgroup=target,
+            marker={"size": 8, "color": IMPRINT_PALETTE[i], "opacity": 0.8, "line": {"width": 0.5, "color": PAGE_BG}},
+            name=str(group),
         )
     )
 
-# Scale loadings for visibility (relative to score spread)
-score_scale = max(np.abs(scores).max(axis=0))
-loading_scale = max(np.abs(loadings).max(axis=0))
-scale_factor = score_scale / loading_scale * 0.9
-
-# Plot loading arrows
-arrow_color = INK_SOFT
-for loading, name in zip(loadings, feature_names, strict=False):
-    x_end = loading[0] * scale_factor
-    y_end = loading[1] * scale_factor
-
-    # Arrow line
-    fig.add_trace(
-        go.Scatter(
-            x=[0, x_end],
-            y=[0, y_end],
-            mode="lines",
-            line={"color": arrow_color, "width": 3},
-            showlegend=False,
-            hoverinfo="skip",
-        )
-    )
-
-    # Arrowhead using annotation
+# Loading arrows from the origin, each labeled at its tip
+tips = loadings * scale_factor
+lowest = int(np.argmin(tips[:, 1]))  # its label goes below the tip so near-parallel arrows keep apart
+for k, ((load_x, load_y), name) in enumerate(zip(tips, FEATURES, strict=False)):
     fig.add_annotation(
-        x=x_end,
-        y=y_end,
+        x=load_x,
+        y=load_y,
         ax=0,
         ay=0,
         xref="x",
@@ -93,38 +77,31 @@ for loading, name in zip(loadings, feature_names, strict=False):
         ayref="y",
         showarrow=True,
         arrowhead=2,
-        arrowsize=1.5,
-        arrowwidth=3,
-        arrowcolor=arrow_color,
+        arrowsize=1.3,
+        arrowwidth=2,
+        arrowcolor=INK_SOFT,
     )
-
-    # Variable label with offset to avoid overlap
-    label_offsets = {
-        "sepal length": (0.15, 0.3),
-        "sepal width": (0.1, 0.25),
-        "petal length": (0.15, -0.35),
-        "petal width": (0.15, 0.15),
-    }
-    clean_name = name.replace(" (cm)", "")
-    dx, dy = label_offsets.get(clean_name, (0.1, 0.1))
-    offset_x = x_end + dx
-    offset_y = y_end + dy
-    xanchor = "left" if x_end > 0 else "right"
     fig.add_annotation(
-        x=offset_x,
-        y=offset_y,
-        text=clean_name,
+        x=load_x,
+        y=load_y,
+        text=name,
         showarrow=False,
-        font={"size": 16, "color": arrow_color},
-        xanchor=xanchor,
-        yanchor="middle",
+        font={"size": 12, "color": INK},
+        xanchor="left" if load_x > 0 else "right",
+        yanchor="top" if k == lowest else "bottom",
+        xshift=6 if load_x > 0 else -6,
+        yshift=-4 if k == lowest else 4,
     )
 
-# Layout
+# Style
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
     title={
-        "text": "biplot-pca · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "biplot-pca · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
@@ -132,21 +109,21 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     xaxis={
-        "title": {"text": f"PC1 ({var_explained[0]:.1f}%)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": f"PC1 ({var_explained[0]:.1f}%)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "zeroline": True,
         "zerolinewidth": 1,
-        "zerolinecolor": arrow_color,
+        "zerolinecolor": INK_SOFT,
         "gridcolor": GRID,
         "gridwidth": 1,
         "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": f"PC2 ({var_explained[1]:.1f}%)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": f"PC2 ({var_explained[1]:.1f}%)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "zeroline": True,
         "zerolinewidth": 1,
-        "zerolinecolor": arrow_color,
+        "zerolinecolor": INK_SOFT,
         "gridcolor": GRID,
         "gridwidth": 1,
         "linecolor": INK_SOFT,
@@ -154,7 +131,8 @@ fig.update_layout(
         "scaleratio": 1,
     },
     legend={
-        "font": {"size": 18, "color": INK_SOFT},
+        "title": {"text": SPECIES, "font": {"size": 11, "color": INK}},
+        "font": {"size": 11, "color": INK_SOFT},
         "x": 0.02,
         "y": 0.98,
         "xanchor": "left",
@@ -163,9 +141,8 @@ fig.update_layout(
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 80, "r": 80, "t": 100, "b": 80},
 )
 
-# Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
