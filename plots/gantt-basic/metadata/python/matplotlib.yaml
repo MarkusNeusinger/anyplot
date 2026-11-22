@@ -2,48 +2,49 @@ library: matplotlib
 language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:20:43Z'
-updated: '2026-05-10T22:33:04Z'
-generated_by: claude-haiku
-workflow_run: 25641472337
+updated: '2026-11-21T23:51:12Z'
+generated_by: claude-sonnet
+workflow_run: 44963332110
 issue: 2377
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 84
 review:
   strengths:
-  - Excellent theme adaptation with all chrome elements properly threaded through
-    theme tokens
-  - 'Perfect spec compliance: all required features implemented (categories, date
-    formatting, Today marker)'
-  - Clean, simple code with no unnecessary complexity; straightforward data and plot
-    logic
-  - 'Visual quality: all text readable in both themes with excellent contrast and
-    spacing; no overlapping elements'
-  - 'Thoughtful design: category color-coding adds semantic meaning; Today marker
-    provides project status context'
-  - Proper Okabe-Ito palette usage maintains category identity across light and dark
-    themes
+  - Exact 3200x1800 canvas from figsize=(8, 4.5), dpi=400 with the default bbox, so
+    nothing is trimmed and the layout breathes inside the frame
+  - 'All chrome threaded through theme tokens (INK, INK_SOFT, ELEVATED_BG legend frame):
+    every label, tick and legend entry is readable on both #FAF8F1 and #1A1A17, and
+    the Imprint category colors stay identical across themes'
+  - Tasks sorted by start date with ax.invert_yaxis(), giving the expected staircase
+    from top-left to bottom-right, one row per task with uniform 0.6 bar height and
+    clear gaps
+  - Date axis built with mdates.WeekdayLocator(byweekday=MO, interval=2) and DateFormatter('%b
+    %d'), a format suited to the four-month range so starts and ends read against
+    Monday gridlines
+  - 'Adaptable data zone: tidy pandas DataFrame read through column constants, category
+    colors assigned from the data''s own order, the today marker and axis year derived
+    from the data rather than hard-coded'
   weaknesses:
-  - 'Design Excellence could be higher: implementation lacks exceptional visual sophistication
-    or more dramatic emphasis techniques'
-  - 'Library Mastery could be higher: techniques are standard matplotlib patterns
-    rather than distinctive features'
+  - 'Suggestion: the per-row barh loop could be a single ax.barh(range(len(tasks)),
+    (tasks[END] - tasks[START]).dt.days, left=tasks[START], color=tasks[CATEGORY].map(category_colors),
+    height=0.6) call.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "gantt-basic · matplotlib · anyplot.ai" in dark text (24pt, medium weight), readable. Y-axis label "Project Tasks" (20pt, dark text), X-axis label "Project Timeline (2025)" (20pt, dark text). Tick labels: task names and dates in INK_SOFT dark color (16pt), all clearly readable against light background. Grid: subtle vertical lines. Legend: upper right, dark text on elevated background.
-      Data: Four bars colored with Okabe-Ito palette - Planning (first series, brand green #009E73), Development (orange #D55E00), Testing (blue #0072B2), Deployment (purple #CC79A7). "Today" dashed line in muted color. All bars clearly distinguishable.
-      Legibility verdict: PASS - all text readable, excellent contrast, no dark-on-light failures
+      Background: warm off-white #FAF8F1 over the full 3200x1800 canvas.
+      Chrome: title "gantt-basic · python · matplotlib · anyplot.ai" in dark ink at 12 pt, about 46 % of the width; axis titles "Project Tasks" and "Project Timeline (2025)" at 10 pt dark ink; task names and date ticks (Jan 13 ... May 05, rotated 45°) at 8 pt in INK_SOFT; subtle vertical gridlines every two Mondays; legend upper right on an elevated off-white frame. Top and right spines removed.
+      Data: 12 horizontal bars sorted by start date as a staircase; Planning #009E73 (first series), Development #C475FD, Testing #4467A3, Deployment #BD8233; a muted grey dashed "Today" line near Mar 4 cuts Backend Development and API Integration. Bars of one thickness with visible row gaps.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title in light text (#F0EFE8), fully readable on dark background. Y-axis and X-axis labels in light text, readable. Tick labels in INK_SOFT light color (#B8B7B0), all readable without dark-on-dark failure (no black text on near-black background). Grid: subtle lines visible against dark surface. Legend: dark elevated background (#242420) with light text and light borders.
-      Data: Identical four colors as light render - green, orange, blue, purple bars maintain identity. "Today" marker remains visible. Bar edges and spines properly adapted to dark theme (INK_SOFT color).
-      Legibility verdict: PASS - all text readable, proper contrast, no dark-on-dark failures. Data colors identical to light render (only chrome changed).
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink #F0EFE8, ticks and legend text in light INK_SOFT #B8B7B0, all clearly readable; no dark-on-dark text; gridlines faint but visible; legend frame #242420 with light border.
+      Data: same four Imprint colors as the light render, same bar geometry; the dashed Today line is light grey and visible; brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,77 +55,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (24pt), axis labels (20pt), tick labels (16pt), legend (16pt)
-          all explicitly sized and readable in both light and dark themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (style-guide
+          reference); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; date labels rotated 45°, well-spaced with 2-week
-          intervals; legend cleanly positioned upper right
+        comment: No text collisions; rotated date ticks spaced; legend sits in empty
+          top-right space; the Today line crossing bars is permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars clearly distinguishable with Okabe-Ito colors; Today marker
-          (linewidth=3 dashed line) is prominent
+        comment: Bars, legend swatches and dashed line visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (colorblind-safe); adequate contrast; categories
-          identified by both color and legend
+        comment: Imprint hues with legend; good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio appropriate for Gantt chart; nothing cut off; generous
-          margins with tight_layout()
+        comment: 3200x1800 canvas, no gate file; balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive; X-axis provides context (2025); Y-axis clear;
-          date formatting appropriate (Jan 19, Jan 27, etc.)
+        comment: Project Tasks / Project Timeline (2025)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green); multi-series follows Okabe-Ito
-          order; backgrounds #FAF8F1/#1A1A17; both renders theme-correct'
+        comment: 'First category #009E73, Imprint order, correct backgrounds in both
+          renders'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional with intentional category color-coding; thoughtful theme
-          adaptation; solid bar styling (alpha=0.9). Lacks exceptional visual sophistication
-          or dramatic emphasis.
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: L-shaped spines; subtle x-axis grid (alpha=0.15); generous whitespace;
-          properly styled legend; color-blended bar edges
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear hierarchy; timeline progression is focal point; Today marker
-          guides viewer; category colors create grouping. Could have stronger visual
-          emphasis.
+        comment: Data displayed with the Notes' today line; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -134,29 +127,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar (Gantt) chart; each task is a bar spanning
-          start-to-end date
+        comment: Basic Gantt bars only plus the allowed category colors and current-date
+          line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal bars, date formatting, category color-coding, Today marker,
-          adequate spacing all present
+        comment: 'C1-C5 met: bars at their dates, start-date staircase, uniform bars
+          with gaps and legend, suitable date format, no extra layers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: dates with padding; Y-axis: all task names; data correctly
-          mapped'
+        comment: Bars span start to end; x-limits cover all tasks with 3-day padding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format; legend shows all categories and Today marker;
-          labels match spec
+        comment: Mandated title format; legend names all four phases and Today
     data_quality:
       score: 15
       max: 15
@@ -166,22 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows multiple task types, overlapping tasks, varied durations, logical
-          sequencing
+        comment: Overlapping tasks, varied durations including a short Go Live, four
+          categories, current-date line
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic software development workflow; realistic task names; realistic
-          Jan-May 2025 timeline with appropriate durations
+        comment: Plausible, neutral software project schedule
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 tasks (within 5-30 range); reasonable date range; sensible task
-          durations (2-5 weeks per phase)
+        comment: 12 tasks within 5-30; durations 1-5 weeks over Jan-May 2025; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -191,62 +181,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; simple linear code; data defined inline
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed datetime objects; deterministic; no random elements
+        comment: Fixed dates, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, datetime, timedelta, mdates, pyplot, Patch);
-          no unused imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; no AR-08 violations
+        comment: Appropriate; the short barh loop is a suggestion only
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API; no deprecated methods
+        comment: plot-{THEME}.png at dpi=400, default bbox
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Axes methods (not pyplot); proper fig/ax setup; theme tokens correctly
-          implemented; good date handling with mdates
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom date formatting (mdates.DateFormatter, WeekdayLocator); matplotlib.patches.Patch
-          for legend; barh for horizontal bars. Standard patterns, not particularly
-          distinctive.
+        comment: Axes API, ax.set_yticks(positions, labels) one-call form, ax.invert_yaxis()
+          for top-down order, pandas datetimes passed straight to barh(left=...)
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: matplotlib.dates WeekdayLocator(byweekday=MO, interval=2) + DateFormatter
+          aligns ticks to Mondays
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-21T23:47:49Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - manual-ticks
+  - reference-line
+  - date-axis
   patterns:
   - data-generation
-  - explicit-figure
-  dataprep:
-  - time-series
+  - iteration-over-groups
+  dataprep: []
   styling:
-  - grid-styling
-  - edge-highlighting
+  - alpha-blending
+  - minimal-chrome

@@ -2,46 +2,46 @@ library: plotly
 language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:23:15Z'
-updated: '2026-05-10T22:35:06Z'
-generated_by: claude-haiku
-workflow_run: 25641501093
+updated: '2026-11-21T23:54:59Z'
+generated_by: claude-sonnet
+workflow_run: 44963570702
 issue: 2377
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 85
 review:
   strengths:
-  - Clean, idiomatic use of Plotly's timeline function for Gantt charts
-  - Excellent theme-adaptive design with perfect legibility in both light and dark
-    renders
-  - Well-structured realistic project timeline data that demonstrates Gantt chart
-    purpose
-  - Proper Okabe-Ito palette compliance with correct color ordering
-  - Custom 'Today' annotation adds valuable temporal context
-  - Professional layout with appropriate margins, font sizing, and spacing
-  - Correct output format with both PNG and HTML artifacts
+  - px.timeline draws each task from its start to its end date on a shared date axis,
+    with autorange='reversed' giving the start-date staircase
+  - Theme tokens threaded through every chrome element; both renders readable with
+    identical Imprint data colours
+  - Current-date line referenced to paper coordinates spans the full plot height,
+    and its label sits inside the plot foot clear of the date ticks
+  - Plausible, neutral software project with overlapping tasks, idle gaps and varied
+    durations
+  - Canonical 3200x1800 canvas with pinned margins and autosize=False; PNG plus interactive
+    HTML with native hover
   weaknesses:
-  - Library Mastery score limited by conservative use of Plotly—no advanced interactive
-    features beyond defaults (custom hover templates, range sliders, cross-filter
-    callbacks could enhance visualization)
-  - Design Excellence reflects functional but standard Plotly styling—could be elevated
-    with refined typography hierarchy or distinctive visual polish
+  - 'Suggestion: the ''%b %d'' ticks never show the year; an axis title such as ''Date
+    (2025)'' would anchor the schedule in time'
+  - 'Suggestion: the legend title ''Category'' is top-aligned above the entry row;
+    legend.title.side=''left'' with vertical centring would line it up with the swatches'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - exactly as specified, not pure white.
-      Chrome: Title "Software Development Project · gantt-basic · plotly · anyplot.ai" clearly visible in dark text. Axis labels "Timeline (2025)" and "Project Tasks" readable. Tick labels (dates and task names) in dark color fully readable. Legend positioned horizontally below title with category labels. All text is legible.
-      Data: 12 horizontal bars color-coded by category using Okabe-Ito palette (Planning: #009E73 green, Design: #D55E00 orange, Development: #0072B2 blue, Testing: #CC79A7 purple, Deployment: #E69F00 yellow). Bars have white edges for definition. Vertical dashed line marked "Today" at Feb 20 with annotation. Date range Jan 12 - Apr 20, 2025. Grid lines subtle.
-      Legibility verdict: PASS - All text is clearly readable against light background with no contrast issues.
+      Background: warm off-white #FAF8F1 across paper and plot area.
+      Chrome: title 'Software Development Project · gantt-basic · python · plotly · anyplot.ai' centred in dark ink; horizontal 'Category' legend in an elevated box below it; y-axis task names and x-axis date ticks (Jan 12 ... Apr 20, '%b %d') in INK_SOFT; axis titles 'Task' and 'Date'; subtle vertical grid. All readable.
+      Data: 12 horizontal bars sorted by start date in a staircase, coloured by category — Planning #009E73, Design #C475FD, Development #4467A3, Testing #BD8233, Deployment #AE3030; dashed INK_SOFT current-date line near Feb 21 spanning the full plot height, 'Today' label at its foot.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - exactly as specified, not pure black.
-      Chrome: Title visible in light text (#F0EFE8). Axis labels visible in light text. Tick labels in secondary light color (#B8B7B0) fully readable - NO dark-on-dark issues. Legend background (#242420) provides good contrast with legend text. All text legible.
-      Data: All bars identical colors to light render (Okabe-Ito palette unchanged). White bar edges visible. "Today" dashed line visible in light gray. Grid lines subtle and visible on dark background.
-      Legibility verdict: PASS - All text is clearly readable against dark background. No "dark-on-dark" text failures. Brand green (#009E73) is visible and readable on dark surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text all in light ink; legend box on #242420 with a light border; grid subtle but visible. No dark-on-dark text.
+      Data: bar colours identical to the light render; the dashed today line and its label flip to light grey and stay visible; brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,71 +52,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, ticks 18px all readable in both themes
+        comment: Title 15 px, axis titles 12 px, ticks/legend 10 px (style-guide reference
+          sizes); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Task names and labels don't overlap; adequate left margin (220px)
+        comment: No text collisions; the 'Today' label sits inside the plot at the
+          bottom, clear of the date ticks and the bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars visible with good color distinction; appropriately sized
-          for canvas
+        comment: 12 bars at bargap 0.3, clearly visible; legend swatches match the
+          bars in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (colorblind-safe); no red-green sole signals
+        comment: Five well-separated Imprint hues; category is also readable from
+          row position; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape format (4800×2700) appropriate; good margins; nothing cut
-          off
+        comment: 3200x1800 canonical canvas; balanced margins; title ~60% of width;
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title with spec format; axes descriptive with units
+        comment: Title, 'Date' and 'Task' axis titles, 'Category' legend title, all
+          readable text
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; follows Okabe-Ito order; correct backgrounds
-          both themes'
+        comment: 'Full Imprint list via color_discrete_sequence, Planning = #009E73;
+          #FAF8F1 / #1A1A17 backgrounds; chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Professional color coding and layout; 'Today' annotation intentional;
-          relies on Plotly defaults without extensive custom design
+        comment: 'Style-guide baseline: theme tokens, explicit font sizes, elevated
+          legend box; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid; legend styling with border; bar edges defined; good
-          spacing
+        comment: 'Beyond baseline: the ''Today'' label placed inside the plot foot
+          so it never meets the tick row, bars outlined in the page colour for crisp
+          row separation'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear phase progression through color; 'Today' reference provides
-          context; logical ordering guides viewer
+        passed: false
+        comment: Staircase ordering and the today line are what the Notes prescribe;
+          no hierarchy chosen beyond them
     spec_compliance:
       score: 15
       max: 15
@@ -126,25 +131,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart; horizontal bars with duration
+        comment: 'Correct Gantt chart, basic variant: task bars, category colours
+          and the Notes'' current-date line only'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Task names, dates, timeline, categories, 'Today' marker all present
+        comment: 'All Notes and C1-C5 met: horizontal bars on a time axis, ''%b %d''
+          ticks for a 3.5-month range, start-date ordering, current-date line, row
+          gaps, category legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: timeline; Y: task names; color: category; full range shown'
+        comment: Bars run from start to end at their dates via px.timeline; full range
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec format; legend shows all categories correctly
+        comment: Title 'Software Development Project · gantt-basic · python · plotly
+          · anyplot.ai' matches the format; legend entries are the categories
     data_quality:
       score: 15
       max: 15
@@ -154,22 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all Gantt aspects: durations, overlaps, variety, grouping,
-          current date'
+        comment: Shows overlapping tasks, idle gaps, very different durations, grouped
+          categories and a current-date line
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software dev project; logical phase sequence; realistic dates; neutral
-          domain
+        comment: Plausible, neutral software project schedule with real task names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 tasks (within 5-30); realistic durations (~2 weeks); 4.5 month
-          project reasonable
+        comment: 12 tasks (within 5-30); 1.5-6 week durations over Jan-Apr 2025; no
+          Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -179,59 +188,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions; direct px.timeline() usage
+        comment: Flat zone-structured script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic (fixed dates, no randomization)
+        comment: Fixed dates, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, datetime, pandas, plotly.express)
+        comment: os, pandas, plotly.express all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake features; idiomatic Plotly patterns
+        comment: px.timeline does the Gantt geometry; no hand-built algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Writes plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html;
+          current API, autosize=False
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: px.timeline() canonical function; high-level API; proper color_discrete_map
+        comment: px.timeline with color_discrete_sequence, autorange='reversed' y-axis,
+          update_layout with theme tokens — idiomatic express usage
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses custom fig.add_shape/add_annotation; lacks advanced features
-          like custom hover, range sliders, callbacks
+        passed: false
+        comment: px.timeline (plotly's dedicated Gantt primitive with date-aware bars)
+          and a paper-referenced add_shape spanning the full plot height
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-21T23:51:28Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - html-export
-  patterns:
-  - data-generation
+  - hover-tooltips
+  patterns: []
   dataprep:
   - time-series
   styling:
-  - alpha-blending
   - edge-highlighting
-  - grid-styling
+  - alpha-blending
