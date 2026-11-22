@@ -2,46 +2,50 @@ library: plotnine
 language: python
 specification_id: maze-printable
 created: '2026-01-07T20:22:43Z'
-updated: '2026-05-16T14:53:04Z'
-generated_by: claude-haiku
-workflow_run: 25964816175
+updated: '2026-11-22T01:32:57Z'
+generated_by: claude-sonnet
+workflow_run: 44971515855
 issue: 3232
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - 'Perfect spec compliance: implements DFS maze generation with guaranteed single
-    solution path'
-  - 'Flawless theme adaptation: data colors identical across light/dark, chrome perfectly
-    adapted'
-  - 'Excellent visual quality: all text explicitly sized and readable, strong contrast
-    in both renders'
-  - 'Clean code structure: simple linear flow from generation to plotting, no over-engineering'
-  - 'Appropriate design for spec: minimalist aesthetic perfectly suited for printable
-    puzzle with clean margins'
-  - 'Correct library usage: idiomatic plotnine patterns (ggplot + geoms, theme_void,
-    coord_fixed)'
+  - Depth-first backtracker carves a perfect maze on a 51×51 wall/passage grid, so
+    exactly one route connects S (top-left) and G (bottom-right)
+  - Walls drawn as unit geom_tile blocks under coord_fixed(ratio=1) give square cells
+    and walls of one consistent, print-friendly thickness equal to the passage width
+  - 'theme_void removes every axis, tick and grid, leaving a clean puzzle sheet with
+    an even page margin; ink flips correctly between themes (near-black walls on #FAF8F1,
+    light walls on #1A1A17)'
+  - 'S and G are bold brand-green #009E73 letters set inside their corner cells, readable
+    on both surfaces and clear of the walls'
+  - Renders on the canonical 2400×2400 square canvas in both themes
   weaknesses:
-  - Design Excellence is functional rather than sophisticated - while the minimalist
-    aesthetic is intentional and appropriate, it doesn't demonstrate aesthetic innovation
-    or visual hierarchy beyond the spec requirement
+  - 'CQ-01 (code): WIDTH, HEIGHT and SEED are written as column constants with ''#
+    role:'' comments above the # Data block, and X/Y/WALL/LABEL column constants plus
+    a df are built, although the spec''s data shape is Generated → put the named parameters
+    (width, height, seed) inside the # Data block with no column constants, per prompts/adaptable-code.md
+    ''Data shapes → Generated''. Likely cause: the table-shape template applied to
+    a generated puzzle layout.'
+  - 'Suggestion: slightly larger S and G glyphs (size 9 → about 11) would make the
+    start and goal stand out more from the dense wall texture.'
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with generous margins
-      Chrome: Title "maze-printable · plotnine · anyplot.ai" in bold dark text (explicitly sized 24pt), perfectly readable
-      Data: 25×25 grid maze with black walls (#1A1A17), white passages. Start marker "S" in brand green (#009E73) at top-left, goal marker "G" in green at bottom-right. Both markers clearly visible with size=48.
-      Legibility verdict: PASS - all elements perfectly readable, excellent contrast
+    Light render (plot-light.png, 2400×2400):
+      Background: warm off-white #FAF8F1 page with an even empty margin on all four sides of the maze.
+      Chrome: bold near-black title "maze-printable · python · plotnine · anyplot.ai" centred at the top, ~74% of the width, fully readable. No axes, ticks, grid or legend (theme_void).
+      Data: a 25×25-cell maze drawn as near-black #1A1A17 wall blocks of uniform thickness equal to the passage width, inside a closed outer boundary. Bold green #009E73 "S" in the top-left cell, "G" in the bottom-right cell, both clear of the walls.
+      Legibility verdict: PASS
 
-    Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with matching margins
-      Chrome: Title in light text (#F0EFE8), clearly visible. No dark-on-dark failures - text has strong contrast.
-      Data: Maze walls inverted to light color (#F0EFE8) with black passages, maintaining identical structure to light render. Start "S" and goal "G" markers in same brand green (#009E73) as light render - data colors unchanged, only chrome adapted.
-      Legibility verdict: PASS - all text readable, theme adaptation perfect, brand color consistent across renders
+    Dark render (plot-dark.png, 2400×2400):
+      Background: warm near-black #1A1A17 page with the same margins.
+      Chrome: title in light #F0EFE8, fully readable; no dark-on-dark text.
+      Data: the identical maze structure with walls flipped to light #F0EFE8 on the dark passages (wall ink is theme chrome here). S and G in the same #009E73 as in the light render, readable against the dark passages.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,50 +56,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt bold, markers 48pt - all explicitly sized and perfectly
-          readable in both themes
+        comment: Title size 12 bold and S/G size 9 bold set explicitly; all readable
+          at full size in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements - title, markers, and maze all have clear
-          spacing
+        comment: S and G sit inside their cells, clear of the walls; title well clear
+          of the maze
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Maze walls and markers optimally sized and clearly distinguishable
+        comment: Walls are solid unit tiles of uniform thickness; markers visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Excellent contrast - black/light walls on inverse backgrounds, green
-          (#009E73) safe for CVD
+        comment: Ink-on-page contrast is maximal; green letters are not a red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout - square 12x12 figure, maze fills 50-80% of canvas
-          with balanced margins
+        comment: Canonical 2400×2400 square canvas; maze centred with even margins;
+          title ~74% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''maze-printable · plotnine · anyplot.ai'''
+        comment: N/A for axes (no data axes by design); title present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito brand (#009E73) for markers in both renders, theme-correct
-          chrome backgrounds and text
+        comment: 'Markers in #009E73 identical in both renders; #FAF8F1 / #1A1A17
+          backgrounds; ink tokens flip correctly'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -103,22 +107,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-designed for functional purpose - clean and intentional - but
-          not exceptional aesthetic innovation
+        comment: 'Style-guide baseline: clean void theme, bold title; nothing beyond
+          it'
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: 'Perfect refinement: theme_void removes clutter, generous whitespace,
-          consistent wall thickness, polished for printing'
+        passed: false
+        comment: Baseline refinement only
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Functional presentation - clear start/goal markers guide solving,
-          but no visual hierarchy or insight emphasis
+        comment: Puzzle displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -128,28 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: printable maze with DFS generation guaranteeing
-          single solution'
+        comment: Printable rectangular maze
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: start marked ''S'', goal marked ''G'', algorithmic
-          generation, black walls, adequate margins'
+        comment: DFS generation (single solution), S/G marks, consistent print-friendly
+          walls, margins, black on off-white in light theme; all C1–C5 bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct mapping: maze cells to x/y, walls visible, start/goal at
-          correct positions'
+        comment: Grid cells map to tile positions exactly; S at cell (1,1), G at the
+          opposite corner
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format with spec-id, library, and domain
+        comment: Title 'maze-printable · python · plotnine · anyplot.ai' correct;
+          legend N/A
     data_quality:
       score: 15
       max: 15
@@ -159,84 +161,83 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete maze with walls, passages, solution path, and all
-          marked positions
+        comment: Full perfect maze with dead ends, start, goal and closed boundary
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real and comprehensible use case - educational/entertainment maze
-          puzzle, neutral topic
+        comment: Neutral activity-sheet puzzle
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25×25 grid appropriate difficulty, seed=42 for reproducibility, sensible
-          for printing
+        comment: 25×25 cells, inside the spec's 15–40 range and matching its example;
+          no Check values in the Notes
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Clean linear flow: imports → maze generation → data prep → plotting
-          → save'
+        passed: false
+        comment: 'Linear flow, but parameters are set up as column constants with
+          role comments instead of named parameters in the # Data block (Generated
+          shape) (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, deterministic maze generation
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (THEME), numpy (generation), pandas (DataFrame),
-          plotnine (plotting)'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic DFS implementation with appropriate complexity
+        comment: Compact DFS; vectorised DataFrame via np.indices; no call replaces
+          the carving
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-{THEME}.png with dpi=300'
+        comment: Saves plot-{THEME}.png at dpi=400
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert idiomatic use: ggplot + geom_tile/geom_text, theme_void,
-          coord_fixed, proper theme customization'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses theme_void and coord_fixed (plotnine-specific) but not exceptionally
-          distinctive - could replicate in other libraries
+        comment: 'ggplot + geom_tile/geom_text, theme_void, coord_fixed: the standard
+          idiom'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-22T01:29:39Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - layer-composition
+  techniques: []
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
