@@ -12,112 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 40
 review:
   strengths:
-  - 'Perfect theme adaptation: text is clearly readable in both light and dark renders
-    with appropriate contrast'
-  - Excellent data mapping and layout with well-distributed product labels avoiding
-    significant overlap
-  - Clean code structure with proper use of environment variables and consistent API
-  - Title and axis labels are descriptive and correctly formatted per specification
+  - 'Theme-adaptive chrome: backgrounds and text tokens correct in both renders'
+  - 'Brand green #009E73 identical across themes'
   weaknesses:
-  - Brand color (#009E73) specified in code but not visually applied to text labels
-    in rendered output; labels appear in neutral INK colors instead. This is likely
-    a pygal limitation with how XY charts handle label colors.
-  - 'Minimal visual design refinement: uses defaults for styling without distinctive
-    customization beyond theme tokens'
-  - Limited demonstration of pygal-specific features; implementation uses basic API
-    without exploring library capabilities like custom annotations or advanced styling
+  - 'SC-01 (both): the ten points are joined by a line in data order, a line chart
+    instead of a scatter of text labels → no connecting stroke. Likely cause: pygal.XY
+    default stroke=True.'
+  - 'SC-02 (both): no product name is drawn anywhere, so no item is shown as its text
+    label (C1, C2) → print every label at its (x, y). Likely cause: print_labels not
+    set.'
+  - 'VQ-01 (both): tick labels ~16 px and axis titles ~18 px on the 4800 px canvas
+    read tiny beside the plot → ticks ~44 px, axis titles ~56 px on a 3200 px canvas.
+    Likely cause: font sizes sized for an 800 px chart.'
+  - 'VQ-05 (both): canvas is 4800x2700, not a canonical size → 3200x1800 (−1600 ×
+    −900). Likely cause: width=4800, height=2700.'
+  - 'VQ-03 (both): the only data element is a thin 2 px line; the text marks the plot
+    type depends on are invisible → bold labels at ~48 px. Likely cause: show_dots=False
+    without print_labels.'
+  - 'SC-04 (both): title reads ''Python'' instead of the mandated lowercase ''python''
+    → ''scatter-text · python · pygal · anyplot.ai''. Likely cause: title string.'
+  - 'DQ-01 (both): the render shows none of the plot type''s aspects — no label, no
+    label density → text labels at all ten coordinates. Likely cause: labels never
+    printed.'
+  - 'LM-01 (code): pygal.XY used with its default stroke and without print_labels,
+    the library''s own way to print per-point labels → stroke=False, print_labels=True.
+    Likely cause: chart options.'
+  - 'Suggestion: a tighter y range around the data would remove the empty lower third.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified, not pure white
-      Chrome: Title "scatter-text · Python · pygal · anyplot.ai" and axis labels "Price Competitiveness" (X) and "Feature Completeness" (Y) rendered in dark text (#1A1A17), fully readable. Tick labels on both axes (0-5 on Y, 1.2-4.8 on X) clearly visible. Y-axis gridlines present and subtle.
-      Data: 10 product labels positioned at their coordinates. Labels appear in neutral gray/dark color rather than specified brand green (#009E73). All text labels are legible with appropriate spacing, minimal overlap.
-      Layout: Good proportions with generous margins. Axis range 0-5.5 accommodates all data points without crowding.
-      Legibility verdict: PASS - all elements clearly readable, good contrast, professional appearance
+      Background: warm off-white #FAF8F1
+      Chrome: small title "scatter-text · Python · pygal · anyplot.ai" at top; axis titles and tick labels very small on the 4800x2700 canvas but dark and readable; dotted horizontal grid
+      Data: a thin #009E73 line zigzags through the ten points in data order; no text labels anywhere; y axis 0-5.5 leaves the lower third empty
+      Legibility verdict: PASS (tiny but readable)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified, not pure black
-      Chrome: Title and axis labels rendered in light text (#F0EFE8), fully readable against dark background. Tick labels clearly visible. Y-axis gridlines present and subtle.
-      Data: 10 product labels positioned identically to light render. Text labels appear in light neutral color matching the light background requirement, maintaining contrast against dark surface. No "dark on dark" failures.
-      Colors: Data colors identical to light render (neutral rendering rather than specified brand green). Theme-adaptive chrome correctly inverted (light text on dark background).
-      Layout: Consistent with light render, all elements visible and properly spaced
-      Legibility verdict: PASS - all elements readable in dark theme, proper contrast maintained, no dark-on-dark failures
-
-    Both renders successfully demonstrate scatter plot with text labels for product positioning visualization. Theme adaptation works correctly with appropriate text contrast in each theme.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink, readable though tiny; no dark-on-dark
+      Data: identical #009E73 line, no labels
+      Legibility verdict: PASS (tiny but readable)
   criteria_checklist:
     visual_quality:
-      score: 16
+      score: 15
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 2
         max: 8
         passed: false
-        comment: Text is readable but relying on library defaults, not explicitly
-          set sizes
+        comment: Tick labels ~16 px and axis titles ~18 px on a 4800 px canvas read
+          tiny (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: Some text overlap in dense regions reduces readability
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Text labels are visible and well-positioned
+        comment: No text overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 1
+        max: 6
+        passed: false
+        comment: No text labels drawn; the only data element is a thin 2 px zigzag
+          line (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe palette
+        comment: Single hue, good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 0
         max: 4
         passed: false
-        comment: Plot fills ~50% of canvas but unoptimized layout
+        comment: Canvas 4800x2700, not one of the canonical sizes; tiny chrome on
+          a huge canvas (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Perfect Okabe-Ito compliance, theme-correct chrome
+        comment: 'Line in #009E73, backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic styling with defaults, no design thought
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Default settings, no visual polish
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: No visual hierarchy or emphasis, raw data display
+        comment: No hierarchy
     spec_compliance:
-      score: 8
+      score: 5
       max: 15
       items:
       - id: SC-01
@@ -125,52 +134,52 @@ review:
         score: 0
         max: 5
         passed: false
-        comment: 'CRITICAL: Implementation is a line plot, not a scatter plot. Should
-          show text labels at coordinates without connecting lines'
+        comment: A line chart connecting the points in data order, not a scatter of
+          text labels (defect line)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 0
         max: 4
         passed: false
-        comment: Text labels present but plot structure doesn't match scatter-plot
-          requirement
+        comment: No text label is drawn at any point (C1, C2 missed) (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y coordinates mapped correctly
+        comment: Vertices sit at their x/y values
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: Title format correct but legend not shown (acceptable for single
-          series, but original shows as line plot legend)
+        comment: Title uses 'Python' instead of the mandated lowercase 'python' (defect
+          line)
     data_quality:
-      score: 12
+      score: 10
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 1
         max: 6
         passed: false
-        comment: Shows product positioning but limited context for scatter-plot demonstration
+        comment: 'The render shows none of the plot type''s aspects: no labels at
+          all (defect line)'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Product positioning scenario is realistic and neutral
+        comment: Fictional product positioning, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Data values are plausible for price/feature metrics
+        comment: Sensible 1-5 scores
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -178,51 +187,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure
+        comment: Linear
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Does not use show_lines=False or equivalent to remove connecting
-          lines - critical oversight
+        passed: true
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG/HTML output
+        comment: plot-{THEME}.png/.html
     library_mastery:
-      score: 6
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Correct pygal.XY usage but doesn't properly configure for text-only
-          scatter plot
+        comment: pygal.XY with stroke left on and print_labels not set, so the label
+          idiom is never used (defect line)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Uses Style customization but doesn't leverage library features for
-          proper visualization
+        comment: Nothing beyond Style
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies: []
   techniques: []
