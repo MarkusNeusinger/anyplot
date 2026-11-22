@@ -12,45 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 72
 review:
   strengths:
-  - 'Perfect visual quality: all text legible in both light and dark themes with no
-    readability defects'
-  - 'Flawless palette compliance: Okabe-Ito categorical colors match spec exactly,
-    theme-adaptive chrome is correct in both renders'
-  - 'Accurate, realistic data: real-world cities with verified geographic coordinates
-    and populations from 3.4M to 37.4M'
-  - 'Professional theme integration: both light (#FAF8F1 background) and dark (#1A1A17
-    background) renders equally polished and readable'
-  - Clean, maintainable code with explicit font sizing (24pt title, 20pt labels, 16pt
-    ticks) and proper theme token usage
+  - sns.scatterplot maps hue to region and size to population in one call on a DataFrame
+  - Real city data with correct coordinates and plausible populations
+  - 'Theme-adaptive chrome and land fill: readable in both light and dark'
   weaknesses:
-  - 'Design could reach publication-showcase level: while professional and correct,
-    styling is fairly standard for geographic plots (no custom flourishes beyond spec
-    requirements)'
-  - 'Library mastery opportunity: seaborn usage is correct and idiomatic, but could
-    showcase more distinctive seaborn features like FacetGrid or statistical overlays
-    (LM-02 scored 3/5, could reach 5/5 with distinctive techniques)'
+  - 'VQ-05 (both): the canvas is 4748x2382, not a canonical size → 3200x1800 (-1548
+    x -582). Likely cause: figsize=(16, 9) at dpi=300 with bbox_inches=''tight'' in
+    savefig.'
+  - 'VQ-07, SC-04 (both): North America and Europe are both drawn in #C475FD and Imprint
+    position 5 is skipped, so the two regions cannot be told apart in the map or the
+    legend → one Imprint color per region in canonical order. Likely cause: the hand-written
+    region_colors mapping.'
+  - 'SC-04 (both): the region legend shows a raw ''region'' sub-header entry under
+    its ''Region'' title → only the region entries. Likely cause: handles[0:6] includes
+    seaborn''s hue title handle.'
+  - 'VQ-03 (both): the region legend''s swatches are tiny dots far smaller than the
+    city markers they explain → swatches near the median marker size. Likely cause:
+    seaborn''s legend handles reused without markersize.'
+  - 'SC-02 (both): the hand-drawn basemap has no country boundaries and omits Japan,
+    the UK and Indonesia, so Tokyo, London and Jakarta sit in open sea → a basemap
+    whose land masses contain the mapped points. Likely cause: the six coarse WORLD_COASTLINES
+    polygons.'
+  - 'CQ-04 (code): the ''marker_size'' and ''color'' columns are computed but never
+    used, and a sys.path workaround needs noqa E402 comments → delete them. Likely
+    cause: leftovers from an earlier sizing approach.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 ✓
-      Chrome: Title "scatter-map-geographic · python · seaborn · anyplot.ai" dark text, axis labels "Longitude (°)" and "Latitude (°)" with units, tick labels all readable against light background ✓
-      Data: 25 cities as colored circles sized by population. Asia green (#009E73, brand), North America orange (#D55E00), Europe orange (#D55E00), Africa blue (#0072B2), South America purple (#CC79A7), Oceania sky blue (#56B4E9). All colors correct per Okabe-Ito order. Coastlines in light gray provide geographic context. Markers have light edges for definition.
-      Legends: "Region" legend lower left, "Population" legend lower right, both properly positioned, readable at fontsize 14-16pt
-      Grid: Subtle alpha=0.10, visible but not dominant
-      Legibility verdict: PASS - All text readable, data colors clear, no "light on light" failures
+      Background: warm off-white #FAF8F1, 4748x2382.
+      Chrome: title, 'Longitude (°)' / 'Latitude (°)' and ticks dark and readable; subtle grid.
+      Data: 25 cities on a coarse light-grey land fill, colored by region (Asia #009E73, North America and Europe both #C475FD, Africa #4467A3, South America #BD8233, Oceania #2ABCCD), sized by population. 'Region' legend lower left with a stray 'region' entry and tiny swatches; 'Population' legend lower right (5M/20M/35M+).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 ✓
-      Chrome: Title and axis labels now light text (#F0EFE8 primary, #B8B7B0 secondary), all readable against dark background ✓
-      Data: IDENTICAL colors to light render - Asia green (#009E73), orange regions, Africa blue (#0072B2), South America purple (#CC79A7), Oceania sky blue (#56B4E9). Coastlines darker gray (#2A2A26). Markers still distinguishable with visible size variation. Brand green (#009E73) clearly visible and reads well on dark.
-      Legends: Same positioning as light render with adapted light text colors
-      Grid: Subtle grid visible at alpha=0.10
-      Legibility verdict: PASS - All text readable in light color against dark background, no "dark on dark" failures, data colors perfectly match light render (theme-independent color preservation confirmed)
+      Background: warm near-black #1A1A17.
+      Chrome: light title, axis titles and ticks, legend frames on dark elevated fill; no dark-on-dark text.
+      Data: same colors as the light render; dark-grey land fill quieter than the points.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -58,77 +61,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt—all explicitly set and perfectly
-          readable in both themes
+        comment: Title 24 pt, axis titles 20 pt, ticks 16 pt, legend 14-16 pt at 16x9
+          in (the 8x4.5 equivalents of 12/10/8); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend boxes positioned without overlap; axis labels properly spaced;
-          no text collisions
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Marker sizes 100–700px optimal for 25 cities; alpha=0.75 handles
-          overlaps; all elements clearly distinguishable
+        passed: false
+        comment: City markers well sized; the region legend's swatches are tiny dots
+          far smaller than the marks they explain (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good contrast throughout; no red-green
-          as sole signal
+        comment: Palette hues CVD-distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Plot fills 50–70% of canvas; balanced margins; legends positioned
-          near plot; no cut-off
+        passed: false
+        comment: Canvas 4748x2382 is neither 3200x1800 nor 2400x2400 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) and Latitude (°) with units; title in correct format
+        comment: Latitude (°) and Longitude (°) with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73 ✓; remaining regions follow Okabe-Ito order
-          ✓; backgrounds #FAF8F1/#1A1A17 ✓; data colors identical across themes ✓'
+        passed: false
+        comment: 'North America and Europe share #C475FD and position 5 is skipped,
+          so the categorical colors are not the Imprint order (defect line)'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: false
-        comment: Professional Okabe-Ito palette and custom coastline context show
-          thoughtful design, but not at publication-showcase level—fairly standard
-          geographic plot styling
+        comment: Style-guide baseline; nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Top/right spines removed; subtle grid; generous whitespace; refined
-          legend styling; marker edges well-defined
+        passed: false
+        comment: Spines and grid per the style guide; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Data choice (real cities with realistic populations) creates clear
-          geographic/demographic narrative; size variation emphasizes hierarchy
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -136,27 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct geographic scatter plot with latitude/longitude positioning
+        comment: Geographic scatter positioned by latitude/longitude
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Basemap, size encoding, color encoding, color legend, size legend
-          all present
+        passed: false
+        comment: Color and size legends present; the hand-drawn basemap lacks country
+          boundaries and misses Japan, the UK and Indonesia, so Tokyo, London and
+          Jakarta sit in open sea (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Longitude, Y=Latitude, Hue=Region, Size=Population; all axes span
-          full data range
+        comment: x = longitude, y = latitude; no displacement
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; legend labels match data values
+        passed: false
+        comment: Title format correct; region legend carries a raw 'region' sub-header
+          entry and two entries with the same color (defect line)
     data_quality:
       score: 15
       max: 15
@@ -166,25 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All continents represented; population range 3.4M–37.4M shows high
-          variation; includes megacities and smaller hubs
+        comment: Cities on every inhabited continent, populations 3.4M-37.4M
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world cities with accurate populations; neutral geographic/demographic
-          context
+        comment: Real, neutral city data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values realistic; geographic coordinates verified (Tokyo
-          35.7°N/139.7°E, NYC 40.7°N/74°W, Sydney -33.9°S/151.2°E); axis ranges appropriate
-          for global coverage
+        comment: 'Checked: Tokyo 35.7N/139.7E, Sydney 33.9S/151.2E are correct'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -192,54 +185,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports→theme→data→figure→customization→save; no unnecessary
-          abstraction'
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data ensures deterministic output; no random elements
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (theme), sys (path fix), matplotlib, pandas,
-          seaborn'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic code; appropriate complexity; no over-engineering;
-          no fake UI
+        passed: false
+        comment: 'Dead code: unused ''marker_size'' and ''color'' columns; sys.path
+          workaround with noqa comments (defect line)'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API; DPI=300
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of sns.set_theme() with rc config; sns.scatterplot() with
-          hue/size/palette; proper axes-level pattern
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Seaborn usage is correct but fairly standard; coastline drawing and
-          custom legends are matplotlib-level techniques; could leverage more distinctive
-          seaborn features
+        comment: sns.scatterplot with hue/size; legend rebuilt by hand
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
 impl_tags:
   dependencies: []
   techniques:
