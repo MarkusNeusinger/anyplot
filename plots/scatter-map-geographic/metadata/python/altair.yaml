@@ -12,34 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/altair/plot-dark.html
-quality_score: 94
+quality_score: 77
 review:
   strengths:
-  - Perfect specification compliance with all required features (coordinates, size/color
-    encoding, basemap, legends, tooltips)
-  - 'Excellent Altair mastery: idiomatic use of geographic projections, topo feature
-    loading, and layer composition'
-  - 'Flawless palette compliance: Okabe-Ito colors in correct order, theme-adaptive
-    chrome perfectly implemented'
-  - 'Strong data quality: realistic world cities with representative population values
-    across all continents'
-  - Clean, readable code with proper theme tokenization and no unnecessary complexity
-  weaknesses: []
+  - 'Idiomatic Altair geo layering: alt.topo_feature basemap with mark_geoshape and
+    a mark_circle layer, both in the naturalEarth1 projection'
+  - Theme-tuned basemap fill and stroke keep the land quieter than the points, and
+    page-coloured outlines keep stacked cities distinguishable
+  - Map fills most of the canvas, legends tucked into the empty corners
+  - Native tooltips (city, population, region) in the HTML output
+  weaknesses:
+  - 'VQ-05 (both): the canvas is 4836x2826, not a canonical size → 3200x1800 landscape
+    (−1636 × −1026 px). Likely cause: .properties(width=1600, height=900) with scale_factor=3.0
+    and no pad-to-target step.'
+  - 'VQ-03, SC-04 (dark): the size-legend circles render near-black on the #1A1A17
+    background and almost vanish, so the population key cannot be read → fill them
+    with a theme token such as INK_SOFT. Likely cause: alt.Legend for size without
+    symbolFillColor.'
+  - 'SC-02 (both): the Notes ask interactive libraries to enable zoom and pan, and
+    the HTML has no zoom or pan on the map → bind projection scale/translate to params
+    or drag/wheel selections so the map can be zoomed and panned. Likely cause: no
+    zoom/pan params on the layered geoshape chart.'
+  - 'Suggestion: a size legend starting at 10 instead of 0 would match the 4-37 million
+    data range.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with no pure white — correct
-      Chrome: Title in dark text (#1A1A17) clearly readable at 28px; legend titles and labels in appropriate grays (#4A4A44, #1A1A17); all elements readable
-      Data: Cities rendered as colored circles with white edges and opacity 0.75; first series (Asia) correctly using brand green (#009E73); remaining regions (Africa #D55E00, Europe #0072B2, North America #CC79A7, South America #E69F00, Oceania #56B4E9) match Okabe-Ito order
-      Legibility verdict: PASS — all text readable, colors clearly distinguishable, basemap provides context without overwhelming data
+      Background: warm off-white #FAF8F1, canvas 4836x2826
+      Chrome: bold title at the top in dark ink; framed 'Population (millions)' size legend at bottom-left and 'Region' legend at bottom-right; all text readable
+      Data: Natural Earth basemap filling most of the canvas in light beige; 56 cities as translucent circles with page-coloured outlines, Asia #009E73, Africa purple, Europe blue, North America ochre, South America red, Oceania cyan
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light text (#F0EFE8) clearly visible; legend text in light tones; no dark-on-dark failures
-      Data: Colors identical to light render (only chrome changed) — confirms theme-independence of data palette
-      Legibility verdict: PASS — all text readable in dark theme, strong contrast maintained, brand green still visible and distinguishable
+      Background: warm near-black #1A1A17
+      Chrome: title and legend text in light ink, readable; the size-legend circles are near-black and almost vanish against the background
+      Data: dark grey basemap; city colours identical to the light render; brand green visible
+      Legibility verdict: FAIL for the size-legend glyphs (text itself readable)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -47,76 +57,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title and all labels clearly readable in both themes at proper font
-          sizes
+        comment: Title and legend text set explicitly and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Spread geographic distribution with well-positioned legends, no text
-          collisions
+        comment: No text collisions; city overlap handled with alpha and page-coloured
+          outlines
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: All 44 cities clearly visible; white edges on points provide definition;
-          opacity appropriate for density
+        passed: false
+        comment: 'Points visible, but the size-legend circles render near-black on
+          the #1A1A17 dark background and almost vanish (defect line)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety; all 6 regions easily distinguishable
+        comment: Six Imprint hues, distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Landscape format at 1600x900 (scales to 4800x2700); good proportions,
-          nothing cut off
+        passed: false
+        comment: Canvas is 4836x2826, not one of the canonical 3200x1800 / 2400x2400
+          sizes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title is descriptive with proper format; geographic projections don't
-          require traditional axis labels
+        comment: N/A for axes on a map; descriptive title and legend titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
-          #FAF8F1 light / #1A1A17 dark, both renders theme-correct'
+        comment: 'Asia #009E73 first, Imprint colours, correct backgrounds in both
+          renders'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Natural Earth projection, well-applied Okabe-Ito palette, subtle
-          basemap styling, multi-dimensional encoding (size + color) elevates design
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: White point edges, subtle basemap strokes, generous whitespace; functional
-          rather than highly refined
+        comment: Theme-specific basemap fill and stroke kept quieter than the points,
+          page-coloured point outlines
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Size and color variation create visual hierarchy; regional grouping
-          and population encoding guide viewer through geographic distribution
+        comment: Data displayed; no focal point chosen beyond the encodings
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -124,28 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter map with latitude/longitude positioning
+        comment: Geographic scatter map on a basemap
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Size encoding (population), color encoding (region), basemap context,
-          legends for both, tooltip support
+        passed: false
+        comment: Basemap, projection, both legends, transparency present; zoom/pan
+          for interactive libraries missing (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude/latitude correct, size and color properly encoded, all
-          44 cities displayed
+        comment: Every city at its latitude/longitude
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct with descriptive prefix; legends properly labeled
-          for size and color
+        passed: false
+        comment: Title format correct; the dark render's size legend is barely readable
+          as an encoding key (defect line)
     data_quality:
       score: 15
       max: 15
@@ -155,22 +160,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive: 44 cities covering all major continents with realistic
-          population values'
+        comment: Size and colour encodings, dense and sparse regions shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real world cities with contemporary, plausible population data; neutral
-          presentation
+        comment: Real major world cities, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population range 4M-37M appropriate for major cities; size scale
-          150-2000 matches canvas
+        comment: Populations 4-37 million plausible; coordinates in place on the map
     code_quality:
       score: 10
       max: 10
@@ -180,52 +182,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; direct chart construction; clean and simple
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed data, deterministic output
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only needed imports; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake interactivity; well-structured theme
-          tokens
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html; scale_factor=3.0 for proper resolution;
-          current API
+        comment: Saves plot-{THEME}.png and .html, current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent: alt.Chart, mark_circle, proper encoding chains, layer
-          composition, project(), legend configuration'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Strong use of Altair strengths: geographic projections, topo feature
-          loading from CDN, layer composition, interactive tooltips'
+        comment: Idiomatic topo_feature + geoshape layer with .project()
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Vega-Lite geo projection of a TopoJSON basemap with native tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
 impl_tags:
   dependencies: []
   techniques:
