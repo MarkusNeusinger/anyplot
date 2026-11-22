@@ -2,102 +2,111 @@ library: pygal
 language: python
 specification_id: chessboard-pieces
 created: '2026-05-17T03:21:33Z'
-updated: '2026-05-17T08:18:02Z'
-generated_by: claude-haiku
-workflow_run: 25980076737
+updated: '2026-11-22T02:49:11Z'
+generated_by: claude-sonnet
+workflow_run: 44977284166
 issue: 3350
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 79
 review:
   strengths:
-  - 'Complete spec compliance: all piece types, correct orientation, standard algebraic
-    notation labels'
-  - Elegant warm brown board palette integrates naturally with anyplot.ai brand
-  - Theme-adaptive board square colors are a thoughtful, domain-appropriate design
-    choice
-  - Deterministic, factually correct chess starting position data
-  - Clean HTML/SVG/PNG triple output with correct file naming
+  - Piece bodies in cream vs near-black, each with a contrasting outline, keep white
+    and black pieces visible on both square colors in both themes
+  - Board squares re-tuned per theme (wood tones in light, umber in dark) while the
+    page background and coordinate labels follow the theme tokens
+  - 'Correct orientation: h1 light square, white at the bottom, files a-h left to
+    right and ranks 1-8 bottom to top'
+  - Pieces centered at 70 % of the square size, a clean inset from the square edges
+  - Tidy df with Square/Piece columns makes the position easy to swap for the user's
+    own
   weaknesses:
-  - 'Black pieces (#1A1A17) are near-invisible on dark squares (#2D2622) in dark render
-    — BLACK_PIECE_COLOR must be theme-adaptive (e.g. use #3C3830 in dark mode instead
-    of near-black #1A1A17)'
-  - Standard starting position lacks storytelling — consider a famous puzzle, opening,
-    or game position with a natural focal point
-  - 'Library Mastery limited: pygal is used only as an SVG shell generator; the chess
-    board itself is drawn via raw XML injection rather than pygal charting APIs'
+  - 'VQ-03, SC-02 (both): the solid body glyph and the hollow outline glyph stacked
+    on each square do not register: every piece shows a doubled edge offset by a few
+    px, the white bishops on c1/f1 show a dark-filled head and the white queen on
+    d1 shows the square color through her crown, so those white pieces read half-black
+    (spec bullet C3) → one glyph per piece whose body and outline match, e.g. the
+    solid glyph filled in the side''s color with a contrasting SVG stroke. Likely
+    cause: the `layers` tuple drawing PIECE_UNICODE[piece.lower()] under PIECE_UNICODE[piece.upper()].'
+  - 'VQ-05 (both): the board sits high on the canvas: about 145 px between the title
+    and the board, but about 290 px of empty canvas below the file labels → center
+    the board-plus-labels block under the title (about +70 px on the board''s y offset).
+    Likely cause: the fixed MARGIN_Y = 220.'
+  - 'Suggestion: a well-known position (a mating pattern or an opening tabiya) would
+    give the diagram a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "chessboard-pieces · pygal · anyplot.ai" in dark ink — clearly readable. Rank labels 1-8 and file labels a-h in INK_MUTED — readable.
-      Data: Board uses cream-beige light squares (#E8D5C4) and tan-brown dark squares (#B5956F). Black pieces rendered as near-black Unicode symbols — clearly visible on light squares, good contrast on dark squares. White pieces as cream (#F5E6D0) — clearly visible on dark squares, moderate contrast on light squares.
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title "chessboard-pieces · python · pygal · anyplot.ai" in dark ink at the top center; rank numbers 1-8 left of the board and file letters a-h below it in muted gray. All readable.
+      Data: 8x8 board of cream (#E8D5C4) and tan (#B5956F) squares, h1 light, white at the bottom. Starting position: black pieces solid near-black on ranks 7-8, white pieces cream with a dark outline on ranks 1-2. The two glyph layers are slightly offset (doubled edges); the white bishops c1/f1 have dark heads and the white queen's crown is hollow. No palette series (domain colors only).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct
-      Chrome: Title and rank/file labels render in warm off-white/muted light text — fully readable. No dark-on-dark text failures for chrome elements.
-      Data: Board adapts with dark olive-brown light squares (#4A4136) and very dark brown dark squares (#2D2622). White pieces (cream #F5E6D0) clearly visible throughout. BLACK CONTRAST FAILURE: black pieces (#1A1A17) are nearly indistinguishable from dark squares (#2D2622) — near-zero contrast. Piece shapes barely discernible on darker squares at ranks 7-8.
-      Legibility verdict: FAIL — black piece color not theme-adaptive, causes near-invisible pieces on dark board squares in dark mode
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title and coordinate labels in light ink / light muted gray, fully readable; no dark-on-dark text.
+      Data: board squares flip to umber (#4A4136) and dark brown (#2D2622). Black pieces now carry a cream outline over a near-black body, white pieces a cream body with outline; both sides visible on every square and distinguishable by body fill. Same layer offset and half-dark white bishops as in light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 72px, labels 44px, pieces proportional
-          to square size). All chrome text readable in both themes.
+        comment: Title (52 px) and coordinate labels (40 px) read clearly at full
+          size in both themes; no dark-on-dark or light-on-light text
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap anywhere on the board.
+        comment: No text collisions; pieces stay inside their squares
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Black pieces (#1A1A17) nearly invisible against dark squares (#2D2622)
-          in dark render. White pieces on light squares also show moderate contrast
-          only.
+        comment: Every piece is visible in both themes, but the two stacked glyph
+          layers are misregistered (doubled, offset edges), and the white bishops
+          and queen read half-dark (defect line)
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Significant luminance contrast failure: black piece color vs dark
-          squares in dark mode creates near-invisible elements.'
+        passed: true
+        comment: Body fill (cream vs near-black) plus a contrasting outline separates
+          the two sides by luminance, not hue; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Board occupies ~65% of 3600x3600 canvas with balanced margins; minor
-          excess whitespace in title zone.
+        comment: '2400x2400 canvas, board about 77 % of the width, but the board sits
+          high: about 145 px under the title vs about 290 px of empty canvas below
+          the file labels (defect line)'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; rank 1-8 and file a-h labels follow chess standard
-          notation.
+        comment: N/A for data axes; file letters a-h and rank numbers 1-8 are the
+          board's coordinates
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds #FAF8F1/#1A1A17 correct. Chrome adapts correctly. Piece
-          colors are domain-appropriate for chess visualization.'
+        comment: 'Backgrounds #FAF8F1 / #1A1A17 correct; chrome theme-adaptive; board
+          and piece colors are domain colors, no categorical series'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -105,24 +114,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Warm brown chess palette is elegant and domain-appropriate; above
-          generic defaults.
+        comment: A warm wood-toned board chosen for the domain and re-tuned per theme
+          (tan/cream in light, umber in dark) that sits in the Imprint page tones
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: No guides or legend, clean composition, rank/file labels well-positioned.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Shows all piece types in standard starting position — recognizable
-          but lacks narrative focus; a puzzle or famous game position would score
-          higher.
+        comment: Muted coordinate labels and no chrome meet the baseline; nothing
+          beyond it, and the board is not vertically centered
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Starting position displayed; no focal point chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -130,27 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chess board with pieces, standard orientation, h1=light square
-          verified.
+        comment: Chess board with Unicode pieces, nothing unasked added
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: All Unicode chess symbols present, pieces centered, board convention
-          correct.
+        comment: 'C1 met (h1 light, white at the bottom), C2 met (pieces centered
+          on their squares), C4 met (inset 70 % glyphs), C5 met (a at left, 1 at bottom).
+          C3 partly missed: the white bishops on c1/f1 show a dark-filled head and
+          the white queen''s crown shows the square through it (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 32 pieces in correct positions per algebraic notation.
+        comment: All 32 pieces on their named squares, nothing elsewhere
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed for this visualization type.
+        comment: Title 'chessboard-pieces · python · pygal · anyplot.ai' correct;
+          no legend needed
     data_quality:
       score: 15
       max: 15
@@ -160,57 +170,56 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 12 piece types shown, full 32-piece starting position.
+        comment: All 12 piece types, both colors, on both square colors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard chess starting position, universally recognized, neutral
-          domain.
+        comment: Standard starting position, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct per official chess rules.
+        comment: 'Checked: queens on their own color (white d1 light, black d8 dark),
+          kings on e1/e8, h1 light square, back rank RNBQKBNR'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Clear flow but sys.path manipulation and SVG injection add complexity;
-          necessary given pygal limitations.
+        comment: Linear script, no functions or classes; tidy df in the Data block
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded chess position.
+        comment: Deterministic position
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; cairosvg conditionally imported.
+        comment: importlib, os, sys, cairosvg, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: SVG injection is the necessary approach; no fake interactive UI.
+        comment: Appropriate complexity; no fake UI; 157 lines
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, .svg, and .html correctly.
+        comment: Writes plot-{THEME}.png, .svg and .html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -218,24 +227,25 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY and Style correctly for theming; chess board itself
-          drawn via SVG injection rather than pygal chart APIs.
+        comment: pygal.XY + Style carry the theme chrome; the board itself is injected
+          SVG
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Creative use of pygal SVG output as scaffolding; HTML export included.
-          Core visualization done in raw XML, not pygal-specific APIs.
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-22T02:44:15Z'
 impl_tags:
-  dependencies:
-  - cairosvg
+  dependencies: []
   techniques:
   - html-export
-  - svg-injection
-  patterns:
-  - iteration-over-groups
+  - layer-composition
+  patterns: []
   dataprep: []
   styling:
   - minimal-chrome
+  - edge-highlighting
