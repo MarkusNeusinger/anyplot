@@ -154,7 +154,8 @@ TARGET_W, TARGET_H = 3200, 1800
 img = Image.open(f"plot-{THEME}.png").convert("RGB")
 if img.width > TARGET_W or img.height > TARGET_H:
     # Other data can widen the facets: shrink the whole picture to fit instead of cropping it
-    img.thumbnail((TARGET_W, TARGET_H), Image.LANCZOS)
+    fit = min(TARGET_W / img.width, TARGET_H / img.height)
+    img = img.resize((int(img.width * fit), int(img.height * fit)), Image.LANCZOS)
 canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
 canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
 canvas.save(f"plot-{THEME}.png")
