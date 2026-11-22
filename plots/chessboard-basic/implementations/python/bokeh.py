@@ -1,13 +1,14 @@
 """ anyplot.ai
 chessboard-basic: Chess Board Grid Visualization
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-17
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-22
 """
 
 import os
 import time
 from pathlib import Path
 
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
@@ -18,68 +19,64 @@ from selenium.webdriver.chrome.options import Options
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Chess board colors (light and dark squares)
+# Chess board colors (constant across themes; the board is the data)
 LIGHT_SQUARE = "#F0D9B5"
 DARK_SQUARE = "#B58863"
 
-# Data - 8x8 chess board squares
-columns = list("abcdefgh")
-rows = list("12345678")
+# Setup
+W, H = 2400, 2400
 
-x_coords = []
-y_coords = []
-colors = []
+# Columns
+FILE = "File"  # role: columns
+RANK = "Rank"  # role: rows
 
-for row_idx, _row in enumerate(rows):
-    for col_idx, _col in enumerate(columns):
-        x_coords.append(col_idx + 0.5)
-        y_coords.append(row_idx + 0.5)
-        if (row_idx + col_idx) % 2 == 0:
-            colors.append(DARK_SQUARE)
-        else:
-            colors.append(LIGHT_SQUARE)
-
-source = ColumnDataSource(data={"x": x_coords, "y": y_coords, "color": colors})
-
-# Plot
-p = figure(
-    width=3600,
-    height=3600,
-    title="chessboard-basic · bokeh · anyplot.ai",
-    x_range=(-0.1, 8.1),
-    y_range=(-0.1, 8.1),
-    tools="",
-    toolbar_location=None,
+# Data - 8x8 chess board, light square at h1 and a8
+files = list("abcdefgh")
+ranks = list("12345678")
+df = pd.DataFrame(
+    [
+        {FILE: f, RANK: r, "shade": "light" if (i + j) % 2 == 1 else "dark"}
+        for j, r in enumerate(ranks)
+        for i, f in enumerate(files)
+    ]
 )
 
-p.rect(x="x", y="y", width=1, height=1, source=source, color="color", line_color=INK_SOFT, line_width=2)
+# Plot
+df["fill"] = df["shade"].map({"light": LIGHT_SQUARE, "dark": DARK_SQUARE})
+p = figure(
+    width=W,
+    height=H,
+    title="chessboard-basic · python · bokeh · anyplot.ai",
+    x_range=files,
+    y_range=ranks,
+    x_axis_label=FILE,
+    y_axis_label=RANK,
+    tools="",
+    toolbar_location=None,
+    min_border_left=190,
+    min_border_bottom=190,
+    min_border_top=190,
+    min_border_right=190,
+)
+
+p.rect(x=FILE, y=RANK, width=1, height=1, source=ColumnDataSource(df), color="fill", line_color=INK_SOFT, line_width=2)
 
 # Style
-p.title.text_font_size = "32pt"
+p.title.text_font_size = "40pt"
 p.title.text_color = INK
 p.title.align = "center"
 
-p.xaxis.ticker = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5]
-p.xaxis.major_label_overrides = {0.5: "a", 1.5: "b", 2.5: "c", 3.5: "d", 4.5: "e", 5.5: "f", 6.5: "g", 7.5: "h"}
-p.xaxis.major_label_text_font_size = "24pt"
-p.xaxis.major_label_text_color = INK_SOFT
-p.xaxis.axis_label = "Column"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.xaxis.axis_label_text_color = INK
-p.xaxis.axis_line_color = INK_SOFT
-
-p.yaxis.ticker = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5]
-p.yaxis.major_label_overrides = {0.5: "1", 1.5: "2", 2.5: "3", 3.5: "4", 4.5: "5", 5.5: "6", 6.5: "7", 7.5: "8"}
-p.yaxis.major_label_text_font_size = "24pt"
-p.yaxis.major_label_text_color = INK_SOFT
-p.yaxis.axis_label = "Row"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_color = INK
-p.yaxis.axis_line_color = INK_SOFT
+for axis in (p.xaxis, p.yaxis):
+    axis.major_label_text_font_size = "34pt"
+    axis.major_label_text_color = INK_SOFT
+    axis.axis_label_text_font_size = "30pt"
+    axis.axis_label_text_color = INK
+    axis.axis_line_color = None
+    axis.major_tick_line_color = None
+    axis.minor_tick_line_color = None
 
 p.xgrid.visible = False
 p.ygrid.visible = False
@@ -94,7 +91,6 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome
-W, H = 3600, 3600
 opts = Options()
 for arg in (
     "--headless=new",
@@ -108,6 +104,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
