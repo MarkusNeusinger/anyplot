@@ -1,7 +1,7 @@
 """ anyplot.ai
 ohlc-bar: OHLC Bar Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-17
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-22
 """
 
 import os
@@ -31,88 +31,72 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# imprint semantic anchors for up/down distinction
-UP_COLOR = "#009E73"  # green - up bars
-DOWN_COLOR = "#AE3030"  # red - down bars
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+UP_COLOR = IMPRINT_PALETTE[0]  # up bars
+DOWN_COLOR = IMPRINT_PALETTE[4]  # down bars
 
-# Data - Generate 50 days of realistic stock OHLC data
+# Constants
+TICK_WIDTH = 0.3  # open/close tick length in bar spacings
+
+# Columns
+DATE = "date"  # role: date
+OPEN = "open"  # role: open
+HIGH = "high"  # role: high
+LOW = "low"  # role: low
+CLOSE = "close"  # role: close
+
+# Data
 np.random.seed(42)
 n_days = 50
 start_price = 150.0
-
-# Generate price movements using random walk
 returns = np.random.normal(0.001, 0.02, n_days)
 close_prices = start_price * np.cumprod(1 + returns)
-
-# Generate open, high, low based on close
 open_prices = np.roll(close_prices, 1)
 open_prices[0] = start_price
-
-# High and low are generated around the open-close range
 daily_volatility = np.abs(np.random.normal(0, 0.015, n_days))
 high_prices = np.maximum(open_prices, close_prices) * (1 + daily_volatility)
 low_prices = np.minimum(open_prices, close_prices) * (1 - daily_volatility)
-
-# Create date range (business days)
-dates = pd.bdate_range(start="2024-06-01", periods=n_days)
-
-# Create DataFrame
 df = pd.DataFrame(
     {
-        "date": dates,
-        "day_num": range(n_days),
-        "open": open_prices,
-        "high": high_prices,
-        "low": low_prices,
-        "close": close_prices,
+        DATE: pd.bdate_range(start="2024-06-01", periods=n_days),
+        OPEN: open_prices,
+        HIGH: high_prices,
+        LOW: low_prices,
+        CLOSE: close_prices,
     }
 )
 
-# Determine bar direction for coloring
-df["direction"] = np.where(df["close"] >= df["open"], "up", "down")
-
-# Define tick width for open/close marks
-tick_width = 0.3
-
-# Create data for open ticks (extend left from bar)
-df["open_x_start"] = df["day_num"] - tick_width
-df["open_x_end"] = df["day_num"]
-
-# Create data for close ticks (extend right from bar)
-df["close_x_start"] = df["day_num"]
-df["close_x_end"] = df["day_num"] + tick_width
-
-# Create the OHLC bar chart
+# Plot
+DAY, DIRECTION, OPEN_X, CLOSE_X = "day_num", "direction", "open_x_start", "close_x_end"
+df[DAY] = np.arange(len(df))
+df[DIRECTION] = np.where(df[CLOSE] >= df[OPEN], "up", "down")
+df[OPEN_X] = df[DAY] - TICK_WIDTH
+df[CLOSE_X] = df[DAY] + TICK_WIDTH
+label_step = max(len(df) // 5, 1)
+label_pos = list(range(0, len(df), label_step))
+label_text = [df[DATE].iloc[i].strftime("%b %d") for i in label_pos]
 plot = (
     ggplot(df)
-    # High-Low vertical line
-    + geom_segment(aes(x="day_num", xend="day_num", y="low", yend="high", color="direction"), size=1.2)
-    # Open tick (left horizontal line)
-    + geom_segment(aes(x="open_x_start", xend="open_x_end", y="open", yend="open", color="direction"), size=1.2)
-    # Close tick (right horizontal line)
-    + geom_segment(aes(x="close_x_start", xend="close_x_end", y="close", yend="close", color="direction"), size=1.2)
-    # Colors: up (Okabe-Ito position 1) and down (Okabe-Ito position 2)
+    + geom_segment(aes(x=DAY, xend=DAY, y=LOW, yend=HIGH, color=DIRECTION), size=0.9)
+    + geom_segment(aes(x=OPEN_X, xend=DAY, y=OPEN, yend=OPEN, color=DIRECTION), size=0.9)
+    + geom_segment(aes(x=DAY, xend=CLOSE_X, y=CLOSE, yend=CLOSE, color=DIRECTION), size=0.9)
     + scale_color_manual(
-        values={"up": UP_COLOR, "down": DOWN_COLOR}, labels={"up": "Up (Close > Open)", "down": "Down (Close < Open)"}
+        values=[UP_COLOR, DOWN_COLOR], limits=["up", "down"], labels=["Up (Close > Open)", "Down (Close < Open)"]
     )
-    # X-axis labels - show every 10th date
-    + scale_x_continuous(
-        breaks=list(range(0, n_days, 10)), labels=[dates[i].strftime("%b %d") for i in range(0, n_days, 10)]
-    )
-    # Labels
-    + labs(title="ohlc-bar · plotnine · anyplot.ai", x="Date", y="Price (USD)", color="Direction")
-    # Theme
+    + scale_x_continuous(breaks=label_pos, labels=label_text)
+    + labs(title="ohlc-bar · python · plotnine · anyplot.ai", x="Date", y="Price (USD)", color="Direction")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold", color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        axis_text_x=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        figure_size=(8, 4.5),
+        plot_title=element_text(size=12, weight="bold", color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="right",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
         panel_grid_major=element_line(color=INK, alpha=0.10, size=0.3),
         panel_grid_minor=element_blank(),
         panel_background=element_rect(fill=PAGE_BG, color=None),
@@ -121,5 +105,4 @@ plot = (
     )
 )
 
-# Save the plot
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)

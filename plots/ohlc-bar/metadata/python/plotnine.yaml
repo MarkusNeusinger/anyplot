@@ -2,41 +2,46 @@ library: plotnine
 language: python
 specification_id: ohlc-bar
 created: '2026-01-08T16:05:09Z'
-updated: '2026-05-17T10:51:20Z'
-generated_by: claude-haiku
-workflow_run: 25988596874
+updated: '2026-11-22T04:56:25Z'
+generated_by: claude-sonnet
+workflow_run: 44986812756
 issue: 3293
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - Perfect theme adaptation with correct token usage (INK, INK_SOFT changing per
-    theme)
-  - Correct OHLC structure with proper color distinction (up/down)
-  - All text fully legible in both light and dark renders
-  - 'Proper Okabe-Ito palette (green #009E73, orange #D55E00)'
-  - Clean, idiomatic plotnine code using geom_segment layers
-  - Excellent specification compliance - all required features present
+  - Clean OHLC construction from three geom_segment layers (high-low, open tick left,
+    close tick right), each mark exactly at its data value
+  - Up/down direction mapped through scale_color_manual with limits fixing the order,
+    so Up (#009E73) leads the legend and colors match in both themes
+  - Theme tokens threaded through every chrome element; both renders fully legible
+    on the correct canvas
+  - Tick width of 0.3 bar spacings keeps open and close ticks readable while neighbouring
+    bars stay clearly separate
   weaknesses:
-  - Design could be slightly more sophisticated (custom spine styling, refined typography
-    variations could elevate polish)
+  - 'Suggestion: the legend title and key glyphs sit right against the left edge of
+    the legend frame; a little legend padding (legend_box_margin / legend_margin)
+    would let the box breathe.'
+  - 'Suggestion: plotting against the real dates with scale_x_date and a timedelta
+    tick offset would let plotnine format the time axis natively instead of an index
+    plus hand-built labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines (alpha=0.10)
-      Chrome: Title "ohlc-bar · plotnine · anyplot.ai" in bold dark INK (#1A1A17); axis labels "Date" and "Price (USD)" clearly readable; tick labels for dates (Jun 03, Jun 17, etc.) and prices (130-170 USD) all rendered in secondary INK_SOFT (#4A4A44); legend positioned right with "Direction" title and two categories
-      Data: 50 trading days of OHLC bars - vertical lines representing high-low range, with left tick for open price and right tick for close price; green (#009E73) bars indicate up movement (close > open), orange (#D55E00) bars indicate down movement (close < open); price action shows clear downtrend from ~170 to ~125
-      Legibility verdict: PASS - all elements fully readable and well-contrasted against light background
+      Background: warm off-white #FAF8F1 with a faint major grid behind the bars.
+      Chrome: bold title 'ohlc-bar · python · plotnine · anyplot.ai' in dark INK; axis titles 'Date' and 'Price (USD)'; ticks Jun 03 / Jun 17 / Jul 01 / Jul 15 / Jul 29 and 130-170; legend 'Direction' on an elevated box at the right. All readable.
+      Data: 50 OHLC bars: vertical high-low lines with a short left open tick and right close tick; up bars #009E73, down bars #AE3030; price rises from 150 to about 168 in mid-June, then declines to about 125 by mid-August.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle grid lines using light RULE color
-      Chrome: Title rendered in light INK (#F0EFE8) - clearly visible against dark background; axis labels and tick labels all in appropriate light INK_SOFT (#B8B7B0) - no dark-on-dark failures; legend box has dark ELEVATED_BG (#242420) with light text borders
-      Data: Identical OHLC structure as light render - same green (#009E73) for up bars, same orange (#D55E00) for down bars, confirming data colors remain constant; all price levels and date markers equally visible
-      Legibility verdict: PASS - perfect dark theme adaptation with all text readable and no chrome legibility issues
+      Background: warm near-black #1A1A17, grid subtle but visible.
+      Chrome: title and axis titles in light INK, ticks and legend text in light INK_SOFT, legend box #242420 with a light frame. No dark-on-dark text.
+      Data: identical bars and the same #009E73 / #AE3030 as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -47,79 +52,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, legend all explicitly sized and
-          colored (INK/INK_SOFT tokens) - fully readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, legend 9/8 pt, all set
+          explicitly; INK/INK_SOFT tokens readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; OHLC bars well-spaced (day_num positions);
-          legend positioned right without collision
+        comment: No text collisions; neighbouring open/close ticks stay apart (0.3
+          spacing each side leaves a 0.4 gap)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Geom segments sized at 1.2 (thick bars); colors distinct (green vs
-          orange); all OHLC components (high-low line, open tick, close tick) clearly
-          visible
+        comment: Segments at size 0.9 read clearly for 50 bars; legend line glyphs
+          match the bar colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (positions 1 and 2) - CVD-safe; green and orange
-          have sufficient contrast on both light and dark backgrounds
+        comment: 'Direction is encoded twice: color and the left/right tick position;
+          #009E73 and #AE3030 differ in lightness'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Figure size 16x9 (4800x2700px); generous margins; nothing cut off;
-          proportions excellent
+        comment: 3200x1800 canvas; title about 46 % of the width, balanced axis and
+          tick labels, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id, library, domain; Y-axis labeled with unit
-          (USD); X-axis dates formatted appropriately
+        comment: '''Price (USD)'' with unit, ''Date'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Okabe-Ito pos 1), second #D55E00 (pos 2);
-          backgrounds #FAF8F1 light / #1A1A17 dark; theme tokens (INK, INK_SOFT, ELEVATED_BG)
-          correctly applied; data colors identical between renders'
+        comment: 'Up #009E73 (Imprint 1), down #AE3030 (semantic red); backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional polish with correct color palette, intentional OHLC
-          structure, custom date tick configuration, appropriate use of theme_minimal()
+        comment: The style-guide baseline (theme_minimal, tokens, explicit sizes),
+          nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Subtle grid (alpha=0.10), generous whitespace, proper panel background,
-          legend box styling; could benefit from explicit spine removal or additional
-          typographic hierarchy
+        comment: 'Subtle grid, no minor grid, axis lines in INK_SOFT: the spine and
+          grid rules met, nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: OHLC bars naturally convey price movement narrative; up/down color
-          distinction creates visual hierarchy; clear focal point on data; time-series
-          progression guides viewer
+        comment: Data displayed with up/down coloring as the Notes allow; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -129,29 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OHLC bar chart with vertical high-low lines and horizontal
-          open/close ticks
+        comment: 'Correct OHLC bar chart: high-low line plus left open and right close
+          ticks, no unasked layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: thin vertical lines for high-low, left ticks
-          for open, right ticks for close, up/down color distinction'
+        comment: Thin high-low lines, left open / right close ticks, direction colors,
+          date-formatted axis, grid lines; C1-C4 all shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price; vertical segment spans low-high; left x=open-tick_width
-          to open, right x=close to close+tick_width; color=direction
+        comment: Each bar at its period index; segments at exact open/high/low/close
+          values; price axis not forced to zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct; legend shows Direction with clear labels (Up:
-          Close > Open, Down: Close < Open)'
+        comment: Title 'ohlc-bar · python · plotnine · anyplot.ai'; legend 'Direction'
+          with reader-friendly Up/Down labels, Up first
     data_quality:
       score: 15
       max: 15
@@ -161,22 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 50 trading days of realistic OHLC data; all aspects visible (open,
-          high, low, close); both up and down movements represented
+        comment: 50 periods with both up and down bars, long and short ranges, a clear
+          rise and decline
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price data (150-170 USD) with realistic random walk; business
-          day calendar; no controversial content
+        comment: Daily stock prices on business days, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range 120-170 USD sensible for domain; 50 days ideal for OHLC;
-          daily volatility realistic
+        comment: 'Checked in code: high = max(open, close)*(1+v) and low = min(open,
+          close)*(1-v), so every high/low brackets its ticks; prices 124-168 USD with
+          about 2 % daily moves, read off the axis'
     code_quality:
       score: 10
       max: 10
@@ -186,58 +186,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions, no classes; linear flow (setup -> data generation ->
-          plot creation -> save)
+        comment: Imports, tokens, column constants, Data, Plot, Save; no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, numpy, pandas, plotnine); no unused imports
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI or simulated interactivity (AR-08
-          compliant); clean variable naming
+        comment: Three geom_segment layers, no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current plotnine API; no bare plot.png
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5); current
+          API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses geom_segment (idiomatic for OHLC in ggplot2/plotnine); proper
-          aes() mapping; scale_color_manual for palette; theme_minimal() + custom
-          theme (plotnine pattern)
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Three geom_segment layers creatively combined to build OHLC structure;
-          demonstrates grammar of graphics mastery
-    score_caps_applied: []
+        comment: Grammar-of-graphics layering with aes mapping and scale_color_manual(limits=...);
+          correct but standard
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-22T04:53:04Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
