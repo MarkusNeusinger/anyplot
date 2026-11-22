@@ -12,37 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 72
 review:
   strengths:
-  - Excellent theme adaptation with consistent token application across all elements
-    (title, annotations, map colors)
-  - Strong geographic visualization with Natural Earth projection and proper basemap
-    (coastlines, countries)
-  - 'Correct multi-dimensional encoding: Viridis for continuous AQI, size variation
-    for measurement counts, transparency for overlap'
-  - Idiomatic Plotly usage (Scattergeo, graph_objects, update_layout)
-  - Clean, reproducible code with deterministic seed
-  - Proper title format and hover tooltips with meaningful context
+  - Full Natural Earth outline with theme-tokenised land, ocean, lakes, coastlines
+    and borders
+  - Marker outlines flip with the theme and keep overlapping clusters distinguishable
+  - Hovertemplate with lat, lon, AQI and readings; native zoom and pan in the HTML
   weaknesses:
-  - 'Design Excellence could be enhanced: Consider subtle refinements to legend styling
-    or whitespace'
-  - 'Library Mastery: Could push further with advanced hover template customization'
+  - 'VQ-05 (both): canvas is 4800x2700, not a valid target -> 3200x1800 (-1600 x -900).
+    Likely cause: write_image(width=1600, height=900, scale=3); use scale=2.'
+  - 'VQ-07 (both): AQI is colored with Viridis, a forbidden colormap -> imprint_seq
+    two-stop scale #009E73 -> #4467A3. Likely cause: colorscale=''Viridis''.'
+  - 'SC-02, SC-04 (both): the size legend is the text ''Point Size = # Readings''
+    with no reference circles and no value range, so marker size cannot be decoded
+    -> 2-3 reference markers at 10, 20 and 30 readings with the same size mapping.
+    Likely cause: size legend built as a plain annotation.'
+  - 'DQ-03 (both): several ground air-quality sensors sit in open ocean (Atlantic
+    west of Africa, Indian Ocean east of Madagascar), and comments mislabel regions
+    (''China, India'' for 100-120 deg E, ''Mediterranean'' for 45-50 deg N, 10-25
+    deg E) -> land positions and matching labels. Likely cause: uniform lat/lon boxes
+    for Africa (-35..20, -20..55).'
+  - 'CQ-04 (code): lines 25-110 repeat np.concatenate per region for latitude, longitude,
+    AQI and counts in five near-identical blocks -> one region table iterated once
+    (about 15 lines). Likely cause: per-variable copy of each region.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with appropriate warm tone for light theme
-      Chrome: Title "scatter-map-geographic · python · plotly · anyplot.ai" in dark text (#1A1A17); map elements (land #E5E5E5, ocean #D4E8F2, coastlines #999999, countries #CCCCCC) all visible
-      Data: Viridis colormap (purple→cyan→green→yellow) for AQI values; point sizes 6-34px based on measurement counts; 85 points distributed globally
-      Legibility verdict: PASS - All text clearly readable, no contrast issues, dark-on-light works perfectly
+      Background: warm off-white #FAF8F1 page; full Natural Earth outline with light-gray land, pale blue ocean, gray coastlines and country borders, Antarctica included.
+      Chrome: title 'scatter-map-geographic · python · plotly · anyplot.ai' in dark ink; 'AQI' colorbar right; 'Point Size / = # Readings' text bottom right. All readable.
+      Data: 85 markers colored with Viridis (purple to yellow), 6-34 px, dark outlines, opacity 0.85; clusters in US east, Europe, China, SE Asia; several points in the Atlantic and Indian Ocean.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with appropriate dark tone
-      Chrome: Title in light text (#F0EFE8); map elements (land #3A3A36, ocean #2A3F4D, coastlines #666666, countries #555555) visible with proper contrast
-      Data: Viridis colors IDENTICAL to light render (purple, cyan, green, yellow); point sizes identical; all data points match light render exactly
-      Legibility verdict: PASS - All text clearly readable against dark background; no dark-on-dark failures; proper theme adaptation confirmed
+      Background: warm near-black #1A1A17; dark-gray land, dark slate ocean.
+      Chrome: title, colorbar and legend text in light ink; no dark-on-dark text.
+      Data: Viridis colors identical to the light render; light outlines keep dark purple markers visible on dark land.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -50,68 +58,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title at 28px, all labels readable in both themes
+        comment: All sizes set explicitly (title 28, colorbar 20/16, legend 16); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor overlap in dense regions handled with opacity=0.85
+        comment: No text collisions; overlapping markers distinguishable by outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers, colorbar, and map basemap all clearly visible
+        comment: 85 points at 6-34 px with outlines, visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Viridis is CVD-safe; outlines keep dark purple points visible on
+          dark land
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Canvas filled well; nothing cut off; balanced margins
+        passed: false
+        comment: Canvas 4800x2700 is not a valid target (3200x1800 / 2400x2400) (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format; coordinates on hover
+        comment: 'Colorbar ''AQI'' and ''Point Size = # Readings'' name the variables'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Viridis for continuous AQI; backgrounds #FAF8F1/#1A1A17; both renders
-          theme-correct'
+        passed: false
+        comment: Viridis colorscale instead of imprint_seq (defect line)
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Theme tokens elegantly applied; Viridis chosen appropriately
+        passed: false
+        comment: Baseline theme tokens and explicit sizes; nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Coastlines/boundaries provide structure; customized colorbar
+        passed: false
+        comment: Baseline; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Strong geographic hierarchy; color guides viewer; size adds dimension
+        passed: false
+        comment: Data displayed without a chosen hierarchy
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -119,28 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Scattergeo with Natural Earth projection
+        comment: Correct Scattergeo on Natural Earth
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec elements present: lat/lon, AQI color, reading size, basemap,
-          legends'
+        passed: false
+        comment: Size legend is text only, no reference glyphs (C3, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly positioned; full global coverage
+        comment: Points at their lat/lon
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format exact; legends clear
+        passed: false
+        comment: 'Title correct; size legend ''= # Readings'' cannot be decoded (defect
+          line)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -148,21 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 85 points with multi-dimensional encoding
+        comment: Clusters, sparse regions, colour and size variation shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world air-quality sensor network; sensible patterns
+        comment: Air-quality sensor network, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 85 points ideal; size 6-34px; AQI 20-250; readings 8-30
+        passed: false
+        comment: 'Checked positions: several land sensors in the Atlantic and Indian
+          Ocean; comments mislabel regions (defect line)'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -170,48 +181,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward script
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Theme tokens elegant; no fake UI
+        passed: false
+        comment: Five per-region np.concatenate blocks repeated for lat, lon, AQI
+          and counts (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png/html; current API
+        comment: Writes plot-{THEME}.png/html
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: go.Scattergeo + go.Figure() + update_layout()
+        passed: false
+        comment: Correct go.Scattergeo usage; default
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Leverages Scattergeo projection; automatic interactivity
+        passed: false
+        comment: Nothing beyond the Notes
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
 impl_tags:
   dependencies: []
   techniques:
