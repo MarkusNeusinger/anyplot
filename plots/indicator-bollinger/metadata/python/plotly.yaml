@@ -2,48 +2,46 @@ library: plotly
 language: python
 specification_id: indicator-bollinger
 created: '2026-01-07T20:19:32Z'
-updated: '2026-05-17T09:50:12Z'
-generated_by: claude-haiku
-workflow_run: 25987313982
+updated: '2026-11-22T04:29:37Z'
+generated_by: claude-sonnet
+workflow_run: 44984775171
 issue: 3237
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - 'Perfect theme adaptation: both light and dark renders are readable with no dark-on-dark
-    or light-on-light failures'
-  - 'All required Bollinger Bands elements present and correctly positioned: bands,
-    SMA, close price'
-  - 'Proper palette compliance: first series is brand green (#009E73), subsequent
-    series follow Okabe-Ito order'
-  - Clean, reproducible code with deterministic seed
-  - Realistic synthetic data demonstrating meaningful price volatility and trend
-  - Responsive legend and clear typography hierarchy
+  - Bands share Imprint purple with a 0.18-alpha tonexty fill, so the green price
+    and the dashed blue SMA read clearly through it in both themes
+  - Exact 3200x1800 canvas with title, legend and plot area cleanly separated
+  - Standard 20-period / 2σ parameters stated in the legend labels and driven by WINDOW
+    and NUM_STD constants
+  - hovermode='x unified' with per-trace $ hovertemplates gives one readout of price,
+    SMA and both bands in the HTML
   weaknesses:
-  - 'Design excellence is solid but not exceptional: could use additional visual refinement
-    (legend placement, grid styling, stronger visual hierarchy)'
-  - 'Library mastery leaves room for distinctive Plotly features: no range selectors,
-    range sliders, or candlestick representation despite technical indicator context'
+  - 'DQ-02 (both): the series is an unnamed ''Close price ($)'' with no instrument
+    or ticker, so the scenario reads as a generic stock → name a plausible fictional
+    instrument in the axis or legend label (e.g. a sector ETF). Likely cause: the
+    CLOSE column label.'
+  - 'Suggestion: plotly rangebreaks (bounds=[''sat'',''mon'']) would remove the straight
+    weekend segments on the business-day series.'
+  - 'Suggestion: the separate ''Upper band'' and ''Lower band'' legend entries share
+    one glyph; one legend entry (legendgroup) for both lines would shorten the legend.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "indicator-bollinger · plotly · anyplot.ai" in dark text (28px), clearly visible. Axis labels ("Date", "Price ($)") in dark text (22px). Tick labels in subdued dark gray (18px). All text fully readable with excellent contrast.
-      Data: Close price as prominent green line (#009E73) with diamond markers ranging from ~$98 to ~$112. 20-day SMA as dashed blue line (#0072B2) running through center. Upper/lower bands as orange solid lines (#D55E00) with light orange semi-transparent fill between them. All colors distinct and visible.
-      Grid: Subtle grid lines in light gray, non-competing with data
-      Legend: Positioned top-center with clear labels for all five series, light background with subtle border
+      Background: warm off-white #FAF8F1 across paper and plot area
+      Chrome: title 'indicator-bollinger · python · plotly · anyplot.ai' dark and centered; horizontal boxed legend below it (Close price ($), 20-day SMA, Lower band (−2σ), Upper band (+2σ), Bollinger band (±2σ)); axis titles 'Date' and 'Close price ($)'; $ ticks $85-$110 and date ticks Jan 28-Jun 2; subtle grid. All readable.
+      Data: thick #009E73 close line, dashed #4467A3 SMA, #C475FD upper/lower lines with translucent purple fill; bands wide in Feb, narrow Apr-May, widen in June; price pierces lower band late March, upper mid-April
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title in light text (#F0EFE8), clearly visible. Axis labels in light text. Tick labels in light gray (#B8B7B0). All text fully readable against dark background with no dark-on-dark failures.
-      Data: Close price green line, 20-day SMA blue dashed line, upper/lower bands orange lines - all colors identical to light render, confirming proper theme separation (data colors are theme-independent, only chrome flips)
-      Grid: Subtle grid lines in light-adapted rgba color, visible but subtle
-      Legend: Dark elevated background (#242420) with light text, maintaining clear hierarchy
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink; legend on #242420 with light border; grid subtle. No dark-on-dark text.
+      Data: identical colors to the light render; the fill reads as a muted purple and all three lines remain visible through it
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -55,73 +53,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, tick labels 18px—all explicitly sized
-          and readable in both themes
+        comment: Title 16, axis titles 12, ticks and legend 10 set explicitly; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend positioned clearly without overlapping data; all labels distinct
-          and readable
+        comment: Title, legend box and plot area clear of each other; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All lines, markers, and fills visible; band envelope clearly distinguishable
+        comment: Price 2.5 px over 1.5 px bands and 2 px dashed SMA; fill at alpha
+          0.18 keeps all lines visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used correctly; colors CVD-safe; no red-green-only
-          signals
+        comment: Green, purple and blue differ in hue and luminance; SMA also differs
+          by dash
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions; generous margins; nothing cut off
+        comment: 3200x1800; plot fills most of the canvas, legend near the plot, balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title identifies plot, library, domain; axes have descriptive labels
-          with units
+        comment: '''Close price ($)'' and ''Date''; $ tick format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (position 1); bands #D55E00 (position 2); SMA
-          #0072B2 (position 3); backgrounds correct; both renders theme-correct'
+        comment: 'Price #009E73, bands #C475FD, SMA #4467A3 in Imprint order; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Custom theme tokens show intentional design; professional polish.
-          Hierarchy through color and line weight. Not highly innovative.
+        comment: The style-guide baseline, nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Clean layout with proper margins; subtle grid; clear legend styling.
-          Could be enhanced.
+        comment: Baseline grid and spines; boxed legend, nothing refined beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear focal point with green price line; good hierarchy; Bollinger
-          Bands context supports narrative
+        comment: Data displayed; the price's prominence is what the Notes ask for
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +126,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bollinger Bands chart with overlaid line series
+        comment: Bollinger bands over a price line on one axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All elements present: close price, 20-day SMA, upper/lower bands
-          with fill'
+        comment: Prominent price, shared band color with fill, dashed SMA, 20/2σ noted
+          in legend labels (C1-C4 met; C5 optional, not drawn)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: date; Y-axis: price ($); all data visible'
+        comment: Date on x, price on y; every line at its rolling value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match all series
+        comment: Title 'indicator-bollinger · python · plotly · anyplot.ai'; legend
+          entries readable
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -160,22 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete plot type showing all aspects: close price, SMA, bands,
-          120-period series'
+        comment: Wide bands early, a squeeze in Apr-May, expansion at the end; price
+          pierces both bands
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Plausible synthetic stock price; business day frequency; realistic
-          trend and volatility; neutral context
+        passed: false
+        comment: Plausible daily stock series but no instrument named (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range ($85–$112) sensible; 20-period SMA standard; 2σ envelope
-          realistic
+        comment: 'Checked: SMA midway between the bands on every date, 20-period window
+          and 2σ in code (lines 26-44), prices $84-$112 plausible'
     code_quality:
       score: 10
       max: 10
@@ -185,31 +180,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions; straightforward code
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: pandas rolling for SMA/std; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html; current API
+        comment: plot-{THEME}.png and .html, current API
     library_mastery:
       score: 6
       max: 10
@@ -219,22 +214,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter() idiomatically; proper trace patterns; theme-adaptive
-          styling
+        comment: fill='tonexty' envelope, per-trace hovertemplate with $ formatting,
+          tickformat '$.0f'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses hovermode, custom fill, rgba transparency. Could leverage more
-          Plotly features (range slider, candlestick).
+        passed: true
+        comment: hovermode='x unified' gives a single crosshair readout of price,
+          SMA and both bands in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T04:25:52Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - rolling-window
-  styling: []
+  - time-series
+  styling:
+  - alpha-blending
