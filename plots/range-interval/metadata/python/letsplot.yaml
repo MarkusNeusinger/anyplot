@@ -2,51 +2,51 @@ library: letsplot
 language: python
 specification_id: range-interval
 created: '2026-01-09T23:48:37Z'
-updated: '2026-05-18T10:54:36Z'
-generated_by: claude-haiku
-workflow_run: 26028765767
+updated: '2026-11-22T12:43:43Z'
+generated_by: claude-sonnet
+workflow_run: 45023194211
 issue: 3577
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - Perfect theme-adaptive rendering with INK/INK_SOFT tokens correctly applied to
-    all chrome elements in both light and dark themes
-  - Crystal-clear text legibility in both renders with no dark-on-dark or light-on-light
-    failures
-  - Correct Okabe-Ito palette usage (positions 1/2/3) with brand green as primary
-    series
-  - 'Semantic marker design: multiple marker types (hollow circles, triangles, filled
-    circles) effectively encode min/max/midpoint information'
-  - Realistic, plausible weather data that tells a clear seasonal story without controversy
+  - Floating geom_segment ranges per month with hollow-circle minimum and triangle
+    maximum markers sitting exactly on the bounds
+  - Theme tokens threaded through every chrome element; grid at the 15% rgba token;
+    both renders readable
+  - Canvas follows the library prompt's ggsize(800, 450) at scale=4 (3200x1800)
+  - Chronological month order kept; realistic seasonal temperature data including
+    a sub-zero January minimum
+  - Interactive HTML export alongside the PNG
   weaknesses:
-  - 'Generic design: minimal customization beyond theme_minimal() defaults'
-  - 'Limited visual emphasis: no special techniques (color contrast, gradient fills,
-    annotations) to amplify data storytelling'
-  - DE-01 and DE-03 could be elevated with refined typography, visual hierarchy, or
-    strategic visual accents
+  - 'VQ-03 (dark): the midpoint dots in #4467A3 at size 2 sit on the alpha-0.7 green
+    segment and almost disappear against it on the #1A1A17 page → a midpoint color
+    with clear contrast to the segment in both themes (e.g. the INK token) or a slightly
+    larger dot. Likely cause: geom_point(color=ACCENT2, size=2) for MID_TEMP.'
+  - 'Suggestion: geom_linerange(ymin=…, ymax=…) is the native lets-plot range geom
+    and would replace geom_segment with x=xend.'
+  - 'Suggestion: a light label or caption could tell min, max and midpoint markers
+    apart for first-time readers.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title in dark INK (#1A1A17), axis labels dark, tick labels soft gray (INK_SOFT #4A4A44) - all readable
-      Data: Green range segments (#009E73 brand), hollow green circles at min, orange triangles at max (#D55E00), blue filled circles at midpoint (#0072B2)
-      Grid: Y-axis grid subtle and non-competing
-      Legibility verdict: PASS - all elements clearly visible with strong contrast
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: bold title 'range-interval · python · letsplot · anyplot.ai' top-left in dark ink; 'Month' and 'Temperature (°C)' axis titles; soft-gray ticks Jan-Dec and -0..30 in steps of 5; faint 15% horizontal grid. All readable.
+      Data: 12 vertical semi-transparent #009E73 segments floating from min to max, hollow green circles at minima, purple #C475FD triangles at maxima, small navy #4467A3 midpoint dots.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title in light INK (#F0EFE8), labels light, tick labels lighter gray (INK_SOFT #B8B7B0) - all readable, no dark-on-dark issues
-      Data: Identical colors to light render - green segments, hollow circles, orange triangles, blue circles all unchanged
-      Grid: Y-axis grid lighter but equally subtle
-      Legibility verdict: PASS - all text readable against dark background with no failures
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks light gray, subtle grid. No dark-on-dark text.
+      Data: identical colors to the light render; the navy midpoint dots are hard to see on the darker-looking green segments.
+      Legibility verdict: PASS (text); midpoint dots low-contrast
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,51 +54,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes (24/20/16pt) explicitly set; all text readable in both
-          themes with theme-adaptive INK tokens
+        comment: Sizes 16/12/10 pt per the library prompt; all text readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All month labels properly spaced, no text collisions, markers clearly
-          distinct
+        comment: No text collisions; markers distinct
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Thick range segments (size=8), distinct marker shapes, appropriate
-          sizing for large canvas
+        passed: false
+        comment: 'Midpoint dots #4467A3 nearly vanish on the dark-green segments in
+          the dark render (defect line)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1/2/3 are CVD-safe; strong contrast throughout
+        comment: Shape plus color separate min/max; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions (1600x900 to 4800x2700); generous margins; no cut-off
-          elements
+        comment: 3200x1800 canvas; balanced proportions; title within width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format; axes labeled with units; descriptive and
-          clear
+        comment: '''Month'' and ''Temperature (°C)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand); Okabe-Ito order respected; backgrounds
-          correct; both renders theme-correct'
+        comment: Brand green first; Imprint positions 1-3; correct backgrounds; grid
+          at the 15% token
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -106,22 +103,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Clean but minimal; uses mandatory Okabe-Ito palette; theme_minimal()
-          base without additional refinement
+        comment: Style-guide baseline (theme tokens, Imprint colors, explicit sizes);
+          nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Spines removed; grid subtly customized (y-axis only); adequate whitespace
-          but limited polish
+        comment: Spine and grid rules met; no further refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy; seasonal story evident; guides viewer through
-          pattern
+        passed: false
+        comment: Data displayed chronologically as the Notes allow; no focal point
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +127,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct range-interval visualization with min-max segments as thick
-          bars per category
+        comment: Floating vertical range segments per month, correct range-interval
+          form
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Range bars, category labels, min/max markers, midpoint markers all
-          present
+        comment: C1 floating spans, C2 one thickness, even spacing, chronological;
+          C3 min/max markers on the bounds; C4 ranges separated; C5 midpoints at the
+          middle of each range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps to month, Y maps to temperature, axes show full data span
+        comment: Month on x, temperature on y; every mark at its data value; axis
+          covers -2 to 29
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec format; no legend needed (single-series, self-explanatory)
+        comment: Title in the mandated format; single series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -161,20 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12-month temperature ranges; realistic seasonal variation
+        comment: Shows ranges of varying length, a range crossing zero, min/max and
+          midpoint markers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible weather-station data; neutral, no controversial elements
+        comment: Plausible temperate weather-station monthly highs/lows, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible temperature range for temperate climate; proportional y-axis
-          scale
+        comment: 'Checked: Jan -2..6, Jul 19..29 read off the axis and match the data;
+          midpoints computed as (min+max)/2'
     code_quality:
       score: 10
       max: 10
@@ -184,58 +183,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward sequential code
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data (deterministic); reproducible output
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, pandas, lets_plot'
+        comment: os, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI or simulated interactivity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses current ggsave()
-          API
+        comment: Saves plot-{THEME}.png and .html with current ggsave API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Grammar-of-graphics approach; high-level API; proper aesthetic mappings;
-          correct export
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: Multiple geom layers; theme-adaptive styling; clean theme system
+        comment: Grammar-of-graphics layering with geom_segment and geom_point; standard
           usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
+  rendered_at: '2026-11-22T12:40:45Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - html-export
   patterns: []
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
