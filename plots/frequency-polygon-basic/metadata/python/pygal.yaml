@@ -2,51 +2,55 @@ library: pygal
 language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:17:46Z'
-updated: '2026-05-17T16:39:21Z'
-generated_by: claude-haiku
-workflow_run: 25996476726
+updated: '2026-11-22T07:16:48Z'
+generated_by: claude-sonnet
+workflow_run: 44997079993
 issue: 3418
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 79
 review:
   strengths:
-  - Correct frequency polygon with three clearly comparable distributions
-  - Excellent theme adaptation with perfect background colors and text legibility
-    in both light and dark
-  - All text readable at large 4800×2700 canvas
-  - Proper Okabe-Ito palette with correct first series (#009E73)
-  - Semi-transparent fills enhance comparison while maintaining clarity
-  - Markers at all data points improve readability
-  - Clean, deterministic code with proper reproducibility
-  - Correct bin alignment across all groups
+  - 'Correct frequency polygon on pygal.XY: one point per bin midpoint on shared edges,
+    joined by straight segments and closed on zero at both ends'
+  - 'Full Imprint palette in canonical order with #009E73 first; theme tokens flip
+    all chrome correctly in both renders'
+  - Text sized to the style guide's pygal references (66/56/44/44) on the 3200x1800
+    canvas, readable in both themes
+  - 'Clean adaptable structure: column constants, a Data block ending in df, groupby
+    plus np.histogram for the counts'
+  - HTML output keeps pygal's native hover tooltips for each vertex
   weaknesses:
-  - 'Design Excellence not maximized: could add more visual refinement through spine
-    removal and refined grid styling'
-  - Library Mastery could leverage more distinctive pygal-specific features beyond
-    standard configuration
+  - 'VQ-03, SC-02 (both): fill opacity 0.8 makes the Clay Soil area nearly opaque,
+    so Sandy Soil''s right tail (50-65 cm) and Loamy Soil''s line between 50 and 70
+    cm are traceable only by their dots, missing the spec''s ''every line traceable
+    where the lines cross'' → a semi-transparent fill around opacity 0.3-0.4 (-0.4
+    to -0.5) with the 3 px stroke kept at full strength. Likely cause: Style(opacity=0.8)
+    with fill=True.'
+  - 'Suggestion: the y tick labels 0 and 50 render at the 44 major-label size while
+    10-40 and 60 use 56; setting y_labels_major or matching the two sizes would even
+    out the axis.'
+  - 'Suggestion: three legend entries split over two rows at the bottom; legend_at_bottom_columns=3
+    would put them on one line.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title "frequency-polygon-basic · pygal · anyplot.ai" clearly visible in dark text; axis labels "Plant Height (cm)" and "Frequency" readable; tick labels on both axes visible; legend at bottom with group names
-      Data: Three frequency polygons with semi-transparent fills - Sandy Soil (#009E73, green), Loamy Soil (#D55E00, orange), Clay Soil (#0072B2, blue) in correct Okabe-Ito order; markers at all data points; lines extend to zero at both ends
-      Grid: Subtle, visible on both axes, does not dominate
-      Legibility verdict: PASS - all text is readable against light background; data colors distinct and visible; no legibility failures
+      Background: warm off-white #FAF8F1 on canvas and plot area
+      Chrome: title 'frequency-polygon-basic · python · pygal · anyplot.ai' in dark ink at about 66% of the width; axis titles 'Plant Height (cm)' and 'Frequency', ticks 20-90 and 0-60, dotted guides on both axes, legend at the bottom (Sandy Soil, Loamy Soil on row one, Clay Soil on row two); y ticks 0 and 50 render smaller than the others
+      Data: three filled polygons with dots - Sandy Soil #009E73 peaking at 53 near 45 cm, Loamy Soil #C475FD broad with peak 37 near 59 cm and a small bump at 78 cm, Clay Soil #4467A3 narrow peak 57 near 59 cm; all start and end at zero; the 0.8 fills of Clay Soil cover most of Sandy Soil's right tail and Loamy Soil's line in 50-70 cm, where only the dots remain distinct
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title clearly visible in light text; axis labels readable; tick labels visible; legend clear
-      Data: Three frequency polygons identical in color to light render (#009E73, #D55E00, #0072B2); markers visible; fill patterns maintained
-      Grid: Subtle, visible on both axes
-      Legibility verdict: PASS - all text is readable against dark background; no dark-on-dark failures; axis tick labels are visible light colors on dark background; data colors remain distinct and visible
-      Theme consistency: Data colors are identical between renders, only chrome (background, text, grid) adapted correctly
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles, ticks and legend in light ink, all readable; guides subtle; no dark-on-dark text
+      Data: same three colors as the light render, identical vertices; same occlusion under the Clay Soil fill
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,72 +58,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark themes at large canvas size
+        comment: Title 66, axis titles 56, ticks and legend 44 (style-guide pygal
+          references); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Semi-transparent fills manage overlapping distributions effectively
+        comment: No text collisions; title, ticks, axis titles and bottom legend all
+          clear
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Markers, lines, and fills all clearly visible and distinguishable
+        passed: false
+        comment: Fill opacity 0.8 makes the Clay Soil area nearly opaque, so Sandy
+          Soil's right tail and Loamy Soil's line between 50 and 70 cm read only by
+          their dots (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with good contrast
+        comment: Green, violet and blue differ in lightness and hue; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 format with good proportions, nothing cut off
+        comment: 3200x1800 canvas, title about 66% of the width, balanced axis titles,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id and site; axis labels are descriptive with
-          units
+        comment: '''Plant Height (cm)'' with unit, ''Frequency'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds #FAF8F1
-          and #1A1A17, both themes correct'
+        comment: 'Imprint palette in canonical order, first series #009E73, backgrounds
+          #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional polish with semi-transparent fills and markers, but
-          not highly distinctive
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, reference font
+          sizes; nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and clean layout, but could be more refined with spine
-          removal
+        comment: pygal default dotted guides on both axes and bottom legend; no refinement
+          beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clearly shows three distributions with distinct shapes, means, and
-          spreads
+        passed: false
+        comment: Three distributions shown; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -127,26 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY frequency polygon implementation
+        comment: Frequency polygon on pygal.XY, one polygon per group, no bars, smoothing
+          or reference lines
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: multiple distributions, distinct colors, legend,
-          markers, zero-extended lines'
+        passed: false
+        comment: Legend, distinct colors, markers, zero-extended ends and aligned
+          bins present; C4 (every line traceable where lines cross) partly missed
+          under the 0.8 fill (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y axes correct; bin edges aligned across all groups
+        comment: Vertices at shared bin midpoints and exact counts; frequency axis
+          starts at zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data series
+        comment: Title 'frequency-polygon-basic · python · pygal · anyplot.ai'; legend
+          names Sandy, Loamy, Clay Soil
     data_quality:
       score: 15
       max: 15
@@ -156,19 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects of frequency polygon shown
+        comment: Groups differ in center, spread and peak height; overlap and crossings
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plant heights by soil type is plausible and neutral
+        comment: Plant height by soil type, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values for domain (200 observations per group, 20-85cm range)
+        comment: 'Heights 20-85 cm and 200 plants per group are sensible; checked:
+          counts come from np.histogram on shared edges (line 54), maximum 57 matches
+          the y range'
     code_quality:
       score: 10
       max: 10
@@ -178,56 +193,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary abstractions
+        comment: Imports, constants, Data block, Plot, Save; adaptable-code check
+          passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: numpy, pygal, Style'
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or interactions; straightforward and appropriate
+        comment: np.histogram does the binning; loop over groupby; nothing to trim
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct filenames: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal 3
+          API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper XY chart type, custom Style with theme tokens, appropriate
-          configuration
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Semi-transparent fills are decent, but could leverage more pygal-specific
-          capabilities
+        comment: pygal.XY with Style and fill=True as the library prompt shows; idiomatic
+          but nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; HTML keeps pygal's
+          native hover tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-22T07:13:21Z'
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
+  - groupby-aggregation
   dataprep:
   - binning
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
