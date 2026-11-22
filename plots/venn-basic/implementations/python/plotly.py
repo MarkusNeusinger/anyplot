@@ -1,141 +1,166 @@
-""" anyplot.ai
+"""anyplot.ai
 venn-basic: Venn Diagram
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-15
+Library: plotly | Python 3.13
 """
 
 import os
+from itertools import combinations
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data: Programming language preference survey
-set_labels = ["Python", "JavaScript", "SQL"]
-set_sizes = [100, 80, 60]
+# Imprint palette: all eight positions, one per set in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-ab_overlap = 30  # Python & JavaScript
-ac_overlap = 20  # Python & SQL
-bc_overlap = 25  # JavaScript & SQL
-abc_overlap = 10  # All three
+# Constants
+SEPARATOR = " & "  # joins set names in the name of an overlap
+FILL_ALPHA = 0.45  # translucency of each circle, so overlaps read as blends
 
-only_a = set_sizes[0] - ab_overlap - ac_overlap + abc_overlap
-only_b = set_sizes[1] - ab_overlap - bc_overlap + abc_overlap
-only_c = set_sizes[2] - ac_overlap - bc_overlap + abc_overlap
-only_ab = ab_overlap - abc_overlap
-only_ac = ac_overlap - abc_overlap
-only_bc = bc_overlap - abc_overlap
+# Columns: set these to your table's column names
+SETS = "Sets"  # role: set_labels
+SIZE = "Set size"  # role: set_sizes
+OVERLAP = "Overlap size"  # role: intersections
 
-# Radii proportional to set size (area ∝ count)
-r_base = 1.0
-radii = [r_base * np.sqrt(s / set_sizes[0]) for s in set_sizes]
+# Data: replace this block with your own table, for example df = pd.read_csv("sets.csv")
+# One row per set (its size) or per overlap (its size, inclusive: AWS & Azure also counts the triple overlap).
+# Cloud platforms used by 100, 80 and 60 companies in a survey of engineering teams.
+df = pd.DataFrame(
+    {
+        SETS: ["AWS", "Azure", "GCP", "AWS & Azure", "AWS & GCP", "Azure & GCP", "AWS & Azure & GCP"],
+        SIZE: [100, 80, 60, None, None, None, None],
+        OVERLAP: [None, None, None, 30, 20, 25, 10],
+    }
+)
 
-# Equilateral triangle arrangement
-angle_offset = np.pi / 2
-angles = [angle_offset, angle_offset + 2 * np.pi / 3, angle_offset + 4 * np.pi / 3]
-distance = 0.6
-cx = [distance * np.cos(a) for a in angles]
-cy = [distance * np.sin(a) for a in angles]
+# Plot: reads only df and the constants above
+sizes = pd.to_numeric(df[SIZE].fillna(df[OVERLAP]), errors="coerce")
+members = [tuple(str(name).split(SEPARATOR)) for name in df[SETS]]
+inclusive = {frozenset(m): float(s) for m, s in zip(members, sizes, strict=True) if pd.notna(s)}
+names = list(dict.fromkeys(m[0] for m in members if len(m) == 1 and frozenset(m) in inclusive))
+n = len(names)
+size_of = {name: inclusive[frozenset([name])] for name in names}
+radii = np.sqrt(np.array([size_of[name] for name in names]) / np.pi)
 
-# Okabe-Ito palette with transparency
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
-fill_colors = ["rgba(0, 158, 115, 0.45)", "rgba(196, 117, 253, 0.45)", "rgba(68, 103, 163, 0.45)"]
+# Exclusive count of each region by inclusion-exclusion over the inclusive sizes
+exclusive = {}
+for k in range(1, n + 1):
+    for region in combinations(range(n), k):
+        total = 0.0
+        for j in range(k, n + 1):
+            for sup in combinations(range(n), j):
+                if set(region) <= set(sup):
+                    total += (-1) ** (j - k) * inclusive.get(frozenset(names[i] for i in sup), 0.0)
+        exclusive[region] = total
 
-hover_texts = [
-    f"<b>Python</b><br>Total: {set_sizes[0]}<br>Only Python: {only_a}<br>Python ∩ JS: {only_ab}<br>Python ∩ SQL: {only_ac}",
-    f"<b>JavaScript</b><br>Total: {set_sizes[1]}<br>Only JavaScript: {only_b}<br>JS ∩ Python: {only_ab}<br>JS ∩ SQL: {only_bc}",
-    f"<b>SQL</b><br>Total: {set_sizes[2]}<br>Only SQL: {only_c}<br>SQL ∩ Python: {only_ac}<br>SQL ∩ JS: {only_bc}",
-]
 
-theta = np.linspace(0, 2 * np.pi, 200)
+def lens_area(r1, r2, d):
+    """Overlap area of two circles whose centres are d apart."""
+    if d >= r1 + r2:
+        return 0.0
+    if d <= abs(r1 - r2):
+        return np.pi * min(r1, r2) ** 2
+    a1 = r1**2 * np.arccos((d**2 + r1**2 - r2**2) / (2 * d * r1))
+    a2 = r2**2 * np.arccos((d**2 + r2**2 - r1**2) / (2 * d * r2))
+    return a1 + a2 - 0.5 * np.sqrt((-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2))
+
+
+def centre_distance(i, j):
+    """Distance at which circles i and j overlap by their pairwise intersection (bisection)."""
+    target = inclusive.get(frozenset([names[i], names[j]]), 0.0) / np.pi
+    low, high = abs(radii[i] - radii[j]), radii[i] + radii[j]
+    for _ in range(60):
+        mid = (low + high) / 2
+        low, high = (mid, high) if lens_area(radii[i], radii[j], mid) > target else (low, mid)
+    return (low + high) / 2
+
+
+# Circle centres: set 0 at the origin, set 1 on the x axis, set 2 from the two remaining distances
+centres = np.zeros((n, 2))
+if n > 1:
+    centres[1] = [centre_distance(0, 1), 0.0]
+if n > 2:
+    d01, d02, d12 = centre_distance(0, 1), centre_distance(0, 2), centre_distance(1, 2)
+    x2 = (d02**2 - d12**2 + d01**2) / (2 * d01)
+    centres[2] = [x2, -np.sqrt(max(d02**2 - x2**2, 0.0))]
+
+# Region masks on a fine grid give each region's label position (its centroid)
+pad = 1.15
+lo = (centres - radii[:, None]).min(axis=0) - pad
+hi = (centres + radii[:, None]).max(axis=0) + pad
+gx, gy = np.meshgrid(np.linspace(lo[0], hi[0], 900), np.linspace(lo[1], hi[1], 900))
+inside = [(gx - cx) ** 2 + (gy - cy) ** 2 <= r**2 for (cx, cy), r in zip(centres, radii, strict=True)]
+
 fig = go.Figure()
-
-for i in range(3):
-    r = radii[i]
-    x_circle = cx[i] + r * np.cos(theta)
-    y_circle = cy[i] + r * np.sin(theta)
+theta = np.linspace(0, 2 * np.pi, 240)
+for i, name in enumerate(names):
+    color = IMPRINT_PALETTE[i]
+    rgb = ", ".join(str(int(color[k : k + 2], 16)) for k in (1, 3, 5))
+    others = [f"{other}: {inclusive.get(frozenset([name, other]), 0):.0f}" for other in names if other != name]
     fig.add_trace(
         go.Scatter(
-            x=x_circle,
-            y=y_circle,
-            fill="toself",
-            fillcolor=fill_colors[i],
-            line={"color": IMPRINT[i], "width": 3},
+            x=centres[i, 0] + radii[i] * np.cos(theta),
+            y=centres[i, 1] + radii[i] * np.sin(theta),
             mode="lines",
-            name=set_labels[i],
-            showlegend=False,
+            fill="toself",
+            fillcolor=f"rgba({rgb}, {FILL_ALPHA})",
+            line={"color": color, "width": 2.5},
             hoverinfo="text",
-            hovertext=hover_texts[i],
+            hovertext=f"<b>{name}</b><br>{SIZE}: {size_of[name]:.0f}<br>Shared with " + ", ".join(others),
+            showlegend=False,
         )
     )
 
-# Set labels outside each circle
-label_positions = [
-    (cx[0], cy[0] + radii[0] + 0.32, set_labels[0], set_sizes[0]),
-    (cx[1] - radii[1] - 0.32, cy[1], set_labels[1], set_sizes[1]),
-    (cx[2] + radii[2] + 0.32, cy[2], set_labels[2], set_sizes[2]),
-]
+# Exclusive count inside each region
+for region, count in exclusive.items():
+    mask = np.ones_like(gx, dtype=bool)
+    for i in range(n):
+        mask &= inside[i] if i in region else ~inside[i]
+    if mask.any():
+        fig.add_annotation(
+            x=gx[mask].mean(),
+            y=gy[mask].mean(),
+            text=f"<b>{count:.0f}</b>",
+            showarrow=False,
+            font={"size": 17, "color": INK},
+        )
 
-for x, y, label, size in label_positions:
+# Set names just outside each circle, pointing away from the middle of the diagram
+middle = centres.mean(axis=0)
+for i, name in enumerate(names):
+    away = centres[i] - middle
+    away = away / np.linalg.norm(away) if np.linalg.norm(away) > 1e-9 else np.array([0.0, 1.0])
+    x, y = centres[i] + away * (radii[i] + 0.8)
     fig.add_annotation(
-        x=x,
-        y=y,
-        text=f"<b>{label}</b><br>({size})",
-        showarrow=False,
-        font={"size": 28, "color": INK},
-        xanchor="center",
-        yanchor="middle",
+        x=x, y=y, text=f"<b>{name}</b><br>{size_of[name]:.0f}", showarrow=False, font={"size": 16, "color": INK}
     )
 
-# Region annotation positions
-pos_a = (cx[0], cy[0] + 0.32)
-pos_b = (cx[1] - 0.32, cy[1] - 0.18)
-pos_c = (cx[2] + 0.32, cy[2] - 0.18)
-pos_ab = ((cx[0] + cx[1]) / 2 - 0.12, (cy[0] + cy[1]) / 2 + 0.12)
-pos_ac = ((cx[0] + cx[2]) / 2 + 0.12, (cy[0] + cy[2]) / 2 + 0.12)
-pos_bc = ((cx[1] + cx[2]) / 2, (cy[1] + cy[2]) / 2 - 0.22)
-pos_abc = (0, 0)
-
-region_annotations = [
-    (*pos_a, only_a, "Only<br>Python"),
-    (*pos_b, only_b, "Only<br>JavaScript"),
-    (*pos_c, only_c, "Only<br>SQL"),
-    (*pos_ab, only_ab, ""),
-    (*pos_ac, only_ac, ""),
-    (*pos_bc, only_bc, ""),
-    (*pos_abc, abc_overlap, "All"),
-]
-
-for x, y, value, desc in region_annotations:
-    if desc:
-        text = f"<b>{value}</b><br><span style='font-size:18px'>{desc}</span>"
-    else:
-        text = f"<b>{value}</b>"
-    fig.add_annotation(
-        x=x, y=y, text=text, showarrow=False, font={"size": 24, "color": INK}, xanchor="center", yanchor="middle"
-    )
-
+# Style
 fig.update_layout(
+    autosize=False,
+    width=600,
+    height=600,
     title={
-        "text": "venn-basic · plotly · anyplot.ai",
-        "font": {"size": 36, "color": INK},
+        "text": "venn-basic · python · plotly · anyplot.ai",
+        "font": {"size": 18, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.95,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     showlegend=False,
-    xaxis={"visible": False, "range": [-2.5, 2.5], "scaleanchor": "y", "scaleratio": 1},
-    yaxis={"visible": False, "range": [-2.2, 2.5]},
-    margin={"l": 40, "r": 40, "t": 100, "b": 40},
+    margin={"l": 30, "r": 30, "t": 70, "b": 30},
+    xaxis={"visible": False, "range": [lo[0], hi[0]], "scaleanchor": "y", "scaleratio": 1},
+    yaxis={"visible": False, "range": [lo[1], hi[1]]},
 )
 
-fig.write_image(f"plot-{THEME}.png", width=1200, height=1200, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
