@@ -1,30 +1,20 @@
-""" anyplot.ai
+"""anyplot.ai
 kagi-basic: Basic Kagi Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-17
 """
 
 import os
-import sys
 import time
 from pathlib import Path
 
-
-# Remove script directory from sys.path to avoid shadowing bokeh package
-script_dir = os.path.dirname(os.path.abspath(__file__))
-while script_dir in sys.path:
-    sys.path.remove(script_dir)
-if "" in sys.path:
-    sys.path.remove("")
-if "." in sys.path:
-    sys.path.remove(".")
-
-import numpy as np  # noqa: E402
-from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, Legend, LegendItem  # noqa: E402
-from bokeh.plotting import figure  # noqa: E402
-from selenium import webdriver  # noqa: E402
-from selenium.webdriver.chrome.options import Options  # noqa: E402
+import numpy as np
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, Legend, LegendItem
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 # Theme tokens
@@ -34,158 +24,138 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-YANG_COLOR = "#009E73"  # First series - bluish green
-YIN_COLOR = "#AE3030"  # imprint red — bearish
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+YANG_COLOR = IMPRINT_PALETTE[0]  # thick, bullish
+YIN_COLOR = IMPRINT_PALETTE[4]  # thin, bearish (semantic red)
 
-# Data generation
+# Constants
+REVERSAL_PCT = 0.04  # a Kagi line turns only after a 4% move against its direction
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close price ($)"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 250
-
-# Simulate a stock price with trends
-base_price = 100.0
 returns = np.random.normal(0.001, 0.02, n_days)
-# Add some trending periods
-returns[20:60] += 0.003  # Uptrend
-returns[80:120] -= 0.004  # Downtrend
-returns[150:200] += 0.002  # Uptrend
-prices = base_price * np.cumprod(1 + returns)
+returns[20:60] += 0.003  # uptrend
+returns[80:120] -= 0.004  # downtrend
+returns[150:200] += 0.002  # uptrend
+df = pd.DataFrame({DATE: pd.date_range("2024-01-01", periods=n_days, freq="B"), CLOSE: 100.0 * np.cumprod(1 + returns)})
 
-# Kagi chart algorithm
-reversal_pct = 0.04  # 4% reversal threshold
+# Plot: reads only df and the constants above
+prices = df[CLOSE].dropna().to_numpy()
 
+# Kagi construction: (x1, y1, x2, y2, is_yang) per segment
 current_price = prices[0]
-direction = 1  # 1 for up, -1 for down
-is_yang = True  # Start as yang (thick)
+direction = 1
+is_yang = True
 line_index = 0
 last_high = prices[0]
 last_low = prices[0]
-
-# Store kagi line segments: (x1, y1, x2, y2, is_yang)
 segments = []
 
-for i in range(1, len(prices)):
-    price = prices[i]
-    reversal_amount = current_price * reversal_pct
-
-    if direction == 1:  # Currently going up
+for price in prices[1:]:
+    reversal_amount = current_price * REVERSAL_PCT
+    if direction == 1:
         if price > current_price:
-            # Continue upward - extend vertical line
             if price > last_high:
-                is_yang = True  # Becomes yang when exceeds previous high
+                is_yang = True
             last_high = max(last_high, price)
             segments.append((line_index, current_price, line_index, price, is_yang))
             current_price = price
         elif current_price - price >= reversal_amount:
-            # Reversal down - draw horizontal shoulder
             segments.append((line_index, current_price, line_index + 1, current_price, is_yang))
             line_index += 1
             direction = -1
             if price < last_low:
-                is_yang = False  # Becomes yin when falls below previous low
+                is_yang = False
             last_low = min(last_low, price)
             segments.append((line_index, current_price, line_index, price, is_yang))
             current_price = price
-    else:  # Currently going down
+    else:
         if price < current_price:
-            # Continue downward - extend vertical line
             if price < last_low:
-                is_yang = False  # Becomes yin when falls below previous low
+                is_yang = False
             last_low = min(last_low, price)
             segments.append((line_index, current_price, line_index, price, is_yang))
             current_price = price
         elif price - current_price >= reversal_amount:
-            # Reversal up - draw horizontal waist
             segments.append((line_index, current_price, line_index + 1, current_price, is_yang))
             line_index += 1
             direction = 1
             if price > last_high:
-                is_yang = True  # Becomes yang when exceeds previous high
+                is_yang = True
             last_high = max(last_high, price)
             segments.append((line_index, current_price, line_index, price, is_yang))
             current_price = price
 
-# Prepare data for ColumnDataSource - separate yang and yin
-xs_yang, ys_yang = [], []
-xs_yin, ys_yin = [], []
+yang = [s for s in segments if s[4]]
+yin = [s for s in segments if not s[4]]
+source_yang = ColumnDataSource(data={"xs": [[s[0], s[2]] for s in yang], "ys": [[s[1], s[3]] for s in yang]})
+source_yin = ColumnDataSource(data={"xs": [[s[0], s[2]] for s in yin], "ys": [[s[1], s[3]] for s in yin]})
 
-for seg in segments:
-    x1, y1, x2, y2, yang = seg
-    if yang:
-        xs_yang.append([x1, x2])
-        ys_yang.append([y1, y2])
-    else:
-        xs_yin.append([x1, x2])
-        ys_yin.append([y1, y2])
-
-source_yang = ColumnDataSource(data={"xs": xs_yang, "ys": ys_yang})
-source_yin = ColumnDataSource(data={"xs": xs_yin, "ys": ys_yin})
-
-# Create figure
+title = "kagi-basic · python · bokeh · anyplot.ai"
 p = figure(
-    width=4800,
-    height=2700,
-    title="kagi-basic · bokeh · anyplot.ai",
-    x_axis_label="Line Index",
-    y_axis_label="Price ($)",
+    width=3200,
+    height=1800,
+    title=title,
+    x_axis_label="Line index",
+    y_axis_label=CLOSE,
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Plot kagi lines - yang (thick) and yin (thin) with ColumnDataSource
-yang_renderer = p.multi_line(xs="xs", ys="ys", source=source_yang, line_color=YANG_COLOR, line_width=8)
-yin_renderer = p.multi_line(xs="xs", ys="ys", source=source_yin, line_color=YIN_COLOR, line_width=3)
+yang_renderer = p.multi_line(xs="xs", ys="ys", source=source_yang, line_color=YANG_COLOR, line_width=10)
+yin_renderer = p.multi_line(xs="xs", ys="ys", source=source_yin, line_color=YIN_COLOR, line_width=4)
 
-# Styling - scaled for 4800x2700 canvas
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-
-# Grid styling - subtle, solid lines
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
-
-# Background
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
-# Add legend with larger, more prominent text
 legend = Legend(
     items=[
-        LegendItem(label="Yang (Uptrend)", renderers=[yang_renderer]),
-        LegendItem(label="Yin (Downtrend)", renderers=[yin_renderer]),
+        LegendItem(label="Yang (thick, uptrend)", renderers=[yang_renderer]),
+        LegendItem(label="Yin (thin, downtrend)", renderers=[yin_renderer]),
     ],
     location="top_left",
-    label_text_font_size="20pt",
+    label_text_font_size="34pt",
 )
-
 p.add_layout(legend)
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.background_fill_alpha = 0.9
 p.legend.border_line_color = INK_SOFT
 p.legend.label_text_color = INK_SOFT
 
-# Save HTML
+# Save HTML + PNG via headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome via Selenium
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -200,6 +170,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
-time.sleep(3)  # Let Bokeh's JS render
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
