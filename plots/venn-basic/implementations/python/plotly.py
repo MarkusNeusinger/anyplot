@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 venn-basic: Venn Diagram
-Library: plotly | Python 3.13
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-22
 """
 
 import os
