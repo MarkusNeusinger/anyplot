@@ -1,200 +1,164 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-printable: Printable Maze Puzzle
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-16
 """
 
 import os
-import re
-import sys
-from importlib import import_module
+
+import numpy as np
+import pygal
+from pygal.style import Style
 
 
-# Prevent module name conflict with pygal.py script
-sys.path = [p for p in sys.path if "implementations" not in p]
-
-import cairosvg  # noqa: E402
-import numpy as np  # noqa: E402
-
-
-pygal_module = import_module("pygal")  # noqa: E402
-Style = import_module("pygal.style").Style  # noqa: E402
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#000000" if THEME == "light" else "#F0EFE8"  # walls: black on white for printing
 
-# Theme-adaptive colors for maze walls and background
-if THEME == "light":
-    PAGE_BG = "#FAF8F1"
-    WALL_COLOR = "#000000"  # Black walls on light background (printable)
-else:
-    PAGE_BG = "#1A1A17"
-    WALL_COLOR = "#FFFFFF"  # White walls on dark background
+# Imprint palette: the start marker takes position 1
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Seed for reproducibility
-np.random.seed(42)
+# Data: maze parameters, no table (a generated puzzle layout)
+MAZE_WIDTH = 25  # cells horizontally
+MAZE_HEIGHT = 25  # cells vertically
+SEED = 42
 
-# Maze dimensions (25x25 as specified in spec)
-maze_width = 25
-maze_height = 25
+# Plot
+rng = np.random.default_rng(SEED)
 
-# Generate maze using DFS algorithm
-# Each cell: 0 = wall, 1 = passage
-grid_h = maze_height * 2 + 1
-grid_w = maze_width * 2 + 1
-maze = np.zeros((grid_h, grid_w), dtype=int)
-
-# Initialize cells (passages between walls)
-for y in range(maze_height):
-    for x in range(maze_width):
-        maze[y * 2 + 1, x * 2 + 1] = 1
-
-# DFS maze generation
+# Depth-first carving: `open_right[y][x]` / `open_down[y][x]` mark removed interior walls
+open_right = np.zeros((MAZE_HEIGHT, MAZE_WIDTH), dtype=bool)
+open_down = np.zeros((MAZE_HEIGHT, MAZE_WIDTH), dtype=bool)
+visited = np.zeros((MAZE_HEIGHT, MAZE_WIDTH), dtype=bool)
+visited[0, 0] = True
 stack = [(0, 0)]
-visited = set()
-visited.add((0, 0))
-
-directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-
 while stack:
-    cx, cy = stack[-1]
-    neighbors = []
-    for dx, dy in directions:
-        nx, ny = cx + dx, cy + dy
-        if 0 <= nx < maze_width and 0 <= ny < maze_height and (nx, ny) not in visited:
-            neighbors.append((nx, ny, dx, dy))
-
-    if neighbors:
-        idx = np.random.randint(len(neighbors))
-        nx, ny, dx, dy = neighbors[idx]
-        # Remove wall between current and neighbor
-        maze[cy * 2 + 1 + dy, cx * 2 + 1 + dx] = 1
-        visited.add((nx, ny))
-        stack.append((nx, ny))
-    else:
+    cy, cx = stack[-1]
+    options = [
+        (cy + dy, cx + dx)
+        for dy, dx in ((0, 1), (1, 0), (0, -1), (-1, 0))
+        if 0 <= cy + dy < MAZE_HEIGHT and 0 <= cx + dx < MAZE_WIDTH and not visited[cy + dy, cx + dx]
+    ]
+    if not options:
         stack.pop()
+        continue
+    ny, nx = options[rng.integers(len(options))]
+    if ny == cy:
+        open_right[cy, min(cx, nx)] = True
+    else:
+        open_down[min(cy, ny), cx] = True
+    visited[ny, nx] = True
+    stack.append((ny, nx))
 
-# Create entrance (top-left) and exit (bottom-right)
-maze[0, 1] = 1  # Entrance at top
-maze[grid_h - 1, grid_w - 2] = 1  # Exit at bottom
+# Wall runs on the cell-edge lattice; y grows downward, so the maze is drawn with y flipped
+interior_runs = []
+for y in range(1, MAZE_HEIGHT):  # horizontal interior walls on lattice line y
+    x = 0
+    while x < MAZE_WIDTH:
+        if open_down[y - 1, x]:
+            x += 1
+            continue
+        start = x
+        while x < MAZE_WIDTH and not open_down[y - 1, x]:
+            x += 1
+        interior_runs.append([(start, MAZE_HEIGHT - y), (x, MAZE_HEIGHT - y)])
+for x in range(1, MAZE_WIDTH):  # vertical interior walls on lattice line x
+    y = 0
+    while y < MAZE_HEIGHT:
+        if open_right[y, x - 1]:
+            y += 1
+            continue
+        start = y
+        while y < MAZE_HEIGHT and not open_right[y, x - 1]:
+            y += 1
+        interior_runs.append([(x, MAZE_HEIGHT - start), (x, MAZE_HEIGHT - y)])
 
-# Mark start and goal positions in the maze data
-# Start: first cell after entrance (row 1, col 1)
-start_y, start_x = 1, 1
-# Goal: last cell before exit (row grid_h-2, col grid_w-2)
-goal_y, goal_x = grid_h - 2, grid_w - 2
+# Outer boundary, closed except for an entrance in the top-left cell and an exit in the bottom-right cell
+boundary_runs = [
+    [(1, MAZE_HEIGHT), (MAZE_WIDTH, MAZE_HEIGHT)],  # top, entrance above column 0
+    [(0, 0), (MAZE_WIDTH - 1, 0)],  # bottom, exit below the last column
+    [(0, 0), (0, MAZE_HEIGHT)],  # left
+    [(MAZE_WIDTH, 0), (MAZE_WIDTH, MAZE_HEIGHT)],  # right
+]
+wall_runs = boundary_runs + interior_runs
 
-# All walls are the same color - create enough entries for each row
-colors = tuple([WALL_COLOR] * grid_h)
+# Start and goal markers sit in the centre of their cells
+start_cell = (0.5, MAZE_HEIGHT - 0.5)
+goal_cell = (MAZE_WIDTH - 0.5, 0.5)
+LABEL_SHIFT = 1.04
+LABEL_LIFT = 0.8  # pygal anchors value text at its left edge; shift back to centre the letter
 
-# Custom style - clean for printability
-custom_style = Style(
+# Layout: a square canvas with equal data units per pixel on both axes
+CANVAS = 2400
+MARGIN = 150
+TITLE_SIZE = 56
+title_band = 1.0 * TITLE_SIZE  # pygal reserves roughly this height above the plot
+side = CANVAS - 2 * MARGIN
+margin_top = MARGIN + title_band
+plot_side = CANVAS - margin_top - MARGIN
+inset = (side - plot_side) / 2 + 26  # 26 px: pygal's own side padding around the plot
+cell = plot_side / max(MAZE_WIDTH, MAZE_HEIGHT)
+wall_stroke = 0.2 * cell
+n_walls = len(wall_runs)
+
+style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
-    foreground=WALL_COLOR,
-    foreground_strong=WALL_COLOR,
-    foreground_subtle=WALL_COLOR,
-    colors=colors,
-    title_font_size=96,
-    label_font_size=1,
-    major_label_font_size=1,
-    legend_font_size=1,
-    value_font_size=1,
-    font_family="monospace",
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=PAGE_BG,
+    colors=(INK,) * n_walls + (IMPRINT_PALETTE[0], IMPRINT_PALETTE[4]),
+    stroke_width=wall_stroke,
+    stroke_width_hover=wall_stroke,
+    title_font_size=TITLE_SIZE,
+    value_font_size=int(0.75 * cell),
+    label_font_size=int(0.6 * cell),
+    value_colors=(INK,) * n_walls + (IMPRINT_PALETTE[0], IMPRINT_PALETTE[4]),
+    font_family="sans-serif",
+    stroke_opacity=1,
+    stroke_opacity_hover=1,
+    opacity=1,
+    opacity_hover=1,
 )
 
-# Use Dot chart to create grid representation
-chart = pygal_module.Dot(
-    width=3600,
-    height=3600,
-    style=custom_style,
-    title="maze-printable · pygal · anyplot.ai",
+chart = pygal.XY(
+    width=CANVAS,
+    height=CANVAS,
+    style=style,
+    title="maze-printable · python · pygal · anyplot.ai",
     show_legend=False,
     show_x_labels=False,
     show_y_labels=False,
-    dots_size=32,
-    margin=100,
+    show_x_guides=False,
+    show_y_guides=False,
+    show_minor_x_labels=False,
+    show_minor_y_labels=False,
+    xrange=(0, MAZE_WIDTH),
+    range=(0, MAZE_HEIGHT),
+    include_x_axis=False,
+    stroke=True,
+    show_dots=False,
+    dots_size=0,
+    margin_top=int(margin_top),
+    margin_bottom=MARGIN,
+    margin_left=int(MARGIN + inset),
+    margin_right=int(MARGIN + inset),
+    print_values=True,
+    tooltip_border_radius=0,
 )
+for i, run in enumerate(wall_runs):
+    chart.add(f"Wall {i}", run, stroke_style={"linecap": "square"}, formatter=lambda _v: "")
+for name, (px, py), letter in (("Start", start_cell, "S"), ("Goal", goal_cell, "G")):
+    chart.add(
+        name,
+        [(px - LABEL_SHIFT, py + LABEL_LIFT)],
+        stroke=False,
+        show_dots=True,
+        dots_size=0.01,
+        formatter=lambda _v, text=letter: text,
+    )
 
-# Add wall rows - walls show as dots, passages are empty
-for y in range(grid_h):
-    row_data = []
-    for x in range(grid_w):
-        if maze[y, x] == 0:  # Wall
-            row_data.append(1)
-        else:  # Passage
-            row_data.append(None)
-    chart.add("", row_data)
-
-# First, create a helper chart with dots at start and goal positions to find exact coordinates
-helper_chart = pygal_module.Dot(
-    width=3600,
-    height=3600,
-    style=custom_style,
-    title="maze-printable · pygal · anyplot.ai",
-    show_legend=False,
-    show_x_labels=False,
-    show_y_labels=False,
-    dots_size=32,
-    margin=100,
-)
-
-# Add rows with dots only at start and goal positions
-for y in range(grid_h):
-    row_data = []
-    for x in range(grid_w):
-        if (x == start_x and y == start_y) or (x == goal_x and y == goal_y):
-            row_data.append(1)
-        else:
-            row_data.append(None)
-    helper_chart.add("", row_data)
-
-# Extract circle positions from helper chart
-helper_svg = helper_chart.render().decode("utf-8")
-circles = re.findall(r'<circle[^>]*cx="([^"]+)"[^>]*cy="([^"]+)"', helper_svg)
-
-# Get start and goal positions (first circle is start, second is goal)
-# Note: pygal applies a transform to the plot group, so we need to add offsets
-# The plot group has transform="translate(margin, title_area_height + margin)"
-# margin = 100, title_area_height ~ 106 (based on title_font_size 96)
-plot_x_offset = 100
-plot_y_offset = 206  # Accounts for title area and margin
-
-if len(circles) >= 2:
-    s_x = float(circles[0][0]) + plot_x_offset
-    s_y = float(circles[0][1]) + plot_y_offset
-    g_x = float(circles[1][0]) + plot_x_offset
-    g_y = float(circles[1][1]) + plot_y_offset
-else:
-    # Fallback positions
-    s_x, s_y = 300, 400
-    g_x, g_y = 3350, 3350
-
-# Render the main maze chart
-svg_string = chart.render().decode("utf-8")
-
-# Create S and G text elements with bold styling - sized to fit within a cell
-# Cell spacing is approximately 64px, so font-size of 50 fits well
-s_marker = f'''<text x="{s_x}" y="{s_y}" font-family="Arial, sans-serif" font-size="50" font-weight="bold" fill="{WALL_COLOR}" text-anchor="middle" dominant-baseline="central">S</text>'''
-g_marker = f'''<text x="{g_x}" y="{g_y}" font-family="Arial, sans-serif" font-size="50" font-weight="bold" fill="{WALL_COLOR}" text-anchor="middle" dominant-baseline="central">G</text>'''
-
-# Insert markers before the closing </svg> tag
-svg_with_markers = svg_string.replace("</svg>", f"{s_marker}\n{g_marker}\n</svg>")
-
-# Use cairosvg to convert SVG to PNG
-cairosvg.svg2png(bytestring=svg_with_markers.encode("utf-8"), write_to=f"plot-{THEME}.png")
-
-# Also save HTML version with markers
-html_template = f"""<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>maze-printable · pygal · anyplot.ai</title>
-</head>
-<body style="margin:0;padding:0;background:{PAGE_BG};">
-{svg_with_markers}
-</body>
-</html>"""
-
-with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
-    f.write(html_template)
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
