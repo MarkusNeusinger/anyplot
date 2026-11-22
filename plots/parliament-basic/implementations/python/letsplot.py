@@ -1,20 +1,31 @@
-""" anyplot.ai
+"""anyplot.ai
 parliament-basic: Parliament Seat Chart
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-17
-"""
-# ruff: noqa: F405
-"""anyplot.ai
-parliament-basic: Parliament Seat Chart
-Library: letsplot | Python 3.13
-Quality: pending | Updated: 2026-05-17
 """
 
 import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
+from lets_plot import (
+    LetsPlot,
+    aes,
+    coord_fixed,
+    element_rect,
+    element_text,
+    geom_point,
+    geom_segment,
+    geom_text,
+    ggplot,
+    ggsave,
+    ggsize,
+    labs,
+    scale_color_manual,
+    scale_y_continuous,
+    theme,
+    theme_void,
+)
 
 
 LetsPlot.setup_html()
@@ -26,100 +37,107 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series ALWAYS #009E73
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+# Imprint palette: all eight positions, one per party in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Board of Directors composition (neutral, non-political)
-parties = [
-    "Finance Committee",
-    "Technology Board",
-    "Operations Division",
-    "Research Council",
-    "Marketing Team",
-    "Legal Advisory",
-]
-seats = [85, 72, 58, 35, 95, 55]
+# Constants
+N_ROWS = 8  # concentric arcs of the chamber
+INNER_RADIUS = 0.45
+ROW_GAP = 0.075
 
-total_seats = sum(seats)
-n_rows = 5
+# Columns: set these to your table's column names
+PARTY = "Division"  # role: party
+SEATS = "Seats"  # role: seats
+COLOR = "Color"  # role: color
 
-# Calculate seat positions in semicircular arrangement
-row_weights = np.array([i + 1 for i in range(n_rows)])
-seats_per_row = (row_weights / row_weights.sum() * total_seats).astype(int)
-seats_per_row[-1] += total_seats - seats_per_row.sum()  # Adjust for rounding
+# Data: replace this block with your own table, for example df = pd.read_csv("chamber.csv")
+df = pd.DataFrame(
+    {
+        PARTY: [
+            "Finance Committee",
+            "Technology Board",
+            "Operations Division",
+            "Research Council",
+            "Marketing Team",
+            "Legal Advisory",
+        ],
+        SEATS: [85, 72, 58, 35, 95, 55],
+        COLOR: ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"],
+    }
+)
 
-x_positions = []
-y_positions = []
-party_labels = []
+# Plot
+total = int(df[SEATS].astype(int).sum())
+majority = total // 2 + 1
 
-party_index = 0
-remaining_in_party = seats[0]
+# Rows hold seats in proportion to their radius, so seat spacing is even
+radii = INNER_RADIUS + ROW_GAP * np.arange(N_ROWS)
+per_row = np.floor(radii / radii.sum() * total).astype(int)
+per_row[-1] += total - per_row.sum()
 
-for row_idx, row_seats in enumerate(seats_per_row):
-    radius = 0.5 + row_idx * 0.12  # Radius increases for outer rows
-    angles = np.linspace(np.pi, 0, row_seats)  # Semicircle from left to right
+angle = np.concatenate([np.linspace(np.pi, 0, n) for n in per_row])
+radius = np.concatenate([np.full(n, r) for n, r in zip(per_row, radii, strict=True)])
 
-    for angle in angles:
-        x = radius * np.cos(angle)
-        y = radius * np.sin(angle)
-        x_positions.append(x)
-        y_positions.append(y)
-        party_labels.append(parties[party_index])
+# Sweep the seats from left to right and hand them out party by party
+order = np.lexsort((radius, -angle))
+angle, radius = angle[order], radius[order]
+labels = [f"{p} ({int(s)})" for p, s in zip(df[PARTY], df[SEATS], strict=True)]
+seat_party = np.repeat(labels, df[SEATS].astype(int))
 
-        remaining_in_party -= 1
-        if remaining_in_party == 0 and party_index < len(seats) - 1:
-            party_index += 1
-            remaining_in_party = seats[party_index]
+seats = pd.DataFrame(
+    {"x": radius * np.cos(angle), "y": radius * np.sin(angle), "label": pd.Categorical(seat_party, categories=labels)}
+)
 
-# Create DataFrame
-df = pd.DataFrame({"x": x_positions, "y": y_positions, "party": party_labels})
+# Majority threshold: a radial line between the last seat of the majority and the next one,
+# drawn in the gaps inside and outside the seat arcs so it never covers a seat
+cut = (angle[majority - 1] + angle[majority]) / 2
+r_in, r_out = radii[0] - 0.09, radii[-1] + 0.09
+r_label = r_out + 0.17
+threshold = pd.DataFrame(
+    {
+        "x": [r_in * np.cos(cut)],
+        "y": [r_in * np.sin(cut)],
+        "xend": [(r_in - 0.1) * np.cos(cut)],
+        "yend": [(r_in - 0.1) * np.sin(cut)],
+    }
+)
+threshold_out = pd.DataFrame(
+    {
+        "x": [r_out * np.cos(cut)],
+        "y": [r_out * np.sin(cut)],
+        "xend": [(r_out + 0.07) * np.cos(cut)],
+        "yend": [(r_out + 0.07) * np.sin(cut)],
+    }
+)
+threshold_label = pd.DataFrame(
+    {"x": [r_label * np.cos(cut)], "y": [r_label * np.sin(cut)], "text": [f"Majority: {majority} of {total}"]}
+)
 
-# Create legend labels with seat counts
-party_seat_counts = dict(zip(parties, seats, strict=True))
-df["party_label"] = df["party"].apply(lambda p: f"{p} ({party_seat_counts[p]})")
-
-# Create color mapping (Okabe-Ito in order)
-color_map = {
-    f"{p} ({s})": IMPRINT[i]
-    for i, (p, s) in enumerate(zip(parties, seats, strict=True))
-}
-color_values = [color_map[label] for label in df["party_label"].unique()]
-
-# Theme-adaptive styling
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    axis_title=element_text(color=INK),
-    axis_text=element_text(color=INK_SOFT),
-    axis_line=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24, hjust=0.5),
+    plot_title=element_text(color=INK, size=16, hjust=0.5),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT),
-    legend_title=element_text(color=INK),
-    plot_margin=[40, 40, 40, 40],
+    legend_text=element_text(color=INK_SOFT, size=11),
+    legend_title=element_text(color=INK, size=12),
+    plot_margin=[24, 0, 0, 0],
 )
 
-# Build the plot
 plot = (
-    ggplot(df, aes(x="x", y="y", color="party_label"))
-    + geom_point(size=5, alpha=0.9)
-    + scale_color_manual(values=color_values)
-    + coord_fixed(ratio=1)
+    ggplot()
+    + geom_point(aes(x="x", y="y", color="label"), data=seats, size=3.2)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=threshold, color=INK, size=0.8)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=threshold_out, color=INK, size=0.8)
+    + geom_text(aes(x="x", y="y", label="text"), data=threshold_label, color=INK_SOFT, size=5)
+    + scale_color_manual(values=IMPRINT_PALETTE, breaks=labels)
+    + scale_y_continuous(expand=[0.105, 0])
+    + coord_fixed()
     + theme_void()
     + anyplot_theme
-    + labs(title="parliament-basic · letsplot · anyplot.ai", color="Division (Seats)")
-    + ggsize(1600, 900)
+    + labs(title="parliament-basic · python · letsplot · anyplot.ai", color="Division (seats)")
+    + ggsize(800, 450)
 )
-
-# Add majority line annotation (horizontal line at y=0)
-plot = plot + geom_hline(yintercept=0, color=INK_SOFT, size=1.5, alpha=0.4)
-
-# Add total seats annotation
-annotation_df = pd.DataFrame(
-    {"x": [0], "y": [-0.15], "label": [f"Total: {total_seats} seats | Majority: {total_seats // 2 + 1}"]}
-)
-plot = plot + geom_text(data=annotation_df, mapping=aes(x="x", y="y", label="label"), size=14, color=INK_SOFT)
 
 # Save as PNG and HTML with theme suffix
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
