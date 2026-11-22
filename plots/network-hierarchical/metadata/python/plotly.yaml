@@ -2,64 +2,51 @@ library: plotly
 language: python
 specification_id: network-hierarchical
 created: '2026-01-08T21:55:53Z'
-updated: '2026-05-17T06:19:39Z'
-generated_by: claude-haiku
-workflow_run: 25983216939
+updated: '2026-11-22T03:17:12Z'
+generated_by: claude-sonnet
+workflow_run: 44979425214
 issue: 3343
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - Perfect visual quality and theme compliance in both light and dark renders
-  - Elegant hierarchical layout with asymmetric tree structure handled beautifully
-  - Proper Okabe-Ito color scheme with clear color-coding for hierarchy levels (brand
-    green for CEO, then vermillion/blue/purple for deeper levels)
-  - Full spec compliance — all required features implemented (tree layout, parent-child
-    edges, root at top, orthogonal routing)
-  - Deterministic, reproducible code with clean structure and proper theme-adaptive
-    styling throughout
-  - Interactive hover text showing node labels and hierarchy level information
+  - Tidy tree layout puts the CEO at the top and each of the four levels on its own
+    row, with every parent centered over its children and siblings grouped together
+    (C1, C2)
+  - Parent labels sit to the right of their nodes and leaf labels below, so no edge
+    crosses any label in either render (C4)
+  - Thin orthogonal elbow edges in INK_SOFT, without arrowheads, stay lighter than
+    the 24 px nodes and are easy to trace from parent to child (C3)
+  - Axes and grid are hidden, and theme tokens thread through the title, labels, edges
+    and node outlines, so both renders read cleanly
+  - Native plotly hovertext shows each node's label and level in the HTML output,
+    and the figure is exported to both PNG and HTML
   weaknesses:
-  - Design excellence scores moderate (6/8 and 4/6) — could enhance with curved edges
-    or more sophisticated visual refinement rather than orthogonal routing alone
-  - Library mastery for distinctive features is low (2/5) — could showcase more Plotly-specific
-    interactive capabilities beyond basic hover text
+  - 'CQ-01 (code): the layout is computed by a recursive helper function `place(node,
+    depth)` (lines 69–78), which breaks the Imports → Data → Plot → Save structure
+    with no functions → compute depth and x in plain loops instead: walk the nodes
+    in breadth-first order to assign levels, give leaves consecutive slots, then visit
+    the nodes in reverse breadth-first order and set each parent to the mean x of
+    its children. Likely cause: the tidy-tree recursion written as a function.'
+  - 'Suggestion: a slightly wider gap between the lowest level and the bottom margin
+    would balance the empty space above the CEO.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle warmth — clean, readable surface.
-      Chrome: Title "network-hierarchical · plotly · anyplot.ai" is dark text (INK), clearly visible at top center.
-        Axis lines removed (appropriate for network viz). All text elements use dark INK color against light background.
-      Data: Hierarchical organizational chart with 22 nodes across 4 levels, using Okabe-Ito color scheme:
-        - Level 0 (CEO): Brand green (#009E73)
-        - Level 1 (VPs): Vermillion (#D55E00)
-        - Level 2 (Directors): Blue (#0072B2)
-        - Level 3 (Leads): Reddish purple (#CC79A7)
-        Nodes have white borders for edge definition. Text labels positioned below nodes (14pt font).
-        Edges use orthogonal routing (gray lines, INK_SOFT color) with clear parent-child connections.
-      Layout: Asymmetric tree structure beautifully handled — leaf nodes spaced sequentially at bottom,
-        parent nodes centered above children. Clear hierarchical depth and branching visible.
-      Legibility verdict: PASS — all text readable, nodes well-spaced, edges don't clutter the view.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas; no axes, no grid.
+      Chrome: the title "network-hierarchical · python · plotly · anyplot.ai" is centered at the top in dark INK and takes about 42% of the width. All node labels are dark text and readable.
+      Data: an org chart of 20 nodes on 4 rows. The CEO (brand green #009E73) is at the top, the 3 VPs are purple #C475FD, the 7 directors blue #4467A3 and the 9 leads ochre #BD8233. Each node has a thin page-colored outline. Orthogonal elbow edges are drawn as thin #4A4A44 lines. Parent labels sit to the right of their nodes and leaf labels below them, so no label is crossed by an edge.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — dark, comfortable for evening viewing.
-      Chrome: Title uses light text (INK #F0EFE8), clearly visible against dark background.
-        All UI elements properly theme-adapted. No dark-on-dark failures detected.
-      Data: Identical data colors to light render (positions 1-4 of Okabe-Ito palette unchanged):
-        - Level 0: Same brand green (#009E73)
-        - Level 1: Same vermillion (#D55E00)
-        - Level 2: Same blue (#0072B2)
-        - Level 3: Same reddish purple (#CC79A7)
-        Node text is light (INK #F0EFE8) and readable against dark background.
-        Edges use light gray (INK_SOFT #B8B7B0) and are clearly visible.
-        White node borders visible against dark background.
-      Layout: Identical to light render — only chrome (background, text colors) flipped.
-      Legibility verdict: PASS — all text readable, excellent contrast, no dark-on-dark issues.
-        Brand green and all data colors maintain excellent visibility on dark surface.
+      Background: warm near-black #1A1A17; no axes, no grid.
+      Chrome: the title and all node labels are light #F0EFE8 text and clearly readable. There is no dark-on-dark text.
+      Data: the node colors are identical to the light render (green, purple, blue, ochre). The edges flip to light grey #B8B7B0 and stay visible, and the brand-green CEO node reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -70,68 +57,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, labels 16px, all readable in both themes
+        comment: Title 16 px and labels 10 px at scale 4 are readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Orthogonal routing, centered parents, no label collisions
+        comment: Parent labels sit to the right and leaf labels below; no edge crosses
+          a label
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers 48px, edges 3.5px, all clearly visible
+        comment: 24 px nodes with outlines and 1.5 px edges suit 20 nodes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe
+        comment: Levels also read from position, so color is never the only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px renders well, nothing cut off
+        comment: 3200x1800 canvas; the tree fills it with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: network-hierarchical · plotly · anyplot.ai'
+        comment: N/A for axes (hidden by design); the node labels are readable names
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Light bg #FAF8F1, dark bg #1A1A17, first series #009E73, both renders
-          theme-correct'
+        comment: 'Imprint positions 1-4 in canonical order with the root in #009E73;
+          theme backgrounds are correct'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional polish with elegant hierarchical structure, asymmetric
-          handling, theme adaptation
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Node borders add definition, orthogonal routing is structured but
-          could be softer (bezier curves)
+        passed: false
+        comment: Label placement chosen by role (right of parents, below leaves) keeps
+          every label clear of the edges
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear color-based hierarchy, level-based visual ordering guides viewer
+        passed: false
+        comment: Data displayed; no hierarchy or focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -141,26 +128,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hierarchical network graph with tree layout
+        comment: Hierarchical tree layout network
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hierarchical levels, parent-child edges, root at top, orthogonal
-          routing
+        comment: 'C1-C4 all met: root at the top, levels on their own rows, no axes,
+          edges without arrows, spacing keeps labels apart'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 22 nodes positioned correctly, all edges shown
+        comment: All 20 nodes and 19 edges drawn; layout-positioned type
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, labels on nodes eliminate need for legend
+        comment: Title format correct; no legend needed because nodes are labelled
+          directly
     data_quality:
       score: 15
       max: 15
@@ -170,79 +158,83 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows asymmetric branching, multiple reporting lines, full organizational
-          structure
+        comment: 4 levels, unequal branching (1-3 children), subtrees of different
+          size
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic org chart with plausible titles, neutral content
+        comment: Plausible, neutral company org chart
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 22 nodes within 10-50 range, 4 levels depth is reasonable, proportional
-          spacing
+        comment: 20 nodes, inside the 10-50 range; the spec has no Check values
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Straightforward procedural code, no unnecessary abstraction
+        passed: false
+        comment: Recursive helper function place() for the layout (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic, hardcoded data, same output every run
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects, both used
+        comment: os, pandas and plotly are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no AR-08 violations
+        comment: Appropriate complexity; no installed call computes a tree layout
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html correctly
+        comment: plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Standard Plotly patterns with go.Figure and Scatter traces, theme-adaptive
-          approach
+        comment: Standard go.Scatter edge and node traces with None separators
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: HTML export with CDN, hover tooltips, but could showcase more interactive
-          Plotly capabilities
+        passed: false
+        comment: hovertext with each node's level for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T03:13:39Z'
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+  - explicit-figure
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-layout
+  styling:
+  - minimal-chrome
