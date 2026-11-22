@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' mosaic-categorical: Mosaic Plot for Categorical Association Analysis
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 86/100 | Created: 2026-05-19
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 83/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(dplyr)
@@ -72,7 +72,7 @@ p <- ggplot(plot_data) +
       ymin = ymin_plot, ymax = ymax_plot,
       fill = satisfaction
     ),
-    color = PAGE_BG, linewidth = 0.6
+    color = PAGE_BG, linewidth = 0.3
   ) +
   scale_fill_manual(
     values = setNames(IMPRINT[1:3], satisfaction_levels),
@@ -92,28 +92,28 @@ p <- ggplot(plot_data) +
     x     = "Product Category  (column width proportional to group size)",
     y     = "Proportion of Respondents"
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
     panel.grid        = element_blank(),
-    axis.title        = element_text(color = INK,      size = 18),
-    axis.text.x       = element_text(color = INK_SOFT, size = 14),
-    axis.text.y       = element_text(color = INK_SOFT, size = 14),
+    axis.title        = element_text(color = INK,      size = 10),
+    axis.text.x       = element_text(color = INK_SOFT, size = 8),
+    axis.text.y       = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
-    plot.title        = element_text(color = INK,      size = 18, hjust = 0.5),
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
-    legend.text       = element_text(color = INK_SOFT, size = 14),
-    legend.title      = element_text(color = INK,      size = 16),
-    plot.margin       = margin(40, 60, 40, 40)
+    plot.title        = element_text(color = INK,      size = 10, hjust = 0.5),
+    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
+    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.title      = element_text(color = INK,      size = 10),
+    plot.margin       = margin(20, 30, 20, 20)
   )
 
 ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
