@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chessboard-basic: Chess Board Grid Visualization
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-17
@@ -17,7 +17,7 @@ from plotnine import (
     ggplot,
     labs,
     scale_fill_manual,
-    scale_x_continuous,
+    scale_x_discrete,
     scale_y_continuous,
     theme,
 )
@@ -29,50 +29,50 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - create 8x8 chess board grid
-rows = list(range(1, 9))
-cols = list(range(1, 9))
-col_labels = ["a", "b", "c", "d", "e", "f", "g", "h"]
+# Imprint palette: all eight positions, in canonical order (the board uses its own domain pair below)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Create grid data
-data = []
-for row in rows:
-    for col in cols:
-        # Light squares where (row + col) is even, dark where odd
-        # This ensures h1 (row=1, col=8) is light: 1+8=9 is odd, so we flip
-        is_light = (row + col) % 2 == 1
-        data.append({"col": col, "row": row, "color": "light" if is_light else "dark"})
+# Constants
+SQUARE_COLORS = {"light": "#EEEED2", "dark": "#769656"}  # classic ivory and green tournament board
 
-df = pd.DataFrame(data)
+# Columns: set these to your table's column names
+FILE = "Column"  # role: columns
+RANK = "Row"  # role: rows
+SHADE = "Square shade"  # role: extra
 
-# Chess board colors - classic cream and brown
-light_color = "#F0D9B5"
-dark_color = "#B58863"
+# Data: replace this block with your own table, for example df = pd.read_csv("board.csv")
+files = list("abcdefgh")
+df = pd.DataFrame(
+    [
+        {FILE: letter, RANK: rank, SHADE: "light" if (file_no + rank) % 2 == 1 else "dark"}
+        for file_no, letter in enumerate(files, start=1)
+        for rank in range(1, 9)
+    ]
+)
 
-# Create plot
+# Plot: reads only df and the constants above
 plot = (
-    ggplot(df, aes(x="col", y="row", fill="color"))
+    ggplot(df, aes(x=FILE, y=RANK, fill=SHADE))
     + geom_tile(color=INK_SOFT, size=0.3)
-    + scale_fill_manual(values={"light": light_color, "dark": dark_color})
-    + scale_x_continuous(breaks=list(range(1, 9)), labels=col_labels, expand=(0, 0))
-    + scale_y_continuous(breaks=list(range(1, 9)), labels=[str(i) for i in range(1, 9)], expand=(0, 0))
+    + scale_fill_manual(values=SQUARE_COLORS, limits=list(SQUARE_COLORS))
+    + scale_x_discrete(limits=df[FILE].unique().tolist(), expand=(0, 0))
+    + scale_y_continuous(breaks=sorted(df[RANK].unique()), expand=(0, 0))
     + coord_fixed(ratio=1)
-    + labs(x="Column", y="Row", title="chessboard-basic · plotnine · anyplot.ai")
+    + labs(title="chessboard-basic · python · plotnine · anyplot.ai")
     + theme(
-        figure_size=(9, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text_x=element_text(size=20, weight="bold", color=INK_SOFT),
-        axis_text_y=element_text(size=20, weight="bold", color=INK_SOFT),
+        figure_size=(6, 6),
+        plot_title=element_text(size=14, ha="center", weight="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=12, weight="bold", color=INK_SOFT),
         axis_ticks=element_blank(),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
         legend_position="none",
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_border=element_rect(color=INK_SOFT, size=2),
+        panel_border=element_rect(color=INK_SOFT, size=1.5),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, width=9, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
