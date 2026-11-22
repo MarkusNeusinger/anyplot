@@ -1,104 +1,755 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 61/100 | Created: 2026-05-18
+Library: pygal 3.1.3 | Python 3.13.13
+Quality: 61/100 | Updated: 2026-11-22
 """
 
 import os
-import sys
-
-
-# Ensure installed pygal package is imported, not local file
-sys.path.insert(0, "/home/runner/work/anyplot/anyplot/.venv/lib/python3.13/site-packages")
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+# Basemap tones stay quieter than the data and are the only theme-dependent marks
+COAST = "#8C8A80" if THEME == "light" else "#7C7B72"
+GRATICULE = "#D8D5C8" if THEME == "light" else "#34332E"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: depth runs as a single-polarity ramp from position 1 (#009E73) to position 3 (#4467A3)
+DEPTH_COLORS = ("#009E73", "#4B8294", "#4467A3")
+DEPTH_BINS = (0, 40, 80, 1000)
+DEPTH_NAMES = ("Depth under 40 km", "Depth 40-80 km", "Depth over 80 km")
 
-# Earthquake data with latitude, longitude, magnitude, and depth
-np.random.seed(42)
+# Columns
+LATITUDE = "latitude"  # role: y, degrees north
+LONGITUDE = "longitude"  # role: x, degrees east
+MAGNITUDE = "magnitude"  # role: size
+DEPTH = "depth_km"  # role: color
 
-# Ring of Fire region (Pacific basin earthquake hotspot)
-latitudes = np.array([36.4, 38.3, -37.8, -23.6, 15.9, -19.2, 5.2, 20.5, 42.7, -41.4, 10.4, -8.8])
-longitudes = np.array([138.5, 141.3, 176.4, -70.7, 120.7, 169.3, 124.1, 145.8, 141.7, 172.8, -85.3, 113.9])
+# Data: Pacific Ring of Fire earthquakes (M6+), clustered around twelve subduction-zone hotspots
+rng = np.random.default_rng(42)
+hotspots = pd.DataFrame(
+    {
+        LATITUDE: [36.4, 38.3, -37.8, -23.6, 15.9, -19.2, 5.2, 20.5, 42.7, -41.4, 10.4, -8.8],
+        LONGITUDE: [138.5, 141.3, 176.4, -70.7, 120.7, 169.3, 124.1, 145.8, 141.7, 172.8, -85.3, 113.9],
+        DEPTH: [37, 52, 18, 76, 107, 51, 91, 42, 29, 125, 68, 35],
+    }
+)
+events = hotspots.loc[hotspots.index.repeat(5)].reset_index(drop=True)
+df = pd.DataFrame(
+    {
+        LATITUDE: (events[LATITUDE] + rng.normal(0, 1.4, len(events))).clip(-85, 85).round(2),
+        LONGITUDE: (events[LONGITUDE] + rng.normal(0, 1.4, len(events))).clip(-179, 179).round(2),
+        MAGNITUDE: np.minimum(6.0 + rng.exponential(0.45, len(events)), 8.2).round(1),
+        DEPTH: (events[DEPTH] * rng.lognormal(0, 0.35, len(events))).clip(5, 300).round(0),
+    }
+)
 
-# Magnitude (controls point size)
-magnitudes = np.array([7.4, 7.1, 7.2, 7.8, 6.8, 6.9, 7.3, 7.0, 6.7, 7.5, 6.6, 6.9])
+# Robinson projection (tabulated every 5 degrees of latitude), used for both the basemap and the points
+PLEN = np.array([1.0, 0.9986, 0.9954, 0.99, 0.9822, 0.973, 0.96, 0.9427, 0.9216, 0.8962])
+PLEN = np.append(PLEN, [0.8679, 0.835, 0.7986, 0.7597, 0.7186, 0.6732, 0.6213, 0.5722, 0.5322])
+PDFE = np.array([0.0, 0.062, 0.124, 0.186, 0.248, 0.31, 0.372, 0.434, 0.4958, 0.5571])
+PDFE = np.append(PDFE, [0.6176, 0.6769, 0.7346, 0.7903, 0.8435, 0.8936, 0.9394, 0.9761, 1.0])
+LAT_GRID = np.arange(0, 95, 5)
 
-# Depth in km (controls color)
-depths = np.array([37, 52, 18, 76, 107, 51, 91, 42, 29, 125, 68, 35])
 
-# Normalize magnitude for point size (scale to 10-80 for visibility)
-size_normalized = (magnitudes - magnitudes.min()) / (magnitudes.max() - magnitudes.min())
-sizes = 10 + size_normalized * 70
+def robinson(lon, lat):
+    """Project longitude/latitude in degrees to Robinson x, y."""
+    lon, lat = np.asarray(lon, dtype=float), np.asarray(lat, dtype=float)
+    plen = np.interp(np.abs(lat), LAT_GRID, PLEN)
+    pdfe = np.interp(np.abs(lat), LAT_GRID, PDFE)
+    return 0.8487 * np.radians(lon) * plen, 1.3523 * np.sign(lat) * pdfe
 
-# Normalize depth for color (0-1 for cmap interpolation)
-depth_normalized = (depths - depths.min()) / (depths.max() - depths.min())
 
-# Create depth-based color palette (from light to dark for depth visualization)
-colors_depth = []
-for d_norm in depth_normalized:
-    # Interpolate from Okabe-Ito position 1 (shallow) through position 3 (deep)
-    if d_norm < 0.5:
-        # Light to medium: positions 1 and 2
-        t = d_norm * 2
-        c1 = int(IMPRINT[0][1:], 16)
-        c2 = int(IMPRINT[1][1:], 16)
-    else:
-        # Medium to dark: positions 2 and 3
-        t = (d_norm - 0.5) * 2
-        c1 = int(IMPRINT[1][1:], 16)
-        c2 = int(IMPRINT[2][1:], 16)
-    colors_depth.append(IMPRINT[0])  # Use first Okabe-Ito color for all points
+# Coarse coastlines as (longitude, latitude) rings
+LAND = {
+    "north_america": [
+        (-168, 66),
+        (-162, 70),
+        (-156, 71.3),
+        (-141, 69.7),
+        (-128, 70),
+        (-115, 68.5),
+        (-95, 71),
+        (-85, 69),
+        (-82, 66),
+        (-90, 64),
+        (-94, 59),
+        (-92, 57),
+        (-82, 55),
+        (-79, 52),
+        (-78, 58),
+        (-77, 62),
+        (-72, 61),
+        (-65, 60),
+        (-61, 56),
+        (-56, 52),
+        (-60, 48),
+        (-66, 45),
+        (-70, 43),
+        (-70, 41.5),
+        (-74, 40),
+        (-76, 37),
+        (-76, 35),
+        (-81, 31),
+        (-80, 26),
+        (-82, 26),
+        (-83, 29.5),
+        (-89, 30),
+        (-94, 29.5),
+        (-97, 27),
+        (-97.5, 22),
+        (-95, 18.5),
+        (-91, 18.5),
+        (-90, 21),
+        (-87, 21),
+        (-88, 16),
+        (-84, 15.5),
+        (-83.5, 11),
+        (-80, 9),
+        (-77.5, 8.5),
+        (-79, 7.5),
+        (-82, 8),
+        (-85.5, 10),
+        (-87.5, 13),
+        (-92, 14.5),
+        (-96, 15.7),
+        (-101, 17.5),
+        (-105.5, 20),
+        (-105.5, 23),
+        (-109, 25.5),
+        (-112.5, 29.5),
+        (-114.8, 31.8),
+        (-114.5, 29),
+        (-112, 25),
+        (-110, 23),
+        (-112, 24.8),
+        (-114.5, 27.5),
+        (-116.5, 30.5),
+        (-117, 32.5),
+        (-120.5, 34.5),
+        (-122.5, 37.5),
+        (-124, 40.5),
+        (-124, 46),
+        (-124.7, 48.4),
+        (-128, 51),
+        (-131, 54.5),
+        (-135, 58),
+        (-140, 59.7),
+        (-147, 61),
+        (-152, 59),
+        (-158, 56.5),
+        (-163, 54.8),
+        (-158, 58.5),
+        (-162, 60),
+        (-165, 62),
+        (-161, 64.5),
+        (-168, 65.5),
+    ],
+    "south_america": [
+        (-77.5, 8.5),
+        (-72, 12),
+        (-67, 10.5),
+        (-62, 10.5),
+        (-60, 8),
+        (-57, 6),
+        (-52, 5),
+        (-50, 1),
+        (-44, -2.5),
+        (-38, -4),
+        (-35, -6),
+        (-35, -9),
+        (-39, -14),
+        (-39, -18),
+        (-41, -22),
+        (-45, -23.5),
+        (-48.5, -26),
+        (-49, -29),
+        (-53, -34),
+        (-58, -34.5),
+        (-57, -37.5),
+        (-62, -39),
+        (-65, -41),
+        (-63.5, -42.5),
+        (-67, -46),
+        (-66, -48),
+        (-69, -51),
+        (-68.5, -52.5),
+        (-72, -53.5),
+        (-75, -50),
+        (-74, -45),
+        (-73.5, -40),
+        (-72, -33),
+        (-71.5, -28),
+        (-70.5, -18.5),
+        (-76, -14),
+        (-79, -7),
+        (-81, -5),
+        (-80, -1),
+        (-80, 2),
+        (-77.5, 4),
+        (-77.5, 8.5),
+    ],
+    "africa": [
+        (-6, 35.8),
+        (10, 37),
+        (11, 33.5),
+        (20, 32),
+        (25, 31.8),
+        (32, 31),
+        (32.5, 30),
+        (35, 24),
+        (37, 19),
+        (39, 15),
+        (43, 12.5),
+        (51, 12),
+        (51, 10.5),
+        (47, 6),
+        (41, -1.5),
+        (39, -6),
+        (40, -11),
+        (40.5, -15),
+        (35, -20),
+        (35.5, -24),
+        (32.5, -26),
+        (30, -31),
+        (27, -33.5),
+        (20, -34.8),
+        (18.4, -34),
+        (17, -29),
+        (14.5, -22.5),
+        (12, -17),
+        (13.5, -12),
+        (12, -5),
+        (9.5, -1),
+        (9.5, 3.8),
+        (6, 4.3),
+        (2, 6.3),
+        (-4, 5.2),
+        (-7.5, 4.4),
+        (-13, 8),
+        (-16.5, 12.5),
+        (-17.5, 14.7),
+        (-16, 19),
+        (-17, 21),
+        (-13, 27.5),
+        (-10, 29.5),
+        (-9.8, 31.5),
+        (-6, 35.8),
+    ],
+    "eurasia": [
+        (-6, 36),
+        (-9, 37),
+        (-9.5, 39),
+        (-8.8, 43),
+        (-2, 43.5),
+        (-1.5, 46),
+        (-4.5, 48.5),
+        (-1.5, 49.7),
+        (1.5, 50.5),
+        (4, 51.5),
+        (8, 54),
+        (8.5, 57),
+        (10.5, 57.5),
+        (10.5, 55),
+        (12, 54.2),
+        (18, 54.8),
+        (21, 55.5),
+        (21.5, 57.5),
+        (24, 57),
+        (24, 59.5),
+        (30, 60),
+        (23, 60),
+        (21.5, 61),
+        (21.5, 64),
+        (25, 65.5),
+        (22, 65.8),
+        (17.5, 62.5),
+        (18.5, 60),
+        (16.5, 57),
+        (13, 55.5),
+        (11, 59),
+        (8, 58),
+        (5, 59),
+        (5.5, 62),
+        (10.5, 64.5),
+        (14, 68),
+        (20, 70),
+        (26, 71),
+        (31, 70),
+        (40, 67),
+        (33, 66),
+        (41, 66),
+        (44, 68),
+        (54, 68.5),
+        (60, 69),
+        (69, 69),
+        (73, 72),
+        (80, 73),
+        (87, 75),
+        (100, 77.5),
+        (105, 77),
+        (113, 74),
+        (125, 73),
+        (130, 71),
+        (140, 72.5),
+        (150, 71),
+        (160, 69.5),
+        (170, 70),
+        (180, 69),
+        (180, 65),
+        (178, 64.5),
+        (172, 64),
+        (177, 62.5),
+        (170, 60),
+        (164, 60),
+        (163, 57.5),
+        (160, 53),
+        (156.5, 51),
+        (156, 57),
+        (160, 61.5),
+        (154, 59.5),
+        (143, 59),
+        (137, 54),
+        (141, 53),
+        (140, 48),
+        (135, 43.5),
+        (131, 42.5),
+        (129, 40),
+        (128, 38),
+        (129.5, 35.5),
+        (126.5, 34.5),
+        (126, 37.5),
+        (125, 39.5),
+        (121.5, 39),
+        (122, 40.5),
+        (118, 39),
+        (119, 37.2),
+        (122.5, 37),
+        (120, 35),
+        (122, 31),
+        (121.5, 28),
+        (119, 25),
+        (115, 22.7),
+        (110, 21),
+        (108, 21.5),
+        (106.5, 19),
+        (109, 15),
+        (109, 12),
+        (106, 9.5),
+        (105, 8.7),
+        (103, 10.5),
+        (100.5, 13.5),
+        (100, 10),
+        (103.5, 5),
+        (104, 1.4),
+        (101, 3),
+        (98.5, 8),
+        (98.5, 12),
+        (97.5, 16.5),
+        (94, 16),
+        (94.5, 19),
+        (92, 21.5),
+        (90, 22),
+        (87, 21.5),
+        (85, 19.5),
+        (80, 15.5),
+        (80, 10),
+        (77.5, 8),
+        (76, 10.5),
+        (73, 17),
+        (72.8, 21),
+        (70, 21),
+        (68.5, 23.5),
+        (66.5, 25.5),
+        (61, 25.2),
+        (57, 25.8),
+        (56.5, 27),
+        (52, 27.8),
+        (50, 30),
+        (50.5, 26),
+        (51.5, 24.5),
+        (54, 24),
+        (56, 26),
+        (56.3, 24.5),
+        (58, 23.5),
+        (59.8, 22.5),
+        (57.5, 19),
+        (55, 17),
+        (52, 16),
+        (45, 12.8),
+        (43.5, 13),
+        (42.5, 16),
+        (39, 21.5),
+        (35, 28),
+        (34.8, 29.5),
+        (32.5, 30),
+        (34, 31.2),
+        (35, 33),
+        (36, 36),
+        (32, 36.2),
+        (29, 36.5),
+        (27, 37),
+        (26.5, 39.5),
+        (26, 40.5),
+        (29, 41),
+        (31, 41),
+        (35, 42),
+        (38, 41),
+        (41.5, 41.5),
+        (41.5, 43),
+        (37.5, 45),
+        (35, 45),
+        (33, 46),
+        (31, 46.5),
+        (29.7, 45.2),
+        (28.7, 43.5),
+        (28, 41.5),
+        (26, 40.8),
+        (24, 40.2),
+        (23, 38),
+        (22, 36.7),
+        (21, 38.5),
+        (19.5, 41.8),
+        (18, 43),
+        (13.7, 45),
+        (12.3, 44.9),
+        (14, 42.5),
+        (16, 41.8),
+        (18.5, 40.2),
+        (16, 38),
+        (15.7, 40),
+        (12, 42),
+        (10, 44),
+        (8, 44),
+        (6, 43),
+        (3, 43.3),
+        (3, 42),
+        (0, 39.5),
+        (-0.5, 38),
+        (-2, 36.8),
+        (-5, 36),
+        (-6, 36),
+    ],
+    "britain": [
+        (-5.5, 50),
+        (1.5, 51),
+        (1.7, 52.8),
+        (-0.2, 54),
+        (-2, 56),
+        (-2, 57.6),
+        (-3.5, 58.6),
+        (-5, 58.5),
+        (-6, 57),
+        (-5.5, 55),
+        (-3, 54.8),
+        (-3, 53.4),
+        (-4.5, 53),
+        (-4.2, 52),
+        (-5.2, 51.7),
+        (-3, 51.4),
+        (-5.5, 50),
+    ],
+    "ireland": [(-10, 52), (-6, 52.2), (-6, 54), (-8, 55.2), (-10, 54), (-10, 52)],
+    "iceland": [(-24, 65.5), (-22, 66.4), (-16, 66.5), (-13.5, 65), (-18, 63.4), (-22.5, 63.8), (-24, 65.5)],
+    "greenland": [
+        (-73, 78),
+        (-60, 82),
+        (-30, 83.5),
+        (-20, 81),
+        (-19, 76),
+        (-22, 70.5),
+        (-32, 68),
+        (-41, 65),
+        (-43.5, 60),
+        (-49, 61),
+        (-52, 65),
+        (-54, 69.5),
+        (-58, 75.5),
+        (-68, 76),
+        (-73, 78),
+    ],
+    "baffin": [
+        (-80, 73.5),
+        (-72, 71.5),
+        (-62, 67),
+        (-65, 63),
+        (-72, 63.5),
+        (-78, 64.5),
+        (-74, 68),
+        (-85, 70),
+        (-80, 73.5),
+    ],
+    "victoria": [(-118, 72.5), (-105, 73), (-100, 70), (-110, 68.5), (-118, 70), (-118, 72.5)],
+    "cuba": [(-85, 22), (-82, 23), (-77, 21.7), (-74.2, 20.2), (-77.5, 19.9), (-80, 21.5), (-84, 21.8), (-85, 22)],
+    "hispaniola": [(-74.4, 18.4), (-72, 19.9), (-68.4, 18.6), (-71.5, 17.7), (-74.4, 18.4)],
+    "honshu": [
+        (130.9, 34),
+        (133, 35.5),
+        (136, 36),
+        (137, 37.5),
+        (140, 40),
+        (141.5, 41.3),
+        (142, 39.5),
+        (141, 37),
+        (140.8, 35.5),
+        (139, 34.7),
+        (137, 34.6),
+        (135, 33.5),
+        (132, 33.8),
+        (130.9, 34),
+    ],
+    "kyushu": [(129.8, 33.5), (131.5, 33.8), (131.5, 31.5), (130.2, 31), (129.8, 33.5)],
+    "hokkaido": [(140, 41.8), (141, 45.4), (145.5, 43.3), (143.2, 42), (140, 41.8)],
+    "sakhalin": [(142, 46), (143.2, 49), (142.8, 54), (142, 53), (142, 46)],
+    "taiwan": [(120.1, 23), (121.5, 25.2), (122, 24.5), (120.8, 22), (120.1, 23)],
+    "luzon": [
+        (120.5, 18.5),
+        (122.2, 18.4),
+        (122, 16),
+        (124, 13),
+        (121.7, 13.8),
+        (120.6, 14.2),
+        (120, 16),
+        (120.5, 18.5),
+    ],
+    "mindanao": [(122, 7), (123, 8.7), (126.5, 9.3), (126.3, 6.5), (124, 6.2), (122, 7)],
+    "borneo": [
+        (109, 1.8),
+        (111, 1.8),
+        (113, 3.5),
+        (115, 5),
+        (117.5, 7),
+        (119, 5),
+        (118, 1),
+        (116.5, -2),
+        (114.5, -4),
+        (111, -3),
+        (110, -1.5),
+        (109, 1.8),
+    ],
+    "sumatra": [
+        (95.3, 5.6),
+        (98, 4),
+        (100.5, 2),
+        (104, -1),
+        (106, -3),
+        (105.8, -5.8),
+        (102, -4),
+        (98.5, 0.5),
+        (95.3, 5.6),
+    ],
+    "java": [
+        (105.2, -6.8),
+        (108, -6.3),
+        (111, -6.5),
+        (114.5, -7.7),
+        (114.5, -8.7),
+        (110, -8.1),
+        (106, -7.5),
+        (105.2, -6.8),
+    ],
+    "sulawesi": [
+        (119.5, -5.5),
+        (119.5, -1),
+        (120.5, 1),
+        (125, 1.5),
+        (121, 0.5),
+        (123, -1),
+        (121.5, -2.5),
+        (123, -4.5),
+        (120.5, -3),
+        (120.5, -5.5),
+        (119.5, -5.5),
+    ],
+    "new_guinea": [
+        (131, -1),
+        (134, -0.8),
+        (138, -1.7),
+        (145, -4.5),
+        (147.5, -6.2),
+        (150.5, -10.5),
+        (147, -10),
+        (143, -9),
+        (141, -9.1),
+        (138, -8.2),
+        (137.5, -5.5),
+        (133.5, -4),
+        (131, -1),
+    ],
+    "australia": [
+        (113.5, -22),
+        (114, -26),
+        (115, -34),
+        (118, -35),
+        (123, -34),
+        (129, -31.5),
+        (134, -32.7),
+        (138, -35.5),
+        (140, -38),
+        (144, -38.5),
+        (147, -38.3),
+        (150, -37),
+        (153, -31),
+        (153.5, -27),
+        (151, -23.5),
+        (149, -20.2),
+        (146, -18.5),
+        (145.3, -15),
+        (143.5, -13.5),
+        (142.5, -10.7),
+        (141.5, -13.5),
+        (141, -17),
+        (139, -17),
+        (135.5, -15),
+        (136.8, -12.2),
+        (132, -11.5),
+        (130, -13.2),
+        (127, -14),
+        (125, -14.5),
+        (122, -17),
+        (121, -19.5),
+        (117, -20.7),
+        (113.5, -22),
+    ],
+    "nz_north": [
+        (172.7, -34.5),
+        (175, -37),
+        (178, -37.7),
+        (177, -39.5),
+        (175, -41.5),
+        (174.5, -39.5),
+        (173.8, -39.3),
+        (174.8, -37),
+        (172.7, -34.5),
+    ],
+    "nz_south": [
+        (172.7, -40.5),
+        (174, -41.5),
+        (172.5, -43.5),
+        (170.5, -46),
+        (166.5, -46),
+        (168, -44),
+        (171, -42.5),
+        (172.7, -40.5),
+    ],
+    "madagascar": [(49.3, -12), (50.5, -15.5), (47.5, -25), (45, -25.5), (43.5, -22), (44.4, -16.3), (49.3, -12)],
+    "sri_lanka": [(79.8, 9.8), (81.8, 7.5), (81, 6), (80, 6), (79.8, 9.8)],
+}
 
-# Create custom style
-custom_style = Style(
+MERIDIANS = range(-180, 181, 60)
+PARALLELS = range(-60, 61, 30)
+
+
+def to_path(rings):
+    """Join rings into one projected line series; (None, None) lifts the pen between rings."""
+    path = []
+    for ring in rings:
+        x, y = robinson(*zip(*ring, strict=True))
+        path += list(zip(x.tolist(), y.tolist(), strict=True)) + [(float(x[-1]), None)]
+    return path
+
+
+# Plot
+coast_path = to_path(LAND.values())
+lat_line = np.linspace(-90, 90, 73)
+lon_line = np.linspace(-180, 180, 145)
+graticule = [
+    list(zip(*np.vstack(robinson(np.full_like(lat_line, m), lat_line)).tolist(), strict=True)) for m in MERIDIANS
+]
+graticule += [
+    list(zip(*np.vstack(robinson(lon_line, np.full_like(lon_line, p))).tolist(), strict=True)) for p in PARALLELS
+]
+graticule_path = [pt for line in graticule for pt in [*line, (line[-1][0], None)]]
+
+px, py = robinson(df[LONGITUDE], df[LATITUDE])
+df_proj = df.assign(px=px, py=py, depth_class=pd.cut(df[DEPTH], DEPTH_BINS, labels=False, right=False))
+
+style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(IMPRINT[0],),
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=2,
-    opacity=0.8,
+    guide_stroke_color=GRATICULE,
+    major_guide_stroke_color=GRATICULE,
+    colors=(GRATICULE, COAST, *DEPTH_COLORS, INK_MUTED),
+    title_font_size=66,
+    label_font_size=40,
+    major_label_font_size=40,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=3,
+    opacity=0.72,
     opacity_hover=0.95,
 )
 
-# Create scatter plot
+x_ticks = [float(robinson(lon, 0)[0]) for lon in MERIDIANS]
+y_ticks = [float(robinson(0, lat)[1]) for lat in PARALLELS]
+lon_of_x = {round(x, 6): lon for x, lon in zip(x_ticks, MERIDIANS, strict=True)}
+lat_of_y = {round(y, 6): lat for y, lat in zip(y_ticks, PARALLELS, strict=True)}
+
+
+def hemisphere(value, positive, negative):
+    return f"{abs(value)}°{positive if value > 0 else negative}" if value else "0°"
+
+
 chart = pygal.XY(
-    style=custom_style,
-    width=4800,
-    height=2700,
+    style=style,
+    width=3200,
+    height=1800,
     title="scatter-map-geographic · python · pygal · anyplot.ai",
-    x_title="Longitude",
+    x_title="Longitude (Robinson projection)",
     y_title="Latitude",
-    show_legend=False,
-    show_dots=True,
+    x_labels=x_ticks,
+    y_labels=y_ticks,
+    x_value_formatter=lambda v: hemisphere(lon_of_x.get(round(v, 6), 0), "E", "W"),
+    value_formatter=lambda v: hemisphere(lat_of_y.get(round(v, 6), 0), "N", "S"),
+    show_x_guides=False,
+    show_y_guides=False,
+    show_legend=True,
+    legend_at_bottom=True,
+    legend_at_bottom_columns=3,
+    legend_box_size=28,
     stroke=False,
-    dots_size=8,
+    show_dots=True,
+    dots_size=10,
+    range=(-1.5, 1.5),
+    xrange=(-2.8, 2.8),
+    margin=40,
+    margin_bottom=110,
+    truncate_legend=-1,
 )
 
-# Add data points with size encoding for magnitude
 chart.add(
-    "Earthquake",
-    [(lon, lat) for lat, lon in zip(latitudes, longitudes, strict=False)],
+    "Graticule", graticule_path, stroke=True, allow_interruptions=True, show_dots=False, stroke_style={"width": 2}
 )
+chart.add("Coastlines", coast_path, stroke=True, allow_interruptions=True, show_dots=False, stroke_style={"width": 3.5})
 
-# Save output
+for cls, name in enumerate(DEPTH_NAMES):
+    sub = df_proj[df_proj["depth_class"] == cls]
+    chart.add(
+        name,
+        [
+            {
+                "value": (float(r.px), float(r.py)),
+                "label": f"M{r[MAGNITUDE]:.1f}, {r[DEPTH]:.0f} km",
+                "node": {"r": float(9 + (r[MAGNITUDE] - df[MAGNITUDE].min()) * 12)},
+            }
+            for _, r in sub.iterrows()
+        ],
+        stroke=False,
+    )
+
+chart.add("Marker size = magnitude", [])
+
+# Save
 chart.render_to_png(f"plot-{THEME}.png")
-
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
