@@ -2,47 +2,53 @@ library: plotly
 language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:19:58Z'
-updated: '2026-05-19T04:53:36Z'
+updated: '2026-11-22T15:58:16Z'
 generated_by: claude-sonnet
-workflow_run: 26076624381
+workflow_run: 45040539037
 issue: 3652
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present (price line, EMA 12, EMA
-    26, distinct colors, width hierarchy, crossover markers, labeled legend)'
-  - 'Comprehensive theme-adaptive chrome: all tokens applied to every element including
-    the range slider; both renders pass readability'
-  - 'Excellent data quality: realistic stock price arc with correct EWM calculation,
-    both crossover types present, neutral business context'
-  - Idiomatic Plotly range slider with matching theme background — a distinctive,
-    library-specific feature that adds genuine utility to the financial chart
+  - 'Clear line-weight hierarchy: price at width 3 dominates, both EMAs at width 2
+    in distinct Imprint colors, readable in both themes'
+  - 'Data path shows the EMA behaviour well: a fast rally where EMA 26 lags far behind
+    EMA 12, then a consolidation where both converge and cross'
+  - Golden and death crosses as small amber and red triangles with page-colored outlines
+    keep the lines beneath visible
+  - Themed Plotly range slider and unified x hover add real navigation in the HTML
+    output
+  - 'Adaptable structure: column constants, one Data block ending in df, everything
+    derived below it'
   weaknesses:
-  - Chart frame border visible on all four sides — removing it with xaxis.showline=False/yaxis.showline=False
-    would give a cleaner look
-  - Both X and Y grids shown — style guide recommends Y-axis grid only for line charts;
-    xaxis.showgrid=False would reduce visual noise
-  - Golden/death cross markers are present but silent — a text annotation at the golden
-    cross event would elevate storytelling
-  - Using go.Scatter for price is correct but go.Candlestick (OHLC) would be the highest-fidelity
-    Plotly financial chart
+  - 'SC-02 (both): a golden-cross triangle sits on the second trading day, where EMA
+    12 and EMA 26 only leave their shared starting value and nothing crosses (C5)
+    → mark only crossings where the short EMA was strictly below the long one the
+    day before (one fewer marker). Likely cause: was_above filled with above.iloc[0]
+    and the start where both EMAs are equal counted as ''below''.'
+  - 'DQ-02 (both): the series is labelled Brent crude in 2024 but its prices ($72
+    rising to $110 by March) are invented and contradict the real benchmark → keep
+    the shape and drop the real name (a generic energy commodity or crude grade label)
+    or drop the real year from the dates. Likely cause: the scenario comment and the
+    CLOSE label name Brent with 2024 dates.'
+  - 'Suggestion: the ''Date'' axis title sits below the range slider, far from its
+    tick labels; placing the slider thinner would close the gap.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "indicator-ema · python · plotly · anyplot.ai" in dark #1A1A17, clearly readable. Axis labels "Date" and "Price (USD)" in #1A1A17. Tick labels in muted #4A4A44. All readable against light background.
-      Data: Price line in #009E73 (Okabe-Ito pos 1), EMA 12 in #D55E00 (pos 2), EMA 26 in #0072B2 (pos 3), Golden Cross markers in #CC79A7 (pos 4), Death Cross markers in #E69F00 (pos 5). Range slider at bottom. Legend in upper-left with elevated background.
+      Background: Warm off-white #FAF8F1, not pure white.
+      Chrome: Title "indicator-ema · python · plotly · anyplot.ai" centred in dark ink; y-axis title "Price (USD per barrel)" and x-axis title "Date" (below the range slider) in dark ink; tick labels $80-$110 and Jan-Jun 2024 in soft ink; subtle horizontal grid only; left and bottom axis lines only. Legend upper-left in an elevated box with a soft-ink border. All readable.
+      Data: Price line in #009E73 (width 3) rising from ~$72 to ~$103 by late February, then consolidating between $96 and $111; EMA 12 in lavender #C475FD and EMA 26 in blue #4467A3 (width 2) lagging behind, converging in the sideways stretch. Amber triangle (golden cross) on day 2 and in early June, red down-triangle (death cross) end of May. Range slider below repeats all traces.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and axis labels in light #F0EFE8, tick labels in #B8B7B0. All readable against dark background. No dark-on-dark failures observed. Legend box uses #242420 elevated dark background.
-      Data: All data colors identical to light render — #009E73 price, #D55E00 EMA 12, #0072B2 EMA 26, #CC79A7 golden cross, #E69F00 death cross. Only chrome flips between themes.
+      Background: Warm near-black #1A1A17, not pure black.
+      Chrome: Title, axis titles in light ink; tick labels in soft light ink; grid faint but visible; legend box on #242420 with a light border. No dark-on-dark text.
+      Data: Identical colors to the light render — #009E73 price, #C475FD EMA 12, #4467A3 EMA 26, amber and red crossover triangles; only chrome flips. The blue EMA 26 is darker on this surface but still distinct.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,51 +60,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, tick labels 18px, legend 18px — all
-          explicitly set, readable in both themes
+        comment: Title 16 px, axis titles 12 px, ticks and legend 10 px at scale 4,
+          the library prompt's sizes; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend in upper-left clear of data; tick labels and series labels
-          all unobstructed
+        comment: Legend sits in the empty upper-left area above the rally; no text
+          collides with text or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line width 3, EMA lines width 2, crossover markers size 16
-          — appropriate for data density
+        comment: Price at width 3, EMAs at width 2, size-9 crossover triangles with
+          page-colored outline; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; series also distinguishable by marker
-          type
+        comment: Green, lavender and blue lines are CVD-distinct; crosses also differ
+          by triangle direction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Main chart fills ~70% vertical space; range slider is appropriate
-          use of remaining area; balanced margins
+        comment: 3200x1800 canvas (no gate file); plot fills most of the canvas with
+          the range slider below; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Price (USD) with units; X-axis: Date'
+        comment: '''Price (USD per barrel)'' with units, ''Date'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series Okabe-Ito order; backgrounds
-          #FAF8F1/#1A1A17; both renders theme-correct'
+        comment: 'Price #009E73, EMAs #C475FD/#4467A3 in canonical order, amber anchor
+          for golden cross (semantic), #AE3030 death cross; backgrounds #FAF8F1/#1A1A17'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -106,24 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Line width hierarchy, crossover markers with page-background borders,
-          elevated legend — clearly above defaults but not FiveThirtyEight-level
+        comment: Semantic amber/red pairing for golden/death cross and an elevated
+          legend box beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid at 10% opacity is subtle; both axes have gridlines (y-only would
-          be cleaner); Plotly frame border visible
+        comment: Crossover markers outlined in the page color so they separate from
+          the lines; range slider themed to the page and border tokens
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Crossover markers are storytelling devices; price line width creates
-          hierarchy; data arc reads naturally; missing text annotation at golden cross
+        comment: Data displayed with the crossover markers the Notes suggest; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,29 +137,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct EMA overlay chart: price line with two EMA lines'
+        comment: Price line with two EMA overlays on one price axis
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Price, EMA 12, EMA 26, distinct colors, width hierarchy, crossover
-          highlighting, period labels all present
+        passed: false
+        comment: Price prominent, distinct thinner EMAs, period labels in legend;
+          but a golden-cross marker sits on day 2 where the EMAs only diverge from
+          their shared start (C5, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, Price (USD) on Y; all 120 trading days visible
+        comment: Date on x, price on y, all 120 business days visible, every line
+          at its computed value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: indicator-ema · python · plotly · anyplot.ai; legend labels
-          descriptive and correct'
+        comment: Title 'indicator-ema · python · plotly · anyplot.ai'; legend 'Price',
+          'EMA 12', 'EMA 26', 'Golden cross', 'Death cross'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -161,22 +169,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Price volatility, two EMA periods, both crossover types, distinct
-          market phases all shown
+        comment: Trending rally where EMAs lag and separate, a consolidation where
+          they converge, both crossover types
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Plausible mid-cap stock $150-$190 over 120 trading days; neutral
-          business scenario
+        passed: false
+        comment: Brent crude is a real benchmark, shown with invented 2024 prices
+          running $72 to $110 (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: seed(42), ewm(span=12/26, adjust=False) correct; price range and
-          ~1.5% daily volatility realistic
+        comment: 'Checked: ewm(span=12/26, adjust=False) (lines 47-48); EMA 12 tracks
+          price closer than EMA 26 in the render; $72-$111 range and 1.4% daily volatility
+          plausible for crude'
     code_quality:
       score: 10
       max: 10
@@ -186,32 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → plot → save; no functions or classes'
+        comment: Tokens, column constants, one Data block ending in df, plot, save;
+          adaptable-code static check and smoke pass
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.default_rng(11)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, plotly.graph_objects — all used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; conditional trace addition is appropriate; no
-          over-engineering
+        comment: EMAs via pandas ewm, crossovers from a boolean shift, loops over
+          the EMA and cross traces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png + plot-{THEME}.html; current Plotly API
+        comment: plot-{THEME}.png at 800x450 scale 4 with autosize=False, plus plot-{THEME}.html
     library_mastery:
       score: 7
       max: 10
@@ -221,26 +231,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Figure() + add_trace(go.Scatter()) correct for multi-series; hovermode=x
-          unified, hovertemplate, rangeslider, tickformat=$,.0f all idiomatic
+        comment: go.Figure + go.Scatter traces, per-trace hovertemplate with date
+          formatting, tickformat '$,.0f'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Range slider (cannot be replicated in matplotlib), unified X hover
-          mode, HTML export, dollar-formatted ticks
+        comment: Themed rangeslider for zooming the window and hovermode 'x unified'
+          in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
+  rendered_at: '2026-11-22T15:54:02Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
-  - time-series
   - rolling-window
-  - cumulative-sum
   styling:
-  - edge-highlighting
+  - publication-ready
