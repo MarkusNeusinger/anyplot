@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-17
@@ -9,7 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
-from scipy.optimize import minimize
+from PIL import Image
 
 
 # Theme tokens (see prompts/default-style-guide.md)
@@ -18,21 +18,24 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Imprint sequential colormap (single polarity), used for the Sharpe ratio coloring
+IMPRINT_SEQ = ["#009E73", "#4467A3"]
 
-# Data - Portfolio simulation with efficient frontier
-np.random.seed(42)
+# Constants
+RISK_FREE = 0.02  # annualized risk-free rate for the Sharpe ratio and the capital market line
 
-# Asset parameters (5 assets)
-n_assets = 5
-n_portfolios = 300
+# Columns: set these to your table's column names
+RISK = "Risk (standard deviation)"  # role: risk
+RETURN = "Expected return"  # role: return
 
-# Expected returns and covariance (realistic annualized values)
-expected_returns = np.array([0.08, 0.10, 0.12, 0.15, 0.18])
-cov_matrix = np.array(
+# Data: replace this block with your own table, for example df = pd.read_csv("portfolios.csv")
+# One row per random portfolio: its annualized risk and expected return.
+rng = np.random.default_rng(42)
+asset_returns = np.array([0.08, 0.10, 0.12, 0.15, 0.18])
+asset_cov = np.array(
     [
         [0.04, 0.01, 0.02, 0.01, 0.02],
         [0.01, 0.06, 0.02, 0.03, 0.02],
@@ -41,173 +44,186 @@ cov_matrix = np.array(
         [0.02, 0.02, 0.03, 0.05, 0.16],
     ]
 )
-risk_free_rate = 0.02
-
-# Generate random portfolios
-portfolio_returns = []
-portfolio_risks = []
-portfolio_sharpes = []
-
-for _ in range(n_portfolios):
-    weights = np.random.random(n_assets)
-    weights /= np.sum(weights)
-
-    ret = np.dot(weights, expected_returns)
-    risk = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-    sharpe = (ret - risk_free_rate) / risk
-
-    portfolio_returns.append(ret)
-    portfolio_risks.append(risk)
-    portfolio_sharpes.append(sharpe)
-
-# Find minimum variance portfolio first
-constraints = ({"type": "eq", "fun": lambda w: np.sum(w) - 1},)
-bounds = tuple((0, 1) for _ in range(n_assets))
-result_minvar = minimize(
-    lambda w: np.sqrt(np.dot(w.T, np.dot(cov_matrix, w))),
-    np.ones(n_assets) / n_assets,
-    method="SLSQP",
-    bounds=bounds,
-    constraints=constraints,
-)
-min_var_risk = result_minvar.fun
-min_var_return = np.dot(result_minvar.x, expected_returns)
-
-# Calculate efficient frontier using optimization (from min variance to max return)
-frontier_risks_opt = []
-frontier_returns_opt = []
-target_returns = np.linspace(min_var_return, max(expected_returns), 50)
-
-for target in target_returns:
-    constraints = (
-        {"type": "eq", "fun": lambda w: np.sum(w) - 1},
-        {"type": "eq", "fun": lambda w, t=target: np.dot(w, expected_returns) - t},
-    )
-    bounds = tuple((0, 1) for _ in range(n_assets))
-    result = minimize(
-        lambda w: np.sqrt(np.dot(w.T, np.dot(cov_matrix, w))),
-        np.ones(n_assets) / n_assets,
-        method="SLSQP",
-        bounds=bounds,
-        constraints=constraints,
-    )
-    if result.success:
-        frontier_returns_opt.append(target)
-        frontier_risks_opt.append(result.fun)
-
-# Maximum Sharpe ratio portfolio
-sharpe_ratios = [(r - risk_free_rate) / v for r, v in zip(frontier_returns_opt, frontier_risks_opt, strict=True)]
-max_sharpe_idx = np.argmax(sharpe_ratios)
-max_sharpe_risk = frontier_risks_opt[max_sharpe_idx]
-max_sharpe_return = frontier_returns_opt[max_sharpe_idx]
-
-# Create DataFrames
-portfolios_df = pd.DataFrame(
-    {"Risk (Std Dev)": portfolio_risks, "Expected Return": portfolio_returns, "Sharpe Ratio": portfolio_sharpes}
+weights = rng.random((300, len(asset_returns)))
+weights /= weights.sum(axis=1, keepdims=True)
+df = pd.DataFrame(
+    {RISK: np.sqrt(np.einsum("ij,jk,ik->i", weights, asset_cov, weights)), RETURN: weights @ asset_returns}
 )
 
-frontier_df = pd.DataFrame({"Risk (Std Dev)": frontier_risks_opt, "Expected Return": frontier_returns_opt})
+# Plot: reads only df and the constants above
+SHARPE = "Sharpe ratio"
+PORTFOLIO = "Portfolio"
+CURVE = "Curve"
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
 
-special_points_df = pd.DataFrame(
+cloud_df = df.dropna(subset=[RISK, RETURN]).copy()
+cloud_df[SHARPE] = (cloud_df[RETURN] - RISK_FREE) / cloud_df[RISK]
+
+# Efficient frontier: the upper convex hull of the cloud, from its lowest-risk portfolio
+# up to its highest-return portfolio (no portfolio of the sample lies above it)
+ordered = cloud_df.sort_values([RISK, RETURN])[[RISK, RETURN]].to_numpy()
+hull = []
+for point in ordered:
+    while len(hull) >= 2:
+        a, b = hull[-1] - hull[-2], point - hull[-2]
+        if a[0] * b[1] - a[1] * b[0] < 0:
+            break
+        hull.pop()
+    hull.append(point)
+frontier_df = pd.DataFrame(hull, columns=[RISK, RETURN])
+frontier_df = frontier_df.iloc[: frontier_df[RETURN].argmax() + 1]
+
+min_risk_point = frontier_df.iloc[0]
+tangent_idx = ((frontier_df[RETURN] - RISK_FREE) / frontier_df[RISK]).idxmax()
+tangent_risk = frontier_df.loc[tangent_idx, RISK]
+tangent_return = frontier_df.loc[tangent_idx, RETURN]
+
+cml_risk = np.array([0.0, tangent_risk * 1.5])
+cml_df = pd.DataFrame({RISK: cml_risk, RETURN: RISK_FREE + (tangent_return - RISK_FREE) / tangent_risk * cml_risk})
+
+frontier_df[CURVE] = "Efficient frontier"
+cml_df[CURVE] = "Capital market line"
+curves_df = pd.concat([frontier_df, cml_df], ignore_index=True)
+
+key_df = pd.DataFrame(
     {
-        "Risk (Std Dev)": [min_var_risk, max_sharpe_risk],
-        "Expected Return": [min_var_return, max_sharpe_return],
-        "Portfolio": ["Minimum Variance", "Maximum Sharpe Ratio"],
+        PORTFOLIO: ["Minimum variance", "Maximum Sharpe ratio", "Risk-free rate"],
+        RISK: [min_risk_point[RISK], tangent_risk, 0.0],
+        RETURN: [min_risk_point[RETURN], tangent_return, RISK_FREE],
     }
 )
 
-# Capital Market Line
-cml_risk = np.array([0, max_sharpe_risk * 1.5])
-cml_return = risk_free_rate + (max_sharpe_return - risk_free_rate) / max_sharpe_risk * cml_risk
-cml_df = pd.DataFrame({"Risk (Std Dev)": cml_risk, "Expected Return": cml_return})
+x_enc = alt.X(
+    RISK.translate(ESCAPE),
+    type="quantitative",
+    title=RISK,
+    scale=alt.Scale(domain=[0, curves_df[RISK].max() * 1.05], nice=False),
+)
+y_enc = alt.Y(
+    RETURN.translate(ESCAPE),
+    type="quantitative",
+    title=RETURN,
+    scale=alt.Scale(domain=[0, curves_df[RETURN].max() * 1.08], nice=False),
+    axis=alt.Axis(format=".0%"),
+)
 
-# Risk-free rate point
-rf_df = pd.DataFrame({"Risk (Std Dev)": [0], "Expected Return": [risk_free_rate], "Point": ["Risk-Free Rate"]})
-
-# Plot
-# Scatter plot of random portfolios colored by Sharpe ratio
-scatter = (
-    alt.Chart(portfolios_df)
-    .mark_circle(size=100, opacity=0.6)
+cloud = (
+    alt.Chart(cloud_df)
+    .mark_circle(size=45, opacity=0.65)
     .encode(
-        x=alt.X("Risk (Std Dev):Q", scale=alt.Scale(domain=[0, 0.45]), title="Risk (Standard Deviation)"),
-        y=alt.Y("Expected Return:Q", scale=alt.Scale(domain=[0, 0.22]), title="Expected Return"),
+        x=x_enc,
+        y=y_enc,
         color=alt.Color(
-            "Sharpe Ratio:Q",
-            scale=alt.Scale(scheme="viridis"),
-            legend=alt.Legend(title="Sharpe Ratio", titleFontSize=16, labelFontSize=14),
+            SHARPE,
+            type="quantitative",
+            title=SHARPE,
+            scale=alt.Scale(range=IMPRINT_SEQ),
+            legend=alt.Legend(orient="right", gradientLength=110, direction="vertical"),
         ),
-        tooltip=["Risk (Std Dev)", "Expected Return", "Sharpe Ratio"],
+        tooltip=[
+            alt.Tooltip(RISK.translate(ESCAPE), title=RISK, format=".3f"),
+            alt.Tooltip(RETURN.translate(ESCAPE), title=RETURN, format=".3f"),
+            alt.Tooltip(SHARPE, title=SHARPE, format=".2f"),
+        ],
     )
 )
 
-# Efficient frontier line
-frontier_line = (
-    alt.Chart(frontier_df).mark_line(strokeWidth=4, color=BRAND).encode(x="Risk (Std Dev):Q", y="Expected Return:Q")
-)
-
-# Capital market line
-cml_line = (
-    alt.Chart(cml_df)
-    .mark_line(strokeWidth=3, strokeDash=[8, 4], color=IMPRINT[1])
-    .encode(x="Risk (Std Dev):Q", y="Expected Return:Q")
-)
-
-# Special points
-special_points = (
-    alt.Chart(special_points_df)
-    .mark_point(size=400, filled=True, stroke="white", strokeWidth=2)
+curves = (
+    alt.Chart(curves_df)
+    .mark_line(strokeWidth=2.5)
     .encode(
-        x="Risk (Std Dev):Q",
-        y="Expected Return:Q",
+        x=x_enc,
+        y=y_enc,
         color=alt.Color(
-            "Portfolio:N",
-            scale=alt.Scale(domain=["Minimum Variance", "Maximum Sharpe Ratio"], range=[IMPRINT[1], IMPRINT[2]]),
-            legend=alt.Legend(title="Key Portfolios", titleFontSize=16, labelFontSize=14),
+            CURVE,
+            type="nominal",
+            title=None,
+            scale=alt.Scale(domain=["Efficient frontier", "Capital market line"], range=[INK, IMPRINT_PALETTE[4]]),
+            legend=alt.Legend(symbolType="stroke", symbolStrokeWidth=3),
         ),
-        tooltip=["Portfolio", "Risk (Std Dev)", "Expected Return"],
+        strokeDash=alt.StrokeDash(
+            CURVE,
+            type="nominal",
+            scale=alt.Scale(domain=["Efficient frontier", "Capital market line"], range=[[1, 0], [6, 4]]),
+            legend=None,
+        ),
+        order=alt.Order(CURVE, type="nominal"),
     )
 )
 
-# Risk-free rate point
-rf_point = (
-    alt.Chart(rf_df)
-    .mark_point(size=300, shape="diamond", filled=True, color=INK_SOFT)
-    .encode(x="Risk (Std Dev):Q", y="Expected Return:Q", tooltip=["Point", "Expected Return"])
+key_points = (
+    alt.Chart(key_df)
+    .mark_point(size=170, filled=True, stroke=PAGE_BG, strokeWidth=1.5, opacity=1)
+    .encode(
+        x=x_enc,
+        y=y_enc,
+        color=alt.Color(
+            PORTFOLIO,
+            type="nominal",
+            title="Key portfolios",
+            scale=alt.Scale(
+                domain=key_df[PORTFOLIO].tolist(), range=[IMPRINT_PALETTE[1], IMPRINT_PALETTE[3], IMPRINT_PALETTE[5]]
+            ),
+            legend=alt.Legend(symbolType="diamond"),
+        ),
+        shape=alt.Shape(
+            PORTFOLIO,
+            type="nominal",
+            scale=alt.Scale(domain=key_df[PORTFOLIO].tolist(), range=["diamond", "square", "triangle-up"]),
+            legend=None,
+        ),
+        tooltip=[
+            alt.Tooltip(PORTFOLIO, title=PORTFOLIO),
+            alt.Tooltip(RISK.translate(ESCAPE), title=RISK, format=".3f"),
+            alt.Tooltip(RETURN.translate(ESCAPE), title=RETURN, format=".3f"),
+        ],
+    )
 )
 
-# Combine all layers
+title = "frontier-efficient · python · altair · anyplot.ai"
 chart = (
-    alt.layer(scatter, frontier_line, cml_line, special_points, rf_point)
+    alt.layer(cloud, curves, key_points)
+    .resolve_scale(color="independent", shape="independent", strokeDash="independent")
     .properties(
-        width=1600,
-        height=900,
+        width=580,
+        height=390,
         background=PAGE_BG,
-        title=alt.Title("frontier-efficient · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
+        title=alt.Title(title, fontSize=16, anchor="middle"),
     )
+    .configure_view(continuousWidth=580, continuousHeight=390, fill=PAGE_BG, stroke=INK_SOFT)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
         gridColor=INK,
         gridOpacity=0.10,
         labelColor=INK_SOFT,
-        labelFontSize=16,
+        labelFontSize=10,
         titleColor=INK,
-        titleFontSize=20,
+        titleFontSize=12,
     )
     .configure_title(color=INK)
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
+        padding=6,
         labelColor=INK_SOFT,
         titleColor=INK,
-        titleFontSize=16,
-        labelFontSize=14,
-        symbolSize=200,
+        titleFontSize=10,
+        labelFontSize=9,
+        symbolSize=90,
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) the render to the canonical 3200 x 1800 canvas
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TW or img.height > TH:
+    raise SystemExit(f"altair render {img.size} exceeds the {TW}x{TH} target; shrink width/height")
+canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+canvas.paste(img, ((TW - img.width) // 2, (TH - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
