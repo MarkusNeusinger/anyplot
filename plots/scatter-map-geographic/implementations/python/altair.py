@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-18
@@ -14,6 +14,7 @@ while script_dir in sys.path:
 
 import altair as alt  # noqa: E402
 import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402
 
 
 # Theme tokens
@@ -24,9 +25,19 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BASEMAP_FILL = "#E5E3D8" if THEME == "light" else "#3A3935"
 BASEMAP_STROKE = "#9C9A91" if THEME == "light" else "#5A5855"
 
-# Data: Major world cities with population and region
+# Imprint palette: all eight positions, one per region in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns: set these to your table's column names
+CITY = "City"  # role: label
+LATITUDE = "Latitude (°)"  # role: latitude
+LONGITUDE = "Longitude (°)"  # role: longitude
+POPULATION = "Population (millions)"  # role: size
+REGION = "Region"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("cities.csv")
 cities_data = {
-    "city": [
+    CITY: [
         "Tokyo",
         "Delhi",
         "Shanghai",
@@ -72,7 +83,7 @@ cities_data = {
         "Nairobi",
         "Dar es Salaam",
     ],
-    "latitude": [
+    LATITUDE: [
         35.6762,
         28.7041,
         31.2304,
@@ -118,7 +129,7 @@ cities_data = {
         -1.2921,
         -6.8000,
     ],
-    "longitude": [
+    LONGITUDE: [
         139.6503,
         77.1025,
         121.4737,
@@ -164,7 +175,7 @@ cities_data = {
         36.8219,
         39.2069,
     ],
-    "population_millions": [
+    POPULATION: [
         37.4,
         32.9,
         29.2,
@@ -210,7 +221,7 @@ cities_data = {
         4.0,
         4.7,
     ],
-    "region": [
+    REGION: [
         "Asia",
         "Asia",
         "Asia",
@@ -260,81 +271,84 @@ cities_data = {
 
 df = pd.DataFrame(cities_data)
 
-# Load world basemap
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+TW, TH = 3200, 1800
+TITLE = "World Major Cities · scatter-map-geographic · python · altair · anyplot.ai"
+
 world = alt.topo_feature("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json", "countries")
 
-# Create basemap layer
 basemap = (
     alt.Chart(world)
-    .mark_geoshape(fill=BASEMAP_FILL, stroke=BASEMAP_STROKE, strokeWidth=0.5)
+    .mark_geoshape(fill=BASEMAP_FILL, stroke=BASEMAP_STROKE, strokeWidth=0.4)
     .project(type="naturalEarth1")
-    .properties(width=1600, height=900)
+    .properties(width=560, height=290)
 )
 
-# Define color scale for regions using Okabe-Ito palette positions
-region_colors = {
-    "Asia": "#009E73",  # OI position 1 (brand green)
-    "Africa": "#C475FD",  # OI position 2 (vermillion)
-    "Europe": "#4467A3",  # OI position 3 (blue)
-    "North America": "#BD8233",  # OI position 4 (reddish purple)
-    "South America": "#AE3030",  # OI position 5 (orange)
-    "Oceania": "#2ABCCD",  # OI position 6 (sky blue)
-}
-
-# Create scatter points layer
 points = (
     alt.Chart(df)
-    .mark_circle(opacity=0.75, stroke=PAGE_BG, strokeWidth=1.5)
+    .mark_circle(opacity=0.75, stroke=PAGE_BG, strokeWidth=1)
     .encode(
-        longitude="longitude:Q",
-        latitude="latitude:Q",
+        longitude=alt.Longitude(LONGITUDE.translate(ESCAPE), type="quantitative"),
+        latitude=alt.Latitude(LATITUDE.translate(ESCAPE), type="quantitative"),
         size=alt.Size(
-            "population_millions:Q",
-            scale=alt.Scale(range=[150, 2000]),
-            legend=alt.Legend(
-                title="Population (millions)", titleFontSize=18, labelFontSize=16, orient="bottom-left", offset=20
-            ),
+            POPULATION.translate(ESCAPE),
+            type="quantitative",
+            title=POPULATION,
+            scale=alt.Scale(range=[25, 300]),
+            legend=alt.Legend(orient="left", offset=4, symbolFillColor=INK_SOFT),
         ),
         color=alt.Color(
-            "region:N",
-            scale=alt.Scale(domain=list(region_colors.keys()), range=list(region_colors.values())),
-            legend=alt.Legend(title="Region", titleFontSize=18, labelFontSize=16, orient="bottom-right", offset=20),
+            REGION.translate(ESCAPE),
+            type="nominal",
+            title=REGION,
+            sort=None,
+            scale=alt.Scale(range=IMPRINT_PALETTE),
+            legend=alt.Legend(orient="right", offset=4),
         ),
-        tooltip=["city:N", "population_millions:Q", "region:N"],
+        tooltip=[
+            alt.Tooltip(CITY.translate(ESCAPE), title=CITY),
+            alt.Tooltip(POPULATION.translate(ESCAPE), title=POPULATION),
+            alt.Tooltip(REGION.translate(ESCAPE), title=REGION),
+        ],
     )
     .project(type="naturalEarth1")
-    .properties(width=1600, height=900)
+    .properties(width=560, height=290)
 )
 
-# Combine layers with theme-adaptive styling
 chart = (
     alt.layer(basemap, points)
     .properties(
-        title=alt.Title(
-            text="World Major Cities · scatter-map-geographic · python · altair · anyplot.ai",
-            fontSize=28,
-            anchor="middle",
-            color=INK,
-        ),
+        title=alt.Title(text=TITLE, fontSize=round(16 * min(1.0, 67 / len(TITLE))), anchor="middle", color=INK),
         background=PAGE_BG,
     )
     .configure_view(stroke=None, fill=PAGE_BG)
     .configure_legend(
-        padding=15,
+        padding=6,
         cornerRadius=0,
         fillColor="transparent",
         strokeColor=INK_SOFT,
         strokeWidth=1,
         labelColor=INK_SOFT,
         titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=11,
     )
-    .configure_axis(labelColor=INK_SOFT, titleColor=INK)
     .configure_title(color=INK)
 )
 
 # Save as PNG and HTML with theme-suffixed filenames
-script_dir = os.path.dirname(os.path.abspath(__file__))
 png_path = os.path.join(script_dir, f"plot-{THEME}.png")
 html_path = os.path.join(script_dir, f"plot-{THEME}.html")
-chart.save(png_path, scale_factor=3.0)
+chart.save(png_path, scale_factor=4.0)
 chart.save(html_path)
+
+# Pad (never crop) to the canonical canvas
+img = Image.open(png_path).convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TW}x{TH}")
+if (w, h) != (TW, TH):
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(png_path)
