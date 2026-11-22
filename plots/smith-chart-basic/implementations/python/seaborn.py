@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 
 # Theme tokens
@@ -19,9 +20,13 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito data colors (categorical series)
-REACT_COLOR = "#C475FD"  # Reactance arcs — second series
-VSWR_COLOR = "#4467A3"  # VSWR reference circle — third series
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+REACT_COLOR = IMPRINT_PALETTE[1]  # Reactance arcs
+VSWR_COLOR = IMPRINT_PALETTE[2]  # VSWR reference circle
+
+# Imprint sequential colormap for the frequency sweep
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
 # Apply seaborn theme for chrome elements
 sns.set_theme(
@@ -39,22 +44,35 @@ sns.set_theme(
     },
 )
 
-# Data — antenna impedance sweep 1–6 GHz, Z₀ = 50 Ω
-np.random.seed(42)
-z0 = 50
-n_points = 100  # Dense for smooth frequency-gradient locus
-freq_ghz = np.linspace(1, 6, n_points)
+# Constants
+Z0 = 50  # reference impedance in ohms
+VSWR = 3  # reference standing-wave ratio drawn as a constant-|Γ| circle
+N_KEY_POINTS = 5  # frequency labels along the locus
 
+# Columns: set these to your table's column names
+FREQUENCY = "Frequency (GHz)"  # role: frequency
+Z_REAL = "Resistance (Ω)"  # role: z_real
+Z_IMAG = "Reactance (Ω)"  # role: z_imag
+
+# Data: replace this block with your own table, for example df = pd.read_csv("s11.csv")
+# Antenna impedance sweep 1–6 GHz
+n_points = 100
 t = np.linspace(0, 1.8 * np.pi, n_points)
-z_real = 50 + 30 * np.sin(t) + 15 * np.cos(2 * t) + 10 * (t / (2 * np.pi))
-z_imag = 40 * np.sin(1.5 * t) + 20 * np.cos(t) - 15 * (t / (2 * np.pi))
+df = pd.DataFrame(
+    {
+        FREQUENCY: np.linspace(1, 6, n_points),
+        Z_REAL: 50 + 30 * np.sin(t) + 15 * np.cos(2 * t) + 10 * (t / (2 * np.pi)),
+        Z_IMAG: 40 * np.sin(1.5 * t) + 20 * np.cos(t) - 15 * (t / (2 * np.pi)),
+    }
+)
 
-z_norm = (z_real + 1j * z_imag) / z0
+# Plot: reads only df and the constants above
+z_norm = (df[Z_REAL].to_numpy() + 1j * df[Z_IMAG].to_numpy()) / Z0
 gamma = (z_norm - 1) / (z_norm + 1)
-gamma_real = gamma.real
-gamma_imag = gamma.imag
+locus = pd.DataFrame({"gamma_real": gamma.real, "gamma_imag": gamma.imag, FREQUENCY: df[FREQUENCY]})
+f_min, f_max = df[FREQUENCY].min(), df[FREQUENCY].max()
 
-# Plot — square canvas (2400×2400 px)
+# Square canvas (2400×2400 px)
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
@@ -95,26 +113,23 @@ for x in [0.2, 0.5, 1, 2, 5]:
 ax.plot(np.cos(theta), np.sin(theta), color=INK_SOFT, linewidth=1.5, zorder=1)
 ax.axhline(0, color=INK_SOFT, linewidth=1.0, alpha=0.6, zorder=1)
 
-# VSWR 3:1 circle (|Γ| = 0.5)
-vswr_r = 0.5
+# VSWR circle: constant |Γ| = (VSWR - 1) / (VSWR + 1)
+vswr_r = (VSWR - 1) / (VSWR + 1)
 ax.plot(vswr_r * np.cos(theta), vswr_r * np.sin(theta), "--", color=VSWR_COLOR, linewidth=1.5, zorder=2)
-ax.text(0.36, 0.37, "VSWR 3:1", fontsize=8, color=VSWR_COLOR, fontweight="bold")
-
-# Impedance locus DataFrame
-df_locus = pd.DataFrame({"gamma_real": gamma_real, "gamma_imag": gamma_imag, "freq_ghz": freq_ghz})
+ax.text(0.36, 0.37, f"VSWR {VSWR}:1", fontsize=8, color=VSWR_COLOR, fontweight="bold")
 
 # Thin background line for trajectory continuity
-ax.plot(gamma_real, gamma_imag, color=INK_SOFT, linewidth=1.2, alpha=0.4, zorder=4)
+ax.plot(locus["gamma_real"], locus["gamma_imag"], color=INK_SOFT, linewidth=1.2, alpha=0.4, zorder=4)
 
-# Frequency-gradient scatter — seaborn continuous hue encoding with viridis colormap.
-# Coloring each point by freq_ghz reveals sweep direction (purple=1 GHz → yellow=6 GHz).
+# Frequency-gradient scatter: seaborn continuous hue encoding with the Imprint sequential colormap,
+# so the sweep direction reads from green (low) to blue (high).
 sns.scatterplot(
-    data=df_locus,
+    data=locus,
     x="gamma_real",
     y="gamma_imag",
-    hue="freq_ghz",
-    palette="viridis",
-    hue_norm=(1.0, 6.0),
+    hue=FREQUENCY,
+    palette=imprint_seq,
+    hue_norm=(f_min, f_max),
     s=40,
     ax=ax,
     zorder=5,
@@ -123,19 +138,18 @@ sns.scatterplot(
 )
 
 # Colorbar to decode frequency gradient
-norm = plt.Normalize(1.0, 6.0)
-sm = plt.cm.ScalarMappable(cmap="viridis", norm=norm)
+sm = plt.cm.ScalarMappable(cmap=imprint_seq, norm=plt.Normalize(f_min, f_max))
 sm.set_array([])
 cbar = fig.colorbar(sm, ax=ax, shrink=0.5, aspect=20, pad=0.05)
-cbar.set_label("Frequency (GHz)", fontsize=8, color=INK)
+cbar.set_label(FREQUENCY, fontsize=8, color=INK)
 cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
-# Key frequency markers — dark outline for contrast against viridis gradient
-key_indices = [0, n_points // 4, n_points // 2, 3 * n_points // 4, n_points - 1]
-df_markers = df_locus.iloc[key_indices].copy()
+# Key frequency markers, outlined in the page color for contrast against the gradient
+key_pos = np.unique(np.linspace(0, len(locus) - 1, N_KEY_POINTS).astype(int))
+markers = locus.iloc[key_pos]
 sns.scatterplot(
-    data=df_markers,
+    data=markers,
     x="gamma_real",
     y="gamma_imag",
     s=100,
@@ -147,19 +161,13 @@ sns.scatterplot(
     legend=False,
 )
 
-# Frequency annotations — 1.0 GHz placed below its point, clear of 2.3 GHz above
-label_offsets = {
-    0: (8, -18),
-    n_points // 4: (10, 8),
-    n_points // 2: (8, -14),
-    3 * n_points // 4: (-45, 8),
-    n_points - 1: (-45, -12),
-}
-for idx in key_indices:
-    ox, oy = label_offsets.get(idx, (8, 8))
+# Frequency annotations: offsets in points, taken in order along the sweep
+label_offsets = [(8, -18), (10, 8), (8, -14), (-45, 8), (-45, -12)]
+for i, (_, row) in enumerate(markers.iterrows()):
+    ox, oy = label_offsets[i % len(label_offsets)]
     ax.annotate(
-        f"{freq_ghz[idx]:.1f} GHz",
-        (gamma_real[idx], gamma_imag[idx]),
+        f"{row[FREQUENCY]:.1f} GHz",
+        (row["gamma_real"], row["gamma_imag"]),
         textcoords="offset points",
         xytext=(ox, oy),
         fontsize=8,
@@ -189,7 +197,7 @@ ax.spines["bottom"].set_color(INK_SOFT)
 # Legend (locus entry replaced by colorbar above)
 ax.plot([], [], color=INK_SOFT, linewidth=0.8, alpha=0.6, label="Constant R circles")
 ax.plot([], [], color=REACT_COLOR, linewidth=0.8, alpha=0.6, label="Constant X arcs")
-ax.plot([], [], color=VSWR_COLOR, linewidth=1.5, linestyle="--", label="VSWR 3:1 circle")
+ax.plot([], [], color=VSWR_COLOR, linewidth=1.5, linestyle="--", label=f"VSWR {VSWR}:1 circle")
 legend = ax.legend(loc="upper left", fontsize=8, framealpha=0.9)
 legend.get_frame().set_facecolor(ELEVATED_BG)
 legend.get_frame().set_edgecolor(INK_SOFT)
@@ -197,4 +205,4 @@ legend.get_frame().set_edgecolor(INK_SOFT)
 plt.tight_layout()
 
 # Save
-plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
