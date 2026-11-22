@@ -1,12 +1,13 @@
-""" anyplot.ai
+"""anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
-Library: pygal 3.1.0 | Python 3.13.13
+Library: pygal 3.1.3 | Python 3.14
 Quality: 83/100 | Updated: 2026-05-20
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -18,125 +19,106 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Canonical Okabe-Ito order: data series take palette positions 1-4 (added first),
-# structural chart elements use positions 5-8 (added after data).
-CHART_COLORS = (
-    "#009E73",  # pos 1: "Antenna Z(f)" ← brand green — first data series
-    "#C475FD",  # pos 2: "1 GHz" (Okabe-Ito vermillion)
-    "#4467A3",  # pos 3: "3.5 GHz" (Okabe-Ito blue)
-    "#BD8233",  # pos 4: "6 GHz" (Okabe-Ito pink/purple)
-    "#AE3030",  # pos 5: unit circle boundary (Okabe-Ito amber)
-    "#2ABCCD",  # pos 6: resistance circles (Okabe-Ito sky blue)
-    INK_MUTED,  # pos 7: reactance arcs (theme-adaptive muted)
-    INK_SOFT,  # pos 8: real axis (theme-adaptive subtle)
-)
+# Imprint palette: the locus takes position 1, the structural series use theme-adaptive inks
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+SERIES_COLORS = (IMPRINT_PALETTE[0], INK_SOFT, INK_MUTED, *IMPRINT_PALETTE[1:])
 
+# Constants
 Z0 = 50  # reference impedance (ohms)
-R_CIRCLES = [0, 0.2, 0.5, 1, 2, 5]
-X_ARCS = [0.2, 0.5, 1, 2, 5]
+R_CIRCLES = [0, 0.2, 0.5, 1, 2, 5]  # normalized resistance values of the grid
+X_ARCS = [0.2, 0.5, 1, 2, 5]  # normalized reactance values of the grid (both signs)
 
-# Style
+# Columns: set these to your table's column names
+FREQUENCY = "Frequency (Hz)"  # role: frequency
+Z_REAL = "Resistance (ohm)"  # role: z_real
+Z_IMAG = "Reactance (ohm)"  # role: z_imag
+
+# Data: replace this block with your own table, for example df = pd.read_csv("s11.csv")
+np.random.seed(42)
+n = 50
+freqs = np.linspace(1e9, 6e9, n)
+r_base = 25 + 50 * np.exp(-freqs / 3e9)
+x_base = 30 * np.sin(2 * np.pi * freqs / 2e9) + 20 * np.cos(freqs / 1e9)
+df = pd.DataFrame({FREQUENCY: freqs, Z_REAL: r_base + np.random.randn(n) * 3, Z_IMAG: x_base + np.random.randn(n) * 5})
+
+# Plot
+gamma = ((df[Z_REAL] + 1j * df[Z_IMAG]) / Z0 - 1) / ((df[Z_REAL] + 1j * df[Z_IMAG]) / Z0 + 1)
+gamma = gamma.to_numpy()
+limit = 1.15
+
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=CHART_COLORS,
+    colors=SERIES_COLORS,
+    value_colors=(INK,) * len(SERIES_COLORS),  # point labels default to black
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=36,
+    value_font_size=48,
+    value_label_font_size=48,
     stroke_width=3,
 )
 
-# Chart — square format; truncate_label=-1 prevents pygal from clipping tick text
+# Square canvas; truncate_label=-1 prevents pygal from clipping text
 chart = pygal.XY(
     width=2400,
     height=2400,
     style=custom_style,
     title="smith-chart-basic · python · pygal · anyplot.ai",
     show_legend=True,
-    legend_at_bottom=False,
+    legend_at_bottom=True,
     show_x_guides=False,
     show_y_guides=False,
     x_title="Reflection Coefficient Real Part",
     y_title="Reflection Coefficient Imaginary Part",
     dots_size=8,
-    range=(-1.15, 1.15),
-    xrange=(-1.15, 1.15),
+    range=(-limit, limit),
+    xrange=(-limit, limit),
     margin=120,
     truncate_label=-1,
+    print_labels=True,
+    allow_interruptions=True,
+    print_values=False,
 )
-
-# Explicit tick marks at clean round values to prevent floating-point label truncation
 chart.x_labels = [-1.0, -0.5, 0.0, 0.5, 1.0]
 
-# Data — antenna impedance sweep 1–6 GHz
-# Added FIRST so data series take palette positions 1-4 (brand green at pos 1)
-np.random.seed(42)
-n = 50
-freqs = np.linspace(1e9, 6e9, n)
+# Impedance locus; the first, middle and last points carry frequency labels and larger markers
+key_points = {0, len(df) // 2, len(df) - 1}
+locus = []
+for i, g in enumerate(gamma):
+    point = {"value": (float(g.real), float(g.imag))}
+    if i in key_points:
+        ghz = df[FREQUENCY].iloc[i] / 1e9
+        point["label"] = f"{ghz:.1f} GHz"
+        point["node"] = {"r": 22}
+    locus.append(point)
+chart.add("Antenna impedance, 1 to 6 GHz", locus, show_dots=True, stroke_width=5, dots_size=6)
 
-r_base = 25 + 50 * np.exp(-freqs / 3e9)
-x_base = 30 * np.sin(2 * np.pi * freqs / 2e9) + 20 * np.cos(freqs / 1e9)
-z_r = r_base + np.random.randn(n) * 3
-z_i = x_base + np.random.randn(n) * 5
-
-z_c = z_r + 1j * z_i
-z_norm = z_c / Z0
-gamma = (z_norm - 1) / (z_norm + 1)
-
-# Impedance locus: pos 1 = #009E73 brand green
-locus = [(float(g.real), float(g.imag)) for g in gamma]
-chart.add("Antenna Z(f)", locus, show_dots=True, stroke_width=5, dots_size=6)
-
-# Frequency markers (stroke=False = dots only, no connecting line): pos 2-4
-chart.add("1 GHz", [(float(gamma[0].real), float(gamma[0].imag))], show_dots=True, dots_size=22, stroke=False)
-chart.add(
-    "3.5 GHz", [(float(gamma[n // 2].real), float(gamma[n // 2].imag))], show_dots=True, dots_size=22, stroke=False
-)
-chart.add("6 GHz", [(float(gamma[-1].real), float(gamma[-1].imag))], show_dots=True, dots_size=22, stroke=False)
-
-# Structural series — added AFTER data to take palette positions 5-8.
-# Named labels eliminate the unlabeled colored squares that caused legend confusion.
-# Unit circle boundary (|Γ| = 1): pos 5 = #AE3030 amber
+# Chart boundary (|Γ| = 1)
 theta = np.linspace(0, 2 * np.pi, 200)
-unit_circle = [(float(np.cos(t)), float(np.sin(t))) for t in theta]
-chart.add("Unit Circle", unit_circle, show_dots=False, stroke_width=5)
+chart.add(
+    "Chart boundary |Γ| = 1", [(float(np.cos(t)), float(np.sin(t))) for t in theta], show_dots=False, stroke_width=5
+)
 
-# Constant resistance circles: pos 6 = #2ABCCD sky blue
-r_grid = []
-for r in R_CIRCLES:
-    x_vals = np.concatenate([np.linspace(-50, -0.01, 100), np.linspace(0.01, 50, 100)])
-    for x in x_vals:
-        z_n = complex(r, x)
-        g = (z_n - 1) / (z_n + 1)
-        if abs(g) <= 1.001:
-            r_grid.append((float(g.real), float(g.imag)))
-    r_grid.append((None, None))
-chart.add("Resistance Grid", r_grid, show_dots=False, stroke_width=1.5)
-
-# Constant reactance arcs: pos 7 = INK_MUTED gray
-x_grid = []
-for x in X_ARCS:
-    for r in np.linspace(0.001, 50, 100):
-        z_n = complex(r, x)
-        g = (z_n - 1) / (z_n + 1)
-        if abs(g) <= 1.001:
-            x_grid.append((float(g.real), float(g.imag)))
-    x_grid.append((None, None))
-    for r in np.linspace(0.001, 50, 100):
-        z_n = complex(r, -x)
-        g = (z_n - 1) / (z_n + 1)
-        if abs(g) <= 1.001:
-            x_grid.append((float(g.real), float(g.imag)))
-    x_grid.append((None, None))
-chart.add("Reactance Grid", x_grid, show_dots=False, stroke_width=1.5)
-
-# Real axis: pos 8 = INK_SOFT gray
-chart.add("Real Axis", [(-1.0, 0.0), (1.0, 0.0)], show_dots=False, stroke_width=2)
+# Smith grid: constant resistance circles, constant reactance arcs and the real axis in one series;
+# (None, None) breaks the line between segments
+grid = []
+t = np.linspace(0, 2 * np.pi, 240)
+for r in R_CIRCLES:  # circle of constant r: centre (r/(1+r), 0), radius 1/(1+r)
+    cx, rad = r / (1 + r), 1 / (1 + r)
+    grid += [(float(cx + rad * np.cos(a)), float(rad * np.sin(a))) for a in t] + [(None, None)]
+for x in X_ARCS:  # arc of constant x: centre (1, 1/x), radius 1/x, clipped to the unit disc
+    for sign in (1, -1):
+        cy, rad = sign / x, 1 / x
+        pts = [(1 + rad * np.cos(a), cy + rad * np.sin(a)) for a in np.linspace(0, 2 * np.pi, 4000)]
+        run = [(float(px), float(py)) for px, py in pts if px * px + py * py <= 1.0000001]
+        grid += run + [(None, None)]
+grid += [(-1.0, 0.0), (1.0, 0.0), (None, None)]
+chart.add("Resistance and reactance grid", grid, show_dots=False, stroke_width=1.5)
 
 # Save
 chart.render_to_file(f"plot-{THEME}.html")
