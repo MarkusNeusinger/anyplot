@@ -1,7 +1,7 @@
 """ anyplot.ai
 crossword-basic: Crossword Puzzle Grid
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-20
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-22
 """
 
 import sys
@@ -106,10 +106,10 @@ p = figure(
     x_range=(-0.6, grid_size - 0.4),
     y_range=(-0.6, grid_size - 0.4),
     toolbar_location=None,
-    min_border_bottom=80,
+    min_border_bottom=100,
     min_border_left=80,
     min_border_top=110,
-    min_border_right=50,
+    min_border_right=80,
 )
 
 p.xaxis.visible = False
@@ -179,6 +179,10 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Pin the viewport exactly: headless --window-size reserves a phantom title bar
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
