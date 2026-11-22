@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 density-rug: Density Plot with Rug Marks
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: pending | Updated: 2026-05-18
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-22
 """
 
 import os
