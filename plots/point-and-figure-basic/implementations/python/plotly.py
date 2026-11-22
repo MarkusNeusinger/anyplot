@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-20
@@ -7,6 +7,7 @@ Quality: 92/100 | Updated: 2026-05-20
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -18,25 +19,42 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-COLOR_X = "#009E73"  # Okabe-Ito pos 1 — X (Rising), colorblind-safe
+COLOR_X = "#009E73"  # Imprint palette pos 1 — X (Rising), colorblind-safe
 COLOR_O = "#AE3030"  # imprint red — O (Falling)
 
-# Data — synthetic stock price with distinct trend phases
+# Constants
+BOX_SIZE = 2.0  # price increment that earns one symbol
+REVERSAL = 3  # boxes of counter-move that start a new column
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+HIGH = "High ($)"  # role: high
+LOW = "Low ($)"  # role: low
+CLOSE = "Price ($)"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 300
-
-initial_price = 100.0
 returns = np.random.normal(0.001, 0.02, n_days)
 returns[50:100] += 0.003
 returns[120:150] -= 0.004
 returns[180:230] += 0.002
 returns[250:280] -= 0.003
+closes = 100.0 * np.cumprod(1 + returns)
+spread = np.random.uniform(0.002, 0.01, n_days)
+df = pd.DataFrame(
+    {
+        DATE: pd.bdate_range("2024-01-01", periods=n_days),
+        HIGH: closes * (1 + spread),
+        LOW: closes * (1 - spread),
+        CLOSE: closes,
+    }
+)
 
-close = initial_price * np.cumprod(1 + returns)
-
-# P&F parameters
-box_size = 2.0
-reversal = 3
+# Plot
+box_size = BOX_SIZE
+reversal = REVERSAL
+close = df[CLOSE].to_numpy()
 
 # Build P&F columns
 columns = []
@@ -95,7 +113,6 @@ for i in range(1, len(close)):
 if current_column:
     columns.append((current_column.copy(), current_direction, column_index))
 
-# Plot
 fig = go.Figure()
 
 # X and O symbols for each column
@@ -179,6 +196,9 @@ fig.add_trace(
 
 # Style
 fig.update_layout(
+    autosize=False,
+    width=600,
+    height=600,
     title={
         "text": "point-and-figure-basic · python · plotly · anyplot.ai",
         "font": {"size": 16, "color": INK},
@@ -196,13 +216,13 @@ fig.update_layout(
         "dtick": 5,
     },
     yaxis={
-        "title": {"text": "Price ($)", "font": {"size": 12, "color": INK}},
+        "title": {"text": CLOSE, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
         "gridwidth": 1,
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
-        "dtick": 10,
+        "dtick": box_size * 5,
         "range": [min_price, max_price],
     },
     paper_bgcolor=PAGE_BG,
