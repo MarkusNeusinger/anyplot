@@ -2,49 +2,57 @@ library: seaborn
 language: python
 specification_id: logistic-regression
 created: '2026-01-09T21:56:07Z'
-updated: '2026-05-18T08:32:04Z'
-generated_by: claude-haiku
-workflow_run: 26022067454
+updated: '2026-11-22T12:03:43Z'
+generated_by: claude-sonnet
+workflow_run: 45019759730
 issue: 3550
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 79
 review:
   strengths:
-  - Perfect text legibility across both themes with explicitly set sizes
-  - Comprehensive spec compliance with all required features implemented
-  - 'Strong visual hierarchy: logistic curve as primary focal point, data secondary,
-    CI tertiary'
-  - Excellent theme adaptation - data colors identical between light/dark, chrome
-    appropriately theme-aware
-  - Idiomatic seaborn/matplotlib usage with custom legend construction and bootstrap
-    confidence intervals
-  - Clean, reproducible code with proper random seed and appropriate complexity
+  - 'Theme tokens threaded through sns.set_theme rc (face, edge, label, tick, grid,
+    legend colors) so both renders are theme-correct with identical Imprint data colors
+    (#009E73 curve/class 0, #C475FD class 1)'
+  - 'All five required elements present and legible: alpha-0.6 jittered class rows,
+    a smooth prominent fitted curve, a semi-transparent bootstrap 95% band, and a
+    dashed p=0.5 threshold subordinate to the curve'
+  - Canvas at the canonical 3200x1800 with balanced 12/10/8 pt text hierarchy and
+    despined axes
+  - 'Data block follows the adapter convention: column constants with role comments,
+    one df, and the accuracy/coefficient annotation and axis limits derived from df'
   weaknesses:
-  - Palette uses Okabe-Ito defaults rather than custom design (DE-01 scored conservatively)
+  - 'VQ-02 (both): the opaque upper-left legend box sits over about four class-1 observations
+    near p=1.0 (x around -2.4 to -1.6), which show only as faint ghosts through it
+    → keep the legend clear of the data rows, for example a placement outside the
+    top row''s span or a lower legend frame alpha. Likely cause: ax.legend(loc="upper
+    left") over the class-1 row.'
+  - 'DQ-02 (both): the scenario is abstract — the x axis reads "Predictor variable
+    (X)" and the classes "Class 0" / "Class 1" with no domain → a concrete neutral
+    context from the spec''s Applications (e.g. credit score vs. loan default, biomarker
+    level vs. diagnosis) with matching axis and class labels. Likely cause: the PREDICTOR
+    constant and the legend labels.'
+  - 'Suggestion: sns.regplot(logistic=True) or sns.scatterplot(hue=...) would showcase
+    seaborn''s own logistic fit and hue mapping instead of plain matplotlib calls.'
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white. Plot area clearly defined.
-      Chrome: Title is centered and clearly readable in dark text (#1A1A17). X-axis label "Predictor Variable (X)" and Y-axis label "Probability" are all clearly visible. Tick labels (16pt) are readable. Legend box positioned upper-left with appropriate styling.
-      Data: Logistic curve rendered in #009E73 (brand green, position 1 Okabe-Ito), thick 3px line clearly visible. Class 0 points in #009E73, Class 1 points in #D55E00 (position 2 Okabe-Ito vermillion) - both series follow canonical order. Confidence interval band (alpha=0.25) clearly visible. Decision threshold dashed line at p=0.5 distinct. All data markers (s=150) well-sized for 200 points with alpha=0.6.
-      Annotation box: Lower-right corner shows "Accuracy: 86.5%, Coef: 1.44, Intercept: 0.58" in light background (#FFFDF6) with proper contrast.
-      Legibility verdict: PASS - all text is clearly readable on light background with excellent contrast.
+    Light render (plot-light.png, 3200x1800):
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title "logistic-regression · python · seaborn · anyplot.ai" centered in dark ink (~51% width); axis titles "Predictor variable (X)" and "Probability", grey tick labels -3..3 and 0.0..1.0; subtle horizontal grid; left/bottom spines only. Legend upper-left on an elevated box (Logistic curve, 95% CI, Decision threshold (p=0.5), Class 0, Class 1); model box lower-right "Accuracy: 84.5% / Coef: 1.54, Intercept: 0.33". All readable.
+      Data: 200 points jittered around 0 (green #009E73) and 1 (lavender #C475FD) at alpha 0.6; green S-curve 2.5 lw from x≈-2.95 to 2.95 crossing 0.5 near x≈-0.2, enclosed by a light green band widening at the ends; dark-grey dashed line at 0.5 across the full x range. About four class-1 points under the legend box show only as faint ghosts.
+      Legibility verdict: PASS
 
-    Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black. Plot area appropriately contrasted.
-      Chrome: Title, axis labels, and tick labels are all light-colored and clearly readable against dark background. No dark-on-dark failures. All text meets readability requirements.
-      Data: Logistic curve still #009E73 (identical to light render), clearly visible against dark background. Class points maintain identical colors (#009E73 and #D55E00) - data colors are theme-independent as required. Confidence interval band is identical in appearance. Decision threshold dashed line equally visible.
-      Annotation box: Uses dark elevated background (#242420) with light text - theme-adaptive and readable.
-      Legibility verdict: PASS - all text is clearly readable on dark background. Data colors are identical to light render; only chrome (background, text, legend box) has adapted to theme.
-
-    Both renders pass theme-readability checks completely. The implementation correctly demonstrates theme adaptation: data element colors (Okabe-Ito positions 1-7) remain identical between renders, while chrome elements (backgrounds, text, grid, legend frames) flip to appropriate light/dark tokens.
+    Dark render (plot-dark.png, 3200x1800):
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis titles in light ink, tick labels light grey; legend and model box on #242420 with light text and light-grey frame; dashed threshold line light grey. No dark-on-dark text.
+      Data: identical colors to light (#009E73 curve, band and class 0; #C475FD class 1); band reads as a dark-green tint with points and gridlines visible. Same legend occlusion of a few class-1 points.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,53 +60,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (Title 24pt, Labels 20pt, Ticks 16pt).
-          Perfectly readable in both themes.
+        comment: Explicit 12/10/8 pt sizes, readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend positioned well, annotation
-          box in lower-right does not obstruct critical data.
+        comment: Legend box hides about four class-1 points (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (s=150) optimally sized for 200 data points. Logistic curve
-          (3px linewidth) clearly visible. CI band (alpha=0.25) visible but not dominant.
+        comment: s=40 markers at alpha 0.6 suit 200 points; legend glyphs match marks
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Green (#009E73) and Orange (#D55E00)
-          have excellent contrast. Elements distinguishable without hue alone.
+        comment: Green vs lavender is CVD-safe and separated by row position too
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Figure 16x9 (4800x2700px at 300dpi) fills 60-70% of canvas. Balanced
-          margins, no elements cut off. Legend and annotation well-positioned.
+        comment: 3200x1800, title ~51% width, balanced labels, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Predictor Variable (X)'', Y-axis: ''Probability'' - both
-          descriptive. No units needed for probability.'
+        comment: Readable axis titles; probability needs no unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 - Okabe-Ito positions 1-2.
-          Backgrounds #FAF8F1 (light) and #1A1A17 (dark). Text colors theme-correct.
-          Data colors identical between renders.'
+        comment: Imprint positions 1-2, correct backgrounds, identical data colors
+          across themes
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -106,26 +108,20 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-configured library defaults with intentional visual hierarchy.
-          Uses standard Okabe-Ito palette rather than custom design. Professional
-          polish but not publication-exceptional.
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-axis grid (alpha=0.10), generous
-          whitespace. Legend and annotation boxes have rounded styling. Minor polish
-          opportunities.
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: 'Clear narrative: logistic curve (primary focal point, brightest
-          green, 3px line) shows probability change with predictor. Decision threshold
-          provides context. Data color-coding shows class separation. Model annotation
-          adds interpretability.'
+        comment: Model annotation is what the Notes suggest; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -135,33 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct logistic regression plot type with S-shaped sigmoid curve.
-          All subtypes present: curve, CI band, decision threshold, jittered data
-          points.'
+        comment: Logistic regression curve plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Logistic curve, 95% CI (bootstrap), decision threshold (p=0.5), jittered
-          class points, model info annotation - all features implemented.
+        comment: 'C1-C5 all met: jittered rows, alpha 0.6, smooth curve, band, dashed
+          0.5 line'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Predictor (-3.5 to 3.5), Y: Probability (0 to 1 with jitter).
-          All data visible, axes correctly assigned.'
+        comment: Points at exact x, jitter on y only as the Notes ask; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''logistic-regression · python · seaborn · anyplot.ai'' (correct
-          format). Legend labels accurate: Logistic Curve, 95% CI, Decision Threshold,
-          Class 0, Class 1.'
+        comment: Correct title format; legend entries readable
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -169,25 +160,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both classes, S-shaped logistic relationship, decision boundary,
-          confidence intervals, model statistics. All aspects of logistic regression
-          visualized.
+        comment: Class overlap in the middle, widening band, S-shape all shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Synthetic but realistic logistic relationship. Neutral domain (binary
-          classification applicable to credit, medical, marketing). No controversial
-          content.
+        passed: false
+        comment: Abstract 'Predictor variable (X)' / 'Class 0/1' (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Logistic relationship mathematically correct. Binary probabilities
-          (0-1) appropriate. Model coefficients and accuracy realistic. All values
-          follow logical constraints.
+        comment: Probabilities in 0-1, plausible coef/accuracy computed from df; no
+          Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -197,71 +183,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → theme setup → data generation → bootstrap
-          CI → plotting → save. No unnecessary functions/classes.'
+        comment: Linear script, Data block convention passes the static check
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Bootstrap uses consistent random sampling.
-          Fully reproducible.
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.pyplot, numpy, seaborn, matplotlib.lines,
-          matplotlib.patches, scipy.special, sklearn.linear_model.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Bootstrap calculation appropriate complexity.
-          Manual legend construction justified. No over-engineering or fake functionality.
+        comment: Appropriate complexity; sklearn fits, np.percentile for the band
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Uses current matplotlib/seaborn API. Correct
-          output format.
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: sns.set_theme() with comprehensive rc configuration. Appropriate
-          matplotlib primitives for custom elements. High-level APIs used where available.
-          Theme-aware via environment variables.
+        comment: Correct usage; plotting is matplotlib primitives under sns.set_theme
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: sns.set_theme() with comprehensive theme adaptation. Custom legend
-          with Line2D/Patch for mixed elements. Bootstrap CI calculation. Theme-aware
-          light/dark adaptation. Styled annotation boxes. Demonstrates mastery of
-          both seaborn and matplotlib.
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T11:59:47Z'
 impl_tags:
   dependencies:
+  - scikit-learn
   - scipy
-  - sklearn
   techniques:
   - custom-legend
   - annotations
+  - confidence-band
   patterns:
   - data-generation
-  - explicit-figure
+  - iteration-over-groups
   dataprep:
   - regression
+  - bootstrap
   styling:
   - alpha-blending
-  - grid-styling
-  - dark-theme
+  - minimal-chrome
