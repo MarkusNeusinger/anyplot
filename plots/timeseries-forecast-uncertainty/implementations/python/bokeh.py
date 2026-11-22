@@ -1,7 +1,7 @@
 """ anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-19
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-22
 """
 
 import os
@@ -24,51 +24,60 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-OKABE_ITO_1 = "#009E73"  # Bluish green (brand)
-OKABE_ITO_2 = "#C475FD"  # Vermillion
-OKABE_ITO_4 = "#BD8233"  # Reddish purple
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Monthly product sales with forecast
-np.random.seed(42)
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+ACTUAL = "Actual"  # role: actual
+FORECAST = "Forecast"  # role: forecast
+LOWER_80 = "Lower 80%"  # role: lower_80
+UPPER_80 = "Upper 80%"  # role: upper_80
+LOWER_95 = "Lower 95%"  # role: lower_95
+UPPER_95 = "Upper 95%"  # role: upper_95
+SALES_LABEL = "Sales (thousands)"
 
-# Historical data: 36 months (3 years)
-n_historical = 36
-dates_hist = pd.date_range("2022-01-01", periods=n_historical, freq="MS")
-trend = np.linspace(80, 120, n_historical)
-seasonal = 15 * np.sin(np.linspace(0, 6 * np.pi, n_historical))
-noise = np.random.normal(0, 5, n_historical)
-actual = trend + seasonal + noise
+# Data: replace this block with your own table, for example df = pd.read_csv("forecast.csv")
+# Monthly product sales: 36 months of history, then a 12-month forecast that starts at the last observation
+rng = np.random.default_rng(42)
+n_hist, n_fc = 36, 12
+dates = pd.date_range("2022-01-01", periods=n_hist + n_fc, freq="MS")
+actual = np.linspace(80, 120, n_hist) + 15 * np.sin(np.linspace(0, 6 * np.pi, n_hist)) + rng.normal(0, 5, n_hist)
+trend_fc = np.linspace(120, 135, n_fc)
+seasonal_fc = 15 * np.sin(np.linspace(6 * np.pi, 8 * np.pi, n_fc))
+forecast = np.concatenate([[actual[-1]], trend_fc + seasonal_fc])
+half_80 = np.concatenate([[0], np.linspace(5, 15, n_fc)])
+half_95 = np.concatenate([[0], np.linspace(8, 25, n_fc)])
+df = pd.DataFrame(
+    {
+        DATE: dates[n_hist - 1 :],
+        FORECAST: forecast,
+        LOWER_80: forecast - half_80,
+        UPPER_80: forecast + half_80,
+        LOWER_95: forecast - half_95,
+        UPPER_95: forecast + half_95,
+    }
+)
+df = pd.concat([pd.DataFrame({DATE: dates[:n_hist], ACTUAL: actual}), df], ignore_index=True)
 
-# Forecast data: 12 months
-n_forecast = 12
-dates_forecast = pd.date_range(dates_hist[-1] + pd.DateOffset(months=1), periods=n_forecast, freq="MS")
-trend_forecast = np.linspace(120, 135, n_forecast)
-seasonal_forecast = 15 * np.sin(np.linspace(6 * np.pi, 8 * np.pi, n_forecast))
-forecast = trend_forecast + seasonal_forecast
+# Plot: reads only df and the constants above
+history = df[df[ACTUAL].notna()]
+future = df[df[FORECAST].notna()]
+split_ms = history[DATE].max().timestamp() * 1000
+band_top = df[[ACTUAL, UPPER_95]].max().max()
+band_bottom = df[[ACTUAL, LOWER_95]].min().min()
+pad = (band_top - band_bottom) * 0.08
+x_end = df[DATE].max() + pd.DateOffset(months=2)
 
-# Uncertainty grows over time
-uncertainty_80 = np.linspace(5, 15, n_forecast)
-uncertainty_95 = np.linspace(8, 25, n_forecast)
-
-lower_80 = forecast - uncertainty_80
-upper_80 = forecast + uncertainty_80
-lower_95 = forecast - uncertainty_95
-upper_95 = forecast + uncertainty_95
-
-# X-range with right padding (2 months past last forecast date)
-x_start = dates_hist[0]
-x_end = dates_forecast[-1] + pd.DateOffset(months=2)
-x_range = Range1d(start=x_start.timestamp() * 1000, end=x_end.timestamp() * 1000)
-
-# Create figure
 p = figure(
     width=3200,
     height=1800,
     title="timeseries-forecast-uncertainty · python · bokeh · anyplot.ai",
-    x_axis_label="Date",
-    y_axis_label="Sales (thousands)",
+    x_axis_label=DATE,
+    y_axis_label=SALES_LABEL,
     x_axis_type="datetime",
-    x_range=x_range,
+    x_range=Range1d(df[DATE].min().timestamp() * 1000, x_end.timestamp() * 1000),
+    y_range=Range1d(band_bottom - pad, band_top + 2.5 * pad),
     toolbar_location=None,
     min_border_bottom=180,
     min_border_left=200,
@@ -76,11 +85,13 @@ p = figure(
     min_border_right=60,
 )
 
-# Style title and axes
+# Style
 p.title.text_font_size = "56pt"
 p.title.text_color = INK
 p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_font_style = "normal"
+p.yaxis.axis_label_text_font_style = "normal"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_font_size = "36pt"
@@ -89,125 +100,81 @@ p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-
-# Background — outline=None removes the enclosing box (top/right spines equivalent)
-p.background_fill_color = PAGE_BG
-p.border_fill_color = PAGE_BG
-p.outline_line_color = None
-
-# Axis styling — keep left and bottom lines (L-shaped frame)
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.axis_line_width = 2
 p.yaxis.axis_line_width = 2
-
-# Grid styling - subtle y-axis only
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK_SOFT
 p.ygrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_width = 1
 
-# 95% confidence band (lighter, drawn first)
-source_95 = ColumnDataSource(
-    data={"x": np.concatenate([dates_forecast, dates_forecast[::-1]]), "y": np.concatenate([upper_95, lower_95[::-1]])}
+# Nested confidence bands: wider 95% band first, narrower 80% band on top
+future_src = ColumnDataSource(future)
+band_95 = p.varea(x=DATE, y1=LOWER_95, y2=UPPER_95, source=future_src, fill_color=IMPRINT_PALETTE[1], fill_alpha=0.18)
+band_80 = p.varea(x=DATE, y1=LOWER_80, y2=UPPER_80, source=future_src, fill_color=IMPRINT_PALETTE[1], fill_alpha=0.38)
+
+# Historical line (solid) and forecast line (dashed)
+hist_line = p.line(x=DATE, y=ACTUAL, source=ColumnDataSource(history), line_color=IMPRINT_PALETTE[0], line_width=4)
+forecast_line = p.line(
+    x=DATE, y=FORECAST, source=future_src, line_color=IMPRINT_PALETTE[1], line_width=5, line_dash="dashed"
 )
-band_95 = p.patch(x="x", y="y", source=source_95, fill_color=OKABE_ITO_4, fill_alpha=0.15, line_color=None)
 
-# 80% confidence band (darker, drawn on top)
-source_80 = ColumnDataSource(
-    data={"x": np.concatenate([dates_forecast, dates_forecast[::-1]]), "y": np.concatenate([upper_80, lower_80[::-1]])}
+# Forecast start marker and label
+p.add_layout(Span(location=split_ms, dimension="height", line_color=INK_SOFT, line_width=2, line_dash="dashed"))
+p.add_layout(
+    Label(
+        x=split_ms, y=band_top + 1.2 * pad, text="Forecast ▶", text_color=INK_SOFT, text_font_size="32pt", x_offset=20
+    )
 )
-band_80 = p.patch(x="x", y="y", source=source_80, fill_color=OKABE_ITO_4, fill_alpha=0.30, line_color=None)
 
-# Historical data line (solid) with hover data
-source_hist = ColumnDataSource(data={"x": dates_hist, "y": actual})
-hist_line = p.line(x="x", y="y", source=source_hist, line_color=OKABE_ITO_1, line_width=3)
-
-# Forecast line (dashed) with CI data for hover tooltip
-source_forecast = ColumnDataSource(
-    data={
-        "x": dates_forecast,
-        "y": forecast,
-        "lower_80": lower_80,
-        "upper_80": upper_80,
-        "lower_95": lower_95,
-        "upper_95": upper_95,
-    }
+# Hover tooltips
+p.add_tools(
+    HoverTool(
+        renderers=[hist_line],
+        tooltips=[(DATE, f"@{{{DATE}}}{{%b %Y}}"), (ACTUAL, f"@{{{ACTUAL}}}{{0.0}}k")],
+        formatters={f"@{{{DATE}}}": "datetime"},
+        mode="vline",
+    )
 )
-forecast_line = p.line(x="x", y="y", source=source_forecast, line_color=OKABE_ITO_2, line_width=3, line_dash="dashed")
-
-# Connection line from last historical point to first forecast point
-source_connect = ColumnDataSource(data={"x": [dates_hist[-1], dates_forecast[0]], "y": [actual[-1], forecast[0]]})
-p.line(x="x", y="y", source=source_connect, line_color=OKABE_ITO_2, line_width=3, line_dash="dashed")
-
-# Vertical line at forecast start
-forecast_start = Span(
-    location=dates_hist[-1], dimension="height", line_color=INK_SOFT, line_width=2, line_dash="dashed"
+p.add_tools(
+    HoverTool(
+        renderers=[forecast_line],
+        tooltips=[
+            (DATE, f"@{{{DATE}}}{{%b %Y}}"),
+            (FORECAST, f"@{{{FORECAST}}}{{0.0}}k"),
+            ("80% CI", f"[@{{{LOWER_80}}}{{0.0}}, @{{{UPPER_80}}}{{0.0}}]k"),
+            ("95% CI", f"[@{{{LOWER_95}}}{{0.0}}, @{{{UPPER_95}}}{{0.0}}]k"),
+        ],
+        formatters={f"@{{{DATE}}}": "datetime"},
+        mode="vline",
+    )
 )
-p.add_layout(forecast_start)
-
-# Annotation labelling the forecast region
-forecast_label = Label(
-    x=dates_forecast[0].timestamp() * 1000,
-    y=168,
-    x_units="data",
-    y_units="data",
-    text="Forecast ▶",
-    text_color=INK_SOFT,
-    text_font_size="32pt",
-    x_offset=20,
-)
-p.add_layout(forecast_label)
-
-# HoverTool for historical data
-hover_hist = HoverTool(
-    renderers=[hist_line],
-    tooltips=[("Date", "@x{%b %Y}"), ("Sales", "@y{0.0}k")],
-    formatters={"@x": "datetime"},
-    mode="vline",
-)
-p.add_tools(hover_hist)
-
-# HoverTool for forecast with confidence intervals
-hover_forecast = HoverTool(
-    renderers=[forecast_line],
-    tooltips=[
-        ("Date", "@x{%b %Y}"),
-        ("Forecast", "@y{0.0}k"),
-        ("80% CI", "[@lower_80{0.0}, @upper_80{0.0}]k"),
-        ("95% CI", "[@lower_95{0.0}, @upper_95{0.0}]k"),
-    ],
-    formatters={"@x": "datetime"},
-    mode="vline",
-)
-p.add_tools(hover_forecast)
 
 # Legend
 legend = Legend(
     items=[
         ("Historical Data", [hist_line]),
-        ("Forecast", [forecast_line]),
+        (FORECAST, [forecast_line]),
         ("80% Confidence Interval", [band_80]),
         ("95% Confidence Interval", [band_95]),
     ],
     location="top_left",
+    label_text_font_size="36pt",
+    label_text_color=INK_SOFT,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.95,
+    border_line_color=INK_SOFT,
+    border_line_width=2,
+    padding=30,
+    spacing=16,
+    glyph_width=60,
+    glyph_height=40,
 )
-
-legend.label_text_font_size = "36pt"
-legend.label_text_color = INK_SOFT
-legend.background_fill_color = ELEVATED_BG
-legend.background_fill_alpha = 0.95
-legend.border_line_color = INK_SOFT
-legend.border_line_width = 2
-legend.padding = 30
-legend.spacing = 16
-legend.glyph_width = 60
-legend.glyph_height = 40
 p.add_layout(legend)
-
-# Set y-axis range with room for confidence bands and annotation
-p.y_range.start = 55
-p.y_range.end = 175
 
 # Save HTML
 output_file(f"plot-{THEME}.html")
@@ -228,6 +195,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
