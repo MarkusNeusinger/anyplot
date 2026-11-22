@@ -16,7 +16,7 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
-                 "#AE3030", "#2ABCCD", "#954477")
+                 "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # --- Data: Product positioning in competitive landscape ---------------------
 # Scenario: Tech products positioned by price (x) vs quality rating (y)
@@ -43,29 +43,29 @@ products$y <- products$quality
 p <- ggplot(products, aes(x = x, y = y, label = name)) +
   geom_text(
     color = IMPRINT[1],
-    size = 5.5,
-    alpha = 0.85,
+    size = 3.2,
+    alpha = 0.9,
     fontface = "plain"
   ) +
   labs(
-    title = "scatter-text · R · ggplot2 · anyplot.ai",
+    title = "scatter-text · r · ggplot2 · anyplot.ai",
     x = "Price (normalized)",
     y = "Quality Rating"
   ) +
   scale_x_continuous(limits = c(-5, 105), breaks = seq(0, 100, by = 25)) +
   scale_y_continuous(limits = c(55, 105), breaks = seq(60, 100, by = 10)) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK_SOFT, linewidth = 0.25),
+    panel.grid.major  = element_line(color = INK_SOFT, linewidth = 0.12),
     panel.grid.minor  = element_blank(),
     panel.border      = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.4),
-    axis.title        = element_text(color = INK, size = 20, face = "plain"),
-    axis.text         = element_text(color = INK_SOFT, size = 16),
+    axis.title        = element_text(color = INK, size = 10, face = "plain"),
+    axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_line(color = INK_SOFT, linewidth = 0.3),
     axis.ticks.length = unit(0.15, "cm"),
-    plot.title        = element_text(color = INK, size = 24, face = "plain", margin = margin(b = 20))
+    plot.title        = element_text(color = INK, size = 12, face = "plain", margin = margin(b = 10))
   )
 
 # --- Save -------------------------------------------------------------------
@@ -73,8 +73,8 @@ ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
