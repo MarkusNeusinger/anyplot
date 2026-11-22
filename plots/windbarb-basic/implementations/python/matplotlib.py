@@ -1,7 +1,7 @@
 """ anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-19
+Quality: 76/100 | Updated: 2026-05-19
 """
 
 import os
