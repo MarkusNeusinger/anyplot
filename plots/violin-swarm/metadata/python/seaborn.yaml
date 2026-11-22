@@ -2,44 +2,49 @@ library: seaborn
 language: python
 specification_id: violin-swarm
 created: '2026-01-09T16:46:05Z'
-updated: '2026-05-18T04:48:06Z'
-generated_by: claude-haiku
-workflow_run: 26013922475
+updated: '2026-11-22T09:57:49Z'
+generated_by: claude-sonnet
+workflow_run: 45009587367
 issue: 3526
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 85
 review:
   strengths:
-  - Perfect palette compliance with Okabe-Ito categorical colors
-  - Excellent theme adaptation with all chrome properly themed
-  - Clean, reproducible code with proper seaborn idioms
-  - Well-designed data showing distribution diversity (including bimodal pattern)
-  - Proper text sizing and legibility in both light and dark themes
-  - Intentional design choice of darker swarm points for contrast
+  - Swarm points are darker shades of each violin's own Imprint hue with a thin theme-ink
+    edge, so every point set reads as belonging to its violin and stays visible on
+    the translucent fill in both themes
+  - cut=0 ends each violin at its data range, so tails do not imply values that were
+    never observed
+  - 'Idiomatic seaborn: hue=+legend=False, inner=None, sns.swarmplot''s native beeswarm
+    layout, sns.despine and set_theme rc tokens for both themes'
+  - Data shows a bimodal Oligodendrocyte group and a long upper tail in Microglia,
+    exercising the density-plus-points combination
   weaknesses:
-  - Could enhance design excellence with more sophisticated visual polish
-  - Library mastery could be higher with more distinctive seaborn features beyond
-    theme-setting
+  - 'VQ-06 (both): the y-axis title ''Expression Level'' has no unit → add one, e.g.
+    ''Expression Level (a.u.)''. Likely cause: EXPRESSION column constant used verbatim
+    as the y label.'
+  - 'Suggestion: a subtle median tick inside each violin could anchor comparison across
+    groups.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title, axis labels ("Cell Type", "Expression Level"), and tick labels all clearly visible in dark text on light background. All readable without contrast issues.
-      Data: Four violins with overlaid swarm points using Okabe-Ito colors 1-4 (green, orange, blue, purple). Violin fills are semi-transparent (alpha 0.4), swarm points use darker variants for contrast. First series (Neuron) is correctly #009E73. Grid is subtle and appropriate.
-      Legibility verdict: PASS - All text readable, no dark-on-dark or light-on-light issues.
+      Background: warm off-white #FAF8F1 across figure and axes.
+      Chrome: title 'violin-swarm · python · seaborn · anyplot.ai' in dark ink, axis titles 'Cell Type' / 'Expression Level', soft-ink tick labels, subtle horizontal grid, top/right spines removed; all readable.
+      Data: four translucent violins (Neuron #009E73, Astrocyte #C475FD, Oligodendrocyte #4467A3, Microglia #BD8233) cut at the data range, each with a centered beeswarm of 60 darker same-hue points with a thin dark outline; Oligodendrocyte is clearly bimodal.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title, axis labels, and tick labels all clearly visible in light text on dark background. No dark-on-dark failures detected.
-      Data: Identical colors to light render (Okabe-Ito palette preserved across themes). Violin and swarm point colors unchanged. Visualization is equally clear in dark theme.
-      Legibility verdict: PASS - All text readable, proper theme adaptation, excellent contrast throughout.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in soft light grey, faint grid; no dark-on-dark text.
+      Data: same violin and point colors as the light render; points now carry a light ink outline, which keeps them distinct on the darker-looking fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,74 +52,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
-          perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt per the style guide; all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, swarm point overlap is intentional
-          and doesn't harm readability
+        comment: No text collisions; swarm points do not hide one another
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Swarm points sized appropriately (size=6), violin shapes clearly
-          visible, optimal for 60 points per category
+        comment: 60 points per group at size 3.5 with a thin ink outline stay individually
+          visible on the translucent violins in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe, good contrast between violin and swarm
-          points
+        comment: Imprint hues 1-4 with luminance contrast between fill and points;
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 4800x2700px layout with balanced margins and generous whitespace
+        comment: 3200x1800 canvas, balanced margins, title ~45% of width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title properly formatted, axis labels descriptive ('Cell Type', 'Expression
-          Level')
+        passed: false
+        comment: '''Expression Level'' carries no unit (defect line)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito order (1-4),
-          backgrounds theme-correct, data colors consistent between renders'
+        comment: 'Violins use Imprint positions 1-4 starting at #009E73; swarm points
+          are darker shades of the same hue; backgrounds #FAF8F1 / #1A1A17; data colors
+          identical across themes'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Intentional design choice with darker swarm point palette for contrast,
-          professional execution, above-default aesthetics
+        comment: Per-hue darkened swarm with an ink-colored edge ties each point set
+          to its violin while separating it from the fill
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Spines properly styled, subtle y-axis grid, good whitespace, well-refined
-          but room for polish
+        comment: Thin theme-ink marker outlines and grid drawn below the marks (set_axisbelow)
+          give clean separation
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy with distinct violins, shows distribution
-          shape and individual values, bimodal pattern visible
+        comment: Distributions displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,28 +127,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot with overlaid swarm, all subtypes present
+        comment: Violin with overlaid swarm, as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features implemented: transparency (alpha 0.4), appropriate
-          sizing, contrasting colors, horizontal spread'
+        comment: 'C1-C5 all met: swarms centered on each violin, inside the outline,
+          alpha 0.4 fill, points individually visible, tails end at the data range
+          (cut=0)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: categorical (Cell Type), Y: numeric (Expression Level), all data
-          visible'
+        comment: Category on x, value on y, all observations visible; swarm offsets
+          are categorical layout
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend omitted appropriately (clear x-axis
-          labels)
+        comment: Title 'violin-swarm · python · seaborn · anyplot.ai'; legend N/A
+          (categories labelled on the axis)
     data_quality:
       score: 15
       max: 15
@@ -155,22 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 4 cell types, different distributions, bimodal
-          pattern for Oligodendrocyte'
+        comment: Four groups with differing widths, a bimodal Oligodendrocyte group
+          and an outlier tail in Microglia
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Gene expression levels across cell types - real, neutral, comprehensible
-          scientific scenario
+        comment: Gene expression by brain cell type, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 20-130 plausible, 60 observations per type (within 20-200
-          range), proportions factually sensible
+        comment: Values ~33-119, 60 observations per group (inside 20-200); no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -180,33 +183,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear code: imports, theme, data, plot, save - no unnecessary
-          functions'
+        comment: Linear script, column constants with role comments
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42), deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn'
+        comment: All imports used (to_rgb for the swarm shades)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no over-engineering, no fake functionality
+        comment: Appropriate complexity; shades derived with a one-line comprehension
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with proper dpi and facecolor, current
-          API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
       score: 6
       max: 10
@@ -216,23 +217,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: High-level API (violinplot, swarmplot), proper hue usage, sophisticated
-          sns.set_theme() for theme adaptation
+        comment: hue=+legend=False idiom, inner=None, cut=0, sns.despine, set_theme
+          rc tokens
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses sns.set_theme() for theme-adaptive styling, could leverage more
-          seaborn-specific features
+        passed: true
+        comment: swarmplot's native beeswarm layout combined with violinplot's KDE
+          on one axis
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T09:54:18Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - kde
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
