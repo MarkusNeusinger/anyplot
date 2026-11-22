@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-18
@@ -7,12 +7,14 @@ Quality: 91/100 | Updated: 2026-05-18
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 LAND_COLOR = "#E5E5E5" if THEME == "light" else "#3A3A36"
@@ -20,140 +22,85 @@ OCEAN_COLOR = "#D4E8F2" if THEME == "light" else "#2A3F4D"
 COAST_COLOR = "#999999" if THEME == "light" else "#666666"
 COUNTRY_COLOR = "#CCCCCC" if THEME == "light" else "#555555"
 
-# Data: Global environmental sensor network monitoring air quality
-np.random.seed(42)
+# Imprint palette: continuous single-polarity scale (green to blue)
+IMPRINT_SEQ = [[0.0, "#009E73"], [1.0, "#4467A3"]]
 
-# Sensor locations distributed across continents
-# Urban and industrial regions with higher sensor density
-n_points = 85
+# Columns: set these to your table's column names
+LATITUDE = "Latitude (°)"  # role: latitude
+LONGITUDE = "Longitude (°)"  # role: longitude
+AQI = "AQI"  # role: value
+READINGS = "Readings per month"  # role: size
 
-# North America - Eastern US industrial corridor
-n_na = 25
-na_lat = np.concatenate(
-    [
-        np.random.uniform(40, 45, 15),  # Northeast corridor
-        np.random.uniform(32, 38, 10),  # Southeast
-    ]
-)
-na_lon = np.concatenate(
-    [
-        np.random.uniform(-82, -70, 15),  # Northeast
-        np.random.uniform(-85, -75, 10),  # Southeast
-    ]
-)
-
-# Europe - Industrial centers
-n_eu = 20
-eu_lat = np.concatenate(
-    [
-        np.random.uniform(50, 55, 10),  # Central Europe
-        np.random.uniform(45, 50, 10),  # Mediterranean
-    ]
-)
-eu_lon = np.concatenate(
-    [
-        np.random.uniform(5, 15, 10),  # Central Europe
-        np.random.uniform(10, 25, 10),  # Mediterranean
-    ]
-)
-
-# Asia - Rapid development zones
-n_asia = 25
-asia_lat = np.concatenate(
-    [
-        np.random.uniform(30, 40, 12),  # China, India
-        np.random.uniform(10, 20, 8),  # Southeast Asia
-        np.random.uniform(-10, 10, 5),  # Indonesia
-    ]
-)
-asia_lon = np.concatenate(
-    [
-        np.random.uniform(100, 120, 12),  # China, India
-        np.random.uniform(95, 110, 8),  # Southeast Asia
-        np.random.uniform(110, 140, 5),  # Indonesia
-    ]
-)
-
-# Africa - Growing urban centers
-n_africa = 10
-africa_lat = np.random.uniform(-35, 20, n_africa)
-africa_lon = np.random.uniform(-20, 55, n_africa)
-
-# Australia-Pacific
-n_pac = 5
-pac_lat = np.random.uniform(-40, -15, n_pac)
-pac_lon = np.random.uniform(110, 180, n_pac)
-
-# Combine all data
-latitudes = np.concatenate([na_lat, eu_lat, asia_lat, africa_lat, pac_lat])
-longitudes = np.concatenate([na_lon, eu_lon, asia_lon, africa_lon, pac_lon])
-
-# Air quality index (AQI) values scaled 0-500 (higher = worse air)
-aqi_values = np.concatenate(
-    [
-        np.random.uniform(20, 120, n_na),  # North America - moderate
-        np.random.uniform(25, 140, n_eu),  # Europe - moderate to high
-        np.random.uniform(30, 250, n_asia),  # Asia - wide range
-        np.random.uniform(15, 180, n_africa),  # Africa - growing industrial
-        np.random.uniform(20, 80, n_pac),  # Pacific - cleaner
-    ]
-)
-
-# Measurement counts (number of readings per sensor in the last month)
-measurement_counts = np.concatenate(
-    [
-        np.random.uniform(15, 30, n_na),
-        np.random.uniform(20, 30, n_eu),
-        np.random.uniform(10, 30, n_asia),
-        np.random.uniform(8, 25, n_africa),
-        np.random.uniform(12, 28, n_pac),
-    ]
-)
-
-# Scale point sizes based on measurement counts
-sizes = (measurement_counts - measurement_counts.min()) / (
-    measurement_counts.max() - measurement_counts.min()
-)
-sizes = sizes * 28 + 6  # Scale to 6-34 range for visibility
-
-# Create hover text
-hover_texts = [
-    f"AQI: {aqi:.0f}<br>Readings: {count:.0f}"
-    for aqi, count in zip(aqi_values, measurement_counts, strict=True)
+# Data: replace this block with your own table, for example df = pd.read_csv("sensors.csv")
+# Global air-quality sensor network; columns are latitude, longitude, AQI and monthly reading count.
+rng = np.random.default_rng(42)
+regions = [
+    # (sensors in region, lat range(s), lon range(s), AQI range, readings range)
+    (15, (40, 45), (-82, -70), (20, 120), (15, 30)),  # US northeast corridor
+    (10, (32, 38), (-85, -75), (20, 120), (15, 30)),  # US southeast
+    (10, (50, 55), (5, 15), (25, 140), (20, 30)),  # Central Europe
+    (10, (45, 50), (10, 25), (25, 140), (20, 30)),  # Mediterranean
+    (12, (30, 40), (100, 120), (30, 250), (10, 30)),  # China
+    (8, (10, 20), (95, 110), (30, 250), (10, 30)),  # Southeast Asia
+    (5, (-10, 10), (110, 140), (30, 250), (10, 30)),  # Indonesia
+    (10, (-35, 20), (-20, 55), (15, 180), (8, 25)),  # Africa
+    (5, (-40, -15), (110, 180), (20, 80), (12, 28)),  # Australia-Pacific
 ]
+parts = []
+for n, lat_range, lon_range, aqi_range, count_range in regions:
+    parts.append(
+        pd.DataFrame(
+            {
+                LATITUDE: rng.uniform(*lat_range, n),
+                LONGITUDE: rng.uniform(*lon_range, n),
+                AQI: rng.uniform(*aqi_range, n),
+                READINGS: rng.uniform(*count_range, n),
+            }
+        )
+    )
+df = pd.concat(parts, ignore_index=True)
 
-# Create figure with geographic scatter
+# Plot: reads only df and the constants above
+readings = df[READINGS]
+marker_sizes = 4 + 12 * (readings - readings.min()) / (readings.max() - readings.min())
+
+hover_texts = [f"{AQI}: {aqi:.0f}<br>{READINGS}: {count:.0f}" for aqi, count in zip(df[AQI], readings, strict=True)]
+
 fig = go.Figure()
-
 fig.add_trace(
     go.Scattergeo(
-        lat=latitudes,
-        lon=longitudes,
+        lat=df[LATITUDE],
+        lon=df[LONGITUDE],
         mode="markers",
         marker={
-            "size": sizes,
-            "color": aqi_values,
-            "colorscale": "Viridis",
+            "size": marker_sizes,
+            "color": df[AQI],
+            "colorscale": IMPRINT_SEQ,
             "colorbar": {
-                "title": {"text": "AQI", "font": {"size": 20}},
-                "tickfont": {"size": 16},
-                "len": 0.6,
-                "thickness": 25,
-                "x": 1.02,
+                "title": {"text": AQI, "font": {"size": 12, "color": INK}},
+                "tickfont": {"size": 10, "color": INK_SOFT},
+                "len": 0.5,
+                "y": 0.65,
+                "thickness": 14,
+                "x": 1.0,
+                "outlinecolor": INK_SOFT,
+                "outlinewidth": 0.5,
             },
-            "line": {"width": 1, "color": INK},
+            "line": {"width": 0.6, "color": INK},
             "opacity": 0.85,
         },
         text=hover_texts,
-        hovertemplate="<b>Lat:</b> %{lat:.2f}°<br><b>Lon:</b> %{lon:.2f}°<br>%{text}<extra></extra>",
+        hovertemplate=(
+            f"<b>{LATITUDE}:</b> %{{lat:.2f}}<br><b>{LONGITUDE}:</b> %{{lon:.2f}}<br>%{{text}}<extra></extra>"
+        ),
     )
 )
 
-# Layout with geographic projection
 fig.update_layout(
+    autosize=False,
     title={
         "text": "scatter-map-geographic · python · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "font": {"size": 18, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
@@ -165,35 +112,38 @@ fig.update_layout(
         "oceancolor": OCEAN_COLOR,
         "showcoastlines": True,
         "coastlinecolor": COAST_COLOR,
-        "coastlinewidth": 1,
+        "coastlinewidth": 0.6,
         "showcountries": True,
         "countrycolor": COUNTRY_COLOR,
-        "countrywidth": 0.5,
+        "countrywidth": 0.3,
         "showlakes": True,
         "lakecolor": OCEAN_COLOR,
+        "showframe": False,
         "bgcolor": PAGE_BG,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin={"l": 20, "r": 100, "t": 80, "b": 20},
+    margin={"l": 20, "r": 135, "t": 60, "b": 20},
     font={"color": INK},
 )
 
-# Add size legend annotation
+# Size legend: the marker diameter encodes the monthly reading count
 fig.add_annotation(
-    x=1.02,
-    y=0.15,
+    x=1.0,
+    y=0.2,
     xref="paper",
     yref="paper",
-    text="<b>Point Size</b><br>= # Readings",
+    text=f"<b>Point size</b><br>{READINGS}<br>{readings.min():.0f} to {readings.max():.0f}",
     showarrow=False,
-    font={"size": 16, "color": INK},
+    font={"size": 10, "color": INK},
     align="left",
+    xanchor="left",
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=4,
 )
 
 # Save as PNG and HTML
-script_dir = os.path.dirname(os.path.abspath(__file__))
-fig.write_image(
-    os.path.join(script_dir, f"plot-{THEME}.png"), width=1600, height=900, scale=3
-)
-fig.write_html(os.path.join(script_dir, f"plot-{THEME}.html"), include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
