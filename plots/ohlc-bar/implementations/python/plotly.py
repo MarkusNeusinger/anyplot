@@ -1,93 +1,88 @@
-""" anyplot.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-17
 """
 
 import os
-import sys
 
-
-# Remove current directory from path to avoid naming conflicts
-sys.path = [p for p in sys.path if p not in ("", ".", os.path.dirname(__file__))]
-
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import plotly.graph_objects as go  # noqa: E402
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
 
 
 # Theme tokens (see prompts/default-style-guide.md)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette for up/down coloring
-BRAND = "#009E73"  # Position 1 - bluish green, first series
-UP_COLOR = BRAND  # Use brand green for up days
-DOWN_COLOR = "#AE3030"  # imprint red — down days
+# Imprint palette: position 1 for up bars, position 5 (red) for down bars
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+UP_COLOR = IMPRINT_PALETTE[0]
+DOWN_COLOR = IMPRINT_PALETTE[4]
 
-# Data - Generate realistic stock price data for 45 trading days
-np.random.seed(42)
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+OPEN = "Open (USD)"  # role: open
+HIGH = "High (USD)"  # role: high
+LOW = "Low (USD)"  # role: low
+CLOSE = "Close (USD)"  # role: close
 
-dates = pd.date_range(start="2024-06-01", periods=45, freq="B")  # Business days
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
+rng = np.random.default_rng(42)
+n_days = 45
+start_price = 150.0
+dates = pd.date_range(start="2024-06-03", periods=n_days, freq="B")
+close_prices = start_price * np.cumprod(1 + rng.normal(0.001, 0.02, n_days))
+open_prices = np.concatenate([[start_price], close_prices[:-1]])
+intraday_range = close_prices * rng.uniform(0.01, 0.03, n_days)
+df = pd.DataFrame(
+    {
+        DATE: dates,
+        OPEN: open_prices,
+        HIGH: np.maximum(open_prices, close_prices) + rng.uniform(0, 1, n_days) * intraday_range,
+        LOW: np.minimum(open_prices, close_prices) - rng.uniform(0, 1, n_days) * intraday_range,
+        CLOSE: close_prices,
+    }
+)
 
-# Generate realistic price movement with trends
-base_price = 150.0
-returns = np.random.normal(0.001, 0.02, 45)  # Daily returns
-cumulative = np.cumprod(1 + returns)
-close_prices = base_price * cumulative
-
-# Generate OHLC data with realistic relationships
-data = []
-for i, date in enumerate(dates):
-    close = close_prices[i]
-    # Open is close of previous day (or base for first day)
-    open_price = close_prices[i - 1] if i > 0 else base_price
-
-    # High and low based on intraday volatility
-    intraday_range = close * np.random.uniform(0.01, 0.03)
-    high = max(open_price, close) + np.random.uniform(0, intraday_range)
-    low = min(open_price, close) - np.random.uniform(0, intraday_range)
-
-    data.append({"date": date, "open": open_price, "high": high, "low": low, "close": close})
-
-df = pd.DataFrame(data)
-
-# Create OHLC chart using Plotly's native OHLC trace
+# Plot: reads only df and the constants above
 fig = go.Figure(
-    data=go.Ohlc(
-        x=df["date"],
-        open=df["open"],
-        high=df["high"],
-        low=df["low"],
-        close=df["close"],
-        increasing={"line": {"color": UP_COLOR, "width": 2}},
-        decreasing={"line": {"color": DOWN_COLOR, "width": 2}},
+    go.Ohlc(
+        x=df[DATE],
+        open=df[OPEN],
+        high=df[HIGH],
+        low=df[LOW],
+        close=df[CLOSE],
+        increasing={"line": {"color": UP_COLOR, "width": 2.5}},
+        decreasing={"line": {"color": DOWN_COLOR, "width": 2.5}},
+        tickwidth=0.45,
         name="Price",
     )
 )
 
-# Update layout for 4800x2700 canvas with theme-adaptive chrome
+# Style
 fig.update_layout(
-    title={"text": "ohlc-bar · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 80, "r": 40, "t": 70, "b": 60},
+    title={"text": "ohlc-bar · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}},
     xaxis={
-        "title": {"text": "Date", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": DATE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
-        "gridwidth": 1,
         "linecolor": INK_SOFT,
         "rangeslider": {"visible": False},
         "tickformat": "%b %d",
     },
     yaxis={
-        "title": {"text": "Price (USD)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Price (USD)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickprefix": "$",
         "gridcolor": GRID,
-        "gridwidth": 1,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
     },
@@ -95,9 +90,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     showlegend=False,
-    margin={"l": 100, "r": 80, "t": 120, "b": 100},
 )
 
-# Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
