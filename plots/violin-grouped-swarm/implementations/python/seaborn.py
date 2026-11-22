@@ -39,7 +39,7 @@ profiles = {
 }
 rows = []
 for test_type in test_types:
-    for exp_level, (mean, std) in zip(experience_levels, profiles[test_type]):
+    for exp_level, (mean, std) in zip(experience_levels, profiles[test_type], strict=True):
         scores = np.clip(np.random.normal(mean, std, 45), 20, 100)
         rows.extend({TEST_TYPE: test_type, EXPERIENCE: exp_level, SCORE: score} for score in scores)
 df = pd.DataFrame(rows)
