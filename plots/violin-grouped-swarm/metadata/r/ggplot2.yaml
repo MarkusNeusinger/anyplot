@@ -2,45 +2,46 @@ library: ggplot2
 language: r
 specification_id: violin-grouped-swarm
 created: '2026-05-18T03:24:34Z'
-updated: '2026-05-18T03:33:28Z'
-generated_by: claude-haiku
-workflow_run: 26011715800
+updated: '2026-11-22T09:51:25Z'
+generated_by: claude-sonnet
+workflow_run: 45009043222
 issue: 3529
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 82
 review:
   strengths:
-  - 'Perfect visual quality: all text legible, no overlap, proper palette compliance
-    across both themes'
-  - 'Correct specification implementation: all required features present, proper grouping
-    and transparency'
-  - 'Strong code quality: clean, reproducible, idiomatic ggplot2 usage with proper
-    theme token setup'
-  - Realistic data with excellent feature coverage showing task complexity and expertise
-    effects
-  - Consistent theme-adaptive rendering with no dark-on-dark or light-on-light failures
+  - Hand-built swarm layout bins each category-group cell by value and spreads points
+    sideways, so every point sits at its true response time and is centered on its
+    own dodged violin
+  - Violin width tied to the dodge slot (slot * 0.95) leaves clear gaps between neighboring
+    Junior and Senior violins in every category
+  - Theme tokens threaded through every chrome element; both renders are fully legible
+    and data colors identical
+  - Column constants with !!NAME := and .data[[...]] keep the data block swappable,
+    per the library prompt
   weaknesses:
-  - 'Design Excellence modest (10/20): lacks strategic visual hierarchy or data storytelling
-    emphasis'
-  - Panel border retained when default style guide suggests removal for minimalism
-  - No particularly distinctive library mastery beyond standard grouped violin implementation
+  - 'Suggestion: in the densest value bins (Analysis Junior near 1350 ms and 1550
+    ms) the swarm spreads into a single horizontal row wider than the violin; a finer
+    bin_height or a smaller step would keep the rows inside the outline.'
+  - 'Suggestion: a direct label or subtitle on how the Junior-Senior gap widens with
+    task complexity would give the chart a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title (24pt, bold, dark #1A1A17), axis labels (20pt, bold, dark #1A1A17), tick labels (16pt, medium gray #4A4A44), grid lines (subtle, light gray), legend (positioned at top, labels in medium gray)
-      Data: Violins and swarm points; Junior in green (#009E73), Senior in orange (#D55E00); three task types (Data Entry, Analysis, Decision-Making) with 50 points per group
-      Legibility verdict: PASS - All text elements fully readable against light background
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'violin-grouped-swarm · r · ggplot2 · anyplot.ai' in dark ink at ~48% width; axis titles 'Task type' and 'Response time (ms)'; gray ticks 0-3000; legend 'Expertise level' at top with Junior/Senior keys (fill, outline and dot); no spines, thin y-only grid. All text readable.
+      Data: Junior violins #009E73 and Senior #C475FD at alpha 0.4 for Data Entry, Analysis, Decision-Making; small hue-matched swarm points spread sideways and centered on their own violin; clear gaps between violins.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title (24pt, bold, light #F0EFE8), axis labels (20pt, bold, light #F0EFE8), tick labels (16pt, light gray #B8B7B0), grid lines (subtle, light gray), legend (positioned at top, labels in light gray)
-      Data: Data colors identical to light render - Junior still #009E73, Senior still #D55E00 (only chrome flipped)
-      Legibility verdict: PASS - All text elements fully readable against dark background, no dark-on-dark failures
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles light #F0EFE8, ticks and legend text #B8B7B0, light thin grid; no dark-on-dark text.
+      Data: identical colors to the light render (#009E73, #C475FD); points visible over the darker translucent fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,48 +52,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
-          perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt set explicitly;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all fully readable
+        comment: No text collisions; swarm points spread sideways so no point hides
+          another
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violins and swarm points optimally sized and positioned for the plot
-          area
+        comment: Small swarm points (size 0.9) visible over alpha 0.4 fills; legend
+          keys show fill, outline and dot in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with excellent contrast, CVD-safe
+        comment: Green vs lavender, strong lightness and hue separation, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout, plot fills ~60% of canvas, balanced margins
+        comment: 3200x1800, balanced margins, title ~48% width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units (Response Time in ms)
+        comment: '''Task type'', ''Response time (ms)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, perfect theme-correct chrome
-          in both renders'
+        comment: 'Junior #009E73, Senior #C475FD (Imprint order); #FAF8F1 / #1A1A17
+          backgrounds; data colors identical across themes'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -100,22 +102,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with professional appearance but
-          no exceptional custom design
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Good grid control (major only), panel border maintained, could remove
-          spines for cleaner aesthetic
+        comment: 'Spineless, y-only thin grid: the style-guide baseline, nothing beyond'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data clearly displayed showing task and expertise differences, but
-          lacks strategic visual emphasis or focal points
+        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +124,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped violin with swarm overlay
+        comment: Grouped violins with dodged swarm overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: distinct colors, transparency, matched swarm
-          points, proper spacing'
+        comment: Distinct group colors + legend, alpha 0.4, small points, spacing
+          between violins, hue-matched points, dodged swarm (C1-C5 all met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=task category, Y=response time (ms), Color=expertise level, all
-          correct
+        comment: Points at their y values; only sideways swarm offsets (exempt)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Title 'violin-grouped-swarm · r · ggplot2 · anyplot.ai'; legend 'Expertise
+          level' with Junior/Senior
     data_quality:
       score: 15
       max: 15
@@ -155,21 +154,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 3 task types, 2 expertise levels, clear distribution
-          differences'
+        comment: 3 task types x 2 expertise levels, 50 obs each; differing widths,
+          a skewed tail, overlapping ranges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Response time analysis across task complexity and expertise—realistic
-          and neutral scenario
+        comment: 'Response times by task type and expertise: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually plausible response times with realistic expertise factor
+        comment: Hundreds to ~2900 ms, floor at 100 ms; plausible. No Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -179,50 +178,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow, no functions or classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) ensures deterministic output
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg, both used
+        comment: 'ggplot2 and ragg, both used; tibble via ::'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop-based data generation, no over-engineering
+        comment: Vectorized data generation; the hand-written swarm layout has no
+          available equivalent (ggbeeswarm not installed)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, ragg device, no deprecated functions
+        comment: plot-{THEME}.png via ragg, 8x4.5 in at 400 dpi, current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent ggplot() grammar, position_dodge for grouping, proper theme
-          composition
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses position_dodge and ragg device, but features fairly standard
-          for grouped violin plots
+        comment: Grammar with .data[[...]], position_dodge and manual scales as the
+          library prompt shows; nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T09:47:35Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -230,6 +232,8 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
+  - grid-styling
