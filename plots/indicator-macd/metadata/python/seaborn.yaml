@@ -2,48 +2,50 @@ library: seaborn
 language: python
 specification_id: indicator-macd
 created: '2026-01-07T16:28:28Z'
-updated: '2026-05-16T10:51:06Z'
-generated_by: claude-haiku
-workflow_run: 25959795404
+updated: '2026-11-22T00:46:37Z'
+generated_by: claude-sonnet
+workflow_run: 44967745543
 issue: 3181
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - 'Perfect theme adaptation: data colors identical between light/dark, chrome correctly
-    adapted'
-  - All text is readable in both themes with no dark-on-dark failures
-  - 'Exact palette compliance with #009E73 as first series, correct backgrounds (#FAF8F1
-    light, #1A1A17 dark)'
-  - Data transformations are mathematically correct with proper EMA calculations
-  - Clean, reproducible code with explicit font sizing (24pt title, 20pt labels, 16pt
-    ticks)
-  - 'Excellent spec compliance (100% on all features: MACD, Signal, Histogram)'
-  - Professional visual refinement with removed spines, subtle grid (alpha=0.10),
-    polished annotation
+  - 'Histogram bars follow the spec exactly: Imprint green #009E73 above zero, Imprint
+    red #AE3030 below, changing sign where the MACD and signal lines cross, identical
+    in both themes'
+  - The parameters are noted where the reader needs them, in the legend labels 'MACD
+    (12, 26)' and 'Signal (9)', computed from the FAST_SPAN/SLOW_SPAN/SIGNAL_SPAN
+    constants
+  - MACD, signal and histogram are computed with pandas ewm(adjust=False) and the
+    warm-up rows are dropped, so the lines start only once the averages are filled
+  - 'Theme tokens threaded through sns.set_theme rc: correct #FAF8F1 / #1A1A17 surfaces,
+    readable ink, subtle y-grid and a visible INK_SOFT dashed zero line in both renders'
+  - Exact 3200x1800 canvas (figsize 8x4.5 at dpi 400, no bbox_inches='tight') with
+    style-guide font sizes (12/10/8 pt)
   weaknesses:
-  - 'Library Mastery is moderate: histogram coloring relies on matplotlib-level manual
-    loop instead of seaborn-idiomatic approach'
-  - 'Design Excellence could be elevated: lacks special visual emphasis techniques
-    (e.g., highlighting key crossover points) to elevate storytelling beyond basic
-    display'
+  - 'Suggestion: the ConciseDateFormatter leaves the first tick as a bare ''15'' and
+    the offset reads ''2024-Jun'', so February is never named; a locator that labels
+    each month start would make the date range obvious.'
+  - 'Suggestion: sns.barplot cannot place bars on a datetime axis, so the histogram
+    stays on ax.bar; a seaborn-native touch elsewhere (for example sns.set_context
+    for the text scale) would show more of the library.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (not pure white) ✓
-      Chrome: Title "indicator-macd · seaborn · anyplot.ai" (24pt dark text), axis labels "Date" and "MACD Value" (20pt dark), tick labels (16pt dark) — all clearly readable
-      Data: MACD line in #009E73 (green), Signal line in #D55E00 (orange), Histogram bars in #0072B2 (blue positive) and #D55E00 (orange negative), zero reference dashed line, legend with proper labels
-      Legibility verdict: PASS - All text is dark ink on light background with excellent contrast; no overlapping elements; grid is subtle but visible
+      Background: warm off-white #FAF8F1, 3200x1800 landscape.
+      Chrome: title "indicator-macd · python · seaborn · anyplot.ai" centred at 12 pt in dark ink; x label "Date", y label "MACD value" at 10 pt; tick labels at 8 pt in INK_SOFT (concise dates 15 / Mar / 15 / Apr ... with "2024-Jun" offset); top and right spines removed; faint horizontal grid; two-column legend in an elevated frame at upper left (MACD (12, 26), Signal (9), Histogram (+), Histogram (−)). All readable.
+      Data: MACD line in Imprint blue #4467A3 and signal line in ochre #BD8233 (2 px) from mid-February to mid-June, MACD dipping to about -2.3 and peaking near 1.2; histogram bars at alpha 0.55 in green #009E73 above zero and red #AE3030 below, changing sign at each crossover; dashed INK_SOFT zero line across the full width. Lines stay readable over the bars.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (not pure black) ✓
-      Chrome: All text is light-colored (#F0EFE8 primary, #B8B7B0 secondary) and clearly readable on dark background; no dark-on-dark failures
-      Data: MACD line #009E73 (IDENTICAL to light), Signal line #D55E00 (IDENTICAL to light), Histogram bars same blue and orange (IDENTICAL to light) — only chrome changed between themes
-      Legibility verdict: PASS - All text is light ink on dark background; zero reference line visible; grid lines visible; annotation box styling is correct with elevated dark background
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels in light ink #F0EFE8, ticks and spines in #B8B7B0, legend frame on #242420 with light text; grid subtle but visible; no dark-on-dark text anywhere.
+      Data: the same blue, ochre, green and red as the light render (alpha bars read darker on the dark surface, same hex values); the dashed zero line is light and clearly visible; brand green visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,72 +56,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24pt, labels=20pt, ticks=16pt);
-          perfectly readable in both themes
+        comment: Title 12 pt, labels 10 pt, ticks and legend 8 pt as in the library
+          prompt; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; date labels well-rotated; legend positioned
-          without interference
+        comment: Legend sits in empty space above the early negative lines; no text
+          collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars (alpha=0.6), lines (linewidth=3) all optimally visible
-          for 87-point dataset
+        comment: 2 px lines and alpha 0.55 bars suit 86 periods; legend glyphs match
+          the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue/orange histogram, green MACD, orange Signal—distinct and CVD-safe
+        comment: Histogram sign is also carried by position above/below zero; blue
+          vs ochre lines are CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins and generous whitespace
+        comment: 3200x1800, balanced margins, title about 48% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with correct title format
+        comment: '''Date'' and ''MACD value'' read as text for a reader; MACD is unitless
+          relative to price'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds exact (#FAF8F1 light, #1A1A17
-          dark), text colors theme-correct'
+        comment: 'Green #009E73 for positive bars as the spec asks, red #AE3030 for
+          negative, Imprint blue/ochre lines, correct backgrounds'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Strong design with thoughtful colors and polish; clearly above defaults
-          but not publication-ready
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, generous whitespace, polished annotation;
-          nearly perfect
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good visual hierarchy; shows convergence/divergence clearly; lacks
-          special emphasis techniques
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MACD indicator with all three components
+        comment: MACD line, signal line and histogram on one standalone panel, as
+          the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: histogram with positive/negative coloring,
-          zero line, parameters'
+        comment: Green/red histogram, zero reference line, distinct line colours,
+          parameters noted (C1-C4 met; C5 not drawn, optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X-axis, MACD value on Y-axis; all data visible
+        comment: Dates on x, values on y; all data visible; bars from zero to MACD
+          minus signal
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels accurate
+        comment: Mandated title format; legend tells MACD, signal and both histogram
+          signs apart
     data_quality:
       score: 15
       max: 15
@@ -158,20 +162,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: convergence, divergence, trend changes, signals'
+        comment: Several crossovers, a deep negative trough, a positive peak and a
+          sideways stretch
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price simulation with realistic parameters; neutral business
-          context
+        comment: Daily MACD from a simulated stock close over 120 business days, the
+          spec's example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All calculations correct; values in proper scale
+        comment: No Check values in the Notes; MACD of about -2.3 to 1.2 on a price
+          near 100 with 1.5% daily volatility is plausible; histogram equals MACD
+          minus signal in the code
     code_quality:
       score: 10
       max: 10
@@ -181,63 +188,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean sequential flow; no unnecessary functions
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42; fully deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; no fake functionality
+        comment: ewm computes the averages; two vectorised bar calls; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and DPI
+        comment: Saves plot-{THEME}.png at dpi 400, current API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses sns.lineplot and sns.set_theme appropriately; histogram loop
-          is reasonable workaround
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses some seaborn features but mostly matplotlib-level customization;
-          could be easily replicated
-    total:
-      score: 91
-      max: 100
+        comment: 'sns.set_theme with rc, sns.lineplot on the tidy df, sns.despine:
+          the expected baseline'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T00:42:58Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
   dataprep:
   - time-series
-  - exponential-moving-average
+  - rolling-window
+  - cumulative-sum
   styling:
   - alpha-blending
   - grid-styling
