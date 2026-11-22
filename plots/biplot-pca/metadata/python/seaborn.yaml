@@ -12,37 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 69
 review:
   strengths:
-  - 'Perfect palette compliance: Okabe-Ito colors identical in both themes'
-  - 'Complete spec implementation: observation scores, loadings, labels, variance
-    percentages all present'
-  - 'Excellent theme-adaptive styling: backgrounds and text colors render correctly
-    in light and dark'
-  - 'Smart feature label positioning: alignment adjustments minimize overlap'
-  - 'Readable at full resolution: all text legible in both renders, properly sized
-    fonts'
+  - One common scale for all loading arrows (C4)
+  - Equal aspect keeps arrow directions true
+  - Theme tokens applied; chrome flips cleanly with identical class colors
   weaknesses:
-  - 'Feature label overlap: several variable name labels overlap with arrows and each
-    other in the dense central region'
-  - 'Design excellence is functional: could benefit from more sophisticated visual
-    hierarchy or emphasis on key patterns'
+  - 'VQ-05 (both): canvas is 2584x2653, not a canonical size → 2400x2400 square (-184
+    x -253 px). Likely cause: figsize=(16, 9) with bbox_inches=''tight'' on savefig.'
+  - 'VQ-02 (both): the total_phenols label is hidden behind the proanthocyanins plate,
+    and the flavanoids and alcalinity_of_ash labels are partly covered by neighbouring
+    plates → no label plate over another. Likely cause: labels placed at 1.12x the
+    tip with 12 pt bordered plates and no spacing for bunched arrows.'
+  - 'SC-02 (both): the covered total_phenols label cannot be attributed to its arrow
+    (C3) → each name readable at its own tip. Likely cause: the same label placement.'
+  - 'SC-04 (both): title ''biplot-pca · seaborn · anyplot.ai'' lacks the language
+    segment → ''biplot-pca · python · seaborn · anyplot.ai''. Likely cause: the set_title
+    string.'
+  - 'DQ-02 (both): the groups are labelled ''Class 0'', ''Class 1'', ''Class 2'' →
+    name them as the three cultivars. Likely cause: the class_names list.'
+  - 'CQ-01 (code): the file has no column-0 # Data marker → one block between column-0
+    # Data and # Plot markers that ends by binding df. Likely cause: the data generation
+    is not marked as one block.'
+  - 'CQ-01 (code): no column constant for the required role `features` and `IMPRINT`
+    lists 5 of 8 positions sliced with IMPRINT[:3] → one constant per column role
+    with a # role: comment, all eight Imprint positions looked up per category. Likely
+    cause: column names and palette sized to the sample.'
+  - 'Suggestion: readable feature names instead of raw identifiers such as od280/od315_of_diluted_wines.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct specification
-      Chrome: Title "biplot-pca · seaborn · anyplot.ai" in dark text, axis labels "PC1 (36.2%)" and "PC2 (19.2%)" with variance explained percentages clearly visible, tick labels in muted gray readable against light background
-      Data: Three wine classes rendered in Okabe-Ito colors - Class 0 (#009E73 green), Class 1 (#D55E00 orange), Class 2 (#0072B2 blue). Scatter points show clear separation between classes. Loading arrows originate from origin with feature labels in white background boxes. All elements clearly distinguishable from background.
-      Legibility verdict: PASS - All text is fully readable
+      Background: warm off-white #FAF8F1, canvas 2584x2653
+      Chrome: title 'biplot-pca · seaborn · anyplot.ai' (no language segment), axis labels 'PC1 (36.2%)' / 'PC2 (19.2%)', ticks -6..6, subtle grid, legend 'Wine Class' lower right
+      Data: 178 large scores in #009E73, #C475FD, #4467A3 with outline; 13 arrows with raw identifier labels in bordered plates; total_phenols label hidden behind proanthocyanins, flavanoids and alcalinity_of_ash labels partly covered
+      Legibility verdict: PASS for visible chrome; one data label unreadable through overlap
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct specification
-      Chrome: Title in light cream text, axis labels and tick labels in light colors clearly readable against dark background. No dark-on-dark text issues detected.
-      Data: All data colors are identical to light render - green, orange, and blue series maintain same hex values. Feature labels use dark background boxes appropriately styled for dark theme. Loading arrows clearly visible with white coloring.
-      Legibility verdict: PASS - All text is fully readable in dark theme, proper contrast throughout
+      Background: warm near-black #1A1A17
+      Chrome: light ink text and ticks, all readable, no dark-on-dark
+      Data: class colors identical to light; same label overlap
+      Legibility verdict: PASS for chrome; one data label unreadable through overlap
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 22
       max: 30
       items:
       - id: VQ-01
@@ -50,43 +62,44 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicit and readable in both themes
+        comment: Explicit sizes; all visible text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Smart text positioning with offsets; no collisions detected
+        passed: false
+        comment: total_phenols label hidden behind proanthocyanins, flavanoids and
+          alcalinity_of_ash labels overlapped (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and arrows well-scaled and visible
+        comment: Large markers with alpha and outline; arrows visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: CVD-distinguishable Imprint positions
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Good proportions with balanced axis limits
+        passed: false
+        comment: Canvas 2584x2653, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include variance percentages
+        comment: PC1 (36.2%) / PC2 (19.2%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; correct backgrounds; theme-correct'
+        comment: Imprint 1-3, identical across themes, correct backgrounds
     design_excellence:
       score: 8
       max: 20
@@ -96,21 +109,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: 'Default: custom theming but no exceptional design thinking'
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: 'Default: standard spine/grid removal'
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: 'Default: biplot shows clustering but lacks emphasized focal point'
+        comment: No hierarchy beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -121,24 +134,25 @@ review:
         comment: Correct PCA biplot
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: All features present
+        passed: false
+        comment: 'C3 missed: the total_phenols label is covered and cannot be attributed
+          to its arrow (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, all data visible
+        comment: Scores at their coordinates, one common loading scale
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Proper format and styling
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -146,53 +160,55 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects of biplot shown
+        comment: All biplot aspects shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Wine dataset appropriate and neutral
+        passed: false
+        comment: Real wine data, groups 'Class 0/1/2' (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible feature and loading scales
+        comment: No check values; variance shares 36.2 % / 19.2 % consistent with
+          standardized PCA
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Linear code, no unnecessary functions
+        passed: false
+        comment: 'No # Data block marker, no column constants, palette sliced to sample
+          size (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data and computation
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming and API
+        comment: plot-{THEME}.png
     library_mastery:
       score: 4
       max: 10
@@ -202,14 +218,16 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: 'Default: seaborn scatterplot idiomatic, manual arrows necessary'
+        comment: Default
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: 'Default: straightforward seaborn usage'
+        comment: Default
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
 impl_tags:
   dependencies:
   - sklearn
