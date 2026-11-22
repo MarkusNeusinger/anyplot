@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-17
@@ -8,7 +8,7 @@ import os
 import shutil
 
 import pandas as pd
-from lets_plot import (  # noqa: F401
+from lets_plot import (
     LetsPlot,
     aes,
     coord_fixed,
@@ -37,7 +37,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Unicode chess symbols
+# Constants
+FILES = "abcdefgh"
+RANKS = "12345678"
 PIECE_SYMBOLS = {
     "K": "♔",
     "Q": "♕",
@@ -52,8 +54,15 @@ PIECE_SYMBOLS = {
     "n": "♞",
     "p": "♟",
 }
+LIGHT_SQUARE = "#F0D9B5"  # chess-standard board colors, identical in both themes
+DARK_SQUARE = "#B58863"
 
-# Scholar's Mate position - a famous 4-move checkmate
+# Columns: set these to your table's column names
+SQUARE = "square"  # role: square
+PIECE = "piece"  # role: piece
+
+# Data: replace this block with your own position, one row per piece
+# Scholar's Mate: a famous four-move checkmate
 pieces = {
     "a1": "R",
     "b1": "N",
@@ -90,60 +99,50 @@ pieces = {
     "e5": "p",
     "f6": "n",
 }
+df = pd.DataFrame({SQUARE: list(pieces.keys()), PIECE: list(pieces.values())})
 
-# Create board squares data
-files = "abcdefgh"
-squares_data = []
-for i in range(8):
-    for j in range(8):
-        is_light = (i + j) % 2 == 1
-        squares_data.append({"file": i + 0.5, "rank": j + 0.5, "color": "light" if is_light else "dark"})
-df_squares = pd.DataFrame(squares_data)
+# Plot: board squares and piece positions derive from df and the constants
+squares = pd.DataFrame(
+    [
+        {"file": i + 0.5, "rank": j + 0.5, "shade": "light" if (i + j) % 2 == 1 else "dark"}
+        for i in range(len(FILES))
+        for j in range(len(RANKS))
+    ]
+)
+placed = pd.DataFrame(
+    {
+        "file": [FILES.index(sq[0]) + 0.5 for sq in df[SQUARE]],
+        "rank": [RANKS.index(sq[1]) + 0.5 for sq in df[SQUARE]],
+        "symbol": [PIECE_SYMBOLS[p] for p in df[PIECE]],
+    }
+)
+ticks = [i + 0.5 for i in range(len(FILES))]
 
-# Create pieces data
-pieces_data = []
-for square, piece in pieces.items():
-    file_idx = files.index(square[0]) + 0.5
-    rank_val = int(square[1]) - 0.5
-    symbol = PIECE_SYMBOLS.get(piece, "")
-    pieces_data.append({"file": file_idx, "rank": rank_val, "symbol": symbol})
-df_pieces = pd.DataFrame(pieces_data)
-
-# Board colors (chess standard, theme-independent for clarity)
-light_color = "#F0D9B5"
-dark_color = "#B58863"
-
-# Build the plot
 plot = (
     ggplot()
-    + geom_tile(aes(x="file", y="rank", fill="color"), data=df_squares, width=1, height=1, color="#8B7355", size=0.5)
-    + scale_fill_manual(values={"light": light_color, "dark": dark_color}, guide="none")
-    + geom_text(aes(x="file", y="rank", label="symbol"), data=df_pieces, size=28)
-    + scale_x_continuous(
-        breaks=[0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5], labels=["a", "b", "c", "d", "e", "f", "g", "h"]
-    )
-    + scale_y_continuous(
-        breaks=[0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5], labels=["1", "2", "3", "4", "5", "6", "7", "8"]
-    )
+    + geom_tile(aes(x="file", y="rank", fill="shade"), data=squares, width=1, height=1, color="#8B7355", size=0.25)
+    + scale_fill_manual(values={"light": LIGHT_SQUARE, "dark": DARK_SQUARE}, guide="none")
+    + geom_text(aes(x="file", y="rank", label="symbol"), data=placed, size=14)
+    + scale_x_continuous(breaks=ticks, labels=list(FILES))
+    + scale_y_continuous(breaks=ticks, labels=list(RANKS))
     + coord_fixed(ratio=1)
-    + labs(title="chessboard-pieces · letsplot · anyplot.ai")
+    + labs(title="chessboard-pieces · python · letsplot · anyplot.ai")
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, hjust=0.5, face="bold", color=INK),
-        axis_text=element_text(size=18, face="bold", color=INK_SOFT),
+        plot_title=element_text(size=12, hjust=0.5, face="bold", color=INK),
+        axis_text=element_text(size=9, face="bold", color=INK_SOFT),
         axis_line=element_blank(),
-        plot_margin=40,
+        plot_margin=20,
     )
-    + ggsize(1200, 1200)
+    + ggsize(600, 600)
 )
 
-# Save outputs - ggsave uses lets-plot-images subfolder by default
-ggsave(plot, f"plot-{THEME}.png", scale=3)
+# Save: ggsave writes into lets-plot-images, so move the files out
+ggsave(plot, f"plot-{THEME}.png", scale=4)
 ggsave(plot, f"plot-{THEME}.html")
 
-# Move files from lets-plot-images to current directory
 if os.path.exists(f"lets-plot-images/plot-{THEME}.png"):
     shutil.move(f"lets-plot-images/plot-{THEME}.png", f"plot-{THEME}.png")
 if os.path.exists(f"lets-plot-images/plot-{THEME}.html"):
