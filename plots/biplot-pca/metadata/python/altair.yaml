@@ -2,47 +2,57 @@ library: altair
 language: python
 specification_id: biplot-pca
 created: '2026-01-09T13:18:49Z'
-updated: '2026-05-17T17:38:19Z'
-generated_by: claude-haiku
-workflow_run: 25997830089
+updated: '2026-11-22T07:39:08Z'
+generated_by: claude-sonnet
+workflow_run: 44998512160
 issue: 3417
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 84
 review:
   strengths:
-  - Perfect theme adaptation with identical data colors and readable chrome in both
-    light and dark renders
-  - 'Excellent data selection: Iris dataset clearly demonstrates PCA biplot purpose
-    with natural clustering and overlap'
-  - 'Perfect technical scores: Visual Quality, Spec Compliance, Data Quality, and
-    Code Quality all 100%'
-  - Professional Okabe-Ito color palette with proper visual hierarchy
-  - 'Thoughtful implementation details: manual label offsets for legibility, origin
-    marker for reference'
-  - 'Idiomatic Altair usage: sophisticated layer composition, transforms, and configuration'
+  - 'Both themes correct: #FAF8F1 / #1A1A17 surfaces, INK/INK_SOFT chrome, identical
+    Imprint data colors (#009E73, #C475FD, #4467A3)'
+  - Arrowheads rotated in pixel space so each head follows its drawn shaft regardless
+    of the axis aspect
+  - Variable names in bold with a page-colored halo, aligned away from the origin
+    per side, all attributable to their arrows
+  - Axis domains and loading scale derived from the data; canvas padded (never cropped)
+    to exactly 3200x1800
+  - 'Native Altair interactivity: .interactive() zoom/pan and tooltips with species
+    and PC coordinates in the HTML'
   weaknesses:
-  - Design Excellence relies on well-configured defaults rather than distinctive custom
-    design choices
+  - 'VQ-02 (both): the bold ''Sepal Length'' label and its page-colored halo sit on
+    top of a virginica score point near (1.7, 1.03) and hide it → keep the label clear
+    of score points, e.g. a thinner halo (strokeWidth 3 → 1.5) or a lower halo opacity
+    so the point stays visible beneath. Likely cause: halo mark_text with stroke=PAGE_BG,
+    strokeWidth=3 at label_x/label_y = tip x 1.15.'
+  - 'CQ-01 (code): lines 35–38 tag four separate constants SEPAL_LENGTH, SEPAL_WIDTH,
+    PETAL_LENGTH, PETAL_WIDTH with the same role `features` → one constant for the
+    role, e.g. FEATURES = ["Sepal Length", "Sepal Width", "Petal Length", "Petal Width"]  #
+    role: features. Likely cause: one constant per column instead of one per spec
+    role.'
+  - 'Suggestion: the optional unit circle the Notes mention could give the loading
+    lengths a reference.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct theme surface
-      Chrome: Title "biplot-pca · altair · anyplot.ai" in dark INK color; axis labels "PC1 (73.0%)" and "PC2 (22.9%)" with variance explained; tick labels at 18px; legend with species names - all clearly readable against light background
-      Data: Three species colored with Okabe-Ito palette - Setosa #009E73 (green, upper left), Versicolor #D55E00 (orange, middle/right), Virginica #0072B2 (blue, right); loading vectors as gray lines with arrowheads; variable labels positioned with offsets
-      Legibility verdict: PASS - all text explicitly sized and readable; no dark-on-light failures
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'biplot-pca · python · altair · anyplot.ai' bold dark INK centered; axis titles 'PC1 (73.0% of variance)' / 'PC2 (22.9% of variance)' bold; ticks -4..4 and -3..3 in INK_SOFT; framed legend 'Species' at right on #FFFDF6; subtle grid - all readable
+      Data: setosa #009E73 cluster on the left, versicolor #C475FD and virginica #4467A3 overlapping on the right; four gray INK_SOFT loading arrows from a cross at the origin with rotated triangle heads; bold labels Sepal Width (upper left), Sepal Length, Petal Width, Petal Length (right) with page-colored halos; the Sepal Length halo covers one virginica point
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct theme surface
-      Chrome: Title, axis labels, tick labels adapt to light color INK #F0EFE8; legend text light-colored on dark box background; grid lines subtle light gray - all clearly readable
-      Data: All three species maintain identical data colors (Setosa #009E73, Versicolor #D55E00, Virginica #0072B2); loading vectors and origin marker visible with proper contrast; no dark-on-dark failures
-      Legibility verdict: PASS - perfect theme adaptation with no readability issues in either render
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and variable labels in light #F0EFE8; ticks in #B8B7B0; legend box #242420 with light text; grid subtle light lines - no dark-on-dark text
+      Data: identical species colors to the light render; arrows and origin cross in light gray, clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,73 +60,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: 'Title 16, axis titles 12, ticks 10, legend 10/12, loading labels
+          10 bold: all explicitly set and readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping text; loading labels offset with manual y-adjustments
+        passed: false
+        comment: The 'Sepal Length' label with its page-colored halo sits on top of
+          a virginica point near (1.7, 1.03) and hides it (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (size=120) and arrows (width=2.5) perfectly adapted to 150-point
-          density
+        comment: 150 points at size 28 with 0.8 opacity are clearly visible; arrows
+          and heads distinct; legend swatches match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito provides strong luminance separation; colorblind-safe
+        comment: Green/purple/blue Imprint trio separates well under CVD; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 70-80% of canvas with balanced margins; legend integrated;
-          nothing cut-off
+        comment: 3200x1800 canvas, plot area fills it with balanced margins, legend
+          at right, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Axes include variance explained: PC1 (73.0%), PC2 (22.9%)'
+        comment: '''PC1 (73.0% of variance)'', ''PC2 (22.9% of variance)'', legend
+          title ''Species'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect Okabe-Ito; first series #009E73; backgrounds #FAF8F1/#1A1A17;
-          all chrome theme-adaptive'
+        comment: 'First series #009E73, then #C475FD, #4467A3; backgrounds #FAF8F1/#1A1A17;
+          chrome flips correctly, data colors identical'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Well-configured professional styling; theme-adaptive design; rooted
-          in library defaults rather than distinctive custom choices
+        passed: false
+        comment: 'Beyond baseline: halo-backed bold variable names, soft-ink arrows
+          subordinate to the colored scores, arrowheads rotated in pixel space so
+          they follow the drawn shafts'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid (10% opacity), clean layout, balanced whitespace; some
-          refinement but room for enhancement
+        passed: false
+        comment: 'Beyond baseline: labels aligned away from the origin per side (left/right
+          align by PC1 sign), symmetric axis domains derived from scores and label
+          positions'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Plot tells PCA story naturally: separation (Setosa vs others), variance
-          dominance (73%), variable importance via arrows; visual hierarchy from data
-          but no explicit annotations'
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct PCA biplot with observation scores and loading vectors
+        comment: 'Correct PCA biplot: scores as points plus loading arrows from the
+          origin'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: colored points, loading arrows, labels, origin
-          marker, variance percentages'
+        comment: PC1 vs PC2, scores colored by group, arrows from origin, each arrow
+          labeled, common loading scale, variance in axis labels (C1-C5 met); optional
+          unit circle not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: PC1 on x-axis, PC2 on y-axis; proper scales; all data visible
+        comment: Scores at their PCA coordinates; arrows at loadings x 2.5; all data
+          inside the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title 'biplot-pca · python · altair · anyplot.ai'; legend names the
+          three species
     data_quality:
       score: 15
       max: 15
@@ -155,86 +172,91 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Iris dataset (150 obs, 4 features, 3 groups) shows full biplot aspects:
-          separation, overlap, variable importance'
+        comment: Shows group separation, overlap of versicolor/virginica, correlated
+          petal arrows and the opposed-ish sepal width arrow
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real scientific dataset; neutral; well-known
+        comment: 'Iris measurements: real, neutral, canonical for PCA'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Variance percentages factually correct; scaling (2.5x) appropriate
-          for visibility
+        comment: 'Checked: standardized Iris PCA gives 73.0% and 22.9% explained variance,
+          matching the axis labels; values fall out of sklearn PCA'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear flow; no unnecessary functions
+        passed: false
+        comment: Four constants share the role 'features' instead of one constant
+          for the role (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: random_state=42; deterministic data
+        comment: Deterministic Iris data, random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; no redundancy
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake functionality
+        comment: Appropriate complexity; PCA and scaling via sklearn
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and .html with scale_factor=3.0
+        comment: Saves plot-{THEME}.png and .html, PAD-only to 3200x1800, current
+          Altair 6 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of Chart, layers, encoding, transform_calculate, configuration;
-          theme-adaptive
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Sophisticated layer composition, detail/order encoding, computed
-          properties; grammar-of-graphics usage
+        passed: false
+        comment: Layered composition, detail/order encodings for line segments, angle
+          encoding with scale=None, transform_filter with Vega expressions, escaped
+          fields with explicit types
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Native .interactive() zoom/pan and tooltips in the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T07:35:17Z'
 impl_tags:
   dependencies:
   - sklearn
+  - pillow
   techniques:
   - layer-composition
   - annotations
-  - custom-legend
+  - html-export
   patterns:
   - dataset-loading
-  - data-generation
   dataprep:
   - pca
+  - normalization
   styling:
-  - theme-adaptive
-  - grid-styling
+  - alpha-blending
