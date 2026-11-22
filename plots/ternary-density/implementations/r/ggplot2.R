@@ -1,6 +1,6 @@
 #' anyplot.ai
 #' ternary-density: Ternary Density Plot
-#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Library: ggplot2 4 | R 4.4.1
 #' Quality: 87/100 | Created: 2026-05-19
 
 library(ggplot2)
@@ -94,7 +94,7 @@ p <- ggplot() +
     aes(x = x, y = y, z = z),
     color     = "white",
     alpha     = 0.55,
-    linewidth = 0.7,
+    linewidth = 0.45,
     na.rm     = TRUE
   ) +
   geom_segment(
@@ -102,26 +102,27 @@ p <- ggplot() +
     aes(x = x, xend = xend, y = y, yend = yend),
     color     = INK_SOFT,
     alpha     = 0.30,
-    linewidth = 0.4
+    linewidth = 0.25
   ) +
   geom_path(
     data      = tri_border,
     aes(x = x, y = y),
     color     = INK,
-    linewidth = 1.4
+    linewidth = 0.8
   ) +
   # Vertex labels
   annotate("text", x = 0.5,   y = TRI_H + 0.09, label = "Sand",
-           color = INK, size = 9, fontface = "bold") +
+           color = INK, size = 5, fontface = "bold") +
   annotate("text", x = -0.09, y = -0.07,         label = "Silt",
-           color = INK, size = 9, fontface = "bold") +
+           color = INK, size = 5, fontface = "bold") +
   annotate("text", x = 1.09,  y = -0.07,         label = "Clay",
-           color = INK, size = 9, fontface = "bold") +
-  scale_fill_viridis_c(
-    option = "viridis",
+           color = INK, size = 5, fontface = "bold") +
+  scale_fill_gradient(
+    low    = "#009E73",
+    high   = "#4467A3",
     name   = "Density",
     na.value = "transparent",
-    guide  = guide_colorbar(barwidth = 1.8, barheight = 14,
+    guide  = guide_colorbar(barwidth = 0.9, barheight = 7,
                             title.position = "top", title.hjust = 0.5)
   ) +
   coord_fixed(
@@ -130,21 +131,21 @@ p <- ggplot() +
   ) +
   labs(
     title    = "ternary-density · r · ggplot2 · anyplot.ai",
-    subtitle = "Sediment composition: kernel density of sand / silt / clay proportions across three geological facies"
+    subtitle = "Kernel density of sand / silt / clay proportions across three geological facies"
   ) +
-  theme_void(base_size = 14) +
+  theme_void(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    plot.title        = element_text(color = INK,      size = 24, hjust = 0.5,
-                                     margin = margin(t = 14, b = 6)),
-    plot.subtitle     = element_text(color = INK_SOFT, size = 15, hjust = 0.5,
-                                     margin = margin(b = 10)),
-    legend.title      = element_text(color = INK,      size = 18),
-    legend.text       = element_text(color = INK_SOFT, size = 14),
-    legend.background = element_rect(fill = ELEVATED_BG, color = NA),
+    plot.title        = element_text(color = INK,      size = 12, hjust = 0.5,
+                                     margin = margin(t = 7, b = 3)),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 8, hjust = 0.5,
+                                     margin = margin(b = 5)),
+    legend.title      = element_text(color = INK,      size = 10),
+    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.background = element_rect(fill = ELEVATED_BG, color = NA, linewidth = 0),
     legend.position   = "right",
-    plot.margin       = margin(10, 80, 20, 80)
+    plot.margin       = margin(5, 15, 10, 15)
   )
 
 # Save
@@ -152,8 +153,8 @@ ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 12,
-  height   = 12,
+  width    = 6,
+  height   = 6,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
