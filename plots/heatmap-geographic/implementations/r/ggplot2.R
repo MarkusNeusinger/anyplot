@@ -8,7 +8,7 @@ library(ragg)
 
 set.seed(42)
 
-# Theme tokens
+# Theme tokens (Imprint palette)
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
@@ -49,22 +49,22 @@ kde_out <- MASS::kde2d(
 
 kde_df          <- expand.grid(longitude = kde_out$x, latitude = kde_out$y)
 kde_df$density  <- as.vector(kde_out$z)
-kde_df$density[kde_df$density < quantile(kde_df$density, 0.15)] <- NA
 
 # Plot
 p <- ggplot() +
   geom_raster(
     data        = kde_df,
-    aes(x = longitude, y = latitude, fill = density),
+    aes(x = longitude, y = latitude, fill = density, alpha = density),
     interpolate = TRUE
   ) +
-  scale_fill_viridis_c(
-    option   = "inferno",
+  scale_alpha_continuous(range = c(0, 0.95), guide = "none") +
+  scale_fill_gradientn(
+    colours  = c("#009E73", "#4467A3"),
     name     = "Storm\nDensity",
     na.value = "transparent",
     guide    = guide_colorbar(
-      barwidth       = 1.5,
-      barheight      = 8,
+      barwidth       = 0.8,
+      barheight      = 6,
       title.position = "top",
       title.hjust    = 0.5
     )
@@ -75,21 +75,21 @@ p <- ggplot() +
     x     = "Longitude",
     y     = "Latitude"
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK_SOFT, linewidth = 0.25, linetype = "dotted"),
+    panel.grid.major  = element_line(color = INK_SOFT, linewidth = 0.15, linetype = "dotted"),
     panel.grid.minor  = element_blank(),
     panel.border      = element_blank(),
-    axis.title        = element_text(color = INK,      size = 20),
-    axis.text         = element_text(color = INK_SOFT, size = 16),
-    plot.title        = element_text(color = INK,      size = 22, margin = margin(b = 12)),
+    axis.title        = element_text(color = INK,      size = 10),
+    axis.text         = element_text(color = INK_SOFT, size = 8),
+    plot.title        = element_text(color = INK,      size = 10, margin = margin(b = 8)),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.4),
-    legend.text       = element_text(color = INK_SOFT, size = 16),
-    legend.title      = element_text(color = INK,      size = 18),
+    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.title      = element_text(color = INK,      size = 10),
     legend.position   = "right",
-    plot.margin       = margin(15, 15, 15, 15)
+    plot.margin       = margin(10, 10, 10, 10)
   )
 
 # Add geographic borders when the maps package is available
@@ -101,13 +101,13 @@ if (requireNamespace("maps", quietly = TRUE)) {
     geom_polygon(
       data    = countries,
       mapping = aes(x = long, y = lat, group = group),
-      fill    = NA, color = INK_SOFT, linewidth = 0.5,
+      fill    = NA, color = INK_SOFT, linewidth = 0.3,
       inherit.aes = FALSE
     ) +
     geom_polygon(
       data    = us_states,
       mapping = aes(x = long, y = lat, group = group),
-      fill    = NA, color = INK_SOFT, linewidth = 0.2,
+      fill    = NA, color = INK_SOFT, linewidth = 0.12,
       inherit.aes = FALSE
     )
 }
@@ -117,8 +117,8 @@ ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
