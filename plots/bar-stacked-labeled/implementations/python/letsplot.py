@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-labeled: Stacked Bar Chart with Total Labels
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-18
@@ -21,6 +21,7 @@ from lets_plot import (
     ggsize,
     labs,
     scale_fill_manual,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -35,83 +36,67 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Quarterly revenue by product category (in millions)
-data = {
-    "Quarter": ["Q1", "Q1", "Q1", "Q2", "Q2", "Q2", "Q3", "Q3", "Q3", "Q4", "Q4", "Q4"],
-    "Product": [
-        "Electronics",
-        "Software",
-        "Services",
-        "Electronics",
-        "Software",
-        "Services",
-        "Electronics",
-        "Software",
-        "Services",
-        "Electronics",
-        "Software",
-        "Services",
-    ],
-    "Revenue": [45, 32, 18, 52, 38, 22, 48, 41, 25, 58, 45, 28],
-}
-df = pd.DataFrame(data)
+# Column constants
+QUARTER = "Quarter"  # role: category
+PRODUCT = "Product"  # role: component
+REVENUE = "Revenue (Millions USD)"  # role: value
 
-# Calculate totals for each quarter
-totals = df.groupby("Quarter", sort=False)["Revenue"].sum().reset_index()
-totals.columns = ["Quarter", "Total"]
-totals["Label"] = totals["Total"].apply(lambda x: f"${x}M")
+# Data: replace this block with your own table, for example df = pd.read_csv("revenue.csv")
+df = pd.DataFrame(
+    {
+        QUARTER: ["Q1"] * 3 + ["Q2"] * 3 + ["Q3"] * 3 + ["Q4"] * 3,
+        PRODUCT: ["Electronics", "Software", "Services"] * 4,
+        REVENUE: [45, 32, 18, 52, 38, 22, 48, 41, 25, 58, 45, 28],
+    }
+)
 
-# Create stacked bar chart with total labels
+# Plot
+totals = df.groupby(QUARTER, sort=False)[REVENUE].sum().reset_index()
+totals["Label"] = totals[REVENUE].map(lambda total: f"${total:g}M")
+
 plot = (
     ggplot()
-    + geom_bar(
-        data=df, mapping=aes(x="Quarter", y="Revenue", fill="Product"), stat="identity", position="stack", width=0.7
-    )
+    + geom_bar(data=df, mapping=aes(x=QUARTER, y=REVENUE, fill=PRODUCT), stat="identity", position="stack", width=0.7)
     + geom_text(
         data=totals,
-        mapping=aes(x="Quarter", y="Total", label="Label"),
+        mapping=aes(x=QUARTER, y=REVENUE, label="Label"),
         position="identity",
         vjust=-0.5,
-        size=18,
+        size=6,
         fontface="bold",
         color=INK,
     )
-    + scale_fill_manual(values=IMPRINT)
-    + labs(
-        title="bar-stacked-labeled · Python · letsplot · anyplot.ai",
-        x="Quarter",
-        y="Revenue (Millions USD)",
-        fill="Product",
-    )
+    + scale_fill_manual(values=IMPRINT_PALETTE)
+    + scale_y_continuous(limits=[0, totals[REVENUE].max() * 1.12])
+    + labs(title="bar-stacked-labeled · python · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK_SOFT, size=0.3),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT),
-        plot_title=element_text(size=24, face="bold", color=INK),
+        plot_title=element_text(size=16, face="bold", color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=12, color=INK),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG and HTML with theme suffix (scale 3x for 4800 × 2700 px)
-ggsave(plot, f"plot-{THEME}.png", scale=3)
+# Save as PNG (3200 x 1800 px) and HTML
+ggsave(plot, f"plot-{THEME}.png", scale=4)
 ggsave(plot, f"plot-{THEME}.html")
 
-# Move files from lets-plot-images subdirectory to current directory (lets-plot quirk)
+# lets-plot writes into a lets-plot-images subdirectory; move the files here
 if os.path.exists("lets-plot-images"):
     for f in [f"plot-{THEME}.png", f"plot-{THEME}.html"]:
         src = os.path.join("lets-plot-images", f)
         if os.path.exists(src):
             shutil.move(src, f)
-    # Clean up subdirectory if empty
     if not os.listdir("lets-plot-images"):
         shutil.rmtree("lets-plot-images")
