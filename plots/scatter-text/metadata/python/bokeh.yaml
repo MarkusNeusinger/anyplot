@@ -2,126 +2,140 @@ library: bokeh
 language: python
 specification_id: scatter-text
 created: '2026-01-09T14:25:32Z'
-updated: '2026-05-17T23:37:31Z'
-generated_by: claude-haiku
-workflow_run: 26005772897
+updated: '2026-11-22T08:31:55Z'
+generated_by: claude-sonnet
+workflow_run: 45002588131
 issue: 3482
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Perfect text legibility and contrast in both light and dark themes
-  - Excellent visual hierarchy via alpha and size variation that emphasizes categories
-    without losing data
-  - Idiomatic bokeh patterns (ColumnDataSource, LabelSet, HoverTool)
-  - Clever use of invisible scatter points for interaction without visual clutter
-  - Proper theme-adaptive styling with all chrome colors correctly set from tokens
-  - Clean reproducible data generation with realistic categorization
+  - 'Text is the mark: every label centered on its exact (x, y) with text_align=''center''
+    and text_baseline=''middle'''
+  - Correct 3200x1800 canvas with toolbar_location=None and balanced min_border reservations;
+    nothing clipped
+  - Theme tokens threaded through title, axes, ticks and grid; brand green identical
+    in both renders
+  - HoverTool exposes language and group in the interactive HTML
+  - Data in a tidy DataFrame with column constants feeding ColumnDataSource
   weaknesses:
-  - 'DE-02: Spines not explicitly styled—consider removing top/right spines or adjusting
-    spine width/color for more visual polish'
-  - 'DE-03: Language category grouping is visually encoded but not labeled—reader
-    doesn''t immediately understand category distinctions; could add annotations or
-    legend'
+  - 'VQ-01 (both): the language labels are drawn at 27-31pt, below the 34pt tick-label
+    reference, and read smaller than the tick numbers although they are the plot''s
+    main content → at least 34pt for the subtle groups and about 38pt for the prominent
+    one (+3 to +7pt). Likely cause: the pt values in the styles dict (31/29/27/30/27/27).'
+  - 'DQ-03 (both): the simulated embedding places languages in the wrong neighbourhoods:
+    Ruby sits with R, Julia and MATLAB in the scientific cluster, Erlang among Java/PHP/Python
+    in the modern cluster, SQL and Groovy among Fortran and COBOL in the legacy cluster
+    → move Ruby to the scripting group, Erlang to the functional group beside Elixir,
+    SQL to the data/scientific group and Groovy to the JVM/modern group. Likely cause:
+    the index lists modern, scientific and legacy (indices 4, 18, 25, 28).'
+  - 'CQ-04 (code): lines 159-178 draw an invisible scatter for hover plus a groupby
+    loop of LabelSets, about 20 lines → one `p.text(x=X_DIM, y=Y_DIM, text=LANGUAGE,
+    source=source, text_font_size=<column of ''NNpt'' strings>, text_alpha=TEXT_ALPHA,
+    text_color=BRAND, text_align="center", text_baseline="middle")` glyph with the
+    HoverTool attached to it (bokeh.plotting). Likely cause: LabelSet annotations
+    used as data marks.'
+  - 'Suggestion: the per-group size and opacity hierarchy is invisible to the reader;
+    encoding the group in Imprint colors with a legend (as the Notes allow) would
+    explain it.'
+  - 'Suggestion: the separate jitter pass with the hand-tuned indices 18 and 23 duplicates
+    the per-group normal draws and could be dropped.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1 (correct theme color)
-      Chrome: Title "scatter-text · Python · bokeh · anyplot.ai" at 28pt dark text; axis labels "Embedding Dimension 1/2" at 22pt dark; tick labels at 18pt in INK_SOFT gray—all clearly readable against light background
-      Data: 30 programming language names in teal/cyan (#009E73, Okabe-Ito position 1) with font sizes 20-23pt and alpha 0.73-0.95 creating visual hierarchy; no overlaps or collisions
-      Grid: Subtle light gray lines at 10% opacity on both axes
-      Legibility verdict: PASS—all text fully legible with strong contrast
+      Background: warm off-white #FAF8F1 across canvas and plot area
+      Chrome: title 'scatter-text · python · bokeh · anyplot.ai' bold near-black top-left; italic axis titles 'Embedding Dimension 1/2' and gray tick labels -4..6 / -6..4, all readable; faint grid
+      Data: 30 programming-language names in brand green #009E73, 27-31pt, alpha 0.73-0.95, clusters of modern (upper right), systems (upper left), functional/scripting (lower left/centre), scientific (bottom), legacy (right middle); no collisions
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17 (correct theme color)
-      Chrome: Title and axis labels now in light text (INK=#F0EFE8, INK_SOFT=#B8B7B0), clearly readable; tick labels in light gray—all visible against dark background
-      Data: Language labels identical teal/cyan (#009E73)—data color unchanged from light render, only chrome flips (correct behavior)
-      Grid: Subtle light gray lines at 10% opacity visible on both axes
-      Legibility verdict: PASS—no dark-on-dark failures; brand green vibrant and distinguishable from dark background; all text fully legible
-
-    Both renders: Data colors are theme-invariant (correct). Only chrome (background, text, grid) changes between light and dark themes as per style guide.
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels light gray, grid faint - no dark-on-dark
+      Data: same green labels at the same positions and opacities as light; the 0.73-alpha labels are dimmer but readable
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized; readable in both themes (title 28pt, axis
-          labels 22pt, ticks 18pt, language 20-23pt)
+        comment: All sizes set explicitly (title 50pt, axis titles 42pt, ticks 34pt);
+          the language labels at 27-31pt sit below the 34pt tick reference and read
+          smaller than the ticks though they are the main content (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 30 labels positioned without collisions; strategic grouping and jitter
-          reduction prevent overlap
+        comment: No text collisions; Java/PHP and Groovy/COBOL sit close but stay
+          separate
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Text labels visible throughout; varying alpha (0.73-0.95) creates
-          hierarchy without hiding elements
+        comment: 30 labels, all readable; alpha 0.73-0.95 keeps the dimmer ones visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single Okabe-Ito #009E73 is colorblind-safe with strong contrast
-          on both backgrounds'
+        comment: Single brand green, good contrast on both surfaces; no hue-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 4800×2700 landscape, generous margins, nothing cut off
+        comment: 3200x1800, plot area fills most of the canvas, balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive (Embedding Dimension
-          1/2)
+        comment: Embedding Dimension 1/2 - descriptive; embedding axes are unitless,
+          N/A for units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; backgrounds #FAF8F1/#1A1A17 ✓; data color
-          identical across themes ✓'
+        comment: 'Brand #009E73 for all labels, identical in both renders; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Intentional hierarchy via group-based size (modern 23pt, others 20-22pt)
-          and alpha (0.95→0.73); professional not generic (raised from default 4)
+        comment: The style-guide baseline (Imprint brand green, theme tokens, explicit
+          sizes); nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Outline subtle, grid refined (10% alpha), invisible scatter elegant;
-          could benefit from explicit spine removal/adjustment
+        passed: false
+        comment: 'Outline removed, minor ticks removed, grid at 10% alpha: the baseline
+          spine/grid rules, nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grouping creates narrative (modern prominent, legacy subtle); hierarchy
-          guides focus but grouping logic not self-evident
+        comment: 'Raised by one: per-group size and opacity make the modern-language
+          cluster the focal point; the grouping itself stays unexplained'
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Text labels at coordinates instead of markers (correct)
+        comment: Text labels replace markers - correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x, y, label present; alpha used; font size varies appropriately
+        comment: C1 centered on exact (x, y) via text_align=center/text_baseline=middle;
+          C2 readable; C3 alpha used; C4 N/A (no color encoding)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y embedding dimensions correct; all 30 labels positioned correctly
+        comment: X/Y mapped correctly; all labels inside the axes; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; HoverTool provides group/language identification
-          (appropriate for single-series)
+        comment: Title 'scatter-text · python · bokeh · anyplot.ai' correct; single
+          series, legend N/A
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -160,23 +175,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Scatter-text well-demonstrated with 30 languages across 6 categories
+        comment: Clusters, isolated items, labels of very different length, empty
+          regions - all aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated embeddings for languages; realistic per spec; neutral real-world
-          data
+        comment: 'Programming-language embedding map: real, neutral domain'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 30 points in recommended 20-100 range; font sizes readable at density;
-          coordinates typical for embedding space
+        comment: 'Checked cluster membership against the domain: Ruby sits in the
+          scientific cluster, Erlang in the modern one, SQL and Groovy in legacy (defect
+          line)'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -184,56 +200,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward procedural code with clear
-          sections
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: No fake UI; HoverTool legitimate; group styling clear
+        comment: Invisible scatter plus a groupby loop of LabelSets replaceable by
+          one p.text glyph (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.html and plot-{THEME}.png; current bokeh 3.9.0
-          API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium per the
+          library prompt
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ColumnDataSource, figure(), LabelSet, HoverTool, Selenium all follow
-          bokeh patterns; theme tokens via env vars (raised from default 3)
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Invisible scatter + HoverTool clever; per-group LabelSet shows organization;
-          theme tokens show mastery (raised from default 1)
+        comment: ColumnDataSource from the tidy df and LabelSet are correct; the marks
+          are annotations rather than a text glyph, so the default stays
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Raised by one: HoverTool with language and group tooltips in the
+          HTML output'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-22T08:27:57Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
@@ -243,5 +263,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
-  - dark-theme
