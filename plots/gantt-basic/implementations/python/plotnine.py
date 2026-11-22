@@ -1,11 +1,10 @@
 """ anyplot.ai
 gantt-basic: Basic Gantt Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-10
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-22
 """
 
 import os
-from datetime import datetime
 
 import pandas as pd
 from plotnine import (
@@ -32,107 +31,109 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (5 categories)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Software development project schedule
-data = {
-    "task": [
-        "Requirements",
-        "UI Design",
-        "Backend Architecture",
-        "Database Setup",
-        "API Development",
-        "Frontend Development",
-        "Integration",
-        "Testing",
-        "Documentation",
-        "Deployment",
-    ],
-    "start": [
-        datetime(2025, 1, 6),
-        datetime(2025, 1, 13),
-        datetime(2025, 1, 13),
-        datetime(2025, 1, 20),
-        datetime(2025, 1, 27),
-        datetime(2025, 2, 3),
-        datetime(2025, 2, 17),
-        datetime(2025, 2, 24),
-        datetime(2025, 3, 3),
-        datetime(2025, 3, 10),
-    ],
-    "end": [
-        datetime(2025, 1, 17),
-        datetime(2025, 1, 31),
-        datetime(2025, 1, 24),
-        datetime(2025, 2, 7),
-        datetime(2025, 2, 21),
-        datetime(2025, 2, 28),
-        datetime(2025, 3, 7),
-        datetime(2025, 3, 14),
-        datetime(2025, 3, 14),
-        datetime(2025, 3, 21),
-    ],
-    "category": [
-        "Planning",
-        "Design",
-        "Design",
-        "Development",
-        "Development",
-        "Development",
-        "Development",
-        "QA",
-        "QA",
-        "Deployment",
-    ],
-}
+# Columns: set these to your table's column names
+TASK = "Task"  # role: task
+START = "Start"  # role: start
+END = "End"  # role: end
+CATEGORY = "Phase"  # role: category
 
-df = pd.DataFrame(data)
+# Data: replace this block with your own table, for example df = pd.read_csv("schedule.csv")
+df = pd.DataFrame(
+    {
+        TASK: [
+            "Requirements",
+            "UI Design",
+            "Backend Architecture",
+            "Database Setup",
+            "API Development",
+            "Frontend Development",
+            "Integration",
+            "Testing",
+            "Documentation",
+            "Deployment",
+        ],
+        START: pd.to_datetime(
+            [
+                "2025-01-06",
+                "2025-01-13",
+                "2025-01-13",
+                "2025-01-20",
+                "2025-01-27",
+                "2025-02-03",
+                "2025-02-17",
+                "2025-02-24",
+                "2025-03-03",
+                "2025-03-10",
+            ]
+        ),
+        END: pd.to_datetime(
+            [
+                "2025-01-17",
+                "2025-01-31",
+                "2025-01-24",
+                "2025-02-07",
+                "2025-02-21",
+                "2025-02-28",
+                "2025-03-07",
+                "2025-03-14",
+                "2025-03-14",
+                "2025-03-21",
+            ]
+        ),
+        CATEGORY: [
+            "Planning",
+            "Design",
+            "Design",
+            "Development",
+            "Development",
+            "Development",
+            "Development",
+            "QA",
+            "QA",
+            "Deployment",
+        ],
+    }
+)
 
-# Order tasks by start date (reversed for bottom-to-top display)
-df = df.sort_values("start", ascending=True)
-df["task"] = pd.Categorical(df["task"], categories=df["task"].tolist(), ordered=True)
+# Plot: reads only df and the constants above
+# Order tasks by start date, first task at the top
+df = df.sort_values(START, kind="stable")
+tasks = df[TASK].dropna().unique().tolist()
+df[TASK] = pd.Categorical(df[TASK], categories=tasks, ordered=True)
 
-# Map categories to Okabe-Ito colors
-category_colors = {
-    "Planning": IMPRINT[0],
-    "Design": IMPRINT[1],
-    "Development": IMPRINT[2],
-    "QA": IMPRINT[3],
-    "Deployment": IMPRINT[4],
-}
+# Current date marker: the midpoint of the schedule
+today = df[START].min() + (df[END].max() - df[START].min()) / 2
 
-# Current date marker
-today = datetime(2025, 2, 10)
-
-# Create the Gantt chart
 plot = (
-    ggplot(df, aes(x="start", xend="end", y="task", yend="task", color="category"))
-    + geom_segment(size=12)
-    + geom_vline(xintercept=today, linetype="dashed", color=INK, size=1.5, alpha=0.5)
-    + scale_color_manual(values=category_colors)
-    + scale_y_discrete(limits=df["task"].tolist()[::-1])
-    + labs(title="gantt-basic · plotnine · anyplot.ai", x="Date", y="Task", color="Phase")
+    ggplot(df, aes(x=START, xend=END, y=TASK, yend=TASK, color=CATEGORY))
+    + geom_segment(size=6)
+    + geom_vline(xintercept=today, linetype="dashed", color=INK, size=0.75, alpha=0.5)
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=df[CATEGORY].unique().tolist())
+    + scale_y_discrete(limits=tasks[::-1])
+    + labs(title="gantt-basic · python · plotnine · anyplot.ai", x="Date")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, face="bold", color=INK),
-        axis_title_x=element_text(size=20, color=INK),
-        axis_title_y=element_text(size=20, color=INK),
-        axis_text_x=element_text(size=16, rotation=45, ha="right", color=INK_SOFT),
-        axis_text_y=element_text(size=16, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT, size=0.5),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
+        plot_title=element_text(size=12, face="bold", color=INK),
+        axis_title_x=element_text(size=10, color=INK),
+        axis_title_y=element_text(size=10, color=INK),
+        axis_text_x=element_text(size=8, rotation=45, ha="right", color=INK_SOFT),
+        axis_text_y=element_text(size=8, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.25),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_major_x=element_line(color=INK, size=0.15, alpha=0.10),
     )
 )
 
-# Save the plot
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
+# Save
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
