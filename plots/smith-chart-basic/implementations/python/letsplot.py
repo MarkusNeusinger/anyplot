@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-20
@@ -37,18 +37,34 @@ BRAND = "#009E73"
 COLOR_START = "#4467A3"  # Okabe-Ito position 3
 COLOR_END = "#C475FD"  # Okabe-Ito position 2
 
+# Constants
 Z0 = 50  # Reference impedance (ohms)
 
-# Simulated antenna impedance sweep 1–6 GHz
+# Columns: set these to your table's column names
+FREQUENCY = "Frequency (Hz)"  # role: frequency
+Z_REAL = "Resistance (Ω)"  # role: z_real
+Z_IMAG = "Reactance (Ω)"  # role: z_imag
+
+# Data: replace this block with your own table, for example df = pd.read_csv("s11.csv")
+# Simulated antenna impedance sweep 1-6 GHz
 np.random.seed(42)
 n_points = 60
-freq = np.linspace(1e9, 6e9, n_points)
 t = np.linspace(0, 2.5 * np.pi, n_points)
 r_base = 20 + 80 * (1 - np.exp(-t / 2.5))
 x_base = 50 * np.sin(t) * np.exp(-t / 6)
-z_real = r_base + 3 * np.random.randn(n_points)
-z_imag = x_base + 2 * np.random.randn(n_points)
+df = pd.DataFrame(
+    {
+        FREQUENCY: np.linspace(1e9, 6e9, n_points),
+        Z_REAL: r_base + 3 * np.random.randn(n_points),
+        Z_IMAG: x_base + 2 * np.random.randn(n_points),
+    }
+)
 
+# Plot: reads only df and the constants above
+n_points = len(df)
+freq = df[FREQUENCY].to_numpy()
+z_real = df[Z_REAL].to_numpy()
+z_imag = df[Z_IMAG].to_numpy()
 z_norm = (z_real + 1j * z_imag) / Z0
 gamma = (z_norm - 1) / (z_norm + 1)
 gamma_real = np.real(gamma)
@@ -116,7 +132,7 @@ df_x_labels = pd.DataFrame(xv_label_rows)
 
 label_indices = [0, n_points // 2, n_points - 1]
 # Per-label nudge to avoid crowding: 1.0 GHz left+up, 3.5 GHz upper-left, 6.0 GHz lower-right
-label_nudges = [(-0.18, 0.13), (-0.12, 0.22), (0.26, -0.22)]
+label_nudges = [(-0.18, 0.13), (-0.18, 0.28), (0.26, -0.22)]
 df_freq_labels = pd.DataFrame(
     {
         "x": [gamma_real[i] + nx for i, (nx, ny) in zip(label_indices, label_nudges, strict=True)],
@@ -131,8 +147,8 @@ df_center = pd.DataFrame({"x": [0], "y": [0]})
 
 df_legend = pd.DataFrame(
     {
-        "x": [1.15, 1.15, 1.15],
-        "y": [0.25, 0.05, -0.15],
+        "x": [-1.4, -0.4, 0.6],
+        "y": [-1.55, -1.55, -1.55],
         "grp": ["locus", "start", "end"],
         "label": ["Impedance locus", "Start (1.0 GHz)", "End (6.0 GHz)"],
     }
@@ -161,7 +177,7 @@ plot = (
         alpha=0.5,
     )
     # Resistance labels along real axis
-    + geom_text(aes(x="x", y="y", label="label"), data=df_r_labels, size=8, nudge_y=-0.08, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_r_labels, size=10, nudge_y=-0.08, color=INK_SOFT)
     # Reactance labels at chart boundary
     + geom_text(aes(x="x", y="y", label="label"), data=df_x_labels, size=9, color=INK_SOFT)
     # Impedance locus path
@@ -193,7 +209,7 @@ plot = (
     + geom_point(aes(x="x", y="y"), data=df_legend[df_legend["grp"] == "locus"], color=BRAND, size=5)
     + geom_point(aes(x="x", y="y"), data=df_legend[df_legend["grp"] == "start"], color=COLOR_START, size=7)
     + geom_point(aes(x="x", y="y"), data=df_legend[df_legend["grp"] == "end"], color=COLOR_END, size=7)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_legend, size=10, hjust=0, nudge_x=0.06, color=INK)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_legend, size=9, hjust=0, nudge_x=0.07, color=INK)
     + labs(title="smith-chart-basic · python · letsplot · anyplot.ai")
     + theme_void()
     + theme(
@@ -201,8 +217,8 @@ plot = (
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
     )
-    + coord_fixed(ratio=1, xlim=(-1.35, 2.1), ylim=(-1.35, 1.35))
-    + ggsize(720, 600)
+    + coord_fixed(ratio=1, xlim=(-1.58, 1.58), ylim=(-1.7, 1.4))
+    + ggsize(600, 600)
 )
 
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
