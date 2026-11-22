@@ -2,50 +2,46 @@ library: matplotlib
 language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:17:56Z'
-updated: '2026-05-19T00:54:40Z'
+updated: '2026-11-22T15:06:43Z'
 generated_by: claude-sonnet
-workflow_run: 26068463027
+workflow_run: 45035893333
 issue: 3651
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 85
 review:
   strengths:
-  - Correct Okabe-Ito palette in canonical order with price as first series (#009E73);
-    fully theme-adaptive chrome in both light and dark renders
-  - Inset Recovery Detail zoomed panel with connection lines adds genuine storytelling
-    and demonstrates advanced matplotlib technique
-  - Golden Cross / Death Cross event markers provide meaningful focal points that
-    guide the viewer through the data
-  - All font sizes explicitly set at correct scale for 4800x2700px render; both themes
-    pass legibility checks
+  - Legend placed in reserved y headroom as a single four-column row, so it never
+    sits on the price or SMA lines in either theme
+  - SMAs computed with pandas rolling().mean(); each starts only when its window is
+    full, SMA 200 covering the last third as the spec permits
+  - Column constants with role comments keep the plot block data-agnostic
+  - Exact 3200x1800 canvas through figsize/dpi and subplots_adjust, no bbox_inches
+    trimming
+  - mdates MonthLocator/DateFormatter with autofmt_xdate give a clean monthly date
+    axis
   weaknesses:
-  - 'Right side feels slightly crowded: 6-item legend (upper right) and inset panel
-    (lower right) compete for the same vertical band — consider moving legend to upper-left
-    or making inset slightly smaller'
-  - Grid alpha at 0.10 is below the recommended 15-25% range; marginally too subtle
-    at full resolution
-  - DE-02 refinement could improve with tick-mark removal (keep labels, hide small
-    tick marks) for a cleaner look
+  - 'Suggestion: the 30 % headroom leaves an empty band above 170; a tighter headroom
+    sized to the legend''s height would give the data more vertical room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "indicator-sma · python · matplotlib · anyplot.ai" in dark ink, readable; Y-axis label "Price ($)" with units; X-axis label "Date"; monthly tick labels rotated 30°, all in dark soft color (INK_SOFT)
-      Data: Four line series — price in #009E73 (green, first series), SMA 20 in #D55E00 (orange), SMA 50 in #0072B2 (blue), SMA 200 in #CC79A7 (purple); subtle green fill_between; Golden Cross star markers and Death Cross triangle markers; inset zoom panel with connector lines
-      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: title 'indicator-sma · python · matplotlib · anyplot.ai' in dark ink; axis titles 'Date' and 'Price ($)'; monthly ticks Jan 2024-Mar 2025 rotated 30°, y ticks 130-180 in INK_SOFT; y-only grid subtle but visible; legend in one row (Price ($), SMA 20, SMA 50, SMA 200) on an elevated frame in the headroom above the data; all readable
+      Data: price in #009E73 (thickest, on top), SMA 20 #C475FD, SMA 50 #4467A3 from mid-Mar, SMA 200 #BD8233 from mid-Oct; SMAs start where their windows fill
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, and tick labels in light-colored text; legend text light; legend frame uses elevated dark background; no dark-on-dark failures detected
-      Data: Data series colors identical to light render — #009E73, #D55E00, #0072B2, #CC79A7 — confirming only chrome flips between themes; inset panel and connection lines correctly rendered
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title and axis titles in light ink, ticks and legend text light grey; grid subtle and visible; no dark-on-dark text
+      Data: same four colors as the light render; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -53,75 +49,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, legend=16;
-          readable in both themes'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (the style-guide
+          sizes); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor crowding: 6-item legend and inset panel both occupy right
-          side; no text unreadable'
+        comment: No text collisions; the legend sits in reserved headroom above the
+          data and covers no line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four lines clearly distinguishable; event markers visible; inset
-          detail clear
+        comment: Price 2.5 lw, SMAs 2.0 lw, all four lines clearly visible in both
+          themes; legend line samples match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good luminance contrast between all
-          series
+        comment: Green, violet, blue and ochre separate well in luminance and hue;
+          no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good 16:9 landscape use; right side slightly crowded with legend
-          + inset panel
+        comment: 3200x1800 canvas; balanced margins; title about 49 % of the width;
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis Price ($) includes units; X-axis Date; title matches required
-          format
+        comment: '''Price ($)'' with unit and ''Date'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito canonical order; backgrounds #FAF8F1/#1A1A17;
-          theme chrome correct in both renders'
+        comment: 'Price #009E73, SMAs in Imprint positions 2-4; backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Strong design: inset zoom panel with connector lines and crossover
-          event markers show sophistication above defaults'
+        comment: 'The style-guide baseline: tokens, palette, explicit sizes; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid at alpha=0.10 (slightly low), top/right spines removed, legend
-          frame styled; good but not perfect
+        comment: 'Y headroom reserved for a single-row four-column legend so the frame
+          never sits on the series (line 74-75): a placement chosen for this chart'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Inset zoom highlights recovery; Golden/Death Cross markers create
-          focal points; visual hierarchy present
+        passed: false
+        comment: Price on top by z-order and width; no hierarchy chosen beyond what
+          the Notes ask
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +126,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: price line chart with SMA overlays'
+        comment: Price line with SMA overlays on one axis; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: price line, SMA 20/50/200 overlays, distinct colors,
-          legend with period labels; bonus: crossover markers, zoom panel'
+        comment: Prominent close (C1), distinct SMA colors (C2), legend with periods
+          (C3), SMAs start when windows fill (C4), period-appropriate smoothing (C5),
+          y-grid
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X-axis, Price ($) on Y-axis; 300 business days within spec
-          250-500 range
+        comment: Date on x, price on y; SMAs from rolling().mean() at their computed
+          values; all data in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: indicator-sma · python · matplotlib · anyplot.ai; legend
-          labels match data series'
+        comment: Title 'indicator-sma · python · matplotlib · anyplot.ai'; legend
+          Price ($), SMA 20, SMA 50, SMA 200
     data_quality:
       score: 15
       max: 15
@@ -162,22 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows price volatility, trend reversals, all three SMA smoothing
-          periods, crossover events, and recovery period in inset
+        comment: Shows lag, crossovers, a long warm-up before SMA 200 and a trend
+          change in Oct-Nov
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price scenario (~$130-$170 over 300 business days);
-          neutral finance/business domain
+        comment: Daily stock closes around $130-170 over 300 business days; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: np.random.seed(42) reproducible; 300 bdays within spec; SMA behavior
-          correct; crossover timing plausible
+        comment: 300 periods inside 250-500; SMA 200 starts at the 200th business
+          day (mid-Oct 2024) as computed; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -187,33 +182,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Plot -> Save; no functions or classes
+        comment: Flat script; column constants with role comments above the Data block
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.dates, matplotlib.pyplot, numpy, pandas — all used
+        comment: os, mdates, pyplot, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no fake interactive elements; appropriate complexity
+        comment: rolling().mean() for the SMAs; one loop for three overlays; no dead
+          code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current matplotlib API
+        comment: plot-{THEME}.png at dpi=400, no bbox_inches; current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -221,28 +217,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax. methods, mdates.MonthLocator/DateFormatter, fig.autofmt_xdate(),
-          inset_axes — idiomatic matplotlib patterns
+        comment: Axes methods, pandas rolling, mdates locator/formatter, fig.autofmt_xdate,
+          subplots_adjust per the canvas rules
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: mdates module, autofmt_xdate, inset zoom panel with connection patches
-          — distinctively matplotlib features
+        passed: false
+        comment: mdates.MonthLocator + DateFormatter and autofmt_xdate for date axes;
+          z-order layering
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-22T15:03:18Z'
 impl_tags:
   dependencies: []
   techniques:
-  - inset-axes
-  - annotations
-  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   - explicit-figure
   dataprep:
-  - rolling-window
   - time-series
+  - rolling-window
+  - cumulative-sum
   styling:
   - alpha-blending
   - grid-styling
