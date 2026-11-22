@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-rug: Density Plot with Rug Marks
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-18
@@ -18,65 +18,74 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
 import altair as alt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402
 from scipy.stats import gaussian_kde  # noqa: E402
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Data - response times (ms) with realistic distribution
-np.random.seed(42)
-# Mix of normal response times with some slower outliers
+# Imprint palette: single-series plot uses position 1
+BRAND = "#009E73"
+
+# Columns: set these to your table's column names
+RESPONSE_TIME = "Response time (ms)"  # role: values
+DENSITY = "Density"  # computed below the Data block
+
+# Data: replace this block with your own table, for example df = pd.read_csv("response_times.csv")
+rng = np.random.default_rng(42)
 response_times = np.concatenate(
     [
-        np.random.normal(150, 30, 80),  # Most responses ~150ms
-        np.random.normal(250, 40, 40),  # Slower cluster ~250ms
-        np.random.uniform(350, 500, 15),  # Some slow outliers
+        rng.normal(150, 30, 80),  # most responses around 150 ms
+        rng.normal(250, 40, 40),  # slower cluster around 250 ms
+        rng.uniform(350, 500, 15),  # a few slow outliers
     ]
 )
-response_times = np.clip(response_times, 50, 500)  # Realistic bounds
+df = pd.DataFrame({RESPONSE_TIME: np.clip(response_times, 50, 500)})
 
-# Compute KDE for smooth density curve
-kde = gaussian_kde(response_times, bw_method=0.3)
-x_range = np.linspace(response_times.min() - 20, response_times.max() + 20, 300)
-density_values = kde(x_range)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+values = df[RESPONSE_TIME].dropna().to_numpy()
 
-# Create DataFrames
-density_df = pd.DataFrame({"Response Time (ms)": x_range, "Density": density_values})
+kde = gaussian_kde(values, bw_method=0.3)
+grid = np.linspace(values.min() - 20, values.max() + 20, 300)
+density_df = pd.DataFrame({RESPONSE_TIME: grid, DENSITY: kde(grid)})
+top = density_df[DENSITY].max() * 1.08
 
-# For rug marks, add a small y value to position marks above the x-axis
-rug_df = pd.DataFrame({"Response Time (ms)": response_times, "rug_y": [0.0] * len(response_times)})
+# Rug ticks sit on the foot of the curve, centred half a tick above zero
+TICK_PX = 16
+view_height = 320
+tick_height = top * TICK_PX / view_height
+rug_df = pd.DataFrame({RESPONSE_TIME: values, "rug_y": tick_height / 2})
 
-# Density curve with filled area
-density_chart = (
+x_enc = alt.X(
+    RESPONSE_TIME.translate(ESCAPE), type="quantitative", title=RESPONSE_TIME, scale=alt.Scale(nice=False, zero=False)
+)
+y_scale = alt.Scale(domain=[0, top], nice=False)
+
+density_layer = (
     alt.Chart(density_df)
-    .mark_area(opacity=0.4, color=BRAND, line={"color": BRAND, "strokeWidth": 3})
-    .encode(x=alt.X("Response Time (ms):Q", title="Response Time (ms)"), y=alt.Y("Density:Q", title="Density"))
+    .mark_area(opacity=0.35, color=BRAND, line={"color": BRAND, "strokeWidth": 2.5})
+    .encode(x=x_enc, y=alt.Y(DENSITY, type="quantitative", title=DENSITY, scale=y_scale))
 )
 
-# Rug marks as tick marks along the bottom using a secondary layer
-rug_chart = (
+rug_layer = (
     alt.Chart(rug_df)
-    .mark_tick(color=BRAND, opacity=0.6, thickness=2, size=40)
-    .encode(
-        x=alt.X("Response Time (ms):Q"),
-        y=alt.Y("rug_y:Q", scale=alt.Scale(domain=[density_values.min(), density_values.max()])),
-    )
+    .mark_tick(color=BRAND, opacity=0.5, thickness=1.5, size=TICK_PX)
+    .encode(x=x_enc, y=alt.Y("rug_y", type="quantitative", scale=y_scale))
 )
 
-# Combine charts with layering
+title = "density-rug · python · altair · anyplot.ai"
 chart = (
-    alt.layer(density_chart, rug_chart)
+    alt.layer(density_layer, rug_layer)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=view_height,
         background=PAGE_BG,
-        title=alt.Title("density-rug · Python · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
+        title=alt.Title(title, fontSize=16, anchor="middle", color=INK),
     )
     .configure_axis(
         domainColor=INK_SOFT,
@@ -85,13 +94,23 @@ chart = (
         gridOpacity=0.10,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=10,
+        titleFontSize=12,
     )
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=1)
     .interactive()
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair vl-convert produced {w}×{h}, exceeds target {TW}×{TH}")
+if w < TW or h < TH:
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
