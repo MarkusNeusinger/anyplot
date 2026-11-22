@@ -2,122 +2,137 @@ library: plotly
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:29:21Z'
-updated: '2026-05-19T21:26:53Z'
+updated: '2026-11-22T17:10:39Z'
 generated_by: claude-sonnet
-workflow_run: 26125255997
+workflow_run: 45047211493
 issue: 3188
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (dual CI bands, forecast start
-    marker, dashed forecast line, connector line) are implemented'
-  - Effective data storytelling through color separation (green historical / orange
-    forecast) and the Forecast Start annotation
-  - Theme-adaptive chrome correctly applied throughout all text and chrome elements
-    — both renders pass legibility
-  - Idiomatic Plotly usage with proper interactive features (unified hover, hovertemplate,
-    HTML output)
-  - Clean flat-script structure with deterministic data generation
+  - 'All five characteristic properties shown: solid green history, dashed lilac forecast
+    continuing from it via a dotted bridge, dashed forecast-start line, nested 80
+    %/95 % bands (darker inside lighter), legend naming all four'
+  - Band opacities (0.18 / 0.38) keep the two confidence levels distinct and the forecast
+    line visible through them in both themes
+  - Theme tokens threaded through every chrome element — both renders fully legible,
+    data colors identical across themes
+  - 'Idiomatic plotly: fill=''toself'' polygons for bands, paper-referenced shape
+    and annotation, date-formatted hovertemplates and unified x hover for the HTML
+    view'
+  - Concrete, neutral battery-capacity-fade scenario with an exponential-decay shape
+    and horizon-dependent uncertainty
   weaknesses:
-  - 95% CI band at rgba(213,94,0,0.10) is nearly invisible in the light theme; increase
-    opacity to 0.15-0.18 for better outer-band visibility
-  - Date x-axis label at 22px is disproportionately large for a 4-character label
-    — reduce to ~14-16px to restore axis-label balance
-  - Axis labels (22px) and tick labels (18px) are ~1.8x the style-guide recommendation
-    (12px/10px); acceptable but slightly oversized
+  - 'VQ-02 (both): the dashed forecast-start line reaches y=1 (paper) and runs up
+    through the ''Forecast start'' label centred on it at y=1.02, cutting between
+    its letters → line ends below the label, or the label sits clear of the line (e.g.
+    xanchor=''left'' with a small x shift). Likely cause: add_shape y1=1 together
+    with add_annotation x=forecast_start, y=1.02, centred.'
+  - 'VQ-05 (both): the 28 px title spans about 91 % of the canvas width, past the
+    ~90 % bound with only ~4 % margin each side → about 75-85 % (about 24-26 px, -2
+    to -4 px). Likely cause: title font size=28.'
+  - 'CQ-01 (code): two helper functions, rgba() (lines 28-30) and band() (lines 78-87),
+    break the flat Imports -> Data -> Plot -> Save structure → inline the two band
+    traces and write the two fill colors as rgba string constants. Likely cause: band
+    construction factored into a function.'
+  - 'Suggestion: a fade plateauing near 62 % sits below the commonly cited 80 % end-of-life
+    range; a gentler decay would keep the battery story closer to typical field data.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title dark and centered, readable. X-axis label "Date" and Y-axis label "Monthly Sales (Units)" in dark ink, clearly visible. Tick labels in dark gray, readable. "Forecast Start" annotation above plot frame readable. Legend with elevated #FFFDF6 background and border, all labels clear.
-      Data: Historical line in brand green #009E73 (solid, width=3), Forecast in vermillion #D55E00 (dashed, width=3). 80% CI as peachy-orange fill (rgba 0.32), 95% CI as very subtle light peach fill (rgba 0.10) — barely distinguishable from off-white background. Widening CI bands visible. Dotted green connector between historical end and forecast start.
+      Background: warm off-white #FAF8F1, plot and paper alike
+      Chrome: centred title 'timeseries-forecast-uncertainty · python · plotly · anyplot.ai' in dark ink; x-axis 'Month', y-axis 'Battery capacity (% of rated)'; Jan 2022 to Jul 2025 and 60-100 tick labels in soft dark grey; subtle y grid; bordered legend lower left on #FFFDF6; 'Forecast start' label above the dashed grey vertical line at Jan 2025 (the line runs into the label). All readable.
+      Data: solid #009E73 history decaying from 100 to ~68 %, dotted green bridge to the dashed #C475FD forecast ending ~66 %; 80 % band lilac (alpha 0.38) inside the paler 95 % band (alpha 0.18), both visible
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct
-      Chrome: Title, axis labels, tick labels, and legend text all in light ink, clearly readable against dark background. No dark-on-dark failures. Legend uses elevated #242420 background. "Forecast Start" annotation in gray, readable.
-      Data: Colors identical to light render — #009E73 historical line, #D55E00 dashed forecast. CI bands appear as brownish-orange fills: 95% CI as slightly lighter outer area, 80% CI as brighter orange-brown inner area — both distinguishable from background and from each other.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles in light ink, ticks and legend text in light grey; legend on #242420 with light border; forecast-start line and label light grey. No dark-on-dark text.
+      Data: same #009E73 and #C475FD colors as light; bands read as two distinct purple tones on the dark surface
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes, sizes explicitly set. Axis labels
-          at 22px and tick labels at 18px above recommended 12px/10px for plotly@scale=4.
+        comment: All font sizes set explicitly (title 28, axis titles 18, ticks/legend
+          16 px at scale 4); every text element reads clearly in both themes
       - id: VQ-02
         name: No Overlap
+        score: 5
+        max: 6
+        passed: false
+        comment: The dashed forecast-start line runs up into the 'Forecast start'
+          label and cuts through its letters (defect line)
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Lines prominent. 95% CI at rgba(213,94,0,0.10) barely distinguishable
-          from off-white background in light render.
+        comment: 3 px lines suit 48 monthly points; both CI bands (0.18 / 0.38 alpha)
+          and their legend swatches are visible and told apart in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe.
+        comment: Green vs lilac with distinct dash styles; CVD-safe, no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: true
-        comment: Good proportions and margins. Date x-axis label at 22px disproportionately
-          large for 4-character label.
+        passed: false
+        comment: Title at 28 px spans about 91 % of the canvas width (defect line);
+          plot area, legend and margins otherwise well balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, Y-axis label includes units.
+        comment: '''Month'' and ''Battery capacity (% of rated)'' — descriptive, with
+          units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, backgrounds #FAF8F1/#1A1A17.'
+        comment: 'Historical #009E73 (position 1), forecast and bands #C475FD (position
+          2); backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Custom Okabe-Ito palette, nested CI bands with opacity differentiation,
-          Forecast Start annotation, dotted connector line.
+        comment: 'Style-guide baseline: theme tokens, Imprint colors, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Theme-adaptive chrome, y-axis-only grid, elevated legend background
-          with border, appropriate margins.
+        comment: Legend placed in the empty lower-left region the decay curve leaves;
+          x grid dropped for the time axis while the y grid stays subtle
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Green/orange color separation, annotation marking forecast boundary,
-          widening CI bands encoding growing uncertainty.
+        comment: Dotted green bridge from the last measurement into the forecast and
+          the labelled forecast boundary guide the eye from observed to projected
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Time series with forecast and uncertainty bands.
+        comment: Time series with forecast and nested uncertainty bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Solid historical line, dashed forecast, vertical forecast-start marker,
-          80% CI, 95% CI, legend, semi-transparent fills.
+        comment: Solid history, dashed forecast in a second color, vertical forecast-start
+          line, 80 % band darker inside 95 %, semi-transparent fills, legend for all
+          four (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on x-axis, Monthly Sales (Units) on y-axis.
+        comment: Dates on x, capacity on y; bands drawn between their bounds; all
+          data within the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels Historical/Forecast/80% CI/95%
-          CI.
+        comment: Title in the mandated format; legend Historical / Forecast / 80%
+          CI / 95% CI
     data_quality:
       score: 15
       max: 15
@@ -157,56 +174,61 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both CI levels, widening uncertainty, historical/forecast delineation.
+        comment: Shows history, forecast handoff, two nested CI levels widening with
+          horizon
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales with 3-year history, 12-month forecast, plausible values,
-          neutral context.
+        comment: Battery capacity fade (% of rated) — concrete, neutral, plausible
+          engineering context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 36 historical + 12 forecast points, appropriate y-range.
+        comment: Capacity 100 % decaying toward a ~62 % plateau with 0.7 pt measurement
+          noise; 36 + 12 months inside the spec's size range; no Check values in the
+          spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Flat script, no functions or classes.
+        passed: false
+        comment: Two helper functions rgba() and band() (defect line); otherwise Columns
+          -> Data -> Plot -> Save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pandas, plotly.graph_objects used.
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean trace ordering, appropriate complexity.
+        comment: Appropriate complexity; no hand-written algorithm a call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: autosize=False, write_image 800x450 scale 4 -> plot-{THEME}.png plus
+          plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -214,20 +236,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Scatter with fill=toself for CI bands, add_shape, add_annotation,
-          hovertemplate, hoverinfo=skip.
+        comment: 'Beyond default: fill=''toself'' band polygons, layout shapes/annotations
+          in paper coords, hovertemplate with %{x|%b %Y} date formatting, hoverinfo=''skip''
+          on bands'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: HTML interactive output, unified hover mode, CI band polygon construction,
-          per-trace hovertemplate.
+        comment: hovermode='x unified' for the HTML view; nothing else distinctive
+          beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
+  rendered_at: '2026-11-22T17:06:39Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
@@ -236,3 +263,4 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
+  - minimal-chrome
