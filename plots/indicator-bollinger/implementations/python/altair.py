@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-bollinger: Bollinger Bands Indicator Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 99/100 | Updated: 2026-05-17
@@ -6,109 +6,83 @@ Quality: 99/100 | Updated: 2026-05-17
 
 import os
 
-# noqa: E402 — workflow requires file named altair.py; this conflicts with import
-import sys
-
+import altair as alt
 import numpy as np
 import pandas as pd
-
-
-sys.path = [p for p in sys.path if p != "" and p != os.getcwd()]
-import altair as alt  # noqa: E402
+from PIL import Image
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data colors (Okabe-Ito palette - theme-independent)
-PRICE_COLOR = "#009E73"  # Position 1: brand green
-SMA_COLOR = "#C475FD"  # Position 2: vermillion
-BAND_COLOR = "#4467A3"  # Position 3: blue
+# Imprint palette positions 1-3 (theme-independent)
+PRICE_COLOR = "#009E73"
+SMA_COLOR = "#C475FD"
+BAND_COLOR = "#4467A3"
 
-# Data - Simulated stock price with realistic Bollinger Bands
+# Constants
+WINDOW = 20  # averaging period of the standard Bollinger setup
+NUM_STD = 2  # band width in standard deviations
+
+DATE = "Date"  # role: date
+CLOSE = "Close price ($)"  # role: close
+SMA = "20-day SMA ($)"  # role: sma
+UPPER_BAND = "Upper band ($)"  # role: upper_band
+LOWER_BAND = "Lower band ($)"  # role: lower_band
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 120
-dates = pd.date_range("2024-01-01", periods=n_days, freq="B")  # Business days
+dates = pd.date_range("2024-01-01", periods=n_days, freq="B")
+returns = np.random.randn(n_days) * 0.015
+returns[:30] += 0.002
+returns[50:70] -= 0.003
+returns[90:] += 0.002
+price = pd.Series(100 * np.cumprod(1 + returns))
 
-# Generate price series with trend and volatility changes
-returns = np.random.randn(n_days) * 0.015  # Daily returns ~1.5% std
-returns[:30] += 0.002  # Uptrend start
-returns[50:70] -= 0.003  # Downtrend middle
-returns[90:] += 0.002  # Recovery end
-price = 100 * np.cumprod(1 + returns)
-
-# Calculate Bollinger Bands (20-period SMA, 2 std deviations)
-window = 20
-sma = pd.Series(price).rolling(window=window).mean()
-std = pd.Series(price).rolling(window=window).std()
-upper_band = sma + 2 * std
-lower_band = sma - 2 * std
-
-# Create DataFrame starting from period 20 (where we have valid SMA)
+sma = price.rolling(WINDOW).mean()
+std = price.rolling(WINDOW).std()
 df = pd.DataFrame(
-    {
-        "date": dates[window - 1 :],
-        "close": price[window - 1 :],
-        "sma": sma[window - 1 :].values,
-        "upper_band": upper_band[window - 1 :].values,
-        "lower_band": lower_band[window - 1 :].values,
-    }
+    {DATE: dates, CLOSE: price, SMA: sma, UPPER_BAND: sma + NUM_STD * std, LOWER_BAND: sma - NUM_STD * std}
+).dropna()
+
+# Plot
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+y_min = min(df[CLOSE].min(), df[LOWER_BAND].min()) * 0.98
+y_max = max(df[CLOSE].max(), df[UPPER_BAND].max()) * 1.02
+y_scale = alt.Scale(domain=[y_min, y_max])
+
+x_enc = alt.X(
+    DATE.translate(ESCAPE), type="temporal", title=DATE, axis=alt.Axis(format="%b %d", labelAngle=-45, tickCount=10)
 )
 
-# Calculate Y-axis range with some padding
-y_min = df[["close", "lower_band"]].min().min() * 0.98
-y_max = df[["close", "upper_band"]].max().max() * 1.02
 
-# Base chart configuration
-base = alt.Chart(df).encode(
-    x=alt.X("date:T", title="Date", axis=alt.Axis(format="%b %d", labelAngle=-45, tickCount=10))
-)
+def y_enc(column, **kwargs):
+    return alt.Y(column.translate(ESCAPE), type="quantitative", title="Price ($)", scale=y_scale, **kwargs)
 
-# Band area (filled region between upper and lower bands)
+
 band_area = (
     alt.Chart(df)
     .mark_area(opacity=0.2, color=BAND_COLOR)
-    .encode(
-        x=alt.X("date:T", title="Date"),
-        y=alt.Y("lower_band:Q", title="Price ($)", scale=alt.Scale(domain=[y_min, y_max])),
-        y2="upper_band:Q",
-    )
+    .encode(x=x_enc, y=y_enc(LOWER_BAND), y2=alt.Y2(UPPER_BAND.translate(ESCAPE)))
 )
+upper_line = alt.Chart(df).mark_line(strokeWidth=1, color=BAND_COLOR, opacity=0.6).encode(x=x_enc, y=y_enc(UPPER_BAND))
+lower_line = alt.Chart(df).mark_line(strokeWidth=1, color=BAND_COLOR, opacity=0.6).encode(x=x_enc, y=y_enc(LOWER_BAND))
+sma_line = alt.Chart(df).mark_line(strokeWidth=1.25, strokeDash=[6, 3], color=SMA_COLOR).encode(x=x_enc, y=y_enc(SMA))
+price_line = alt.Chart(df).mark_line(strokeWidth=1.75, color=PRICE_COLOR).encode(x=x_enc, y=y_enc(CLOSE))
 
-# Upper band line
-upper_line = base.mark_line(strokeWidth=2, color=BAND_COLOR, opacity=0.6).encode(
-    y=alt.Y("upper_band:Q", scale=alt.Scale(domain=[y_min, y_max]))
-)
-
-# Lower band line
-lower_line = base.mark_line(strokeWidth=2, color=BAND_COLOR, opacity=0.6).encode(
-    y=alt.Y("lower_band:Q", scale=alt.Scale(domain=[y_min, y_max]))
-)
-
-# Middle band (SMA) - dashed line
-sma_line = base.mark_line(strokeWidth=2.5, strokeDash=[8, 4], color=SMA_COLOR).encode(
-    y=alt.Y("sma:Q", scale=alt.Scale(domain=[y_min, y_max]))
-)
-
-# Price line - prominent
-price_line = base.mark_line(strokeWidth=3.5, color=PRICE_COLOR).encode(
-    y=alt.Y("close:Q", scale=alt.Scale(domain=[y_min, y_max]))
-)
-
-# Combine all layers
 chart = (
     alt.layer(band_area, upper_line, lower_line, sma_line, price_line)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title("indicator-bollinger · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        title=alt.Title("indicator-bollinger · python · altair · anyplot.ai", fontSize=16, anchor="middle"),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -116,12 +90,22 @@ chart = (
         gridOpacity=0.1,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=10,
+        titleFontSize=12,
     )
-    .configure_title(color=INK, fontSize=28)
+    .configure_title(color=INK)
 )
 
-# Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the canonical 3200 x 1800 canvas
+TARGET_W, TARGET_H = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_W or img.height > TARGET_H:
+    raise SystemExit(f"vl-convert produced {img.width}x{img.height}, exceeds {TARGET_W}x{TARGET_H}")
+if img.size != (TARGET_W, TARGET_H):
+    canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+    canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
+    canvas.save(f"plot-{THEME}.png")
