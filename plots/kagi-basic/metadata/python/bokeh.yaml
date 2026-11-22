@@ -2,46 +2,51 @@ library: bokeh
 language: python
 specification_id: kagi-basic
 created: '2026-01-08T22:38:15Z'
-updated: '2026-05-17T08:21:45Z'
-generated_by: claude-haiku
-workflow_run: 25985238751
+updated: '2026-11-22T04:06:08Z'
+generated_by: claude-sonnet
+workflow_run: 44982861345
 issue: 3341
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality - all text legible in both themes with excellent contrast
-    and readability
-  - Complete spec compliance - all required Kagi features implemented correctly (thick/thin
-    lines, reversals, shoulders/waists)
-  - 'Proper theme adaptation - backgrounds (#FAF8F1 light, #1A1A17 dark) and chrome
-    correctly themed; data colors identical across themes'
-  - Clean, reproducible code - algorithm implementation is straightforward with deterministic
-    seed (42)
-  - Correct Okabe-Ito palette usage - Yang uses brand green (#009E73), Yin uses position
-    2 (#D55E00)
-  - Effective visual distinction - line width (8px vs 3px) plus color creates clear
-    trend narrative
+  - Two multi_line renderers fed by separate ColumnDataSources keep the yang/yin split
+    in the data and make the legend native
+  - 10 px vs 4 px line weights plus green/red make yang and yin unmistakable in both
+    themes
+  - Theme tokens threaded through title, axes, grid, outline and legend; both renders
+    theme-correct on the canonical 3200x1800 canvas
   weaknesses:
-  - Design Excellence could be elevated with custom refinements like spine removal,
-    generous whitespace optimization, or sophisticated color layering beyond defaults
+  - 'SC-02, DQ-03 (both): the line turns thick only when the price passes the running
+    all-time high and thin only below the all-time low, not at the previous shoulder
+    and waist: column 6 rises from about 93.1 to 106.3 past the previous shoulder
+    at about 98.4 and column 12 from about 83.4 to 100.2 past the shoulder at about
+    92.9, yet both stay thin; column 14 turns thick only at about 109.5 instead of
+    at the 100.2 shoulder; column 21 falls from about 131.4 to 122.9 below the previous
+    waist at about 124.1, yet stays thick -> switch to yang where the rising line
+    crosses the most recent shoulder and to yin where the falling line crosses the
+    most recent waist, splitting that vertical segment at the crossing level. Likely
+    cause: last_high/last_low track max/min over all prices instead of the last shoulder
+    and waist levels.'
+  - 'Suggestion: a wider legend line sample (legend.glyph_width) would show the thick/thin
+    contrast in the legend as clearly as in the chart.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly themed, not pure white
-      Chrome: Title "kagi-basic · bokeh · anyplot.ai" is clearly visible in dark text. X-axis label "Line Index" and Y-axis label "Price ($)" are readable. Tick labels (130, 120, 110, etc. on Y-axis) are visible in soft ink color. Legend showing "Yang (Uptrend)" and "Yin (Downtrend)" is prominently placed in top-left with light background box
-      Data: Yang lines are thick (8px) in brand green (#009E73), forming clear uptrend boxes. Yin lines are thin (3px) in orange-red (#D55E00), showing downtrends. The characteristic Kagi "box" patterns (vertical and horizontal segments) are clearly visible, with shoulders and waists marking reversals
-      Legibility verdict: PASS — All text is readable against the light surface; data elements have strong contrast; grid is subtle (alpha 0.10) and doesn't interfere
+      Background: warm off-white #FAF8F1, 3200x1800, no toolbar.
+      Chrome: bold title 'kagi-basic · python · bokeh · anyplot.ai' top-left; italic axis titles 'Line index' and 'Close price ($)'; ticks 0-20 and 90-130 in INK_SOFT; subtle grid; thin outline; legend top-left on elevated fill. All readable.
+      Data: one Kagi line over 23 columns, thick #009E73 yang (columns 0-1 and 14-22) and thin #AE3030 yin (columns 1-14), shoulders and waists as horizontal steps, price ~83-134.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly themed, not pure black
-      Chrome: Title remains clearly visible in light text. Axis labels are legible in light-colored text. Tick labels are readable in soft ink. Legend box is styled with elevated dark background (#242420) and soft border
-      Data: Yang lines maintain identical green (#009E73) — brand color is preserved. Yin lines maintain identical orange-red (#D55E00). The Kagi pattern structure is identical to light render — only chrome has flipped
-      Legibility verdict: PASS — No dark-on-dark issues; all text contrasts well against dark background; data colors are identical to light render (only chrome changed); grid remains subtle and readable
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light grey, grid subtle, legend on #242420 with light labels; no dark-on-dark text.
+      Data: identical green/red line colors and weights to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,77 +57,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title, axis labels, ticks, legend) clearly readable in
-          both light and dark themes
+        comment: Title 50pt, axis titles 42pt, ticks 34pt, legend 34pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend, axis labels, and data elements are well-spaced with no overlaps
+        comment: Legend sits in the empty top-left corner; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Yang (thick) and Yin (thin) lines are clearly visible with strong
-          contrast in both themes
+        comment: Yang 10px vs yin 4px clearly different in weight; legend line samples
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) is colorblind-safe; line width
-          adds redundant signal'
+        comment: Green/red pair backed by line weight, so not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, well-balanced use of 4800x2700
-          canvas
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; X-axis 'Line Index' appropriate for Kagi; Y-axis
-          'Price ($)' includes units
+        comment: '''Line index'' and ''Close price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series green (#009E73), second series orange (#D55E00) follow
-          Okabe-Ito order; backgrounds are #FAF8F1 light and #1A1A17 dark; both themes
-          correct'
+        comment: 'Yang #009E73, yin #AE3030 (semantic red); #FAF8F1 / #1A1A17 backgrounds;
+          chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Clean, professional styling with explicit color and line width customization;
-          solid but not exceptionally sophisticated
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Grid is subtle (alpha 0.10), theming is correct; could benefit from
-          additional refinements like spine removal
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through line width and color distinction;
-          Kagi algorithm naturally creates compelling trend narrative
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -130,31 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kagi chart with proper reversal threshold (4%) and trend
-          distinction
+        comment: A single Kagi line, no unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: thick/thin lines, reversal logic, shoulders/waists,
-          color coding (green/red), line index X-axis'
+        passed: false
+        comment: 'C1, C3, C4, C5 met; C2 broken: thickness switches at all-time extremes,
+          not at the previous shoulder/waist (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (Line Index) and Y-axis (Price) correctly mapped; data range
-          appropriate
+        comment: Line index on x, price on y; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'kagi-basic · bokeh · anyplot.ai' matches format; legend labels
-          match spec
+        comment: Title 'kagi-basic · python · bokeh · anyplot.ai'; legend 'Yang (thick,
+          uptrend)' / 'Yin (thin, downtrend)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -162,22 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Kagi aspects: trend reversals, boxes, shoulders, waists;
-          250 observations generate meaningful patterns'
+        comment: 250 observations, 4% reversal, 23 columns with shoulders, waists,
+          thick and thin runs
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price simulation with realistic trends; 4% reversal threshold
-          is reasonable; neutral data
+        comment: Neutral simulated daily stock close around $100
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Base price 100, range ~85-135 realistic; axis scales are readable
-          at full resolution
+        passed: false
+        comment: 'Checked: 4% reversal (current_price*0.04); the yin/yang switch rule
+          is wrong (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -187,52 +182,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; straightforward Kagi algorithm
-          implementation
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; minimal and clean
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity for algorithm; solid implementation
+        comment: Straightforward construction loop, no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-light.png/html and plot-dark.png/html; uses current
-          Selenium API
+        comment: plot-{THEME}.html + plot-{THEME}.png, current Bokeh 3 API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: ColumnDataSource used correctly; multi_line() appropriate; theme
-          token pattern follows bokeh.md
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Bokeh's Legend/LegendItem, multi_line(), and Selenium integration;
-          solid but could explore more advanced interactive features
+        comment: ColumnDataSource + multi_line, the default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-22T04:00:05Z'
 impl_tags:
   dependencies:
   - selenium
@@ -241,7 +235,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  - columndatasource
+  dataprep:
+  - time-series
   styling:
   - grid-styling
