@@ -2,105 +2,98 @@ library: altair
 language: python
 specification_id: crossword-basic
 created: '2026-01-15T21:38:05Z'
-updated: '2026-05-20T02:14:34Z'
+updated: '2026-11-22T17:55:25Z'
 generated_by: claude-sonnet
-workflow_run: 26136687136
+workflow_run: 45051617159
 issue: 3805
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: all crossword features implemented correctly (entry
-    cells, block cells, numbers, 180° symmetry, 15×15 grid)'
-  - 'Excellent theme adaptation: distinct warm-gray/charcoal cell colors for dark
-    mode rather than naively inverting'
-  - Idiomatic Altair layer composition (mark_rect + mark_text) is the correct approach
-    for a grid visualization
-  - Square 2400×2400 canvas is the right format choice for a symmetric grid plot
-  - Clean, minimal code with linear structure and no over-engineering
-  - scale=None for direct color encoding is a clever and correct Altair technique
+  - 'Dark-theme cell tokens keep a printed-puzzle look: paper-gray entry cells, charcoal
+    blocks and dark number ink stay legible instead of a naive inversion'
+  - 'Idiomatic Altair layering: mark_rect cells plus mark_text numbers on shared ordinal
+    encodings, with scale=None passing cell colors straight through'
+  - Clue numbering is computed from the grid (across/down word starts), so numbers
+    rise in reading order and appear only where words start
+  - Exact 2400x2400 square canvas via pad-only post-processing, grid centred with
+    even margins
   weaknesses:
-  - 'Dark mode clue numbers (#B8B7B0 on #DEDAD3 cells) have marginal contrast (~1.4:1);
-    consider using INK (#F0EFE8) instead of INK_SOFT for numbers in dark mode to improve
-    readability'
-  - Number positioning uses fixed dx=-12, dy=-12 pixel offsets which are approximate;
-    could be calibrated more precisely relative to cell size
-  - DE-03 limited by plot type; visual emphasis on cell regions could improve storytelling
-    score
+  - 'Suggestion: a slightly heavier outer border than the inner grid lines would frame
+    the puzzle like a printed newspaper grid.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "crossword-basic · python · altair · anyplot.ai" in bold dark ink (#1A1A17), centered, clearly readable. No axis labels or ticks (correctly hidden for grid). Clue numbers in dark gray (#4A4A44/INK_SOFT) in top-left corners of numbered cells.
-      Data: Entry cells pure white (#FFFFFF); blocking cells near-black (#1A1A17); grid lines in soft gray (#4A4A44). 79 numbered positions visible. 180-degree rotational symmetry evident.
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: warm off-white #FAF8F1 around a centred 15x15 grid, 2400x2400 square canvas
+      Chrome: bold dark title 'crossword-basic · python · altair · anyplot.ai' centred on top; no axes, ticks or legend
+      Data: white entry cells, near-black (#1A1A17) blocking cells, soft-gray #4A4A44 grid lines; 79 bold dark clue numbers in top-left corners, 1-79 in reading order; black pattern 180° symmetric; entry cells connected
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in light cream text (#F0EFE8), clearly readable against dark background. No dark-on-dark failures for title or primary chrome. Clue numbers in medium gray (#B8B7B0/INK_SOFT) on warm light-gray entry cells (#DEDAD3) — readable but lower contrast than ideal (estimated ~1.4:1).
-      Data: Colors are theme-adapted (not identical to light render, by design for monochrome): entry cells shift to #DEDAD3 (warm light gray), blocking cells to #3E3E3A (dark charcoal). Distinction between cell types remains clear.
-      Legibility verdict: PASS — title and all chrome readable; clue numbers marginally lower contrast but still legible
+      Background: warm near-black #1A1A17
+      Chrome: title in light cream ink, clearly readable; no dark-on-dark text
+      Data: same grid with theme-adapted monochrome cells: entry cells light gray #DEDAD3, blocking cells charcoal #3E3E3A (darker than entry cells), grid lines #B8B7B0; clue numbers in dark #2A2A26 ink on the light cells, clearly readable
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 16px, numbers 10px bold). Readable
-          in both themes. Dark mode clue numbers (#B8B7B0 on #DEDAD3) have slightly
-          lower contrast than ideal but remain readable.'
+        comment: Title 16 px and clue numbers 10 px bold set explicitly; numbers in
+          dark ink (#2A2A26) on the light-gray dark-theme entry cells read clearly
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render; numbers cleanly positioned
-          in cell corners.
+        comment: No text collides; numbers sit in the top-left corners clear of the
+          cell borders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Entry cells, block cells, and clue numbers all clearly visible; grid
-          structure immediately legible.
+        comment: Entry cells, blocking cells, grid lines and numbers all clearly visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome design is inherently CVD-safe; strong black/white contrast
-          for cell-type distinction.
+        comment: Monochrome light/dark cell contrast; no hue carries meaning, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas; 15x15 grid fills canvas well with balanced
-          margins and properly offset title.
+        comment: Exact 2400x2400 square canvas, grid centred with even margins, title
+          well proportioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed (correctly hidden); title format 'crossword-basic
-          · python · altair · anyplot.ai' correct.
+        comment: 'N/A: no data axes on a crossword grid; title present in the mandated
+          format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Monochrome design per spec; plot backgrounds #FAF8F1 (light) / #1A1A17
-          (dark) correct; all chrome uses theme-adaptive tokens.'
+        comment: 'Monochrome per spec; backgrounds #FAF8F1 / #1A1A17; chrome flips
+          with theme tokens'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -108,24 +101,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic defaults: theme-adaptive cell colors show deliberate
-          design thought. Clean professional crossword rendering. Not FiveThirtyEight
-          level.'
+        comment: 'Deliberate dark-theme cell tokens (paper-gray entry cells #DEDAD3,
+          charcoal blocks #3E3E3A, dark number ink) keep the printed-puzzle look instead
+          of a naive inversion'
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Axes fully hidden, view border removed, minimal chrome, grid lines
-          in INK_SOFT. Slightly off on fixed dx/dy number positioning.
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Crossword structure clearly communicated (numbered cells, symmetric
-          pattern) but inherently functional/structural visualization with limited
-          storytelling opportunity.
+        comment: Grid centred on the canvas with even breathing room on all sides;
+          view stroke removed so the cell border is the only frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Structural plot; data displayed, no hierarchy chosen beyond the Notes
+          (correct for a -basic grid)
     spec_compliance:
       score: 15
       max: 15
@@ -135,29 +127,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct crossword grid with white entry cells and black blocking
-          cells.
+        comment: Correct crossword grid, nothing beyond the basic variant
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: entry cells, blocking cells, corner numbers,
-          180-degree symmetry, uniform grid lines, monochrome design, 15x15 size.'
+        comment: Square cells, uniform grid lines, white entry / black blocking cells,
+          top-left numbers in reading order, 180° symmetry, connected entry area,
+          monochrome, 15x15
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Row/column ordinal encoding correct; all 225 cells visible and properly
-          mapped.
+        comment: Rows and columns map to ordinal y/x; all 225 cells shown; numbers
+          computed from the grid
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; no legend needed for monochrome
-          design.
+        comment: Title 'crossword-basic · python · altair · anyplot.ai' correct; no
+          legend needed
     data_quality:
       score: 15
       max: 15
@@ -167,22 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all crossword features: entry/blocking cells, numbered positions,
-          180-degree symmetry, realistic word-start detection (across and down).'
+        comment: Entry/blocking cells, across and down word starts, symmetric pattern
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Traditional newspaper-style 15x15 crossword with realistic symmetric
-          black-cell pattern; neutral content.
+        comment: Newspaper-style 15x15 grid, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15x15 is canonical newspaper crossword size; 79 numbered positions
-          realistic; 180-degree symmetry correctly applied.
+        comment: 15x15 with 42 black cells and 79 numbered starts is a plausible daily-size
+          grid; symmetry built by construction; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -192,65 +183,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → grid data → DataFrames → chart layers
-          → save. No functions or classes.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data generation is actually deterministic
-          regardless.
+        comment: Fully deterministic grid
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (theme env), sys (path fix), altair, numpy,
-          pandas.'
+        comment: All imports used (os, sys, altair, numpy for np.where, pandas, PIL
+          for the pad step)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; list comprehensions for DataFrame construction;
-          sys.path fix has explanatory comment; no over-engineering.
+        comment: Appropriate complexity; numbering loop is the domain rule, not a
+          library call
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current API.
+        comment: Saves plot-{THEME}.png (padded to 2400x2400) and plot-{THEME}.html
+          with the current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert Altair usage: mark_rect + mark_text + layer composition;
-          ordinal encoding; alt.Color with scale=None for direct color passthrough;
-          configure_view for background control.'
+        comment: Layered mark_rect + mark_text with ordinal encodings, escaped fields
+          with type=, configure_view per the library prompt
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: 'Distinctive Altair features: layer composition with + operator,
-          scale=None direct color encoding, Vega-Lite grammar-of-graphics declarative
-          structure. Could go further with Altair transforms or selections.'
+        passed: false
+        comment: scale=None identity color passthrough and the + layer operator; HTML
+          output keeps the Vega-Lite spec
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T17:52:06Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - html-export
   - annotations
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - long-to-wide
   styling:
   - minimal-chrome
+  - publication-ready
