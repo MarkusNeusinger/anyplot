@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-17
@@ -30,107 +30,69 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Unicode chess symbols mapping
-UNICODE_PIECES = {
-    "K": "♔",  # White King
-    "Q": "♕",  # White Queen
-    "R": "♖",  # White Rook
-    "B": "♗",  # White Bishop
-    "N": "♘",  # White Knight
-    "P": "♙",  # White Pawn
-    "k": "♚",  # Black King
-    "q": "♛",  # Black Queen
-    "r": "♜",  # Black Rook
-    "b": "♝",  # Black Bishop
-    "n": "♞",  # Black Knight
-    "p": "♟",  # Black Pawn
-}
+# Constants
+FILES = "abcdefgh"
+# Filled glyphs for both sides: white pieces are drawn as white fill over a dark outline
+GLYPHS = {"k": "♚", "q": "♛", "r": "♜", "b": "♝", "n": "♞", "p": "♟"}
+BOARD_LIGHT = "#F0D9B5"  # chess tradition, identical in both themes
+BOARD_DARK = "#B58863"
+PIECE_WHITE = "#FFFFFF"
+PIECE_BLACK = "#000000"
 
-# Scholar's Mate position - a famous 4-move checkmate
-pieces = {
-    # White pieces
-    "a1": "R",
-    "b1": "N",
-    "c1": "B",
-    "d1": "Q",
-    "e1": "K",
-    "h1": "R",
-    "a2": "P",
-    "b2": "P",
-    "c2": "P",
-    "d2": "P",
-    "f2": "P",
-    "g2": "P",
-    "h2": "P",
-    "f3": "N",
-    "c4": "B",
-    "f7": "Q",  # White Queen delivers checkmate
-    # Black pieces
-    "a8": "r",
-    "b8": "n",
-    "c8": "b",
-    "d8": "q",
-    "f8": "b",
-    "g8": "n",
-    "h8": "r",
-    "a7": "p",
-    "b7": "p",
-    "c7": "p",
-    "d7": "p",
-    "g7": "p",
-    "h7": "p",
-    "e5": "p",
-    "e8": "k",  # Black King in checkmate
-}
+# Columns: set these to your table's column names
+SQUARE = "square"  # role: square
+PIECE = "piece"  # role: piece
 
-# Create board data
-files = list("abcdefgh")
-ranks = list(range(1, 9))
+# Data: replace this block with your own position, for example df = pd.read_csv("position.csv")
+# Lucena position (rook endgame, White to move): K+R+P against K+R
+df = pd.DataFrame({SQUARE: ["d8", "d7", "f1", "g7", "g2"], PIECE: ["K", "P", "R", "k", "r"]})
 
-board_data = []
-for file_idx, file in enumerate(files):
-    for rank in ranks:
-        square = f"{file}{rank}"
-        is_light = (file_idx + rank) % 2 == 1
-        color = "light" if is_light else "dark"
-        board_data.append({"file": file_idx + 1, "rank": rank, "color": color, "square": square})
+# Plot
+# Board: 64 squares, a light square at h1 (file index + rank is even)
+board = pd.DataFrame(
+    [
+        {"file": i + 1, "rank": rank, "tone": "light" if (i + rank) % 2 == 0 else "dark"}
+        for i in range(len(FILES))
+        for rank in range(1, len(FILES) + 1)
+    ]
+)
 
-board_df = pd.DataFrame(board_data)
+# Pieces: grid position from the square name, filled glyph from the lowercase code
+pos = df.assign(
+    file=df[SQUARE].str[0].map(FILES.index) + 1,
+    rank=df[SQUARE].str[1].astype(int),
+    glyph=df[PIECE].str.lower().map(GLYPHS),
+    is_white=df[PIECE].str.isupper(),
+)
+white = pos[pos["is_white"]]
+black = pos[~pos["is_white"]]
 
-# Create pieces data
-pieces_data = []
-for square, piece in pieces.items():
-    file = files.index(square[0]) + 1
-    rank = int(square[1])
-    unicode_piece = UNICODE_PIECES.get(piece, "")
-    pieces_data.append({"file": file, "rank": rank, "piece": unicode_piece})
-
-pieces_df = pd.DataFrame(pieces_data)
-
-# Board colors (theme-independent - chess tradition)
-board_colors = {"light": "#F0D9B5", "dark": "#B58863"}
-
-# Piece color adapts to theme for visibility
-piece_color = "#000000" if THEME == "light" else "#FFFFFF"
-
-# Create the plot
 plot = (
     ggplot()
-    + geom_tile(data=board_df, mapping=aes(x="file", y="rank", fill="color"), width=1, height=1)
-    + scale_fill_manual(values=board_colors)
+    + geom_tile(data=board, mapping=aes(x="file", y="rank", fill="tone"), width=1, height=1)
+    + scale_fill_manual(values={"light": BOARD_LIGHT, "dark": BOARD_DARK})
+    # Dark outline under the white pieces, then the white fill on top
     + geom_text(
-        data=pieces_df, mapping=aes(x="file", y="rank", label="piece"), size=28, family="DejaVu Sans", color=piece_color
+        data=white, mapping=aes(x="file", y="rank", label="glyph"), size=41, family="DejaVu Sans", color=PIECE_BLACK
     )
-    + scale_x_continuous(breaks=list(range(1, 9)), labels=list("abcdefgh"), expand=(0, 0))
-    + scale_y_continuous(breaks=list(range(1, 9)), labels=[str(i) for i in range(1, 9)], expand=(0, 0))
+    + geom_text(
+        data=white, mapping=aes(x="file", y="rank", label="glyph"), size=38, family="DejaVu Sans", color=PIECE_WHITE
+    )
+    + geom_text(
+        data=black, mapping=aes(x="file", y="rank", label="glyph"), size=38, family="DejaVu Sans", color=PIECE_BLACK
+    )
+    + scale_x_continuous(breaks=range(1, len(FILES) + 1), labels=list(FILES), expand=(0, 0))
+    + scale_y_continuous(
+        breaks=range(1, len(FILES) + 1), labels=[str(r) for r in range(1, len(FILES) + 1)], expand=(0, 0)
+    )
     + coord_fixed(ratio=1)
-    + labs(title="Scholar's Mate · chessboard-pieces · plotnine · anyplot.ai")
+    + labs(title="Lucena Position · chessboard-pieces · python · plotnine · anyplot.ai")
     + theme(
-        figure_size=(12, 12),
-        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
+        figure_size=(6, 6),
+        plot_title=element_text(size=11, ha="center", weight="bold", color=INK),
         axis_title=element_blank(),
-        axis_text_x=element_text(size=20, weight="bold", color=INK_SOFT),
-        axis_text_y=element_text(size=20, weight="bold", color=INK_SOFT),
+        axis_text_x=element_text(size=12, weight="bold", color=INK_SOFT),
+        axis_text_y=element_text(size=12, weight="bold", color=INK_SOFT),
         axis_ticks=element_blank(),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
@@ -140,4 +102,4 @@ plot = (
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, width=12, height=12)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
