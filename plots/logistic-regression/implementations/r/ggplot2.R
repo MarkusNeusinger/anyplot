@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' logistic-regression: Logistic Regression Curve Plot
-#' Library: ggplot2 | R
-#' Palette: Imprint
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 83/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(ragg)
