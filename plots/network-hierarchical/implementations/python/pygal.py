@@ -1,162 +1,182 @@
-""" anyplot.ai
+"""anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-17
 """
 
 import os
-import shutil
-import subprocess
 
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions, one per tier in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Define organizational hierarchy (CEO -> VPs -> Directors -> Managers)
-hierarchy = {
-    0: ("CEO", 0, None),
-    1: ("VP Eng", 1, 0),
-    2: ("VP Sales", 1, 0),
-    3: ("VP Ops", 1, 0),
-    4: ("Dir FE", 2, 1),
-    5: ("Dir BE", 2, 1),
-    6: ("Dir DevOps", 2, 1),
-    7: ("Dir Americas", 2, 2),
-    8: ("Dir EMEA", 2, 2),
-    9: ("Dir Logistics", 2, 3),
-    10: ("Dir HR", 2, 3),
-    11: ("Mgr React", 3, 4),
-    12: ("Mgr Vue", 3, 4),
-    13: ("Mgr API", 3, 5),
-    14: ("Mgr DB", 3, 5),
-    15: ("Mgr Cloud", 3, 6),
-    16: ("Mgr NA", 3, 7),
-    17: ("Mgr LATAM", 3, 7),
-    18: ("Mgr UK", 3, 8),
-    19: ("Mgr DE", 3, 8),
-    20: ("Mgr Supply", 3, 9),
-    21: ("Mgr Talent", 3, 10),
-}
+# Columns: set these to your table's column names
+NODE = "Position"  # role: nodes
+PARENT = "Reports to"  # role: edges
+TIER = "Tier"  # role: level
 
-# Group nodes by level
-levels = {}
-for node_id, (_label, level, _parent) in hierarchy.items():
-    if level not in levels:
-        levels[level] = []
-    levels[level].append(node_id)
+# Data: replace this block with your own edge list, for example df = pd.read_csv("org.csv")
+# (one row per node; the root has an empty parent)
+df = pd.DataFrame(
+    {
+        NODE: [
+            "CEO",
+            "VP Engineering",
+            "VP Sales",
+            "VP Operations",
+            "Dir Frontend",
+            "Dir Backend",
+            "Dir DevOps",
+            "Dir Americas",
+            "Dir EMEA",
+            "Dir Logistics",
+            "Dir HR",
+            "Mgr React",
+            "Mgr Vue",
+            "Mgr API",
+            "Mgr DB",
+            "Mgr Cloud",
+            "Mgr NA",
+            "Mgr LATAM",
+            "Mgr UK",
+            "Mgr Germany",
+            "Mgr Supply",
+            "Mgr Talent",
+        ],
+        PARENT: [
+            None,
+            "CEO",
+            "CEO",
+            "CEO",
+            "VP Engineering",
+            "VP Engineering",
+            "VP Engineering",
+            "VP Sales",
+            "VP Sales",
+            "VP Operations",
+            "VP Operations",
+            "Dir Frontend",
+            "Dir Frontend",
+            "Dir Backend",
+            "Dir Backend",
+            "Dir DevOps",
+            "Dir Americas",
+            "Dir Americas",
+            "Dir EMEA",
+            "Dir EMEA",
+            "Dir Logistics",
+            "Dir HR",
+        ],
+        TIER: ["Executive"] + ["Vice presidents"] * 3 + ["Directors"] * 7 + ["Managers"] * 11,
+    }
+)
 
-# Calculate node positions using tree layout
-node_positions = {}
-max_level = max(levels.keys())
-y_min, y_max = 10, 90
-y_spacing = (y_max - y_min) / max_level
+# Plot: tree layout derived from df only
+children = {node: [] for node in df[NODE]}
+root = None
+for node, parent in zip(df[NODE], df[PARENT], strict=True):
+    if pd.isna(parent):
+        root = node
+    else:
+        children[parent].append(node)
 
-for level, nodes in levels.items():
-    num_nodes = len(nodes)
-    x_spacing = 90 / (num_nodes + 1)
-    for i, node_id in enumerate(nodes):
-        x = 5 + (i + 1) * x_spacing
-        y = y_max - (level * y_spacing)
-        node_positions[node_id] = (x, y)
+depth = {root: 0}
+x_pos = {}
+next_leaf = [0]
 
-# Level colors using Okabe-Ito palette
-level_colors = [IMPRINT[0], IMPRINT[1], IMPRINT[2], IMPRINT[3]]
-level_names = ["Executive", "VPs", "Directors", "Managers"]
 
-# Create custom style with theme-adaptive colors
-custom_style = Style(
+def place(node, level):
+    """Leaves take consecutive slots; a parent sits centered above its children."""
+    depth[node] = level
+    kids = children[node]
+    if not kids:
+        x_pos[node] = float(next_leaf[0])
+        next_leaf[0] += 1
+    else:
+        for kid in kids:
+            place(kid, level + 1)
+        x_pos[node] = (x_pos[kids[0]] + x_pos[kids[-1]]) / 2
+
+
+place(root, 0)
+max_depth = max(depth.values())
+pos = {node: (x_pos[node], max_depth - depth[node]) for node in df[NODE]}
+
+style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    guide_stroke_color=INK_MUTED,
-    guide_stroke_dasharray="none",
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    tooltip_font_size=14,
+    colors=(INK_MUTED, *IMPRINT_PALETTE),  # first series is the edge layer
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=36,
+    legend_font_size=44,
+    value_font_size=34,
+    value_colors=(INK,) * 9,
     stroke_width=3,
 )
 
-# Create XY chart with legend
 chart = pygal.XY(
-    width=4800,
-    height=2700,
-    style=custom_style,
-    title="network-hierarchical · pygal · anyplot.ai",
-    x_title="Horizontal Position (Peer Distribution)",
-    y_title="Management Level (0=Top, 3=Bottom)",
+    width=3200,
+    height=1800,
+    style=style,
+    title="network-hierarchical · python · pygal · anyplot.ai",
     show_legend=True,
     legend_at_bottom=True,
+    legend_box_size=28,
     show_x_guides=False,
     show_y_guides=False,
-    stroke=True,
-    dots_size=28,
-    show_dots=True,
-    range=(0, 100),
-    xrange=(0, 100),
+    show_x_labels=False,
+    show_y_labels=False,
+    xrange=(-0.8, next_leaf[0] - 0.2),
+    range=(-0.45, max_depth + 0.45),
+    print_values=False,
+    print_labels=True,
     explicit_size=True,
+    # pygal fixes the point-label size at 10px; enlarge it and center it under its node
+    css=(
+        "file://style.css",
+        "file://graph.css",
+        "inline:.text-overlay text.label{font-size:30px !important;text-anchor:middle !important;font-style:normal}",
+    ),
     truncate_legend=-1,
-    margin_bottom=120,
-    margin_top=100,
-    margin_left=100,
-    margin_right=100,
+    margin=60,
+    margin_top=40,
 )
 
-# Add reporting lines
-all_edges = []
-for node_id, (_label, _level, parent_id) in hierarchy.items():
-    if parent_id is not None:
-        parent_pos = node_positions[parent_id]
-        child_pos = node_positions[node_id]
-        all_edges.append((parent_pos, child_pos))
+# Reporting lines: one continuous walk down and back up the tree, so every
+# parent-child pair is traced and no stray segment joins unrelated nodes
+walk = [pos[root]]
 
-edge_data = []
-for start, end in all_edges:
-    if edge_data:
-        edge_data.append(None)
-    edge_data.append(start)
-    edge_data.append(end)
 
-chart.add("Edges", edge_data, show_dots=False, stroke=True, color=INK_MUTED)
+def trace(node):
+    for kid in children[node]:
+        walk.extend([pos[kid]])
+        trace(kid)
+        walk.append(pos[node])
 
-# Add nodes by level with labels visible
-for level_idx in range(max_level + 1):
-    level_nodes = levels[level_idx]
-    level_data = []
-    for node_id in level_nodes:
-        pos = node_positions[node_id]
-        node_label = hierarchy[node_id][0]
-        # Create data point with label visible as annotation
-        level_data.append({"value": pos, "label": node_label})
-    chart.add(level_names[level_idx], level_data, stroke=False, color=level_colors[level_idx])
 
-# Save to PNG and HTML
+trace(root)
+chart.add("Reporting line", walk, show_dots=False, stroke=True, stroke_style={"width": 3})
+
+# Nodes, one series per tier, each point labelled with its own name
+for tier in df[TIER].unique():
+    members = df.loc[df[TIER] == tier, NODE]
+    chart.add(tier, [{"value": pos[node], "label": node} for node in members], stroke=False, dots_size=24)
+
 chart.render_to_file(f"plot-{THEME}.svg")
-# For PNG, we write SVG first then use a simple conversion approach
+chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
-
-# Create static PNG using basic SVG rendering
-try:
-    subprocess.run(["rsvg-convert", "-f", "png", "-o", f"plot-{THEME}.png", f"plot-{THEME}.svg"], check=True)
-except (FileNotFoundError, subprocess.CalledProcessError):
-    # Fallback: use cairosvg if available
-    try:
-        import cairosvg
-
-        cairosvg.svg2png(url=f"plot-{THEME}.svg", write_to=f"plot-{THEME}.png")
-    except ImportError:
-        # If no PNG converter available, just keep the SVG
-        shutil.copy(f"plot-{THEME}.svg", f"plot-{THEME}.png")
