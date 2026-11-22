@@ -2,52 +2,53 @@ library: plotly
 language: python
 specification_id: violin-swarm
 created: '2026-01-09T16:46:46Z'
-updated: '2026-05-18T04:57:34Z'
-generated_by: claude-haiku
-workflow_run: 26013980427
+updated: '2026-11-22T10:08:57Z'
+generated_by: claude-sonnet
+workflow_run: 45010311695
 issue: 3526
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 84
 review:
   strengths:
-  - Perfect visual quality and theme adaptation in both light and dark renders with
-    zero readability failures
-  - 'Excellent palette compliance: Okabe-Ito colors correct, backgrounds theme-correct
-    (#FAF8F1 light, #1A1A17 dark), no dark-on-dark or light-on-light failures'
-  - 'All specification requirements perfectly implemented: violin + swarm overlay,
-    transparency, horizontal spread, distribution visibility'
-  - Realistic, neutral scientific data with clear dose-response pattern demonstrating
-    all plot type features
-  - Clean KISS code structure with proper reproducibility (seeds set), theme tokenization,
-    and idiomatic Plotly usage
+  - Hand-laid beeswarm keeps every point at its exact glucose value and spreads only
+    sideways, centred on each violin (C1, C2)
+  - go.Violin with spanmode='hard' ends each density at its data range on one shared,
+    non-zero value axis (C5)
+  - 'Translucent #009E73 violins with #C475FD points outlined in the page color stay
+    distinct in both themes'
+  - Data shows narrow, right-skewed, bimodal and wide groups, so the violins differ
+    visibly in shape
+  - Per-group hovertemplate gives exact values in the HTML view
   weaknesses:
-  - 'Code quality: line 88 computes jitter values but never uses them (dead code);
-    code comment claims ''improved jittering'' but relies on Plotly''s auto-jittering
-    instead'
-  - 'Design excellence: uses competent library defaults rather than custom design
-    sophistication; spines not removed, minimal grid customization'
-  - 'Data storytelling: plot clearly shows dose-response pattern but doesn''t emphasize
-    the insight through visual hierarchy or focal point beyond basic color contrast'
+  - 'VQ-02, SC-02 (both): at the outer ends of the Healthy and Pre-diabetic violins
+    several swarm points are clamped onto the same x and pile on top of each other,
+    and their markers straddle the violin outline → each point stays separate and
+    inside the outline, by thinning the swarm there with a smaller marker or by matching
+    the clamp width to the drawn violin. Likely cause: np.clip(xs, -0.9 * half_width,
+    0.9 * half_width) after the collision pass, with half_width taken from a scipy
+    gaussian_kde whose bandwidth differs from the KDE plotly draws.'
+  - 'Suggestion: a light median tick inside each violin could anchor comparison across
+    groups.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "violin-swarm · Python · plotly · anyplot.ai" centered and readable in dark text. X-axis "Experimental Condition" with condition labels (Control, Low Dose, Medium Dose, High Dose) clearly readable. Y-axis "Reaction Time (ms)" with units, tick labels dark gray and legible. Grid lines subtle gray on y-axis only.
-      Data: Violin shapes in bluish green (#009E73) with 0.35 alpha showing distribution density for each condition. Overlaid swarm points in vermillion (#D55E00) showing individual observations. Dashed meanline through each violin. Clear dose-response pattern visible (Control ~300-700ms, High Dose ~150-450ms).
-      Legibility verdict: PASS - all text clearly readable, no overlap, excellent contrast
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'violin-swarm · python · plotly · anyplot.ai' centred in dark ink; y-axis 'Fasting glucose (mg/dL)' 75-265 with ticks 100/150/200/250 and subtle horizontal grid; x-axis 'Clinical group' with Healthy, Pre-diabetic, Type 2, untreated, Type 2, treated. Left and bottom axis lines only, no tick marks. All text readable.
+      Data: four translucent #009E73 violins with a green outline, cut at each group's data range; violet #C475FD swarm points with off-white outlines centred on each violin. Healthy is a narrow flat lens near 90, Pre-diabetic a flat lens near 105 with a thin upper tail to 137, Type 2 untreated a tall bimodal violin (modes ~150 and ~215, outlier 263), Type 2 treated a rounded violin near 120. At the ends of the Healthy and Pre-diabetic lenses a few points stack on each other and touch the outline.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title rendered in light color (#F0EFE8) and clearly readable against dark background. X-axis label "Experimental Condition" and tick labels in light gray (#B8B7B0), fully legible. Y-axis "Reaction Time (ms)" and tick labels in same light gray, no dark-on-dark failures. Grid lines light gray and subtle, matching visual weight of light render.
-      Data: Violin shapes identical bluish green (#009E73) as light render - perfect data color consistency. Swarm points identical vermillion (#D55E00) - no change to data colors between themes, only chrome adapted. Same meanlines visible. Distribution patterns identical to light render.
-      Legibility verdict: PASS - all text readable in light colors against dark background, no dark-on-dark failures, brand green clearly visible, chrome properly theme-adapted
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, clearly readable; grid subtle light lines; no dark-on-dark text.
+      Data: identical #009E73 violins (fill darker-looking through translucency on the dark page) and identical #C475FD points, now outlined in the near-black page color; same positions as the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,71 +56,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (28px), axis labels (22px), tick labels (18px) all explicitly
-          sized and readable in both themes
+        comment: Title 16, axis titles 12, ticks 10 at the 800x450 layout (style-guide
+          sizes); all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: All text collision-free, violins well-separated by condition
+        passed: false
+        comment: Swarm points clamped to the violin edge pile on top of each other
+          at the ends of the Healthy and Pre-diabetic violins (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (size=10) and violin lines (width=2) clearly visible and
-          well-distinguished
+        comment: 8 px markers with a page-colored outline suit 60 points per group;
+          violin outline 1.5 px visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (green, orange) provides colorblind-safe contrast
+        comment: Green violins and violet points differ in hue and lightness; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 proportions with generous 120px margins
+        comment: 3200x1800 canvas, pinned margins, nothing overflows; balanced axis
+          labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive, Y-axis includes units (ms)
+        comment: '''Fasting glucose (mg/dL)'' with units, ''Clinical group'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First color #009E73, second #D55E00, backgrounds #FAF8F1/#1A1A17,
-          both renders theme-correct'
+        comment: 'Violin #009E73 (position 1), points #C475FD (position 2), backgrounds
+          #FAF8F1 / #1A1A17, chrome theme-correct'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Clean professional styling but generic defaults without custom refinement
+        comment: 'Beyond the baseline: page-colored marker outlines separate touching
+          points, violet-on-translucent-green contrast reads as one deliberate pairing'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization, top/right spines still visible
+        comment: Tick marks removed, grid only on the value axis, violins cut at the
+          data range so no empty tails clutter the axis
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Clear distribution and individual points but no exceptional visual
-          hierarchy
+        comment: Data displayed in a natural clinical order, no hierarchy chosen beyond
+          the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -127,27 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin + swarm overlay
+        comment: Violin with overlaid swarm, no unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Violin distribution, swarm overlay with transparency, horizontal
-          spread achieved
+        passed: false
+        comment: Translucent violin, centred swarm, tails at the data range, one shared
+          non-zero axis; but edge points of the Healthy and Pre-diabetic swarms straddle
+          the violin outline (C2, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X categorical (conditions), Y continuous (reaction time ms), all
-          data included
+        comment: Each point at its glucose value; only the sideways swarm offset is
+          laid out (exempt)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format with no unnecessary legend
+        comment: Title 'violin-swarm · python · plotly · anyplot.ai' correct; no legend
+          needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -157,22 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects covered: distribution shape, individual observations,
-          all conditions'
+        comment: Shows narrow, skewed, bimodal and wide distributions with differing
+          violin shapes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction times across conditions are scientifically plausible
+        comment: 'Fasting glucose by clinical group: neutral and plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range (100-700 ms) is sensible for reaction times
+        comment: Healthy ~90, pre-diabetic 100-137, untreated type 2 132-263 bimodal,
+          treated ~122 mg/dL; clinically sensible (no Check values in the spec)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,56 +189,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct code, no unnecessary abstractions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures determinism
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports, proper import shadowing handling
+        comment: os, numpy, pandas, plotly.graph_objects, gaussian_kde all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Line 88 generates jitter array but result is never assigned to variable
+        passed: true
+        comment: The beeswarm offset loop has no available call that computes it;
+          gaussian_kde used for widths
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-THEME.png and plot-THEME.html
+        comment: Saves plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: Correct graph_objects API and theme token usage, but unused jitter
-          suggests incomplete implementation
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
         passed: false
-        comment: Generic usage, doesn't showcase plotly's interactive strengths
+        comment: go.Violin with x0, spanmode='hard', scalemode='width', points=False;
+          go.Scatter overlay; layout pinned
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: spanmode='hard' to end the density at the data range and a per-group
+          hovertemplate for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T10:04:54Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
-  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - kde
   styling:
   - alpha-blending
+  - edge-highlighting
