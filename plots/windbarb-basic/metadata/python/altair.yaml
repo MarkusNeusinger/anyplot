@@ -12,152 +12,163 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 64
 review:
   strengths:
-  - 'Correct wind barb symbology: staffs, half/full barbs, pennants, and calm circles
-    all implemented with proper meteorological convention'
-  - Continuous cividis colormap for wind speed encoding is CVD-safe and creates a
-    clear speed gradient across the grid
-  - 'Theme-adaptive chrome is fully wired: background, text, grid, and legend all
-    respond correctly to light/dark ANYPLOT_THEME'
-  - Altair angle encoding (alt.Angle()) for pennant direction is a genuinely distinctive
-    use of the library
-  - Subtitle serves as an embedded legend key, clearly explaining all barb symbology
-  - Feature-coverage forcing (calm and pennant cases) ensures all wind barb types
-    are present in the example
+  - Calm stations drawn as open brand-green circles with no staff
+  - Pennants, full and half barbs all on the left of the staff, as the Northern Hemisphere
+    convention asks
+  - Subtitle key decodes the barb notation; tooltips with speed and direction in the
+    HTML
   weaknesses:
-  - Legend font sizes not explicitly set via configure_legend(labelFontSize=..., titleFontSize=...)
-    — relies on Altair defaults rather than the 16px/18px spec requirement
-  - 'Design storytelling is minimal: the cividis gradient shows speed variation but
-    there is no focal point annotation or callout to highlight the notable high-wind
-    events'
-  - Some dark-blue lower-speed staffs have marginal contrast against the off-white
-    background — slightly harder to read than higher-speed yellow barbs
+  - 'VQ-07 (both): wind speed colored with the cividis colormap → imprint_seq (#009E73
+    -> #4467A3). Likely cause: alt.Scale(scheme=''cividis'').'
+  - 'VQ-05 (both): canvas is 5043x3072, not 3200x1800, and 0.2-degree ticks crowd
+    both axes → size the view at 620x320 with scale_factor 4 and use whole-degree
+    ticks. Likely cause: oversized view and default tick count.'
+  - 'VQ-01 (both): legend title and labels render at about a third of the axis tick
+    size → explicit legend font sizes near the tick size. Likely cause: no configure_legend
+    label/title font sizes.'
+  - 'VQ-02 (both): x tick labels collide at the ends (''−1.0−0.6'', ''10.6 11.0'')
+    → fewer ticks (whole degrees). Likely cause: default tick density on a 12-unit
+    domain.'
+  - 'VQ-03, VQ-04 (dark): the navy low-speed barbs at 0°E 6°N and 0°E 8°N nearly vanish
+    on #1A1A17, and their staffs are only a few px long → a ramp step that contrasts
+    with both backgrounds and a fixed staff length. Likely cause: cividis low end
+    and staff length = speed * 0.03.'
+  - 'SC-02 (both): C4 missed — the half barbs on the 5-10 kt staffs are a few px and
+    not countable → one fixed staff length for every barb. Likely cause: staff_len
+    = spd * SCALE.'
+  - 'SC-03 (both): x and y data units differ on screen (about 156 vs 109 px), so directions
+    bend toward horizontal by up to ~10° → scale the y offsets by the pixel aspect.
+    Likely cause: offsets computed in raw data units.'
+  - 'SC-01 (both): color encodes wind speed, a derived variable the -basic spec does
+    not ask for → one Imprint color for all barbs. Likely cause: speed_color on every
+    layer.'
+  - 'DQ-02 (both): u and v are independent uniform draws per station, so neighbours
+    point in unrelated directions → a smooth wind pattern plus small noise. Likely
+    cause: np.random.uniform for u and v.'
+  - 'CQ-04 (code): the `if len(barb_df) > 0 … else` and `if len(pennant_df) > 0 …
+    else` fallbacks can never run with this data → delete them. Likely cause: defensive
+    branches for empty frames.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "windbarb-basic · python · altair · anyplot.ai" in dark ink, clearly readable. Subtitle in softer dark text, readable. Axis labels "Longitude (°E)" and "Latitude (°N)" with units in dark text, readable. Tick labels in dark soft ink, readable. Legend "Wind Speed (kt)" colorbar in bottom-right, small but legible.
-      Data: Wind barb staffs colored via cividis colormap (dark blue for low speeds, transitioning to yellow-green for high speeds). Two prominent bright-yellow arrow-like barbs at ~(2.4, 5.2) and ~(4.8, 3.0) represent the forced high-speed pennant cases (~56 kt). Two teal-green open circles (brand #009E73) at ~(0, -0.2) and ~(10, -0.2) represent calm winds. Barb line segments are visible across the 6×5 grid.
-      Legibility verdict: PASS — all text elements are readable against the light background. No light-on-light issues.
+      Background: warm off-white #FAF8F1, 5043x3072.
+      Chrome: title and subtitle key at top; axis titles in dark ink; dense 0.2-degree ticks with colliding labels at both ends of the x axis; tiny legend 'Wind Speed (kt)' at bottom right.
+      Data: barbs colored by speed with cividis (navy -> gray -> yellow), staff length proportional to speed, two long yellow 55-kt barbs with triangle pennants, three open green calm circles.
+      Legibility verdict: PASS (legend text very small)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and subtitle in light-colored text, clearly readable against dark background. Axis labels and tick labels in light text, all readable. Legend visible in elevated-dark box. No dark-on-dark text failures observed.
-      Data: Cividis colormap data colors are identical to the light render — the yellow-green pennant barbs at the same positions are equally prominent. Calm circles in #009E73 green remain visible. Dark blue lower-speed staffs are visible but have less contrast on dark background.
-      Legibility verdict: PASS — text is readable on the dark surface. Data element colors match the light render (only chrome flips). No dark-on-dark failures.
+      Background: warm near-black #1A1A17.
+      Chrome: light text on dark, subtle grid; legend tiny.
+      Data: same colors as light; the navy low-speed barbs nearly vanish on the dark background.
+      Legibility verdict: PASS (low-speed barbs low contrast)
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 17
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Title (28px), axis labels (22px), tick labels (18px) all explicitly
-          set. Legend font sizes not explicitly set — relies on defaults.
+        comment: Legend title and labels at Altair defaults read tiny beside the axis
+          text (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: 6×5 grid spacing prevents any barb overlap. All text elements clear.
+        comment: x tick labels collide at both ends ('−1.0−0.6', '10.6 11.0') (defect
+          line)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Staffs (strokeWidth=2.5), pennants (size=700), calm circles (size=350)
-          all visible. Dark-blue low-speed staffs have slightly reduced contrast.
+        comment: Light-wind staffs are a few px long and navy barbs vanish on the
+          dark background (defect line)
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Cividis is CVD-safe. Calm circles in brand green contrast well with
-          cividis barbs.
+        comment: 'Navy low-speed barbs have poor contrast on #1A1A17 (defect line)'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 1
         max: 4
-        passed: true
-        comment: Grid fills canvas well. Legend in bottom-right is functional. Domain
-          margins are intentional.
+        passed: false
+        comment: Canvas 5043x3072, not a canonical size; dense 0.2-step ticks crowd
+          the axes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°E) and Latitude (°N) with units. Title in correct format.
+        comment: Longitude (°E) / Latitude (°N) with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Cividis for continuous speed data. Backgrounds #FAF8F1 (light) /
-          #1A1A17 (dark). Full theme-adaptive chrome.'
+        passed: false
+        comment: Speed uses the cividis colormap instead of imprint_seq (defect line)
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Intentional design: cividis encoding, calm circles in brand green,
-          theme-adaptive theming. Above configured defaults but not publication-level.'
+        comment: Style-guide baseline, nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid at 0.10 opacity, transparent view stroke removes box frame.
-          Good refinement but axes grid on both dimensions creates busyness.
+        passed: false
+        comment: Default dense grid, nothing beyond the spine and grid rules
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Cividis gradient creates speed hierarchy. High-speed pennant barbs
-          draw the eye via bright yellow. Forced feature coverage adds narrative variety.
-          No explicit callouts.
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Complete wind barb implementation: staffs, half barbs, full barbs,
-          pennants, calm circles.'
+        comment: Wind barb plot, but color encodes derived speed, not asked by the
+          -basic spec (defect line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: standard notation, FROM-direction convention,
-          calm circles, 30 stations in grid.'
+        comment: 'C4 missed: feathers on the light-wind staffs are not countable (defect
+          line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: x→longitude, y→latitude, u/v→direction/speed. All axes show full
-          data range.
+        comment: Directions bent toward horizontal by the non-isotropic axes, up to
+          ~10° (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''windbarb-basic · python · altair · anyplot.ai'' ✓. Legend:
-          Wind Speed (kt) colorbar.'
+        comment: Title correct; legend 'Wind Speed (kt)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -165,24 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full coverage: calm (<2.5 kt), half barbs (5 kt), full barbs (10
-          kt), multiple barbs, pennants (~56 kt). All barb types demonstrated.'
+        comment: Calm, half, full barbs and pennants all shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Surface wind observations from weather station grid — classic meteorological
-          use case. Neutral scientific domain.
+        comment: Plausible station grid, but directions are independent random draws
+          (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-60+ knot range is realistic for surface weather observations. Forced
-          pennant case at ~56 kt is plausible for strong surface winds.
+        comment: 0-60 kt range realistic
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -190,55 +199,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → barb calculation → chart
-          layers → save. No functions or classes.'
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Complex barb generation loop is necessary. Chart assembly via alt.layer()
-          is clean. No over-engineering.
+        comment: Empty-DataFrame fallback branches that can never run (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and .html
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses alt.layer(), mark_rule(), mark_point(), alt.Color(), alt.Angle(),
-          alt.Tooltip(), configure_*() — all high-level Altair API. Slightly below
-          expert due to no selection-based interactivity.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: alt.Angle() encoding for pennant direction is distinctly Vega-Lite/Altair.
-          Multi-layer composition is idiomatic. Interactive tooltips on complex layers.
-          Not quite 5 as the viz is primarily line/point geometry without Altair-exclusive
-          transform features.
+        comment: Standard layered Altair, default
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: alt.Angle encoding rotates the pennant markers
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
 impl_tags:
   dependencies: []
   techniques:
