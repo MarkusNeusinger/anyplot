@@ -1,7 +1,7 @@
 """anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-17
+Quality: pending | Updated: 2026-05-17
 """
 
 import os
