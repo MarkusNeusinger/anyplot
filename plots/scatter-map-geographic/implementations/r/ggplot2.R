@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' scatter-map-geographic: Scatter Map with Geographic Points
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 92/100 | Created: 2026-05-18
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 75/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(dplyr)
@@ -36,30 +36,31 @@ earthquakes <- tibble::tibble(
 )
 
 # --- Plot -------------------------------------------------------------------
-anyplot_theme <- theme_minimal(base_size = 14) +
+anyplot_theme <- theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.2),
+    panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.15),
     panel.grid.minor  = element_blank(),
-    axis.title        = element_text(color = INK, size = 20),
-    axis.text         = element_text(color = INK_SOFT, size = 16),
-    plot.title        = element_text(color = INK, size = 24, face = "plain"),
+    axis.title        = element_text(color = INK, size = 10),
+    axis.text         = element_text(color = INK_SOFT, size = 8),
+    plot.title        = element_text(color = INK, size = 12, face = "plain"),
     legend.background = element_rect(fill = PAGE_BG, color = NA),
-    legend.text       = element_text(color = INK_SOFT, size = 16),
-    legend.title      = element_text(color = INK, size = 18),
+    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.title      = element_text(color = INK, size = 10),
     panel.border      = element_blank()
   )
 
 p <- ggplot(earthquakes, aes(x = longitude, y = latitude)) +
   geom_point(aes(size = magnitude, color = depth_km), alpha = 0.75) +
-  scale_size_continuous(name = "Magnitude", range = c(2, 12)) +
-  scale_color_viridis_c(name = "Depth (km)", option = "viridis") +
+  scale_size_continuous(name = "Magnitude", range = c(1.5, 7)) +
+  scale_color_gradient(name = "Depth (km)", low = "#009E73", high = "#4467A3") +
   labs(
     title = "scatter-map-geographic · r · ggplot2 · anyplot.ai",
     x = "Longitude",
     y = "Latitude"
   ) +
+  guides(colour = guide_colourbar(order = 1), size = guide_legend(order = 2, override.aes = list(colour = INK_SOFT))) +
   coord_fixed(ratio = 1.3) +
   anyplot_theme
 
@@ -68,8 +69,8 @@ ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
