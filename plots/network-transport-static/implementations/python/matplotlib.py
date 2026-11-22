@@ -1,14 +1,14 @@
 """ anyplot.ai
 network-transport-static: Static Transport Network Diagram
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-18
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-22
 """
 
 import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd
 
 
 # Theme tokens
@@ -18,287 +18,161 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for route types
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Seed for reproducibility
-np.random.seed(42)
+# Column constants
+FROM_STATION = "From station"  # role: stations
+FROM_X = "From x"  # role: extra
+FROM_Y = "From y"  # role: extra
+TO_STATION = "To station"  # role: extra
+TO_X = "To x"  # role: extra
+TO_Y = "To y"  # role: extra
+ROUTE = "Route"  # role: routes
+DEPARTURE = "Departure"  # role: extra
+ARRIVAL = "Arrival"  # role: extra
+ROUTE_TYPE = "Route type"  # role: extra
 
-# Station data - regional rail network with geographic-style positioning
-stations = [
-    {"id": 0, "label": "Central", "x": 0.5, "y": 0.5},
-    {"id": 1, "label": "North", "x": 0.5, "y": 0.92},
-    {"id": 2, "label": "East", "x": 0.92, "y": 0.5},
-    {"id": 3, "label": "South", "x": 0.5, "y": 0.08},
-    {"id": 4, "label": "West", "x": 0.08, "y": 0.5},
-    {"id": 5, "label": "Airport", "x": 0.88, "y": 0.88},
-    {"id": 6, "label": "University", "x": 0.12, "y": 0.88},
-    {"id": 7, "label": "Harbor", "x": 0.88, "y": 0.12},
-    {"id": 8, "label": "Old Town", "x": 0.12, "y": 0.12},
-]
-
-# Route data with manual label positioning for clarity
-# t_pos: position along edge (0=source, 1=target)
-# offset: perpendicular offset multiplier (positive = left of direction)
-# type: route type (0=RE, 1=AIR, 2=S) for Okabe-Ito color mapping
+# Data: replace this block with your own table, for example df = pd.read_csv("routes.csv")
+# Regional rail network: stations with schematic x/y positions, one row per directed route
+stations = {
+    "Central": (0.5, 0.5),
+    "North": (0.5, 0.92),
+    "East": (0.92, 0.5),
+    "South": (0.5, 0.08),
+    "West": (0.08, 0.5),
+    "Airport": (0.88, 0.88),
+    "University": (0.12, 0.88),
+    "Harbor": (0.88, 0.12),
+    "Old Town": (0.12, 0.12),
+}
+express = "Regional Express (RE)"
+airport = "Airport Service (AIR)"
+suburban = "S-Bahn (S)"
 routes = [
-    # Main lines from Central (RE = Regional Express) - outbound
-    {
-        "source": 0,
-        "target": 1,
-        "route": "RE1",
-        "dep": "06:00",
-        "arr": "06:18",
-        "t_pos": 0.58,
-        "offset": 0.12,
-        "type": 0,
-    },
-    {
-        "source": 0,
-        "target": 2,
-        "route": "RE2",
-        "dep": "06:10",
-        "arr": "06:28",
-        "t_pos": 0.58,
-        "offset": 0.12,
-        "type": 0,
-    },
-    {
-        "source": 0,
-        "target": 3,
-        "route": "RE3",
-        "dep": "06:20",
-        "arr": "06:38",
-        "t_pos": 0.58,
-        "offset": -0.12,
-        "type": 0,
-    },
-    {
-        "source": 0,
-        "target": 4,
-        "route": "RE4",
-        "dep": "06:15",
-        "arr": "06:33",
-        "t_pos": 0.58,
-        "offset": 0.12,
-        "type": 0,
-    },
-    # Main lines - return to Central
-    {
-        "source": 1,
-        "target": 0,
-        "route": "RE1",
-        "dep": "06:30",
-        "arr": "06:48",
-        "t_pos": 0.42,
-        "offset": 0.12,
-        "type": 0,
-    },
-    {
-        "source": 2,
-        "target": 0,
-        "route": "RE2",
-        "dep": "06:40",
-        "arr": "06:58",
-        "t_pos": 0.42,
-        "offset": 0.12,
-        "type": 0,
-    },
-    {
-        "source": 3,
-        "target": 0,
-        "route": "RE3",
-        "dep": "06:50",
-        "arr": "07:08",
-        "t_pos": 0.42,
-        "offset": -0.12,
-        "type": 0,
-    },
-    {
-        "source": 4,
-        "target": 0,
-        "route": "RE4",
-        "dep": "06:45",
-        "arr": "07:03",
-        "t_pos": 0.42,
-        "offset": 0.12,
-        "type": 0,
-    },
-    # Airport express (AIR)
-    {
-        "source": 0,
-        "target": 5,
-        "route": "AIR",
-        "dep": "05:30",
-        "arr": "06:00",
-        "t_pos": 0.40,
-        "offset": 0.12,
-        "type": 1,
-    },
-    {
-        "source": 5,
-        "target": 0,
-        "route": "AIR",
-        "dep": "22:00",
-        "arr": "22:30",
-        "t_pos": 0.60,
-        "offset": 0.12,
-        "type": 1,
-    },
-    # Suburban lines (S-Bahn) - single direction only
-    {"source": 1, "target": 6, "route": "S1", "dep": "07:00", "arr": "07:15", "t_pos": 0.5, "offset": 0.10, "type": 2},
-    {"source": 1, "target": 5, "route": "S2", "dep": "07:05", "arr": "07:22", "t_pos": 0.5, "offset": -0.10, "type": 2},
-    {"source": 2, "target": 7, "route": "S3", "dep": "07:10", "arr": "07:25", "t_pos": 0.5, "offset": 0.10, "type": 2},
-    {"source": 3, "target": 7, "route": "S4", "dep": "07:20", "arr": "07:38", "t_pos": 0.5, "offset": -0.10, "type": 2},
-    {"source": 3, "target": 8, "route": "S5", "dep": "07:25", "arr": "07:43", "t_pos": 0.5, "offset": 0.10, "type": 2},
-    {"source": 4, "target": 8, "route": "S6", "dep": "07:15", "arr": "07:32", "t_pos": 0.5, "offset": 0.10, "type": 2},
-    {"source": 4, "target": 6, "route": "S7", "dep": "07:30", "arr": "07:48", "t_pos": 0.5, "offset": -0.10, "type": 2},
+    ("Central", "North", "RE1", "06:00", "06:18", express),
+    ("Central", "East", "RE2", "06:10", "06:28", express),
+    ("Central", "South", "RE3", "06:20", "06:38", express),
+    ("Central", "West", "RE4", "06:15", "06:33", express),
+    ("North", "Central", "RE1", "06:30", "06:48", express),
+    ("East", "Central", "RE2", "06:40", "06:58", express),
+    ("South", "Central", "RE3", "06:50", "07:08", express),
+    ("West", "Central", "RE4", "06:45", "07:03", express),
+    ("Central", "Airport", "AIR", "05:30", "06:00", airport),
+    ("Airport", "Central", "AIR", "22:00", "22:30", airport),
+    ("North", "University", "S1", "07:00", "07:15", suburban),
+    ("North", "Airport", "S2", "07:05", "07:22", suburban),
+    ("East", "Harbor", "S3", "07:10", "07:25", suburban),
+    ("South", "Harbor", "S4", "07:20", "07:38", suburban),
+    ("South", "Old Town", "S5", "07:25", "07:43", suburban),
+    ("West", "Old Town", "S6", "07:15", "07:32", suburban),
+    ("West", "University", "S7", "07:30", "07:48", suburban),
 ]
+df = pd.DataFrame(routes, columns=[FROM_STATION, TO_STATION, ROUTE, DEPARTURE, ARRIVAL, ROUTE_TYPE])
+df[[FROM_X, FROM_Y]] = [stations[s] for s in df[FROM_STATION]]
+df[[TO_X, TO_Y]] = [stations[s] for s in df[TO_STATION]]
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot
+NODE_RADIUS = 0.035
+CURVE = 0.28  # arc3 curvature for station pairs served in both directions
+
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Set axis limits with padding
-ax.set_xlim(-0.05, 1.05)
-ax.set_ylim(-0.05, 1.05)
-
-# Track route pairs for curve calculation
-route_pairs = {}
-for route in routes:
-    pair = (min(route["source"], route["target"]), max(route["source"], route["target"]))
-    if pair not in route_pairs:
-        route_pairs[pair] = []
-    route_pairs[pair].append(route)
-
-# Draw routes as curved arrows with labels
-for route in routes:
-    src = stations[route["source"]]
-    tgt = stations[route["target"]]
-
-    # Get curve parameters based on multiple routes between same stations
-    pair = (min(route["source"], route["target"]), max(route["source"], route["target"]))
-    same_pair = route_pairs[pair]
-    n_routes = len(same_pair)
-
-    # Calculate curve direction and strength for bidirectional routes
-    if n_routes == 1:
-        curve = 0.0
-    else:
-        # Outbound from lower-id station gets positive curve
-        if route["source"] < route["target"]:
-            curve = 0.2
-        else:
-            curve = -0.2
-
-    # Get route color from Okabe-Ito palette based on type
-    color = IMPRINT[route["type"]]
-
-    # Draw arrow
-    arrow = mpatches.FancyArrowPatch(
-        (src["x"], src["y"]),
-        (tgt["x"], tgt["y"]),
-        connectionstyle=f"arc3,rad={curve}",
-        arrowstyle="->,head_length=10,head_width=6",
-        color=color,
-        linewidth=3,
-        alpha=0.8,
-        zorder=1,
-    )
-    ax.add_patch(arrow)
-
-    # Get label position from route data
-    t = route["t_pos"]
-    base_offset = route["offset"]
-
-    # Linear position along edge
-    base_x = src["x"] + t * (tgt["x"] - src["x"])
-    base_y = src["y"] + t * (tgt["y"] - src["y"])
-
-    # Calculate perpendicular direction
-    dx = tgt["x"] - src["x"]
-    dy = tgt["y"] - src["y"]
-    length = np.sqrt(dx**2 + dy**2)
-
-    if length > 0:
-        perp_x = -dy / length
-        perp_y = dx / length
-    else:
-        perp_x, perp_y = 0, 0
-
-    label_x = base_x + perp_x * base_offset
-    label_y = base_y + perp_y * base_offset
-
-    # Route label with times
-    label_text = f"{route['route']} {route['dep']}→{route['arr']}"
-    ax.annotate(
-        label_text,
-        (label_x, label_y),
-        fontsize=11,
-        ha="center",
-        va="center",
-        color=INK,
-        fontweight="bold",
-        bbox={
-            "boxstyle": "round,pad=0.2",
-            "facecolor": ELEVATED_BG,
-            "edgecolor": color,
-            "linewidth": 1.5,
-            "alpha": 0.95,
-        },
-        zorder=3,
-    )
-
-# Draw station nodes
-node_radius = 0.035
-for station in stations:
-    # Node circle with fill
-    circle = plt.Circle(
-        (station["x"], station["y"]), node_radius, facecolor=PAGE_BG, edgecolor=INK_SOFT, linewidth=3.5, zorder=4
-    )
+# Station nodes, taken from the unique stations in df at their given coordinates
+nodes = pd.concat(
+    [
+        df[[FROM_STATION, FROM_X, FROM_Y]].set_axis(["name", "x", "y"], axis=1),
+        df[[TO_STATION, TO_X, TO_Y]].set_axis(["name", "x", "y"], axis=1),
+    ]
+).drop_duplicates("name")
+node_patches = {}
+for name, x, y in nodes.itertuples(index=False):
+    circle = mpatches.Circle((x, y), NODE_RADIUS, facecolor=PAGE_BG, edgecolor=INK_SOFT, linewidth=1.6, zorder=4)
     ax.add_patch(circle)
-
-    # Station label below node
+    node_patches[name] = circle
     ax.annotate(
-        station["label"],
-        (station["x"], station["y"] - node_radius - 0.025),
-        fontsize=15,
+        name,
+        (x, y - NODE_RADIUS - 0.012),
+        fontsize=8,
         ha="center",
         va="top",
         fontweight="bold",
         color=INK,
+        bbox={"boxstyle": "round,pad=0.12", "facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.85},
+        zorder=6,
+    )
+
+# Routes: one arrow per row, colored by route type; station pairs served both ways curve apart
+route_types = list(dict.fromkeys(df[ROUTE_TYPE]))
+type_color = {t: IMPRINT_PALETTE[i] for i, t in enumerate(route_types)}
+pair_count = df.apply(lambda r: frozenset((r[FROM_STATION], r[TO_STATION])), axis=1).value_counts()
+
+for row in df.to_dict("records"):
+    src, dst = row[FROM_STATION], row[TO_STATION]
+    x1, y1, x2, y2 = row[FROM_X], row[FROM_Y], row[TO_X], row[TO_Y]
+    color = type_color[row[ROUTE_TYPE]]
+    two_way = pair_count[frozenset((src, dst))] > 1
+    rad = CURVE if two_way else 0.0  # reversed direction flips the arc3 side, so the pair separates
+
+    arrow = mpatches.FancyArrowPatch(
+        (x1, y1),
+        (x2, y2),
+        connectionstyle=f"arc3,rad={rad}",
+        arrowstyle="-|>,head_length=0.9,head_width=0.45",
+        patchA=node_patches[src],
+        patchB=node_patches[dst],
+        shrinkA=0,
+        shrinkB=0,
+        color=color,
+        linewidth=1.6,
+        alpha=0.9,
+        zorder=1,
+    )
+    ax.add_patch(arrow)
+
+    # Label on its own curve (quadratic Bezier of the arc3 path); two-way pairs sit at 38 % from
+    # their own source so the two labels of a pair stagger along the line instead of colliding
+    t = 0.38 if two_way else 0.5
+    dx, dy = x2 - x1, y2 - y1
+    cx, cy = (x1 + x2) / 2 + rad * dy, (y1 + y2) / 2 - rad * dx
+    lx = (1 - t) ** 2 * x1 + 2 * t * (1 - t) * cx + t**2 * x2
+    ly = (1 - t) ** 2 * y1 + 2 * t * (1 - t) * cy + t**2 * y2
+    ax.annotate(
+        f"{row[ROUTE]} {row[DEPARTURE]}→{row[ARRIVAL]}",
+        (lx, ly),
+        fontsize=6,
+        ha="center",
+        va="center",
+        color=INK,
+        fontweight="bold",
+        bbox={"boxstyle": "round,pad=0.2", "facecolor": ELEVATED_BG, "edgecolor": color, "linewidth": 1.0},
         zorder=5,
     )
 
-# Create legend
-legend_elements = [
-    mpatches.Patch(facecolor=IMPRINT[0], edgecolor=IMPRINT[0], label="Regional Express (RE)"),
-    mpatches.Patch(facecolor=IMPRINT[1], edgecolor=IMPRINT[1], label="Airport Service (AIR)"),
-    mpatches.Patch(facecolor=IMPRINT[2], edgecolor=IMPRINT[2], label="S-Bahn (S)"),
-]
-leg = ax.legend(handles=legend_elements, loc="upper right", fontsize=16, framealpha=0.95)
-if leg:
-    leg.get_frame().set_facecolor(ELEVATED_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    leg.get_frame().set_linewidth(1)
+# Legend below the plot
+legend_elements = [mpatches.Patch(facecolor=type_color[t], edgecolor=type_color[t], label=t) for t in route_types]
+leg = ax.legend(
+    handles=legend_elements, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=len(route_types), fontsize=7
+)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
 # Styling
-ax.set_title(
-    "network-transport-static · python · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20
-)
-ax.set_xlabel("Relative Position (West → East)", fontsize=20, color=INK)
-ax.set_ylabel("Relative Position (South → North)", fontsize=20, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+pad = NODE_RADIUS + 0.06
+ax.set_xlim(df[[FROM_X, TO_X]].min().min() - pad, df[[FROM_X, TO_X]].max().max() + pad)
+ax.set_ylim(df[[FROM_Y, TO_Y]].min().min() - pad - 0.03, df[[FROM_Y, TO_Y]].max().max() + pad)
 ax.set_aspect("equal")
-
-# Subtle grid
-ax.grid(True, alpha=0.10, linewidth=0.8, color=INK_SOFT)
-
-# Remove spines
+ax.set_title("network-transport-static · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel("Relative position (west → east)", fontsize=9, color=INK)
+ax.set_ylabel("Relative position (south → north)", fontsize=9, color=INK)
+ax.tick_params(axis="both", labelsize=7, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.grid(True, alpha=0.12, linewidth=0.6, color=INK)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-for spine in ["left", "bottom"]:
+for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.1, right=0.97, top=0.93, bottom=0.2)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
