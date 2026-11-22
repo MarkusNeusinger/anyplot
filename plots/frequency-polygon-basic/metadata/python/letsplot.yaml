@@ -2,125 +2,127 @@ library: letsplot
 language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:17:54Z'
-updated: '2026-05-17T16:42:56Z'
-generated_by: claude-haiku
-workflow_run: 25996570310
+updated: '2026-11-22T07:23:46Z'
+generated_by: claude-sonnet
+workflow_run: 44997545625
 issue: 3418
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/letsplot/plot-dark.html
-quality_score: 92
+quality_score: 71
 review:
   strengths:
-  - Perfect theme adaptation in both light and dark renders with correct token usage
-    throughout
-  - Excellent text legibility with all font sizes explicitly set for the large canvas
-  - Correct Okabe-Ito color ordering and palette compliance across both renders
-  - Well-chosen synthetic data demonstrating multiple distribution shapes (unimodal,
-    shifted, bimodal)
-  - Clean code structure following KISS principles with proper random seed for reproducibility
-  - Idiomatic use of letsplot's ggplot2-style API and distinctive features (geom_freqpoly,
-    HTML export)
-  - Professional layout with balanced margins and no overlapping elements
+  - Native geom_freqpoly computes shared bins, so every group's vertices sit at the
+    same x positions (C3)
+  - 'Imprint palette in canonical order with #009E73 first, identical data colors
+    in both themes'
+  - Realistic three-condition response-time data showing unimodal, shifted and bimodal
+    shapes
+  - Axis and legend titles come straight from the descriptive column constants, keeping
+    labs() to the title
+  - Interactive HTML export adds hover inspection of the bin counts
   weaknesses:
-  - 'Design Excellence slightly below exceptional level (DE-01: 4/8) — while well-executed,
-    uses library defaults rather than fully custom aesthetic choices'
+  - 'VQ-01, VQ-07 (dark): the legend box renders pure white (#FFFFFF) on the #1A1A17
+    page, so the near-white legend title ''Condition'' is unreadable and the entry
+    labels read faint → legend background in PAGE_BG with no white fill. Likely cause:
+    legend_background not set in theme(), so theme_minimal''s white legend box remains.'
+  - 'SC-02 (both): polygons do not all close on zero at both ends (C2): Treatment
+    A starts at a count of 1 at ~135 ms and Treatment B ends at 1 at ~525 ms → every
+    line starts and ends at frequency 0, one empty bin beyond the data. Likely cause:
+    geom_freqpoly(bins=25) without padding of the bin range (e.g. a boundary/breaks
+    range one bin wider on each side).'
+  - 'Suggestion: the semi-transparent fill the Notes allow beneath each polygon could
+    ease reading the overlap.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as required. Not pure white.
-      Chrome: Title "frequency-polygon-basic · letsplot · anyplot.ai" clearly visible in dark text (INK). Axis labels "Response Time (ms)" and "Frequency" readable. Tick labels (0, 2, 4... 30-32) in soft gray (INK_SOFT). Legend showing "Condition" with three items.
-      Data: Three lines in Okabe-Ito colors — green (#009E73) for Control (main peak ~350ms), orange (#D55E00) for Treatment A (main peak ~300ms), blue (#0072B2) for Treatment B (bimodal ~280ms and ~420ms). Colors are vibrant and distinct.
-      Grid lines: Subtle, visible, using RULE token.
-      Legibility verdict: PASS — all text highly readable, excellent contrast, no issues.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'frequency-polygon-basic · python · letsplot · anyplot.ai' (~55% width) in dark ink, axis titles 'Response time (ms)' and 'Frequency', ticks 150-500 and 0-30 in soft ink, subtle grid. Legend 'Condition' on the right in a white box (slightly off from the page tone but readable).
+      Data: three angular polygons, Control #009E73, Treatment A #C475FD, Treatment B #4467A3 (bimodal ~250 and ~430 ms). Treatment A starts at 1 and Treatment B ends at 1, not 0.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as required. Not pure black.
-      Chrome: Title in light text (INK: #F0EFE8) clearly visible. Axis labels and tick labels in light soft text (INK_SOFT: #B8B7B0), all readable. Legend text light-colored.
-      Data: Identical colors to light render (#009E73, #D55E00, #0072B2) — confirmation that only chrome flips, not data colors. All three distribution shapes identical to light render.
-      Grid lines: Subtle and visible using RULE token adapted for dark theme.
-      Legibility verdict: PASS — no dark-on-dark failures, all text properly light-colored against dark surface, excellent contrast throughout.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, readable. The legend box is pure white: the near-white legend title 'Condition' is invisible on it and the gray entry labels read faint.
+      Data: identical colors and shapes to the light render.
+      Legibility verdict: FAIL (legend title light-on-white in the white legend box)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
-          Perfect readability in both themes.'
+        passed: false
+        comment: 'Dark render: legend title ''Condition'' is near-white on the pure-white
+          legend box and unreadable (defect line); all other text readable'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend positioned cleanly on right.
+        comment: No text collisions; crossing lines stay traceable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines clearly visible with size=2.5 and alpha=0.9. All three distributions
-          distinguishable.
+        comment: Thick lines suit 25 bins; legend line samples match the lines in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Strong contrast between all three
-          lines.
+        comment: Green, lilac and blue are CVD-distinguishable with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance. Plot fills appropriate canvas area with balanced
-          margins.
+        comment: 3200x1800 canvas, title ~55% width, balanced labels, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels include units. Title in correct format.
+        comment: Response time with unit (ms) and Frequency
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First series is #009E73. Multi-series follows Okabe-Ito order. Backgrounds
-          correct. Chrome colors theme-correct in both renders.'
+        passed: false
+        comment: Imprint order correct (#009E73 first), page backgrounds correct,
+          but the legend box is pure white in the dark render (wrong-theme chrome,
+          defect line)
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Well-configured library defaults with consistent theme tokens. Clean
-          and professional but not exceptionally custom.
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid styling using RULE token, minimal chrome, generous whitespace.
-          Shows attention to visual detail.
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy through color contrast clearly distinguishes three
-          conditions. Data choice naturally tells story about response time differences.
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,27 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct use of geom_freqpoly() for frequency polygon chart type.
+        comment: Frequency polygon via geom_freqpoly, one polygon per group, no extra
+          layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec requirements present: multiple distributions, distinct
-          colors, clear legend, lines connect bin midpoints.'
+        passed: false
+        comment: 'C1, C3, C4 met; C2 missed: Treatment A starts at 1 and Treatment
+          B ends at 1, so not every polygon closes on zero at both ends (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly maps response_time, Y-axis maps frequency, color
-          maps condition.
+        comment: x = response time, y = count per shared bin, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend labels match data conditions.
+        comment: Title in mandated format; legend titled Condition with matching entries
     data_quality:
       score: 15
       max: 15
@@ -158,22 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows three distinct distribution types: unimodal, shifted unimodal,
-          and bimodal. Demonstrates full range of frequency polygon use cases.'
+        comment: Unimodal, shifted and bimodal distributions show what the plot type
+          compares
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world plausible scenario: response times in controlled experimental
-          conditions. Neutral, non-controversial.'
+        comment: Response times across experimental conditions, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values factually correct: response times (200-550ms typical),
-          sample sizes (200 per group), SDs appropriate for psychological research.'
+        comment: 200-500 ms with 200 observations per group is realistic; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -183,60 +184,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → theme tokens → data generation
-          → plot → save. No functions or classes.'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Sets np.random.seed(42) for deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: numpy, pandas, lets_plot components, os.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriately complex. Clean theme token organization.
-          No fake functionality.
+        comment: Native geom_freqpoly binning, no hand-rolled computation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html using current
-          API.
+        comment: plot-{THEME}.png and plot-{THEME}.html via ggsave
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Expertly uses letsplot ggplot2 grammar: ggplot() + geom_freqpoly()
-          + scale_color_manual() + custom theme with element_* functions.'
+        passed: false
+        comment: Grammar-of-graphics layering with theme(); standard usage
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: 'Uses letsplot-specific features: geom_freqpoly(), ggsave() with
-          scale, LetsPlot.setup_html(), theme system with element_* functions.'
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-22T07:20:51Z'
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - binning
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
