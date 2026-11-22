@@ -1,13 +1,15 @@
-""" anyplot.ai
+"""anyplot.ai
 waffle-basic: Basic Waffle Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-05
 """
 
+import math
 import os
 import time
 from pathlib import Path
 
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem
 from bokeh.plotting import figure
@@ -22,101 +24,79 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always brand green)
-PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Survey results on renewable energy adoption
-categories = ["Solar", "Wind", "Hydro", "Geothermal"]
-values = [48, 25, 18, 9]  # Percentages summing to 100
+# Columns: set these to your table's column names
+SOURCE = "Energy source"  # role: category
+SHARE = "Share of mix (%)"  # role: value
 
-# Build waffle grid (10x10 = 100 squares)
-grid_size = 10
-total_squares = grid_size * grid_size
+# Data: replace this block with your own table, for example df = pd.read_csv("mix.csv")
+df = pd.DataFrame({SOURCE: ["Solar", "Wind", "Hydro", "Geothermal"], SHARE: [48, 25, 18, 9]})
 
-# Assign category to each square based on percentages
-square_categories = []
-color_map = []
-for i, (cat, val) in enumerate(zip(categories, values, strict=True)):
-    square_categories.extend([cat] * val)
-    color_map.extend([PALETTE[i]] * val)
+# Plot: reads only df and the constants above
+side = math.isqrt(round(df[SHARE].sum()))  # 10 x 10 grid: each square is 1% of the whole
+squares = df.loc[df.index.repeat(df[SHARE].round().astype(int))].reset_index(drop=True)
+squares["col"] = squares.index % side
+squares["row"] = squares.index // side  # filled row by row, from the bottom
 
-# Create grid coordinates (fill left-to-right, bottom-to-top)
-x_coords = []
-y_coords = []
-for idx in range(total_squares):
-    x_coords.append(idx % grid_size)
-    y_coords.append(idx // grid_size)
+title = "Renewable Energy Sources · waffle-basic · python · bokeh · anyplot.ai"
+title_pt = round(50 * min(1.0, 67 / len(title)))
 
-source = ColumnDataSource(data={"x": x_coords, "y": y_coords, "category": square_categories, "color": color_map})
-
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="Renewable Energy Sources · waffle-basic · bokeh · anyplot.ai",
-    x_range=(-0.7, grid_size - 0.3),
-    y_range=(-0.7, grid_size - 0.3),
+    width=3200,
+    height=1800,
+    title=title,
+    match_aspect=True,
     tools="",
     toolbar_location=None,
+    min_border_top=110,
+    min_border_bottom=100,
+    min_border_left=60,
+    min_border_right=60,
 )
 
-# Draw squares with small gap between them
-square_size = 0.88
-renderers = []
-for i, (cat, color) in enumerate(zip(categories, PALETTE, strict=True)):
-    # Filter data for this category
-    indices = [j for j, c in enumerate(square_categories) if c == cat]
-    cat_source = ColumnDataSource(
-        data={
-            "x": [x_coords[j] for j in indices],
-            "y": [y_coords[j] for j in indices],
-            "category": [cat] * len(indices),
-            "percentage": [values[i]] * len(indices),
-        }
-    )
+legend_items = []
+for i, name in enumerate(df[SOURCE]):
+    rows = squares[squares[SOURCE] == name]
     r = p.rect(
-        x="x",
-        y="y",
-        width=square_size,
-        height=square_size,
-        source=cat_source,
-        fill_color=color,
+        x="col",
+        y="row",
+        width=0.9,
+        height=0.9,
+        source=ColumnDataSource(rows),
+        fill_color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
         line_color=PAGE_BG,
-        line_width=2.5,
-        fill_alpha=1.0,
+        line_width=2,
     )
-    renderers.append((f"{cat} ({values[i]}%)", [r]))
+    legend_items.append(LegendItem(label=f"{name} ({df[SHARE].iloc[i]}%)", renderers=[r]))
 
-# Add hover tool
-hover = HoverTool(tooltips=[("Category", "@category"), ("Percentage", "@percentage%")])
-p.add_tools(hover)
+p.add_tools(HoverTool(tooltips=[(SOURCE, f"@{{{SOURCE}}}"), (SHARE, f"@{{{SHARE}}}")]))
 
-# Add legend
-legend = Legend(items=[LegendItem(label=label, renderers=rends) for label, rends in renderers])
-legend.label_text_font_size = "18pt"
-legend.glyph_height = 35
-legend.glyph_width = 35
-legend.spacing = 12
-legend.padding = 15
-legend.location = "top_right"
+legend = Legend(items=legend_items, location="center")
+legend.label_text_font_size = "34pt"
+legend.label_text_color = INK
+legend.glyph_height = 60
+legend.glyph_width = 60
+legend.spacing = 24
+legend.padding = 30
+legend.margin = 40
 legend.background_fill_color = ELEVATED_BG
 legend.border_line_color = INK_SOFT
-legend.label_text_color = INK_SOFT
 p.add_layout(legend, "right")
 
-# Style the plot
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = f"{title_pt}pt"
 p.title.align = "center"
 p.title.text_color = INK
-
-# Hide axes
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.outline_line_color = None
-
-# Set background
+p.outline_line_alpha = 0
+p.x_range.range_padding = 0.01
+p.y_range.range_padding = 0.01
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 
@@ -125,7 +105,7 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -139,6 +119,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
