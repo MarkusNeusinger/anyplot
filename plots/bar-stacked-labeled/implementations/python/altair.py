@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-stacked-labeled: Stacked Bar Chart with Total Labels
-Library: altair 6.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-18
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-22
 """
 
 import os
