@@ -1,86 +1,95 @@
-""" anyplot.ai
+"""anyplot.ai
 chessboard-basic: Chess Board Grid Visualization
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 95/100 | Updated: 2026-05-17
 """
 
 import os
-import sys
 
+import altair as alt
+import pandas as pd
+from PIL import Image
 
-# Change to script directory before importing to allow proper imports
-script_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(script_dir)
-
-# Remove current directory from import path temporarily
-saved_path = sys.path[:]
-sys.path = [p for p in sys.path if p not in ("", ".", script_dir)]
-
-try:
-    import pandas as pd
-    from altair import Axis, Chart, Color, Scale, Title, X, Y
-finally:
-    sys.path = saved_path
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Create 8x8 chess board
-columns = list("abcdefgh")
-rows = list(range(1, 9))
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Generate all 64 squares with color assignments
-# Light squares at h1 and a8 corners (standard chess convention)
-data = []
-for col_idx, col in enumerate(columns):
-    for row in rows:
-        # Chess coloring: (col_idx + row) even = dark, odd = light
-        is_light = (col_idx + row) % 2 == 1
-        data.append({"column": col, "row": row, "color": "light" if is_light else "dark", "x": col_idx, "y": row - 1})
+# Constants: classic two-tone board colors, constant across themes
+SQUARE_COLORS = {"light": "#F5DEB3", "dark": "#A0704F"}
 
-df = pd.DataFrame(data)
+# Columns: set these to your table's column names
+FILE = "File"  # role: columns
+RANK = "Rank"  # role: rows
+SHADE = "Shade"  # role: extra
 
-# Create chart with rect marks for squares
-# Chess square colors work on both light and dark backgrounds
+# Data: replace this block with your own table of squares, one row per square
+# Light squares sit at h1 and a8 (standard orientation)
+files = list("abcdefgh")
+df = pd.DataFrame(
+    [
+        {FILE: file, RANK: rank, SHADE: "light" if (i + rank - 1) % 2 == 1 else "dark"}
+        for i, file in enumerate(files)
+        for rank in range(1, 9)
+    ]
+)
+
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+file_order = list(dict.fromkeys(df[FILE]))
+rank_order = sorted(df[RANK].unique(), reverse=True)  # highest rank at the top
+shades = list(SQUARE_COLORS)
+
 chart = (
-    Chart(df)
-    .mark_rect(stroke=INK_SOFT, strokeWidth=2)
+    alt.Chart(df)
+    .mark_rect(stroke=INK_SOFT, strokeWidth=1.5)
     .encode(
-        x=X(
-            "column:O",
-            axis=Axis(
-                title=None, labelFontSize=24, labelAngle=0, orient="bottom", labelPadding=10, labelColor=INK_SOFT
-            ),
-            sort=columns,
+        x=alt.X(
+            FILE.translate(ESCAPE),
+            type="ordinal",
+            title=None,
+            sort=file_order,
+            axis=alt.Axis(labelFontSize=24, labelAngle=0, labelPadding=10, labelColor=INK_SOFT, ticks=False),
         ),
-        y=Y(
-            "row:O",
-            axis=Axis(title=None, labelFontSize=24, labelPadding=10, labelColor=INK_SOFT),
-            sort=list(range(8, 0, -1)),  # 8 at top, 1 at bottom
+        y=alt.Y(
+            RANK.translate(ESCAPE),
+            type="ordinal",
+            title=None,
+            sort=rank_order,
+            axis=alt.Axis(labelFontSize=24, labelPadding=10, labelColor=INK_SOFT, ticks=False),
         ),
-        color=Color(
-            "color:N",
-            scale=Scale(
-                domain=["light", "dark"],
-                range=["#F5DEB3", "#A0704F"],  # Wheat / Medium brown (visible on both themes)
-            ),
+        color=alt.Color(
+            SHADE.translate(ESCAPE),
+            type="nominal",
             legend=None,
+            scale=alt.Scale(domain=shades, range=[SQUARE_COLORS[s] for s in shades]),
         ),
     )
     .properties(
-        width=900,
-        height=900,
+        width=460,
+        height=460,
         background=PAGE_BG,
-        title=Title("chessboard-basic · altair · anyplot.ai", fontSize=32, anchor="middle", offset=20, color=INK),
+        title=alt.Title(
+            "chessboard-basic · python · altair · anyplot.ai", fontSize=24, anchor="middle", offset=20, color=INK
+        ),
     )
     .configure_view(strokeWidth=2, stroke=INK_SOFT, fill=PAGE_BG)
-    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK_SOFT, gridOpacity=0.0)
+    .configure_axis(domainColor=INK_SOFT, grid=False)
 )
 
-# Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save: pad (never crop) to the 2400 x 2400 square canvas
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TARGET = 2400
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET or img.height > TARGET:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, exceeds {TARGET}x{TARGET}; shrink width/height")
+canvas = Image.new("RGB", (TARGET, TARGET), PAGE_BG)
+canvas.paste(img, ((TARGET - img.width) // 2, (TARGET - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
