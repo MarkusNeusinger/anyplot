@@ -2,49 +2,43 @@ library: plotnine
 language: python
 specification_id: logistic-regression
 created: '2026-01-09T21:55:08Z'
-updated: '2026-05-18T08:47:08Z'
-generated_by: claude-haiku
-workflow_run: 26022450560
+updated: '2026-11-22T12:18:47Z'
+generated_by: claude-sonnet
+workflow_run: 45021026139
 issue: 3550
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 83
 review:
   strengths:
-  - Excellent theme-adaptive implementation with perfect legibility in both light
-    and dark renders
-  - 'Perfect visual quality: no overlap, legibility, or accessibility issues'
-  - 'All spec requirements met: logistic curve, confidence band, threshold line, jittered
-    points'
-  - Clean, reproducible code with proper seeding and idiomatic plotnine usage
-  - Realistic, educationally-sound data demonstrating the logistic regression concept
-    clearly
-  - Okabe-Ito palette correctly applied with proper theme-token chrome adaptation
+  - Fits the model with statsmodels Logit and draws the 95% band from get_prediction().conf_int(),
+    so the band is the real interval of the predicted probability
+  - 'Imprint positions taken by index from the full eight-hue list: Renewed #009E73,
+    Not renewed #C475FD, curve #4467A3'
+  - Per-layer data in a single ggplot() with column names flowing into the axis and
+    legend titles
+  - Points jittered on y only via position_jitter(width=0, height=0.03), so x stays
+    exact
+  - Theme tokens threaded through every chrome element; both renders read cleanly
   weaknesses:
-  - Design Excellence could reach 8/8 with more distinctive visual refinement (custom
-    styling, enhanced visual hierarchy, or intentional emphasis techniques)
-  - Library Mastery LM-02 uses standard geom composition; could explore more plotnine-distinctive
-    patterns or advanced stat layers for next iteration
+  - 'Suggestion: a slightly stronger band fill in the dark render would separate it
+    more from the page while keeping gridlines visible.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all rendered in dark INK (#1A1A17) with perfect readability; legend cleanly positioned on right with styled background
-      Data: Orange Fail points (n≈75) clustered at y≈0; cyan Pass points (n≈75) clustered at y≈1; blue logistic curve (#0072B2) with semi-transparent confidence band; dashed decision threshold line at y=0.5
-      Grid: Subtle major/minor grid lines (alpha 0.08/0.04) visible but not dominant
-      Legibility verdict: PASS - all elements perfectly readable with high contrast
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'logistic-regression · python · plotnine · anyplot.ai' centered on top; x-axis 'Monthly usage (hours)', y-axis 'Probability of renewal', ticks 0.00-1.00 and 10-40 in dark ink; L-shaped axis lines; subtle grid; legend 'Outcome' on the right on an elevated surface without frame
+      Data: Renewed points in #009E73 jittered around y=1, Not renewed in #C475FD around y=0, both alpha 0.6; blue #4467A3 S-curve with translucent blue-grey 95% band widening at the low end; grey dashed line at 0.5 across the full width
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: All text rendered in light INK (#F0EFE8) and INK_SOFT (#B8B7B0); no dark-on-dark failures; all labels equally readable as light render
-      Data: Orange and cyan data colors are identical to light render (only chrome adapts); blue curve maintains prominence
-      Grid: Grid lines visible with light opacity (theme-inverted but properly styled)
-      Legibility verdict: PASS - all elements readable, no dark-on-dark, colors perfectly theme-adapted
-
-    Both renders pass legibility and theme-adaptation validation. Data colors (positions 1-3 Okabe-Ito) are identical across themes; only backgrounds and text chrome flip as required.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink, no dark-on-dark text; legend on the #242420 elevated surface with light text; grid subtle but visible
+      Data: identical colors to the light render (green, purple, blue curve); band reads as dark navy translucent fill with the curve clearly visible on top
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,72 +49,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt); perfect
-          readability in both themes
+        comment: Explicit sizes from the library prompt (title 12, axis titles 10,
+          ticks 8, legend 8/9 pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlap; all text cleanly spaced
+        comment: No text collisions; points sit in two rows clear of the threshold
+          label area and the legend is outside the panel
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 points at size=4 with alpha=0.6 optimally visible; curve and
-          ribbon prominent
+        comment: 180 points at size 2.5 with alpha 0.6, prominent 1.2 curve, band
+          and dashed threshold all visible in both themes; legend glyphs match the
+          points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with CVD-safe colors; high contrast between series
+        comment: Green vs purple classes are CVD-distinguishable and also separated
+          by row; good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px at (16,9) figure; plot fills 60-70% with generous balanced
-          margins
+        comment: 3200x1800 canvas (gate passed), balanced margins, title ~51% of width,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units (Exam Score in points, Probability of Passing)
+        comment: '''Monthly usage (hours)'' with unit and ''Probability of renewal'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; backgrounds correct ✓; theme tokens on all
-          chrome ✓'
+        comment: 'Renewed = #009E73 (position 1), Not renewed = #C475FD (position
+          2), curve #4467A3 (position 3); backgrounds #FAF8F1 / #1A1A17; data colors
+          identical across themes'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Well-configured colors with intentional hierarchy; professional polish.
-          Could reach 8 with more distinctive refinement.
+        comment: Style-guide baseline; frameless legend on the elevated surface is
+          within the baseline, nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Excellent: spines removed, subtle grid, styled legend. Minor tweaks
-          possible.'
+        passed: false
+        comment: L-shaped axis lines and subtle grid met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Strong visual hierarchy: curve is focal point, points contextual,
-          threshold explains boundary. S-curve tells story clearly.'
+        passed: false
+        comment: Data displayed with the curve as natural focus; no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Perfect logistic regression: sigmoid curve, binary classes, confidence
-          band, threshold'
+        comment: Correct logistic regression curve plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: jittered points, smooth curve, 95% CI, 0.5 threshold,
-          alpha=0.6'
+        comment: Jittered points per class, alpha 0.6, solid smooth curve, 95% CI
+          band, dashed 0.5 threshold across the whole x range; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: scores 20-100; Y: 0-1 probability; all data visible'
+        comment: x = usage hours at exact values, y jitter only (spec-requested);
+          full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Title 'logistic-regression · python · plotnine · anyplot.ai'; legend
+          'Outcome' with Renewed / Not renewed
     data_quality:
       score: 15
       max: 15
@@ -160,21 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full pass/fail separation, uncertainty region, outliers, realistic
-          variance
+        comment: Shows overlap in the middle, sparse right tail, band widening toward
+          the ends
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Exam scores with outcomes: real, comprehensible, neutral, educational'
+        comment: 'Subscription renewal vs monthly usage: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 20-100 realistic; outcome proportions plausible; distributions
-          match real-world pattern
+        comment: Usage 0.5-40 h/month and ~60% renewal rate are sensible; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -184,58 +182,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no unnecessary functions/classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic
+        comment: rng seeded and np.random.seed for plotnine jitter
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: statsmodels get_prediction/conf_int used for the band; no hand-rolled
+          algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png format; dpi=300
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi 400; current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expertly uses ggplot() + geom_*() pattern; proper aes(), theme(),
-          scale_color_manual()
+        comment: Grammar-of-graphics layering with per-layer data, column names flowing
+          into axis/legend titles via aes, theme layered on theme_minimal, position_jitter(width=0)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Uses geom_ribbon() for CI and statsmodels integration; solid but
-          uses standard patterns. Could explore more distinctive plotnine features.
+        comment: geom_ribbon/geom_line/geom_hline are standard composition; nothing
+          beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-bf70a1c05e
+  rendered_at: '2026-11-22T12:15:20Z'
 impl_tags:
   dependencies:
   - statsmodels
   techniques:
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
   - alpha-blending
+  - minimal-chrome
+  - grid-styling
