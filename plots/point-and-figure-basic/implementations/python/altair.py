@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-20
@@ -14,6 +14,7 @@ sys.path = [p for p in sys.path if not p.endswith("/python")]
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -22,21 +23,39 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BULL_COLOR = "#009E73"  # Okabe-Ito position 1 — X columns (bullish)
+BULL_COLOR = "#009E73"  # Imprint position 1 — X columns (bullish)
 BEAR_COLOR = "#AE3030"  # imprint red — O columns (bearish)
 
-# Data
+# Constants
+BOX_SHARE = 0.02  # box size as a share of the median close, rounded to the nearest half unit
+REVERSAL = 3  # boxes of reverse movement that start a new column
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+HIGH = "High ($)"  # role: high
+LOW = "Low ($)"  # role: low
+CLOSE = "Close ($)"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 300
-dates = pd.date_range("2024-01-01", periods=n_days, freq="D")
 returns = np.random.normal(0.0005, 0.02, n_days)
-close = 100 * np.cumprod(1 + returns)
+closes = 100 * np.cumprod(1 + returns)
+ranges = np.abs(np.random.normal(0, 0.01, n_days))
+df = pd.DataFrame(
+    {
+        DATE: pd.date_range("2024-01-01", periods=n_days, freq="D"),
+        HIGH: closes * (1 + ranges),
+        LOW: closes * (1 - ranges),
+        CLOSE: closes,
+    }
+)
 
-# Point and Figure parameters
-box_size = 2.0  # $2 per box
-reversal = 3  # 3-box reversal
-
-# Build P&F columns
+# Plot
+# Build P&F columns from the closing prices
+close = df[CLOSE].to_numpy()
+box_size = max(0.5, round(df[CLOSE].median() * BOX_SHARE * 2) / 2)
+reversal = REVERSAL
 pf_data = []
 col = 0
 direction = None
@@ -119,7 +138,7 @@ SUBTITLE = f"Box Size: ${box_size:.0f} | Reversal: {reversal} boxes"
 
 pf_marks = (
     alt.Chart(pf_df)
-    .mark_text(fontSize=18, fontWeight="bold")
+    .mark_text(fontSize=14, fontWeight="bold")
     .encode(
         x=alt.X("column:O", title="Column (Reversals)", axis=alt.Axis(labelFontSize=10, titleFontSize=12)),
         y=alt.Y(
@@ -157,13 +176,13 @@ resist_layer = (
 chart = (
     alt.layer(pf_marks, support_layer, resist_layer)
     .properties(
-        width=800,
-        height=450,
+        width=620,
+        height=320,
         background=PAGE_BG,
         title=alt.Title(TITLE, fontSize=16, subtitle=SUBTITLE, subtitleFontSize=11),
     )
     .interactive()
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke="transparent")
     .configure_axis(
         domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.12, labelColor=INK_SOFT, titleColor=INK
     )
@@ -180,4 +199,13 @@ chart = (
 
 # Save
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Pad (never crop) to the 3200 x 1800 target canvas
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TW or img.height > TH:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, exceeds {TW}x{TH}; shrink width/height")
+canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+canvas.paste(img, ((TW - img.width) // 2, (TH - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
 chart.save(f"plot-{THEME}.html")
