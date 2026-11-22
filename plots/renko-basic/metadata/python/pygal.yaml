@@ -2,123 +2,138 @@ library: pygal
 language: python
 specification_id: renko-basic
 created: '2026-01-08T16:12:15Z'
-updated: '2026-05-17T11:57:04Z'
-generated_by: claude-haiku
-workflow_run: 25989879803
+updated: '2026-11-22T05:27:20Z'
+generated_by: claude-sonnet
+workflow_run: 44989077410
 issue: 3294
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/pygal/plot-dark.html
-quality_score: 92
+quality_score: 74
 review:
   strengths:
-  - Perfect visual quality with legible text in both light and dark themes
-  - 'Flawless spec compliance with correct Okabe-Ito colors (#009E73 and #D55E00)'
-  - Theme-adaptive styling works perfectly—only chrome flips, data colors remain identical
-  - Clever use of StackedBar with invisible spacer layer to position renko bricks
-  - Realistic, well-scaled synthetic stock price data with appropriate parameters
-  - Clean, reproducible code with proper seeding and minimal imports
+  - 'Renko construction is correct: every brick moves one column right and one brick
+    up or down, with two-brick reversals, reading as clean staircases'
+  - Invisible page-coloured spacer series in a pygal StackedBar positions the bricks
+    without any custom drawing
+  - 'Imprint green #009E73 for bullish and Imprint red #AE3030 for bearish, identical
+    in both themes, with theme-correct chrome'
+  - Bricks are uniform and separated by a small gap (spacing=6), no extra layers on
+    the basic variant
+  - Native interactive HTML output with pygal tooltips alongside the PNG
   weaknesses:
-  - Design Excellence is moderate—implementation is technically sound but aesthetically
-    fairly standard, mostly relying on theme tokens rather than additional visual
-    refinement techniques
+  - 'SC-03, SC-02, DQ-03 (both): the y-axis labels do not match the bricks: each $2
+    brick spans one $4 gridline step, the first brick (start price near $100) is drawn
+    above the $110 label, and the upper half of the plot carries no price labels →
+    every brick spans exactly one $2 brick size at its real price on a labelled axis.
+    Likely cause: string y_labels (''$82''…''$110'') placed by pygal at numeric positions
+    that do not correspond to the spacer heights (price − y_min); plot the spacer
+    from y_min with numeric y_labels and a value_formatter adding ''$'', or set range/min_scale
+    to the true price window.'
+  - 'VQ-05 (both): the legend breaks into two misaligned rows — ''Bullish (up)'' centred
+    on the first row, ''Bearish (down)'' alone at the left of a second row — because
+    the empty-titled spacer series still takes a legend slot → one row with both entries.
+    Likely cause: chart.add('''', spacer_values) participates in the legend; exclude
+    it (e.g. legend_box_size / truncate, or add the spacer with a config that hides
+    it from the legend) or use legend_at_bottom_columns=2.'
+  - 'VQ-03 (both): legend swatches are about 10 px squares beside 44 px legend text
+    and are hard to see → swatches near the text height (legend_box_size ≈ 36–44).
+    Likely cause: default legend_box_size.'
+  - 'VQ-01 (both): the $82 and $102 y-tick labels render visibly smaller than the
+    other tick labels → one tick size for all labels. Likely cause: pygal draws them
+    as ''major'' labels at major_label_font_size=44 while the others use label_font_size=56;
+    set both sizes equal.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, correctly themed
-      Chrome: Title "renko-basic · pygal · anyplot.ai" clearly visible at top. X-axis label "Brick Index" and Y-axis label "Price ($)" readable. Tick labels (0, 5, 10... and $80, $84, $90...) all distinct and legible.
-      Data: Green bars (#009E73) for bullish/up bricks, orange bars (#D55E00) for bearish/down bricks. Subtle horizontal grid aids price-level reading. Legend labels clear.
-      Legibility verdict: PASS — all text readable, proper contrast, professional spacing, no dark-on-dark issues.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'renko-basic · python · pygal · anyplot.ai' dark and readable; 'Price ($)' and 'Brick index' axis titles readable; y ticks $82..$110 (the $82 and $102 labels render smaller), x ticks 0..35 every 5; subtle dotted horizontal grid; legend at bottom split over two rows.
+      Data: 40 bricks, bullish #009E73 green, bearish #AE3030 red, separated by small gaps, forming staircases; the upper half of the bricks sits above the last price label $110.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, correctly themed
-      Chrome: Title and all axis labels in light text, fully readable against dark surface. X and Y tick labels show excellent contrast, no dark-on-dark failures detected.
-      Data: Data colors (green and orange bars) are IDENTICAL to light render, confirming only chrome flipped while categorical colors stayed constant. Grid lines remain subtle. Legend text legible.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, excellent theme adaptation, consistent palette across renders.
-
-    Both renders pass legibility checks with proper color contrast and theme-adaptive styling throughout.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, all readable; no dark-on-dark text; grid subtle.
+      Data: same green and red brick colours as the light render, only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: Font sizes explicitly set (28px title, 22px labels, 18px ticks).
-          All readable in both themes.
+        passed: false
+        comment: Title 66px, axis titles 56px, ticks 44px readable in both themes,
+          but the $82 and $102 y-tick labels render smaller than the others (defect
+          line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels spaced every 5 indices. Y-axis properly separated.
-          Bars have clear gaps (spacing=6). Zero collisions.
+        comment: No text collisions; bricks separated by spacing=6
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: All bricks clearly distinguishable. Green and orange maintain strong
-          contrast. Data elements prominent.
+        passed: false
+        comment: Bricks prominent; legend swatches are tiny squares next to 44px legend
+          text (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette used (#009E73, #D55E00). Colorblind-safe, adequate
-          contrast.'
+        comment: Green/red bricks differ strongly in lightness too; readable for CVD
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 4800×2700 landscape appropriate. Balanced proportions. Nothing cut
-          off. Good spacing.
+        passed: false
+        comment: 3200x1800 canvas, good proportions, but the legend breaks into two
+          misaligned rows because the empty spacer series takes a slot (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Labels descriptive with units ("Price ($)").
+        comment: '''Price ($)'' and ''Brick index'' are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Multi-series follows Okabe-Ito order. Backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark). Theme-correct.'
+        comment: 'Bullish #009E73, bearish Imprint red #AE3030; backgrounds #FAF8F1
+          / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom Style with theme tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED).
-          Intentional color choices. Not generic, but fairly standard.
+        passed: false
+        comment: 'Style-guide baseline: theme tokens and Imprint colors, nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid via foreground_subtle. Generous whitespace. Bars properly
-          spaced. Clean legend placement.
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Chart shows trend direction clearly. Color encoding guides viewer
-          (green/red). Trend reversals visible. No extra emphasis.
+        passed: false
+        comment: Bricks displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -126,31 +141,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: StackedBar correctly represents renko bricks. Clever invisible spacer
-          positions bricks at correct price.
+        comment: Correct Renko chart via stacked bars with an invisible spacer; no
+          unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Bullish/bearish bricks present. Fixed brick size ($2) implemented.
-          Price levels shown. Reversals visible.
+        passed: false
+        comment: 'Green/red bricks, gaps, index x-axis, subtle grid present; C1 missed:
+          each $2 brick spans a $4 gridline step on the labelled axis (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: X = brick index, Y = price. Bricks positioned correctly. Mapping
-          accurate.
+        passed: false
+        comment: 'Price axis mislabelled: bricks sit at spacer heights (price - y_min)
+          on a pygal axis whose string labels $82..$110 do not match those values;
+          the upper half of the bricks has no price labels (defect line)'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match ("Bullish (Up)", "Bearish
-          (Down)").
+        comment: Title in mandated format; legend 'Bullish (up)' / 'Bearish (down)'
+          matches
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -158,22 +174,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 40 bricks demonstrate uptrends, downtrends, reversals. Full renko
-          behavior range.
+        comment: 40 bricks with uptrends, downtrends and reversals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price data with realistic returns (mean=0.001, std=0.02). Price
-          range $80–$130 plausible. Brick size $2 sensible.
+        comment: Plausible daily stock closes over ~6 months with a $2 brick
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Price range sensible. Brick size creates meaningful levels. 40 bricks
-          avoid crowding. 180 days realistic.
+        passed: false
+        comment: 'Read off the axis: the first brick, which starts near $100, sits
+          above the $110 label, and a $2 brick spans the $4 label step; the axis does
+          not show the brick prices (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -183,57 +198,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes. Straightforward renko algorithm.
-          Clear flow.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42). Deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (os, numpy, pygal, Style). No bloat.
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear brick calculation. No fake interactivity (pygal is interactive
-          by nature).
+        comment: Renko construction loop is the necessary algorithm; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Correct ANYPLOT_THEME
-          usage.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: StackedBar used idiomatically. Custom Style applies theme tokens
-          correctly. Font sizing appropriate for pixel-based library.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Clever invisible spacer + stacked bars technique. Theme-adaptive
-          styling solid. Interactive HTML output. Moderate sophistication.
+        passed: false
+        comment: 'StackedBar with custom Style: standard pygal usage, default'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; HTML output native
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-22T05:24:14Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
+  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling: []
