@@ -2,43 +2,53 @@ library: letsplot
 language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:48:04Z'
-updated: '2026-05-18T03:33:38Z'
-generated_by: claude-haiku
-workflow_run: 26011659529
+updated: '2026-11-22T09:55:08Z'
+generated_by: claude-sonnet
+workflow_run: 45009288491
 issue: 3529
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 80
 review:
   strengths:
-  - 'Perfect visual quality: all text readable, no overlap, excellent contrast in
-    both themes'
-  - Proper theme-adaptive chrome using tokens (PAGE_BG, INK, INK_SOFT) consistently
-  - Spec-compliant data with realistic pharmaceutical context (drug efficacy by dosage
-    + treatment)
-  - 'Idiomatic letsplot usage: position adjustments for grouped violin + swarm are
-    appropriate'
-  - Okabe-Ito palette correctly applied (#009E73 first series)
-  weaknesses: []
+  - Native position_dodge and position_jitterdodge with the same dodge width keep
+    every swarm centred on its own violin
+  - Theme tokens threaded through every chrome element; both renders read cleanly,
+    legend on the elevated surface
+  - 'Adaptable layout: column constants with role comments and the full Imprint palette
+    mapped in order'
+  - Interactive HTML output alongside the PNG
+  weaknesses:
+  - 'VQ-03 (both): swarm points at geom_point size 1.0 with alpha 0.6 read faint against
+    their same-hue violin fill, most of all the green Placebo points on the dark-green
+    fill in the dark render → size about 1.5 and alpha about 0.8 (+0.5 size, +0.2
+    alpha). Likely cause: geom_point(alpha=0.6, size=1.0).'
+  - 'SC-03 (both): trim=False extends the violin tails to about -0.7 and 11 on an
+    efficacy score clipped to 1-10, so the violins show values the data does not have
+    → trim the density at the data range. Likely cause: geom_violin(trim=False).'
+  - 'Suggestion: a quantile line inside each violin (geom_violin draw_quantiles) would
+    make the dose-response shift of the medians easier to read.'
+  - 'Suggestion: a tooltip layout (layer_tooltips) naming dose, group and score would
+    add value in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels (Dosage Level, Efficacy Score), tick marks all dark and clearly visible
-      Data: Grouped violins with swarm overlay; green #009E73 (Placebo) and orange #D55E00 (Treatment); alpha=0.5 transparency on violins; point sizes appropriate
+      Background: warm off-white #FAF8F1, 3200x1800 canvas
+      Chrome: title 'violin-grouped-swarm · python · letsplot · anyplot.ai' top-left in dark ink; y-axis 'Efficacy Score' ticks -1..11, x-axis 'Dosage Level' with Low / Medium / High Dose; thin grey grid; legend 'Group' on the right on an elevated box — all readable
+      Data: per dose a green #009E73 Placebo violin and a lavender #C475FD Treatment violin side by side, alpha 0.5 fills with solid outlines, small hue-matched jittered points over each; treatment rises with dose, placebo stays near 3-4; KDE tails extend below 0 and to 11
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, ticks all light-colored (INK_SOFT #B8B7B0) and clearly readable; no dark-on-dark failures
-      Data: Colors identical to light render (green and orange preserved); legend background uses elevated tone (#242420) with clear separation
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks and legend text light grey, legend on a #242420 box — no dark-on-dark text
+      Data: same green and lavender as the light render; fills read darker over the dark page; green Placebo points on the dark-green fill are faint but visible
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -46,73 +56,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set; all text readable in both themes via proper
-          token usage
+        comment: Theme sizes at the library prompt's reference (title 16, axis titles
+          12, ticks and legend 10); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Title separated; labels and ticks have adequate spacing; legend positioned
-          cleanly
+        comment: No text collisions; neighbouring violins stay separate
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Violins visible with alpha=0.5; swarm points appropriately sized
-          and positioned
+        passed: false
+        comment: Swarm points at size 1.0 with alpha 0.6 read faint on their same-hue
+          violin fill, most of all the Placebo points in the dark render (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; colorblind-safe with excellent contrast
+        comment: Green vs lavender separate by hue and lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 px; perfect proportions, nothing cut off
+        comment: 3200x1800 canvas; balanced proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels and title in correct format
+        comment: '''Dosage Level'' and ''Efficacy Score'' read as text for a reader;
+          the score has no unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 (light) and #1A1A17 (dark);
-          both renders correctly themed'
+        comment: 'Placebo #009E73, Treatment #C475FD (Imprint order); backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom Okabe-Ito palette; professional token usage; intentional design
-          choices
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Minimal spines; subtle grid; clean legend styling
+        passed: false
+        comment: 'theme_minimal with a thin grid: the spine and grid rules met, nothing
+          beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy; violins + swarm effectively communicate drug
-          efficacy across doses
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -120,26 +129,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped violin plot with swarm overlay
+        comment: Grouped violins with dodged swarm overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grouped violins, color differentiation, swarm points with matching
-          hue, appropriate transparency, spacing
+        comment: 'C1-C5 met: side-by-side violins, consistent group colors with legend,
+          alpha 0.5 fills, hue-matched points, dodged and centered swarms'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'X: Dosage; Y: Efficacy Score; Fill/Color: Group; all data visible'
+        passed: false
+        comment: trim=False extends the KDE tails to about -0.7 and 11 on a score
+          clipped to 1-10, showing values the data does not have (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend match spec format
+        comment: Title in the mandated format; legend 'Group' with Placebo / Treatment
     data_quality:
       score: 15
       max: 15
@@ -149,19 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects visible: distributions, raw data, group and dose comparisons'
+        comment: Distribution shapes, raw points, dose and group comparisons all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pharmaceutical scenario; realistic values (1-10 scale, means 3-7.5)
+        comment: Drug efficacy across dosage levels, placebo vs treatment
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Dosage levels and efficacy scale sensible; data range reasonable
+        comment: 45 observations per cell, inside the 20-150 range; 3 categories x
+          2 groups; efficacy on a 1-10 scale. No Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -171,13 +182,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; simple data generation
+        comment: Flat script; column constants with role comments; full eight-position
+          palette
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -189,38 +201,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; position adjustments are idiomatic
+        comment: Appropriate complexity; native position_dodge / position_jitterdodge
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ggplot() composition proper; geom_violin/geom_point idiomatic; position
-          adjustments appropriate
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Standard practices; limited showcase of advanced letsplot capabilities
+        comment: 'Standard ggplot grammar: geom_violin + geom_point with position
+          adjustments'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-22T09:51:55Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - kde
   styling:
   - alpha-blending
   - grid-styling
