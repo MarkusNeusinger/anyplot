@@ -2,126 +2,127 @@ library: pygal
 language: python
 specification_id: ternary-density
 created: '2026-01-11T21:03:47Z'
-updated: '2026-05-19T12:24:03Z'
+updated: '2026-11-22T17:04:49Z'
 generated_by: claude-sonnet
-workflow_run: 26091581184
+workflow_run: 45046296077
 issue: 3696
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 80
 review:
   strengths:
-  - 'Excellent spec compliance: all required features (KDE density overlay, viridis
-    colormap, grid lines, vertex labels with units, contour lines) are present and
-    working correctly.'
-  - Sophisticated manual viridis implementation (11-waypoint interpolation) with correct
-    theme-adaptive chrome in both renders — both images look polished and professional.
-  - Three distinct density clusters in the sediment data tell a clear geological story;
-    the data choice fully exercises the ternary density plot type.
-  - 'Perfect palette compliance: viridis for continuous density, theme-correct backgrounds
-    (#FAF8F1/#1A1A17), all text using INK tokens.'
+  - 'Density surface uses imprint_seq (#009E73 -> #4467A3) with a High/Low colorbar,
+    identical data colors in both themes'
+  - Smooth KDE raster clipped to the triangle with a clipPath, so no density color
+    leaks past the edges
+  - Contours at 20/40/60/80 % of the peak in a light line follow the same KDE surface
+    and close around the coffee and soda peaks
+  - pygal XY chart with a themed Style draws triangle, dashed ternary grid and contour
+    series; the pixel scale is calibrated so the triangle is equilateral
+  - Flavor-profile scenario with three distinct drink groups gives two peaks and an
+    edge ridge
   weaknesses:
-  - No pygal chart classes or API used — the implementation is a manual SVG render
-    with cairosvg, not a pygal implementation. Library mastery scores are consequently
-    near-floor.
-  - Title is slightly small relative to the 3600x3600 canvas; consider increasing
-    title font-size to ~90-100px.
-  - Contour dots (dot-sampled isolines) look noisy vs. actual marching-squares isolines;
-    improving this would raise DE-01 and DE-02.
+  - 'VQ-05 (both): about 400 px of empty canvas between the title and the Bitter vertex
+    label, while the colorbar''s High label ends about 15 px from the right canvas
+    edge → shift the triangle and colorbar up and pull the colorbar left by about
+    80 px so margins balance. Likely cause: Y_PAD=0.16 with margin_top=40 and cb_x
+    = px_x(1) + 190.'
+  - 'CQ-01 (code): eight helper functions (to_xy, level_segments, build, calibrate,
+    px_x, px_y, loc_x, loc_y) break the linear script structure → inline the coordinate
+    conversions and the chart build. Likely cause: the calibration loop and the contour
+    chaining wrapped in functions.'
+  - 'Suggestion: the ~45-line marching-squares and segment-chaining block (lines 88–132)
+    could shrink if a contouring utility becomes available.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "Sediment Composition Distribution" in dark ink at top; subtitle "ternary-density · python · pygal · anyplot.ai" below it — both readable. Vertex labels CLAY (%), SAND (%), SILT (%) in bold dark ink — clearly legible. Percentage tick labels (25%, 50%, 75%) along all three edges in dark secondary ink — readable. Colorbar "Density" / "High" / "Low" labels in dark ink on right side — readable.
-      Data: Viridis heatmap with three distinct density clusters: bright yellow-green peak at lower-left (sand-dominant), second bright cluster at lower-right (silt-dominant), third cluster upper-left quadrant (clay-dominant). Dashed grid lines at 25/50/75% in muted dark tone at 0.5 opacity. Contour dot markers trace density-level boundaries. Triangle border in dark ink.
-      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light failures.
+      Background: warm off-white #FAF8F1, 2400x2400.
+      Chrome: two-line title "Beverage Flavor Profiles" / "ternary-density · python · pygal · anyplot.ai" in dark ink; bold vertex labels Sweet (%) bottom-left, Sour (%) bottom-right, Bitter (%) top; 25/50/75 % tick labels on all three edges in INK_SOFT; colorbar "Density" with High/Low at right. All readable.
+      Data: equilateral triangle filled with a smooth green (#009E73, low) to blue (#4467A3, high) KDE surface; a coffee peak near 80 % bitter, a sweet-led soda pair of peaks near the bottom-left, a ridge along the sweet-bitter edge; thin light contour lines; dashed dark grid at 25/50/75 % parallel to the sides.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface, not pure black.
-      Chrome: Title, subtitle, vertex labels, percentage tick labels, colorbar text all render in light ink (#F0EFE8 / #B8B7B0) against the dark surface — all clearly readable. Triangle border drawn in light ink. No dark-on-dark failures detected.
-      Data: Viridis heatmap colors are identical to light render — same three bright yellow-green/teal/blue density clusters. Data identity across themes confirmed. Grid lines appear in muted light tone, visible but subtle.
-      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures.
+      Background: warm near-black #1A1A17.
+      Chrome: title, vertex labels, tick labels and colorbar text in light ink (#F0EFE8 / #B8B7B0); triangle edge and grid in light tones; no dark-on-dark text.
+      Data: density raster and contour colors identical to the light render; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (72/48/56/36/44/32px); all readable.
-          Title slightly small for 3600x3600 canvas.
+        comment: Explicit sizes (54 title, 56 bold vertex names, 40 ticks, 44/36 colorbar)
+          on the 2400 canvas; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; vertex labels, edge tick labels, and colorbar
-          are well-spaced.
+        comment: No text collisions; tick labels sit clear of the triangle edges
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Viridis density heatmap vivid and fully visible in both themes; three
-          clusters clearly distinguishable.
+        comment: Density raster, thin light contours and dashed grid all visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe; sequential density
-          encoding.
+        comment: Green-to-blue sequential ramp, lightness-monotone, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: true
-        comment: Triangle fills ~70% of canvas width; colorbar well-positioned. Slight
-          extra whitespace at top.
+        passed: false
+        comment: Empty band of about 400 px between the title and the Bitter label
+          while the colorbar's High label sits about 15 px from the right edge (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Vertex labels include units: SAND (%), SILT (%), CLAY (%).'
+        comment: Vertex labels Sweet (%), Sour (%), Bitter (%) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous density data. Backgrounds #FAF8F1 (light)
-          / #1A1A17 (dark). Theme-adaptive chrome via INK tokens.'
+        comment: 'imprint_seq #009E73 -> #4467A3 for density; #FAF8F1 / #1A1A17 backgrounds;
+          theme tokens on all chrome'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Manual 11-waypoint viridis interpolation, theme-adaptive chrome,
-          contour markers. Professional above-default polish.
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Dashed grid at 0.5 opacity, density layer at 0.85 opacity, clean
-          triangle border. No superfluous frames.
+        passed: false
+        comment: Grid and frame rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Three compositional clusters immediately apparent as distinct bright
-          peaks. Multimodal distribution clear without annotation.
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary density plot with KDE overlay.
+        comment: Ternary KDE density surface on an equilateral triangle
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: KDE, viridis, grid lines, vertex labels, contour lines all present.
+        comment: C1 vertices labelled, continuous surface; C2 clipped to the triangle
+          and smooth; C3 imprint_seq with High/Low colorbar; C4 dashed grid parallel
+          to the sides, visible over the peaks; C5 contours at 20/40/60/80 % of the
+          peak, closed or ending at edges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sand/Silt/Clay correctly mapped to Bottom-left/Bottom-right/Top vertices.
+        comment: Sweet bottom-left, Sour bottom-right, Bitter top; edge ticks name
+          the component whose grid lines end there
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Descriptive title on first line; ternary-density · python · pygal
-          · anyplot.ai on second line.
+        comment: Descriptive title above ternary-density · python · pygal · anyplot.ai;
+          colorbar labelled Density High/Low
     data_quality:
       score: 15
       max: 15
@@ -160,90 +165,96 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three distinct clusters spanning ternary space; near-vertex concentrations
-          demonstrated.
+        comment: Two compact peaks (sodas, coffee) and a ridge along the sweet-bitter
+          edge, plus large low-density areas
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sediment classification (sand/silt/clay) is a canonical geological
-          ternary context.
+        comment: Beverage flavor profiles (sweet/sour/bitter) with named drink groups;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Components sum to 100% (normalized at line 46); realistic geological
-          proportions.
+        comment: Rows normalised to shares summing to 100 %; no Check values in the
+          Notes
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Linear flow with no functions/classes. Verbose (~270 lines) due to
-          manual SVG construction.
+        passed: false
+        comment: Eight helper functions (to_xy, level_segments, build, calibrate,
+          px_x, px_y, loc_x, loc_y) (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All five imports used: math, os, cairosvg, numpy, scipy.gaussian_kde.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: No fake UI. Per-cell rect loops are appropriate but repetitive boilerplate.
+        comment: Marching squares written out, but no allowed package provides a non-plotting
+          contour call; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 2
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: No import pygal; bypasses pygal chart API entirely. Uses cairosvg
-          (pygal's PNG backend) directly. Ternary absent from pygal native API forces
-          this approach.
+        comment: pygal.XY with a Style object draws the frame, grid and contours;
+          raster and colorbar spliced into the SVG
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No pygal-specific features (Style, Chart classes, render_to_file,
-          interactive JS) used. Only connection is shared cairosvg dependency.
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-2a7b04a927
+  rendered_at: '2026-11-22T17:00:39Z'
 impl_tags:
   dependencies:
   - scipy
+  - cairosvg
   techniques:
   - colorbar
-  - annotations
+  - contour-lines
+  - custom-coordinates
+  - svg-post-processing
   patterns:
   - data-generation
-  - matrix-construction
-  - iteration-over-groups
+  - helper-functions
   dataprep:
   - kde
   - normalization
+  - marching-squares
   styling:
-  - alpha-blending
+  - theme-adaptive
   - custom-colormap
+  - dashed-grid
