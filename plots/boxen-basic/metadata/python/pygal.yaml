@@ -2,172 +2,181 @@ library: pygal
 language: python
 specification_id: boxen-basic
 created: '2026-05-17T08:58:34Z'
-updated: '2026-05-17T09:37:03Z'
-generated_by: claude-haiku
-workflow_run: 25986442262
+updated: '2026-11-22T04:25:52Z'
+generated_by: claude-sonnet
+workflow_run: 44984257548
 issue: 3414
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/pygal/plot-dark.html
-quality_score: 61
+quality_score: 81
 review:
   strengths:
-  - Theme tokens correctly applied (warm off-white and near-black backgrounds)
-  - Data colors remain identical across light and dark renders
-  - API response time scenario is realistic and well-chosen
-  - Shows outliers and multiple quantile levels as specified
-  - Clean code structure with reproducible seed
-  - Correctly formatted title
+  - Genuine letter-value boxes built from pygal XY segments with per-series stroke_style
+    widths and butt caps, narrowing from 300 to 90 px for each deeper level
+  - Box edges and outliers come straight from np.quantile on the data; outliers sit
+    at their category position with no jitter
+  - Legend names each quantile level with its percentile span plus the median and
+    outlier entries
+  - Theme tokens threaded through Style; data colors identical in both renders, median
+    bar flips to INK
+  - Column constants and a marked Data block make the script reusable with a real
+    table
   weaknesses:
-  - 'Legend clutter: 16 entries (4 endpoints × 4 quantile levels) severely impacts
-    readability; legend should be simplified or reorganized'
-  - Boxen plot is approximation using line segments rather than nested rectangles
-    - doesn't match specification's 'nested boxes with decreasing width'
-  - Color cycling per level rather than per endpoint causes same quantile level to
-    have different colors across endpoints, confusing the encoding
-  - Minimal design refinement; uses library defaults with no visual hierarchy or aesthetic
-    sophistication
-  - Small outlier markers (4px) are barely visible at full resolution
+  - 'VQ-07 (both): the four letter-value levels, which are ordered by depth, are drawn
+    in the categorical Imprint hues green, purple, blue and ochre as if unrelated
+    groups → discrete steps of imprint_seq from the quartile box to the deepest level.
+    Likely cause: series_colors = IMPRINT_PALETTE[level].'
+  - 'VQ-05 (both): pygal draws its x=0 axis line vertically through the API-Auth column,
+    from the baseline to the top of the plot, so it reads like a whisker over the
+    first category → no axis line inside the data area. Likely cause: categories placed
+    at x=0..n-1 with xrange=(-0.6, …); place them at 1..n with xrange=(0.4, n+0.6).'
+  - 'Suggestion: move the legend from the cramped top-left corner into the empty upper
+    plot area or below the chart.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title ("boxen-basic · pygal · anyplot.ai"), axis labels ("Endpoint", "Response Time (ms)"), and tick labels all clearly readable against light background. All text is dark-colored and well-positioned.
-      Data: Uses four colored marker sets (cyan, orange, blue, pink) with line segments representing quantile levels. Each endpoint (API-Auth, API-Search, API-Report, API-Download) is shown with nested line segments for sixteenths, eighths, quartiles, and median, plus outlier points with jitter. Colors appear to follow Okabe-Ito palette order but are applied inconsistently (cycling per level rather than per endpoint).
-      Legend: MAJOR ISSUE - Contains 16 entries (4 endpoints × 4 quantile types), creating severe visual clutter and overlap on the left side. Legend is hard to parse.
-      Legibility verdict: PARTIAL FAIL - While text elements are readable, the legend clutter significantly impairs usability.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "boxen-basic · python · pygal · anyplot.ai" top center; y-axis "Response Time (ms)" 0-1500, x-axis "Endpoint" with API-Auth, API-Search, API-Report, API-Download; dashed subtle y-grid; legend top-left with six entries (Thirty-seconds, Sixteenths, Eighths, Quartiles, Median, Beyond deepest level). All text dark and readable. A thin vertical axis line at x=0 runs through the API-Auth column to the top.
+      Data: per endpoint a green quartile box (widest) with a black median bar, purple eighths, blue sixteenths and narrow ochre thirty-seconds slabs above and below; upper tails long (ochre to ~490-830 ms), gray outlier dots stacked above to 1000-1500 ms and a few near 0.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title, axis labels, and tick labels are all light-colored and readable against the dark background. No "dark-on-dark" failures observed.
-      Data: Data colors are identical to light render (cyan, orange, blue, pink line segments for each quantile level and outliers). Line visibility is good against dark background.
-      Legend: Same 16-entry clutter issue as light render, but text is now light-colored and readable against dark background.
-      Legibility verdict: PARTIAL FAIL - Chrome is theme-correct, but legend clutter reduces overall usability in both renders.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks and legend in light text, all readable; no dark-on-dark. Grid subtle. Same x=0 axis line through API-Auth.
+      Data: box colors identical to light; median bar flips to light ink, outlier dots to light gray.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All text readable but could be more prominent at 4800×2700 resolution
+        comment: Title 66, axis titles 56, ticks 48, legend 40 source-px; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 1
+        score: 6
         max: 6
-        passed: false
-        comment: 'CRITICAL: Legend has 16 entries creating severe overlap and clutter'
+        passed: true
+        comment: No text collisions; outlier dots stack along the category axis as
+          the spec permits
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Line segments visible but thin; outlier points (4px) are quite small
+        comment: Boxes solid and wide, median bar clear, outlier dots visible in both
+          themes; legend swatches match the marks
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Palette cycles per level not per endpoint; same level has different
-          colors across endpoints
+        passed: true
+        comment: Green/purple/blue/ochre neighbours stay distinct, also by width
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Excellent canvas utilization with balanced margins
+        comment: 3200x1800 canvas, good proportions, but pygal's x=0 axis line runs
+          vertically through the API-Auth column (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Clear descriptive labels with units
+        comment: Endpoint / Response Time (ms)
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Okabe-Ito palette defined but applied via color cycling; theme chrome
-          is correct in both renders but palette is misapplied
+        comment: Quantile levels are ordered by depth but drawn in the categorical
+          palette (defect line); theme chrome correct in both renders
     design_excellence:
-      score: 6
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults with no design thought; color cycling creates visual
-          confusion
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 8
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Uses XY scatter as workaround; not true boxen plot with nested rectangles
+        passed: true
+        comment: True letter-value plot with nested boxes; no whiskers or extra layers
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Shows quantile levels and outliers but 'nested boxes with decreasing
-          width' not clearly represented
+        passed: true
+        comment: C1 nested boxes at quantiles, C2 narrowing widths, C3 contrasting
+          levels + legend, C4 outliers beyond deepest level, C5 nothing extra
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct (endpoint vs response time)
+        comment: Box edges computed with np.quantile; outliers at x=category, no jitter;
+          range derived from data
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title correct format; legend is confusing with 16 cluttered entries
+        passed: true
+        comment: Mandated title; six-entry legend naming each quantile level, median
+          and outliers
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows outliers and varying distributions well
+        comment: Four levels, skewed tails of unequal length, many outliers, differing
+          spreads
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: API response times by endpoint is realistic, neutral scenario
+        comment: API endpoint response times, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times 0-1200ms are realistic and plausible
+        comment: 3700 obs per endpoint, medians ~35-65 ms, tails to 1.5 s; no Check
+          values in spec
     code_quality:
       score: 10
       max: 10
@@ -177,33 +186,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward
+        comment: Flat script, column constants and marked Data block
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI
+        comment: Segment loop is the necessary workaround for pygal having no box
+          primitive; quantiles via np.quantile
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and .html output
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -211,20 +221,28 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses XY chart and Style correctly; workaround approach is reasonable
-          given pygal limitations
+        comment: XY chart with Style; workaround construction
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic usage without distinctive library features
+        comment: Per-series stroke_style widths and pygal's inline css hook to draw
+          butt-capped slabs as boxes, x_value_formatter for category labels
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-22T04:21:57Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
-  styling: []
+  - dataframe-input
+  dataprep:
+  - quantile-computation
+  styling:
+  - theme-tokens
