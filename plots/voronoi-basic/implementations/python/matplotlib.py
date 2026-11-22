@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-17
@@ -8,29 +8,41 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.collections import PolyCollection
 from scipy.spatial import Voronoi
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for Voronoi regions
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per cell in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Generate seed points for Voronoi diagram
+# Columns: set these to your table's column names
+X = "X coordinate"  # role: x
+Y = "Y coordinate"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("seeds.csv")
 np.random.seed(42)
 n_points = 15
-x = np.random.uniform(1, 9, n_points)
-y = np.random.uniform(1, 9, n_points)
-points = np.column_stack([x, y])
+df = pd.DataFrame({X: np.random.uniform(1, 9, n_points), Y: np.random.uniform(1, 9, n_points)})
 
-# Create Voronoi tessellation with mirror points for bounded regions
-# Add mirror points outside the boundary to ensure all regions are finite
-x_min, x_max, y_min, y_max = 0, 10, 0, 10
-mirror_points = np.vstack(
+# Plot: reads only df and the constants above
+points = df[[X, Y]].dropna().to_numpy(dtype=float)
+n_points = len(points)
+
+# Visible bounding box: the seed extent padded by one unit
+pad = 1.0
+x_min, x_max = points[:, 0].min() - pad, points[:, 0].max() + pad
+y_min, y_max = points[:, 1].min() - pad, points[:, 1].max() + pad
+
+# Mirror every seed across each box edge so all original cells are finite
+x, y = points[:, 0], points[:, 1]
+mirrored = np.vstack(
     [
         points,
         np.column_stack([x, 2 * y_min - y]),
@@ -39,47 +51,45 @@ mirror_points = np.vstack(
         np.column_stack([2 * x_max - x, y]),
     ]
 )
-vor = Voronoi(mirror_points)
+vor = Voronoi(mirrored)
 
-# Create figure with theme-aware background
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
+# Greedy coloring: each cell takes the first palette color none of its neighbors uses
+neighbors = {i: set() for i in range(n_points)}
+for a, b in vor.ridge_points:
+    if a < n_points and b < n_points:
+        neighbors[a].add(b)
+        neighbors[b].add(a)
+cell_color = {}
+for idx in range(n_points):
+    taken = {cell_color[n] for n in neighbors[idx] if n in cell_color}
+    cell_color[idx] = next((c for c in range(len(IMPRINT_PALETTE)) if c not in taken), idx % len(IMPRINT_PALETTE))
 
-# Collect polygons for original points only (first n_points)
 polygons = []
 poly_colors = []
-
 for idx in range(n_points):
-    region_idx = vor.point_region[idx]
-    region = vor.regions[region_idx]
-
+    region = vor.regions[vor.point_region[idx]]
     if not region or -1 in region:
         continue
-
-    # Get polygon vertices
-    polygon = np.array([vor.vertices[v] for v in region])
-
-    # Clip polygon to bounding box
+    polygon = vor.vertices[region].copy()
     polygon[:, 0] = np.clip(polygon[:, 0], x_min, x_max)
     polygon[:, 1] = np.clip(polygon[:, 1], y_min, y_max)
-
     polygons.append(polygon)
-    poly_colors.append(IMPRINT[idx % len(IMPRINT)])
+    poly_colors.append(IMPRINT_PALETTE[cell_color[idx]])
 
-# Draw all Voronoi regions at once
-collection = PolyCollection(polygons, facecolors=poly_colors, edgecolors=INK_SOFT, linewidths=2.5, alpha=0.6)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+collection = PolyCollection(polygons, facecolors=poly_colors, edgecolors=INK_SOFT, linewidths=1.2, alpha=0.6)
 ax.add_collection(collection)
+ax.scatter(x, y, s=70, c=IMPRINT_PALETTE[0], edgecolors="white", linewidths=1.5, zorder=5)
 
-# Plot seed points prominently with brand green
-ax.scatter(x, y, s=350, c="#009E73", edgecolors="white", linewidths=3, zorder=5)
-
-# Set bounds and styling
-ax.set_xlim(-0.2, 10.2)
-ax.set_ylim(-0.2, 10.2)
-ax.set_xlabel("X Coordinate", fontsize=20, color=INK)
-ax.set_ylabel("Y Coordinate", fontsize=20, color=INK)
-ax.set_title("voronoi-basic · matplotlib · anyplot.ai", fontsize=24, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Style
+ax.set_xlim(x_min - 0.02 * (x_max - x_min), x_max + 0.02 * (x_max - x_min))
+ax.set_ylim(y_min - 0.02 * (y_max - y_min), y_max + 0.02 * (y_max - y_min))
+ax.set_xlabel(X, fontsize=10, color=INK)
+ax.set_ylabel(Y, fontsize=10, color=INK)
+ax.set_title("voronoi-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 ax.spines["top"].set_visible(False)
@@ -88,4 +98,4 @@ ax.set_aspect("equal")
 ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color=INK)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
