@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-macd: MACD Technical Indicator Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-16
@@ -9,7 +9,6 @@ import os
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 
 # Theme tokens
@@ -18,94 +17,79 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # MACD
-SIGNAL_COLOR = "#BD8233"  # imprint ochre — signal line (categorical contrast)
+# Imprint palette: histogram green first, then red for negative bars, blue and ochre for the two lines
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+UP_COLOR = IMPRINT_PALETTE[0]
+DOWN_COLOR = IMPRINT_PALETTE[4]
+MACD_COLOR = IMPRINT_PALETTE[2]
+SIGNAL_COLOR = IMPRINT_PALETTE[3]
 
-# Data - Generate realistic stock price data and calculate MACD
-np.random.seed(42)
+# Constants
+FAST, SLOW, SIGNAL_SPAN = 12, 26, 9  # standard MACD parameters
 
-n_days = 150
-dates = pd.date_range("2025-06-01", periods=n_days, freq="B")
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+MACD = "MACD"  # role: macd
+SIGNAL = "Signal"  # role: signal
+HISTOGRAM = "Histogram"  # role: histogram
 
-returns = np.random.normal(0.0005, 0.015, n_days)
-price = pd.Series(100 * np.exp(np.cumsum(returns)))
-
-# Calculate EMAs for MACD
-ema_12 = price.ewm(span=12, adjust=False).mean()
-ema_26 = price.ewm(span=26, adjust=False).mean()
-
-# MACD components
-macd_line = ema_12 - ema_26
-signal_line = macd_line.ewm(span=9, adjust=False).mean()
-histogram = macd_line - signal_line
-
-# Use data from day 35 onwards (stable EMA values)
-start_idx = 35
-dates = dates[start_idx:]
-macd_line = macd_line.values[start_idx:]
-signal_line = signal_line.values[start_idx:]
-histogram = histogram.values[start_idx:]
-
-# Create histogram colors using diverging approach
-hist_positive = histogram >= 0
-hist_colors = [
-    "#4467A3" if val else "#BD8233"  # Blue for positive, purple for negative
-    for val in hist_positive
+# Data: replace this block with your own table, for example df = pd.read_csv("macd.csv")
+# Synthetic daily crypto closes with alternating trend regimes; MACD from 12/26/9 EMAs
+rng = np.random.default_rng(7)
+n_days = 200
+dates = pd.date_range("2025-01-01", periods=n_days, freq="D")
+drift = np.repeat([0.004, -0.005, 0.003, -0.003, 0.005], n_days // 5)
+returns = rng.normal(drift, 0.022)
+close = pd.Series(30000 * np.exp(np.cumsum(returns)))
+macd_line = close.ewm(span=FAST, adjust=False).mean() - close.ewm(span=SLOW, adjust=False).mean()
+signal_line = macd_line.ewm(span=SIGNAL_SPAN, adjust=False).mean()
+df = pd.DataFrame({DATE: dates, MACD: macd_line, SIGNAL: signal_line, HISTOGRAM: macd_line - signal_line}).iloc[
+    SLOW + SIGNAL_SPAN :
 ]
 
-# Create figure
-fig = make_subplots(rows=1, cols=1, vertical_spacing=0.1)
+# Plot
+bar_colors = np.where(df[HISTOGRAM] >= 0, UP_COLOR, DOWN_COLOR)
+title = "indicator-macd · python · plotly · anyplot.ai"
 
-# Add MACD histogram bars
+fig = go.Figure()
 fig.add_trace(
-    go.Bar(x=dates, y=histogram, name="Histogram", marker={"color": hist_colors}, opacity=0.7, showlegend=True)
+    go.Bar(
+        x=df[DATE], y=df[HISTOGRAM], name=HISTOGRAM, marker={"color": bar_colors, "line": {"width": 0}}, opacity=0.75
+    )
 )
-
-# Add MACD line
-fig.add_trace(go.Scatter(x=dates, y=macd_line, name="MACD (12, 26)", line={"color": BRAND, "width": 3}, mode="lines"))
-
-# Add Signal line
 fig.add_trace(
-    go.Scatter(x=dates, y=signal_line, name="Signal (9)", line={"color": SIGNAL_COLOR, "width": 3}, mode="lines")
+    go.Scatter(x=df[DATE], y=df[MACD], name=f"{MACD} ({FAST}, {SLOW})", line={"color": MACD_COLOR, "width": 2.5})
+)
+fig.add_trace(
+    go.Scatter(x=df[DATE], y=df[SIGNAL], name=f"{SIGNAL} ({SIGNAL_SPAN})", line={"color": SIGNAL_COLOR, "width": 2.5})
 )
 
-# Add zero reference line
-fig.add_hline(
-    y=0,
-    line={"color": INK_SOFT, "width": 2, "dash": "dash"},
-    annotation_text="Zero Line",
-    annotation_position="left",
-    annotation_font_size=16,
-)
+fig.add_hline(y=0, layer="above", line={"color": INK_SOFT, "width": 1.5, "dash": "dash"})
 
-# Update layout for theme-adaptive styling
 fig.update_layout(
-    title={
-        "text": "indicator-macd · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    width=800,
+    height=450,
+    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
+    font={"color": INK},
     xaxis={
-        "title": {"text": "Date", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": DATE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
-        "showgrid": True,
+        "showgrid": False,
     },
     yaxis={
-        "title": {"text": "MACD Value", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "MACD value (USD)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
-        "showgrid": True,
         "zeroline": False,
     },
     legend={
-        "font": {"size": 18, "color": INK_SOFT},
+        "font": {"size": 10, "color": INK_SOFT},
         "x": 0.01,
         "y": 0.99,
         "xanchor": "left",
@@ -116,24 +100,22 @@ fig.update_layout(
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin={"l": 100, "r": 60, "t": 100, "b": 80},
+    bargap=0.1,
+    margin={"l": 80, "r": 40, "t": 60, "b": 60},
     annotations=[
         {
-            "text": "Parameters: EMA(12), EMA(26), Signal(9)",
+            "text": f"Parameters: EMA({FAST}), EMA({SLOW}), Signal({SIGNAL_SPAN})",
             "xref": "paper",
             "yref": "paper",
             "x": 0.99,
-            "y": 0.01,
+            "y": 0.02,
             "xanchor": "right",
             "yanchor": "bottom",
-            "font": {"size": 16, "color": INK_SOFT},
+            "font": {"size": 10, "color": INK_SOFT},
             "showarrow": False,
         }
     ],
 )
 
-# Save as PNG
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
