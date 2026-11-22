@@ -1,334 +1,197 @@
 """ anyplot.ai
 mosaic-categorical: Mosaic Plot for Categorical Association Analysis
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-19
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 87/100 | Updated: 2026-11-22
 """
 
 import os
-import sys
 
-import numpy as np
+import pandas as pd
+from pygal.graph.graph import Graph
+from pygal.style import Style
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette — first series is always brand green
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
+# Imprint palette: one position per row category, in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Temporarily remove current directory from path to avoid pygal.py name collision
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
+# Columns: set these to your table's column names
+DEVICE = "Device type"  # role: category_2
+APP_CATEGORY = "App category"  # role: category_1
+SESSIONS = "Sessions"  # role: frequency
 
-from pygal.graph.graph import Graph  # noqa: E402
-from pygal.style import Style  # noqa: E402
+# Data: replace this block with your own table, for example df = pd.read_csv("usage.csv")
+df = pd.DataFrame(
+    {
+        APP_CATEGORY: ["Social Media", "Gaming", "Productivity", "Entertainment"] * 3,
+        DEVICE: ["Mobile"] * 4 + ["Tablet"] * 4 + ["Desktop"] * 4,
+        SESSIONS: [450, 320, 180, 290, 120, 200, 230, 290, 80, 150, 480, 130],
+    }
+)
 
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=APP_CATEGORY, columns=DEVICE, values=SESSIONS, aggfunc="sum", sort=False)
+row_labels = [str(r) for r in table.index]
+col_labels = [str(c) for c in table.columns]
+counts = table.fillna(0).to_numpy()  # an empty combination is an empty tile
+col_totals = counts.sum(axis=0)
+shares = counts / col_totals  # conditional proportions within each column
 
-sys.path.insert(0, _cwd)
+# Key insight: the row category whose conditional share differs most between two columns
+insight = ""
+best_ratio = 1.0
+for i, row in enumerate(row_labels):
+    lo, hi = shares[i].argmin(), shares[i].argmax()
+    if shares[i, lo] > 0 and shares[i, hi] / shares[i, lo] > best_ratio:
+        best_ratio = shares[i, hi] / shares[i, lo]
+        insight = (
+            f"Key insight: {col_labels[hi]} skews towards {row} ({shares[i, hi] * 100:.0f}%)"
+            f" — {best_ratio:.1f}× the {col_labels[lo]} rate ({shares[i, lo] * 100:.0f}%)"
+        )
 
 
 class MosaicPlot(Graph):
+    """pygal has no mosaic type: draw the tiles straight into the SVG plot node."""
+
     def __init__(self, *args, **kwargs):
-        self.contingency_data = kwargs.pop("contingency_data", {})
-        self.row_labels = kwargs.pop("row_labels", [])
-        self.col_labels = kwargs.pop("col_labels", [])
-        self.cell_colors = kwargs.pop("cell_colors", list(IMPRINT))
-        self.gap_ratio = kwargs.pop("gap_ratio", 0.02)
-        self.ink = kwargs.pop("ink", INK)
-        self.ink_soft = kwargs.pop("ink_soft", INK_SOFT)
-        self.ink_muted = kwargs.pop("ink_muted", INK_MUTED)
-        self.page_bg = kwargs.pop("page_bg", PAGE_BG)
-        self.rule = kwargs.pop("rule", RULE)
+        self.counts = kwargs.pop("counts")
+        self.row_labels = kwargs.pop("row_labels")
+        self.col_labels = kwargs.pop("col_labels")
+        self.x_name = kwargs.pop("x_name")
+        self.y_name = kwargs.pop("y_name")
+        self.insight = kwargs.pop("insight")
         super().__init__(*args, **kwargs)
 
-    def _plot(self):
-        if not self.contingency_data or not self.row_labels or not self.col_labels:
-            return
-
-        n_rows = len(self.row_labels)
-        n_cols = len(self.col_labels)
-
-        col_totals = [
-            sum(self.contingency_data.get((row, col), 0) for row in self.row_labels) for col in self.col_labels
-        ]
-        grand_total = sum(col_totals)
-        if grand_total == 0:
-            return
-
-        col_proportions = [t / grand_total for t in col_totals]
-
-        plot_width = self.view.width
-        plot_height = self.view.height
-
-        margin_left = 440
-        margin_right = 80
-        margin_top = 100
-        margin_bottom = 380
-
-        available_width = plot_width - margin_left - margin_right
-        available_height = plot_height - margin_top - margin_bottom
-
-        col_gap = available_width * self.gap_ratio
-        row_gap = available_height * self.gap_ratio
-        drawing_width = available_width - col_gap * (n_cols - 1)
-        drawing_height = available_height - row_gap * (n_rows - 1)
-
-        x_offset = self.view.x(0) + margin_left
-        y_offset = self.view.y(n_rows) + margin_top
-
-        plot_node = self.nodes["plot"]
-        mosaic_group = self.svg.node(plot_node, class_="mosaic-plot")
-
-        current_x = x_offset
-        for j, col in enumerate(self.col_labels):
-            col_width = drawing_width * col_proportions[j]
-            col_total = col_totals[j]
-            if col_total == 0:
-                current_x += col_width + col_gap
-                continue
-
-            row_values = [self.contingency_data.get((row, col), 0) for row in self.row_labels]
-            row_proportions = [v / col_total for v in row_values]
-
-            current_y = y_offset
-            for i, row in enumerate(self.row_labels):
-                cell_height = drawing_height * row_proportions[i]
-                if cell_height < 1:
-                    current_y += cell_height + row_gap
-                    continue
-
-                color = self.cell_colors[i % len(self.cell_colors)]
-                freq = self.contingency_data.get((row, col), 0)
-                pct = row_proportions[i] * 100
-
-                rect = self.svg.node(
-                    mosaic_group,
-                    "rect",
-                    x=current_x,
-                    y=current_y,
-                    width=max(col_width, 1),
-                    height=max(cell_height, 1),
-                    rx=6,
-                    ry=6,
-                )
-                rect.set("fill", color)
-                rect.set("stroke", self.page_bg)
-                rect.set("stroke-width", "5")
-                rect.set("fill-opacity", "0.90")
-
-                # SVG tooltip for interactive HTML — pygal-native feature
-                tooltip = self.svg.node(rect, "title")
-                tooltip.text = f"{row} · {col}: {freq:,} ({pct:.1f}% of {col} users)"
-
-                if cell_height > 80 and col_width > 110:
-                    label_size = min(44, int(min(col_width, cell_height) * 0.26))
-                    text_x = current_x + col_width / 2
-
-                    if cell_height > 130 and col_width > 160:
-                        # Dual label: count (bold, upper) + percentage (smaller, lower)
-                        count_node = self.svg.node(
-                            mosaic_group, "text", x=text_x, y=current_y + cell_height / 2 - label_size * 0.28
-                        )
-                        count_node.set("text-anchor", "middle")
-                        count_node.set("dominant-baseline", "middle")
-                        count_node.set("fill", "#ffffff")
-                        count_node.set(
-                            "style",
-                            f"font-size:{label_size}px;font-weight:700;font-family:sans-serif;letter-spacing:-0.5px",
-                        )
-                        count_node.text = f"{freq:,}"
-
-                        pct_size = max(int(label_size * 0.62), 22)
-                        pct_node = self.svg.node(
-                            mosaic_group, "text", x=text_x, y=current_y + cell_height / 2 + label_size * 0.52
-                        )
-                        pct_node.set("text-anchor", "middle")
-                        pct_node.set("dominant-baseline", "middle")
-                        pct_node.set("fill", "rgba(255,255,255,0.80)")
-                        pct_node.set("style", f"font-size:{pct_size}px;font-family:sans-serif;font-weight:500")
-                        pct_node.text = f"{pct:.0f}%"
-                    else:
-                        # Single count label for smaller cells
-                        count_node = self.svg.node(mosaic_group, "text", x=text_x, y=current_y + cell_height / 2)
-                        count_node.set("text-anchor", "middle")
-                        count_node.set("dominant-baseline", "middle")
-                        count_node.set("fill", "#ffffff")
-                        count_node.set("style", f"font-size:{label_size}px;font-weight:700;font-family:sans-serif")
-                        count_node.text = f"{freq:,}"
-
-                current_y += cell_height + row_gap
-
-            # Column label — bold, prominent
-            col_label_size = 46
-            label_x = current_x + col_width / 2
-            label_y = y_offset + available_height + 76
-            col_label_node = self.svg.node(mosaic_group, "text", x=label_x, y=label_y)
-            col_label_node.set("text-anchor", "middle")
-            col_label_node.set("fill", self.ink)
-            col_label_node.set(
-                "style", f"font-size:{col_label_size}px;font-weight:700;font-family:sans-serif;letter-spacing:0.5px"
-            )
-            col_label_node.text = col
-
-            # Hairline separator between label and proportion sublabel
-            sep_y = label_y + 16
-            half_w = min(col_width * 0.35, 100)
-            sep_line = self.svg.node(mosaic_group, "line", x1=label_x - half_w, y1=sep_y, x2=label_x + half_w, y2=sep_y)
-            sep_line.set("stroke", self.ink_muted)
-            sep_line.set("stroke-width", "1.5")
-            sep_line.set("stroke-opacity", "0.45")
-
-            # Proportion sub-label — italic, muted
-            prop_label_y = label_y + 58
-            prop_node = self.svg.node(mosaic_group, "text", x=label_x, y=prop_label_y)
-            prop_node.set("text-anchor", "middle")
-            prop_node.set("fill", self.ink_muted)
-            prop_node.set("style", "font-size:34px;font-style:italic;font-family:sans-serif")
-            prop_node.text = f"{col_proportions[j] * 100:.1f}% of sessions"
-
-            current_x += col_width + col_gap
-
-        # Row legend (left side) — larger swatches, refined alignment
-        first_col = self.col_labels[0]
-        first_col_total = col_totals[0] if col_totals[0] > 0 else 1
-        for i, row in enumerate(self.row_labels):
-            color = self.cell_colors[i % len(self.cell_colors)]
-
-            cumulative = sum(
-                self.contingency_data.get((r, first_col), 0) / first_col_total for r in self.row_labels[:i]
-            )
-            row_prop = self.contingency_data.get((row, first_col), 0) / first_col_total
-            center_y = y_offset + drawing_height * (cumulative + row_prop / 2) + i * row_gap
-
-            swatch_size = 40
-            swatch_x = x_offset - 260
-            swatch_y = center_y - swatch_size / 2
-
-            swatch = self.svg.node(
-                mosaic_group, "rect", x=swatch_x, y=swatch_y, width=swatch_size, height=swatch_size, rx=6, ry=6
-            )
-            swatch.set("fill", color)
-            swatch.set("stroke", self.ink_soft)
-            swatch.set("stroke-width", "1.5")
-            swatch.set("fill-opacity", "0.90")
-
-            row_label_size = 38
-            text_x = swatch_x + swatch_size + 16
-            text_y = center_y + row_label_size * 0.36
-            row_label_node = self.svg.node(mosaic_group, "text", x=text_x, y=text_y)
-            row_label_node.set("text-anchor", "start")
-            row_label_node.set("fill", self.ink)
-            row_label_node.set("style", f"font-size:{row_label_size}px;font-family:sans-serif;font-weight:500")
-            row_label_node.text = row
-
-        # X-axis title
-        x_title_x = x_offset + available_width / 2
-        x_title_y = y_offset + available_height + 216
-        x_title_node = self.svg.node(mosaic_group, "text", x=x_title_x, y=x_title_y)
-        x_title_node.set("text-anchor", "middle")
-        x_title_node.set("fill", self.ink_soft)
-        x_title_node.set("style", "font-size:50px;font-weight:700;font-family:sans-serif;letter-spacing:1px")
-        x_title_node.text = "DEVICE TYPE"
-
-        # Y-axis title (rotated)
-        y_title_x = x_offset - 400
-        y_title_y = y_offset + available_height / 2
-        y_title_node = self.svg.node(mosaic_group, "text", x=y_title_x, y=y_title_y)
-        y_title_node.set("text-anchor", "middle")
-        y_title_node.set("fill", self.ink_soft)
-        y_title_node.set("style", "font-size:50px;font-weight:700;font-family:sans-serif;letter-spacing:1px")
-        y_title_node.set("transform", f"rotate(-90, {y_title_x}, {y_title_y})")
-        y_title_node.text = "APP CATEGORY"
-
-        # Key insight annotation — guides viewer to the most striking pattern
-        insight_y = y_offset + available_height + 318
-        insight_node = self.svg.node(mosaic_group, "text", x=x_title_x, y=insight_y)
-        insight_node.set("text-anchor", "middle")
-        insight_node.set("fill", self.ink_muted)
-        insight_node.set("style", "font-size:34px;font-style:italic;font-family:sans-serif")
-        insight_node.text = (
-            "Key insight: Desktop skews heavily towards Productivity (57%) — nearly 4× the Mobile rate (15%)"
+    def _text(self, parent, x, y, text, size, fill, weight=400, italic=False, anchor="middle"):
+        node = self.svg.node(parent, "text", x=x, y=y)
+        node.set("text-anchor", anchor)
+        node.set("dominant-baseline", "middle")
+        node.set("fill", fill)
+        node.set(
+            "style",
+            f"font-size:{size}px;font-weight:{weight};font-family:sans-serif"
+            + (";font-style:italic" if italic else ""),
         )
+        node.text = text
+        return node
+
+    def _plot(self):
+        n_rows, n_cols = len(self.row_labels), len(self.col_labels)
+        col_tot = self.counts.sum(axis=0)
+        grand = col_tot.sum()
+
+        margin_left, margin_bottom = 500, 330
+        avail_w = self.view.width - margin_left - 20
+        avail_h = self.view.height - 20 - margin_bottom
+        gap = 0.012
+        col_gap, row_gap = avail_w * gap, avail_h * gap
+        draw_w = avail_w - col_gap * (n_cols - 1)
+        draw_h = avail_h - row_gap * (n_rows - 1)
+        x0 = self.view.x(0) + margin_left
+        y0 = self.view.y(n_rows) + 20
+
+        group = self.svg.node(self.nodes["plot"], class_="mosaic-plot")
+        x = x0
+        for j, col in enumerate(self.col_labels):
+            col_w = draw_w * col_tot[j] / grand
+            y = y0
+            for i, row in enumerate(self.row_labels):
+                freq = self.counts[i, j]
+                share = freq / col_tot[j]
+                h = draw_h * share
+                color = IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)]
+                rect = self.svg.node(group, "rect", x=x, y=y, width=col_w, height=h, rx=6, ry=6)
+                rect.set("fill", color)
+                rect.set("stroke", PAGE_BG)
+                rect.set("stroke-width", "4")
+                tip = self.svg.node(rect, "title")
+                tip.text = f"{row} · {col}: {freq:,.0f} ({share * 100:.1f}% of {col})"
+
+                # Dark text on the light tiles, white on the dark ones
+                r, g, b = (int(color[k : k + 2], 16) for k in (1, 3, 5))
+                text_fill = "#1A1A17" if (0.299 * r + 0.587 * g + 0.114 * b) > 150 else "#FFFFFF"
+                cx = x + col_w / 2
+                if h > 90 and col_w > 120:
+                    size = min(58, int(min(col_w, h) * 0.26))
+                    if h > 150 and col_w > 180:
+                        self._text(group, cx, y + h / 2 - size * 0.3, f"{freq:,.0f}", size, text_fill, 700)
+                        pct_size = max(int(size * 0.65), 28)
+                        self._text(group, cx, y + h / 2 + size * 0.55, f"{share * 100:.0f}%", pct_size, text_fill, 500)
+                    else:
+                        self._text(group, cx, y + h / 2, f"{freq:,.0f}", size, text_fill, 700)
+                y += h + row_gap
+
+            # Column label and its share of all sessions
+            self._text(group, x + col_w / 2, y0 + avail_h + 50, col, 52, INK, 700)
+            share_text = f"{col_tot[j] / grand * 100:.1f}% of sessions"
+            self._text(group, x + col_w / 2, y0 + avail_h + 105, share_text, 36, INK_MUTED, 400, True)
+            x += col_w + col_gap
+
+        # Row legend, aligned with the tiles of the first column
+        y = y0
+        for i, row in enumerate(self.row_labels):
+            h = draw_h * self.counts[i, 0] / col_tot[0]
+            cy = y + h / 2
+            swatch = self.svg.node(group, "rect", x=x0 - 400, y=cy - 22, width=44, height=44, rx=6, ry=6)
+            swatch.set("fill", IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)])
+            swatch.set("stroke", INK_SOFT)
+            swatch.set("stroke-width", "1.5")
+            self._text(group, x0 - 340, cy, row, 44, INK, 500, anchor="start")
+            y += h + row_gap
+
+        # Axis titles
+        self._text(group, x0 + avail_w / 2, y0 + avail_h + 175, self.x_name.upper(), 48, INK_SOFT, 700)
+        ty = y0 + avail_h / 2
+        title = self._text(group, x0 - 470, ty, self.y_name.upper(), 48, INK_SOFT, 700)
+        title.set("transform", f"rotate(-90, {x0 - 470}, {ty})")
+        if self.insight:
+            self._text(group, x0 + avail_w / 2, y0 + avail_h + 250, self.insight, 38, INK_MUTED, 400, True)
 
     def _compute(self):
-        n_rows = len(self.row_labels) if self.row_labels else 1
-        n_cols = len(self.col_labels) if self.col_labels else 1
-        self._box.xmin = 0
-        self._box.xmax = n_cols
-        self._box.ymin = 0
-        self._box.ymax = n_rows
+        self._box.xmin, self._box.xmax = 0, len(self.col_labels)
+        self._box.ymin, self._box.ymax = 0, len(self.row_labels)
 
 
-# App engagement data: device type vs. app category
-np.random.seed(42)
-
-data = {
-    ("Social Media", "Mobile"): 450,
-    ("Gaming", "Mobile"): 320,
-    ("Productivity", "Mobile"): 180,
-    ("Entertainment", "Mobile"): 290,
-    ("Social Media", "Tablet"): 120,
-    ("Gaming", "Tablet"): 200,
-    ("Productivity", "Tablet"): 230,
-    ("Entertainment", "Tablet"): 290,
-    ("Social Media", "Desktop"): 80,
-    ("Gaming", "Desktop"): 150,
-    ("Productivity", "Desktop"): 480,
-    ("Entertainment", "Desktop"): 130,
-}
-
-row_labels = ["Social Media", "Gaming", "Productivity", "Entertainment"]
-col_labels = ["Mobile", "Tablet", "Desktop"]
-
-custom_style = Style(
+style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=68,
-    legend_font_size=40,
-    label_font_size=40,
-    value_font_size=32,
+    colors=tuple(IMPRINT_PALETTE),
+    title_font_size=66,
+    label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
     font_family="sans-serif",
 )
 
 chart = MosaicPlot(
-    width=4800,
-    height=2700,
-    style=custom_style,
+    width=3200,
+    height=1800,
+    style=style,
     title="App Usage by Device · mosaic-categorical · python · pygal · anyplot.ai",
-    contingency_data=data,
+    counts=counts,
     row_labels=row_labels,
     col_labels=col_labels,
-    cell_colors=list(IMPRINT),
-    gap_ratio=0.015,
+    x_name=DEVICE,
+    y_name=APP_CATEGORY,
+    insight=insight,
     show_legend=False,
-    margin=100,
-    margin_top=220,
-    margin_bottom=150,
     show_x_labels=False,
     show_y_labels=False,
-    ink=INK,
-    ink_soft=INK_SOFT,
-    ink_muted=INK_MUTED,
-    page_bg=PAGE_BG,
-    rule=RULE,
+    margin=60,
+    margin_top=120,
+    margin_bottom=40,
 )
+chart.add("", [0])  # pygal only runs its pipeline when a series exists
 
-# Dummy series required to trigger pygal's rendering pipeline
-chart.add("", [0])
-
-# Save
 chart.render_to_png(f"plot-{THEME}.png")
-
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
