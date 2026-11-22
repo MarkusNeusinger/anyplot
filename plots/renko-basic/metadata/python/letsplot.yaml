@@ -2,45 +2,55 @@ library: letsplot
 language: python
 specification_id: renko-basic
 created: '2026-01-09T08:19:17Z'
-updated: '2026-05-17T11:52:18Z'
-generated_by: claude-haiku
-workflow_run: 25989894421
+updated: '2026-11-22T05:28:22Z'
+generated_by: claude-sonnet
+workflow_run: 44988854544
 issue: 3294
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/letsplot/plot-dark.html
-quality_score: 92
+quality_score: 77
 review:
   strengths:
-  - Perfect theme-adaptive chrome with no readability failures in either render
-  - Correct Okabe-Ito color palette (green for bullish, orange for bearish) with strong
-    visual distinction
-  - Clean renko implementation with proper brick sizing, spacing, and white borders
-    for definition
-  - 'Excellent code clarity: straightforward renko algorithm, seed-based reproducibility,
-    clean imports'
-  - Well-structured use of letsplot theming system with explicit font sizes and theme
-    tokens
-  - Professional layout with balanced margins, adequate canvas utilization (4800×2700
-    px)
-  - Realistic synthetic data with 200 daily observations and $2 brick size demonstrating
-    clear trends
-  weaknesses: []
+  - 'Correct Renko construction: one even column per brick, each one brick-step above
+    or below the last, reading as diagonal staircases'
+  - 'Bullish bricks in Imprint green #009E73 and bearish in Imprint red #AE3030, identical
+    in both themes'
+  - Theme tokens threaded through title, axis text, legend and background; both renders
+    fully readable
+  - Brick size derived from the data (2 % of the median close, rounded to a round
+    number) and adaptable column constants
+  - Native lets-plot HTML export alongside the PNG for interactive inspection
+  weaknesses:
+  - 'SC-02, SC-03 (both): every brick spans 4 $ on the price axis (brick 0 runs from
+    99 to 103, brick 1 from 101 to 105) while the brick size and the step between
+    neighbours are 2 $, so each brick covers half of its neighbour''s price range
+    and C1 (each brick spans exactly one brick size) is missed → each brick spans
+    exactly one brick size, 2 $ (−2 $ per brick). Likely cause: geom_tile''s height
+    is relative to the y resolution of the tile centres (2 $), so height=BRICK_SIZE
+    doubles it; use height=1 or geom_rect(ymin=low, ymax=low + BRICK_SIZE).'
+  - 'DE-02 (both): the panel is framed on all four sides, top and right included,
+    where the style guide keeps only the left and bottom spines, and the grid is drawn
+    in full-strength INK on both axes → an L-shaped frame and a grid in the 0.15-alpha
+    rule token. Likely cause: a full panel border from the theme plus panel_grid_major=element_line(color=INK);
+    set panel_border=element_blank() and a translucent grid color.'
+  - 'Suggestion: y breaks at multiples of the brick size would let the grid mark the
+    brick levels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, correct for light theme
-      Chrome: Title "renko-basic · letsplot · anyplot.ai" in dark INK color (#1A1A17), clearly readable. X-axis "Brick Index" and Y-axis "Price ($)" in 20pt with dark color. Tick labels (0-70 on x, 82-114 on y) in secondary INK_SOFT (#4A4A44) at 16pt, fully readable. Grid subtle with low opacity. Legend "Direction" label clearly visible on right.
-      Data: 73 renko bricks with bullish (green #009E73) and bearish (orange #D55E00) colors perfectly distinct. Bricks have white borders (size 0.5) creating clear separation. Price range 82-114 fully visible. Chart shows clear trend reversals and direction changes.
-      Legibility verdict: PASS - All elements readable, excellent contrast, professional appearance
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'renko-basic · python · letsplot · anyplot.ai' top left in dark ink (about 41 % of the width); 'Brick index' and 'Close price ($)' axis titles, ticks 0-70 and 85-110 in INK_SOFT; thin full-ink grid every 5 bricks and 5 $; panel framed on all four sides; legend 'Direction' with bullish/bearish swatches right.
+      Data: 68 Renko bricks in diagonal staircases, bullish #009E73, bearish #AE3030, separated by page-colored gaps; each brick spans 4 $ (e.g. 99-103) while neighbours step 2 $.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, correct for dark theme
-      Chrome: Title in light INK color (#F0EFE8), clearly readable on dark background. Axis labels in light color, fully legible. Tick labels in INK_SOFT (#B8B7B0), perfectly readable—no dark-on-dark failures. Grid appropriately subtle. Legend text visible and properly styled.
-      Data: Renko bricks are **identical** to light render—green #009E73 and orange #D55E00 unchanged. Only chrome (text, grid, background) adapted for dark theme. All data colors remain consistent across both renders. Bricks and their white borders are clearly distinguishable.
-      Legibility verdict: PASS - All elements readable with proper contrast, successful theme adaptation, no dark-on-dark issues
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks and legend in light tokens, all readable, no dark-on-dark; grid in light ink, clearly visible; four-sided frame.
+      Data: brick colors identical to the light render; green and red both clearly visible on the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,79 +61,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: 24pt title, 20pt axis labels, 16pt
-          tick labels. All readable in both light and dark themes.'
+        comment: Title 16, axis titles 12, ticks and legend 10 pt, the library prompt's
+          sizes; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Bricks well-spaced (width 0.85), tick labels properly positioned.
-          No overlapping elements.
+        comment: No text collisions; bricks separated by a page-colored gap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 73 bricks clearly visible with white borders. Colors optimally
-          adapted to density. Grid subtle but visible.
+        comment: 68 bricks clearly visible; legend swatches match the bricks in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used correctly. Green and orange have excellent
-          contrast on both light and dark backgrounds.
+        comment: Imprint green and red differ strongly in lightness; direction is
+          also carried by the staircase position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 4800×2700 landscape layout. Plot fills 50-80% of canvas with
-          balanced margins. All elements within bounds.
+        comment: 3200x1800 canvas, balanced margins, title about 41 % of the width,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'renko-basic · letsplot · anyplot.ai' correct. Axis labels
-          'Brick Index' and 'Price ($)' are descriptive with units.
+        comment: '''Brick index'' and ''Close price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bullish #009E73, bearish #D55E00 are Okabe-Ito positions 1-2. Backgrounds
-          #FAF8F1 (light) and #1A1A17 (dark) correct. Theme-adaptive chrome perfect
-          in both renders.'
+        comment: 'Bullish #009E73, bearish #AE3030 (Imprint red), backgrounds #FAF8F1
+          / #1A1A17, chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful color choice with clean, professional styling. White borders
-          on bricks add intentional visual refinement above defaults.
+        passed: false
+        comment: 'The style-guide baseline: tokens, explicit sizes, Imprint colors;
+          nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: Spines removed via theme_minimal(). Grid subtle. Generous whitespace.
-          Brick borders provide definition without clutter.
+        passed: false
+        comment: Panel framed on all four sides and a full-ink grid on both axes (defect
+          line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Color choice (green for up, orange for down) creates clear visual
-          hierarchy. Price reversals easily identified. Viewer guided through trend
-          narrative.
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -131,29 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct renko implementation with fixed-size bricks, proper direction
-          tracking, and trend reversals.
+        comment: Correct Renko chart, bricks only, no added layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Bullish/bearish coloring, uniform brick sizing, clear separation,
-          brick index on x-axis, price on y-axis, grid for levels.
+        passed: false
+        comment: Green/red, gap, brick index and grid present, but bricks span two
+          brick sizes (C1 missed; defect line)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X-axis correctly shows brick index (0-70). Y-axis correctly shows
-          price ($82-$114). All data visible.
+        passed: false
+        comment: Columns correct, but brick extents show 4 $ ranges for 2 $ bricks
+          (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format 'renko-basic · letsplot · anyplot.ai'. Legend
-          correctly labels 'Direction' with 'bullish' and 'bearish'.
+        comment: Title 'renko-basic · python · letsplot · anyplot.ai'; legend 'Direction'
+          bullish/bearish
     data_quality:
       score: 15
       max: 15
@@ -163,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows ALL renko features: bullish bricks, bearish bricks, trend
-          reversals, price levels, ~70 bricks for pattern visibility.'
+        comment: Up runs, down runs, reversals and revisited price levels all shown
+          across 68 bricks
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price simulation (starting $100, 200 daily returns, $2 brick
-          size) is realistic and neutral. Synthetic but plausible.
+        comment: 200 daily closes of a stock-like random walk around 100 $, plausible
+          and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $82-$114 with $2 brick size is proportionally sensible.
-          Returns ~1% daily is realistic for stock data.
+        comment: Brick size $2 (2 % of the median close, rounded) as in the spec's
+          example; price range 83-113 $ sensible
     code_quality:
       score: 10
       max: 10
@@ -188,61 +192,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple, direct flow: imports → data generation → renko calculation
-          → plot → save. No unnecessary functions.'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output. Produces identical
-          results on every run.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (THEME env), numpy (calculations), pandas (DataFrame),
-          lets_plot (visualization).'
+        comment: Every imported name used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant renko algorithm with while loops for up/down bricks. No fake
-          UI, no overengineering. Pythonic and clear.
+        comment: Brick construction is a short loop; no library call computes Renko
+          bricks
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot-{THEME}.png (scale 3 = 4800×2700) and plot-{THEME}.html.
-          Current API using ggsave().
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with ggsave
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert ggplot2-style grammar: aes(), geom_tile(), scale_fill_manual(),
-          theme_minimal() base. High-level API throughout.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses letsplot theme system with explicit token colors and HTML export.
-          Not unique to letsplot but well-executed.
+        passed: false
+        comment: 'Standard grammar: ggplot + geom_tile + scale_fill_manual + theme;
+          nothing beyond the default idiom'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: HTML export is mandated; no distinctive lets-plot feature beyond
+          it
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-22T05:24:35Z'
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - cumulative-sum
+  - time-series
   styling:
-  - theme-adaptive
+  - edge-highlighting
+  - grid-styling
