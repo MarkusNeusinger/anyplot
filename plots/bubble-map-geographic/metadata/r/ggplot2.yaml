@@ -2,155 +2,166 @@ library: ggplot2
 language: r
 specification_id: bubble-map-geographic
 created: '2026-05-18T22:49:06Z'
-updated: '2026-05-18T23:06:32Z'
+updated: '2026-11-22T14:29:52Z'
 generated_by: claude-sonnet
-workflow_run: 26064616675
+workflow_run: 45032496744
 issue: 3625
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - 'Excellent real-world data: 40 cities with accurate 2023 populations and precise
-    coordinates across 6 continents'
-  - Proper area scaling via scale_size_area() — correctly encodes population to bubble
-    area, not radius
-  - 'Thorough theme-adaptive implementation: OCEAN_BG, GRID_COLOR, ELEVATED_BG, and
-    all INK tokens properly defined for both themes'
-  - 'Correct Okabe-Ito assignment with Asia = #009E73 as first series; canonical order
-    maintained for all six continents'
-  - Clean KISS code structure with descriptive variable names and no unnecessary abstractions
+  - scale_size_area() makes bubble area proportional to population, and the four-break
+    size legend (6M, 10M, 20M, 37M) reads in the value's units
+  - A hand-traced landmass basemap with themed ocean and land tints sits clearly quieter
+    than the bubbles in both themes
+  - Bubbles are sorted largest first and drawn with shape 21, alpha 0.70 and a page-colored
+    outline, so small cities stay visible inside the dense South and East Asia cluster
+  - Per-guide override.aes keeps the size legend neutral grey and the continent swatches
+    legible in both themes
+  - All chrome threads theme tokens; the dark render has no dark-on-dark text
   weaknesses:
-  - plot.title (22pt) and axis.text (14pt) are slightly below library guide minimums
-    (24pt and 16pt) — increase font sizes
-  - library(dplyr) and library(scales) are imported but not used anywhere — remove
-    both
-  - 'No geographic basemap: spec requires country/coastline outlines; use ggplot2
-    native borders(database="world", colour=INK_SOFT, fill=NA, linewidth=0.2) before
-    geom_text layer'
-  - 'Continent reference labels use LABEL_COLOR="#4A6070" in dark mode against #182530
-    ocean (~2.5:1 contrast); replace with INK_MUTED (#A8A79F) for legibility'
+  - 'SC-01 (both): continent name labels (NORTH AMERICA, SOUTH AMERICA, EUROPE, AFRICA,
+    ASIA, AUSTRALIA) are an annotation layer the spec does not ask for, and London
+    and São Paulo bubbles sit on EUROPE and SOUTH AMERICA → remove the layer; the
+    basemap already gives the geographic context. Likely cause: the region_labels
+    geom_text layer.'
+  - 'Suggestion: Europe takes slot 5, the matte red #AE3030 that the style guide keeps
+    as a semantic loss anchor; slot 6 or 7 would keep red free.'
+  - 'Suggestion: the size legend circles could take the data marks'' outline so they
+    read even more like the bubbles they explain.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 page background; light-blue #D6E8F2 ocean panel — correct for light theme
-      Chrome: Title "World's Largest Cities · bubble-map-geographic · r · ggplot2 · anyplot.ai" in bold dark ink (22pt); subtitle in INK_SOFT; axis labels "Longitude"/"Latitude" in INK (20pt); tick labels with degree units in INK_SOFT (14pt); legend text in INK_SOFT — all clearly readable
-      Data: 40 city bubbles colored by continent; Asia=#009E73 (first series, correct), Africa=#D55E00, N.America=#0072B2, S.America=#CC79A7, Europe=#E69F00, Oceania=#56B4E9; alpha=0.70; sizes range from small (Oceania/Singapore) to large (Tokyo); two legends (Population bubble sizes, Continent colors) placed to the right; continent text labels in muted gray-blue
-      Legibility verdict: PASS — all critical text is readable against light background
+      Background: warm off-white #FAF8F1 page; map panel in a pale blue ocean tint with cream landmasses outlined in a muted grey ink.
+      Chrome: bold title 'World’s Largest Cities · bubble-map-geographic · r · ggplot2 · anyplot.ai' (about 78% of the width), grey subtitle, Longitude/Latitude axis titles, degree ticks 150°W–150°E and 60°S–60°N, two framed legend cards on the right (Population 6M/10M/20M/37M grey circles; Continent swatches). Muted bold continent labels on the landmasses. All text dark on light and readable.
+      Data: 40 translucent bubbles with thin page-colored outlines; Asia #009E73 (largest cluster, Tokyo biggest), Africa #C475FD, N. America #4467A3, S. America #BD8233, Europe #AE3030, Oceania #2ABCCD. London and São Paulo bubbles partly cover the EUROPE and SOUTH AMERICA labels.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 page background; dark navy #182530 ocean panel — correct for dark theme
-      Chrome: Title, axis labels, tick labels, legend text all use light-colored INK/INK_SOFT tokens and are clearly readable against the dark background; no dark-on-dark failures for critical text; grid lines and panel border are subtle but visible; continent reference labels use #4A6070 against #182530 ocean — low contrast (~2.5:1), labels are faint but decorative only
-      Data: All Okabe-Ito data colors are IDENTICAL to light render — same greens, oranges, blues, purples for each continent; bubble sizes unchanged
-      Legibility verdict: PASS for critical text; MINOR NOTE on continent reference label contrast in dark mode (#4A6070 vs #182530 is too low, should use INK_MUTED #A8A79F)
+      Background: warm near-black #1A1A17 page; ocean panel in dark navy, landmasses in dark grey with light grey outlines.
+      Chrome: title, subtitle, axis titles and ticks in light ink, legend cards on the elevated dark surface with light text; size-legend circles mid grey and clearly visible. No dark-on-dark text.
+      Data: same bubble colors and positions as the light render; only chrome flips; outlines switch to the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Sizes explicitly set throughout; plot.title=22pt (recommended 24pt)
-          and axis.text=14pt (recommended 16pt) slightly below guidelines
+        comment: Title 11 pt, axis titles 10 pt, ticks and legend text 8 pt; all text
+          readable in both themes, dark chrome uses light ink tokens
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No label or element collisions
+        comment: No text collides with other text; the continent labels touched by
+          bubbles are an unrequested layer, carried under SC-01
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bubbles well-sized with alpha=0.70; size range from tiny (Oceania)
-          to large (Tokyo) clear
+        comment: 40 bubbles with alpha 0.70 and a thin page-colored outline, drawn
+          largest first; size-legend circles in INK_SOFT are visible on both legend
+          backgrounds; continent swatches at size 4
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe palette; adequate contrast and alpha blending
+        comment: Imprint hues are CVD-separated; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilized; legends placed cleanly to the right
+        comment: 3200x1800 canvas, map fills the panel with expand = FALSE, legends
+          stacked on the right, title about 78% of the width (expected for the mandated
+          title)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude with degree tick units (150°W, 60°N, etc.)
+        comment: Longitude/Latitude with degree-labelled ticks (150°W, 60°N); subtitle
+          states the unit (millions)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Asia first series = #009E73; Okabe-Ito order followed; PAGE_BG #FAF8F1/#1A1A17
-          correct; all chrome tokens theme-adaptive'
+        comment: 'Asia = #009E73, other continents in Imprint order; backgrounds #FAF8F1
+          / #1A1A17; all chrome theme-adaptive'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured with OCEAN_BG panel, ELEVATED_BG legend, continent
-          labels; polished but not publication-exceptional
+        comment: 'Raised one: a two-tone ocean/land basemap (OCEAN_BG panel, LAND_BG
+          landmasses) tuned per theme so the basemap stays quieter than the bubbles,
+          plus an ELEVATED_BG legend card'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid at linewidth=0.4, minor grid removed, panel border appropriate
-          for geographic map, generous margins
+        comment: 'Raised one: page-colored bubble outlines separate overlapping bubbles
+          and a tight expand = FALSE frame with a thin panel border; beyond that,
+          style-guide baseline'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Geographic distribution immediately reveals Asia's dominance in mega-city
-          population; Tokyo's bubble visibly largest
+        passed: false
+        comment: 'Default: data displayed, continent color shows Asia''s concentration
+          but no focal point chosen beyond the spec'
     spec_compliance:
       score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct geographic bubble map with area-proportional sizing
+        comment: Correct geographic bubble map, but the continent name labels (NORTH
+          AMERICA, EUROPE, …) are an annotation layer the spec does not ask for (defect
+          line)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: scale_size_area, alpha=0.70, size legend, category color all present;
-          missing country/coastline basemap
+        comment: Area scaling (scale_size_area), size legend, alpha 0.70, landmass
+          basemap, minimum size via the data range, smaller bubbles drawn above larger
+          (C1–C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lon→x, lat→y, population→size, continent→color — all correct
+        comment: lon→x, lat→y, population→area, continent→fill; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format with descriptive prefix; both Population
-          and Continent legends present
+        comment: Title 'World’s Largest Cities · bubble-map-geographic · r · ggplot2
+          · anyplot.ai'; legends 'Population' (6M–37M) and 'Continent' read as text
+          for a reader
     data_quality:
       score: 15
       max: 15
@@ -160,23 +171,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 40 cities across 6 continents; full size range from ~5M to 37M; all
-          bubble-map aspects demonstrated
+        comment: Size range 5.3M–37.4M across 6 continents, overlap clusters in South/East
+          Asia and sparse regions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real 2023 city population estimates; neutral scientific context
+        comment: Real world cities with 2023 population estimates; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually accurate (Tokyo 37.4M, Delhi 32.9M, etc.); coordinates
-          geographically correct
+        comment: 'Checked Tokyo 37.4M, Delhi 32.9M, Shanghai 28.5M and the coordinates
+          of Tokyo, London, Sydney against the render: plausible'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -184,59 +195,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → plot → save; no functions or classes
+        comment: 'Linear script: tokens, data, basemap, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data; no random generation needed
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) and library(scales) imported but not used anywhere
-          in the script
+        passed: true
+        comment: ggplot2, ragg, tibble all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean readable R; no over-engineering
+        comment: Appropriate complexity; hand-traced basemap is justified because
+          no map package is available
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ragg::agg_png; correct API
+        comment: Saves plot-{THEME}.png via ragg::agg_png at 8x4.5 in, dpi 400
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Exemplary grammar-of-graphics: aes() mappings, scale_size_area(),
-          coord_fixed() for geographic projection, proper theme() layering'
+        comment: 'Raised one: scale_size_area for area-true sizing, coord_fixed with
+          expand = FALSE, per-guide override.aes and guide order'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses scale_size_area() for area-proportional scaling, coord_fixed()
-          for geographic aspect ratio, theme token system; solid but not deeply distinctive
+        passed: false
+        comment: 'Raised one: shape 21 with separate fill/stroke so outline and fill
+          are themed independently, override.aes to restyle each legend'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T14:25:54Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
-  patterns:
-  - data-generation
+  - annotations
+  - manual-ticks
+  patterns: []
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
