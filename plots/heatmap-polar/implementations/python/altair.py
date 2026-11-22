@@ -1,21 +1,15 @@
 """ anyplot.ai
 heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 90/100 | Created: 2026-05-13
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-22
 """
 
 import os
-import sys
 
-
-# Prevent the local altair.py from shadowing the installed library
-_script_dir = os.path.dirname(os.path.abspath(__file__))
-if _script_dir in sys.path:
-    sys.path.remove(_script_dir)
-
-import altair as alt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
+import altair as alt
+import numpy as np
+import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -25,118 +19,135 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data — monthly energy consumption (kWh) across five years
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+CELL_TEXT = "#FAF8F1"  # year labels sit on the data colors, which are identical in both themes
+
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: angular
+YEAR = "Year"  # role: radial
+ENERGY = "Energy (kWh/month)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("energy.csv")
 np.random.seed(42)
-
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-years = [2019, 2020, 2021, 2022, 2023]
-n_months = len(months)
-n_years = len(years)
-
-rows = []
-for yi, year in enumerate(years):
-    for mi, month in enumerate(months):
+years = ["2019", "2020", "2021", "2022", "2023"]
+values = []
+for yi in range(len(years)):
+    for mi in range(len(months)):
         winter = 75 * np.exp(-min(mi**2, (12 - mi) ** 2) / 3.5)
         summer = 45 * np.exp(-((mi - 6.5) ** 2) / 5.0)
-        trend = yi * 9
-        noise = np.random.normal(0, 10)
-        value = round(max(80, 155 + winter + summer + trend + noise), 1)
+        values.append(round(max(80, 155 + winter + summer + yi * 9 + np.random.normal(0, 10)), 1))
+df = pd.DataFrame({MONTH: months * len(years), YEAR: np.repeat(years, len(months)), ENERGY: values})
 
-        rows.append(
-            {
-                "month": month,
-                "year": str(year),
-                "value": value,
-                "theta": mi * 2 * np.pi / n_months,
-                "theta2": (mi + 1) * 2 * np.pi / n_months,
-                "r_inner": 100 + yi * 85,
-                "r_outer": 100 + (yi + 1) * 85,
-            }
-        )
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+VIEW = 480  # inner view size in px; polar geometry below scales with it
+R_HOLE = VIEW * 0.09  # empty centre so the innermost ring keeps a usable width
+R_EDGE = VIEW * 0.43  # outer edge of the last ring
+R_LABEL = VIEW * 0.465  # month labels just outside the rings
 
-df = pd.DataFrame(rows)
+month_codes, month_names = pd.factorize(df[MONTH])
+year_codes, year_names = pd.factorize(df[YEAR])
+n_months, n_years = len(month_names), len(year_names)
+ring = (R_EDGE - R_HOLE) / n_years
 
-# Month label positions (just outside outermost ring at r=525)
-month_label_df = pd.DataFrame(
-    [
-        {"label": month, "theta_mid": (mi + 0.5) * 2 * np.pi / n_months, "r_label": 555}
-        for mi, month in enumerate(months)
-    ]
+cells = df.assign(
+    theta=month_codes * 2 * np.pi / n_months,
+    theta2=(month_codes + 1) * 2 * np.pi / n_months,
+    r_inner=R_HOLE + year_codes * ring,
+    r_outer=R_HOLE + (year_codes + 1) * ring,
+)
+month_labels_df = pd.DataFrame(
+    {"label": month_names, "theta": (np.arange(n_months) + 0.5) * 2 * np.pi / n_months, "r": R_LABEL}
+)
+# One year label per ring, stacked along the ray at 11 o'clock (centre of the last month)
+year_labels_df = pd.DataFrame(
+    {
+        "label": year_names,
+        "theta": (n_months - 0.5) * 2 * np.pi / n_months,
+        "r": R_HOLE + (np.arange(n_years) + 0.5) * ring,
+    }
 )
 
-# Year label positions (near 11 o'clock, in the gap between rings)
-year_label_df = pd.DataFrame(
-    [
-        {"label": str(year), "theta_mid": 2 * np.pi - np.pi / 6, "r_label": 100 + (yi + 0.5) * 85}
-        for yi, year in enumerate(years)
-    ]
-)
-
-# Arc heatmap cells
+identity = alt.Scale(type="identity")
 arc = (
-    alt.Chart(df)
-    .mark_arc(stroke=PAGE_BG, strokeWidth=0.8)
+    alt.Chart(cells)
+    .mark_arc(stroke=PAGE_BG, strokeWidth=0.6)
     .encode(
-        theta=alt.Theta("theta:Q", scale=alt.Scale(type="identity")),
-        theta2=alt.Theta2("theta2:Q"),
-        radius=alt.Radius("r_outer:Q", scale=alt.Scale(type="identity")),
-        radius2=alt.Radius2("r_inner:Q"),
+        theta=alt.Theta("theta", type="quantitative", scale=identity),
+        theta2=alt.Theta2("theta2"),
+        radius=alt.Radius("r_outer", type="quantitative", scale=identity),
+        radius2=alt.Radius2("r_inner"),
         color=alt.Color(
-            "value:Q",
-            scale=alt.Scale(scheme="viridis"),
+            ENERGY.translate(ESCAPE),
+            type="quantitative",
+            title=ENERGY,
+            scale=alt.Scale(range=[IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]]),
             legend=alt.Legend(
-                title="kWh / month",
-                titleFontSize=18,
-                labelFontSize=16,
+                titleFontSize=14,
+                labelFontSize=12,
                 fillColor=ELEVATED_BG,
                 labelColor=INK_SOFT,
                 titleColor=INK,
                 strokeColor=INK_SOFT,
-                orient="right",
-                offset=20,
+                padding=8,
+                orient="bottom",
+                direction="horizontal",
+                gradientLength=300,
+                offset=14,
             ),
         ),
         tooltip=[
-            alt.Tooltip("month:N", title="Month"),
-            alt.Tooltip("year:N", title="Year"),
-            alt.Tooltip("value:Q", title="kWh", format=".0f"),
+            alt.Tooltip(MONTH.translate(ESCAPE), type="nominal", title=MONTH),
+            alt.Tooltip(YEAR.translate(ESCAPE), type="nominal", title=YEAR),
+            alt.Tooltip(ENERGY.translate(ESCAPE), type="quantitative", title=ENERGY, format=".0f"),
         ],
     )
 )
 
-# Month labels around the perimeter
-month_labels = (
-    alt.Chart(month_label_df)
-    .mark_text(fontSize=18, fontWeight="bold", align="center", baseline="middle", color=INK_SOFT)
+month_text = (
+    alt.Chart(month_labels_df)
+    .mark_text(fontSize=15, fontWeight="bold", align="center", baseline="middle", color=INK_SOFT)
     .encode(
-        theta=alt.Theta("theta_mid:Q", scale=alt.Scale(type="identity")),
-        radius=alt.Radius("r_label:Q", scale=alt.Scale(type="identity")),
+        theta=alt.Theta("theta", type="quantitative", scale=identity),
+        radius=alt.Radius("r", type="quantitative", scale=identity),
         text="label:N",
     )
 )
 
-# Year labels near 11 o'clock, one per ring
-year_labels = (
-    alt.Chart(year_label_df)
-    .mark_text(fontSize=16, align="center", baseline="middle", color=INK_SOFT)
+year_text = (
+    alt.Chart(year_labels_df)
+    .mark_text(fontSize=11, fontWeight="bold", align="center", baseline="middle", color=CELL_TEXT)
     .encode(
-        theta=alt.Theta("theta_mid:Q", scale=alt.Scale(type="identity")),
-        radius=alt.Radius("r_label:Q", scale=alt.Scale(type="identity")),
+        theta=alt.Theta("theta", type="quantitative", scale=identity),
+        radius=alt.Radius("r", type="quantitative", scale=identity),
         text="label:N",
     )
 )
 
 chart = (
-    (arc + month_labels + year_labels)
+    (arc + month_text + year_text)
     .properties(
-        width=1200,
-        height=1200,
+        width=VIEW,
+        height=VIEW,
         background=PAGE_BG,
-        title=alt.Title("heatmap-polar · altair · anyplot.ai", fontSize=28, color=INK, anchor="middle"),
+        title=alt.Title("heatmap-polar · python · altair · anyplot.ai", fontSize=20, color=INK, anchor="middle"),
     )
     .configure_view(fill=PAGE_BG, stroke=None)
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the 2400 x 2400 square target
+TARGET = 2400
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET or img.height > TARGET:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, exceeds {TARGET}x{TARGET}; shrink VIEW")
+canvas = Image.new("RGB", (TARGET, TARGET), PAGE_BG)
+canvas.paste(img, ((TARGET - img.width) // 2, (TARGET - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
