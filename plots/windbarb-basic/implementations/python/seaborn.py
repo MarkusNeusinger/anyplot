@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-19
@@ -8,16 +8,23 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
-from matplotlib.patches import Circle
+from matplotlib.colors import LinearSegmentedColormap
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint sequential colormap for the continuous wind speed
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
 sns.set_theme(
     style="ticks",
@@ -31,97 +38,102 @@ sns.set_theme(
         "ytick.color": INK_SOFT,
     },
 )
-sns.set_context("talk", font_scale=1.2)
 
-# Data: Simulated surface wind observations from a grid of weather stations
+# Constants
+CALM_KNOTS = 2.5  # winds below this speed are drawn as an open circle without a staff
+BARB_INCREMENTS = {"half": 5, "full": 10, "flag": 50}  # knots per half barb, full barb and pennant
+
+# Columns: set these to your table's column names
+LONGITUDE = "Longitude (°E)"  # role: x
+LATITUDE = "Latitude (°N)"  # role: y
+U_WIND = "Zonal wind u (knots)"  # role: u
+V_WIND = "Meridional wind v (knots)"  # role: v
+
+# Data: replace this block with your own table, for example df = pd.read_csv("winds.csv")
 np.random.seed(42)
+lon, lat = np.meshgrid(np.linspace(2, 12, 6), np.linspace(2, 8, 4))
+lon = lon.flatten()
+lat = lat.flatten()
+n_stations = len(lon)
 
-# Create a grid of observation points (6x4 grid = 24 stations)
-x_grid = np.linspace(2, 12, 6)
-y_grid = np.linspace(2, 8, 4)
-x, y = np.meshgrid(x_grid, y_grid)
-x = x.flatten()
-y = y.flatten()
+# Spatially coherent field plus noise
+u = 20 * np.sin(lon * 0.4) + 15 + np.random.randn(n_stations) * 8
+v = 15 * np.cos(lat * 0.5) + 10 + np.random.randn(n_stations) * 8
 
-n_points = len(x)
-
-# Generate wind components with full range: calm, moderate, and strong (with pennants)
-base_u = 20 * np.sin(x * 0.4) + 15
-base_v = 15 * np.cos(y * 0.5) + 10
-noise_u = np.random.randn(n_points) * 8
-noise_v = np.random.randn(n_points) * 8
-
-u = base_u + noise_u
-v = base_v + noise_v
-
-# Force calm winds (< 2.5 knots) shown as open circles
-calm_indices = [0, 11, 23]
-for idx in calm_indices:
+# Calm stations
+for idx in [0, 11, 23]:
     u[idx] = 0.5 * (np.random.rand() - 0.5)
     v[idx] = 0.5 * (np.random.rand() - 0.5)
 
-# Force strong winds with pennants (50+ knots)
-strong_indices = [5, 9, 18]
-for idx in strong_indices:
+# Strong stations that need pennants
+for idx in [5, 9, 18]:
     angle = np.random.rand() * 2 * np.pi
     speed_val = 55 + np.random.rand() * 15
     u[idx] = speed_val * np.cos(angle)
     v[idx] = speed_val * np.sin(angle)
 
-speed = np.sqrt(u**2 + v**2)
+df = pd.DataFrame({LONGITUDE: lon, LATITUDE: lat, U_WIND: u, V_WIND: v})
 
-calm_mask = speed < 2.5
-barb_mask = ~calm_mask
+# Plot: reads only df and the constants above
+speed = np.hypot(df[U_WIND], df[V_WIND])
+is_calm = speed < CALM_KNOTS
+winds = df[~is_calm]
+calm = df[is_calm]
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
-fig.subplots_adjust(bottom=0.15)
+fig.subplots_adjust(left=0.08, right=0.93, top=0.92, bottom=0.2)
 
-if np.any(barb_mask):
-    barbs = ax.barbs(
-        x[barb_mask],
-        y[barb_mask],
-        u[barb_mask],
-        v[barb_mask],
-        speed[barb_mask],
-        cmap="viridis",
-        length=9,
-        linewidth=2.5,
-        barb_increments={"half": 5, "full": 10, "flag": 50},
-        pivot="middle",
-        clim=(0, 75),
+top_speed = speed.max()
+barbs = ax.barbs(
+    winds[LONGITUDE],
+    winds[LATITUDE],
+    winds[U_WIND],
+    winds[V_WIND],
+    speed[~is_calm],
+    cmap=imprint_seq,
+    clim=(0, top_speed),
+    length=7,
+    linewidth=1.5,
+    barb_increments=BARB_INCREMENTS,
+    pivot="middle",
+)
+
+# Calm stations: open circle alone, no staff, colored as the lowest speed
+if len(calm) > 0:
+    sns.scatterplot(
+        data=calm,
+        x=LONGITUDE,
+        y=LATITUDE,
+        s=110,
+        marker="o",
+        facecolor="none",
+        edgecolor=imprint_seq(0.0),
+        linewidth=1.6,
+        legend=False,
+        ax=ax,
     )
 
-    cbar = plt.colorbar(barbs, ax=ax, pad=0.02)
-    cbar.set_label("Wind Speed (knots)", fontsize=20, color=INK, rotation=270, labelpad=25)
-    cbar.ax.tick_params(labelsize=16, colors=INK_SOFT)
-    cbar.ax.yaxis.set_tick_params(color=INK_SOFT)
-    plt.setp(cbar.ax.yaxis.get_ticklabels(), color=INK_SOFT)
-    cbar.outline.set_edgecolor(INK_SOFT)
-
-# Calm winds as open circles (standard meteorological notation)
-calm_circle_color = "#440154" if THEME == "light" else "#90d743"
-for idx in np.where(calm_mask)[0]:
-    circle = Circle((x[idx], y[idx]), radius=0.35, fill=False, edgecolor=calm_circle_color, linewidth=3)
-    ax.add_patch(circle)
+cbar = fig.colorbar(barbs, ax=ax, pad=0.015, fraction=0.04)
+cbar.set_label("Wind speed (knots)", fontsize=10, color=INK)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
 
 # Style
-ax.set_xlabel("Longitude (°E)", fontsize=20, color=INK)
-ax.set_ylabel("Latitude (°N)", fontsize=20, color=INK)
-ax.set_title("windbarb-basic · python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_title("windbarb-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(LONGITUDE, fontsize=10)
+ax.set_ylabel(LATITUDE, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+x_lo, x_hi = df[LONGITUDE].min(), df[LONGITUDE].max()
+y_lo, y_hi = df[LATITUDE].min(), df[LATITUDE].max()
+ax.set_xlim(x_lo - 0.08 * (x_hi - x_lo), x_hi + 0.08 * (x_hi - x_lo))
+ax.set_ylim(y_lo - 0.12 * (y_hi - y_lo), y_hi + 0.12 * (y_hi - y_lo))
+sns.despine(ax=ax)
 
-ax.set_xlim(0, 14)
-ax.set_ylim(0, 10)
-ax.grid(False)
+key = (
+    f"Barb notation: ○ calm (<{CALM_KNOTS} kt)  |  half barb {BARB_INCREMENTS['half']} kt  |  "
+    f"full barb {BARB_INCREMENTS['full']} kt  |  pennant ▲ {BARB_INCREMENTS['flag']} kt"
+)
+fig.text(0.5, 0.03, key, fontsize=8, ha="center", va="bottom", color=INK_MUTED)
 
-for spine in ax.spines.values():
-    spine.set_color(INK_SOFT)
-    spine.set_linewidth(0.8)
-
-legend_text = "Barb notation: ○ = calm (<2.5 kt) | half barb = 5 kt | full barb = 10 kt | pennant ▲ = 50 kt"
-fig.text(0.5, 0.02, legend_text, fontsize=16, ha="center", va="bottom", color=INK_MUTED)
-
-# Save
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
