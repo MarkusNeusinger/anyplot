@@ -1,7 +1,7 @@
 """anyplot.ai
 indicator-bollinger: Bollinger Bands Indicator Chart
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-11-22
+Quality: pending | Updated: 2026-11-22
 """
 
 import os
