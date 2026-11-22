@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-text: Scatter Plot with Text Labels Instead of Points
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-17
@@ -6,9 +6,20 @@ Quality: 90/100 | Updated: 2026-05-17
 
 import os
 
-import numpy as np
 import pandas as pd
-from plotnine import aes, element_line, element_rect, element_text, geom_text, ggplot, labs, scale_color_manual, theme
+from plotnine import (
+    aes,
+    element_line,
+    element_rect,
+    element_text,
+    geom_text,
+    ggplot,
+    labs,
+    scale_color_manual,
+    scale_x_continuous,
+    scale_y_log10,
+    theme,
+)
 
 
 # Theme tokens
@@ -18,87 +29,84 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (categorical data only)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Simulated 2D projection of programming language embeddings
-np.random.seed(42)
+# Column names
+CITY = "City"  # role: label
+TEMPERATURE = "Mean annual temperature (°C)"  # role: x
+PRECIPITATION = "Annual precipitation (mm)"  # role: y
+CLIMATE = "Climate"  # grouping column that drives the text color
 
-languages = [
-    # Object-oriented / General purpose
-    ("Python", -1.2, 2.1, "General"),
-    ("Java", -0.8, 1.5, "General"),
-    ("C#", -0.5, 1.3, "General"),
-    ("Ruby", -1.5, 1.8, "General"),
-    ("Kotlin", -0.3, 1.6, "General"),
-    # Systems / Low-level
-    ("C", 2.0, -0.5, "Systems"),
-    ("C++", 1.8, 0.2, "Systems"),
-    ("Rust", 1.5, 0.8, "Systems"),
-    ("Go", 1.2, 1.0, "Systems"),
-    ("Zig", 2.2, -0.2, "Systems"),
-    # Functional
-    ("Haskell", -2.0, -1.5, "Functional"),
-    ("Scala", -1.0, -0.5, "Functional"),
-    ("Clojure", -1.8, -1.0, "Functional"),
-    ("F#", -0.7, -0.8, "Functional"),
-    ("Erlang", -2.2, -1.2, "Functional"),
-    # Web / Scripting
-    ("JavaScript", 0.5, 2.5, "Web"),
-    ("TypeScript", 0.3, 2.2, "Web"),
-    ("PHP", 0.8, 1.8, "Web"),
-    ("Perl", 1.0, 1.2, "Web"),
-    ("Lua", 1.5, 1.5, "Web"),
-    # Data / Scientific
-    ("R", -1.8, 0.5, "Data"),
-    ("Julia", -0.2, 0.3, "Data"),
-    ("MATLAB", -1.5, 0.2, "Data"),
-    ("SQL", 0.2, -1.5, "Data"),
-    ("SAS", -1.2, -0.3, "Data"),
+# Data: climate normals (approximate) for cities on five continents
+rows = [
+    ("Singapore", 27.0, 2340, "Tropical"),
+    ("Jakarta", 27.5, 1800, "Tropical"),
+    ("Mumbai", 27.2, 2400, "Tropical"),
+    ("Bangkok", 28.6, 1500, "Tropical"),
+    ("Lagos", 27.0, 1500, "Tropical"),
+    ("Manaus", 27.4, 2300, "Tropical"),
+    ("Cairo", 22.0, 25, "Arid"),
+    ("Dubai", 27.0, 100, "Arid"),
+    ("Riyadh", 26.0, 100, "Arid"),
+    ("Phoenix", 24.0, 210, "Arid"),
+    ("Lima", 19.0, 15, "Arid"),
+    ("Alice Springs", 21.0, 280, "Arid"),
+    ("Rome", 15.5, 800, "Mediterranean"),
+    ("Athens", 18.5, 400, "Mediterranean"),
+    ("Lisbon", 17.5, 750, "Mediterranean"),
+    ("Los Angeles", 18.5, 380, "Mediterranean"),
+    ("Cape Town", 17.0, 515, "Mediterranean"),
+    ("Sydney", 18.0, 1200, "Mediterranean"),
+    ("London", 11.0, 600, "Oceanic"),
+    ("Paris", 12.0, 640, "Oceanic"),
+    ("Seattle", 11.5, 950, "Oceanic"),
+    ("Wellington", 12.5, 1250, "Oceanic"),
+    ("Dublin", 10.0, 760, "Oceanic"),
+    ("Vancouver", 10.5, 1150, "Oceanic"),
+    ("Moscow", 5.8, 710, "Continental"),
+    ("Oslo", 6.0, 760, "Continental"),
+    ("Toronto", 9.5, 830, "Continental"),
+    ("Chicago", 10.0, 970, "Continental"),
+    ("Helsinki", 5.5, 650, "Continental"),
+    ("Beijing", 12.9, 570, "Continental"),
+    ("Reykjavik", 5.0, 800, "Subarctic"),
+    ("Yakutsk", -8.8, 240, "Subarctic"),
+    ("Anchorage", 2.8, 400, "Subarctic"),
+    ("Ulaanbaatar", -0.4, 260, "Subarctic"),
+    ("Fairbanks", -2.5, 280, "Subarctic"),
 ]
-
-df = pd.DataFrame(languages, columns=["label", "x", "y", "category"])
-df["x"] = df["x"] + np.random.normal(0, 0.1, len(df))
-df["y"] = df["y"] + np.random.normal(0, 0.1, len(df))
-
-# Map categories to Okabe-Ito colors
-category_colors = {
-    "General": IMPRINT[0],
-    "Systems": IMPRINT[1],
-    "Functional": IMPRINT[2],
-    "Web": IMPRINT[3],
-    "Data": IMPRINT[4],
-}
+df = pd.DataFrame(rows, columns=[CITY, TEMPERATURE, PRECIPITATION, CLIMATE])
 
 # Plot
+climates = df[CLIMATE].unique().tolist()
+t_min, t_max = df[TEMPERATURE].min(), df[TEMPERATURE].max()
+t_pad = (t_max - t_min) * 0.08
+
 plot = (
-    ggplot(df, aes(x="x", y="y", label="label", color="category"))
-    + geom_text(size=11, alpha=0.9, fontweight="bold")
-    + labs(
-        x="Dimension 1 (Paradigm Similarity)",
-        y="Dimension 2 (Abstraction Level)",
-        title="scatter-text · Python · plotnine · anyplot.ai",
-        color="Category",
-    )
-    + scale_color_manual(values=category_colors)
+    ggplot(df, aes(x=TEMPERATURE, y=PRECIPITATION, label=CITY, color=CLIMATE))
+    + geom_text(size=5, alpha=0.9, fontweight="bold")
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=climates)
+    + scale_x_continuous(limits=(t_min - t_pad, t_max + t_pad))
+    + scale_y_log10()
+    + labs(title="City climates · scatter-text · python · plotnine · anyplot.ai")
     + theme(
-        figure_size=(16, 9),
-        dpi=300,
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
-        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.08),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.06),
         panel_border=element_rect(color=INK_SOFT, fill=None, size=0.4),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.4),
-        plot_title=element_text(size=24, color=INK, ha="left"),
+        plot_title=element_text(size=12, color=INK, ha="left"),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
         legend_position="right",
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
