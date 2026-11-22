@@ -12,147 +12,148 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 77
 review:
   strengths:
-  - 'Excellent spec compliance: all required features (polar geometry, sequential
-    colormap, colorbar, cell borders, readable angular labels) implemented correctly'
-  - 'Perfect data quality: realistic website traffic scenario with compelling weekday/weekend
-    contrast; np.random.seed(42) ensures reproducibility'
-  - 'Idiomatic Plotly usage: go.Barpolar with shared coloraxis and customdata+hovertemplate
-    are the canonical Plotly patterns for this chart type'
-  - 'Correct palette: viridis for continuous sequential data; theme-adaptive chrome
-    (INK/INK_SOFT/ELEVATED_BG tokens) applied consistently throughout both renders'
-  - 'Clean code: linear structure, no over-engineering, all imports used, no fake
-    UI elements'
+  - go.Barpolar rings with a shared coloraxis and one colorbar
+  - Bold boxed day labels stay readable over the cells in both themes
+  - Realistic weekday/weekend traffic pattern, seeded
+  - Per-cell hovertemplate in the HTML output
   weaknesses:
-  - 'DE-03 (storytelling): Peak pattern is visible through color contrast alone but
-    no deliberate emphasis technique guides the viewer — add a subtitle or fig.add_annotation()
-    noting ''Weekday peaks: 9am & 8pm | Weekend: midday plateau'''
-  - 'DE-01 (aesthetic sophistication): Typography is standard throughout with no distinctive
-    type weight or hierarchy beyond size differences; no distinctive design flourishes
-    beyond library configuration'
-  - 'VQ-01 minor: Colorbar tick labels at tickfont size 14px are slightly below the
-    18px spec for pixel-based libraries — raise to 16-18px'
+  - 'VQ-05 (both): the canvas is 3600x3600 instead of the allowed 2400x2400 square
+    → 2400x2400 (−1200 × −1200 px). Likely cause: write_image(width=1200, height=1200,
+    scale=3) instead of width=600, height=600, scale=4.'
+  - 'VQ-07 (both): the continuous scale is viridis, a colormap the style guide forbids
+    → imprint_seq [[0, ''#009E73''], [1, ''#4467A3'']]. Likely cause: coloraxis colorscale=''viridis''.'
+  - 'SC-04 (both): the title ''Website Traffic · heatmap-polar · plotly · anyplot.ai''
+    lacks the language segment → ''Website Traffic · heatmap-polar · python · plotly
+    · anyplot.ai''. Likely cause: the title string.'
+  - 'SC-01 (both): an annotation callout box (''Weekdays: 9am & 8pm peaks / Weekends:
+    midday plateau'') the spec does not ask for sits below the disc → remove it. Likely
+    cause: an added fig.add_annotation call.'
+  - 'Suggestion: the colorbar tick labels could be one step larger to balance the
+    18 px angular labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Website Traffic · heatmap-polar · plotly · anyplot.ai" in dark ink (28px), angular tick labels (12am, 3am, 6am, 9am, 12pm, 3pm, 6pm, 9pm) in INK_SOFT (18px), radial day labels (Mon-Sun) in INK_SOFT (16px), colorbar title "Page Views" in INK (18px), colorbar ticks in INK_SOFT (14px) — all clearly readable against light background
-      Data: Viridis colormap from deep purple (low ~0 page views) to bright yellow-green (peak ~5500 page views); weekday rings (Mon-Fri) show sharp yellow spike at 9am position and secondary green peak around 8pm; weekend rings (Sat-Sun) show broader, dimmer midday plateau; 168 cells (7 days × 24 hours) all visible; thin PAGE_BG separator lines between cells improve ring readability
+      Background: warm off-white #FAF8F1
+      Chrome: title 'Website Traffic · heatmap-polar · plotly · anyplot.ai' in dark ink; angular labels 12am..9pm clockwise from top; bold radial day labels Mon..Sun in light boxes along the 45 deg spoke; colorbar 'Page Views' 0-5000 in a bordered box; a green-bordered callout box 'Weekdays: 9am & 8pm peaks / Weekends: midday plateau' below right of the disc; '6pm' label touches the left canvas edge
+      Data: 168 ring segments colored with viridis from deep purple (low) to yellow (high); weekday 9am yellow spike, 8pm green secondary peak, weekend midday plateau in the outer rings
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light ink (F0EFE8), angular labels in INK_SOFT (B8B7B0), radial day labels in INK_SOFT, colorbar title and ticks in light-themed colors — all clearly readable against dark background; no dark-on-dark failures detected
-      Data: Viridis colormap colors are visually identical to light render — the bright yellow 9am spike and the dark purple low-traffic cells are indistinguishable between themes; only chrome elements (background, text, colorbar border/fill) have flipped
+      Background: warm near-black #1A1A17
+      Chrome: title, angular labels, boxed day labels, colorbar and callout text all in light ink; no dark-on-dark text
+      Data: cell colors identical to the light render; separators flip to the dark page color
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 28px, angular ticks 18px, radial ticks 16px explicitly set
-          and readable; colorbar ticks at 14px slightly below 18px spec
+        comment: Title, angular ticks 18 px, boxed bold radial labels and colorbar
+          text all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Inner radial day labels slightly compact in center but all readable;
-          no text collision
+        comment: Radial day labels sit in backing boxes over the cells and stay readable;
+          no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Viridis creates excellent contrast; all 168 cells visible and distinguishable
+        comment: All 168 cells visible with high viridis contrast; thin separators
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Viridis is CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Square 3600x3600 format ideal for polar; domain [0,0.82]x[0.02,0.98]
-          + colorbar at x=0.88 well-considered
+        passed: false
+        comment: Canvas 3600x3600 is not one of the two allowed sizes (2400x2400 /
+          3200x1800) — hard rule (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive, colorbar titled 'Page Views', hour/day labels
-          present
+        comment: Descriptive prefixed title, colorbar titled Page Views, self-explanatory
+          tick labels
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Viridis for sequential continuous data; backgrounds #FAF8F1/#1A1A17;
-          chrome tokens flip correctly'
+        passed: false
+        comment: Continuous scale is viridis, a forbidden colormap; imprint_seq required
+          (defect line). Backgrounds correct
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above well-configured default: theme-adaptive colorbar border, axis
-          line colors, cell separators; standard typography'
+        comment: Style-guide baseline with bold boxed day labels; nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: 10% opacity grid, 0.5px PAGE_BG cell separators, styled colorbar
-          border; above defaults
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
+        passed: true
+        comment: Page-colored cell separators and boxed radial labels placed on the
+          45 deg spoke
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: Viridis luminance gradient makes weekday/weekend pattern visible;
-          no deliberate emphasis technique or annotation to guide viewer
+        comment: The emphasis comes from an unrequested callout box, which earns no
+          credit
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct polar heatmap using go.Barpolar
+        passed: false
+        comment: 'Correct polar heatmap, but an unrequested annotation callout (''Weekdays:
+          9am & 8pm peaks / Weekends: midday plateau'') is added (defect line)'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: cyclic wrapping, outward radial, viridis, angular
-          labels, colorbar, cell borders'
+        comment: 'C1-C4 all shown: Mon innermost and labelled rings, cyclic closure
+          with 3-hourly labels, sequential cmap with colorbar, equal segments with
+          subordinate borders'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hours to angular, days to radial, page views to color — all correct
+        comment: Hour -> angle (clockwise from 12am at top), day -> ring, views ->
+          color; all cells at their categories
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title contains required spec-id · library · anyplot.ai; colorbar
-          labelled Page Views
+        passed: false
+        comment: Title 'Website Traffic · heatmap-polar · plotly · anyplot.ai' lacks
+          the language segment 'python' (defect line)
     data_quality:
       score: 15
       max: 15
@@ -162,21 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows weekday dual peaks (9am+8pm) and weekend single midday plateau;
-          full 7x24 coverage
+        comment: Shows the weekday double peak (9am, 8pm) against the weekend midday
+          plateau and the overnight trough across all 7x24 cells
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Website traffic by hour and day: real-world, neutral, comprehensible'
+        comment: 'Website traffic by hour and weekday: real-world, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weekday peak ~5500, weekend ~3500, overnight ~0; Gaussian peaks realistic;
-          clipped at 0
+        comment: Hourly views 0 to about 5,500 clipped at 0 are plausible
     code_quality:
       score: 10
       max: 10
@@ -186,50 +186,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> tokens -> data -> plot -> save; no functions/classes'
+        comment: 'Linear zones: tokens, constants, data, plot, style, save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects — all used
+        comment: os, numpy, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration, shared coloraxis, no fake UI
+        comment: Clean loop over days with a shared coloraxis; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image and write_html both present with correct naming
+        comment: write_image to plot-{THEME}.png plus write_html (the canvas size
+          is scored in VQ-05)
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: go.Barpolar with shared coloraxis, customdata+hovertemplate, write_html
-          — canonical Plotly patterns
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: go.Barpolar + shared coloraxis + hovertemplate are Plotly-distinctive;
-          trace iteration is basic approach
+        comment: go.Barpolar with base stacking for rings, a shared coloraxis across
+          traces and customdata hovertemplates
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Shared layout coloraxis driving one colorbar for seven traces, plus
+          HTML hover per cell; standard otherwise
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
 impl_tags:
   dependencies: []
   techniques:
