@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-19
@@ -24,6 +24,7 @@ from plotnine import (
     labs,
     scale_color_manual,
     scale_fill_manual,
+    scale_linetype_manual,
     scale_x_datetime,
     theme,
     theme_minimal,
@@ -38,89 +39,87 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-IMPRINT = {"Historical": "#009E73", "Forecast": "#C475FD"}
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Monthly electricity demand with forecast
-np.random.seed(42)
+# Column names, written the way the axis and legend should read
+DATE = "Week"  # role: date
+ACTUAL = "Observed"  # role: actual
+FORECAST = "Forecast"  # role: forecast
+LOWER_80 = "Lower 80%"  # role: lower_80
+UPPER_80 = "Upper 80%"  # role: upper_80
+LOWER_95 = "Lower 95%"  # role: lower_95
+UPPER_95 = "Upper 95%"  # role: upper_95
+VISITS_LABEL = "Website visits (thousand per week)"
 
-# Historical period: 36 months
-n_historical = 36
-dates_historical = pd.date_range("2022-01-01", periods=n_historical, freq="MS")
+# Data: replace this block with your own table, for example df = pd.read_csv("traffic.csv")
+# Weekly website traffic: 2 years of history with a step change at a campaign launch,
+# then a damped-growth forecast for the next 16 weeks.
+rng = np.random.default_rng(7)
+n_hist, n_fc = 104, 16
+weeks = pd.date_range("2023-01-02", periods=n_hist + n_fc, freq="W-MON")
+t = np.arange(n_hist)
+level = 42 + 0.12 * t + 24 * (t >= 62)
+season = 4 * np.sin(2 * np.pi * (t - 8) / 52)
+observed = level + season + rng.normal(0, 2.2, n_hist)
 
-# Base trend with seasonality
-trend = np.linspace(100, 130, n_historical)
-seasonality = 15 * np.sin(2 * np.pi * np.arange(n_historical) / 12)
-noise = np.random.normal(0, 5, n_historical)
-actual_values = trend + seasonality + noise
+horizon = np.arange(0, n_fc + 1)
+damped_growth = 0.9 * 6 * (1 - 0.88**horizon)
+seasonal_shift = 4 * (np.sin(2 * np.pi * (n_hist - 1 + horizon - 8) / 52) - np.sin(2 * np.pi * (n_hist - 1 - 8) / 52))
+fc = observed[-1] + damped_growth + seasonal_shift
+spread = 2.4 * np.sqrt(horizon)
 
-# Forecast period: 12 months
-n_forecast = 12
-dates_forecast = pd.date_range(dates_historical[-1] + pd.DateOffset(months=1), periods=n_forecast, freq="MS")
-
-# Forecast with expanding uncertainty
-forecast_trend = np.linspace(actual_values[-1], 145, n_forecast)
-forecast_seasonality = 15 * np.sin(2 * np.pi * (np.arange(n_forecast) + n_historical) / 12)
-forecast_values = forecast_trend + forecast_seasonality
-
-# Confidence intervals widen over time
-time_factor = np.sqrt(np.arange(1, n_forecast + 1))
-ci_80 = 5 * time_factor
-ci_95 = 10 * time_factor
-
-# Build dataframe for historical data
-df_historical = pd.DataFrame({"date": dates_historical, "value": actual_values, "series": "Historical"})
-
-# Build dataframe for forecast
-df_forecast = pd.DataFrame({"date": dates_forecast, "value": forecast_values, "series": "Forecast"})
-
-# CI band dataframes with label column for legend mapping
-df_ci_95 = pd.DataFrame(
-    {"date": dates_forecast, "ymin": forecast_values - ci_95, "ymax": forecast_values + ci_95, "ci": "95% CI"}
+df = pd.DataFrame(
+    {
+        DATE: weeks[n_hist - 1 :].union(weeks[:n_hist]),
+        ACTUAL: np.r_[observed, np.full(n_fc, np.nan)],
+        FORECAST: np.r_[np.full(n_hist - 1, np.nan), fc],
+        LOWER_80: np.r_[np.full(n_hist - 1, np.nan), fc - 1.28 * spread],
+        UPPER_80: np.r_[np.full(n_hist - 1, np.nan), fc + 1.28 * spread],
+        LOWER_95: np.r_[np.full(n_hist - 1, np.nan), fc - 1.96 * spread],
+        UPPER_95: np.r_[np.full(n_hist - 1, np.nan), fc + 1.96 * spread],
+    }
 )
-df_ci_80 = pd.DataFrame(
-    {"date": dates_forecast, "ymin": forecast_values - ci_80, "ymax": forecast_values + ci_80, "ci": "80% CI"}
-)
-
-# Forecast start date and annotation anchor
-forecast_start = dates_forecast[0]
-annotation_x = forecast_start + pd.DateOffset(months=1)
-annotation_y = float(df_ci_95["ymax"].max()) + 5
-
-# CI fill colors (same hue; alpha per-geom creates visual depth difference)
-CI_COLORS = {"95% CI": IMPRINT["Forecast"], "80% CI": IMPRINT["Forecast"]}
 
 # Plot
+SERIES, VALUE, LEVEL, LOW, HIGH = "Series", "Value", "Interval", "Low", "High"
+LEVEL_95, LEVEL_80 = "95% interval", "80% interval"
+
+lines = df.melt(id_vars=DATE, value_vars=[ACTUAL, FORECAST], var_name=SERIES, value_name=VALUE).dropna()
+bands_in = df.dropna(subset=[FORECAST])
+bands = pd.concat(
+    [
+        pd.DataFrame({DATE: bands_in[DATE], LOW: bands_in[LOWER_95], HIGH: bands_in[UPPER_95], LEVEL: LEVEL_95}),
+        pd.DataFrame({DATE: bands_in[DATE], LOW: bands_in[LOWER_80], HIGH: bands_in[UPPER_80], LEVEL: LEVEL_80}),
+    ]
+)
+series_order = [ACTUAL, FORECAST]
+forecast_start = df.loc[df[ACTUAL].notna(), DATE].max()
+label_x = forecast_start + pd.Timedelta(weeks=1)
+label_y = df[UPPER_95].max()
+
 plot = (
     ggplot()
-    # 95% confidence band (lighter, outer) — fill mapped for legend entry
-    + geom_ribbon(data=df_ci_95, mapping=aes(x="date", ymin="ymin", ymax="ymax", fill="ci"), alpha=0.20)
-    # 80% confidence band (darker, inner) — fill mapped for legend entry
-    + geom_ribbon(data=df_ci_80, mapping=aes(x="date", ymin="ymin", ymax="ymax", fill="ci"), alpha=0.30)
-    # Vertical line at forecast start
+    + geom_ribbon(data=bands[bands[LEVEL] == LEVEL_95], mapping=aes(x=DATE, ymin=LOW, ymax=HIGH, fill=LEVEL))
+    + geom_ribbon(data=bands[bands[LEVEL] == LEVEL_80], mapping=aes(x=DATE, ymin=LOW, ymax=HIGH, fill=LEVEL))
     + geom_vline(xintercept=forecast_start, linetype="dashed", color=INK_SOFT, size=0.8)
-    # Forecast period label offset right so text clears the vline
-    + annotate("text", x=annotation_x, y=annotation_y, label="Forecast period", color=INK_MUTED, size=9, ha="left")
-    # Historical line
-    + geom_line(data=df_historical, mapping=aes(x="date", y="value", color="series"), size=1.0)
-    # Forecast line (dashed)
-    + geom_line(data=df_forecast, mapping=aes(x="date", y="value", color="series"), size=1.0, linetype="dashed")
-    # Color mapping for lines
-    + scale_color_manual(values=IMPRINT)
-    # Fill mapping for CI bands with legend entries
-    + scale_fill_manual(values=CI_COLORS, name="CI bands")
-    # Suppress "series" column header from color legend
-    + guides(color=guide_legend(title=""))
-    # Labels
-    + labs(
-        x="Date",
-        y="Electricity Demand (GWh)",
-        title="timeseries-forecast-uncertainty · python · plotnine · anyplot.ai",
-        subtitle="Shaded bands show 80% and 95% confidence intervals; uncertainty widens with forecast horizon",
+    + annotate("text", x=label_x, y=label_y, label="Forecast →", color=INK_MUTED, size=7, ha="left")
+    + geom_line(data=lines, mapping=aes(x=DATE, y=VALUE, color=SERIES, linetype=SERIES), size=1.5)
+    + scale_color_manual(values=IMPRINT_PALETTE[:2], limits=series_order)
+    + scale_linetype_manual(values=["solid", "dashed"], limits=series_order)
+    + scale_fill_manual(values=[IMPRINT_PALETTE[2] + "70", IMPRINT_PALETTE[2] + "33"], limits=[LEVEL_80, LEVEL_95])
+    + guides(
+        color=guide_legend(title="", order=1),
+        linetype=guide_legend(title="", order=1),
+        fill=guide_legend(title="Confidence band", order=2),
     )
-    # Date axis formatting
+    + labs(
+        x=DATE,
+        y=VISITS_LABEL,
+        title="timeseries-forecast-uncertainty · python · plotnine · anyplot.ai",
+        subtitle="Weekly traffic after the campaign step change; bands widen with forecast horizon",
+    )
     + scale_x_datetime(date_breaks="6 months", date_labels="%b %Y")
-    # Theme
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -136,6 +135,7 @@ plot = (
         plot_subtitle=element_text(size=9, color=INK_MUTED),
         legend_position="top",
         legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=8, color=INK),
     )
