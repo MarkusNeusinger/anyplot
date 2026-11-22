@@ -12,35 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/altair/plot-dark.html
-quality_score: 98
+quality_score: 76
 review:
   strengths:
-  - Perfect theme-aware implementation with consistent token system for both light
-    and dark renders
-  - Excellent altair idiom usage (hconcat/vconcat layout, encode/configure pattern)
-  - All text elements properly configured for legibility in both themes (no dark-on-dark
-    or light-on-light failures)
-  - Clear professional dashboard narrative with 4 complementary metrics
-  - Proper Okabe-Ito palette compliance with CVD-safe colors throughout
-  - Clean, reproducible code with proper seed management
-  - Independent axes and appropriate scales for each subplot
-  - Proper spacing and alignment prevent clutter
-  weaknesses: []
+  - Idiomatic Altair composition of two hconcat rows in a vconcat
+  - Binning and counting done in the encoding (alt.Bin, count())
+  - Sales vs Target told apart by color and dash
+  - Theme tokens threaded through configure_axis, configure_legend and configure_view;
+    both renders theme-correct
+  - Tooltips add inspection in the HTML output
+  weaknesses:
+  - 'VQ-05 (both): the render is 5328x3354, off both canonical canvases, and the right
+    column''s plot areas do not line up (the line panel''s y-axis sits about 70 source
+    px right of the histogram''s) → 3200x1800 with aligned plot areas. Likely cause:
+    width=750/height=420 panels saved at scale_factor=3.0 with no pad-to-target step.'
+  - 'SC-04 (both): the title reads ''subplot-grid · altair · anyplot.ai'' without
+    the language → ''subplot-grid · python · altair · anyplot.ai''. Likely cause:
+    the title string.'
+  - 'SC-03 (both): the monthly points are month-end dates, so the month axis starts
+    at February and every month is labelled one late → month-start dates. Likely cause:
+    pd.date_range(..., freq=''ME'').'
+  - 'SC-01 (both): bars at or above 80 are green and the rest purple, a derived highlight
+    the spec does not ask for and that no legend explains → one color for all bars.
+    Likely cause: alt.condition(alt.datum.Performance >= 80, ...).'
+  - 'DQ-02 (both): a unitless ''Performance Score'' per region and product revenue
+    drawn independently of units sold read generic → a named metric with a unit and
+    revenue that follows the units. Likely cause: hard-coded scores and np.random.uniform
+    revenue.'
+  - 'Suggestion: place the line panel''s legend inside the panel''s empty area instead
+    of against the canvas edge.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "subplot-grid · altair · anyplot.ai" clearly visible at top; all axis labels and tick labels in dark text, fully readable on light background; grid is subtle but visible
-      Data: Scatter plot with green (#009E73) markers; line chart with solid green Sales and orange dotted Target; bar chart with conditional coloring (green ≥80, orange <80); histogram with green bars. First categorical series is #009E73 per spec.
-      Legibility verdict: PASS ✓ — All elements readable, no dark-on-light or light-on-light failures
+      Background: warm off-white #FAF8F1.
+      Chrome: title "subplot-grid · altair · anyplot.ai" in dark ink at the top; left-anchored bold panel titles (Product Performance, Monthly Sales Trend, Regional Performance, Order Value Distribution); dark axis titles and tick labels, subtle grid. All readable.
+      Data: 2x2 grid. Scatter of 50 green #009E73 dots (Units Sold vs Revenue ($K)); line panel with a solid green Sales line and a dotted purple #C475FD Target line, legend titled Metric outside on the right edge; bar chart of Performance Score per region with East/North green and Central/South/West purple; right-skewed green histogram of Order Value ($). Canvas is 5328x3354.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title clearly visible in light color; axis labels and tick labels in light text (#B8B7B0 INK_SOFT), fully readable on dark background; grid is subtle and visible; no dark-on-dark text issues
-      Data: Colors are IDENTICAL to light render — green (#009E73) for primary series, orange (#D55E00) for secondary. Only chrome (background, text, grid, legend frames) flips between themes. All colors maintain proper contrast and visibility.
-      Legibility verdict: PASS ✓ — All elements readable, brand green clearly visible, no dark-on-dark failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, panel titles, axis titles and ticks in light ink; grid subtle; legend with elevated dark fill and light labels. No dark-on-dark text.
+      Data: identical colors to the light render; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -48,108 +63,100 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizing (title 22-28px, axis title 18px, labels 16px,
-          legend 14-16px). All text readable in both themes.
+        comment: Explicit sizes at or above the reference; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No colliding text. Subplots well-spaced (60px gaps).
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter points visible (size=120, opacity=0.7), line strokes clear
-          (strokeWidth=3), bars distinct (size=60), histogram bins properly binned.
+        comment: 50 dots at size 120, 3 px lines, clear bars, legend samples match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (CVD-safe). Line differentiation via stroke-dash.
-          Good contrast.
+        comment: CVD-safe green/purple; Target also dotted
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Balanced 2×2 grid (750×420 per subplot). Nothing cut off. Clean proportions.
+        passed: false
+        comment: Canvas 5328x3354, off both canonical sizes; right-column plot areas
+          misaligned (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All descriptive with units: Units Sold, Revenue ($K), Month, Sales
-          ($K), Performance Score, Order Value ($), Frequency.'
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series Okabe-Ito order, backgrounds
-          correct (#FAF8F1/#1A1A17), both renders theme-correct.'
+        comment: 'First series #009E73, correct backgrounds, both themes correct'
     design_excellence:
-      score: 18
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: 'Intentional styling: custom marker sizes (120), line stroke width
-          (3), scatter opacity (0.7), conditional coloring, stroke-dash differentiation.
-          Professional polish.'
+        comment: Clear hierarchy of figure title, left-anchored panel titles and axis
+          text
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid (gridOpacity=0.10), no border strokes, generous whitespace,
-          legend properly styled.
+        passed: false
+        comment: Style-guide baseline; legend squeezed against the right canvas edge
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Dashboard scenario with four complementary views: product metrics
-          → sales trend → regional comparison → distribution. Clear focal point per
-          subplot.'
+        passed: false
+        comment: Data displayed; the threshold highlight is an unrequested addition
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct subplot grid with 4 distinct chart types (scatter, line,
-          bar, histogram).
+        passed: false
+        comment: Correct 2x2 grid; unexplained threshold highlight on the bars (defect
+          line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Configurable grid (2×2), independent axes, different plot types per
-          cell, consistent spacing, clear titles.
+        comment: Four plot types, independent axes with ticks and titles, panel titles,
+          legend beside its panel
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X/Y correct for each type. Ranges sensible. All data visible.
+        passed: false
+        comment: Month-end dates make the month axis start at February for January
+          data (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Main title correct. Subplot titles descriptive. Legend present and
-          labeled.
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -157,22 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Scatter (product metrics), line (sales trend), bar (regional comparison),
-          histogram (distribution) — comprehensive coverage.
+        comment: Scatter, line, bar and histogram
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Financial dashboard scenario (products, sales, regions, orders) is
-          realistic, plausible, and neutral.
+        passed: false
+        comment: Neutral sales dashboard, but a unitless Performance Score and revenue
+          unrelated to units read generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Units 0-1000, revenue $10-100K, sales $500-1100K, performance 0-100,
-          order values log-normal. All sensible.
+        comment: Units 100–1000, revenue $10–100K, order values $20–420 sensible;
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -182,50 +188,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes. Linear structure.
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, altair, numpy, pandas. All used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Proper altair idioms. Clean alt.condition() usage.
+        comment: In-encoding binning and count(); no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current API.
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Uses altair idiomatically: alt.Chart, alt.X/Y, mark_*(), encode(),
-          properties(). Proper hconcat/vconcat for layout.'
+        comment: hconcat/vconcat composition and configure_* chrome
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: StrokeDash encoding, alt.condition() for conditional coloring, alt.Tooltip
-          interactivity, theme token system, configure_* methods.
+        passed: false
+        comment: strokeDash encoding and in-encoding binning; tooltips in HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
 impl_tags:
   dependencies: []
   techniques:
