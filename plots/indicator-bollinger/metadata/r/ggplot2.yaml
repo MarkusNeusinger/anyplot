@@ -2,44 +2,50 @@ library: ggplot2
 language: r
 specification_id: indicator-bollinger
 created: '2026-05-17T09:55:01Z'
-updated: '2026-05-17T09:58:19Z'
-generated_by: claude-haiku
-workflow_run: 25987602797
+updated: '2026-11-22T04:37:43Z'
+generated_by: claude-sonnet
+workflow_run: 44985448127
 issue: 3237
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - 'Excellent theme adaptation: data colors identical between light/dark, chrome
-    properly flips'
-  - 'Perfect specification compliance: all Bollinger Bands features correctly implemented'
-  - Strong visual design with clear hierarchy and storytelling
-  - All text explicitly sized and readable in both themes
-  - Proper use of transparency and line styling for visual layering
-  - Clean, reproducible code structure with set.seed(42)
+  - 'Correct Bollinger structure: prominent solid price line, dashed 20-day SMA, shared-color
+    upper/lower bands with a 0.15 alpha ribbon, all on one price axis'
+  - Theme tokens threaded through every chrome element; data colors identical in light
+    and dark
+  - Graded line weight and alpha separate price, middle band and band edges without
+    extra colors
+  - 'Follows the adaptable-code layout: column constants, a tibble built with !!COL
+    :=, plot reads .data[[...]]'
+  - scale_x_date(date_labels = '%b') gives clean month ticks
   weaknesses:
-  - Unused imports (dplyr, tidyr) reduce code cleanliness
-  - Data generation uses base R loops instead of dplyr, less idiomatic
-  - Design excellence is solid but not exceptional (scores 4-5, not 6-8)
-  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
-    \ #FAF8F1 - correct\n  Chrome: Title \"indicator-bollinger · ggplot2 · anyplot.ai\"\
-    \ dark and readable; \n          Y-axis \"Price ($)\" readable; X-axis \"Date\"\
-    \ readable; \n          tick labels (Jan-Jun, 100/110/120) all dark and clearly\
-    \ visible;\n          grid lines subtle but visible in soft gray\n  Data: Bollinger\
-    \ Bands in Okabe-Ito green (#009E73) - solid price line, dashed SMA,\n       \
-    \ semi-transparent ribbon fill (alpha=0.15), all clearly distinguishable\n  Legibility\
-    \ verdict: PASS - All text readable, excellent contrast\n\nDark render (plot-dark.png):\n\
-    \  Background: Warm near-black #1A1A17 - correct\n  Chrome: Title, axis labels,\
-    \ tick labels all light-colored and clearly readable;\n          no dark-on-dark\
-    \ failures; grid lines subtle and visible in light gray\n  Data: Bollinger Bands\
-    \ colors identical to light render (same #009E73 green);\n        price line,\
-    \ SMA, and bands maintain perfect visibility and contrast\n  Legibility verdict:\
-    \ PASS - All text readable, theme adaptation perfect"
+  - 'DQ-03 (both): the bands for dates 2-19 come from partial windows (2 to 19 prices)
+    rather than the 20-period SMA and standard deviation the chart claims; window_start
+    = pmax(i - 19, 1) draws a ribbon from Jan 2 that is not a 20-day Bollinger band
+    → start SMA and bands at the 20th period (NA before; the spec permits bands beginning
+    only where a full period is available). Likely cause: the pmax(seq_len(n_periods)
+    - sma_period + 1, 1) partial-window start.'
+  - 'Suggestion: label the price, 20-day SMA and ±2σ bands (a compact legend or direct
+    labels at the right edge) so readers outside finance can tell the three green
+    lines apart.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'indicator-bollinger · r · ggplot2 · anyplot.ai' top-left in dark ink; 'Price ($)' and 'Date' axis titles dark; tick labels 100/110/120 and Jan-Jun in soft dark grey; horizontal major grid only, thin grey lines; all readable
+      Data: everything in #009E73 - thick solid close line, dashed SMA, thin semi-transparent band edges and a pale green ribbon (alpha 0.15) from early January to end of May; bands widen in January and May, narrow in February-March
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17, 3200x1800
+      Chrome: title and axis titles in light ink, tick labels light grey, grid light grey and subtle; no dark-on-dark text
+      Data: identical #009E73 price, dashed SMA and band edges; ribbon reads as a dark green tint; price and SMA clearly visible through the fill
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,46 +56,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All text explicitly sized: Title 24pt, Labels 20pt, Ticks 16pt'
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt (library-prompt sizes);
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text collisions; price crossing the bands is expected data overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line, bands, and SMA all optimally visible
+        comment: Price line 0.9 prominent; dashed SMA and thin band edges visible
+          through the 0.15 fill in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73, excellent contrast, CVD-safe'
+        comment: Single hue; series told apart by width and dash, not by color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 50-70% canvas utilization with balanced margins
+        comment: 3200x1800 canvas, title ~50% width, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; correct title format
+        comment: '''Date'' and ''Price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: #009E73 data, #FAF8F1/#1A1A17 backgrounds, theme-adaptive
-          chrome'
+        comment: 'All data in #009E73; #FAF8F1 / #1A1A17 backgrounds; chrome flips
+          correctly'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -97,20 +105,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults, no custom design innovations
+        comment: Style-guide baseline typography, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Grid customization, spines removed (L-shaped), explicit margins
+        passed: false
+        comment: Graded line-weight and alpha hierarchy (band edges 0.4/0.6, SMA 0.6/0.8,
+          price 0.9/1.0) chosen for this chart
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear visual hierarchy: price line primary, SMA secondary, bands
-          contextual'
+        passed: false
+        comment: Data displayed, no focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bollinger Bands with all features
+        comment: Correct Bollinger Bands chart, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: Price prominent (C1), shared-color bands with translucent fill (C2),
+          dashed middle band (C3); standard 20/2 parameters so no note needed (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct mapping: date X, price Y'
+        comment: Date on x, all lines on one price axis; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed
+        comment: Title 'indicator-bollinger · r · ggplot2 · anyplot.ai' correct; no
+          legend needed
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -148,21 +158,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: oversold, overbought, volatility changes'
+        comment: Bands widen (Jan, May) and narrow (Feb-Mar), price touches and pierces
+          bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price scenario
+        comment: Plausible daily stock price scenario, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Correct financial domain values
+        passed: false
+        comment: Prices ~98-126 sensible; the bands for dates 2-19 come from partial
+          windows (2 to 19 prices) rather than the 20-period SMA and standard deviation
+          the chart claims (defect line)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,33 +183,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) ensures deterministic output
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Unused imports: dplyr and tidyr'
+        passed: true
+        comment: 'ggplot2 and ragg both used; tibble via ::'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and appropriate complexity
+        comment: Compact vapply window computation, column constants per adaptable-code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png via ragg at 8x4.5 in, 400 dpi
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -204,21 +217,29 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: Good ggplot patterns but data uses base R loops
+        comment: tibble keyed by column constants, .data[[...]] in aes, scale_x_date(date_labels)
+          beyond the mandated patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Good geom_ribbon and alpha-blending usage
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T04:34:21Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - ragg
   techniques:
   - layer-composition
   patterns:
   - data-generation
   dataprep:
+  - rolling-window
+  - time-series
   - cumulative-sum
   styling:
   - alpha-blending
+  - publication-ready
