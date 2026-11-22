@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' frequency-polygon-basic: Frequency Polygon for Distribution Comparison
 #' Library: ggplot2 4.0 | R 4.4.1
-#' Quality: 86/100 | Updated: 2026-11-22
+#' Quality: pending | Updated: 2026-11-22
 
 library(ggplot2)
 library(ragg)
