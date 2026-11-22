@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-18
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-22
 """
 
 import os
@@ -9,6 +9,7 @@ import os
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
@@ -19,64 +20,12 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette — use positions 1→N in canonical order
-IMPRINT = [
-    "#009E73",  # 1: bluish green (ALWAYS first series)
-    "#C475FD",  # 2: vermillion
-    "#4467A3",  # 3: blue
-    "#BD8233",  # 4: reddish purple
-    "#AE3030",  # 5: orange
-    "#2ABCCD",  # 6: sky blue
-]
+# Imprint palette — use positions 1→N in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Major world cities with population and region
-np.random.seed(42)
-
-cities = {
-    "Tokyo": (35.6762, 139.6503, 37.4, "Asia"),
-    "Delhi": (28.6139, 77.2090, 32.9, "Asia"),
-    "Shanghai": (31.2304, 121.4737, 28.5, "Asia"),
-    "São Paulo": (-23.5505, -46.6333, 22.4, "South America"),
-    "Mexico City": (19.4326, -99.1332, 21.8, "North America"),
-    "Cairo": (30.0444, 31.2357, 21.3, "Africa"),
-    "Mumbai": (19.0760, 72.8777, 20.7, "Asia"),
-    "Beijing": (39.9042, 116.4074, 20.5, "Asia"),
-    "Dhaka": (23.8103, 90.4125, 22.5, "Asia"),
-    "Osaka": (34.6937, 135.5023, 19.2, "Asia"),
-    "New York": (40.7128, -74.0060, 18.8, "North America"),
-    "Karachi": (24.8607, 67.0011, 16.5, "Asia"),
-    "Buenos Aires": (-34.6037, -58.3816, 15.4, "South America"),
-    "Istanbul": (41.0082, 28.9784, 15.4, "Europe"),
-    "Lagos": (6.5244, 3.3792, 14.9, "Africa"),
-    "Los Angeles": (34.0522, -118.2437, 12.5, "North America"),
-    "London": (51.5074, -0.1278, 9.5, "Europe"),
-    "Paris": (48.8566, 2.3522, 11.0, "Europe"),
-    "Moscow": (55.7558, 37.6173, 12.5, "Europe"),
-    "Chicago": (41.8781, -87.6298, 8.9, "North America"),
-    "Sydney": (-33.8688, 151.2093, 5.4, "Oceania"),
-    "Lima": (-12.0464, -77.0428, 11.0, "South America"),
-    "Bangkok": (13.7563, 100.5018, 10.7, "Asia"),
-    "Seoul": (37.5665, 126.9780, 9.8, "Asia"),
-    "Jakarta": (-6.2088, 106.8456, 10.6, "Asia"),
-}
-
-# Extract data
-names = list(cities.keys())
-lats = np.array([cities[c][0] for c in names])
-lons = np.array([cities[c][1] for c in names])
-populations = np.array([cities[c][2] for c in names])
-regions = [cities[c][3] for c in names]
-
-# Map regions to Okabe-Ito colors
-unique_regions = ["Asia", "South America", "North America", "Africa", "Europe", "Oceania"]
-region_colors = {region: IMPRINT[i] for i, region in enumerate(unique_regions)}
-colors = [region_colors[r] for r in regions]
-
-# Scale sizes based on population
-sizes = populations * 22
-
-# Simplified world map coastlines
-continents = [
+# Constants
+# Simplified world map coastlines (basemap, drawn for any data)
+CONTINENTS = [
     # North America
     [(-168, 66), (-165, 60), (-141, 60), (-141, 70), (-156, 71), (-168, 66)],
     # Alaska + Canada + USA main
@@ -397,76 +346,126 @@ continents = [
     ],
 ]
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+CITY = "City"  # role: label
+LATITUDE = "Latitude (°)"  # role: latitude
+LONGITUDE = "Longitude (°)"  # role: longitude
+POPULATION = "Population (millions)"  # role: size
+REGION = "Region"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("cities.csv")
+df = pd.DataFrame(
+    [
+        ("Tokyo", 35.6762, 139.6503, 37.4, "Asia"),
+        ("Delhi", 28.6139, 77.2090, 32.9, "Asia"),
+        ("Shanghai", 31.2304, 121.4737, 28.5, "Asia"),
+        ("São Paulo", -23.5505, -46.6333, 22.4, "South America"),
+        ("Mexico City", 19.4326, -99.1332, 21.8, "North America"),
+        ("Cairo", 30.0444, 31.2357, 21.3, "Africa"),
+        ("Mumbai", 19.0760, 72.8777, 20.7, "Asia"),
+        ("Beijing", 39.9042, 116.4074, 20.5, "Asia"),
+        ("Dhaka", 23.8103, 90.4125, 22.5, "Asia"),
+        ("Osaka", 34.6937, 135.5023, 19.2, "Asia"),
+        ("New York", 40.7128, -74.0060, 18.8, "North America"),
+        ("Karachi", 24.8607, 67.0011, 16.5, "Asia"),
+        ("Buenos Aires", -34.6037, -58.3816, 15.4, "South America"),
+        ("Istanbul", 41.0082, 28.9784, 15.4, "Europe"),
+        ("Lagos", 6.5244, 3.3792, 14.9, "Africa"),
+        ("Los Angeles", 34.0522, -118.2437, 12.5, "North America"),
+        ("London", 51.5074, -0.1278, 9.5, "Europe"),
+        ("Paris", 48.8566, 2.3522, 11.0, "Europe"),
+        ("Moscow", 55.7558, 37.6173, 12.5, "Europe"),
+        ("Chicago", 41.8781, -87.6298, 8.9, "North America"),
+        ("Sydney", -33.8688, 151.2093, 5.4, "Oceania"),
+        ("Lima", -12.0464, -77.0428, 11.0, "South America"),
+        ("Bangkok", 13.7563, 100.5018, 10.7, "Asia"),
+        ("Seoul", 37.5665, 126.9780, 9.8, "Asia"),
+        ("Jakarta", -6.2088, 106.8456, 10.6, "Asia"),
+    ],
+    columns=[CITY, LATITUDE, LONGITUDE, POPULATION, REGION],
+)
+
+# Plot: reads only df and the constants above
+SIZE_PER_MILLION = 5.5  # marker area (pt²) per million inhabitants
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Ocean color (theme-adaptive) - sophisticated water tones
-ocean_bg = "#C5D9ED" if THEME == "light" else "#3A4E68"
-
-# Draw continents (theme-adaptive) - refined earth tones
+# Basemap: quiet earth tones, theme-adaptive
 continent_color = "#D6CCBE" if THEME == "light" else "#4B4540"
-continent_edge = INK_SOFT
-for continent in continents:
-    poly = plt.Polygon(continent, facecolor=continent_color, edgecolor=continent_edge, linewidth=0.6, zorder=1)
-    ax.add_patch(poly)
+for continent in CONTINENTS:
+    ax.add_patch(plt.Polygon(continent, facecolor=continent_color, edgecolor=INK_SOFT, linewidth=0.3, zorder=1))
 
-# Add graticule (grid lines)
+# Graticule every 30 degrees
 for lat in range(-60, 90, 30):
-    ax.axhline(y=lat, color=INK_SOFT, linewidth=0.4, linestyle=":", alpha=0.15, zorder=0)
+    ax.axhline(y=lat, color=INK_SOFT, linewidth=0.3, linestyle=":", alpha=0.15, zorder=0)
 for lon in range(-150, 181, 30):
-    ax.axvline(x=lon, color=INK_SOFT, linewidth=0.4, linestyle=":", alpha=0.15, zorder=0)
+    ax.axvline(x=lon, color=INK_SOFT, linewidth=0.3, linestyle=":", alpha=0.15, zorder=0)
 
-# Plot cities
-ax.scatter(lons, lats, c=colors, s=sizes, alpha=0.8, edgecolors=PAGE_BG, linewidths=2.5, zorder=5)
+# Cities: one scatter per region, in the data's own order
+regions = list(df[REGION].unique())
+region_colors = {region: IMPRINT_PALETTE[i] for i, region in enumerate(regions)}
+for region, rows in df.groupby(REGION, sort=False):
+    ax.scatter(
+        rows[LONGITUDE],
+        rows[LATITUDE],
+        color=region_colors[region],
+        s=rows[POPULATION] * SIZE_PER_MILLION,
+        alpha=0.8,
+        edgecolors=PAGE_BG,
+        linewidths=0.8,
+        zorder=5,
+    )
 
-# Highlight Tokyo with subtle annotation for visual storytelling
-tokyo_lat, tokyo_lon = 35.6762, 139.6503
+# Callout: the most populous city
+top = df.loc[df[POPULATION].idxmax()]
 ax.annotate(
-    "Tokyo\n(37.4M)",
-    xy=(tokyo_lon, tokyo_lat),
-    xytext=(tokyo_lon + 8, tokyo_lat + 6),
-    fontsize=12,
+    f"{top[CITY]}\n({top[POPULATION]:.1f}M)",
+    xy=(top[LONGITUDE], top[LATITUDE]),
+    xytext=(26, 22),
+    textcoords="offset points",
+    fontsize=7,
     color=INK_SOFT,
     weight="medium",
-    bbox={"boxstyle": "round,pad=0.5", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.85},
-    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2, "alpha": 0.7},
+    bbox={
+        "boxstyle": "round,pad=0.4",
+        "facecolor": ELEVATED_BG,
+        "edgecolor": INK_SOFT,
+        "alpha": 0.85,
+        "linewidth": 0.6,
+    },
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 0.8, "alpha": 0.7},
     zorder=10,
 )
 
-# Set axis limits
 ax.set_xlim(-180, 180)
 ax.set_ylim(-60, 80)
 
-# Style
-ax.set_xlabel("Longitude (°)", fontsize=20, color=INK)
-ax.set_ylabel("Latitude (°)", fontsize=20, color=INK)
+ax.set_xlabel(LONGITUDE, fontsize=10, color=INK)
+ax.set_ylabel(LATITUDE, fontsize=10, color=INK)
 ax.set_title(
     "World's Largest Cities by Population · scatter-map-geographic · python · matplotlib · anyplot.ai",
-    fontsize=24,
+    fontsize=8,
     fontweight="medium",
     color=INK,
-    pad=15,
+    pad=8,
 )
-ax.tick_params(axis="both", labelsize=18, colors=INK_SOFT)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
-# Create region legend
-legend_handles = []
-for region in unique_regions:
-    color = region_colors[region]
-    handle = mpatches.Patch(facecolor=color, edgecolor=PAGE_BG, linewidth=1.5, label=region)
-    legend_handles.append(handle)
-
+# Color legend: one patch per region
+legend_handles = [
+    mpatches.Patch(facecolor=region_colors[region], edgecolor=PAGE_BG, linewidth=0.8, label=region)
+    for region in regions
+]
 region_legend = ax.legend(
     handles=legend_handles,
-    title="Region",
+    title=REGION,
     loc="lower left",
-    fontsize=14,
-    title_fontsize=16,
+    fontsize=7,
+    title_fontsize=8,
     framealpha=0.95,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
@@ -475,26 +474,38 @@ region_legend.get_title().set_color(INK)
 plt.setp(region_legend.get_texts(), color=INK_SOFT)
 ax.add_artist(region_legend)
 
-# Create size legend (population)
-size_values = [10, 20, 35]
-size_labels = ["10M", "20M", "35M"]
-size_handles = []
-for val, label in zip(size_values, size_labels, strict=True):
-    handle = ax.scatter([], [], c=IMPRINT[0], s=val * 22, label=label, edgecolors=PAGE_BG, linewidths=1.5, alpha=0.8)
-    size_handles.append(handle)
-
+# Size legend: three population values spanning the data
+size_values = np.round(np.quantile(df[POPULATION], [0.1, 0.5, 1.0]))
+size_handles = [
+    ax.scatter(
+        [],
+        [],
+        color=INK_MUTED,
+        s=val * SIZE_PER_MILLION,
+        label=f"{val:.0f}M",
+        edgecolors=PAGE_BG,
+        linewidths=0.8,
+        alpha=0.8,
+    )
+    for val in size_values
+]
 size_legend = ax.legend(
     handles=size_handles,
-    title="Population",
-    loc="lower right",
-    fontsize=14,
-    title_fontsize=16,
+    title=POPULATION,
+    loc="lower center",
+    bbox_to_anchor=(0.6, 0.0),
+    ncol=len(size_handles),
+    fontsize=7,
+    title_fontsize=8,
     framealpha=0.95,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
+    columnspacing=1.6,
+    handletextpad=0.8,
+    borderpad=0.8,
 )
 size_legend.get_title().set_color(INK)
 plt.setp(size_legend.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.07, right=0.98, top=0.93, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
