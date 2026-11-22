@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' frontier-efficient: Efficient Frontier for Portfolio Optimization
-#' Library: ggplot2 | R
-#' Quality: pending | Updated: 2026-11-22
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 83/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(dplyr)
