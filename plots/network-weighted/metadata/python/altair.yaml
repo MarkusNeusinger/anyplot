@@ -2,44 +2,54 @@ library: altair
 language: python
 specification_id: network-weighted
 created: '2026-01-08T15:58:06Z'
-updated: '2026-05-17T14:45:42Z'
-generated_by: claude-haiku
-workflow_run: 25993805421
+updated: '2026-11-22T06:30:51Z'
+generated_by: claude-sonnet
+workflow_run: 44993581618
 issue: 3290
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/altair/plot-dark.html
-quality_score: 95
+quality_score: 85
 review:
   strengths:
-  - Sophisticated multi-variable encoding (position, size, color, edge thickness)
-    creates visual hierarchy and storytelling
-  - Excellent theme-adaptive implementation with perfect Okabe-Ito compliance and
-    no dark-on-dark or light-on-light failures
-  - 'Professional polish with refinements: proper legend styling, node stroke definition,
-    edge opacity for depth'
-  - Idiomatic Altair usage with effective layer composition (edges + nodes + labels)
-    and interactive capability
-  - Clean, reproducible code with force-directed layout algorithm and proper semantic
-    data structure
+  - Edge thickness scales 1–7 px over 25–580 B with a stroke-type legend whose samples
+    are labeled with their weights
+  - Opaque nodes with thin outlines sit cleanly on top of the edges; node size encodes
+    weighted degree with its own legend
+  - 'Theme tokens threaded through title, subtitle, labels and legends: both renders
+    fully readable'
+  - Layered Altair composition with independent scale resolution and HTML tooltips
   weaknesses:
-  - 'Minor: Very rare potential for label overlap in extremely dense network regions
-    (mitigated by force-directed layout spacing)'
+  - 'VQ-02 (both): the ''USA'' label sits on the thick USA–China edge and ''China''
+    is crossed by the China–Japan and China–Australia edges → labels clear of edges,
+    e.g. a PAGE_BG halo behind the text. Likely cause: mark_text at dy=-17 with no
+    stroke/halo over the edge layer.'
+  - 'SC-02 (both): reciprocal flows (Australia→China 190 B and China→Australia 145
+    B, France→Spain 75 B and Spain→France 55 B, UK→Netherlands 85 B and Netherlands→UK
+    70 B, USA–S. Korea, USA–India, USA–Brazil) are two rules on the same segment,
+    so the pair reads as one darker line and the thinner weight is hidden under the
+    thicker (C5) → one edge per country pair, its weight the sum of both directions.
+    Likely cause: the edge list has both directions and is drawn without aggregating
+    by unordered pair.'
+  - 'Suggestion: shade the edges by the region of the pair to show intra- vs inter-regional
+    trade.'
+  - 'Suggestion: the empty band below the network could be reduced by a slightly taller
+    inner view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title/subtitle in dark INK (#1A1A17), node labels bold fontSize=16, legend titles and labels all clearly readable against light surface. All text has high contrast and is fully legible.
-      Data: 15 nodes colored by region using Okabe-Ito palette (Americas=#009E73, Europe=#D55E00, Asia=#0072B2, Oceania=#CC79A7). Edge thickness varies 2-14px by trade weight with 0.4 opacity. Node size scales by weighted degree. All colors and markers are distinct and clearly visible.
-      Legibility verdict: PASS — All elements readable, no contrast failures
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas
+      Chrome: bold dark title 'International trade flows · network-weighted · python · altair · anyplot.ai' with an INK_SOFT subtitle; bold dark node labels; three framed legends on #FFFDF6 (Trade, Region, Total trade) on the right; all readable
+      Data: 15 opaque nodes colored by region (Americas #009E73, Asia #C475FD, Europe #4467A3, Oceania #BD8233), sized by total trade; gray edges 1-7 px; USA-Canada, USA-China, USA-Mexico the thickest; reciprocal pairs (Australia-China, France-Spain, UK-Netherlands) render darker
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title/subtitle in light INK (#F0EFE8), node labels light-colored, legend in elevated-dark (#242420) with light text (#B8B7B0). All text is readable against dark surface. No dark-on-dark failures.
-      Data: Data colors identical to light render — Okabe-Ito colors 1-4 are theme-independent as required. Edge thickness and node sizing unchanged. All structural elements perfectly match light render.
-      Legibility verdict: PASS — All elements readable in dark theme, no dark-on-dark failures, brand green #009E73 fully visible and vibrant
+      Background: warm near-black #1A1A17
+      Chrome: title, labels in light ink, subtitle and legend labels in light gray on #242420 legend boxes; no dark-on-dark text
+      Data: node and edge colors identical to light; size-legend circles in light gray, visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -50,83 +60,80 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title, labels, legend) explicitly set with proper font
-          sizes and theme-adaptive colors; readable in both light (#FAF8F1) and dark
-          (#1A1A17) renders
+        comment: 'Title 15, subtitle 11, node labels 11 bold, legend 11/12 at scale
+          4: all text readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
-        passed: true
-        comment: Node labels positioned with dy=-26 offset; good spacing overall;
-          minimal collision risk in force-directed layout
+        passed: false
+        comment: Node labels 'USA' and 'China' sit on top of the thick USA–China and
+          China–Japan edges (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes clearly visible with size range 600-3000; edges vary 2-14px
-          and are distinguishable; 0.4 opacity creates depth without obscuring
+        comment: Edges 1–7 px at 0.45 opacity, thinnest (Canada–UK, 25 B) still visible
+          in both themes; legend glyphs filled with INK_SOFT and visible on both legend
+          backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (positions 1-4) is CVD-safe; no red-green as sole
-          signal; adequate contrast throughout
+        comment: Imprint colors on distinct hues, region also named in legend; no
+          red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 (4800x2700 at 3x scale) with good proportions; nothing cut
-          off; well-utilized space
+        comment: 3200x1800 canvas, network fills the width, three legends stacked
+          on the right without overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'network-weighted · altair · anyplot.ai'; subtitle with units
-          'billions USD'; axes hidden (appropriate for network graph)
+        comment: No axes (network); title, subtitle and legend titles carry units
+          (billion USD)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Americas=#009E73 (brand green); multi-series follows
-          Okabe-Ito order 1-4; backgrounds correct #FAF8F1 (light) and #1A1A17 (dark);
-          data colors identical between renders; theme-adaptive chrome (INK, INK_SOFT
-          tokens) properly applied'
+        comment: 'Americas = #009E73, then #C475FD, #4467A3, #BD8233 in Imprint order;
+          #FAF8F1 / #1A1A17 backgrounds; data colors identical between renders'
     design_excellence:
-      score: 17
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: 'Sophisticated multi-variable design: position (force-directed),
-          size (weighted degree), color (region), edge thickness (weight). Intentional
-          hierarchy and professional visual composition'
+        passed: false
+        comment: Descriptive title prefix with a secondary INK_SOFT subtitle that
+          states both encodings, a three-level type hierarchy (title / labels / legend)
+          and legends on the elevated surface
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: 'Refined styling: no axes (clean), subtle edge opacity, node strokes
-          for definition, professional legend formatting (titleFontSize=18, labelFontSize=16),
-          generous whitespace'
+        passed: false
+        comment: Round stroke caps, thin 1 px node outlines and opaque nodes so edges
+          end cleanly under them; consistent legend padding and offset shared by all
+          three legends
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Clear focal points through node sizing (major trade hubs like USA,
-          China prominent); visual hierarchy guides viewer; force-directed layout
-          naturally clusters related regions; subtitle frames narrative
+        passed: false
+        comment: Subtitle tells the reader how to read thickness and size; the USA–China–Canada–Mexico
+          hub stands out as the focal cluster
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -134,30 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct weighted network graph with varying edge thickness for connection
-          strength
+        comment: Weighted network graph with edge thickness by weight
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: nodes with IDs, edges with weights, edge thickness
-          scaling, node sizing by weighted degree, force-directed layout (200 iterations),
-          legends explaining scales'
+        passed: false
+        comment: 'C1, C2, C3, C4 met; C5 partly missed: reciprocal pairs such as Australia–China
+          and France–Spain are drawn as two overlapping rules (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Force-directed layout positions all 15 nodes; edges properly connect
-          sources to targets; scale domain [-1.2, 1.2] shows all data with padding
+        comment: Layout-positioned type; edges connect their source and target nodes;
+          all nodes inside the domain
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows spec format; descriptive subtitle with units; three
-          legends (Trade, Total Trade, Region) properly labeled and styled
+        comment: Title 'International trade flows · network-weighted · python · altair
+          · anyplot.ai'; legend titles readable
     data_quality:
       score: 15
       max: 15
@@ -167,23 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of weighted networks: node clustering, connection
-          strength variation, degree centrality, multi-region structure'
+        comment: Hubs, peripheral single-link nodes, weight range 25–580, regional
+          grouping all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: International trade data is realistic and neutral; plausible country
-          relationships and trade volumes
+        comment: Plausible bilateral trade network of 15 economies with realistic
+          magnitudes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 nodes (within spec 10-50 range); 30 edges sufficient for structure
-          visibility; trade values 25-580 billion USD show good variation without
-          clutter
+        comment: Weights 25–580 billion USD and totals up to ~2,000 billion are sensible;
+          checked legend ranges against data (min 25, max 580)
     code_quality:
       score: 10
       max: 10
@@ -193,67 +197,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No unnecessary functions or classes; straightforward linear structure:
-          data → layout → dataframes → chart'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output; force-directed layout
-          always converges to same positions
+        comment: np.random.seed(42) seeds the layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (theme), altair (plotting), numpy (layout),
-          pandas (dataframes); no unused imports'
+        comment: All imports used (PIL for the pad step)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Force-directed algorithm appropriately complex for task; no fake
-          UI or simulated interactivity; idiomatic API usage
+        comment: Force layout hand-written because networkx is not available; repulsion
+          vectorized with broadcasting
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current Altair API;
-          no bare plot.png
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; pad-only canvas step
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent idiomatic Altair: mark_rule (edges), mark_circle (nodes),
-          mark_text (labels); proper encoding syntax; Scale/Legend configuration;
-          theme setup with configure_* methods; .interactive() for zoom/pan'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: 'Uses Altair-specific features: interactive zoom/pan, HTML output,
-          layered composition (3-layer chart), effective encoding system; tooltips
-          provide additional interactivity'
+        passed: false
+        comment: Layered composition (edge + node + label), mark_rule with x2/y2,
+          independent scale resolution, escaped fields with explicit types
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: symbolType='stroke' legend for the strokeWidth channel and tooltips
+          in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T06:27:02Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - minimal-chrome
   - alpha-blending
+  - edge-highlighting
