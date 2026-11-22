@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' lollipop-grouped: Grouped Lollipop Chart
 #' Library: ggplot2 | R
-#' Quality: 84/100 | Created: 2026-05-17
+#' Quality: pending | Created: 2026-05-17
 
 library(ggplot2)
 library(dplyr)
