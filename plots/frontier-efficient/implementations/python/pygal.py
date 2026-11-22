@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-17
@@ -7,29 +7,36 @@ Quality: 85/100 | Updated: 2026-05-17
 import os
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
+from scipy.optimize import minimize
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Generate simulated portfolios and efficient frontier
-np.random.seed(42)
+# Constants
+RISK_FREE_RATE = 0.02  # risk-free rate for the Sharpe ratio
+RANDOM = "Random"  # kind of a randomly weighted portfolio
+FRONTIER = "Frontier"  # kind of a portfolio on the efficient frontier
 
-# Simulate 5 assets with expected returns and volatilities
-n_assets = 5
-expected_returns = np.array([0.08, 0.12, 0.15, 0.10, 0.18])
-volatilities = np.array([0.15, 0.20, 0.25, 0.18, 0.30])
+# Columns: set these to your table's column names
+RISK = "Risk (standard deviation)"  # role: risk
+RETURN = "Expected return"  # role: return
+KIND = "Portfolio kind"  # role: extra
 
-# Create correlation matrix and covariance matrix
-correlations = np.array(
+# Data: replace this block with your own table, for example df = pd.read_csv("portfolios.csv")
+rng = np.random.default_rng(42)
+asset_returns = np.array([0.08, 0.12, 0.15, 0.10, 0.18])
+asset_vols = np.array([0.15, 0.20, 0.25, 0.18, 0.30])
+asset_corr = np.array(
     [
         [1.0, 0.3, 0.4, 0.2, 0.3],
         [0.3, 1.0, 0.5, 0.3, 0.4],
@@ -38,148 +45,127 @@ correlations = np.array(
         [0.3, 0.4, 0.5, 0.3, 1.0],
     ]
 )
-cov_matrix = np.outer(volatilities, volatilities) * correlations
+cov = np.outer(asset_vols, asset_vols) * asset_corr
+n_assets = len(asset_returns)
 
-# Generate 300 random portfolios
-n_portfolios = 300
-portfolio_returns = []
-portfolio_risks = []
-portfolio_sharpes = []
-risk_free_rate = 0.02
+weights = rng.dirichlet(np.ones(n_assets), size=400)
+random_ret = weights @ asset_returns
+random_risk = np.sqrt(np.einsum("ij,jk,ik->i", weights, cov, weights))
 
-for _ in range(n_portfolios):
-    weights = np.random.random(n_assets)
-    weights /= weights.sum()
-    port_return = np.dot(weights, expected_returns)
-    port_risk = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-    sharpe = (port_return - risk_free_rate) / port_risk
-    portfolio_returns.append(port_return)
-    portfolio_risks.append(port_risk)
-    portfolio_sharpes.append(sharpe)
+# Efficient frontier: minimum variance for each target return, long-only, fully invested
+frontier_ret = np.linspace(asset_returns.min() + 0.002, asset_returns.max() - 0.002, 50)
+frontier_risk = []
+for target in frontier_ret:
+    res = minimize(
+        lambda w: w @ cov @ w,
+        np.full(n_assets, 1 / n_assets),
+        method="SLSQP",
+        bounds=[(0, 1)] * n_assets,
+        constraints=[
+            {"type": "eq", "fun": lambda w: w.sum() - 1},
+            {"type": "eq", "fun": lambda w, t=target: w @ asset_returns - t},
+        ],
+    )
+    frontier_risk.append(np.sqrt(res.fun))
 
-# Generate efficient frontier by finding optimal portfolios at each risk level
-n_samples = 5000
-all_returns = []
-all_risks = []
-all_sharpes = []
+df = pd.DataFrame(
+    {
+        RISK: np.concatenate([random_risk, frontier_risk]),
+        RETURN: np.concatenate([random_ret, frontier_ret]),
+        KIND: [RANDOM] * len(random_risk) + [FRONTIER] * len(frontier_risk),
+    }
+)
 
-for _ in range(n_samples):
-    weights = np.random.random(n_assets)
-    weights /= weights.sum()
-    port_return = np.dot(weights, expected_returns)
-    port_risk = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-    sharpe = (port_return - risk_free_rate) / port_risk
-    all_returns.append(port_return)
-    all_risks.append(port_risk)
-    all_sharpes.append(sharpe)
+# Plot: reads only df and the constants above
+df["sharpe"] = (df[RETURN] - RISK_FREE_RATE) / df[RISK]
+is_frontier = df[KIND] == FRONTIER
+random_df = df[~is_frontier]
+frontier_df = df[is_frontier].sort_values(RISK)
+has_frontier = not frontier_df.empty
+if has_frontier:
+    frontier_df = frontier_df[frontier_df[RETURN] >= frontier_df.loc[frontier_df[RISK].idxmin(), RETURN]]
+    min_var = frontier_df.loc[frontier_df[RISK].idxmin()]
+    max_sharpe = frontier_df.loc[frontier_df["sharpe"].idxmax()]
 
-# Find efficient frontier points (pareto optimal)
-risk_buckets = np.linspace(min(all_risks), max(all_risks), 40)
-frontier_risks = []
-frontier_returns = []
+# Sharpe bins for the cloud: terciles, coloured along the Imprint sequential ramp (#009E73 to #4467A3)
+edge_lo, edge_hi = random_df["sharpe"].quantile([1 / 3, 2 / 3])
+bins = [
+    (f"Sharpe below {edge_lo:.2f}", random_df[random_df["sharpe"] < edge_lo]),
+    (
+        f"Sharpe {edge_lo:.2f} to {edge_hi:.2f}",
+        random_df[(random_df["sharpe"] >= edge_lo) & (random_df["sharpe"] < edge_hi)],
+    ),
+    (f"Sharpe above {edge_hi:.2f}", random_df[random_df["sharpe"] >= edge_hi]),
+]
+seq_start, seq_end = IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]
+seq_mid = "#" + "".join(f"{(int(seq_start[i : i + 2], 16) + int(seq_end[i : i + 2], 16)) // 2:02X}" for i in (1, 3, 5))
+series_colors = [seq_start, seq_mid, seq_end, IMPRINT_PALETTE[4], IMPRINT_PALETTE[1], IMPRINT_PALETTE[3]]
 
-for i in range(len(risk_buckets) - 1):
-    mask = (np.array(all_risks) >= risk_buckets[i]) & (np.array(all_risks) < risk_buckets[i + 1])
-    if np.any(mask):
-        bucket_returns = np.array(all_returns)[mask]
-        best_idx = np.argmax(bucket_returns)
-        bucket_risks = np.array(all_risks)[mask]
-        frontier_risks.append(bucket_risks[best_idx])
-        frontier_returns.append(bucket_returns[best_idx])
-
-# Sort frontier by risk
-sorted_indices = np.argsort(frontier_risks)
-frontier_risks = [frontier_risks[i] for i in sorted_indices]
-frontier_returns = [frontier_returns[i] for i in sorted_indices]
-
-# Find minimum variance portfolio (lowest risk)
-min_var_idx = np.argmin(all_risks)
-min_var_risk = all_risks[min_var_idx]
-min_var_return = all_returns[min_var_idx]
-
-# Find maximum Sharpe ratio portfolio
-max_sharpe_idx = np.argmax(all_sharpes)
-max_sharpe_risk = all_risks[max_sharpe_idx]
-max_sharpe_return = all_returns[max_sharpe_idx]
-
-# Custom style - theme-adaptive tokens, Okabe-Ito palette
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    colors=tuple(series_colors),
+    opacity="0.65",
+    opacity_hover="0.95",
+    title_font_size=66,
+    label_font_size=52,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=9,
 )
 
-# Calculate appropriate axis ranges based on actual data
-data_max_risk = max(max(portfolio_risks), max(frontier_risks), max_sharpe_risk, min_var_risk)
-data_min_risk = min(min(portfolio_risks), min(frontier_risks), max_sharpe_risk, min_var_risk)
-data_max_return = max(max(portfolio_returns), max(frontier_returns), max_sharpe_return, min_var_return)
-data_min_return = min(min(portfolio_returns), min(frontier_returns), max_sharpe_return, min_var_return)
+x_pad = (df[RISK].max() - df[RISK].min()) * 0.04
+y_pad = (df[RETURN].max() - df[RETURN].min()) * 0.04
 
-# Add small padding for better visualization
-x_padding = (data_max_risk - data_min_risk) * 0.1
-y_padding = (data_max_return - data_min_return) * 0.1
-
-# Create XY chart (scatter plot capability)
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="frontier-efficient · pygal · anyplot.ai",
-    x_title="Risk (Standard Deviation)",
-    y_title="Expected Return",
+    title="frontier-efficient · python · pygal · anyplot.ai",
+    x_title=RISK,
+    y_title=RETURN,
     show_x_guides=True,
     show_y_guides=True,
-    dots_size=8,
     stroke=False,
+    dots_size=9,
     legend_at_bottom=True,
-    legend_at_bottom_columns=6,
+    legend_at_bottom_columns=3,
     truncate_legend=-1,
-    x_value_formatter=lambda x: f"{x:.1%}",
-    y_value_formatter=lambda y: f"{y:.1%}",
-    range=(max(0, data_min_return - y_padding), data_max_return + y_padding),
-    xrange=(max(0, data_min_risk - x_padding), data_max_risk + x_padding),
+    x_value_formatter=lambda x: f"{x:.0%}",
+    value_formatter=lambda y: f"{y:.0%}",
+    xrange=(df[RISK].min() - x_pad, df[RISK].max() + x_pad),
+    range=(df[RETURN].min() - y_pad, df[RETURN].max() + y_pad),
+    margin=40,
 )
 
-# Add random portfolios grouped by Sharpe ratio
-sharpe_33 = np.percentile(portfolio_sharpes, 33)
-sharpe_66 = np.percentile(portfolio_sharpes, 66)
+for label, part in bins:
+    chart.add(label, list(zip(part[RISK], part[RETURN], strict=True)))
+if has_frontier:
+    chart.add(
+        "Efficient frontier",
+        list(zip(frontier_df[RISK], frontier_df[RETURN], strict=True)),
+        stroke=True,
+        dots_size=0,
+        stroke_style={"width": 9},
+    )
+    chart.add(
+        f"Minimum variance ({min_var[RISK]:.1%} risk)",
+        [(min_var[RISK], min_var[RETURN])],
+        dots_size=24,
+        stroke_style={"width": 0},
+    )
+    chart.add(
+        f"Maximum Sharpe ({max_sharpe['sharpe']:.2f})",
+        [(max_sharpe[RISK], max_sharpe[RETURN])],
+        dots_size=24,
+        stroke_style={"width": 0},
+    )
 
-low_sharpe = [
-    (portfolio_risks[i], portfolio_returns[i]) for i in range(n_portfolios) if portfolio_sharpes[i] < sharpe_33
-]
-mid_sharpe = [
-    (portfolio_risks[i], portfolio_returns[i])
-    for i in range(n_portfolios)
-    if sharpe_33 <= portfolio_sharpes[i] < sharpe_66
-]
-high_sharpe = [
-    (portfolio_risks[i], portfolio_returns[i]) for i in range(n_portfolios) if portfolio_sharpes[i] >= sharpe_66
-]
-
-chart.add(f"Low Sharpe (<{sharpe_33:.2f})", low_sharpe, dots_size=8)
-chart.add(f"Mid Sharpe ({sharpe_33:.2f}-{sharpe_66:.2f})", mid_sharpe, dots_size=8)
-chart.add(f"High Sharpe (≥{sharpe_66:.2f})", high_sharpe, dots_size=8)
-
-# Add efficient frontier as connected line
-frontier_points = list(zip(frontier_risks, frontier_returns, strict=False))
-chart.add("Efficient Frontier", frontier_points, stroke=True, dots_size=0, stroke_style={"width": 8})
-
-# Add special marker points for key portfolios
-chart.add("Min Variance", [(min_var_risk, min_var_return)], dots_size=25)
-chart.add("Max Sharpe", [(max_sharpe_risk, max_sharpe_return)], dots_size=25)
-
-# Save outputs
+# Save
 chart.render_to_png(f"plot-{THEME}.png")
-
-# Save HTML for interactive version
-with open(f"plot-{THEME}.html", "w") as f:
-    f.write(chart.render().decode("utf-8"))
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
