@@ -2,47 +2,54 @@ library: plotly
 language: python
 specification_id: range-interval
 created: '2026-01-09T23:47:28Z'
-updated: '2026-05-18T10:47:04Z'
-generated_by: claude-haiku
-workflow_run: 26028200815
+updated: '2026-11-22T12:40:37Z'
+generated_by: claude-sonnet
+workflow_run: 45022656773
 issue: 3577
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality with all text explicitly sized and readable in both themes
-  - Theme-adaptive styling correctly applied with Okabe-Ito palette compliance across
-    light and dark renders
-  - 'Complete spec implementation with all required features: range bars, endpoints,
-    midpoints, and proper data mapping'
-  - Clean, reproducible code with deterministic data generation and idiomatic Plotly
-    usage
-  - Realistic, educational temperature data showing clear seasonal variation across
-    12 months
+  - Range bars float exactly between each month's minimum and maximum on a shared
+    °C axis, in chronological order, with endpoint markers sitting on both bounds
+    and midpoint dots kept small and subordinate to the ranges
+  - 'Theme tokens are threaded through every chrome element: title, axis titles, ticks,
+    spines, zero line, grid and legend box all flip correctly between #FAF8F1 and
+    #1A1A17 while the #009E73 bars and #C475FD endpoints stay identical'
+  - Canvas follows the plotly landscape contract (800×450 at scale 4 → 3200×1800)
+    with explicit margins and the library prompt's 16/12/10 font sizes
+  - 'Per-trace hovertemplates with units ("Max Temperature: 30.8°C") give the HTML
+    view exact values without cluttering the static PNG'
+  - Data sits in a tidy df with column constants, so the plot block reads only df
+    and the constants
   weaknesses:
-  - Design feels standard rather than sophisticated—uses required colors well but
-    without custom refinements or distinctive visual flourishes
-  - Limited use of Plotly-specific features—basic scatter plot approach could be implemented
-    similarly in other libraries
-  - Visual hierarchy is present but not emphasized—data story is clear but lacks focal
-    point or special emphasis techniques
+  - 'SC-04 (both): the legend entries "Min Temperature" and "Max Temperature" carry
+    identical glyphs (purple fill, green outline, same size), so neither entry identifies
+    which endpoint it explains, and the range bar itself has no entry → one entry
+    per distinct glyph, e.g. a single "Min / max bound" entry, or distinct marker
+    symbols (triangle-down / triangle-up) for the two bounds. Likely cause: the endpoint
+    loop uses the same marker dict for both TEMP_MIN and TEMP_MAX.'
+  - 'Suggestion: shading the warm months or labelling the annual extremes could give
+    the seasonal arc a focal point.'
+  - 'Suggestion: a horizontal-bar layout via go.Bar with base= would express the floating
+    range with plotly''s native bar primitive instead of 12 two-point line traces.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 as specified
-      Chrome: Title "range-interval · python · plotly · anyplot.ai" in dark ink (#1A1A17) at 28px is prominent and readable. X-axis labeled "Month" and Y-axis "Temperature (°C)" in 22px dark text. Tick labels at 18px in softer ink (#4A4A44) are clearly visible. Legend in upper left with three items.
-      Data: Thick green bars (#009E73) show temperature ranges for each month. Orange markers (#D55E00) at min/max endpoints. Small dark midpoint markers (#1A1A17). All elements clearly distinguishable from light background.
-      Legibility verdict: PASS - All text readable, no overlaps, excellent contrast.
+      Background: warm off-white #FAF8F1, 3200×1800 landscape.
+      Chrome: centered title "range-interval · python · plotly · anyplot.ai" in dark ink (~37 % of width); x-axis "Month" with Jan–Dec ticks, y-axis "Temperature (°C)" from about −8 to 33 with ticks every 5; subtle horizontal grid, a darker zero line, left and bottom axis lines only. Legend top-left in a cream box with a thin dark frame: Min Temperature, Max Temperature, Midpoint. All text dark and readable.
+      Data: 12 thick vertical #009E73 range bars, one per month in chronological order, spanning from about −6/5 °C in Jan to about 22/31 °C in Jul; purple #C475FD endpoint circles with green outlines on both bounds; small near-black midpoint dots at the middle of each bar. Seasonal arc clearly visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 as specified
-      Chrome: Title text in light color (#F0EFE8) is readable on dark surface. Axis labels and titles properly light-colored with good contrast. Tick labels in appropriate soft light (#B8B7B0) are clearly visible against dark background. No dark-on-dark text issues. Legend box with light border frame (#242420) background.
-      Data: Green bars (#009E73) identical to light render, clearly visible. Orange markers (#D55E00) identical to light render. Midpoint markers now light-colored and visible against dark background. All data colors consistent between light and dark—only chrome elements changed appropriately by theme.
-      Legibility verdict: PASS - All text readable, no dark-on-dark failures, perfect theme adaptation.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink; grid faint but visible; zero line and axis lines light grey; legend box #242420 with light frame and light text. No dark-on-dark text.
+      Data: bars #009E73 and endpoint circles #C475FD identical to the light render; midpoint dots flip to light ink (theme-adaptive neutral) and stay visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,53 +60,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks).
-          Perfectly readable in both light and dark renders.
+        comment: Title 16, axis titles 12, ticks and legend 10 as the plotly prompt
+          gives; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no overlapping elements. Legend positioned
-          well with adequate spacing.
+        comment: Legend sits in empty upper-left space; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Range bars (width 18), endpoint markers (size 18), and midpoint markers
-          (size 10) all clearly visible and well-adapted to 12-category density.
+        comment: Bars, endpoint markers and midpoint dots clearly visible in both
+          themes; legend glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) is CVD-safe with excellent
-          contrast.'
+        comment: Green bars with purple endpoints, CVD-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px landscape format with generous margins (80/40/80/60).
-          Plot fills appropriate area with balanced whitespace.
+        comment: 3200x1800, balanced margins, plot fills the canvas; no gate file
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Axes clearly labeled with units: Temperature (°C). Title descriptive
-          with library/format info.'
+        comment: Month / Temperature (°C)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series #009E73 (BRAND). Secondary #D55E00. Backgrounds
-          #FAF8F1 (light)/#1A1A17 (dark). Theme-adaptive text colors (INK/INK_SOFT)
-          correctly applied. Data colors identical between renders; only chrome flips.'
+        comment: 'First series #009E73, second #C475FD, midpoint in theme ink; backgrounds
+          correct in both renders'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -107,27 +109,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Competent use of Okabe-Ito colors and clean layout, but design follows
-          standard patterns without custom refinements or exceptional visual thinking.
-          Looks like well-configured library defaults rather than publication-quality
-          design.
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Subtle Y-axis grid, no X-axis grid, generous whitespace, and clean
-          layout. Some refinement beyond defaults but not comprehensive polish.
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clear seasonal pattern in temperature data with visual hierarchy
-          through size variation (thick bars vs. small midpoints). Data story is readable
-          but not actively emphasized with focal points or special techniques.
+        comment: Data displayed chronologically; no focal point chosen beyond the
+          Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,28 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical range-interval chart with all subtypes present.
+        comment: Floating vertical range segments per category
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features implemented: min-max ranges, category labels,
-          optional endpoints, optional midpoints.'
+        comment: C1 floating spans, C2 one thickness and chronological order, C3 endpoints
+          on bounds, C5 subordinate midpoints all met; C4 n/a (no overlapping ranges
+          per category)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis months (categorical), Y-axis temperature in °C (numeric).
-          Full range visible, all 12 categories displayed.
+        comment: Months on x, °C on y, all data in range, marks at their values
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title format correct: ''range-interval · python · plotly · anyplot.ai''.
-          Legend labels accurate: Min Temperature, Max Temperature, Midpoint.'
+        passed: false
+        comment: Title correct; Min and Max legend entries have identical glyphs (defect
+          line)
     data_quality:
       score: 15
       max: 15
@@ -166,22 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all range-interval aspects: min/max endpoints, midpoints,
-          seasonal variation, 12 categories with differing range sizes.'
+        comment: 12 ranges of differing length and position, crossing zero in winter
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world monthly temperature data for temperate climate. Winter
-          lows ~-6°C, summer highs ~+32°C. Neutral, educational context.
+        comment: Monthly temperature ranges of a temperate city, the spec's own example;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature ranges physically realistic with natural seasonal variation.
-          All proportions factually correct.
+        comment: Winter about −6 to 5 °C, July about 22 to 31 °C; plausible. No Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -191,56 +187,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → tokens → data → figure → traces → layout
-          → save. No unnecessary functions/classes.'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, numpy, plotly.graph_objects. All used.'
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, clean, appropriate complexity. No over-engineering or fake
-          functionality.
+        comment: Midpoints vectorised on df; endpoint traces from one loop
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html using current
-          Plotly API.
+        comment: plot-{THEME}.png and .html, current API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: false
-        comment: Uses go.Figure(), add_trace(), go.Scatter, and update_layout() idiomatically.
-          Theme-adaptive approach with environment variables. Could leverage more
-          advanced Plotly features like animation or custom event handlers.
+        passed: true
+        comment: go.Figure / add_trace / update_layout; default
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses hovertemplate and HTML export (interactive features). However,
-          visualization is straightforward scatter plot approach that could be replicated
-          in other libraries with minor syntax changes. Doesn't leverage uniquely
-          Plotly capabilities like 3D, animations, or custom interactions.
+        comment: Hovertemplates only; nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
+  rendered_at: '2026-11-22T12:33:49Z'
 impl_tags:
   dependencies: []
   techniques:

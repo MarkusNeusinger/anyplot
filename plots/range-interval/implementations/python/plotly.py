@@ -1,12 +1,13 @@
 """ anyplot.ai
 range-interval: Range Interval Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-18
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-22
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -18,109 +19,114 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # Primary series
-SECONDARY = "#C475FD"  # Secondary series
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Monthly temperature ranges (°C) for a temperate climate city
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: category
+TEMP_MIN = "Min temperature (°C)"  # role: min_value
+TEMP_MAX = "Max temperature (°C)"  # role: max_value
+TEMP = "Temperature (°C)"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("ranges.csv")
 np.random.seed(42)
+base_temps = np.array([-2, 0, 5, 12, 18, 22, 25, 24, 19, 12, 5, 0])
+df = pd.DataFrame(
+    {
+        MONTH: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        TEMP_MIN: [t - np.random.uniform(3, 6) for t in base_temps],
+        TEMP_MAX: [t + np.random.uniform(4, 8) for t in base_temps],
+    }
+)
 
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+# Plot: reads only df and the constants above
+months = df[MONTH].tolist()
+midpoints = (df[TEMP_MIN] + df[TEMP_MAX]) / 2
+brand, secondary = IMPRINT_PALETTE[0], IMPRINT_PALETTE[1]
 
-# Realistic temperature ranges that follow seasonal pattern
-base_temps = [-2, 0, 5, 12, 18, 22, 25, 24, 19, 12, 5, 0]
-min_temps = [t - np.random.uniform(3, 6) for t in base_temps]
-max_temps = [t + np.random.uniform(4, 8) for t in base_temps]
-
-# Create figure
 fig = go.Figure()
 
-# Add range bars as vertical lines with markers at endpoints
-for i, month in enumerate(months):
-    # Range bar (vertical line)
+# Range bars: one vertical segment per category from its minimum to its maximum
+for month, low, high in zip(df[MONTH], df[TEMP_MIN], df[TEMP_MAX], strict=True):
     fig.add_trace(
         go.Scatter(
             x=[month, month],
-            y=[min_temps[i], max_temps[i]],
+            y=[low, high],
             mode="lines",
-            line={"color": BRAND, "width": 18},
+            line={"color": brand, "width": 9},
             showlegend=False,
             hoverinfo="skip",
         )
     )
 
-# Add markers at min points (bottom)
-fig.add_trace(
-    go.Scatter(
-        x=months,
-        y=min_temps,
-        mode="markers",
-        marker={"color": SECONDARY, "size": 18, "line": {"color": BRAND, "width": 3}},
-        name="Min Temperature",
-        hovertemplate="%{x}<br>Min: %{y:.1f}°C<extra></extra>",
+# Endpoint markers on the two bounds
+for column, label in ((TEMP_MIN, "Min Temperature"), (TEMP_MAX, "Max Temperature")):
+    fig.add_trace(
+        go.Scatter(
+            x=months,
+            y=df[column],
+            mode="markers",
+            marker={"color": secondary, "size": 9, "line": {"color": brand, "width": 1.5}},
+            name=label,
+            hovertemplate=f"%{{x}}<br>{label}: %{{y:.1f}}°C<extra></extra>",
+        )
     )
-)
 
-# Add markers at max points (top)
-fig.add_trace(
-    go.Scatter(
-        x=months,
-        y=max_temps,
-        mode="markers",
-        marker={"color": SECONDARY, "size": 18, "line": {"color": BRAND, "width": 3}},
-        name="Max Temperature",
-        hovertemplate="%{x}<br>Max: %{y:.1f}°C<extra></extra>",
-    )
-)
-
-# Add midpoint markers
-midpoints = [(min_temps[i] + max_temps[i]) / 2 for i in range(len(months))]
+# Midpoint markers, kept small so the ranges stay dominant
 fig.add_trace(
     go.Scatter(
         x=months,
         y=midpoints,
         mode="markers",
-        marker={"color": INK, "size": 10, "line": {"color": BRAND, "width": 2}},
+        marker={"color": INK, "size": 5, "line": {"color": brand, "width": 1}},
         name="Midpoint",
         hovertemplate="%{x}<br>Mid: %{y:.1f}°C<extra></extra>",
     )
 )
 
-# Update layout with theme-adaptive styling
+# Style
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "range-interval · python · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"
+        "text": "range-interval · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Month", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": MONTH, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "categoryorder": "array",
         "categoryarray": months,
         "showgrid": False,
         "linecolor": INK_SOFT,
-        "linewidth": 2,
+        "linewidth": 1,
     },
     yaxis={
-        "title": {"text": "Temperature (°C)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": TEMP, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": True,
         "zerolinecolor": INK_SOFT,
-        "zerolinewidth": 2,
+        "zerolinewidth": 1,
         "linecolor": INK_SOFT,
-        "linewidth": 2,
+        "linewidth": 1,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     legend={
-        "font": {"size": 16, "color": INK_SOFT}, "x": 0.02, "y": 0.98, "bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "borderwidth": 1
+        "font": {"size": 10, "color": INK_SOFT},
+        "x": 0.02,
+        "y": 0.98,
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
     },
-    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    margin={"l": 80, "r": 40, "t": 60, "b": 60},
     hovermode="closest",
 )
 
-# Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
