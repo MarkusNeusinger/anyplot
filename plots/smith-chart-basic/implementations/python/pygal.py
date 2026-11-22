@@ -1,7 +1,7 @@
 """anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
 Library: pygal 3.1.3 | Python 3.14
-Quality: 83/100 | Updated: 2026-05-20
+Quality: pending | Updated: 2026-05-20
 """
 
 import os
