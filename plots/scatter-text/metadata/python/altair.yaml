@@ -12,110 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 62
 review:
   strengths:
-  - Perfect visual quality across both light and dark themes with zero legibility
-    failures
-  - Excellent theme-adaptive chrome implementation with correct token mapping
-  - Clean, idiomatic altair code using conditional encoding and selections
-  - Realistic, neutral data demonstrating the scatter-text plot type effectively
-  - All specification requirements met with polished execution
+  - Every label centered on its exact (x, y) coordinate
+  - Theme tokens threaded through axis, title and legend chrome
+  - selection_point(on='pointerover', nearest=True) hover highlight with tooltips
+    in the HTML
+  - Real, neutral programming-language scenario
   weaknesses:
-  - 'Design Excellence moderate: lacks distinctive aesthetic touches or custom styling
-    beyond configured defaults'
-  - 'Visual storytelling minimal: no visual hierarchy or emphasis to guide interpretation'
-  - 'Library Mastery: doesn''t leverage advanced altair features like transforms or
-    custom interaction patterns'
+  - 'VQ-05 (both): canvas is 5349x3003, not a canonical size → 3200x1800 (-2149 x
+    -1203). Likely cause: properties(width=1600, height=900) with save scale_factor=3.0
+    and no pad-to-target step.'
+  - 'VQ-07 (both): continuous popularity color uses scheme=''viridis'', outside imprint_seq
+    / imprint_div → scale=alt.Scale(range=[''#009E73'', ''#4467A3'']). Likely cause:
+    Scale(scheme=''viridis'').'
+  - 'VQ-01, VQ-03, VQ-04, SC-02 (dark): the low-popularity labels (Clojure, Elixir,
+    Haskell, Erlang, COBOL, Lisp, Fortran) in viridis dark purple nearly vanish on
+    #1A1A17 and cannot be read → a ramp whose every color is legible as text on both
+    pages. Likely cause: the viridis scheme''s dark end.'
+  - 'SC-04 (both): title reads ''scatter-text · Python · altair · anyplot.ai'' → lowercase
+    ''python''. Likely cause: the Title text literal.'
+  - 'DQ-03 (code): language ages are counted to about 2024 and several are wrong for
+    their creation year (TypeScript 8 vs 14, Java 26 vs 31, Dart 18 vs 15), and year_created
+    = 2026 - ages carries the errors into the tooltip → ages that match the creation
+    years for 2026. Likely cause: the ages array.'
+  - 'CQ-01 (code): line 22 opens the Data block with no column-0 # Plot marker after
+    it → one block between column-0 # Data and # Plot markers that ends by binding
+    df, with no plotting, styling or theme token inside and no plotting call above
+    it. Likely cause: the plot code is not separated from the data generation.'
+  - 'CQ-01 (code): has no column constant for the required roles `x`, `y`, `label`
+    → one string constant per required column role above the Data block, each with
+    a trailing # role: <role> comment naming a spec role. Likely cause: column names
+    are typed where they are used instead of once, above the block.'
+  - 'Suggestion: np.random.seed(42) seeds nothing; the data is fixed, so the seed
+    and that use of numpy can go.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct page surface tone
-      Chrome: Title "scatter-text · Python · altair · anyplot.ai" centered and readable; axis labels "Language Age (Years Since Creation)" and "Relative Popularity Score" descriptive with units; tick labels and legend all readable in dark text
-      Data: 28 programming language names positioned by age and popularity; colors follow viridis colormap (purple for low ~4, yellow for high ~98); bold text clearly distinguishable from background
-      Legibility verdict: PASS - all elements readable, good contrast, no dark-on-light issues
+      Background: warm off-white #FAF8F1 on a 5349x3003 canvas.
+      Chrome: title 'scatter-text · Python · altair · anyplot.ai' at the top edge; axis titles 'Language Age (Years Since Creation)' and 'Relative Popularity Score'; x ticks every 2 from -2 to 74, y ticks every 5; subtle grid; color bar 'Popularity' pressed against the right edge, its frame cut there.
+      Data: 28 bold language names centered on their (age, popularity) points, colored with viridis from dark purple (COBOL, Lisp) to yellow (Python). Readable on light.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark page surface tone
-      Chrome: Title, axis labels, tick labels all readable in light text colors (#F0EFE8 primary, #B8B7B0 secondary); no dark-on-dark failures; sufficient contrast against dark background
-      Data: Viridis colormap identical to light render (same purple-to-yellow gradient showing popularity distribution); only chrome adapted to theme; colors unchanged confirming proper theme handling
-      Legibility verdict: PASS - all text readable with proper light-on-dark contrast, no accessibility issues
+      Background: warm near-black #1A1A17.
+      Chrome: light title, axis titles and ticks, readable.
+      Data: same viridis colors; the dark-purple low-popularity labels (Clojure, Elixir, Haskell, Erlang, COBOL, Lisp, Fortran) nearly disappear against the dark page.
+      Legibility verdict: FAIL (dark-purple labels unreadable)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 13
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: Font sizes explicitly set; all text readable in both light and dark
-          themes
+        passed: false
+        comment: 'Low-popularity labels (Clojure, Elixir, Haskell, COBOL, Lisp, Fortran)
+          in viridis dark purple are near-unreadable on the #1A1A17 background (defect
+          line)'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Text labels well-distributed across plot; no overlapping elements
+        comment: No text collisions; COBOL/Lisp/Fortran stay apart
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Labels appropriately sized for 4800×2700px canvas; fully visible
+        passed: false
+        comment: The dark-purple labels nearly vanish in the dark render (defect line)
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Viridis is perceptually uniform; hover uses brand green #009E73'
+        passed: false
+        comment: Viridis dark end has almost no contrast against the dark page (defect
+          line)
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Excellent canvas utilization with balanced margins and legend placement
+        passed: false
+        comment: Canvas 5349x3003, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Language Age (Years Since Creation)'',
-          ''Relative Popularity Score'''
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Viridis for continuous data; backgrounds #FAF8F1 (light) / #1A1A17
-          (dark); text colors theme-adaptive; data colors identical across renders'
+        passed: false
+        comment: Continuous color uses viridis, outside imprint_seq / imprint_div
+          (defect line)
     design_excellence:
-      score: 9
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Well-configured defaults with thoughtful viridis use; intentional
-          data choice; lacks distinctive custom styling—reads as library defaults
+        comment: Outside the Imprint palette, so short of the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Theme-aware colors and grid opacity configured; some refinement but
-          mostly library patterns
+        comment: Subtle grid, no view stroke; dense 2-unit x ticks; baseline at most
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy, focal point, or narrative
-          emphasis
+        comment: Data displayed without a chosen focal point
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -123,28 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with text labels per specification
+        comment: Scatter of text labels in place of markers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features implemented: text labels at coordinates, legend, hover
-          interaction, tooltips'
+        passed: false
+        comment: 'C4 missed: the dark-purple label colors are not legible against
+          the dark page (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = language age, Y = popularity; axes correctly show all data
+        comment: Labels centered at their (x, y); axes cover all data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; legend properly labeled as 'Popularity'
+        passed: false
+        comment: Title capitalizes 'Python' instead of the mandated lowercase 'python'
+          (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -152,76 +171,75 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 28 languages with varied ages (4-68 years) and popularities (4-98)
-          demonstrate full feature coverage
+        comment: Sparse and dense regions, numeric color variable
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Programming languages by age and popularity is a real, neutral, comprehensible
-          scenario
+        comment: Real programming languages, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Language ages and popularities align with actual programming language
-          history
+        passed: false
+        comment: Ages mostly two years short of 2026 and TypeScript (8 vs 14), Java
+          (26 vs 31), Dart (18 vs 15) off; year_created = 2026 - ages inherits the
+          errors (defect line)
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        passed: false
+        comment: 'Data block without the # Plot marker and no column constants for
+          x, y, label (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with np.random.seed(42)
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports present
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; conditional encoding with condition() is elegant;
-          selection_point() for hover is appropriate
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and .html
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Expert use of altair's high-level API with proper encoding, conditional
-          expressions, and selection patterns
+        passed: false
+        comment: Declarative encodings, conditional color/size on a selection
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses conditional encoding and hover selections effectively; doesn't
-          leverage advanced features like transforms or custom properties
+        comment: selection_point(on='pointerover', nearest=True) hover highlight
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
 impl_tags:
   dependencies: []
   techniques:
