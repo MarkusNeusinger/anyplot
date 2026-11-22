@@ -2,47 +2,45 @@ library: seaborn
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:28:34Z'
-updated: '2026-05-19T21:33:46Z'
+updated: '2026-11-22T17:17:16Z'
 generated_by: claude-sonnet
-workflow_run: 26126038392
+workflow_run: 45048090921
 issue: 3188
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: historical line, forecast dashed line, nested 80%/95%
-    CI bands, vertical boundary marker, and Forecast annotation all present'
-  - Excellent theme-adaptation with thoughtful alpha adjustments per theme (higher
-    alpha in dark mode prevents CI bands from disappearing on the near-black surface)
-  - 'Idiomatic seaborn usage: long-form data with hue/style/palette/dashes dict mapping
-    — distinctly seaborn API'
-  - Strong visual hierarchy separating historical from forecast periods via subtle
-    axvspan shading, dotted boundary line, and annotation
-  - Reproducible, clean code with KISS structure and explicit font sizing throughout
+  - 'Idiomatic seaborn: long-form melt into sns.lineplot with hue+style and dict-mapped
+    palette and dashes gives solid history and dashed forecast in one call'
+  - Nested 80%/95% bands with per-theme alphas stay told apart in both renders, and
+    the forecast picks up exactly at the last observation
+  - Forecast start marked twice, a low-alpha dotted line over a faint region tint,
+    with a small 'Forecast →' label
+  - 'Clean six-zone structure: column constants, a Data block that ends in df, a plot
+    that reads only df'
   weaknesses:
-  - 'DE-01/DE-02: In dark mode the CI bands at higher alpha (0.42/0.30) become visually
-    heavy and saturated, slightly reducing refinement. A narrower alpha range or a
-    subtle edge stroke on the bands would improve dark-mode polish'
-  - 'LM-02: The implementation does not leverage any distinctively seaborn-only statistical
-    feature (e.g., built-in estimator/errorbar, FacetGrid); most CI band work is done
-    via matplotlib fill_between'
+  - 'Suggestion: the 95% band in the light render is pale (alpha 0.22); a slightly
+    higher alpha would give the outer band more presence against the forecast-region
+    tint.'
+  - 'Suggestion: a distinctive seaborn layer (e.g. sns.lineplot with errorbar on resampled
+    paths) could draw the bands natively instead of fill_between.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface tone, not pure white.
-      Chrome: Title "timeseries-forecast-uncertainty · python · seaborn · anyplot.ai" in dark ink at 11pt, readable across full width (~75%). Y-axis label "Stock Price ($)" and X-axis label "Date" in INK at 10pt, balanced. Tick labels in INK_SOFT at 8pt, readable. Legend in upper-left with warm elevated background (#FFFDF6), bordered in INK_SOFT.
-      Data: Historical line in #009E73 (solid, linewidth=3) covers 2025-01-01 to ~2025-03-28; Forecast line in #D55E00 (dashed, linewidth=3) starts at the historical endpoint and extends to 2025-04-25. Two nested CI bands in transparent #D55E00 (95% outer at alpha≈0.22, 80% inner at alpha≈0.30) visibly expand over the forecast horizon. Subtle forecast region shading (axvspan, alpha=0.04) distinguishes future from past. Dotted vertical boundary line and "Forecast →" annotation at top of forecast zone.
-      Legibility verdict: PASS — all chrome text is clearly dark-on-light, no visibility issues.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'timeseries-forecast-uncertainty · python · seaborn · anyplot.ai' dark ink, ~60% of width; 'Stock Price ($)' and 'Date' axis titles, ticks 150-175 and 2025-01-01..2025-04-15 in INK_SOFT; framed legend upper left (Historical, Forecast, 80% Confidence, 95% Confidence); y-grid subtle; dotted vertical boundary at ~2025-03-25 with a faint forecast-region tint and 'Forecast →' label.
+      Data: solid green #009E73 history line, dashed purple #C475FD forecast starting at the last observation, darker 80% band nested inside a lighter 95% band, both widening with the horizon.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title and axis labels rendered in light #F0EFE8/INK_SOFT tokens, all clearly visible against the near-black background. Tick labels in #B8B7B0, readable. Legend with elevated dark background (#242420) bordered in INK_SOFT — no dark-on-dark issues.
-      Data: Historical line (#009E73) and Forecast line (#D55E00) are identical in hue to the light render — only chrome flips. CI bands rendered at higher alpha (95%: 0.30, 80%: 0.42) to compensate for lower contrast on dark surface; both bands remain visible and nested structure is distinguishable, though more saturated/heavy than in light mode. "Forecast →" annotation in INK_SOFT (#B8B7B0) is visible.
-      Legibility verdict: PASS — no dark-on-dark failures; all text uses light-colored theme tokens correctly.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light tokens, legend on elevated #242420 with light text; no dark-on-dark text; grid subtle.
+      Data: same green and purple as light; bands at slightly higher alpha, 80% clearly darker/stronger than 95%; dashed forecast visible over the bands.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,79 +51,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=11pt, labels=10pt, ticks=8pt,
-          legend=8pt); readable in both themes; well-proportioned; long title fills
-          ~75% width as expected
+        comment: Title 11pt, axis labels 10pt, ticks and legend 8pt, all set explicitly;
+          readable in both themes, title fills ~60% of the width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements; legend in upper-left, annotation
-          in upper forecast area — no collisions
+        comment: 'No text collisions: legend upper left over empty space, ''Forecast
+          →'' label above the bands'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: linewidth=3 appropriate for 80+20 point time series; CI bands visible
-          in both themes with theme-adjusted alpha
+        comment: 3pt lines suit 60+20 points; both bands and the dashed forecast stay
+          visible in both themes; legend swatches match the band alphas
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73/#D55E00 pair is CVD-safe; solid vs dashed provides
-          non-color signal for historical vs forecast'
+        comment: Green/purple pair is CVD-safe, and solid vs dashed carries the history/forecast
+          split without color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins; tight_layout applied;
-          legend near data
+        comment: 3200x1800 canvas, plot fills the canvas with balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Stock Price ($)'' with unit; X-axis: ''Date''; title in
-          correct mandated format'
+        comment: '''Stock Price ($)'' with unit, ''Date'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (historical), second #D55E00 (forecast) — Okabe-Ito
-          positions 1 and 2; light bg #FAF8F1, dark bg #1A1A17; all chrome theme-adaptive'
+        comment: 'History #009E73 (Imprint 1), forecast and bands #C475FD (Imprint
+          2), identical across themes; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Strong design: intentional color family (green historical / orange
-          forecast), custom legend construction (Line2D + Patch), subtle axvspan forecast
-          region shading, nested CI bands — clearly above defaults'
+        passed: false
+        comment: 'Beyond baseline: band alphas tuned per theme so the nested bands
+          stay told apart on both surfaces, edge-free bands (linewidth=0), one purple
+          family for forecast and its uncertainty'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Spines removed and re-styled (INK_SOFT), y-axis only grid at 0.15
-          alpha, ax.set_axisbelow, legend styled (fancybox=False, framealpha=1.0);
-          CI bands somewhat heavy in dark mode
+        passed: false
+        comment: 'Beyond baseline: the boundary drawn as a low-alpha dotted line over
+          a 4% forecast-region tint instead of a heavy rule; framed legend tucked
+          into the empty upper-left'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Clear story: expanding uncertainty in forecast horizon; ''Forecast
-          ->'' annotation, dotted boundary, and region shading guide the viewer through
-          the narrative'
+        passed: false
+        comment: The forecast region tint plus the 'Forecast →' label lead the eye
+          from history into the widening uncertainty
     spec_compliance:
       score: 15
       max: 15
@@ -135,28 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: time series with forecast and nested CI bands'
+        comment: Time series with forecast and nested uncertainty bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: solid historical line, dashed forecast, vertical
-          boundary marker, 80%+95% CI bands, semi-transparent fills, clear legend'
+        comment: Solid history, dashed forecast (C1), dotted boundary line plus shaded
+          region (C2), nested darker 80% inside lighter 95% (C3), semi-transparent
+          fills (C4), legend with all four entries (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, price on Y; historical and forecast periods cover correct
-          ranges
+        comment: Date on x, price on y; forecast and bands start at the last observation;
+          all data in view
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches mandated format; legend has Historical, Forecast,
-          80% Confidence, 95% Confidence
+        comment: Mandated title; legend entries Historical, Forecast, 80% Confidence,
+          95% Confidence
     data_quality:
       score: 15
       max: 15
@@ -166,22 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: historical variability, upward trend, forecast
-          continuation, widening CI bands (sqrt(horizon) growth)'
+        comment: History with trend and noise, forecast continuation, bands widening
+          with sqrt(horizon)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price ~$150-175 in 2025 at business-day frequency — neutral,
-          plausible, real-world scenario
+        comment: Business-day stock price, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and uncertainty growth realistic for mid-cap stock; 1.96/1.28
-          sigma multipliers for 95%/80% CI are statistically correct
+        comment: Prices ~147-174 $; 1.28/1.96 sigma multipliers for 80/95% are the
+          correct normal quantiles; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -191,61 +186,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: tokens -> data -> sns.set_theme -> plot -> save; no functions
-          or classes'
+        comment: 'Six zones: tokens, column constants, Data block ending in df, Plot
+          reading only df'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set early
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, matplotlib, numpy, pandas, seaborn, Line2D, Patch)
-          are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; comments explain non-obvious design decisions
-          (why wide-form vs long-form, alpha rationale for dark mode)
+        comment: No hand-written algorithm, no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400, bbox_inches='tight', facecolor=PAGE_BG
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400) with default bbox
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: sns.lineplot with long-form data, hue/style/palette dict/dashes dict
-          is idiomatic seaborn; sns.set_theme() and sns.despine() used correctly
+        passed: false
+        comment: Long-form melt into sns.lineplot with hue+style, palette and dashes
+          dicts keyed by series; sns.set_theme rc tokens and sns.despine
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: 'dashes={series: (on,off)} dict mapping and style+hue dual-mapping
-          are distinctively seaborn; CI bands via matplotlib fill_between (necessary
-          since seaborn''s CI is for statistical estimation, not pre-computed intervals)'
+        passed: false
+        comment: style semantic with a dashes dict mapping solid vs dashed per series
+          is seaborn-native; the bands are matplotlib fill_between
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T17:14:08Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
   - custom-legend
+  - annotations
   patterns:
   - data-generation
+  - wide-to-long
+  - explicit-figure
   dataprep:
   - time-series
   styling:
