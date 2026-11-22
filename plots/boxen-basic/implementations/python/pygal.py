@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-11-22
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-22
 """
 
 import importlib
