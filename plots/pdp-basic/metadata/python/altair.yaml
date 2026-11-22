@@ -2,40 +2,52 @@ library: altair
 language: python
 specification_id: pdp-basic
 created: '2025-12-31T05:33:12Z'
-updated: '2026-05-15T22:42:17Z'
-generated_by: claude-haiku
-workflow_run: 25944707114
+updated: '2026-11-22T00:29:45Z'
+generated_by: claude-sonnet
+workflow_run: 44966442571
 issue: 2922
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/altair/plot-dark.html
-quality_score: 100
+quality_score: 81
 review:
   strengths:
-  - Perfect theme adaptation with correct chrome colors for both light and dark modes
-  - Excellent visual hierarchy through layer composition (confidence band → line →
-    rug plot)
-  - Interactive tooltips enhance usability for exploratory analysis
-  - Reproducible code with proper random seeds and sklearn integration
-  - Idiomatic altair usage with high-level API throughout
-  - All spec requirements met with additional statistical context (confidence intervals
-    and rug plot)
-  weaknesses: []
+  - 'Clear layer hierarchy: lighter 95 % bootstrap band behind a prominent PD line,
+    rug ticks along the x axis'
+  - Theme tokens threaded through view, axis and title config; both renders read cleanly
+  - One tidy DataFrame with transform_filter per layer and escaped column constants,
+    as the library prompt describes
+  - PD line tooltips in the HTML output for exact values
+  weaknesses:
+  - 'DE-02 (both): the view keeps a four-sided frame and draws vertical grid lines
+    on a line chart, against the style guide''s L-shaped spines and y-only grid for
+    line charts → drop the top/right frame and the x grid. Likely cause: configure_view(stroke=INK_SOFT)
+    and configure_axis grid applied to both axes.'
+  - 'DQ-02 (both): the predicted quantity is only labelled ''Partial dependence (predicted
+    outcome)'' of a synthetic make_regression target, so the scenario reads generic
+    → name the modelled outcome (e.g. ''Partial dependence (predicted energy demand,
+    kWh)''). Likely cause: the y column constant and the untitled make_regression
+    target.'
+  - 'CQ-04 (code): ELEVATED_BG is defined and RUG is escaped but neither is used in
+    the chart → delete both. Likely cause: leftovers from the template''s legend config
+    and the rug filter that uses IS_RUG directly.'
+  - 'Suggestion: limit the x domain to the rug''s extent with a little padding so
+    less of the plot width sits empty left of the curve''s 5th-percentile start.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, and tick labels are dark text (#1A1A17, #4A4A44) - all readable
-      Data: Main green line (#009E73) with 4px stroke, confidence band with 20% opacity, rug plot ticks with 40% opacity
-      Legibility verdict: PASS - all elements clearly visible and readable against light background
+      Background: warm off-white #FAF8F1, 3200x1800, chart centred with padding
+      Chrome: bold dark title 'pdp-basic · python · altair · anyplot.ai', dark axis titles, INK_SOFT tick labels, faint grid on both axes, four-sided frame; all readable
+      Data: #009E73 PD line (3 px) rising stepwise from about -35 at x=-1.57 to 31 at x=1.52, light green 95 % band behind it widening at the top end, translucent green rug ticks along the bottom from about -2.3 to 2.2
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, and tick labels are light text (#F0EFE8, #B8B7B0) - all readable, no dark-on-dark failures
-      Data: Identical colors to light render - green line and band maintain same #009E73, confidence band and rug plot preserve opacity values
-      Legibility verdict: PASS - all elements clearly visible and readable against dark background, proper contrast throughout
+      Background: warm near-black #1A1A17
+      Chrome: light title, axis titles and tick labels, subtle light grid and frame; no dark-on-dark text
+      Data: identical #009E73 line, band and rug as in the light render; band reads as a dark green fill behind the line
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -46,72 +58,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28px title, 22px axis, 18px ticks), all
-          readable in both themes
+        comment: Explicit font sizes (title 16, axis titles 12, ticks 10 at scale
+          4); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, centered title, clear axis layout, rug plot
-          at bottom
+        comment: No text collisions; the rug sits along the bottom of the plot, clear
+          of the curve
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 4px line thickness prominent, 20% opacity band distinguishable, 40%
-          opacity rug visible
+        comment: Prominent PD line, lighter band behind it, translucent rug ticks
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 CVD-safe, opacity differentiation works'
+        comment: Single hue with opacity hierarchy; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions at 1600×900, scales to 4800×2700, generous margins
+        comment: 3200x1800 canvas, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, title present and readable
+        comment: '''Partial dependence (predicted outcome)'' and ''Temperature (standardized
+          units)'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1 light / #1A1A17 dark,
-          both theme-correct'
+        comment: '#009E73 for line, band and rug; #FAF8F1 / #1A1A17 backgrounds; chrome
+          flips correctly'
     design_excellence:
-      score: 20
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 8
+        score: 4
         max: 8
-        passed: true
-        comment: 'Intentional design: proper theme tokens, visual hierarchy through
-          layering, rug plot context'
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 1
         max: 6
-        passed: true
-        comment: Clean composition, subtle grid (10% opacity), generous whitespace,
-          no decoration
+        passed: false
+        comment: Four-sided view frame and a full x grid on a line chart (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Clear focal point (green curve), confidence band shows uncertainty,
-          rug plot shows data distribution
+        passed: false
+        comment: Data displayed with the band/line/rug hierarchy the spec asks for;
+          no further focal choice
     spec_compliance:
       score: 15
       max: 15
@@ -121,28 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct partial dependence plot type
+        comment: Partial dependence line with uncertainty band; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shows PD values, feature range, confidence intervals, rug plot for
-          data distribution
+        comment: PD line (C1), band behind it (C2), y axis as partial dependence (C3),
+          rug at the x axis clear of the curve (C4), basic scope (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis feature values, Y-axis partial dependence, all data visible
+        comment: Feature on x, average prediction on y at sklearn's grid values, unsmoothed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, single series needs no legend
+        comment: Title 'pdp-basic · python · altair · anyplot.ai'; single series needs
+          no legend
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -150,24 +162,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All PDP aspects shown: marginal effect, confidence intervals, data
-          distribution'
+        comment: Shows the marginal effect, tree-model steps, a widening band and
+          the data distribution
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: sklearn GradientBoostingRegressor on synthetic regression data, plausible
-          Temperature feature
+        passed: false
+        comment: 'Generic outcome: the y quantity is only ''predicted outcome'' of
+          a make_regression target (defect line)'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Feature range -2.5 to 2.5, PD range -40 to 40, sensible and fills
-          canvas well
+        comment: Feature range about -2.3 to 2.2 in standardized units, PD -35 to
+          31; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -175,59 +187,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions, straightforward pipeline
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) consistently
+        comment: np.random.seed(42) and random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Uses sklearn PDP function, clean altair layering, no fake UI
+        passed: false
+        comment: Unused ELEVATED_BG token and unused escaped RUG field (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html with correct scale_factor
+        comment: Saves plot-{THEME}.png and .html with current API, pads to 3200x1800
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: alt.layer() composition, proper encoding, configure_* methods, interactive
-          tooltips
+        passed: false
+        comment: One tidy df split per layer with transform_filter, alt.layer composition,
+          mark_area with y2 for the band
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Multi-layer composition, theme-adaptive config, interactive tooltips,
-          mark_area for uncertainty
+        passed: false
+        comment: Vega-Lite tooltips on the PD line in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T00:26:33Z'
 impl_tags:
   dependencies:
-  - sklearn
+  - scikit-learn
+  - pillow
   techniques:
   - layer-composition
-  - html-export
+  - confidence-band
+  - rug-plot
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
+  - model-fitting
+  dataprep:
+  - partial-dependence
+  - bootstrap
   styling:
-  - publication-ready
   - alpha-blending
