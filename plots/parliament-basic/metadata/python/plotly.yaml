@@ -2,48 +2,44 @@ library: plotly
 language: python
 specification_id: parliament-basic
 created: '2025-12-30T00:04:08Z'
-updated: '2026-05-17T13:43:40Z'
-generated_by: claude-haiku
-workflow_run: 25992380653
+updated: '2026-11-22T06:01:33Z'
+generated_by: claude-sonnet
+workflow_run: 44991121376
 issue: 2499
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - Perfect visual legibility in both light and dark themes with well-chosen explicit
-    font sizing
-  - Accurate implementation of the parliament-basic specification with all required
-    features (parties, seats, majority threshold, legend)
-  - 'Excellent data quality: realistic, neutral, and well-proportioned party representation
-    (420 seats, majority at 211)'
-  - Clean, Pythonic code with straightforward structure and proper use of theme-adaptive
-    color tokens
-  - 'Theme-adaptive chrome perfectly implemented: data colors (Okabe-Ito) remain identical
-    across themes, text and backgrounds flip appropriately'
+  - Seats sorted by angle and assigned by cumsum slices, so each party is one contiguous
+    wedge across all 12 arcs with the stepped boundaries the spec expects
+  - 'Majority marker is a short radial tick outside the outer arc at the boundary
+    between seat 211 and 212, labelled ''Majority: 211'', clear of all seat marks'
+  - scaleanchor/scaleratio keep the chamber a true half circle; theme tokens flip
+    only chrome while the Imprint seat colors stay identical
+  - Per-party hovertemplate gives party and seat count in the HTML view
   weaknesses:
-  - 'Design Excellence could be elevated: while well-configured and refined, the aesthetic
-    is standard rather than distinctive (no custom visual enhancements beyond defaults)'
-  - Library Mastery focuses on standard plotly features; could leverage more distinctive
-    plotly capabilities for interactive feature showcase
+  - 'DQ-02 (both): the first party is named ''Progressive Alliance'', an ideological-family
+    label the spec''s Notes exclude → a neutral noun plus a group word such as ''Meadow
+    Alliance''. Likely cause: the PARTY list in the DataFrame.'
+  - 'Suggestion: the semicircle fills only about 60 % of the canvas width; slightly
+    wider x-range tuning or larger markers could use more of the frame.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "parliament-basic · plotly · anyplot.ai" in dark (#1A1A17), legend text in soft dark gray (#4A4A44), all clearly readable against light surface
-      Data: Semicircular parliament chart with 420 seats arranged in 7 concentric arcs. First series (Progressive Alliance, 145 seats) is #009E73 (brand green), followed by Civic Union (orange #D55E00), Green Future (blue #0072B2), Liberty Party (magenta #CC79A7), Reform Coalition (gold #E69F00), and Independent Group (sky blue #56B4E9). White edges on seat markers provide subtle definition. Majority threshold arc at radius ~0.62 marked with dashed line in INK_SOFT color. Central annotation "420 seats" clearly visible. Horizontal legend at bottom with party names and seat counts for each series.
-      Legibility verdict: PASS – All text (title, legend, annotation) is dark and clearly visible on the warm off-white background. No contrast failures.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'parliament-basic · python · plotly · anyplot.ai' in dark ink, centred, about 50 % of the width; 'Majority: 211' label above a short dashed radial tick outside the top of the outer arc; '420 seats' (420 bold) in the hollow centre; framed two-row legend below on #FFFDF6 with 'Party (seats)' entries and 'Majority line (211)'. All dark text clearly readable.
+      Data: 420 equal dots in 12 concentric arcs forming a half circle; contiguous wedges left to right: Progressive Alliance #009E73 (145), Civic Union #C475FD (118), Harbor Union #4467A3 (52), Lantern Party #BD8233 (48), Reform Coalition #AE3030 (35), Independent Group #2ABCCD (22). Stepped block boundaries. No axes or grid.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified (not pure black)
-      Chrome: Title in light (#F0EFE8), legend text in soft light gray (#B8B7B0). All text is light-colored and readable on dark surface. No dark-on-dark failures detected.
-      Data: Identical semicircular parliament layout. All data colors (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9) are IDENTICAL to light render – only chrome (title, legend, background, threshold line) flips to light colors. Seat dots remain clearly distinguishable with white edges providing definition. Majority threshold arc visible as dashed line. Central annotation remains visible. Legend structure unchanged.
-      Legibility verdict: PASS – All text is light-colored and readable against dark surface. No dark-on-dark issues. Data colors properly preserved from light theme.
-
-    Both renders pass legibility and theme-adaptive chrome requirements. Data colors (Okabe-Ito categorical palette) stay constant; only chrome elements adapt to theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title, centre total and legend text in light ink (#F0EFE8 / #B8B7B0); legend frame #242420 with light border; majority tick and label light grey. No dark-on-dark text.
+      Data: seat colors identical to the light render; only chrome flipped. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,46 +50,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        comment: Title 20 px, legend 11 px, majority label 12 px, total 18 px, all
+          set explicitly; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text and elements fully readable with no collisions
+        comment: No text collisions; majority tick and label sit outside the outer
+          arc, clear of seats
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Seat markers well-sized with white edges for definition
+        comment: 420 equal dots at size 11 fill 12 tight arcs; legend swatches visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast; colorblind-safe
+        comment: Imprint colors distinct; red and green blocks are not neighbours
+          and are named in the legend
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced layout with good margin usage and legend placement
+        comment: 3200x1800 canvas; half circle centred, legend below in a frame, nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: parliament-basic · plotly · anyplot.ai'
+        comment: 'N/A: layout-only chart with no axes; title is the mandated one'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series Okabe-Ito order; correct backgrounds
-          and theme-adaptive chrome'
+        comment: 'Imprint positions 1-6 in canonical order, first #009E73; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -101,20 +102,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default; lacks custom enhancements
+        comment: 'Style-guide baseline: theme tokens, Imprint, explicit sizes; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clean, subtle styling with good whitespace and no unnecessary elements
+        passed: false
+        comment: Spine/grid rules met (no axes); nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good narrative through layout and majority threshold context; could
-          add more emphasis
+        passed: false
+        comment: Data displayed; the majority tick is the optional element the Notes
+          allow, no hierarchy beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -124,28 +126,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct semicircular parliament chart
+        comment: Correct semicircular parliament chart; only the allowed majority
+          marker added
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: colors, seats, majority threshold, legend,
-          total annotation'
+        comment: Arcs left to right, one dot per seat, legend with counts, majority
+          marker at seat 211/212 boundary and labelled (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Seats correctly positioned and visible
+        comment: Each party's dot count equals its seat count; blocks contiguous in
+          angular order
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels with seat counts
+        comment: Title 'parliament-basic · python · plotly · anyplot.ai'; legend entries
+          'Party (seats)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -153,20 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of parliament visualization with varying party
-          sizes
+        comment: Six parties from 22 to 145 seats show large and small blocks and
+          stepped boundaries
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Neutral, realistic parliament scenario; non-controversial
+        passed: false
+        comment: Fictional chamber, but 'Progressive Alliance' carries an ideological-family
+          label (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 420 seats realistic; majority threshold correctly calculated
+        comment: 'Checked: 145+118+52+48+35+22 = 420 in the centre label, majority
+          211 = 420//2+1 computed in code'
     code_quality:
       score: 10
       max: 10
@@ -176,57 +183,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme → data → plot → save'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data generation
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, plotly, sys, os, site)
+        comment: os, numpy, pandas, plotly all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity; no fake functionality
+        comment: Vectorised layout, cumsum slices; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-{THEME}.png and .html'
+        comment: Writes plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Proper use of plotly.graph_objects and update_layout
+        passed: false
+        comment: graph_objects traces per party, scaleanchor/scaleratio for a true
+          circle, legend itemsizing constant
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses standard plotly features (hover, markers); could leverage more
-          distinctive capabilities
+        comment: Per-party hovertemplate for the HTML view; nothing else distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T05:58:08Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - hover-tooltips
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
+  - minimal-chrome
