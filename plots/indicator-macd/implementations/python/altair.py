@@ -1,141 +1,138 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-macd: MACD Technical Indicator Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-16
 """
 
-import importlib.util
 import os
-import sys
-from pathlib import Path
 
+import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Load altair from site-packages, bypassing the local altair.py file
-script_dir = Path(__file__).parent
-spec = importlib.util.find_spec("altair")
-if spec and spec.origin and "site-packages" in spec.origin:
-    alt = importlib.util.module_from_spec(spec)
-    sys.modules["altair"] = alt
-    spec.loader.exec_module(alt)
-else:
-    original_path = sys.path.copy()
-    sys.path = [p for p in sys.path if str(script_dir) not in p]
-    import altair as alt
-
-    sys.path = original_path
-
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Generate realistic stock price data and calculate MACD
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+POSITIVE = "Positive"  # histogram above zero
+NEGATIVE = "Negative"  # histogram below zero
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+MACD = "MACD (12, 26)"  # role: macd
+SIGNAL = "Signal (9)"  # role: signal
+HISTOGRAM = "Histogram (MACD - Signal)"  # role: histogram
+
+# Data: replace this block with your own table, for example df = pd.read_csv("macd.csv", parse_dates=[DATE])
 np.random.seed(42)
 n_days = 150
-
-# Generate a random walk with moderate trend for closing prices
+warmup = 26  # skip the days before the slow average is filled
 returns = np.random.normal(0.001, 0.015, n_days)
-price = 100 * np.cumprod(1 + returns)
-
-# Calculate EMAs using pandas
-ema_12 = pd.Series(price).ewm(span=12, adjust=False).mean().values
-ema_26 = pd.Series(price).ewm(span=26, adjust=False).mean().values
-macd_line = ema_12 - ema_26
-signal_line = pd.Series(macd_line).ewm(span=9, adjust=False).mean().values
-histogram = macd_line - signal_line
-
-# Create DataFrame with dates (skip first 26 days for meaningful MACD values)
-start_idx = 26
-dates = pd.date_range("2025-06-01", periods=n_days - start_idx, freq="D")
-
+price = pd.Series(100 * np.cumprod(1 + returns))
+macd_line = price.ewm(span=12, adjust=False).mean() - price.ewm(span=26, adjust=False).mean()
+signal_line = macd_line.ewm(span=9, adjust=False).mean()
 df = pd.DataFrame(
     {
-        "date": dates,
-        "macd": macd_line[start_idx:],
-        "signal": signal_line[start_idx:],
-        "histogram": histogram[start_idx:],
+        DATE: pd.date_range("2025-06-01", periods=n_days - warmup, freq="D"),
+        MACD: macd_line.values[warmup:],
+        SIGNAL: signal_line.values[warmup:],
+        HISTOGRAM: (macd_line - signal_line).values[warmup:],
     }
 )
 
-# Add color column for histogram
-df["hist_color"] = df["histogram"].apply(lambda x: "Positive" if x >= 0 else "Negative")
+# Plot
+sign = np.where(df[HISTOGRAM] >= 0, POSITIVE, NEGATIVE)
+bars_df = df.assign(Momentum=sign)
+lines_df = df.melt(id_vars=[DATE], value_vars=[MACD, SIGNAL], var_name="Line", value_name="Value")
+zero_df = pd.DataFrame({"zero": [0.0]})
 
-# Melt dataframe for line chart
-df_lines = df.melt(id_vars=["date"], value_vars=["macd", "signal"], var_name="line_type", value_name="value")
-
-# Map line types to labels
-line_labels = {"macd": "MACD (12, 26)", "signal": "Signal (9)"}
-df_lines["line_label"] = df_lines["line_type"].map(line_labels)
-
-# Create histogram chart with green/red coloring
-histogram_chart = (
-    alt.Chart(df)
-    .mark_bar(size=8)
+x_axis = alt.Axis(format="%b %Y", tickCount=6)
+bars = (
+    alt.Chart(bars_df)
+    .mark_bar(size=3.5)
     .encode(
-        x=alt.X("date:T", title="Date", axis=alt.Axis(labelFontSize=16, titleFontSize=20)),
-        y=alt.Y("histogram:Q", title="Value", axis=alt.Axis(labelFontSize=16, titleFontSize=20)),
+        x=alt.X(DATE.translate(ESCAPE), type="temporal", title=DATE, axis=x_axis),
+        y=alt.Y(HISTOGRAM.translate(ESCAPE), type="quantitative", title="MACD value (price units)"),
         color=alt.Color(
-            "hist_color:N",
-            scale=alt.Scale(domain=["Positive", "Negative"], range=["#2E7D32", "#C62828"]),
-            legend=alt.Legend(title="Histogram", labelFontSize=14, titleFontSize=16),
-        ),
-        tooltip=[alt.Tooltip("date:T", title="Date"), alt.Tooltip("histogram:Q", title="Histogram", format=".4f")],
-    )
-)
-
-# Create MACD and Signal line chart
-line_chart = (
-    alt.Chart(df_lines)
-    .mark_line(strokeWidth=3)
-    .encode(
-        x=alt.X("date:T", title="Date"),
-        y=alt.Y("value:Q", title="Value"),
-        color=alt.Color(
-            "line_label:N",
-            scale=alt.Scale(domain=["MACD (12, 26)", "Signal (9)"], range=["#4467A3", "#AE3030"]),
-            legend=alt.Legend(title="Lines", labelFontSize=14, titleFontSize=16),
-        ),
-        strokeDash=alt.StrokeDash(
-            "line_label:N", scale=alt.Scale(domain=["MACD (12, 26)", "Signal (9)"], range=[[0], [8, 4]]), legend=None
+            "Momentum",
+            type="nominal",
+            title="Histogram",
+            sort=None,
+            scale=alt.Scale(domain=[POSITIVE, NEGATIVE], range=[IMPRINT_PALETTE[0], IMPRINT_PALETTE[4]]),
         ),
         tooltip=[
-            alt.Tooltip("date:T", title="Date"),
-            alt.Tooltip("line_label:N", title="Line"),
-            alt.Tooltip("value:Q", title="Value", format=".4f"),
+            alt.Tooltip(DATE.translate(ESCAPE), type="temporal", title=DATE),
+            alt.Tooltip(HISTOGRAM.translate(ESCAPE), type="quantitative", title=HISTOGRAM, format=".3f"),
         ],
     )
 )
 
-# Create zero reference line
-zero_line = (
-    alt.Chart(pd.DataFrame({"y": [0]})).mark_rule(color=INK_SOFT, strokeWidth=1.5, strokeDash=[4, 4]).encode(y="y:Q")
+lines = (
+    alt.Chart(lines_df)
+    .mark_line(strokeWidth=2.2)
+    .encode(
+        x=alt.X(DATE.translate(ESCAPE), type="temporal", title=DATE, axis=x_axis),
+        y=alt.Y("Value", type="quantitative", title="MACD value (price units)"),
+        color=alt.Color(
+            "Line",
+            type="nominal",
+            title="Lines",
+            sort=None,
+            scale=alt.Scale(domain=[MACD, SIGNAL], range=[IMPRINT_PALETTE[2], IMPRINT_PALETTE[3]]),
+        ),
+        strokeDash=alt.StrokeDash(
+            "Line",
+            type="nominal",
+            sort=None,
+            scale=alt.Scale(domain=[MACD, SIGNAL], range=[[1, 0], [6, 3]]),
+            legend=None,
+        ),
+        tooltip=[
+            alt.Tooltip(DATE.translate(ESCAPE), type="temporal", title=DATE),
+            alt.Tooltip("Line", type="nominal", title="Line"),
+            alt.Tooltip("Value", type="quantitative", title="Value", format=".3f"),
+        ],
+    )
 )
 
-# Combine charts: histogram + lines + zero line
+zero_line = (
+    alt.Chart(zero_df)
+    .mark_rule(color=INK_SOFT, strokeWidth=1.2, strokeDash=[4, 3])
+    .encode(y=alt.Y("zero", type="quantitative"))
+)
+
+TITLE = "indicator-macd · python · altair · anyplot.ai"
 chart = (
-    alt.layer(histogram_chart, line_chart, zero_line)
+    alt.layer(bars, lines, zero_line)
+    .resolve_scale(color="independent")
     .properties(
-        width=1600,
-        height=900,
+        width=570,
+        height=360,
         background=PAGE_BG,
+        padding={"left": 8, "right": 8, "top": 8, "bottom": 8},
         title=alt.Title(
-            "indicator-macd · altair · anyplot.ai",
-            fontSize=28,
+            TITLE,
+            fontSize=15,
             anchor="middle",
             color=INK,
-            subtitle="MACD (12, 26, 9) - Moving Average Convergence Divergence",
-            subtitleFontSize=18,
+            subtitle="MACD parameters: fast EMA 12, slow EMA 26, signal EMA 9",
+            subtitleFontSize=11,
             subtitleColor=INK_SOFT,
         ),
     )
     .configure_axis(
-        labelFontSize=16,
-        titleFontSize=20,
+        labelFontSize=11,
+        titleFontSize=13,
         gridColor=INK,
         gridOpacity=0.10,
         domainColor=INK_SOFT,
@@ -143,19 +140,30 @@ chart = (
         labelColor=INK_SOFT,
         titleColor=INK,
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_legend(
-        labelFontSize=14,
-        titleFontSize=16,
+        labelFontSize=11,
+        titleFontSize=12,
         orient="right",
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
         labelColor=INK_SOFT,
         titleColor=INK,
+        padding=6,
     )
-    .resolve_scale(color="independent")
 )
 
-# Save outputs
-chart.save(str(script_dir / f"plot-{THEME}.png"), scale_factor=3.0)
-chart.save(str(script_dir / f"plot-{THEME}.html"))
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the 3200 x 1800 target
+TARGET_W, TARGET_H = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TARGET_W or h > TARGET_H:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TARGET_W}x{TARGET_H}; shrink width/height")
+if (w, h) != (TARGET_W, TARGET_H):
+    canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+    canvas.paste(img, ((TARGET_W - w) // 2, (TARGET_H - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
