@@ -12,40 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 68
 review:
   strengths:
-  - Excellent theme-adaptive implementation with perfect readability in both light
-    and dark renders
-  - Well-designed network visualization with clear hub-and-spoke structure
-  - Thoughtful offset logic for parallel routes minimizes visual overlap
-  - Professional color hierarchy by route type aids understanding and follows Okabe-Ito
-    standards
-  - All specification requirements met with high-quality, realistic transportation
-    data
-  - Clean, maintainable code with deterministic seeding and idiomatic plotnine usage
+  - Every station sits at its given coordinates and edges stop short of the nodes
+    so arrowheads stay visible
+  - Theme tokens flip the chrome correctly; data colors identical in both themes
   weaknesses:
-  - Edge label crowding on densest routes (unavoidable given data complexity)
-  - Design excellence could be elevated with additional visual refinement elements
+  - 'VQ-05 (both): the canvas is 4800x2700 → 3200x1800 (−1600 × −900). Likely cause:
+    plot.save with dpi=300 at figure_size=(16, 9) instead of 8x4.5 in at dpi 400.'
+  - 'VQ-02 (both): the labels of opposite-direction services (RE1, RE2, RE3, RE4,
+    AE1 pairs) print on top of each other and cannot be read → each label readable
+    on its own. Likely cause: the offset counts cumcount per ordered source/target
+    pair, so the return service gets offset 0 like the outbound one.'
+  - 'VQ-07 (both): the first route type is blue #4467A3 and the Regional routes use
+    #AE3030, the red loss anchor → Imprint positions 1-4 in data order starting with
+    #009E73. Likely cause: the hand-written route_colors dict.'
+  - 'SC-02 (both): opposite-direction services of a station pair share one line and
+    read as a single double-headed arrow (C5) → a separate offset or curved edge per
+    service, each with its own arrowhead and label. Likely cause: route_pairs grouped
+    by ordered (source, target) rather than the unordered pair.'
+  - 'DQ-02 (both): the stations are named Central, North, South, East, West, Northeast…
+    → real-sounding place names for a fictional network. Likely cause: the stations
+    label list.'
+  - 'CQ-01 (code): the file has no column-0 # Data marker → one block between column-0
+    # Data and # Plot markers that ends by binding df, with no plotting, styling or
+    theme token inside and no plotting call above it. Likely cause: the data generation
+    is not marked as one block.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title bold and centered in dark text (#1A1A17), station labels clear and readable, edge labels staggered with readable route IDs and times
-      Data: 12 stations with circular markers, 24 directed routes with arrows, color-coded by type (green #009E73 for S/Local, blue #0072B2 for RE/Express, orange #E69F00 for RB/Regional, vermillion #D55E00 for AE/Airport)
-      Legend: Right-aligned with clear labels on elevated light box
-      Legibility verdict: PASS - All text fully readable, no contrast issues
+      Background: warm off-white #FAF8F1, canvas 4800x2700, no axes.
+      Chrome: bold dark title at the top; 12 bold dark station names (Central hub, North, South, East, West, Northeast, Northwest, Southeast, Southwest, Airport, University, Industrial); 'Route Type' legend with a thin frame touching the right canvas edge. Text readable except where edge labels overprint each other.
+      Data: 24 directed edges with large closed arrowheads, colored RE blue #4467A3, RB red #AE3030, AE purple #C475FD, S green #009E73, with colored 'ID | hh:mm→hh:mm' labels. Opposite-direction services share one line, so pairs read as double-headed arrows; their labels are stacked on top of each other (RE1, RE2, RE3, RE4, AE1) and cannot be read.
+      Legibility verdict: FAIL (overprinted edge labels)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title and station labels rendered in light text (#F0EFE8), all readable against dark background, edge labels in light colors
-      Data: Route colors identical to light render (green, blue, orange, vermillion preserved), confirming theme-adaptive only chrome flips
-      Legend: Light text on dark elevated background box, excellent contrast
-      Legibility verdict: PASS - All text readable in light colors, no dark-on-dark failures detected
-
-    Both renders confirm: Data colors (positions 1-7) are identical between light and dark. Only chrome (background, text, legend frame) adapts. Both render themes achieve full legibility.
+      Background: warm near-black #1A1A17.
+      Chrome: title, station names and legend title in light ink, legend entries in soft grey; no dark-on-dark text.
+      Data: edge colors identical to the light render; the same stacked labels.
+      Legibility verdict: FAIL (overprinted edge labels)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 20
       max: 30
       items:
       - id: VQ-01
@@ -53,78 +61,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Title 24pt, station labels size 12,
-          edge labels size 9. All fully readable in both themes.
+        comment: Sizes set explicitly; text on its own is readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 1
         max: 6
-        passed: true
-        comment: Minimal overlap on crowded edges due to staggered label positioning.
-          Main elements (stations, routes) remain clear.
+        passed: false
+        comment: Labels of opposite-direction services print on top of each other
+          and are unreadable (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 12 stations and 24 routes optimally visible. Marker sizes adapt
-          well to layout density.
+        comment: Nodes, edges and arrowheads clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe. Excellent contrast between route type
-          categories.
+        comment: Distinct hue families plus text labels
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 16:9 format well-balanced. Plot fills 50-70% of canvas with generous
-          margins.
+        passed: false
+        comment: Canvas 4800x2700, not a required size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title formatted correctly (spec-id · python · plotnine · anyplot.ai).
-          Station labels serve as descriptive node identifiers.
+        comment: N/A for axes; station names are reader text
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series is #009E73. Multi-series follows Okabe-Ito order (green,
-          vermillion, blue, orange). Backgrounds #FAF8F1 (light) and #1A1A17 (dark)
-          correct. Theme chrome adapts correctly in both renders.'
+        passed: false
+        comment: First series is blue and the red loss anchor is an ordinary series
+          (defect line); backgrounds correct
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Intentional color hierarchy by route type. Clean, organized network
-          layout. Professional execution but not exceptionally innovative.
+        passed: false
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: theme_void() provides clean background. Understated, effective styling
-          with room for additional refinement.
+        passed: false
+        comment: theme_void baseline, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Hub-and-spoke structure visually apparent. Color coding reveals route
-          type patterns. Clear focal points with Central as the main hub.
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -132,30 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct directed network diagram with all required elements.
+        comment: Directed transport network
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All features present: station labels, directed edges with arrows,
-          edge labels with route ID and times, color-coding by type, offset routes
-          for multiple connections.'
+        passed: false
+        comment: 'C5 and C4 missed for opposite-direction pairs: shared line, unreadable
+          stacked labels (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Coordinates correctly mapped from station data. All stations and
-          routes visible.
+        comment: Stations at their coordinates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match route types.
+        comment: Mandated title; legend names the route types
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -163,79 +160,72 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all four route types (S, RE, RB, AE). Demonstrates hub-and-spoke
-          network structure with peripheral routes.
+        comment: Hub, branches and parallel services present
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Realistic regional rail network with plausible station names (Central,
-          North, Airport, University, etc.) and neutral business context.
+        passed: false
+        comment: Compass-point station names read generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Times factually plausible (morning service 06:00-10:35, 15-25 min
-          travel times, realistic hourly frequency).
+        comment: No check values; times ordered and 15-25 min legs
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Clean linear structure: imports → data → coordinate transformations
-          → plot definition → save. No unnecessary abstraction.'
+        passed: false
+        comment: 'No column-0 # Data marker (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic execution.
+        comment: Seeded, deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports. numpy, pandas, and plotnine used appropriately.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant offset logic for parallel routes. Thoughtful edge shortening
-          to avoid node overlap. No over-engineering or fake functionality.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300. Current API usage.
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Proper ggplot() + geom_* pattern. Correct use of aes(), scale_color_manual(),
-          theme customization. High-level API usage.
+        comment: Layered ggplot grammar
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: 'Uses plotnine strengths effectively: geom_segment() with arrow()
-          for directed edges, manual coordinate positioning, multiple geom layers,
-          theme_void() with custom element_rect/element_text. Strong demonstration
-          of library capabilities.'
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-bf70a1c05e
 impl_tags:
   dependencies: []
   techniques:
