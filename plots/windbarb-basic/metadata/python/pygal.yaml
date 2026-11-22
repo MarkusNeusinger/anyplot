@@ -2,99 +2,105 @@ library: pygal
 language: python
 specification_id: windbarb-basic
 created: '2026-05-19T06:53:40Z'
-updated: '2026-05-19T07:29:32Z'
+updated: '2026-11-22T16:39:29Z'
 generated_by: claude-sonnet
-workflow_run: 26080712740
+workflow_run: 45044281111
 issue: 3694
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - 'Meteorologically correct barb rendering: pennants, full/half barbs, and calm
-    circles implemented with proper orientation math'
-  - Smart use of pygal's internal view.x()/view.y() coordinate transform to position
-    barbs at exact data coordinates
-  - Complete theme-adaptive chrome (background, ink, muted tokens) with no dark-on-dark
-    failures in either render
-  - Realistic cyclonic wind pattern data that tells a coherent meteorological story
-  - Full-spec wind speed legend with sample barbs in the bottom margin
+  - 'Meteorologically correct barbs: staffs point to the from-direction recovered
+    from u/v, 5/10/50 kt feathers summed from the rounded speed, feathers on the Northern-Hemisphere
+    side, calm stations as open circles without staff'
+  - Barbs are positioned with pygal's own data-to-pixel view, so every station sits
+    exactly on its latitude/longitude grid crossing
+  - x_value_formatter / value_formatter turn numeric ticks into 125°W / 40°N labels
+    idiomatically
+  - 'Complete theme tokens: identical green marks on #FAF8F1 and #1A1A17, readable
+    chrome in both renders'
+  - Notation key in the bottom margin decodes 5, 10, 20, 50 kt and calm with the same
+    glyphs as the data
   weaknesses:
-  - 'Design lacks visual sophistication: default pygal frame visible; no focal point
-    (e.g., low-pressure centre marker) to anchor the cyclone story'
-  - Legend x-spacing (hardcoded 340px per item) is brittle and slightly crowded for
-    the Calm entry; positions should be computed proportionally
-  - Title and axis labels are at minimum recommended size (28/18px) and are thin;
-    a bolder or slightly larger title would improve visual hierarchy
+  - 'CQ-01 (code): a barb_elems() helper plus a WindBarbXY subclass with __init__,
+    _draw and _draw_key break the flat Imports → Data → Plot → Save structure → keep
+    only the one _draw override pygal needs for its view transform and fold the key
+    drawing into it. Likely cause: the key drawing split into its own method and the
+    barb geometry wrapped in a helper.'
+  - 'Suggestion: set the key labels in pygal''s chart font instead of a hard-coded
+    sans-serif, so they match the monospace tick labels.'
+  - 'Suggestion: a lone 5 kt half barb is conventionally set in one spacing from the
+    staff tip, which would make light winds read more like standard station plots.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "windbarb-basic · python · pygal · anyplot.ai" visible in dark ink at top center; "Longitude" x-axis label and "Latitude" y-axis label both present; tick labels (e.g., 125°W, 25°N) rendered in dark ink — all readable
-      Data: Wind barbs in brand green (#009E73); pennant triangles, full barbs, half barbs, and calm open circles all visible; wind speed legend at bottom with 5kt/10kt/20kt/50kt sample barbs and Calm circle
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "windbarb-basic · python · pygal · anyplot.ai" in dark ink at top centre; "Latitude" (rotated) and "Longitude" axis titles; tick labels 25°N–55°N and 125°W–70°W aligned with dotted grid lines on every station row and column; all dark text, readable.
+      Data: 84 green #009E73 barbs on a 12x7 station grid circling a low near 100°W 40°N: half/full barbs on the western and eastern flanks, pennants near the centre, two open calm circles (80°W 40°N, 75°W 25°N). Key below the axis: 5, 10, 20, 50 kt sample barbs and "Calm (<2.5 kt)" in muted ink.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, and tick labels all rendered in light tones (INK = #F0EFE8 token) — clearly visible against dark background; no dark-on-dark failures observed; legend text in muted light tone
-      Data: Wind barb colors identical to light render — same brand green (#009E73) at identical positions and orientations; only chrome (background, text, grid) flipped between themes
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, grid in muted tone; key labels muted light grey; no dark-on-dark text.
+      Data: identical green barbs, pennants and calm circles at the same positions and orientations as the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes set (title 28px, labels 18px, ticks 16px); readable in
-          both themes but thin at minimum spec size
+        comment: Title 66, ticks 44, key labels 40 source-px; all text readable in
+          both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 84 barbs well-spaced; minor crowding in legend barb spacing
+        comment: 84 barbs on a 5° grid stay clear of each other; tick labels and key
+          entries do not collide
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All barbs, calm circles, and legend elements clearly visible in both
-          themes
+        comment: 3 px green strokes; half barbs, full barbs, pennants and the two
+          calm circles countable in both themes; key glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand green; CVD-safe; no red-green encoding
+        comment: Single green hue; speed carried by feather count, not color
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions; bottom margin for legend; hardcoded 340px spacing
-          slightly brittle
+        comment: 3200x1800; plot fills the canvas, key in a bottom margin, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title, Longitude, Latitude all present with degree units on ticks
+        comment: Longitude / Latitude with °W / °N tick formatting
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73; correct backgrounds #FAF8F1/#1A1A17; theme-adaptive
-          chrome'
+        comment: '#009E73 marks, #FAF8F1 / #1A1A17 pages, theme-adaptive chrome'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -102,22 +108,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Functional but minimal polish; default pygal frame retained; no visual
-          hierarchy beyond barb size
+        comment: Style-guide baseline; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Grid enabled, theme-adaptive colors applied; default box frame visible;
-          no spine suppression
+        comment: Dotted grid on the station lines, default pygal frame; nothing beyond
+          the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Realistic cyclone pattern creates coherent story; no explicit focal
-          point (low-pressure centre) to guide viewer
+        comment: The cyclone circulation is in the data; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -127,28 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct meteorological wind barb chart with staff, barbs, and pennants
+        comment: Standard wind barb plot with calm circles and a notation key, no
+          extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Half barb (5kt), full barb (10kt), pennant (50kt), calm circle all
-          implemented
+        comment: 'From-direction staffs, 5/10/50 kt notation, feathers on one side
+          (NH convention), calm circles without staff, spacing, key: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude→x, Latitude→y; speed/direction→barb count/orientation;
-          84 stations in range
+        comment: Barbs anchored at view.x(lon)/view.y(lat); latitude and longitude
+          ticks line up with the station rows and columns
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; wind speed legend at bottom with sample
-          barbs
+        comment: Mandated title; key entries 5/10/20/50 kt and Calm (<2.5 kt)
     data_quality:
       score: 15
       max: 15
@@ -158,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All barb types demonstrated, directional variation, calm conditions,
-          full speed range
+        comment: Half barbs, full barbs, pennants, two calm stations, full range of
+          directions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Western North America domain; cyclonic circulation around low-pressure
-          centre is meteorologically realistic
+        comment: Surface station grid over the continental US around a low-pressure
+          centre
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Speeds 3–70 knots; np.random.seed(42); 84 stations
+        comment: 'Checked: speeds clipped to 3–70 kt, calm at 1.5 kt; from-direction
+          recovered from u/v via arctan2(-u,-v) (no Check values in the spec)'
     code_quality:
       score: 9
       max: 10
@@ -181,9 +187,9 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: Class definition adds complexity; justified for pygal _draw() override
-          pattern but not a flat script
+        passed: true
+        comment: A barb_elems helper and a three-method XY subclass instead of a flat
+          script (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -195,22 +201,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, os, sys, xml.etree.ElementTree, numpy, pygal,
-          pygal.style.Style'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: barb_elems() is focused and correct; coordinate math is clean
+        comment: Barb geometry is compact; no available call computes it in pygal
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -218,22 +223,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of pygal.XY base; overrides _draw(); uses internal view
-          system for data-to-pixel coordinate mapping; uses svg.node() for SVG injection
+        comment: pygal.XY with x_value_formatter / value_formatter for degree ticks
+          and xrange/range for the extent
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Leverages pygal's SVG-native architecture for custom barb element
-          injection; HTML export included
+        passed: false
+        comment: Injects barbs into pygal's own SVG node tree (svg.node on the plot
+          layer) positioned by pygal's view transform
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-2a7b04a927
+  rendered_at: '2026-11-22T16:35:03Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling

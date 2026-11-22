@@ -1,10 +1,9 @@
 #' anyplot.ai
 #' windbarb-basic: Wind Barb Plot for Meteorological Data
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 86/100 | Created: 2026-05-19
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 82/100 | Updated: 2026-11-22
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -141,10 +140,10 @@ station_pts <- data.frame(x = stations$lon, y = stations$lat)
 # --- Plot --------------------------------------------------------------------
 p <- ggplot() +
   geom_point(data = station_pts, aes(x = x, y = y),
-             color = BARB_COLOR, size = 1.4, alpha = 0.9) +
+             color = BARB_COLOR, size = 0.8, alpha = 0.9) +
   geom_segment(data = barb_segs,
                aes(x = x, y = y, xend = xend, yend = yend),
-               color = BARB_COLOR, linewidth = 1.2, lineend = "round")
+               color = BARB_COLOR, linewidth = 0.6, lineend = "round")
 
 if (!is.null(pennants) && nrow(pennants) > 0) {
   p <- p + geom_polygon(data = pennants, aes(x = x, y = y, group = pen_id),
@@ -153,12 +152,10 @@ if (!is.null(pennants) && nrow(pennants) > 0) {
 
 if (!is.null(calm_pts) && nrow(calm_pts) > 0) {
   p <- p + geom_point(data = calm_pts, aes(x = x, y = y),
-                       shape = 1, color = BARB_COLOR, size = 5, stroke = 1.5)
+                       shape = 1, color = BARB_COLOR, size = 3, stroke = 0.8)
 }
 
 p <- p +
-  annotate("text", x = cx, y = cy, label = "L",
-           color = INK, size = 10, fontface = "bold") +
   scale_x_continuous(breaks = seq(-80, -60, by = 5),
                      labels = function(x) paste0(abs(x), "°W")) +
   scale_y_continuous(breaks = seq(35, 45, by = 5),
@@ -170,20 +167,20 @@ p <- p +
     x        = "Longitude",
     y        = "Latitude"
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major = element_line(color = GRID_COLOR, linewidth = 0.3),
+    panel.grid.major = element_line(color = GRID_COLOR, linewidth = 0.2),
     panel.grid.minor = element_blank(),
     panel.border     = element_blank(),
-    axis.line        = element_line(color = INK_SOFT, linewidth = 0.4),
-    axis.ticks       = element_line(color = INK_SOFT, linewidth = 0.3),
-    axis.title       = element_text(color = INK,       size = 20),
-    axis.text        = element_text(color = INK_SOFT,  size = 16),
-    plot.title       = element_text(color = INK,       size = 22, face = "bold"),
-    plot.subtitle    = element_text(color = INK_MUTED, size = 16),
-    plot.margin      = margin(t = 20, r = 20, b = 15, l = 15)
+    axis.line        = element_line(color = INK_SOFT, linewidth = 0.25),
+    axis.ticks       = element_line(color = INK_SOFT, linewidth = 0.2),
+    axis.title       = element_text(color = INK,       size = 10),
+    axis.text        = element_text(color = INK_SOFT,  size = 8),
+    plot.title       = element_text(color = INK,       size = 12, face = "bold"),
+    plot.subtitle    = element_text(color = INK_MUTED, size = 8),
+    plot.margin      = margin(t = 10, r = 10, b = 8, l = 8)
   )
 
 # --- Save --------------------------------------------------------------------
@@ -191,8 +188,8 @@ ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
