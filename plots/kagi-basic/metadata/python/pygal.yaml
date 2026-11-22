@@ -2,122 +2,132 @@ library: pygal
 language: python
 specification_id: kagi-basic
 created: '2026-01-08T22:59:40Z'
-updated: '2026-05-17T08:17:03Z'
-generated_by: claude-haiku
-workflow_run: 25985367896
+updated: '2026-11-22T03:54:36Z'
+generated_by: claude-sonnet
+workflow_run: 44982226081
 issue: 3341
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/pygal/plot-dark.html
-quality_score: 93
+quality_score: 81
 review:
   strengths:
-  - Perfect text legibility in both themes with explicitly sized fonts
-  - Correct Kagi algorithm implementation with proper yang/yin semantics
-  - Excellent theme-adaptive styling using all design tokens correctly
-  - Clear visual differentiation between bullish (thick green) and bearish (thin orange)
-    segments
-  - Proper use of Okabe-Ito palette and theme-correct backgrounds
-  - Well-constructed manual legend showing line style differences
-  - Clean, deterministic code with proper randomization control
+  - 'Correct Kagi construction from closing prices with a 4% reversal: 25 columns
+    stepping one even index per reversal, joined by horizontal shoulders and waists'
+  - 'Thickness and color agree throughout: 12 px green #009E73 yang vs 4 px red #AE3030
+    yin, clearly distinct in both themes'
+  - 'Theme tokens threaded through pygal Style; all chrome readable on #FAF8F1 and
+    #1A1A17'
+  - Explicit y range reserves headroom so the weight legend never covers the line
+  - 'Adaptable structure: column constants and a Data block ending in df, reading
+    prices from df[CLOSE]'
   weaknesses:
-  - CSS override for stroke widths is a workaround rather than native pygal solution,
-    though necessary for precise control
+  - 'SC-02 (both): each column is drawn in a single weight, so the line switches thick/thin
+    at the start of the column (and on the preceding horizontal) instead of where
+    it crosses the previous shoulder or waist (e.g. column 4 is thick from 80.5 although
+    it only rises above the 85.2 shoulder of column 2; column 7 is thin from 89 although
+    it only falls below the 84.5 waist at the crossing) → split the vertical segment
+    at the previous shoulder/waist price and draw the part before the crossing in
+    the old weight (C2). Likely cause: one ''type'' per column dict and one segment
+    per column in the segments loop.'
+  - 'VQ-01 (both): the ''100'' y tick renders at 44 px as a pygal major label while
+    the other y ticks render at 56 px, so one tick reads smaller than its neighbours
+    → the same size for all ticks (+12 px on ''100''). Likely cause: major_label_font_size=44
+    below label_font_size=56.'
+  - 'Suggestion: add the manual weight legend to the HTML export too (it is only injected
+    into the PNG''s SVG).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) providing excellent contrast for data visualization.
-      Chrome: Title "kagi-basic · pygal · anyplot.ai", Y-axis label "Price ($)", X-axis label "Kagi Line Index" all clearly visible in dark text against light background. Tick labels on both axes readable without any crowding.
-      Data: Green (#009E73) thick lines represent yang (bullish) segments, orange (#D55E00) thin lines represent yin (bearish) segments. Horizontal shoulder/waist segments clearly visible connecting vertical price movements. Data colors are Okabe-Ito compliant (position 1 = green, position 2 = orange).
-      Legibility verdict: PASS - All elements fully readable with excellent contrast and no overlaps.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "kagi-basic · python · pygal · anyplot.ai" centered at the top (~50% width); y-axis "Close price ($)", x-axis "Kagi line index", ticks 80-120 and 0-24 in dark ink; dashed subtle horizontal grid; the "100" tick is visibly smaller than its neighbours. Legend panel top right: thick green "Yang (bullish) · thick", thin red "Yin (bearish) · thin".
+      Data: one Kagi line of 25 columns; yang drawn thick in #009E73, yin thin in #AE3030, joined by horizontal shoulders and waists. Opens with a yang rise 101->110, a long yin fall to 80, alternating thick/thin swings rising to ~116, then yin and a closing yang segment near 109.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) with no dark-on-dark issues.
-      Chrome: All text elements (title, axis labels, tick labels) rendered in light color with clear visibility against dark background. Grid lines subtly visible without overwhelming the plot.
-      Data: Green and orange data colors are identical to light render—only the chrome (background, text, grid) has adapted for the dark theme. All line segments clearly distinguishable. Horizontal segments properly visible.
-      Legibility verdict: PASS - All text and data elements readable on dark background with proper contrast and no dark-on-dark failures.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, all readable; grid faint but visible; legend panel on #242420 with light text. No dark-on-dark text.
+      Data: identical line and identical colors (#009E73 / #AE3030) to the light render; only chrome flipped. Green stays clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, labels 22pt, major 18pt).
-          Perfect readability in both themes.
+        comment: All text explicitly sized and readable in both themes; the '100'
+          y tick renders as a pygal major label at 44 px beside the other ticks at
+          56 px (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. All elements have proper spacing.
+        comment: No collisions; the legend sits in reserved headroom above the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Line widths perfectly adapted: yang 18px (thick), yin 4px (thin).
-          All segments clearly visible.'
+        comment: Thick 12 px yang and thin 4 px yin lines clearly visible on both
+          surfaces; legend line samples match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with colorblind-safe colors. Adequate contrast
-          throughout.
+        comment: Green/red pair is redundantly encoded by line weight, so CVD readers
+          lose nothing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions at 4800x2700. Generous margins (100px). Nothing
-          cut off.
+        comment: 3200x1800 canvas, balanced margins, title ~50% width, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format. Axis labels descriptive with units (Price
-          $).
+        comment: '''Close price ($)'' with unit and ''Kagi line index'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First color #009E73 (brand green). Second #D55E00 (Okabe-Ito pos
-          2). Backgrounds correct. Both renders theme-compliant.'
+        comment: 'Yang #009E73, yin Imprint red #AE3030, backgrounds #FAF8F1 / #1A1A17,
+          data colors identical in both renders'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Custom style with theme tokens, manual legend. Solid design beyond
-          defaults.
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good refinement: subtle grid, generous whitespace, manual legend
-          styling.'
+        comment: Y range explicitly extended (+14% headroom) so the legend panel never
+          covers the line; round line caps join the segments cleanly
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear trend reversals, visual hierarchy through line thickness. Guides
-          viewer effectively.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,28 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kagi chart with vertical lines of varying thickness.
+        comment: Basic Kagi line only, no extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features present: thick yang, thin yin, shoulder/waist segments,
-          4% reversal, 300 days.'
+        comment: Thick/thin yang/yin, shoulders and waists, 4% reversal present; the
+          thickness change happens at the start of a column instead of where the line
+          crosses the previous shoulder/waist (C2, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis = Kagi index (appropriate for time-independent chart). Y-axis
-          = price. All data visible.
+        comment: X = Kagi line index, Y = price; all columns visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend clearly labels Yang (Bullish) and Yin
-          (Bearish).
+        comment: Title 'kagi-basic · python · pygal · anyplot.ai'; legend labels Yang/Yin
+          with weight samples
     data_quality:
       score: 15
       max: 15
@@ -156,19 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple trend reversals, clear patterns, rich Kagi structure.
+        comment: 25 columns with several yang/yin switches, shoulders and waists
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price data with 4% reversal is realistic and neutral.
+        comment: 300 business days of stock closes, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $70-$116, 300-day period, 4% threshold all sensible.
+        comment: 'Checked: reversals in the render all exceed 4% (e.g. col 22->23
+          108.4->102.2 = -5.7%, col 17->18 106.5->112.6 = +5.7%); prices $80-$116
+          plausible'
     code_quality:
       score: 10
       max: 10
@@ -178,50 +190,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward single-file script, no unnecessary abstraction.
+        comment: Linear script with column constants and a Data block binding df
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pygal, cairosvg.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Correct Kagi algorithm, proper SVG rendering, no fake functionality.
+        comment: Kagi construction has no library call to replace it; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY appropriately, custom Style with tokens. CSS override
-          is pragmatic for precision.
+        comment: pygal.XY with Style object and per-series stroke_style; CSS override
+          needed for widths
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
         passed: true
-        comment: Creative use of XY chart for Kagi, manual legend on SVG, CSS control
-          for stroke widths.
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-22T03:50:25Z'
 impl_tags:
   dependencies:
   - cairosvg
@@ -230,7 +244,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
   styling:
-  - dark-theme
+  - grid-styling
