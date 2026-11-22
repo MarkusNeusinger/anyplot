@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-text: Scatter Plot with Text Labels Instead of Points
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-17
@@ -20,144 +20,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per sector in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Stock symbols positioned by market metrics (market cap vs growth similarity)
-np.random.seed(42)
-
-stocks = [
-    "AAPL",
-    "MSFT",
-    "GOOGL",
-    "AMZN",
-    "NVDA",
-    "TSLA",
-    "META",
-    "NFLX",
-    "COIN",
-    "RIOT",
-    "JPM",
-    "BAC",
-    "GS",
-    "WFC",
-    "XOM",
-    "CVX",
-    "JNJ",
-    "PFE",
-    "AbbV",
-    "MRK",
-    "WMT",
-    "TGT",
-    "AZO",
-    "HD",
-]
-
-# Generate well-separated coordinates (simulating market embedding)
-base_x = np.array(
-    [
-        -2.5,
-        -2.0,
-        -2.2,
-        -2.8,
-        -1.8,
-        -1.2,
-        -1.5,
-        -0.8,
-        0.2,
-        1.2,
-        2.5,
-        2.8,
-        3.2,
-        3.0,
-        -0.5,
-        0.3,
-        1.5,
-        1.8,
-        2.0,
-        2.3,
-        0.8,
-        1.0,
-        2.5,
-        0.2,
-    ]
-)
-
-base_y = np.array(
-    [
-        3.5,
-        3.2,
-        2.8,
-        3.8,
-        4.0,
-        3.0,
-        2.5,
-        2.2,
-        1.8,
-        0.5,
-        -3.0,
-        -3.5,
-        -2.8,
-        -3.2,
-        -2.5,
-        -2.0,
-        -1.5,
-        -1.2,
-        -0.8,
-        -1.0,
-        1.0,
-        0.3,
-        1.5,
-        0.8,
-    ]
-)
-
-# Add small jitter to prevent exact overlaps
-x = base_x + np.random.uniform(-0.15, 0.15, len(base_x))
-y = base_y + np.random.uniform(-0.15, 0.15, len(base_y))
-
-# Define sectors for coloring
-sectors = [
-    "Technology",
-    "Technology",
-    "Technology",
-    "Technology",
-    "Technology",
-    "Technology",
-    "Technology",
-    "Technology",
-    "Cryptocurrency",
-    "Cryptocurrency",
-    "Finance",
-    "Finance",
-    "Finance",
-    "Finance",
-    "Energy",
-    "Energy",
-    "Healthcare",
-    "Healthcare",
-    "Healthcare",
-    "Healthcare",
-    "Retail",
-    "Retail",
-    "Retail",
-    "Retail",
-]
-
-# Create DataFrame
-df = pd.DataFrame({"x": x, "y": y, "ticker": stocks, "sector": sectors})
-
-# Map sectors to Okabe-Ito colors
-sector_color_map = {
-    "Technology": IMPRINT[0],
-    "Cryptocurrency": IMPRINT[1],
-    "Finance": IMPRINT[2],
-    "Energy": IMPRINT[3],
-    "Healthcare": IMPRINT[4],
-    "Retail": IMPRINT[5],
-}
-
-# Set seaborn theme with theme-adaptive colors
 sns.set_theme(
     style="ticks",
     rc={
@@ -170,65 +35,74 @@ sns.set_theme(
         "ytick.color": INK_SOFT,
         "grid.color": INK,
         "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Create figure and axis
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Columns: set these to your table's column names
+DIM1 = "Market Cap Similarity (Dim 1)"  # role: x
+DIM2 = "Growth Profile (Dim 2)"  # role: y
+TICKER = "Ticker"  # role: label
+SECTOR = "Sector"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("embedding.csv")
+rng = np.random.default_rng(42)
+tickers = [
+    "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "TSLA", "META", "NFLX",
+    "COIN", "RIOT",
+    "JPM", "BAC", "GS", "WFC",
+    "XOM", "CVX",
+    "JNJ", "PFE", "AbbV", "MRK",
+    "WMT", "TGT", "AZO", "HD",
+]  # fmt: skip
+base_x = np.array(
+    [-2.5, -2.0, -2.2, -2.8, -1.8, -1.2, -1.5, -0.8, 0.2, 1.2, 2.5, 2.8]
+    + [3.2, 3.0, -0.5, 0.3, 1.5, 1.8, 2.0, 2.3, 0.8, 1.0, 2.5, 0.2]
+)
+base_y = np.array(
+    [3.5, 3.2, 2.8, 3.8, 4.0, 3.0, 2.5, 2.2, 1.8, 0.5, -3.0, -3.5]
+    + [-2.8, -3.2, -2.5, -2.0, -1.5, -1.2, -0.8, -1.0, 1.0, 0.3, 1.5, 0.8]
+)
+df = pd.DataFrame(
+    {
+        DIM1: base_x + rng.uniform(-0.15, 0.15, len(base_x)),
+        DIM2: base_y + rng.uniform(-0.15, 0.15, len(base_y)),
+        TICKER: tickers,
+        SECTOR: ["Technology"] * 8 + ["Cryptocurrency"] * 2 + ["Finance"] * 4 + ["Energy"] * 2
+        + ["Healthcare"] * 4 + ["Retail"] * 4,
+    }
+)  # fmt: skip
+
+# Plot: reads only df and the constants above
+sectors = list(dict.fromkeys(df[SECTOR]))
+sector_color = {sector: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, sector in enumerate(sectors)}
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot text labels at each coordinate position
-for _, row in df.iterrows():
-    color = sector_color_map[row["sector"]]
+# Each label is anchored at its exact (x, y) value; translucency keeps overlaps readable
+for x, y, ticker, sector in zip(df[DIM1], df[DIM2], df[TICKER], df[SECTOR], strict=True):
     ax.text(
-        row["x"],
-        row["y"],
-        row["ticker"],
-        fontsize=20,
-        fontweight="bold",
-        ha="center",
-        va="center",
-        color=color,
-        alpha=0.85,
+        x, y, ticker, fontsize=9, fontweight="bold", ha="center", va="center", color=sector_color[sector], alpha=0.9
     )
 
-# Styling
-ax.set_xlabel("Market Cap Similarity (Dim 1)", fontsize=20, color=INK)
-ax.set_ylabel("Growth Profile (Dim 2)", fontsize=20, color=INK)
-ax.set_title("scatter-text · Python · seaborn · anyplot.ai", fontsize=24, color=INK)
+# Style
+ax.set_xlabel(DIM1, fontsize=10)
+ax.set_ylabel(DIM2, fontsize=10)
+ax.set_title("scatter-text · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium")
+ax.tick_params(axis="both", labelsize=8)
+ax.yaxis.grid(True, linewidth=0.8)
+sns.despine(ax=ax)
 
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
-
-# Subtle grid
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
-
-# Create legend with sector colors
 legend_elements = [
-    Line2D([0], [0], marker="o", color="w", markerfacecolor=color, markersize=10, label=sector)
-    for sector, color in sector_color_map.items()
+    Line2D([0], [0], marker="o", color="none", markerfacecolor=color, markersize=6, label=sector)
+    for sector, color in sector_color.items()
 ]
-ax.legend(
-    handles=legend_elements,
-    title="Sector",
-    loc="upper left",
-    framealpha=0.95,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
-    fontsize=14,
-    title_fontsize=16,
-)
+ax.legend(handles=legend_elements, title=SECTOR, loc="lower left", framealpha=0.95, fontsize=8, title_fontsize=9)
 
-# Set axis limits with padding
-x_margin = 0.8
-y_margin = 0.8
-ax.set_xlim(x.min() - x_margin, x.max() + x_margin)
-ax.set_ylim(y.min() - y_margin, y.max() + y_margin)
+ax.set_xlim(df[DIM1].min() - 0.8, df[DIM1].max() + 0.8)
+ax.set_ylim(df[DIM2].min() - 0.8, df[DIM2].max() + 0.8)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
