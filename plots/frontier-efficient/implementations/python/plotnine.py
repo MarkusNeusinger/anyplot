@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-17
+Quality: 94/100 | Updated: 2026-11-22
 """
 
 import os
@@ -10,16 +10,19 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
     element_line,
     element_rect,
     element_text,
     geom_line,
     geom_point,
+    geom_text,
     ggplot,
     ggsave,
+    guide_colorbar,
+    guides,
     labs,
-    scale_color_cmap,
+    scale_color_gradient,
+    scale_shape_manual,
     theme,
     theme_minimal,
 )
@@ -32,97 +35,127 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
-# Data
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-n_assets = 5
-n_portfolios = 300
+# Constants
+RISK_FREE_RATE = 0.02  # annual risk-free rate used for the Sharpe ratio
 
-expected_returns = np.array([0.08, 0.12, 0.15, 0.10, 0.18])
-cov_matrix = np.array(
+# Columns: set these to your table's column names
+RISK = "Risk (annualized standard deviation)"  # role: risk
+RETURN = "Expected return (annualized)"  # role: return
+SHARPE = "Sharpe ratio"  # role: extra
+KIND = "Key portfolio"  # legend and label text of the two marked portfolios, not a column of df
+
+# Data: replace this block with your own table, for example df = pd.read_csv("portfolios.csv")
+rng = np.random.default_rng(2024)
+sector_returns = np.array([0.055, 0.065, 0.085, 0.105, 0.135, 0.150])  # utilities ... energy
+sector_vols = np.array([0.13, 0.14, 0.16, 0.20, 0.27, 0.33])
+sector_corr = np.array(
     [
-        [0.04, 0.01, 0.02, 0.01, 0.02],
-        [0.01, 0.09, 0.03, 0.02, 0.04],
-        [0.02, 0.03, 0.16, 0.04, 0.06],
-        [0.01, 0.02, 0.04, 0.06, 0.03],
-        [0.02, 0.04, 0.06, 0.03, 0.25],
+        [1.00, 0.55, 0.40, 0.35, 0.25, 0.20],
+        [0.55, 1.00, 0.50, 0.40, 0.30, 0.25],
+        [0.40, 0.50, 1.00, 0.50, 0.45, 0.30],
+        [0.35, 0.40, 0.50, 1.00, 0.60, 0.50],
+        [0.25, 0.30, 0.45, 0.60, 1.00, 0.35],
+        [0.20, 0.25, 0.30, 0.50, 0.35, 1.00],
     ]
 )
+sector_cov = sector_corr * np.outer(sector_vols, sector_vols)
+n_sectors = len(sector_returns)
 
-weights = np.random.dirichlet(np.ones(n_assets), size=n_portfolios)
+random_weights = rng.dirichlet(np.ones(n_sectors), size=220)
+random_returns = random_weights @ sector_returns
+random_risks = np.sqrt(np.einsum("ij,jk,ik->i", random_weights, sector_cov, random_weights))
 
-portfolio_returns = weights @ expected_returns
-portfolio_risks = np.sqrt(np.diag(weights @ cov_matrix @ weights.T))
-
-risk_free_rate = 0.03
-sharpe_ratios = (portfolio_returns - risk_free_rate) / portfolio_risks
-
-target_returns = np.linspace(min(expected_returns) + 0.01, max(expected_returns) - 0.01, 100)
-frontier_risks = []
-frontier_returns = []
-
-for target in target_returns:
-    constraints = [
-        {"type": "eq", "fun": lambda w: np.sum(w) - 1},
-        {"type": "eq", "fun": lambda w, t=target: w @ expected_returns - t},
-    ]
-    bounds = tuple((0, 1) for _ in range(n_assets))
-    result = minimize(
-        lambda w: w @ cov_matrix @ w,
-        np.ones(n_assets) / n_assets,
+frontier_targets = np.linspace(sector_returns.min(), sector_returns.max(), 80)
+frontier_risks, frontier_returns = [], []
+for target in frontier_targets:
+    fit = minimize(
+        lambda w: w @ sector_cov @ w,
+        np.full(n_sectors, 1 / n_sectors),
         method="SLSQP",
-        bounds=bounds,
-        constraints=constraints,
+        bounds=[(0, 1)] * n_sectors,
+        constraints=[
+            {"type": "eq", "fun": lambda w: w.sum() - 1},
+            {"type": "eq", "fun": lambda w, t=target: w @ sector_returns - t},
+        ],
     )
-    if result.success:
-        frontier_risks.append(np.sqrt(result.fun))
+    if fit.success:
+        frontier_risks.append(np.sqrt(fit.fun))
         frontier_returns.append(target)
 
-min_var_idx = np.argmin(frontier_risks)
-min_var_risk = frontier_risks[min_var_idx]
-min_var_return = frontier_returns[min_var_idx]
+# Keep the efficient branch only: from the minimum-variance portfolio upward
+frontier_risks = np.array(frontier_risks)
+frontier_returns = np.array(frontier_returns)
+efficient = frontier_returns >= frontier_returns[frontier_risks.argmin()]
+frontier_risks, frontier_returns = frontier_risks[efficient], frontier_returns[efficient]
 
-frontier_sharpe = [(r - risk_free_rate) / s for r, s in zip(frontier_returns, frontier_risks, strict=True)]
-max_sharpe_idx = np.argmax(frontier_sharpe)
-max_sharpe_risk = frontier_risks[max_sharpe_idx]
-max_sharpe_return = frontier_returns[max_sharpe_idx]
+df = pd.DataFrame(
+    {RISK: np.concatenate([random_risks, frontier_risks]), RETURN: np.concatenate([random_returns, frontier_returns])}
+)
+df[SHARPE] = (df[RETURN] - RISK_FREE_RATE) / df[RISK]
 
-df_portfolios = pd.DataFrame({"risk": portfolio_risks, "return": portfolio_returns, "sharpe": sharpe_ratios})
+# Plot: reads only df and the constants above
+# The frontier is the set of portfolios that no lower-risk portfolio beats on return
+by_risk = df.sort_values(RISK)
+best_below = by_risk[RETURN].cummax().shift(fill_value=-np.inf)
+is_frontier = by_risk[RETURN] > best_below
+frontier = by_risk[is_frontier]
+cloud = by_risk[~is_frontier]
 
-df_frontier = pd.DataFrame({"risk": frontier_risks, "return": frontier_returns})
+# Key portfolios chosen by rule: lowest risk on the frontier, highest Sharpe ratio on the frontier
+min_var = frontier.loc[frontier[RISK].idxmin()]
+max_sharpe = frontier.loc[frontier[SHARPE].idxmax()]
+marks = pd.DataFrame(
+    {
+        RISK: [min_var[RISK], max_sharpe[RISK]],
+        RETURN: [min_var[RETURN], max_sharpe[RETURN]],
+        KIND: ["Minimum variance", "Maximum Sharpe"],
+    }
+)
+label_offset = 0.012 * (df[RISK].max() - df[RISK].min())
 
-# Plot
+title = "frontier-efficient · python · plotnine · anyplot.ai"
+imprint_seq = (IMPRINT_PALETTE[0], IMPRINT_PALETTE[2])  # single-polarity Imprint ramp
+
 plot = (
     ggplot()
-    + geom_point(df_portfolios, aes(x="risk", y="return", color="sharpe"), size=3, alpha=0.6)
-    + geom_line(df_frontier, aes(x="risk", y="return"), color=IMPRINT[0], size=2.5)
-    + annotate("point", x=min_var_risk, y=min_var_return, color=IMPRINT[4], size=6, shape="s")
-    + annotate("point", x=max_sharpe_risk, y=max_sharpe_return, color=IMPRINT[4], size=6, shape="D")
-    + annotate("text", x=min_var_risk + 0.012, y=min_var_return, label="Min Var", size=14, ha="left", color=INK)
-    + annotate(
-        "text", x=max_sharpe_risk + 0.012, y=max_sharpe_return, label="Max Sharpe", size=14, ha="left", color=INK
+    + geom_point(cloud, aes(x=RISK, y=RETURN, color=SHARPE), size=2.2, alpha=0.75, stroke=0)
+    + geom_line(frontier, aes(x=RISK, y=RETURN), color=INK, size=1.6)
+    + geom_point(marks, aes(x=RISK, y=RETURN, shape=KIND), color=IMPRINT_PALETTE[4], fill=IMPRINT_PALETTE[3], size=4.5)
+    + geom_text(
+        marks,
+        aes(x=RISK, y=RETURN, label=KIND),
+        nudge_x=label_offset,
+        nudge_y=-label_offset * 0.6,
+        ha="left",
+        va="top",
+        size=8,
+        color=INK,
     )
-    + scale_color_cmap(cmap_name="viridis", name="Sharpe Ratio")
-    + labs(x="Risk (Standard Deviation)", y="Expected Return", title="frontier-efficient · plotnine · anyplot.ai")
+    + scale_color_gradient(low=imprint_seq[0], high=imprint_seq[1])
+    + scale_shape_manual(values={"Minimum variance": "s", "Maximum Sharpe": "D"})
+    + guides(shape="none", color=guide_colorbar(nbin=64))
+    + labs(title=title)
     + theme_minimal()
     + theme(
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
-        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.12),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.04),
         panel_border=element_rect(color=INK_SOFT, fill=None),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
+        plot_title=element_text(size=12, color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        figure_size=(16, 9),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
     )
 )
 
 # Save
-ggsave(plot, filename=f"plot-{THEME}.png", dpi=300, width=16, height=9)
+ggsave(plot, filename=f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
