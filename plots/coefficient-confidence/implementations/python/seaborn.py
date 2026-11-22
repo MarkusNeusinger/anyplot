@@ -1,7 +1,7 @@
 """ anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-18
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-22
 """
 
 import os
@@ -19,53 +19,12 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-SIGNIFICANT_COLOR = "#009E73"  # Okabe-Ito position 1 — brand green
-NEUTRAL_COLOR = INK_SOFT  # Adaptive neutral for non-significant
+# Imprint palette, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+SIGNIFICANT_COLOR = IMPRINT_PALETTE[0]  # brand green
+NEUTRAL_COLOR = INK_SOFT  # adaptive neutral for non-significant
 
-# Data: Regression coefficients from a housing price prediction model
-np.random.seed(42)
-
-variables = [
-    "Square Footage",
-    "Number of Bedrooms",
-    "Number of Bathrooms",
-    "Lot Size (acres)",
-    "Age of Home (years)",
-    "Distance to Downtown",
-    "School Rating",
-    "Crime Rate Index",
-    "Garage Spaces",
-    "Has Pool",
-    "Renovated Recently",
-    "Neighborhood Tier",
-]
-
-# Generate realistic regression coefficients
-coefficients = [0.45, 0.12, 0.18, 0.08, -0.15, -0.22, 0.25, -0.31, 0.09, 0.14, 0.11, 0.28]
-
-# Generate confidence intervals (wider for less certain estimates)
-ci_widths = [0.08, 0.15, 0.12, 0.18, 0.09, 0.14, 0.11, 0.16, 0.20, 0.13, 0.22, 0.10]
-ci_lower = [c - w for c, w in zip(coefficients, ci_widths, strict=True)]
-ci_upper = [c + w for c, w in zip(coefficients, ci_widths, strict=True)]
-
-# Determine significance (CI does not cross zero)
-significant = [not (low <= 0 <= high) for low, high in zip(ci_lower, ci_upper, strict=True)]
-
-# Create DataFrame
-df = pd.DataFrame(
-    {
-        "variable": variables,
-        "coefficient": coefficients,
-        "ci_lower": ci_lower,
-        "ci_upper": ci_upper,
-        "significant": significant,
-    }
-)
-
-# Sort by coefficient magnitude for easier comparison
-df = df.sort_values("coefficient", ascending=True).reset_index(drop=True)
-
-# Configure seaborn theme
+# Library setup
 sns.set_theme(
     style="ticks",
     rc={
@@ -83,52 +42,88 @@ sns.set_theme(
     },
 )
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
+# Column constants
+VARIABLE = "Predictor Variable"  # role: variable
+COEFFICIENT = "Coefficient Estimate (Standardized)"  # role: coefficient
+CI_LOWER = "CI lower"  # role: ci_lower
+CI_UPPER = "CI upper"  # role: ci_upper
+SIGNIFICANT = "Significant"  # role: significant
 
-# Assign colors based on significance
-colors = [SIGNIFICANT_COLOR if sig else NEUTRAL_COLOR for sig in df["significant"]]
+# Data: replace this block with your own table, for example df = pd.read_csv("coefficients.csv")
+# Regression coefficients from a housing price prediction model
+variables = [
+    "Square Footage",
+    "Number of Bedrooms",
+    "Number of Bathrooms",
+    "Lot Size (acres)",
+    "Age of Home (years)",
+    "Distance to Downtown",
+    "School Rating",
+    "Crime Rate Index",
+    "Garage Spaces",
+    "Has Pool",
+    "Renovated Recently",
+    "Neighborhood Tier",
+]
+coefficients = np.array([0.45, 0.12, 0.18, 0.08, -0.15, -0.22, 0.25, -0.31, 0.09, 0.14, 0.11, 0.28])
+ci_widths = np.array([0.08, 0.15, 0.12, 0.18, 0.09, 0.14, 0.11, 0.16, 0.20, 0.13, 0.22, 0.10])
+df = pd.DataFrame(
+    {
+        VARIABLE: variables,
+        COEFFICIENT: coefficients,
+        CI_LOWER: coefficients - ci_widths,
+        CI_UPPER: coefficients + ci_widths,
+    }
+)
+df[SIGNIFICANT] = (df[CI_LOWER] > 0) | (df[CI_UPPER] < 0)
 
-# Plot error bars (confidence intervals)
-y_positions = np.arange(len(df))
-for i, row in df.iterrows():
-    color = SIGNIFICANT_COLOR if row["significant"] else NEUTRAL_COLOR
-    ax.hlines(y=i, xmin=row["ci_lower"], xmax=row["ci_upper"], color=color, linewidth=3, alpha=0.7)
+# Plot
+# Order by coefficient so the largest effect sits at the top
+df = df.sort_values(COEFFICIENT, ascending=True).reset_index(drop=True)
+df["row"] = np.arange(len(df))
+point_colors = {True: SIGNIFICANT_COLOR, False: NEUTRAL_COLOR}
 
-# Plot coefficient points
-scatter_df = df.copy()
-scatter_df["y_pos"] = y_positions
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
+# Confidence-interval bars, one per row, colored by significance
+ax.hlines(
+    y=df["row"],
+    xmin=df[CI_LOWER],
+    xmax=df[CI_UPPER],
+    colors=df[SIGNIFICANT].map(point_colors).tolist(),
+    linewidth=1.8,
+    alpha=0.7,
+)
+
+# Point estimates
 sns.scatterplot(
-    data=scatter_df,
-    x="coefficient",
-    y="y_pos",
-    hue="significant",
-    palette={True: SIGNIFICANT_COLOR, False: NEUTRAL_COLOR},
-    s=400,
+    data=df,
+    x=COEFFICIENT,
+    y="row",
+    hue=SIGNIFICANT,
+    hue_order=[False, True],
+    palette=point_colors,
+    s=110,
     ax=ax,
-    legend=True,
     zorder=5,
 )
 
-# Add vertical reference line at zero
-ax.axvline(x=0, color=INK_SOFT, linewidth=2, linestyle="--", alpha=0.5, zorder=1)
+# Zero reference line
+ax.axvline(x=0, color=INK_SOFT, linewidth=1.2, linestyle="--", alpha=0.6, zorder=1)
 
-# Set y-axis labels to variable names
-ax.set_yticks(y_positions)
-ax.set_yticklabels(df["variable"], fontsize=16, color=INK)
+ax.set_yticks(df["row"], df[VARIABLE])
+ax.set_ylim(-0.7, len(df) - 0.3)
+ax.set_xlabel(COEFFICIENT, fontsize=10, color=INK)
+ax.set_ylabel(VARIABLE, fontsize=10, color=INK)
+ax.set_title("coefficient-confidence · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8)
+ax.grid(True, axis="x", alpha=0.10, linewidth=0.6, color=INK)
 
-# Styling
-ax.set_xlabel("Coefficient Estimate (Standardized)", fontsize=20, color=INK)
-ax.set_ylabel("Predictor Variable", fontsize=20, color=INK)
-ax.set_title("coefficient-confidence · python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT)
-ax.grid(True, axis="x", alpha=0.10, linewidth=0.8, color=INK)
+# Legend: hue_order is [False, True]
+handles, _ = ax.get_legend_handles_labels()
+ax.legend(
+    handles, ["CI includes zero", "CI excludes zero (significant)"], fontsize=8, loc="lower right", framealpha=0.95
+)
 
-# Update legend with correct label order
-handles, labels = ax.get_legend_handles_labels()
-ax.legend(handles, ["Not Significant", "Significant (p < 0.05)"], fontsize=14, loc="lower right", framealpha=0.95)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.22, right=0.97, top=0.92, bottom=0.14)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

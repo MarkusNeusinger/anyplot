@@ -2,46 +2,44 @@ library: plotly
 language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:49:37Z'
-updated: '2026-05-18T12:34:17Z'
-generated_by: claude-haiku
-workflow_run: 26033027981
+updated: '2026-11-22T13:02:30Z'
+generated_by: claude-sonnet
+workflow_run: 45024795661
 issue: 3576
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Perfect visual quality with excellent text legibility in both light and dark themes
-  - Flawless spec compliance with all required features correctly implemented
-  - Excellent theme-adaptive implementation with proper use of all theme tokens
-  - Reproducible and realistic data with housing price regression context
-  - Strong technical execution with proper font sizing and clean Plotly idioms
-  - Clear visual hierarchy through color and marker style for significance distinction
+  - 'Significance is double-encoded (solid #009E73 vs hollow neutral ring), so it
+    reads in both themes and under colour-vision deficiency'
+  - Hollow markers are filled with the page colour, so the interval line breaks cleanly
+    behind the estimate
+  - Rows ordered by coefficient via categoryorder='array'; the axis range is derived
+    from the CI extremes rather than typed in
+  - customdata + hovertemplate expose each estimate with its 95% CI in the interactive
+    HTML
+  - Full-height dashed INK zero line stands clearly apart from the subtle grid in
+    both renders
   weaknesses:
-  - Design Excellence could improve with top/right spine removal for cleaner aesthetic
-  - Library Mastery uses standard Plotly features without advanced interactive capabilities
+  - 'Suggestion: the per-row interval traces could become one trace per significance
+    group with native error_x (array/arrayminus), which also draws the caps'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title (28px dark text), axis labels (22px dark), tick labels (18px gray) — all clearly readable against light surface ✓
-      Data: Filled green circles (#009E73) for significant coefficients, open gray circles for non-significant, horizontal error bars showing 95% CIs ✓
-      Legend: Horizontal, centered above plot, clearly labeled ✓
-      Grid: Subtle, not dominant ✓
-      Layout: Generous margins (left: 200px), no overlapping text, good spacing ✓
+      Background: warm off-white #FAF8F1 across paper and plot area, 3200x1800.
+      Chrome: title 'coefficient-confidence · python · plotly · anyplot.ai' centred in near-black; framed horizontal legend below it ('Significant (CI excludes zero)', 'Not significant'); y-axis 'Predictor variable' with 12 variable names in soft ink; x-axis 'Coefficient estimate (standardized)' with ticks -0.4..0.6; subtle grid; left and bottom axis lines only. All text readable.
+      Data: 12 rows ordered by coefficient (Square Footage top, Distance to City Center bottom); six significant estimates as solid #009E73 dots with green intervals and caps, six non-significant as hollow dark-grey rings with grey intervals; dashed near-black zero line runs the full height.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title (light text), axis labels (light), tick labels (light gray #B8B7B0) — all readable against dark surface with proper contrast ✓
-      Data: Green circles (#009E73) and gray circles identical to light render (only chrome changed) ✓
-      Legend: Horizontal, clearly readable ✓
-      Grid: Subtle, visible on dark surface ✓
-      Layout: Identical to light version, well-spaced ✓
-      Legibility verdict: PASS — No dark-on-dark text failures; all elements have proper contrast
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels and legend text in light grey, legend on the elevated dark surface; no dark-on-dark text.
+      Data: identical #009E73 for significant rows; non-significant rings and intervals switch to the light INK_SOFT; zero line in light ink, clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,70 +50,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title 28px, axis labels 22px, ticks 18px) explicitly sized
-          and readable in both themes
+        comment: 'Title 16 px, axis titles 12 px, ticks and legend 10 px at scale
+          4: the style-guide reference sizes, readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Generous left margin (200px); no overlapping elements
+        comment: No text collides with text or data; the legend sits clear between
+          the title and the plot area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bars (width 4), end caps (size 16), points (size 18) clearly
-          distinguishable
+        comment: '12 sparse rows: 10 px markers, 2 px interval lines with line-ns
+          end caps, all clearly visible; legend glyphs match the marks in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Okabe-Ito position 1); gray alternative colorblind-safe'
+        comment: Significance is carried by fill (solid vs hollow) as well as hue
+          (green vs neutral ink), so it survives colour-vision deficiency
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper 4800×2700; good proportions; nothing cut off
+        comment: 3200x1800 canvas; title about 44% of the width, balanced axis titles,
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axes descriptive with units
+        comment: '''Coefficient estimate (standardized)'' names the effect measure;
+          ''Predictor variable'' on the category axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green identical light↔dark; backgrounds #FAF8F1/#1A1A17; theme-adaptive
-          chrome'
+        comment: 'Significant group in #009E73, non-significant in theme INK_SOFT;
+          backgrounds #FAF8F1 / #1A1A17; data colours identical across themes'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Manual error bar construction and refined legend placement show thoughtfulness;
-          no spine removal or advanced styling
+        comment: 'Clean style-guide baseline: typography hierarchy and theme tokens
+          as mandated, nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle grid and legend frame styling; but spines remain (top/right
-          not removed)
+        comment: Hollow markers are filled with the page colour so the interval line
+          breaks cleanly behind the estimate instead of running through the ring
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Clear visual hierarchy and sorting by magnitude; competent but unremarkable
+        comment: Non-significant coefficients are pushed back in neutral ink, making
+          the six significant effects the focal layer; the legend states the rule
+          ('CI excludes zero')
     spec_compliance:
       score: 15
       max: 15
@@ -125,26 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct coefficient plot; horizontal layout; all elements present
+        comment: Correct coefficient plot, horizontal layout, nothing unasked added
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Confidence intervals, significance distinction, zero reference line,
-          magnitude ordering all correct
+        comment: 'Zero reference line, horizontal CIs, significance by colour and
+          marker, magnitude ordering, effect-measure axis label: all Notes and C1-C5
+          bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: coefficients; Y: variables; axes span full range'
+        comment: Estimates at their values; x range derived from the CI extremes with
+          10% padding; every row shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format; legend labels clear
+        comment: Title in the mandated format; legend entries read 'Significant (CI
+          excludes zero)' / 'Not significant'
     data_quality:
       score: 15
       max: 15
@@ -154,20 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 variables; significance distinction; CIs; magnitude ordering
+        comment: 'Significant positives and negatives, non-significant intervals crossing
+          zero, varied widths: every aspect of the plot type shown'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price regression (real-world plausible, neutral)
+        comment: Housing-price regression with 12 plausible, neutral predictors
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coefficients [-0.28, 0.45]; SEs [0.04, 0.11]; x-axis [-0.6, 0.7]
-          sensible
+        comment: Standardized coefficients -0.28..0.45 with SEs 0.04-0.11 are sensible;
+          the spec has no Check values; checked that significance is computed from
+          the CI, not placed
     code_quality:
       score: 10
       max: 10
@@ -177,59 +186,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no unnecessary functions
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed (42), deterministic arrays
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects
+        comment: 'os, pandas, plotly.graph_objects: all used'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No simulations, appropriate complexity
+        comment: Appropriate complexity; no written-out algorithm or dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + .html
+        comment: Saves plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html;
+          current API, autosize=False
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Proper go.Figure(), add_trace(), add_vline(). Manual error bar construction
-          via Scatter traces appropriate
+        comment: Graph objects with explicit categoryorder='array' for the magnitude
+          order, add_vline for the null line, data-derived axis range
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses hovertemplate and add_vline; mostly standard usage without advanced
-          interactive features
-    total:
-      score: 87
-      max: 100
+        comment: customdata feeds a hovertemplate that shows the estimate and its
+          95% CI per coefficient in the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
+  rendered_at: '2026-11-22T12:58:50Z'
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
+  - layer-composition
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
+  - grid-styling
