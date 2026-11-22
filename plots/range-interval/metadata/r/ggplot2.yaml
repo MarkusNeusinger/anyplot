@@ -2,46 +2,48 @@ library: ggplot2
 language: r
 specification_id: range-interval
 created: '2026-05-18T10:55:06Z'
-updated: '2026-05-18T11:05:38Z'
-generated_by: claude-haiku
-workflow_run: 26028997536
+updated: '2026-11-22T12:51:05Z'
+generated_by: claude-sonnet
+workflow_run: 45023967239
 issue: 3577
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 83
 review:
   strengths:
-  - Perfect theme-readability in both light and dark renders with zero dark-on-dark
-    failures
-  - Idiomatic use of geom_linerange() with endpoint markers—exactly how ggplot2 implements
-    range visualization
-  - 'Flawless palette compliance: first series #009E73, backgrounds correct, theme-adaptive
-    chrome properly implemented'
-  - Clean, minimal design with thoughtful spine removal and subtle grid
-  - Excellent seasonal temperature data demonstrating feature coverage and realistic
-    context
-  - Proper explicit text sizing (24pt title, 20pt labels, 16pt ticks) ensuring readability
-    at full resolution
+  - geom_linerange() with ymin/ymax mapped to the two bounds draws each month as a
+    floating span on a shared temperature axis, not anchored at zero, which is the
+    native ggplot2 range geom
+  - Endpoint markers at min_temp and max_temp sit exactly on the bounds, so both ends
+    of every range read clearly in both themes
+  - 'Theme tokens thread through every chrome element: #FAF8F1/#1A1A17 backgrounds,
+    INK titles, INK_SOFT ticks, subtle y-grid only, and the #009E73 data color is
+    identical across both renders'
+  - Text sizes follow the ggplot2 reference exactly (title 12, axis titles 10, ticks
+    8 at dpi 400) on the canonical 3200x1800 canvas
+  - Months stay in chronological order, the logical order the Notes allow, and the
+    seasonal arc reads at a glance
   weaknesses:
-  - Design Excellence could be elevated through more sophisticated aesthetic choices
-    (custom typography, refined color interplay, or intentional visual hierarchy beyond
-    defaults)
+  - 'Suggestion: the endpoint dots share the line''s color and nearly merge into its
+    rounded caps, especially on the dark render; a slightly larger dot or a page-colored
+    outline would make the min/max markers read as distinct marks.'
+  - 'Suggestion: the unused ELEVATED_BG and INK_MUTED tokens could be dropped.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme-adaptive surface
-      Chrome: Title "range-interval · r · ggplot2 · anyplot.ai" in dark ink #1A1A17 at 24pt, fully readable. Axis labels "Month" and "Temperature (°C)" in dark ink at 20pt, clearly legible. Tick labels in secondary ink #4A4A44 at 16pt, all visible. Subtle horizontal grid lines in INK_SOFT (#4A4A44) at low opacity guide reading without competing with data.
-      Data: 12 vertical line ranges in Okabe-Ito #009E73 with 0.85 alpha, linewidth 5.5, clearly visible. Endpoint circles in identical #009E73 at size 3.5 with 0.95 alpha mark min/max bounds.
-      Legibility verdict: PASS — All text readable, no contrast failures, grid appropriately subtle.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas
+      Chrome: title "range-interval · r · ggplot2 · anyplot.ai" top-left in dark ink, about 45 % of the width; axis titles "Month" and "Temperature (°C)" in dark ink; tick labels Jan–Dec and -0/10/20/30 in soft dark grey; thin y grid lines at 0, 10, 20, 30; left y-axis line only. All readable.
+      Data: 12 vertical #009E73 line ranges, one per month in chronological order, each from the monthly minimum to the maximum (Jan -2 to 5 °C up to Jul 28 to 35 °C, back down to Dec 0 to 6 °C), with round #009E73 endpoint dots on both bounds. Even spacing, one thickness, no overlap.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light ink #F0EFE8 at 24pt, fully readable against dark surface. Axis labels in light ink #F0EFE8 at 20pt, clearly legible. Tick labels in secondary light ink #B8B7B0 at 16pt, all visible. Subtle horizontal grid lines in light secondary ink (#B8B7B0) at low opacity, no dark-on-dark failures.
-      Data: 12 vertical line ranges in identical Okabe-Ito #009E73 (matching light render perfectly) with 0.85 alpha and 5.5 linewidth, clearly visible against dark background. Endpoint circles in identical #009E73 at size 3.5 with 0.95 alpha.
-      Legibility verdict: PASS — All text readable against dark surface, no dark-on-dark issues, data colors identical to light render, chrome correctly theme-adaptive.
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink #F0EFE8, tick labels in light grey #B8B7B0, grid lines light grey and subtle. No dark-on-dark text anywhere.
+      Data: the same 12 #009E73 ranges and endpoint dots, identical in color and position to the light render; the green reads well on the dark surface. Only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,71 +54,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, labels, ticks explicitly sized (24pt, 20pt, 16pt); all readable
-          in both themes
+        comment: 'Title 12, axis titles 10, ticks 8 pt at dpi 400: the style-guide
+          reference; readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully visible, no collisions or overlap
+        comment: No text collisions; ranges never cover each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Linerange (5.5 linewidth, 0.85 alpha) and endpoints (size 3.5, 0.95
-          alpha) perfectly adapted
+        comment: 12 ranges at linewidth 2.8 with endpoint dots are prominent for sparse
+          data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 with proper alpha; single color enhances accessibility'
+        comment: Single hue, strong contrast on both surfaces, no color-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization, balanced margins, well-positioned content
+        comment: 3200x1800, balanced margins, nothing clipped, axis titles balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Month and Temperature (°C) with units, fully descriptive
+        comment: Month and Temperature (°C) with unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17 correct; text
-          colors theme-adaptive; data colors identical across themes'
+        comment: '#009E73 first series, #FAF8F1/#1A1A17 backgrounds, theme-correct
+          chrome'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Well-configured design with spine removal and token-based theming;
-          polished defaults rather than exceptional
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid lines, removed spines, good whitespace, alpha blending
-          adds polish
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear seasonal pattern; summer peak and winter valley visually prominent
-          through range spans
+        passed: false
+        comment: Data displayed in chronological order; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct range interval chart
+        comment: Floating range per category on a shared value axis; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: min/max ranges, categories, endpoints'
+        comment: Chronological order, endpoint markers on the bounds (C3), even spacing
+          and one thickness (C2), distinguishable ranges (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Month (categorical), Y=Temperature (numeric), ymin/ymax correctly
-          mapped
+        comment: ymin/ymax map min_temp/max_temp; all 12 months shown at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed (single series)
+        comment: Mandated title format; single series, legend N/A
     data_quality:
       score: 15
       max: 15
@@ -155,19 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range visualization; variable widths demonstrate feature breadth
+        comment: Ranges of varying length and position, overlapping spans across months,
+          an axis below zero
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly temperatures real-world, neutral, comprehensible
+        comment: Monthly high/low temperatures, a spec example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values (-2 to 35°C) with correct seasonal proportions
+        comment: '-2 to 35 °C with 5 to 8 °C daily spans: plausible for a hot-summer
+          climate; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -177,57 +179,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save; no unnecessary abstractions'
+        comment: Linear tokens → data → plot → save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) included
+        comment: Deterministic data, set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, ragg all used
+        comment: ggplot2, dplyr (mutate), ragg (device) all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake functionality
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using current API
+        comment: ggsave plot-{THEME}.png with ragg::agg_png, current linewidth API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: geom_linerange() is canonical ggplot2 approach; proper layer composition
-          with endpoint markers
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses layer-composition and alpha blending; theme-adaptive tokens;
-          solid but straightforward
+        comment: Native geom_linerange with ymin/ymax aesthetics shared from the base
+          aes() instead of a hand-built geom_segment
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T12:48:04Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - layer-composition
+  techniques: []
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - grid-styling
   - alpha-blending
-  - minimal-chrome
