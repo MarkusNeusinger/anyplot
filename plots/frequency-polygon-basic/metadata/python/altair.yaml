@@ -12,34 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 76
 review:
   strengths:
-  - Perfect theme adaptation with both light and dark renders fully legible
-  - Excellent use of line styles (solid/dashed/dotted) to complement color for CVD-safe
-    differentiation
-  - Professional design with clean Okabe-Ito palette and subtle grid refinement
-  - Frequency polygon correctly extends to zero and aligns bins across all groups
-  - Proper implementation of Altair configuration with theme-adaptive tokens for all
-    chrome elements
+  - Shared bin edges from np.histogram_bin_edges put every group's vertices at the
+    same bin midpoints, each polygon closed to zero
+  - Color and stroke dash both encode Condition, giving a non-color signal for the
+    three groups
+  - Imprint palette in canonical order with theme-adaptive chrome in both renders
   weaknesses:
-  - 'Minor: Could add semi-transparent fill beneath lines for additional visual appeal
-    (mentioned in spec as optional enhancement, not a requirement)'
+  - 'VQ-05 (both): canvas is 5415x3003, not a canonical size, and the legend frame
+    sits against the right canvas edge → 3200x1800 (-2215 x -1203). Likely cause:
+    properties(width=1600, height=900) with scale_factor=3.0 and no PAD-to-target
+    step; use the library prompt''s 620x320 inner view at scale 4 plus the PAD block.'
+  - 'SC-04 (both): title ''frequency-polygon-basic · altair · anyplot.ai'' lacks the
+    mandated language segment → ''frequency-polygon-basic · python · altair · anyplot.ai''.
+    Likely cause: the title string.'
+  - 'VQ-03 (both): legend line samples are short thin strokes, so the solid, dashed
+    and dotted patterns that tell the groups apart cannot be read in the legend →
+    longer, thicker samples matching the 3 px lines. Likely cause: configure_legend
+    without symbolStrokeWidth/symbolSize.'
+  - 'Suggestion: the semi-transparent fill the Notes allow beneath each line could
+    make the three shapes easier to compare.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid at 10% opacity
-      Chrome: Title and axis labels in dark INK (#1A1A17); secondary text in INK_SOFT (#4A4A44); all clearly readable
-      Data: Three frequency polygons—Control (solid green #009E73), Treatment A (dashed orange #D55E00), Treatment B (dotted blue #0072B2); lines extend to zero at both ends; legend on right with "Condition" title
-      Legibility verdict: PASS — all text fully readable; no contrast issues
+      Background: warm off-white #FAF8F1 on a 5415x3003 canvas; legend box #FFFDF6 pressed against the right canvas edge.
+      Chrome: title 'frequency-polygon-basic · altair · anyplot.ai' in dark ink; axis titles 'Response Time (ms)' and 'Frequency'; ticks every 20 ms and every 2 counts in INK_SOFT; subtle grid on both axes; all text readable.
+      Data: Control solid #009E73, Treatment A dashed #C475FD, Treatment B dotted #4467A3 over 20 shared bins, each closed to 0 at the outer bin edges; y axis runs 0-40 with headroom above the 38 peaks. Legend line samples are short and thin.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle grid at 10% opacity in light color
-      Chrome: Title and axis labels in light INK (#F0EFE8); secondary text in INK_SOFT (#B8B7B0); all clearly readable against dark surface
-      Data: Identical colors to light render (Control green, Treatment A orange, Treatment B blue); legend background ELEVATED_BG (#242420); all differentiation intact
-      Legibility verdict: PASS — all text fully readable; no dark-on-dark failures; no legibility regressions between themes
+      Background: warm near-black #1A1A17, legend box #242420.
+      Chrome: light ink title and axis titles, #B8B7B0 ticks, faint light grid; no dark-on-dark text.
+      Data: identical colors and dashes to the light render; lines traceable where they cross.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -47,77 +56,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (28px), axis labels (22px), tick labels (18px) all readable
-          in both light and dark themes
+        comment: Title 28, axis titles 22, ticks 18 at scale 3; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Three lines distinguished by color and line style; no text collisions;
-          legend clearly positioned
+        comment: No text collisions; crossing lines expected
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All distributions clearly visible; line styles (solid/dashed/dotted)
-          enhance distinction; appropriate data density
+        comment: Legend line samples are short thin strokes; the dash patterns cannot
+          be told apart (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette correct (#009E73/#D55E00/#0072B2); CVD-safe; line
-          styles provide non-color signal
+        comment: Imprint hues plus dash patterns
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 1600×900 landscape appropriate; generous margins; nothing cut off;
-          proportions balanced
+        passed: false
+        comment: Canvas 5415x3003, not a canonical size (defect line); legend frame
+          against the right canvas edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format 'frequency-polygon-basic · altair · anyplot.ai' correct;
-          axis labels include units
+        comment: '''Response Time (ms)'' with unit, ''Frequency'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order followed; backgrounds #FAF8F1/#1A1A17
-          correct; both renders theme-adapted'
+        comment: '#009E73 first, Imprint order, correct backgrounds and chrome'
     design_excellence:
-      score: 20
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 8
+        score: 4
         max: 8
         passed: true
-        comment: Professional polish; Okabe-Ito palette; color + line style differentiation;
-          intentional hierarchy
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Clean appearance; grid subtle (10% opacity); generous whitespace;
-          refined legend styling
+        passed: false
+        comment: Baseline, dense grid on both axes, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy; distributions easily compared; reveals differences
-          in central tendency and spread
+        passed: false
+        comment: Data displayed, no hierarchy beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,29 +126,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency polygon; lines connect bin centers; properly extends
-          to zero at both ends
+        comment: Correct frequency polygon, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple distributions (3 groups) ✓; distinct colors and styles ✓;
-          legend ✓; closed polygon ✓
+        comment: C1-C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; axes show all data; bin edges aligned across
-          groups
+        comment: Vertices at bin midpoints; axes show all data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct; legend labels match groups; legend title 'Condition'
-          appropriate
+        comment: Title lacks the mandated language segment 'python' (defect line)
     data_quality:
       score: 15
       max: 15
@@ -157,22 +154,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows distribution shape, spread, central tendency, skewness; demonstrates
-          frequency polygon strength
+        comment: Three groups differ in center, spread and peak
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible response time data (350-700ms); realistic distributions;
-          neutral experimental framing
+        comment: Neutral response-time experiment
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values for domain; frequency counts appropriate for 200-per-group
-          sample; 20 bins well-chosen
+        comment: Plausible ms values and counts
     code_quality:
       score: 10
       max: 10
@@ -182,52 +176,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; straightforward linear flow; readable
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); fully deterministic output
+        comment: Seeded
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, site, sys, altair, numpy, pandas); sys.path
-          workaround justified
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake features; proper Altair API usage
+        comment: np.histogram computes bins
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API; scale_factor=3.0
-          for 4800×2700
+        comment: plot-{THEME}.png/.html
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Proper .encode(), .properties(), .configure_*() methods; theme-adaptive
-          implementation idiomatic
+        comment: Shorthand encodings and configure_* chrome
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: alt.StrokeDash() encoding distinctive; advanced configuration (configure_axis,
-          configure_legend, configure_view, configure_title)
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
 impl_tags:
   dependencies: []
   techniques:
