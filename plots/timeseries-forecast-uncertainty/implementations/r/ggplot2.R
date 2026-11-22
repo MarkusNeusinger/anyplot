@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
-#' Library: ggplot2 | R
-#' Quality: pending | Updated: 2026-05-19
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 84/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(ragg)
