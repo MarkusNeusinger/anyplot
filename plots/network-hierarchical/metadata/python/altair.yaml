@@ -2,51 +2,53 @@ library: altair
 language: python
 specification_id: network-hierarchical
 created: '2026-01-08T21:56:31Z'
-updated: '2026-05-17T06:23:36Z'
-generated_by: claude-haiku
-workflow_run: 25983294718
+updated: '2026-11-22T03:26:17Z'
+generated_by: claude-sonnet
+workflow_run: 44980118751
 issue: 3343
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/altair/plot-dark.html
-quality_score: 94
+quality_score: 80
 review:
   strengths:
-  - Perfect theme adaptation with both renders fully readable and color tokens correctly
-    applied
-  - Clean hierarchical layout with tree structure immediately evident and excellent
-    spatial organization
-  - Thoughtful legend with custom level-to-role mapping that adds usability beyond
-    defaults
-  - Correct Okabe-Ito palette usage (positions 1-4) for organizational level distinction
-  - Idiomatic Altair implementation with excellent use of declarative API and layering
-    patterns
-  - Professional polish across title, subtitle, legend, and styling that demonstrates
-    intentionality
+  - 'Clean top-down tree: subtree-width layout centres every parent over its children,
+    siblings grouped, one row per level, with the crowded 12-node bottom row evenly
+    spaced'
+  - Theme tokens threaded through title, subtitle, node labels, outlines and legend,
+    so both renders read cleanly with identical Imprint data colors
+  - Edges are thin (1.2 px) and translucent INK_SOFT lines that stay subordinate to
+    the outlined nodes
+  - Canonical 3200x1800 canvas reached by padding, never cropping, as the library
+    prompt requires
+  - Native Vega-Lite tooltips (label and role) add inspection in the HTML output
   weaknesses:
-  - Could enhance visual storytelling with node size variation by span-of-control
-    or team size
-  - Edge styling could be more sophisticated with subtle bundling or gradient opacity
-    for cleaner appearance
-  - Interactive features available in Altair not yet enabled such as zoom/pan or selection
+  - 'VQ-02 (both): the incoming parent edges run straight through many child labels
+    (''UI'', ''SE'', ''API'', ''NW'', ''Supply'', ''Office'', ''Backend'', ''VP Sales'',
+    ''VP Mkt'', ''Brand'') because each label sits on the edge''s approach path above
+    its node → keep every label clear of the edges, e.g. place the label below the
+    node or end the edge at the node''s top. Likely cause: mark_text dy=-17 puts each
+    label directly above its node where the edge from the parent arrives.'
+  - 'Suggestion: elbow (orthogonal) connectors from each parent would tidy the wide
+    fan-out from the CEO and keep the label space above each node free.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "network-hierarchical · altair · anyplot.ai" in dark text, clearly readable; subtitle descriptive and visible; legend on right with role labels (Executive, VP, Director, Manager); all text readable
-      Data: 25 nodes organized hierarchically - CEO in green (#009E73), 4 VPs in orange (#D55E00), 8 Directors in blue (#0072B2), 12 Managers in reddish purple (#CC79A7); edges connect parent-child nodes with subtle gray opacity; node labels positioned above nodes without collision
-      Legibility verdict: PASS (all text and data elements clearly readable with strong contrast against light background)
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: centred bold title 'network-hierarchical · python · altair · anyplot.ai' in near-black, grey subtitle 'Organizational chart: 25 employees across 4 management levels', legend 'Role' top right in an elevated box (Executive, VP, Director, Manager); bold node labels above every node; no axes or grid. All text readable.
+      Data: CEO in #009E73 at the top, 4 VPs in violet #C475FD, 8 Directors in blue #4467A3, 12 Managers in ochre #BD8233, each with a dark outline; thin grey straight edges connect parents to children. Edges pass through several child labels (UI, SE, API, NW, Supply, Office).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title and subtitle adapted to light text, all readable against dark background; legend maintains proper contrast with light text on darker background; node labels visible and readable
-      Data: All data colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7); edges visible with appropriate opacity; all 25 nodes and 24 edges clearly distinguishable
-      Legibility verdict: PASS (no dark-on-dark issues; perfect theme adaptation with all text elements readable against dark background)
+      Background: warm near-black #1A1A17.
+      Chrome: title, node labels and legend title in light ink, subtitle and legend labels in soft light grey; legend box on #242420. No dark-on-dark text.
+      Data: node colors identical to the light render; outlines flip to light ink; edges lighter grey, still subordinate to the nodes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,70 +56,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes with proper font sizing
+        comment: Title 16 px, subtitle 11 px, bold node labels 9.5 px and legend text
+          11/12 px at scale 4 all read clearly in both themes; INK/INK_SOFT threaded
+          through every text element
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Node labels positioned without collision; hierarchical layout prevents
-          crowding
+        passed: false
+        comment: Node labels do not collide with each other, but incoming edges run
+          through many child labels (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 25 nodes and edges clearly visible with adequate spacing
+        comment: 25 nodes at size 330 with an INK outline are prominent; edges at
+          1.2 px / 0.5 opacity stay lighter than the nodes; legend swatches match
+          the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe with excellent contrast on both backgrounds
+        comment: Green, violet, blue and ochre are distinct in lightness and hue;
+          tier also encoded by row position, so color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 landscape with generous spacing and margins
+        comment: 3200x1800 canvas (gate passed), chart padded and centred with comfortable
+          margins; title, tree and legend balanced, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title and subtitle
+        comment: N/A for axes (layout positions, no axes); descriptive subtitle with
+          computed counts
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order preserved, backgrounds correct
-          in both themes'
+        comment: 'Executive = #009E73, then Imprint positions 2-4 in canonical order;
+          backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: false
-        comment: Professional polish with intentional color hierarchy; custom legend
-          mapping shows thoughtfulness; could be more sophisticated
+        comment: 'Style-guide baseline: theme tokens, elevated legend box, explicit
+          sizes; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clean layout appropriate for network type; could enhance with sophisticated
-          edge styling or bundling
+        comment: Clean, no axes or grid as the spec requires; nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: false
-        comment: Clear focal point and color gradient guide viewer; could strengthen
-          with node size variation
+        comment: Data displayed with tier coloring; no hierarchy or focal point chosen
+          beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hierarchical tree layout with parent-child relationships
+        comment: Correct hierarchical tree layout, root at top
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: nodes, edges, levels, 25 nodes within
-          spec range'
+        comment: 'All Notes and A-good-version bullets met: root at top with one row
+          per level (C1), layout positions with siblings grouped and no axes (C2),
+          straight arrowless edges thinner and lighter than nodes (C3), crowded bottom
+          row spaced with labels on their own nodes (C4)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Positions computed via BFS + subtree-width algorithm; all nodes and
-          edges visible
+        comment: Every parent sits above the centre of its subtree; all 25 nodes and
+          24 edges shown within the scale domain
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct with descriptive legend labels
+        comment: Title 'network-hierarchical · python · altair · anyplot.ai' correct;
+          legend 'Role' with readable entries
     data_quality:
       score: 15
       max: 15
@@ -157,19 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full tree with 4 levels demonstrating hierarchical network aspects
+        comment: Four levels, unequal branching (1-3 children), leaves of different
+          depth subtrees shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic organizational structure with neutral role names
+        comment: Plausible, neutral organizational chart with department names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25 nodes readable with realistic 1-4-8-12 distribution
+        comment: 25 nodes inside the 10-50 range; 1-4-8-12 tier counts sensible; no
+          Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -179,57 +192,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Procedural without unnecessary functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) with deterministic data
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-implemented tree layout algorithm
+        comment: Compact subtree-width layout (networkx is not available, Vega-Lite
+          has no tree transform); no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming with scale_factor=3.0
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, pads to the canonical
+          canvas; current Altair 6 API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent declarative patterns with layering and configure methods
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: Uses Altair-specific features well but could leverage more interactive
-          capabilities
+        comment: Layered marks, detail encoding for edge segments, escaped fields
+          with explicit types; the mandated idioms, nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Tooltips only; nothing distinctive beyond what the library prompt
+          shows
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T03:22:14Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - custom-legend
   - hover-tooltips
-  patterns:
-  - data-generation
-  - matrix-construction
+  - html-export
+  patterns: []
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
