@@ -2,46 +2,52 @@ library: altair
 language: python
 specification_id: smith-chart-basic
 created: '2026-01-15T21:53:37Z'
-updated: '2026-05-20T01:31:32Z'
+updated: '2026-11-22T17:32:24Z'
 generated_by: claude-sonnet
-workflow_run: 26135089674
+workflow_run: 45049308082
 issue: 3792
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 84
 review:
   strengths:
-  - Mathematically correct Smith chart construction with proper gamma-plane mapping
-  - 'Excellent theme adaptation: all chrome correctly inverts between light/dark'
-  - 'Clear visual hierarchy with bold #009E73 locus dominating the subtle gray grid'
-  - Interactive tooltips showing frequency, R, and X on hover — leverages Altair native
-    strength
-  - Realistic RF engineering data with physically plausible antenna impedance trajectory
-  - Resistance value labels along real axis add navigational context
-  - Per-label dx/dy offsets correctly prevent overlap for the curved trajectory labels
+  - 'Grid is mathematically exact: resistance circles (r+e^{jθ})/(r+1) and reactance
+    arcs swept from r=0 to r→∞, all converging on the right-hand point inside a true-circle
+    boundary'
+  - Resistance values 0–5 sit exactly where each circle crosses the real axis
+  - Theme tokens threaded through every text and line layer; both renders read cleanly
+  - Native Altair tooltips (frequency, resistance, reactance) and .interactive() zoom/pan
+    in the HTML output
+  - alt.layer composition with detail and order encodings draws all grid groups from
+    one tidy frame
   weaknesses:
-  - 'Center label crowding: 3.4 GHz, 6.0 GHz, and resistance 0 label converge near
-    chart center — adjust label offsets to separate them'
+  - 'VQ-02 (both): the "2.6 GHz" label''s right edge runs into the vertical locus
+    segment at about Γ = −0.12+0.22j → keep the whole label clear of the curve by
+    a few px (about +10 px further outward). Likely cause: the fixed 26 px radial
+    offset in the freq_layers loop is too small for this point.'
+  - 'CQ-01 (code): a helper function gamma_of() is defined (lines 59–61) → inline
+    (z - 1) / (z + 1) at its two call sites. Likely cause: the def gamma_of block.'
+  - 'Suggestion: the 6.0 GHz label sits about 50 px from its endpoint; a smaller offset
+    would tie it more visibly to the last point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "smith-chart-basic · python · altair · anyplot.ai" dark and readable; subtitle "Antenna Impedance Sweep (1–6 GHz, Z₀ = 50 Ω)" in secondary ink; frequency labels (1.0, 2.2, 3.4, 6.0 GHz) bold at fontSize=14; resistance labels (0, 0.2, 0.5, 1, 2, 5) at fontSize=12 bold; VSWR labels at fontSize=11 italic — all readable
-      Data: Impedance locus in #009E73 (strokeWidth=4, size=80 markers); VSWR dashed circles in #D55E00; grid arcs/circles in INK_SOFT at opacity=0.3; unit circle boundary in INK at opacity=0.8; center cross in INK
-      Layout: Slight crowding in center area where 3.4 GHz, 6.0 GHz, and "0" resistance label converge
+      Background: warm off-white #FAF8F1 across the full 2400x2400 canvas.
+      Chrome: bold dark title "smith-chart-basic · python · altair · anyplot.ai", soft subtitle "Antenna impedance sweep, 1–6 GHz, Z₀ = 50 Ω"; heavy dark boundary circle; grey grid of resistance circles (0.2, 0.5, 1, 2, 5) and reactance arcs converging on the right point; resistance values 0–5 in bold soft ink just below the real axis. All readable.
+      Data: #009E73 locus line with circle markers from 1.0 GHz (left, on the real axis) looping up through 2.6 GHz, down to 4.4 GHz and ending near the dark centre cross at 6.0 GHz; violet dashed VSWR 1.5/2.0/3.0 circles with italic labels. The 2.6 GHz label touches the locus.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title and subtitle in light F0EFE8 text, fully readable; frequency labels in light INK; resistance labels and VSWR labels all light-colored; unit circle boundary in light gray; no dark-on-dark failures detected
-      Data: Impedance locus remains identical #009E73; VSWR circles remain #D55E00 — data colors identical to light render
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, frequency labels and resistance values in light ink; boundary light grey; grid subtle but traceable. No dark-on-dark text.
+      Data: identical #009E73 locus and #C475FD VSWR circles; only chrome flips.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,70 +55,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes at 2400x2400
+        comment: Explicit sizes (title 16, frequency labels 14 bold, resistance values
+          12, VSWR 11 at scale 4); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: false
-        comment: 'Slight crowding: 3.4 GHz, 6.0 GHz, and resistance 0 label converge
-          near center'
+        comment: The 2.6 GHz label runs into the vertical locus segment (defect line);
+          other labels clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Impedance locus prominently visible; grid correctly subtle at opacity
-          0.3
+        comment: Locus at strokeWidth 4 with 80-size markers stands out; grid subtle
+          at 0.3 opacity; markers crowd toward the sweep end as the data converges,
+          curve still traceable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 and #D55E00 are CVD-safe with good contrast'
+        comment: Green locus vs violet dashed VSWR circles vs neutral grid; CVD-safe,
+          not red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400; chart fills canvas well with balanced margins
+        comment: 2400x2400 square canvas; the disc fills the canvas with balanced
+          margins; title ~57% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axis labels correct for Smith chart; inline labels
-          provide context
+        comment: N/A for Cartesian axes (spec permits none); subtitle states the sweep
+          range and Z0 = 50 Ω
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Primary #009E73, VSWR #D55E00, backgrounds FAF8F1/1A1A17, chrome
-          fully adaptive'
+        comment: 'Locus #009E73, VSWR circles #C475FD (Imprint position 2), backgrounds
+          #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Strong design with intentional visual hierarchy; clearly above defaults
+        passed: false
+        comment: 'Typographic hierarchy beyond baseline: bold ink frequency labels,
+          italic violet VSWR labels, softer bold resistance values, informative subtitle'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: All axis chrome removed; manual grid at 0.3 opacity; very polished
+        passed: false
+        comment: Boundary drawn heavier than the 0.3-opacity grid; frequency labels
+          pushed radially outward from the centre so they sit beside the locus
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Frequency trajectory narrates impedance evolution; VSWR context;
-          center goal marker
+        passed: false
+        comment: Data displayed with the spec's required elements; no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,26 +134,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Full Smith chart with all canonical elements
+        comment: Standard Smith chart with one locus, VSWR circles and centre mark
+          only, as the spec allows
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: resistance circles, reactance arcs, impedance
-          locus, freq labels, VSWR circles, center marker'
+        comment: Resistance circles touch the right end, reactance arcs complete to
+          the boundary, connected locus in frequency order, four frequency labels,
+          centre mark, VSWR circles
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Gamma correctly computed from Z/Z0; real→x, imag→y
+        comment: Gamma = (Z/Z0 - 1)/(Z/Z0 + 1) computed from the data; resistance
+          labels sit where each circle crosses the real axis
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec format; inline labels replace legend appropriately
+        comment: Title smith-chart-basic · python · altair · anyplot.ai; no legend
+          needed, VSWR circles labelled inline
     data_quality:
       score: 15
       max: 15
@@ -151,86 +167,94 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All Smith chart elements demonstrated with varied values
+        comment: Locus loops through inductive and capacitive regions and converges
+          toward match; shows all aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Antenna impedance sweep 1-6 GHz, Z0=50 Ohm — canonical RF engineering
-          scenario
+        comment: Antenna S11 sweep 1–6 GHz, Z0 = 50 Ω — real RF context, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically plausible antenna impedance trajectory with realistic
-          VSWR range
+        comment: Resistance 15–50 Ω, reactance within ±40 Ω; VSWR circles at 1.5/2/3
+          use |Γ| = (VSWR-1)/(VSWR+1), checked in code; no Check values in spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear flow, no functions or classes
+        passed: false
+        comment: Defines a helper function gamma_of (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; importlib workaround necessary for file self-shadowing
+        comment: All imports used; importlib loading avoids the self-shadowing altair.py
+          file
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized; per-label offset layers are correct Altair pattern
+        comment: Vectorized grid construction with numpy, compact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with scale_factor=4.0
+        comment: Saves plot-{THEME}.png (padded to 2400x2400) and plot-{THEME}.html
+          with current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert alt.layer() composition; detail encoding for grouped lines;
-          order encoding; configure_* for chrome
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Interactive zoom/pan; native tooltip encoding; html-export; detail
-          channel for multi-group rendering
+        passed: false
+        comment: alt.layer composition, detail channel for multi-group lines, order
+          encoding, configure_* for chrome, alt.Title with subtitle
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Native tooltips (frequency, R, X) and .interactive() zoom/pan in
+          the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T17:28:30Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

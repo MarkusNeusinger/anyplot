@@ -12,156 +12,167 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-cha
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 62
 review:
   strengths:
-  - LineCollection with cividis colormap creates an elegant gradient impedance locus
-    that encodes frequency progression without requiring a separate legend entry
-  - 'Smith chart grid rendered from scratch with correct mathematical formulas (resistance
-    circles: center=r/(r+1), radius=1/(r+1); reactance arcs: center=1/x, radius=1/x)
-    and proper unit-disk clipping via np.where/mask'
-  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED, ELEVATED_BG,
-    PAGE_BG) correctly applied to every text element, colorbar, legend, and spines
-    in both renders'
-  - Realistic RF engineering scenario (antenna impedance 1-6 GHz) with physically
-    correct normalization and gamma calculation
-  - 'Perfect spec compliance: all required and optional features implemented (resistance
-    circles, reactance arcs, impedance locus, frequency labels, VSWR circles, matched
-    condition marker)'
+  - LineCollection with Normalize feeds a continuous gradient locus straight into
+    plt.colorbar
+  - Smith grid computed from the closed-form circle equations with a unit-disk mask,
+    converging on Γ = 1 inside a true circle
+  - Theme tokens threaded through title, labels, legend and colorbar in both renders
+  - Frequency labels tied to their points with arrows
   weaknesses:
-  - 'Brand green #009E73 (Okabe-Ito position 1) is absent — VSWR circles start at
-    OI_2 (#D55E00) and matched condition uses OI_3 (#0072B2). Fix: swap matched condition
-    to use #009E73 as OI_1, keep VSWR circles at #D55E00 as OI_2.'
-  - All four matplotlib spines are kept; style guide default is to remove top/right
-    spines. For a Smith chart the unit circle boundary makes top/right spines redundant.
-  - Small grid labels (resistance and reactance labels) at fontsize=6 are at the minimum
-    legibility threshold; increase to 7pt for a small legibility margin.
+  - 'VQ-05 (both): the canvas is 2360x2212 instead of the 2400x2400 square target
+    (signed delta -40 x -188 px) → 2400x2400. Likely cause: savefig(..., bbox_inches=''tight'').'
+  - 'CQ-05 (code): savefig uses bbox_inches=''tight'', which the matplotlib library
+    prompt forbids → default bbox. Likely cause: the savefig call.'
+  - 'VQ-07 (both): the locus and its colorbar use the cividis colormap, outside the
+    Imprint maps; the matched marker is #4467A3 instead of the first Imprint color
+    #009E73; the colorbar tick marks render pure black on the dark page → imprint_seq,
+    #009E73 and INK_SOFT ticks. Likely cause: cmap=''cividis'', OI_3 on the matched
+    marker, cbar.ax.tick_params without color.'
+  - 'VQ-02, SC-02 (both): every resistance value 0.2–5 is drawn at Γ = 1 and they
+    pile into an illegible stack beside ''Open'', not on their own circles (C4); ''6.0
+    GHz'' overlaps the 3.4 GHz marker and the locus → each value at its own circle''s
+    real-axis crossing and frequency labels clear of the locus. Likely cause: label_x
+    = center + radius, which is 1 for every r.'
+  - 'VQ-03, SC-04 (both): the legend''s ''Impedance Locus'' glyph is matplotlib''s
+    default blue #1f77b4, a colour that appears nowhere on the cividis locus, and
+    the locus'' butt-capped segments notch every joint → a legend glyph in the locus
+    colormap and continuous joints. Likely cause: label on the LineCollection without
+    a matching handle; no capstyle.'
+  - 'VQ-01 (both): resistance, reactance and VSWR labels at 6 pt, below the 8 pt tick
+    reference, read small → 8 pt (+2 pt). Likely cause: fontsize=6 on those ax.text
+    calls.'
+  - 'DE-02 (both): all four spines draw a rectangular frame around the circular chart
+    → remove the spines. Likely cause: the spine loop sets a colour instead of set_visible(False).'
+  - 'SC-01 (both): the cardinal callouts Short/Open/+jX (Inductive)/-jX (Capacitive)
+    are an annotation layer the basic variant excludes → remove them. Likely cause:
+    the cardinal-direction ax.text block.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "smith-chart-basic · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Real(Γ)" and "Imag(Γ)" in dark ink. No tick labels (removed, appropriate for Smith chart). Cardinal direction labels (Short/Open/+jX/-jX) in INK_MUTED, readable. Resistance circle and reactance arc labels at 6pt in INK_MUTED — at minimum threshold but readable. Frequency annotation labels at 7pt in INK, readable. Colorbar label "Frequency (GHz)" and tick labels readable.
-      Data: Impedance locus via cividis colormap dark blue (1 GHz) → yellow (6 GHz). VSWR dashed circles in #D55E00 orange-vermillion. Matched condition dot in #0072B2 blue. Smith chart grid in INK_MUTED at alpha=0.35, subtle and appropriate.
+      Background: warm off-white #FAF8F1 on a 2360x2212 canvas, framed by four dark-grey spines.
+      Chrome: title in dark ink, axis titles Real(Γ) / Imag(Γ), cardinal labels Short/Open/+jX (Inductive)/-jX (Capacitive) in grey; reactance values ±j0.2, ±j0.5, ±j1 at 6 pt; the resistance values all stack illegibly at Γ=1 beside 'Open'; legend upper left; colorbar 'Frequency (GHz)' at right. Text readable apart from that stack.
+      Data: dark unit circle, subtle grey grid, lavender dashed VSWR circles 1.5/2/3, blue #4467A3 matched dot, locus in cividis from navy (1 GHz) through grey to yellow (6 GHz); five arrowed labels 1.0, 2.2, 3.4, 4.7, 6.0 GHz; the legend's locus glyph is default blue.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title and axis labels in off-white #F0EFE8, clearly readable against dark background. Cardinal direction labels and secondary text in #B8B7B0, readable. Resistance/reactance labels in #A8A79F, visible. Frequency annotations in #F0EFE8 (INK), readable. Colorbar label and ticks adapted correctly. Legend frame uses #242420 elevated background. No dark-on-dark failures detected.
-      Data: Cividis locus colors IDENTICAL to light render — dark blue through olive to bright yellow. VSWR circles same orange-vermillion. Matched condition same blue. Only chrome flipped.
+      Background: warm near-black #1A1A17, with light-grey spines.
+      Chrome: title, axis titles and frequency labels in light ink; grid values and cardinal labels in light grey; no dark-on-dark text; the colorbar tick marks render black.
+      Data: cividis locus, markers and VSWR purple identical to the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 16
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
-        passed: true
-        comment: Title, axis labels, annotations readable in both themes. Grid labels
-          at 6pt are at minimum threshold.
+        passed: false
+        comment: Resistance, reactance and VSWR labels at 6 pt, 2 pt below the 8 pt
+          tick reference, read small; legend and frequency labels at 7 pt (defect
+          line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Minor proximity between r=0.5 resistance label and cardinal label
-          near right boundary; not a hard collision.
+        passed: false
+        comment: The resistance values 0.2–5 are all drawn at Γ=1 and pile into an
+          illegible stack beside 'Open'; '6.0 GHz' overlaps the 3.4 GHz marker and
+          locus; '+j0.2'/'-j0.2' sit on the boundary (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Impedance locus prominent at linewidth=2.5. Frequency markers visible
-          with edge highlights. Grid appropriately subtle at alpha=0.35.
+        passed: false
+        comment: 'Locus prominent but butt-capped segments notch every joint; the
+          legend''s ''Impedance Locus'' glyph is default blue #1f77b4, a colour that
+          appears nowhere on the cividis locus (defect line)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Cividis is perceptually uniform and colorblind-safe. No red-green
-          sole-signal.
+        comment: Cividis is CVD-safe with strong luminance contrast; frequency also
+          carried by text labels
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Square 2400x2400 correct for Smith chart. Cardinal labels fit within
-          xlim/ylim without clipping.
+        passed: false
+        comment: Canvas is 2360x2212, off the 2400x2400 target (-40 x -188 px) because
+          of bbox_inches='tight' (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real(Γ) and Imag(Γ) descriptive. Colorbar labeled Frequency (GHz).
-          Title follows mandatory format.
+        comment: Real(Γ) / Imag(Γ) descriptive; colorbar 'Frequency (GHz)' with unit
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: 'Continuous data correctly uses cividis. Backgrounds correct. But
-          brand green #009E73 absent — VSWR uses OI_2, matched condition uses OI_3,
-          skipping OI_1.'
+        comment: 'Continuous locus uses cividis, a forbidden non-Imprint colormap;
+          matched marker #4467A3 instead of #009E73; colorbar tick marks pure black
+          in dark (defect line)'
     design_excellence:
-      score: 15
+      score: 4
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 2
         max: 8
-        passed: true
-        comment: Well above default. LineCollection gradient, custom Smith chart grid
-          with math clipping, VSWR reference circles, polished colorbar and legend.
+        passed: false
+        comment: 'Short of the baseline: a non-Imprint colormap carries the main data'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: All four spines kept (defensible for circular chart). Chrome tokens
-          correctly applied throughout both themes. Tick marks removed (appropriate).
+        passed: false
+        comment: 'Short of the baseline: all four spines draw a rectangular frame
+          around the circular chart'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Frequency sweep story clear via color encoding. VSWR circles provide
-          engineering context. Cardinal labels explain quadrant meaning. Strong visual
-          hierarchy.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct Smith chart with resistance circles, reactance arcs, unit
-          circle boundary.
+        passed: false
+        comment: Correct Smith chart, but the cardinal callouts Short/Open/+jX (Inductive)/-jX
+          (Capacitive) are an annotation layer the basic spec excludes (defect line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All required features present: resistance circles, reactance arcs,
-          normalization, impedance locus, frequency labels, VSWR circles, matched
-          condition.'
+        passed: false
+        comment: Grid, locus, frequency labels, VSWR circles and matched mark present,
+          but the printed resistance values do not sit on their own circles (C4) (defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct normalization z_norm = z/Z0, correct gamma = (z_norm-1)/(z_norm+1).
-          50-point 1-6 GHz sweep.
+        comment: Γ computed correctly from Z/Z0, marks at their values
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title exactly matches mandatory format. Legend shows Matched (Z=Z0)
-          and Impedance Locus with subscript.
+        passed: false
+        comment: Title correct; the legend's locus glyph in default blue does not
+          match the cividis locus (defect line)
     data_quality:
       score: 15
       max: 15
@@ -171,25 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive: r-circles for 6 values, reactance arcs for 5 positive/negative
-          values, unit circle, real axis, VSWR circles for 3 values, matched condition,
-          frequency locus, colorbar.'
+        comment: Locus loops across both halves and several VSWR circles
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Antenna impedance sweep 1-6 GHz is a standard VNA measurement scenario.
-          Neutral engineering context.
+        comment: 1–6 GHz 50 Ω impedance sweep, the spec's example scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Z0=50 ohm standard RF reference. z_real 10-90 ohm and z_imag +/-35
-          ohm produce physically correct Gamma values within unit circle.
+        comment: 'Checked: Z0 = 50, Γ formula, R 10–90 Ω keeps |Γ| < 1, matched marker
+          at Γ = 0'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -197,52 +205,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear procedural structure.
+        comment: Flat structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data.
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys path manipulation necessary and documented.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: np.where(mask, ..., np.nan) for circle clipping is elegant. LineCollection
-          is the right tool. No fake interactivity.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png. Current matplotlib API throughout.
+        passed: false
+        comment: savefig with bbox_inches='tight', which the library prompt forbids
+          and which drifts the canvas (defect line)
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: All ax methods used. plt.colorbar() receives LineCollection. ax.set_aspect('equal')
-          for circular geometry. tight_layout() before savefig.
+        comment: Idiomatic ax API, set_aspect('equal'), annotate with arrowprops
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: LineCollection with Normalize for gradient locus, mpatches.Circle
-          with add_patch() for VSWR circles, np.where(mask, ..., np.nan) for unit-disk
-          clipping — all distinctively matplotlib.
+        comment: LineCollection + Normalize feeding the colorbar, mpatches.Circle
+          VSWR patches
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
 impl_tags:
   dependencies: []
   techniques:
