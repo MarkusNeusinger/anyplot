@@ -2,50 +2,59 @@ library: ggplot2
 language: r
 specification_id: biplot-pca
 created: '2026-05-17T17:45:09Z'
-updated: '2026-05-17T17:48:15Z'
-generated_by: claude-haiku
-workflow_run: 25998065029
+updated: '2026-11-22T07:54:30Z'
+generated_by: claude-sonnet
+workflow_run: 44999886886
 issue: 3417
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 97
+quality_score: 79
 review:
   strengths:
-  - Flawless theme adaptation—light/dark rendering uses correct tokens throughout
-    (PAGE_BG, INK, INK_SOFT, INK_MUTED) with no color mixing or legibility failures
-  - PCA decomposition correctly implemented with proper scaling of loading vectors
-    (3.2x factor) for visual clarity alongside scores
-  - Okabe-Ito palette applied correctly (setosa=#009E73 as first series), all three
-    species distinctly colored and CVD-safe
-  - Complete spec implementation includes scores, loadings, arrows with labels, reference
-    circle, and variance explained percentages on axis labels
-  - Professional visual design with clean layout, subtle grid, generous whitespace,
-    and good use of italic styling for variable labels
+  - Correct PCA on standardized iris with prcomp; variance explained is computed with
+    summary() and shown in both axis titles (73.0 %, 22.9 %)
+  - All four loadings share one scale factor, so arrow directions and relative lengths
+    are faithful; coord_fixed keeps the circle round
+  - Theme tokens threaded through every chrome element; data colors identical in both
+    renders
   weaknesses:
-  - Panel border on all four sides could be simplified to L-shaped (left+bottom) for
-    minimal-chrome style, though current border is acceptable for biplot context where
-    origin reference is important
+  - 'VQ-02 (both): the Petal.Length and Petal.Width labels are drawn on top of virginica
+    score points around PC1 ≈ 2, PC2 ≈ 0 to -0.6 → lift the label text clear of the
+    points, e.g. a page-colored label background (geom_label with fill = PAGE_BG,
+    linewidth = 0) or a slightly larger offset beyond the tips. Likely cause: geom_text
+    with no background at PC1*1.15 + 0.35.'
+  - 'VQ-05 (both): coord_fixed on the 16:9 canvas shrinks the panel to about half
+    of the canvas width, leaving empty bands of roughly 20 % on the left and 15 %
+    beside the legend → fill more width, e.g. the 2400x2400 square canvas or the legend
+    moved inside/below the panel. Likely cause: coord_fixed() with width = 8, height
+    = 4.5 and a right-hand legend.'
+  - 'SC-03 (both): the dashed reference circle has radius 1 in score units while every
+    loading is drawn x3.2, so it marks a loading magnitude of about 0.31 instead of
+    1 → radius 3.2 (the loading scale factor, +2.2). Likely cause: annotate(''path'',
+    x = cos(...), y = sin(...)) not multiplied by the loading scale.'
+  - 'CQ-03 (code): library(dplyr) is loaded but no dplyr function is called → remove
+    it. Likely cause: leftover import.'
+  - 'Suggestion: write the arrow labels for a reader ("Petal length") instead of the
+    raw R column names with dots.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct and readable.
-      Chrome: Title "biplot-pca · ggplot2 · anyplot.ai" in dark text, centered, size 24pt. Axis labels "PC1 (73.0%)" and "PC2 (22.9%)" in dark text (INK). Tick labels in soft gray (INK_SOFT). All text is clearly readable against the light surface.
-      Data: 150 observation points colored by species using Okabe-Ito palette: setosa (#009E73 — green, first series ✓), versicolor (#D55E00 — orange), virginica (#0072B2 — blue). Four loading arrows (gray, INK_SOFT) with italic variable labels. Dashed reference circle (subtle, INK_MUTED). All elements clearly visible.
-      Legibility verdict: PASS — all text is legible, colors are distinct, layout is clean.
+      Background: warm off-white #FAF8F1, 3200x1800 canvas.
+      Chrome: title 'biplot-pca · r · ggplot2 · anyplot.ai' centered in dark ink; axis titles 'PC1 (73.0%)' and 'PC2 (22.9%)'; ticks -2/0/2 in INK_SOFT; faint grid; full panel border; legend 'Species' on an elevated box at the right. All readable.
+      Data: 150 points, setosa #009E73 (left cluster), versicolor #C475FD, virginica #4467A3 (right, overlapping versicolor); four gray arrows from the origin with italic labels Petal.Length, Petal.Width, Sepal.Length, Sepal.Width (long, pointing down); dashed radius-1 circle at the origin. Petal labels sit on virginica points.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct and readable.
-      Chrome: Title in light text (#F0EFE8), centered, size 24pt. Axis labels in light text. Tick labels in light gray (#B8B7B0 — INK_SOFT). All text is clearly readable against the dark surface. No dark-on-dark failures detected.
-      Data: 150 points maintain identical colors to light render (green, orange, blue — data colors are theme-independent ✓). Arrows in light gray, variable labels in light gray italic. Reference circle visible as dashed line. Legend background in elevated dark tone (#242420) with light text.
-      Legibility verdict: PASS — both renders are equally legible, theme tokens applied correctly, no contrast failures.
-
-    Both renders are production-ready. Data colors are identical between themes (only chrome flips). No legibility issues in either direction.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, ticks and labels in light gray, legend box #242420 with light text; no dark-on-dark text.
+      Data: same three colors as the light render; arrows and labels in light gray, circle faint dashed.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -53,75 +62,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark themes—proper sizing and
-          color contrast throughout
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, arrow labels
+          3.4 mm (~9.7 pt); all at the style-guide reference and readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Well-spaced elements—observations, arrows, labels, legend all occupy
-          distinct regions
+        comment: Petal.Length and Petal.Width labels sit on top of virginica score
+          points (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers visible with alpha=0.65, arrows clearly defined, reference
-          circle subtle but present
+        comment: 150 points at size 2.2, alpha 0.65 suit the density; arrows and legend
+          glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; adequate contrast in both themes
+        comment: Green/lavender/blue are CVD-distinct; chrome contrast adequate in
+          both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions, nothing cut off, generous margins
+        comment: coord_fixed on the 16:9 canvas leaves the panel at about half the
+          width with wide empty side margins (defect line); canvas 3200x1800 correct
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include variance explained percentages; title format is correct
+        comment: Axis titles PC1 (73.0%) / PC2 (22.9%) name the component and its
+          variance
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series=#009E73 (setosa), background=#FAF8F1 light/#1A1A17 dark,
-          chrome tokens correct
+        comment: 'setosa = #009E73, Imprint order, backgrounds #FAF8F1 / #1A1A17,
+          chrome flips correctly'
     design_excellence:
-      score: 18
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Professional Polish: reference circle adds scientific context. Intentional
-          hierarchy in typography. No custom palette (Okabe-Ito is standard). Raised
-          from default 4 for polish + hierarchy evidence.'
+        comment: Style-guide baseline; italic variable labels are the only typographic
+          choice beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid (linewidth=0.25), generous whitespace, clean layout.
-          Border kept for biplot context. Full marks for refinement.
+        passed: false
+        comment: Subtle 12 % grid meets the grid rule, nothing beyond it
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear visual hierarchy: species clusters are focal point, arrow
-          directions guide interpretation of variable contributions. Strong narrative.'
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -129,29 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct PCA biplot: scores as points, loadings as arrows, proper
-          2D representation'
+        comment: 'Correct PCA biplot: scores as points, loadings as arrows from the
+          origin'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: PC1 vs PC2, observation scores, loading
-          vectors, variable labels, reference circle'
+        comment: PC1 vs PC2, colored scores, arrows from origin, labeled arrows, common
+          loading scale, variance in axis labels, round centered circle (C1-C5 met)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: X=PC1, Y=PC2 correct; axes span full data range; 150 observations
-          and 4 variables shown
+        comment: Dashed reference circle has radius 1 in score units while the loadings
+          are drawn x3.2, so it marks a loading magnitude of about 0.31, not 1 (defect
+          line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''biplot-pca · ggplot2 · anyplot.ai'' ✓ Legend labels correct
-          (setosa, versicolor, virginica)'
+        comment: Title biplot-pca · r · ggplot2 · anyplot.ai correct; legend 'Species'
+          names the three groups
     data_quality:
       score: 15
       max: 15
@@ -161,23 +172,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 iris features shown as loading arrows with labels
+        comment: Shows group separation, correlated petal arrows and the orthogonal
+          Sepal.Width arrow
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset is real, well-known, neutral—good canonical example
-          for biplot
+        comment: Iris measurements, real and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: PCA scaling correct; loading scaling (3.2x) ensures visibility with
-          scores; variance explained values realistic
+        comment: 'Checked: prcomp(scale.=TRUE) on iris gives PC1 73.0 % and PC2 22.9
+          %, both read off the axis titles and computed by summary()'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -185,62 +196,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes—direct scripted approach, straightforward
-          logic
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) ensures consistent PCA results
+        comment: Deterministic (iris + set.seed)
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Only imports used: ggplot2, dplyr, scales, ragg—no unused dependencies'
+        comment: library(dplyr) is loaded but never used (defect line)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; appropriate complexity for
-          biplot
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly; uses ragg::agg_png device
+        comment: ggsave plot-{THEME}.png with ragg, 8x4.5 in at 400 dpi
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Uses ggplot2 grammar properly: ggplot() + geom_point() + geom_segment()
-          + geom_text() + annotate() + scale_*() + labs() + theme() + coord_fixed().
-          High-level API throughout.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of geom_segment for arrows, annotate for reference circle,
-          coord_fixed for aspect ratio, theme tokens. Could explore stat_* transforms
-          for more advanced usage, but current approach is solid.
+        comment: 'Idiomatic grammar: prcomp + summary()$importance, layered geoms,
+          coord_fixed for an equal-aspect biplot'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T07:50:58Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
-  patterns:
-  - dataset-loading
-  - matrix-construction
+  - annotations
+  patterns: []
   dataprep:
   - pca
-  styling: []
+  styling:
+  - alpha-blending
