@@ -2,48 +2,52 @@ library: plotly
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:11:22Z'
-updated: '2026-05-17T08:53:53Z'
-generated_by: claude-haiku
-workflow_run: 25986274015
+updated: '2026-11-22T04:13:31Z'
+generated_by: claude-sonnet
+workflow_run: 44983577018
 issue: 3414
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing across all elements
-  - Exemplary palette compliance—theme-adaptive colors with identical data representation
-    in both renders
-  - 'All spec features implemented: nested boxes with decreasing width, outlier points,
-    legend with quantile labels'
-  - Realistic data context (server response times) with diverse distributions demonstrating
-    all boxen plot features
-  - Clean, reproducible code with deterministic data generation and proper theme token
-    usage
+  - Letter values computed with np.quantile at 1/2^(k+1) so every box edge sits at
+    its quantile
+  - Box widths narrow with each deeper level, centered on the category, with outliers
+    beyond the deepest level as points
+  - Correct 3200x1800 canvas with the legend placed outside the plot area
+  - Theme tokens threaded through title, ticks, axis lines, legend frame and median
+    line in both renders
+  - Outlier hovertemplate gives per-point values in the HTML output
   weaknesses:
-  - Library mastery could be higher—implementation uses generic shape-drawing rather
-    than leveraging plotly-specific specialized features
-  - Design excellence slightly below publication-ready—visual hierarchy could be enhanced
-    through additional styling refinement
+  - 'VQ-03 (both): the levels are drawn as translucent rgba fills stacked on each
+    other, so each visible band is darker than its legend swatch (e.g. the 87.5% band
+    in light reads nearly as saturated as the IQR swatch) and the outlines of the
+    narrower outer boxes drawn underneath show through as vertical lines inside the
+    wider inner boxes → opaque fills, one blended step of #009E73 toward PAGE_BG per
+    level, matching the legend swatches exactly. Likely cause: fillcolor=level_colors[k
+    - 1] with alpha from np.linspace(1.0, 0.2) on shapes layered below each other.'
+  - 'Suggestion: a slightly thinner median line overhang or a ring outline on the
+    outlier points would separate them from the box edges they sit on.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly themed
-      Chrome: Title "boxen-basic · plotly · anyplot.ai" at 28px, axis labels at 22px, tick labels at 18px, legend at right with "Quantile Level" title—all clearly readable with dark text (#1A1A17) against light background
-      Data: Four server endpoints (API Gateway, Auth Service, Data Query, File Upload) with nested boxes in varying shades of #009E73 (from full opacity to 0.2), decreasing width for deeper quantiles, outlier points in full-opacity green scattered above/below, thick black median lines
-      Legibility verdict: PASS—all elements perfectly readable
+      Background: warm off-white #FAF8F1
+      Chrome: title 'boxen-basic · python · plotly · anyplot.ai' centered, axis titles 'Server endpoint' / 'Response time (ms)', tick labels 0–800 and four endpoint names in dark ink; legend 'Quantile level' at right on an elevated panel with seven green swatches (50% (IQR) … 99.22%) and a Median line — all readable
+      Data: four nested-box stacks in #009E73 at decreasing opacity, narrowing for deeper levels, black median line across the IQR, outlier points in #009E73 above and below each stack; File Upload reaches ~800 ms, Auth Service tight near 30 ms
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly themed
-      Chrome: All text elements remain clearly visible with light text (#F0EFE8 for titles/labels, #B8B7B0 for ticks/legend) against dark background. No dark-on-dark failures. Grid lines subtle and visible with rgba(240,239,232,0.10)
-      Data: Identical data colors to light render—all shades of #009E73 preserved. Boxes, median lines, and outlier points all properly visible and distinguishable
-      Legibility verdict: PASS—theme adaptation flawless, all elements readable
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink, legend panel #242420 with light text — no dark-on-dark text
+      Data: same #009E73 hue and opacity steps as light (translucent levels read darker against the dark page), median line flips to light ink, outliers identical green
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,65 +55,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable
+        comment: Title 16, axis titles 12, ticks 10, legend 10/11 — the plotly prompt's
+          sizes; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No text collisions; legend sits outside the plot area to the right
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: All markers and boxes clearly visible
+        passed: false
+        comment: Translucent fills stack, so the visible bands read darker than their
+          legend swatches and the edges of the narrower boxes show through as vertical
+          lines inside the wider ones (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe palette with good contrast
+        comment: Single hue with lightness steps plus outlines; median in ink contrasts
+          in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions and margins
+        comment: 3200x1800 canvas, balanced margins, legend clear of data, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: '''Server endpoint'' and ''Response time (ms)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Perfect Okabe-Ito compliance and theme-correct chrome in both renders
+        comment: 'Brand #009E73 for all levels and outliers; backgrounds #FAF8F1 /
+          #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional styling with custom opacity gradient
+        comment: Style-guide baseline (theme tokens, explicit sizes), nothing beyond
+          it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good refinement with subtle grid and clean lines
+        passed: false
+        comment: Spine and grid rules met (x grid off, subtle y grid), nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy from median to extreme values
+        passed: false
+        comment: Data displayed with no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -119,25 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct boxen plot with all features
+        comment: Correct letter-value plot with only boxes, median, outliers and legend
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nested boxes, outliers, legend all present
+        comment: Nested boxes (C1), narrowing widths centered on category (C2), shaded
+          levels with legend (C3), outliers beyond deepest level (C4), no extra layers
+          (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Endpoints on x-axis, response times on y-axis
+        comment: Endpoints on x, response time on y; box edges at np.quantile letter
+          values; outlier jitter is categorical-axis only
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and descriptive legend
+        comment: Title 'boxen-basic · python · plotly · anyplot.ai'; legend 'Quantile
+          level' with coverage labels and Median
     data_quality:
       score: 15
       max: 15
@@ -147,19 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all boxen plot aspects across distributions
+        comment: Four distributions (bimodal, skewed, long tail) show tails, unequal
+          sides and outliers both sides
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world server scenario
+        comment: Server response times by endpoint — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic response time ranges
+        comment: Response times 0–800 ms plausible; letter values computed by np.quantile,
+          not placed
     code_quality:
       score: 10
       max: 10
@@ -169,56 +185,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: default_rng(42) and default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and well-structured
+        comment: Compact; quantiles via np.quantile
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Proper graph_objects patterns
+        comment: Standard graph_objects shapes and scatter traces, nothing beyond
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Generic shape-drawing approach
+        comment: Hover templates on outliers only; nothing beyond what the prompt
+          mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T04:09:58Z'
 impl_tags:
   dependencies: []
   techniques:
+  - patches
   - custom-legend
   - manual-ticks
+  - hover-tooltips
+  - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
