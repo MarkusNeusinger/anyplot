@@ -1,27 +1,38 @@
 """ anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-18
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-22
 """
 
 import os
 
-import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
-# Theme-adaptive colors
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Data: Housing price regression coefficients
-np.random.seed(42)
+# Imprint palette: position 1 marks significant coefficients
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
+# Constants
+NULL_VALUE = 0  # the null hypothesis: no effect
+
+# Columns: set these to your table's column names
+VARIABLE = "Predictor variable"  # role: variable
+COEFFICIENT = "Coefficient estimate (standardized)"  # role: coefficient
+CI_LOWER = "CI lower (95%)"  # role: ci_lower
+CI_UPPER = "CI upper (95%)"  # role: ci_upper
+SIGNIFICANT = "Significant"  # role: significant
+
+# Data: replace this block with your own table, for example df = pd.read_csv("coefficients.csv")
+# Housing price regression: coefficients with standard errors, 95% intervals
 variables = [
     "Square Footage",
     "Bedrooms",
@@ -36,114 +47,84 @@ variables = [
     "Has Pool",
     "Has Basement",
 ]
+estimates = [0.45, 0.12, 0.18, 0.08, 0.22, -0.15, -0.28, 0.32, -0.19, -0.05, 0.14, 0.09]
+std_errors = [0.08, 0.09, 0.06, 0.05, 0.07, 0.04, 0.10, 0.08, 0.11, 0.06, 0.05, 0.07]
+df = pd.DataFrame({VARIABLE: variables, COEFFICIENT: estimates})
+df[CI_LOWER] = df[COEFFICIENT] - 1.96 * pd.Series(std_errors)
+df[CI_UPPER] = df[COEFFICIENT] + 1.96 * pd.Series(std_errors)
+df[SIGNIFICANT] = (df[CI_LOWER] > NULL_VALUE) | (df[CI_UPPER] < NULL_VALUE)
 
-# Generate realistic regression coefficients with varying significance
-coefficients = np.array([0.45, 0.12, 0.18, 0.08, 0.22, -0.15, -0.28, 0.32, -0.19, -0.05, 0.14, 0.09])
-standard_errors = np.array([0.08, 0.09, 0.06, 0.05, 0.07, 0.04, 0.10, 0.08, 0.11, 0.06, 0.05, 0.07])
+# Plot: reads only df and the constants above
+df = df.sort_values(COEFFICIENT).reset_index(drop=True)
+df[SIGNIFICANT] = df[SIGNIFICANT].fillna(False).astype(bool)
+order = df[VARIABLE].tolist()
+groups = [(True, "Significant (CI excludes zero)", IMPRINT_PALETTE[0]), (False, "Not significant", INK_SOFT)]
+pad = 0.1 * (df[CI_UPPER].max() - df[CI_LOWER].min())
 
-# 95% confidence intervals
-ci_lower = coefficients - 1.96 * standard_errors
-ci_upper = coefficients + 1.96 * standard_errors
-
-# Determine significance (CI does not cross zero)
-significant = (ci_lower > 0) | (ci_upper < 0)
-
-# Sort by coefficient magnitude for better visualization
-sort_idx = np.argsort(coefficients)
-variables = [variables[i] for i in sort_idx]
-coefficients = coefficients[sort_idx]
-ci_lower = ci_lower[sort_idx]
-ci_upper = ci_upper[sort_idx]
-significant = significant[sort_idx]
-
-# Colors based on significance
-colors = [BRAND if sig else INK_SOFT for sig in significant]
-marker_symbols = ["circle" if sig else "circle-open" for sig in significant]
-
-# Create figure
 fig = go.Figure()
 
-# Add error bars (confidence intervals)
-for i in range(len(variables)):
-    # Error bar line
+# Confidence intervals: one line per coefficient, end caps as short vertical ticks
+for _, row in df.iterrows():
+    color = IMPRINT_PALETTE[0] if row[SIGNIFICANT] else INK_SOFT
     fig.add_trace(
         go.Scatter(
-            x=[ci_lower[i], ci_upper[i]],
-            y=[variables[i], variables[i]],
-            mode="lines",
-            line={"color": colors[i], "width": 4},
+            x=[row[CI_LOWER], row[CI_UPPER]],
+            y=[row[VARIABLE]] * 2,
+            mode="lines+markers",
+            line={"color": color, "width": 2},
+            marker={"symbol": "line-ns", "size": 8, "color": color, "line": {"width": 1.5, "color": color}},
             showlegend=False,
             hoverinfo="skip",
         )
     )
 
-    # End caps for error bars
+# Point estimates, one trace per significance group
+for flag, label, color in groups:
+    rows = df[df[SIGNIFICANT] == flag]
     fig.add_trace(
         go.Scatter(
-            x=[ci_lower[i], ci_upper[i]],
-            y=[variables[i], variables[i]],
+            x=rows[COEFFICIENT],
+            y=rows[VARIABLE],
             mode="markers",
-            marker={"symbol": "line-ns", "size": 16, "color": colors[i], "line": {"width": 3}},
-            showlegend=False,
-            hoverinfo="skip",
+            marker={
+                "size": 10,
+                "color": color if flag else PAGE_BG,
+                "symbol": "circle",
+                "line": {"width": 2, "color": color},
+            },
+            name=label,
+            customdata=rows[[CI_LOWER, CI_UPPER]],
+            hovertemplate="%{y}<br>Estimate: %{x:.3f}<br>95% CI: [%{customdata[0]:.3f}, %{customdata[1]:.3f}]<extra></extra>",
         )
     )
 
-# Add coefficient points
-fig.add_trace(
-    go.Scatter(
-        x=coefficients[significant],
-        y=[variables[i] for i in range(len(variables)) if significant[i]],
-        mode="markers",
-        marker={"size": 18, "color": BRAND, "line": {"width": 2, "color": PAGE_BG}},
-        name="Significant (p < 0.05)",
-        hovertemplate="%{y}<br>Coefficient: %{x:.3f}<extra></extra>",
-    )
-)
+# Reference line at the null value
+fig.add_vline(x=NULL_VALUE, line={"color": INK, "width": 1.5, "dash": "dash"})
 
-fig.add_trace(
-    go.Scatter(
-        x=coefficients[~significant],
-        y=[variables[i] for i in range(len(variables)) if not significant[i]],
-        mode="markers",
-        marker={"size": 18, "color": INK_SOFT, "symbol": "circle-open", "line": {"width": 3, "color": INK_SOFT}},
-        name="Not Significant",
-        hovertemplate="%{y}<br>Coefficient: %{x:.3f}<extra></extra>",
-    )
-)
-
-# Add vertical reference line at zero
-fig.add_vline(
-    x=0,
-    line={"color": INK_SOFT, "width": 2, "dash": "dash"},
-    annotation_text="Null",
-    annotation_position="top",
-    annotation_font={"size": 16, "color": INK_SOFT},
-)
-
-# Layout
+# Style
 fig.update_layout(
+    autosize=False,
     title={
         "text": "coefficient-confidence · python · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Coefficient Estimate (Standardized)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": COEFFICIENT, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "zeroline": False,
         "gridcolor": GRID,
-        "range": [-0.6, 0.7],
+        "range": [df[CI_LOWER].min() - pad, df[CI_UPPER].max() + pad],
         "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Predictor Variable", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": VARIABLE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
+        "categoryorder": "array",
+        "categoryarray": order,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
@@ -154,16 +135,13 @@ fig.update_layout(
         "y": 1.02,
         "xanchor": "center",
         "x": 0.5,
-        "font": {"size": 18, "color": INK_SOFT},
+        "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 200, "r": 80, "t": 120, "b": 80},
+    margin={"l": 130, "r": 40, "t": 80, "b": 60},
 )
 
-# Save as PNG (4800x2700)
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
