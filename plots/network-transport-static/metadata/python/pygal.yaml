@@ -2,116 +2,151 @@ library: pygal
 language: python
 specification_id: network-transport-static
 created: '2026-01-09T23:51:43Z'
-updated: '2026-05-18T14:37:55Z'
-generated_by: claude-haiku
-workflow_run: 26039759434
+updated: '2026-11-22T13:36:55Z'
+generated_by: claude-sonnet
+workflow_run: 45027770289
 issue: 3463
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 74
 review:
   strengths:
-  - Excellent visual design with professional polish and deliberate styling choices
-  - Perfect theme adaptation—both renders are readable and visually correct
-  - Perfect specification compliance—all required features present and well-implemented
-  - Clean, deterministic code that is easy to follow and reproduce
-  - Thoughtful color-coding by route type guides visual navigation
-  - Smart edge offset calculation prevents line overlap
+  - Every station at its provided x/y coordinates, every route a directed edge with
+    an arrowhead stopping at the destination node's border
+  - Each edge label 'RE 5 | 07:30 → 07:55' sits on an elevated chip outlined in its
+    route color at the edge midpoint, so it is plain which edge it belongs to
+  - 'Theme tokens threaded through every element: both renders are fully readable
+    with identical Imprint data colors'
+  - Native SVG <title> tooltips on every edge and station in the HTML output
   weaknesses:
-  - Implementation uses ElementTree + cairosvg for raw SVG generation instead of pygal's
-    charting API; while pragmatic for a chart type outside pygal's native scope, this
-    reduces Library Mastery score. Consider investigating pygal SVG extension API
-    or using a different library for network visualizations in future attempts.
+  - 'VQ-01 (both): edge labels at 24 px, station names and legend entries at 28 px,
+    far below pygal''s 44 px legend/tick reference, read small beside the 58 px title
+    → about 36 px for edge labels and 40–44 px for station names and legend entries
+    (+12 to +16 px), with the name and label boxes widened to match. Likely cause:
+    font-size "24" on the route labels and "28" on the station names and legend text.'
+  - 'VQ-02 (both): North Park''s name box covers most of the RE 1 arrowhead arriving
+    from Central Station, and the F→G, G→H and E→I edges run underneath their source''s
+    name box → keep arrowheads and edges clear of the name chips, e.g. by placing
+    each name chip on the side of the node away from its edges or shortening edges
+    at the chip. Likely cause: name boxes drawn at a fixed y + NODE_R + 8 below every
+    node, on top of the edge group.'
+  - 'VQ-05 (both): ''Tech Campus'' overflows its name box on both sides, and a ~300
+    px empty band lies between the subtitle and the topmost nodes while the bottom
+    is tight → box width from the actual text length and MARGIN_TOP reduced by about
+    120 px. Likely cause: box_w = 15.5 * len(name) + 30 underestimates wide glyphs;
+    MARGIN_TOP = 170 plus node y = 0.18.'
+  - 'CQ-01 (code): line 35 tags `TARGET` with the role `routes` that `SOURCE` already
+    has; 7 more at lines 36–42, and a helper function to_svg (lines 71–72) → one string
+    constant per required column role with a trailing # role: <role> comment naming
+    a spec role, and the coordinate transform inlined as plain expressions. Likely
+    cause: two constants for one role; a helper def.'
+  - 'LM-01, LM-02 (code): no pygal call anywhere — the diagram is hand-built SVG through
+    ElementTree and cairosvg, so the file never uses the library it is filed under
+    → build the chart with a pygal chart class (e.g. pygal.XY with stroke for edges,
+    nodes as a dot series, Style for theme tokens) and draw only what pygal cannot
+    (arrowheads, edge labels) into its SVG. Likely cause: the network type treated
+    as outside pygal''s scope.'
+  - 'Suggestion: bolding the hub station University''s name chip would give the network
+    a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface at #FAF8F1 (correct theme token)
-      Chrome: Title (56px bold) and subtitle (32px) in dark INK color, clearly readable; station labels (24px) and route labels (22px) all properly visible against light background
-      Data: 10 stations as green circles (#009E73), colored routes (green RE, orange EX, blue LO) with directed arrows; edge labels on elevated boxes with appropriate styling
-      Legibility verdict: PASS - all text fully readable, excellent contrast, no legibility failures
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas
+      Chrome: bold dark title 'network-transport-static · python · pygal · anyplot.ai' with a soft-ink subtitle 'Regional Rail Network - Morning Schedule'; station name chips and edge-label chips in dark ink on #FFFDF6 elevated boxes; 'Route types' legend lower right — all readable, though edge labels (24 px) and names (28 px) are small
+      Data: 10 stations as #009E73 circles with letters A–J, 15 directed edges colored RE #009E73, EX #C475FD, LO #4467A3 with arrowheads at destination borders; North Park's name chip covers the RE 1 arrowhead; 'Tech Campus' overflows its chip
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface at #1A1A17 (correct theme token)
-      Chrome: Title and subtitle flip to light text (#F0EFE8), clearly readable; station and route labels also adapt with light colors on dark elevated boxes; no dark-on-dark failures
-      Data: Route and node colors are IDENTICAL to light render (green #009E73, orange #D55E00, blue #0072B2); only chrome elements changed theme
-      Legibility verdict: PASS - all text readable, no dark-on-dark issues, perfect theme adaptation
+      Background: warm near-black #1A1A17 across the full canvas
+      Chrome: title, subtitle, chips and legend flip to light ink on #242420 chips; no dark-on-dark text
+      Data: identical route and node colors to the light render; only chrome flips
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
-        passed: true
-        comment: Title (56px), subtitle (32px), station labels (24px), route labels
-          (22px) all explicitly sized and readable in both themes
+        passed: false
+        comment: All text readable in both themes, but the edge labels (24 px), station
+          names (28 px) and legend entries (28 px) sit well below pygal's 44 px legend/tick
+          reference and read small (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Station labels in boxes below nodes; route labels on edge midpoints;
-          edge offsets calculated for multiple routes
+        passed: false
+        comment: North Park's name box covers most of the RE 1 arrowhead arriving
+          from Central Station; edges F→G, G→H and E→I run under their source's name
+          box (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (radius 50) and lines (stroke 5) clearly visible and distinguishable
+        comment: Nodes, 4 px edges and arrowheads clearly visible for 15 sparse routes;
+          legend line+arrow glyphs match the edges in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1–3; colorblind-safe; no red-green only coding
+        comment: Green, purple and blue are CVD-distinguishable; route type is also
+          carried by the RE/EX/LO prefix in every label
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 4800×2700 landscape; 150px margins; well-proportioned
+        passed: false
+        comment: Canvas 3200x1800 correct; 'Tech Campus' overflows its name box on
+          both sides, and a ~300 px empty band separates the subtitle from the topmost
+          nodes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; subtitle descriptive
+        comment: No axes (network diagram); title in the mandated format plus a descriptive
+          subtitle — N/A for axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first series; Okabe-Ito order; correct backgrounds; data
-          colors identical theme-to-theme
+        comment: 'Routes in Imprint positions 1–3 (#009E73, #C475FD, #4467A3), nodes
+          in #009E73; backgrounds #FAF8F1 / #1A1A17; data colors identical across
+          themes'
     design_excellence:
-      score: 16
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional custom implementation with route-type color coding,
-          thoughtful edge offsets, elevated label boxes with rounded corners
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint colors, explicit sizes
+          — nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle borders, no unnecessary decoration, generous whitespace
+        passed: false
+        comment: 'Raised by one: each edge label sits on an elevated chip outlined
+          in its route''s color, tying label to edge, and stations carry a letter
+          inside the node plus a name chip'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy with stations as hubs; color guides navigation;
-          time labels tell travel story
+        passed: false
+        comment: Data displayed evenly; no focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +156,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct directed network with station nodes and arrow-marked edges
+        comment: Directed network diagram with labelled station nodes and arrowed
+          route edges
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: labels, directed edges, arrows, route IDs,
-          times, offset edges, color coding, legend'
+        comment: Labels with route id and times, arrows, offset logic for parallel
+          pairs (no duplicate pairs in this data), color by route type with legend,
+          tooltips via <title> in the HTML — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stations positioned by x/y; routes connect source→target; times shown
+        comment: Stations at their provided x/y coordinates; edges connect source→target
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows RE/EX/LO with colors and arrows
+        comment: Title 'network-transport-static · python · pygal · anyplot.ai' correct;
+          legend 'Route types' names RE/EX/LO
     data_quality:
       score: 15
       max: 15
@@ -150,54 +188,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 stations, 15 routes, 3 route types, morning schedule context
+        comment: 10 stations, 15 routes, 3 route types, hub at University; every aspect
+          of the plot type shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Regional rail network plausible; realistic station names and times
-          (06:00–08:30)
+        comment: Plausible regional rail morning schedule with RE/EX/LO services
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 stations and 15 routes optimal for readability
+        comment: 'Checked: every route arrives after it departs, trip durations 15–40
+          min, connections chain in time (RE 1 06:25 arrival → 06:30 departure at
+          North Park); no Check values in the spec'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: No functions/classes; straightforward SVG generation
+        passed: false
+        comment: A helper function to_svg (lines 71–72) and eight column constants
+          all tagged with the single role 'routes' (lines 35–42) break the KISS /
+          adaptable-code structure (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Theme env var properly used; deterministic data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: os, ElementTree, cairosvg and pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear variable names; clean coordinate normalization
+        comment: Appropriate complexity; no available call replaces the SVG geometry
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-{THEME}.html and plot-{THEME}.png
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
       score: 1
       max: 10
@@ -207,24 +249,29 @@ review:
         score: 1
         max: 5
         passed: false
-        comment: Uses raw ElementTree SVG + cairosvg instead of pygal API. Pragmatic
-          for unsupported chart type, but not idiomatic.
+        comment: No pygal API used at all — the chart is hand-written SVG via ElementTree
+          and rasterised with cairosvg (defect line)
       - id: LM-02
         name: Distinctive Features
         score: 0
         max: 5
         passed: false
-        comment: No pygal-specific features leveraged
+        comment: No pygal feature used (defect line)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-2a7b04a927
+  rendered_at: '2026-11-22T13:32:28Z'
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - annotations
   - custom-legend
+  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
