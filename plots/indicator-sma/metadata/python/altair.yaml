@@ -2,51 +2,48 @@ library: altair
 language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:18:47Z'
-updated: '2026-05-19T01:15:17Z'
+updated: '2026-11-22T15:25:48Z'
 generated_by: claude-sonnet
-workflow_run: 26068744577
+workflow_run: 45037599253
 issue: 3651
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - Full theme-adaptive chrome implementation — all text, grid, legend, and background
-    tokens correctly flip between light and dark
-  - Dual visual encoding (color + dash pattern + stroke weight) makes all four series
-    distinguishable without relying on hue alone — excellent CVD accessibility
-  - Idiomatic Altair declarative grammar with strokeDash and strokeWidth as typed
-    encoding scales with explicit domain/range
-  - Clean, reproducible flat code structure with np.random.seed(42); correct output
-    filenames for both PNG and HTML
+  - 'Close price drawn solid and heaviest in #009E73 while the SMAs use thinner, period-graded
+    dash patterns, so the price stays the dominant series and every line is distinguishable
+    without hue'
+  - 'Correct rolling windows: each SMA starts only where its window is full (SMA 200
+    from mid-July 2025), with null gaps rather than back-fill'
+  - Idiomatic tidy reshape via df.melt with strokeDash and strokeWidth bound as encoding
+    channels to the series domain
+  - Full theme-adaptive chrome; both renders readable, canvas padded exactly to 3200x1800
+  - Typed tooltips with date and $-formatted price in the HTML output
   weaknesses:
-  - 'SMA 200 line is slightly faint: [2,2] dash pattern combined with 1.5px stroke
-    width reduces visibility on the light background — increase stroke to 2.0px or
-    use [4,3] dash'
-  - DE-03 storytelling is limited — chart displays data without guiding the viewer
-    to crossover signals or trend inflection points; emphasis on key crossover moments
-    would improve this
-  - 300-day window gives only ~100 days of SMA-200 history; using 400–500 periods
-    would better demonstrate long-term SMA behavior per spec guidance
+  - 'Suggestion: the style guide prefers a y-axis-only grid on line charts; dropping
+    the vertical date grid lines would quiet the background.'
+  - 'Suggestion: a slightly larger title would balance the 3200 px canvas better;
+    at about 39% of the width it reads modest.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "indicator-sma · python · altair · anyplot.ai" clearly readable in dark ink at 28px. X-axis label "Date" and Y-axis label "Price ($)" legible at 22px. Tick labels at 18px with −45° angled X-axis labels avoiding overlap. Legend in top-right with all series labeled.
-      Data: Close Price renders as solid green (#009E73) at 3.5px — most prominent. SMA 20 in orange (#D55E00) long-dashed. SMA 50 in blue (#0072B2) medium-dashed. SMA 200 in purple (#CC79A7) fine-dashed [2,2] — visible but slightly faint at 1.5px stroke. Y-axis gridlines at 0.10 opacity, very subtle.
-      Legibility verdict: PASS — all text readable, no legibility failures
+      Background: Warm off-white #FAF8F1 across the canvas and plot view; not pure white.
+      Chrome: Bold centred title "indicator-sma · python · altair · anyplot.ai" in dark ink; y-axis title "Price ($)", x-axis title "Date"; horizontal quarterly tick labels Jan 2025 … Jan 2026 and price ticks 90-140 in INK_SOFT. Subtle grid on both axes; four-sided view frame. Framed legend top-left on #FFFDF6 with "Close price", "SMA 20", "SMA 50", "SMA 200". All text readable.
+      Data: Close price solid green #009E73, thickest line, rising from ~100 through a ~87 trough to ~145. SMA 20 purple #C475FD long dash starting late January; SMA 50 blue #4467A3 medium dash from mid-February; SMA 200 ochre #BD8233 fine dash from mid-July, smoothest and lowest. SMAs lag and cross in the sideways spring stretch.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: All text flips to light colors (INK→#F0EFE8, INK_SOFT→#B8B7B0). Title, axis labels, tick labels, and legend text all clearly readable against the dark background. No dark-on-dark failures detected. Legend box uses ELEVATED_BG (#242420) with INK_SOFT stroke. Grid remains subtle.
-      Data: Data colors are identical to light render — Close Price #009E73, SMA 20 #D55E00, SMA 50 #0072B2, SMA 200 #CC79A7. The SMA 200 purple is slightly more visible on dark background than light.
-      Legibility verdict: PASS — no dark-on-dark text issues, all elements distinguishable
+      Background: Warm near-black #1A1A17; not pure black.
+      Chrome: Title and axis titles in light ink #F0EFE8, ticks in #B8B7B0, legend on #242420 with light labels; grid subtle and visible. No dark-on-dark text.
+      Data: Identical colors, dashes and widths to the light render; green close, purple, blue and ochre SMAs all clearly visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -54,74 +51,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px, legend 16/18px; fully readable in both themes'
+        comment: Title 16, axis titles 12, ticks and legend 10 at scale 4, all set
+          explicitly; title spans about 39% of the width; every text readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels angled at -45deg, no label collisions; legend in corner
-          avoids data overlap
+        comment: Horizontal quarterly tick labels well spaced; legend sits in the
+          empty top-left corner above the early price path
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Close Price line prominent at 3.5px solid; SMA 20/50 clear; SMA 200
-          at [2,2] dash with 1.5px stroke is slightly faint but distinguishable
+        comment: Close at 2.6 solid dominates; SMA lines at 1.5-1.9 with dashes clearly
+          visible; legend glyphs match the line styles in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe; redundant dash pattern encoding adds non-hue
-          distinguishability
+        comment: Hue plus dash pattern plus stroke width separate the four series
+          without relying on hue alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Good layout with data filling canvas well; minor: canvas utilization
-          could be slightly better'
+        comment: 3200x1800 canvas (gate passed); chart fills about 78% of the width
+          with balanced margins; legend inside the plot near its data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date on X-axis, Price ($) on Y-axis with units present
+        comment: '''Date'' and ''Price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order followed; backgrounds #FAF8F1
-          light/#1A1A17 dark; theme-adaptive chrome correct'
+        comment: 'Close #009E73, SMAs #C475FD, #4467A3, #BD8233 in Imprint order;
+          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct; data colors identical
+          across themes'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Intentional stroke-weight hierarchy and legend styling above configured
-          defaults but not publication-grade
+        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes),
+          nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Grid at 0.10 opacity is genuinely subtle; some Altair defaults remain
-          (full-box spine via configure_view stroke)
+        comment: Subtle grid at 0.10 opacity; framed view per the altair prompt; nothing
+          beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Visual hierarchy through stroke weight and dash pattern; no emphasis
-          on crossover signals or trend annotations
+        comment: Close-prominent hierarchy is what the Notes ask for; no emphasis
+          chosen beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -131,53 +130,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: line chart with price series and three SMA overlays'
+        comment: Price line with three SMA overlays on one axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Close Price, SMA 20, SMA 50, SMA 200 all present; legend with period
-          labels; distinct colors and dash styles; y-axis gridlines
+        comment: Close prominent (C1), distinct SMA colors (C2), legend with periods
+          (C3), SMAs start where windows fill (C4), SMAs behave like their periods
+          (C5), y-axis grid present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X-axis, Price ($) on Y-axis; all 300 periods rendered; SMA
-          200 correctly shows only after 200-day window
+        comment: Date on x, price on y with zero=False; all 400 days visible; nulls
+          leave gaps, no back-fill
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'indicator-sma · python · altair · anyplot.ai'; legend
-          labels 'Close Price', 'SMA 20', 'SMA 50', 'SMA 200'
+        comment: Title 'indicator-sma · python · altair · anyplot.ai'; legend entries
+          'Close price', 'SMA 20', 'SMA 50', 'SMA 200'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all three SMA timeframes with meaningful divergence; 300 days
-          gives only ~100 days of SMA-200 history
+        comment: Downtrend, sideways stretch with crossings and uptrend; SMA 200 covers
+          about 200 days
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated daily stock returns with upward trend; realistic starting
-          price of $100; neutral financial domain
+        comment: Daily stock closing prices, the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range ~$86-$128 over 300 days; SMA calculation correct with
-          appropriate lag
+        comment: 'Checked: SMA 20 starts about Jan 20, SMA 50 about Feb 19, SMA 200
+          about Jul 19 2025 (day 200), matching pandas rolling(window) on lines 46-48;
+          prices $87-$145 plausible'
     code_quality:
       score: 10
       max: 10
@@ -187,55 +187,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports -> data -> reshape -> chart -> save; no
-          functions or classes'
+        comment: 'Flat zones: tokens, constants, Data block, Plot, Output; adaptability
+          check passes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all used
+        comment: os, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; wide-to-long reshape via concat appropriate for
-          Altair grammar
+        comment: df.melt reshape and rolling().mean(); no written-out algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6.1
-          API
+        comment: plot-{THEME}.png padded to 3200x1800 and plot-{THEME}.html; Altair
+          6 API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper declarative grammar with typed encodings, scale domains, Legend/Axis/configure_*
-          APIs used correctly
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses strokeDash and strokeWidth as encoding channels with explicit
-          scale domains — distinctively Altair; interactive tooltips; HTML export
+        comment: Correct declarative long-form encoding; default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: strokeDash and strokeWidth driven as encoding channels with domain-bound
+          scales, plus typed tooltips in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T15:21:31Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - hover-tooltips
   - html-export
@@ -244,5 +246,5 @@ impl_tags:
   - wide-to-long
   dataprep:
   - rolling-window
-  - time-series
-  styling: []
+  styling:
+  - publication-ready
