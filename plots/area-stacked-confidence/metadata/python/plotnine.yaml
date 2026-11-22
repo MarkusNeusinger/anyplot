@@ -12,36 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 99
+quality_score: 74
 review:
   strengths:
-  - Excellent theme adaptation with proper INK and INK_SOFT tokens throughout
-  - Thoughtful transparency layering (25% bands, 70% main areas) communicates both
-    hierarchy and uncertainty
-  - Perfect Okabe-Ito compliance with consistent colors across light and dark renders
-  - Clean, idiomatic plotnine code demonstrating strong library mastery
-  - Realistic, well-scaled energy forecast data with appropriate confidence interval
-    growth
-  - Properly formatted title and legend clearly communicating visualization purpose
-  - Both renders fully readable with no legibility issues in either theme
-  weaknesses: []
+  - Bands placed on each series' cumulative edge, so layer and band stack order match
+  - Theme tokens on all chrome; both renders readable
+  - Descriptive y-axis title with unit (TWh)
+  - Legend title states the bands are 90% CIs
+  weaknesses:
+  - 'VQ-05 (both): the PNG is saved at 4800x2700 → the 3200x1800 landscape canvas
+    (-1600 x -900 px). Likely cause: figure_size=(16, 9) with dpi=300 instead of width=8,
+    height=4.5, dpi=400.'
+  - 'SC-04 (both): the title reads ''Python'' → the mandated lowercase ''python''.
+    Likely cause: the title string literal.'
+  - 'CQ-01 (code): no column-0 # Data / # Plot block markers, no column constants
+    for the x, y, y_lower, y_upper and category roles, and an IMPRINT list of 3 of
+    8 positions → constants above one Data block that binds df, and the full eight-position
+    palette. Likely cause: column names and the palette typed for the sample data.'
+  - 'VQ-03 (both): the lower half of each 90% band lies under its own layer''s 0.7-alpha
+    fill and reads darker than the layer, not as a lighter shade (C2); visible only
+    in the strip above each edge → draw the bands after the stacked layers (or lower
+    the layer alpha) so each band reads as a lighter, semi-transparent shade on both
+    sides of its edge. Likely cause: the band geom_ribbon is added before the 0.7-alpha
+    layer ribbon.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all dark text, clearly readable; legend on right with elevated light background (#FFFDF6)
-      Data: Three stacked areas (Solar green #009E73, Wind orange #D55E00, Hydro blue #0072B2) with dual transparency layers; 25% alpha confidence bands, 70% alpha central areas; central trend lines visible
-      Grid: Subtle major grid lines at 10% opacity, minor grid removed
-      Legibility verdict: PASS - All elements readable, strong contrast, no light-on-light failures
+      Background: warm off-white #FAF8F1 (saved at 4800x2700).
+      Chrome: title 'area-stacked-confidence · Python · plotnine · anyplot.ai'; x 'Quarter' ticks 1-19 odd; y 'Energy Consumption (TWh)' 0-400; framed panel; legend 'Energy Source (with 90% CI)' in a bordered box. All text readable.
+      Data: Solar #009E73 bottom, Wind #C475FD middle, Hydro #4467A3 top, edge lines, translucent bands widening over 20 quarters.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title, axis labels (light text INK #F0EFE8, secondary INK_SOFT #B8B7B0) clearly readable against dark background; legend has elevated dark background (#242420); no dark-on-dark failures
-      Data: Okabe-Ito colors identical to light render (Solar #009E73, Wind #D55E00, Hydro #0072B2); same transparency structure maintained
-      Grid: Subtle major grid at 10% opacity with light rule color
-      Legibility verdict: PASS - All text has excellent contrast, no dark-on-dark conflicts, brand green visible and clear
+      Background: warm near-black #1A1A17.
+      Chrome: light title, axis titles, ticks and legend text; no dark-on-dark.
+      Data: same colors as light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -49,71 +57,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized (title 24pt, labels 20pt, ticks 16pt) and
-          readable in both themes
+        comment: Title 24 pt, axis 20 pt, ticks 16 pt at 16x9 in; readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no collisions, well-positioned legend
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: All three series distinguishable with proper alpha transparency layering
+        passed: false
+        comment: Edges and layers clear; the lower half of each 90% band lies under
+          its own layer's 0.7-alpha fill and reads darker than the layer, not as a
+          lighter shade (C2); visible only in the strip above each edge (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Green, lavender, blue separate well
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 16:9 landscape appropriate, no cutoffs, good proportions
+        passed: false
+        comment: Saved at 4800x2700 instead of the 3200x1800 canvas (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, proper title format
+        comment: '''Energy Consumption (TWh)'' with unit, ''Quarter'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds correct
-          (#FAF8F1 light, #1A1A17 dark), both renders properly themed'
+        comment: Imprint order in the render; correct backgrounds in both themes
     design_excellence:
-      score: 19
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 4
         max: 8
-        passed: true
-        comment: Very polished with Okabe-Ito palette and thoughtful transparency
-          layering; excellent visual hierarchy
+        passed: false
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Minimal spines, subtle grid (10% alpha), generous whitespace
+        passed: false
+        comment: Spine and grid rules met; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Clear focal point, visual hierarchy through opacity, confidence band
-          widening tells story of uncertainty
+        passed: false
+        comment: Data displayed; no hierarchy beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -121,27 +128,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area with confidence bands
+        comment: Stacked area with confidence bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple series, confidence intervals per series, proper stacking,
-          legend
+        comment: Stacked layers from zero, edge lines, bands on stacked edges, symmetric,
+          legend names the CI
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Quarter (1-20), Y: cumulative TWh, confidence bands mapped correctly'
+        comment: Bands placed on cumulative edges; marks at their values
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Correct format with spec-id, language, library; legend clearly describes
-          sources + CI
+        passed: false
+        comment: Title capitalises 'Python' instead of the mandated 'python' (defect
+          line)
     data_quality:
       score: 15
       max: 15
@@ -151,74 +158,73 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates stacking, composition, and uncertainty visualization
+        comment: Three series with widening intervals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Energy forecast by source is realistic; quarterly 5-year horizon
-          plausible; neutral topic
+        comment: Quarterly energy consumption by source; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TWh units appropriate, 1-20 quarters reasonable, 0-400 TWh visually
-          sensible
+        comment: 50-230 TWh per source per quarter; plausible scale. No Check values
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Direct script execution, no unnecessary functions
+        passed: false
+        comment: No Data/Plot block markers, no column constants, palette sized to
+          3 positions (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unnecessary libraries
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear variable naming, no fake UI, appropriate complexity
+        comment: Verbose but no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: plot-{THEME}.png
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct ggplot() pipeline, proper aes() mapping, geom_ribbon() for
-          confidence bands, appropriate theme customization
+        passed: false
+        comment: geom_ribbon layering with manual scales
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Advanced use of layered geom_ribbon(), theme-adaptive chrome mastery,
-          proper alpha blending
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-bf70a1c05e
 impl_tags:
   dependencies: []
   techniques:
