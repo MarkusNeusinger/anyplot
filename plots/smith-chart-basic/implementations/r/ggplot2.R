@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' smith-chart-basic: Smith Chart for RF/Impedance
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-05-20
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 80/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(ragg)
@@ -11,8 +11,9 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+# Imprint palette
 IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
-                 "#AE3030", "#2ABCCD", "#954477")
+               "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # --- Smith chart grid -------------------------------------------------------
 theta <- seq(0, 2 * pi, length.out = 361)
@@ -102,8 +103,8 @@ p <- ggplot() +
   # VSWR = 2 reference circle
   geom_path(data = vswr_circle, aes(x = x, y = y),
             color = IMPRINT[3], linewidth = 0.5, linetype = "dashed") +
-  annotate("text", x = -0.38, y = 0.06,
-           label = "VSWR = 2", size = 3.0, color = IMPRINT[3]) +
+  annotate("text", x = -0.37, y = -0.2, hjust = 1,
+           label = "VSWR = 2", size = 3.8, color = IMPRINT[3]) +
   # Matched-load centre marker
   geom_point(aes(x = 0, y = 0),
              color = INK_SOFT, size = 1.8, shape = 3) +
@@ -122,14 +123,16 @@ p <- ggplot() +
   geom_point(data = locus[nrow(locus), ], aes(x = gre, y = gim),
              color = IMPRINT[2], size = 3.5, shape = 17) +
   # Frequency labels
-  geom_text(data = label_pts, aes(x = gre, y = gim, label = lbl),
-            color = INK, size = 3.2, hjust = -0.15, lineheight = 0.9) +
+  geom_text(data = label_pts[c(1, 3), ], aes(x = gre, y = gim, label = lbl),
+            color = INK, size = 3.8, hjust = -0.15, lineheight = 0.9) +
+  geom_text(data = label_pts[2, ], aes(x = gre, y = gim, label = lbl),
+            color = INK, size = 3.8, hjust = 1.08, vjust = -0.25, lineheight = 0.9) +
   # Resistance value labels along real axis
   annotate("text",
            x = (r_vals - 1) / (r_vals + 1),
-           y = -0.06,
+           y = -0.03,
            label = as.character(r_vals),
-           size = 3.0, color = INK_SOFT, vjust = 1) +
+           size = 3.4, color = INK_SOFT, vjust = 1) +
   coord_fixed(xlim = c(-1.15, 1.35), ylim = c(-1.15, 1.15)) +
   labs(
     title = "smith-chart-basic · r · ggplot2 · anyplot.ai",

@@ -2,168 +2,164 @@ library: ggplot2
 language: r
 specification_id: smith-chart-basic
 created: '2026-05-20T02:01:58Z'
-updated: '2026-05-20T02:21:27Z'
+updated: '2026-11-22T17:52:01Z'
 generated_by: claude-sonnet
-workflow_run: 26135676591
+workflow_run: 45051279450
 issue: 3792
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 80
 review:
   strengths:
-  - 'Physically correct Smith chart geometry: constant-r circles and constant-x arcs
-    computed from proper formulas, arc clipping to unit disc handled cleanly'
-  - 'Domain-aware data: real RLC antenna model with exact 2 GHz resonance, physically
-    correct reflection coefficient trajectory'
-  - 'Full spec coverage: all required features present (grid, normalized locus, frequency
-    labels, VSWR circle, center marker)'
-  - Both themes correctly implemented with INK/INK_SOFT/PAGE_BG tokens; data colors
-    identical across themes, only chrome flips
-  - 'Excellent code quality: idiomatic R/ggplot2 patterns (do.call/lapply, coord_fixed,
-    annotate with arrow), KISS structure, deterministic data'
+  - 'Physically correct series-RLC antenna model: resonance exactly at 2 GHz lands
+    near the centre (Γ ≈ -0.05), capacitive below and inductive above the real axis'
+  - 'Correct Smith geometry: r circles at r/(1+r) with radius 1/(1+r), reactance arcs
+    clipped to the unit disc, coord_fixed keeps the boundary a true circle'
+  - Theme tokens threaded through every text and grid layer; both renders fully readable
   weaknesses:
-  - Annotation text (frequency labels, resistance labels, VSWR label) at size=3.0-3.2
-    (~47-50 px) is slightly small for mobile (~8 px when scaled to 400 px width);
-    increase to size=3.5-4.0
-  - 'Visual polish gap: resistance labels below real axis lack typographic finesse;
-    consider adding outer circle label ''|Gamma|=1'' or more elegant resistance annotations
-    for DE-01/DE-02 improvement'
-  - 'LM-02: Could leverage more ggplot2-distinctive features such as annotate(''rect'')
-    for VSWR zone shading or geom_ribbon for highlighting impedance regions'
+  - 'VQ-02 (both): ''VSWR = 2'' is grazed by the -0.2 reactance arc, the resistance
+    labels ''0.5'' and ''2'' are crossed by the dashed VSWR circle and ''1'' by the
+    r=1 circle → place each resistance label in a gap clear of the other lines (e.g.
+    above the axis on its own circle) and the VSWR label where no arc passes. Likely
+    cause: annotate(''text'', y = -0.03) and the VSWR label at (-0.37, -0.2).'
+  - 'VQ-05 (both): xlim = c(-1.15, 1.35) is asymmetric, so the disc sits left of centre
+    with an empty band on the right and the Cartesian tick labels float ~0.15 units
+    away from the disc → symmetric limits hugging the unit circle (about ±1.1). Likely
+    cause: coord_fixed(xlim = c(-1.15, 1.35)).'
+  - 'SC-02 (both): Cartesian axes are drawn around the Smith grid (Re(Γ)/Im(Γ) titles,
+    -1.0…1.0 ticks), against the spec''s ''grid in place of Cartesian axes'' property
+    → drop axis.text and axis.title (element_blank()). Likely cause: theme() keeps
+    axis.title/axis.text and labs() sets x/y.'
+  - 'SC-01 (both): an unrequested sweep-direction arrow and an end marker in a second
+    colour (#C475FD triangle) add a callout and a colour the basic variant does not
+    ask for; the triangle also covers the arrowhead → remove the arrow and draw the
+    end marker in the locus green. Likely cause: annotate(''segment'', arrow = …)
+    and geom_point(color = IMPRINT[2], shape = 17).'
+  - 'Suggestion: label a few reactance arcs (±j0.5, ±j1, ±j2) at the boundary so the
+    upper and lower halves read as inductive/capacitive.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "smith-chart-basic · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Re(Γ)"/"Im(Γ)" in dark ink at size=10. Tick labels (-1.0 to 1.0) in #4A4A44 (INK_SOFT) at size=8. Resistance-axis labels (0, 0.2, 0.5, 1, 2, 5) in INK_SOFT, small but legible.
-      Data: Primary impedance locus in #009E73 (brand green, Okabe-Ito #1) as thick connected path (linewidth=1.4). Start marker at 1 GHz: green circle. End marker at 3 GHz: orange triangle (#D55E00, Okabe-Ito #2). Directional arrow at 3 GHz end in green. VSWR=2 dashed circle in #0072B2 (Okabe-Ito #3). Smith chart grid in #4A4A44 with alpha=0.65. Frequency labels ("1 GHz", "2 GHz (res.)", "3 GHz") in dark ink.
+      Background: warm off-white #FAF8F1, square 2400x2400.
+      Chrome: title 'smith-chart-basic · r · ggplot2 · anyplot.ai' dark ink at top left (~57% width); Cartesian axes Re(Γ)/Im(Γ) with -1.0…1.0 ticks in INK_SOFT; resistance labels 0, 0.2, 0.5, 1, 2, 5 under the real axis. All readable.
+      Data: grey Smith grid (r circles + reactance arcs), dark boundary circle, blue dashed VSWR=2 circle labelled lower left; green #009E73 locus from 1 GHz (dot, lower right) through '2 GHz (res.)' (label left of the curve, clear of it) to 3 GHz (purple triangle + arrowhead, upper). Disc sits left of centre with an empty right band.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in off-white (#F0EFE8 = INK for dark theme), clearly readable against dark surface. Axis labels in #F0EFE8, tick labels in #B8B7B0 (INK_SOFT for dark). Smith chart grid lines appear in #B8B7B0 providing good contrast. No dark-on-dark text failures — all text uses light theme tokens correctly. Frequency labels in #F0EFE8 (INK token), readable.
-      Data: Impedance locus retains #009E73 — identical to light render, confirming correct data/chrome separation. Orange end marker (#D55E00) and blue VSWR circle (#0072B2) unchanged. All data elements clearly distinguishable against dark background.
+      Background: warm near-black #1A1A17.
+      Chrome: title and labels in light ink, ticks in light grey; no dark-on-dark text.
+      Data: identical colours to light (green locus, purple end triangle, blue dashed VSWR circle); grid lines light grey, subtle but traceable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis.title=10, axis.text=8).
-          Readable in both themes. Annotation text at size=3.0-3.2 (~47-50 px) is
-          slightly small for mobile (~8 px at 400 px viewport).
+        comment: Theme sizes 12/10/8 pt, annotations 3.0-3.8 mm; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping elements. Frequency labels well-spaced from each other
-          and from grid. Resistance-axis labels well-distributed.
+        passed: false
+        comment: '''VSWR = 2'' label grazed by the -0.2 reactance arc; resistance
+          labels 0.5 and 2 crossed by the dashed VSWR circle, ''1'' by the r=1 circle
+          (defect line)'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Impedance locus (linewidth=1.4) dominates appropriately. Grid lines
-          (linewidth=0.22, alpha=0.65) are subtle references. Start/end markers (size=3.5)
-          clearly visible.
+        comment: 1.4 lw locus, prominent start/end markers, grid subtle but traceable
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette throughout. Green vs orange vs blue all CVD-safe
-          and distinguishable without relying on hue alone.
+        comment: Green locus vs blue dashed VSWR circle, distinct by hue and linetype
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Square 6x6 in @ 400 dpi (2400x2400 px) correct for circular Smith
-          chart. Chart fills canvas well with balanced margins. coord_fixed preserves
-          circular geometry.
+        passed: false
+        comment: Asymmetric xlim (-1.15, 1.35) pushes the disc left with an empty
+          right band; Cartesian tick labels float far from the disc (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Re(Γ) and Im(Γ) use proper mathematical notation for reflection coefficient
-          axes.
+        comment: Re(Γ) / Im(Γ) descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Primary locus #009E73 (Okabe-Ito #1). End marker #D55E00 (Okabe-Ito
-          #2). VSWR circle #0072B2 (Okabe-Ito #3). Backgrounds #FAF8F1/#1A1A17. Both
-          themes chrome-correct.'
+        comment: 'Locus #009E73, backgrounds #FAF8F1/#1A1A17, chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Domain-aware design: directional arrow on sweep, distinct start/end
-          markers, grid weight hierarchy (outer=0.7, inner=0.22), subtle alpha on
-          grid lines. Above generic defaults but not publication-ready.'
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Panel grid removed, custom Smith chart geometry with weight hierarchy.
-          Outer circle heavier than internal arcs. Good refinement but resistance
-          label positioning could be more elegant.
+        comment: Panel grid removed, nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Directional arrow communicates sweep direction. '2 GHz (res.)' annotation
-          highlights resonance. VSWR=2 reference and center marker add engineering
-          context. Clear RF narrative.
+        comment: Resonance point singled out with '(res.)' label as the chart's focal
+          point
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Complete Smith chart: outer unit circle, constant-r circles, constant-x
-          arcs, impedance locus, VSWR circle, center marker.'
+        passed: false
+        comment: Correct Smith chart, but an unrequested sweep-direction arrow and
+          a differently coloured (#C475FD) end triangle add a callout and a second
+          colour (defect line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec features: normalized impedance (Z/Z0=50), connected locus,
-          frequency labels at 1/2/3 GHz, VSWR circle, boundary at |Γ|=1, matched-load
-          center marker.'
+        passed: false
+        comment: 'C1 missed: Cartesian axes with -1.0..1.0 ticks and Re(Γ)/Im(Γ) titles
+          are drawn around the Smith grid instead of the grid replacing them (defect
+          line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Re(Γ) on x-axis, Im(Γ) on y-axis, all data visible within unit circle.
+        comment: Γ computed from Z/Z0; points at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'smith-chart-basic · r · ggplot2 · anyplot.ai' matches required
-          format. Frequency points labeled inline.
+        comment: Title format correct; single locus needs no legend (N/A)
     data_quality:
       score: 15
       max: 15
@@ -173,23 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows resistance circles (r=0-5), reactance arcs (x=±0.2 to ±5),
-          VSWR circle, full impedance sweep with resonance crossing, sweep direction.
+        comment: Resistance circles, reactance arcs, locus crossing resonance, VSWR
+          circle, centre mark
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real RLC antenna model (L=5nH, exact 2 GHz resonance, R=45Ω near
-          50Ω match). 50Ω Z0 is the RF standard. 1-3 GHz covers UHF/microwave range.
+        comment: Series RLC antenna, 45 Ω, 5 nH, 50 Ω reference, 1-3 GHz
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Physically correct: Γ at resonance ≈ -0.053 (near-matched), VSWR=2
-          circle at |Γ|=1/3, locus traces through capacitive (lower) and inductive
-          (upper) half-planes correctly.'
+        comment: 'Checked: resonance Γ = (0.9-1)/(1.9) ≈ -0.053 sits just left of
+          centre on the real axis; VSWR=2 circle at |Γ|=1/3'
     code_quality:
       score: 10
       max: 10
@@ -199,55 +193,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme tokens → grid generation → data → plot
-          → save. No functions or classes.'
+        comment: Linear script, only lapply lambdas
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present. Data deterministic (computed from RLC physics).
+        comment: Deterministic physics model, set.seed present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported, both used.
+        comment: ggplot2, ragg both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: do.call(rbind, lapply()) idiomatic R. Arc clipping to unit disc via
-          vector boolean indexing is clean. No over-engineering.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) produces correct filenames. ragg::agg_png
-          device used explicitly.
+        comment: plot-{THEME}.png via ragg at 6x6 in, 400 dpi
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: coord_fixed() for circular geometry, annotate() with arrow() for
-          directional arrow, geom_path with group for multiple circles, theme_minimal
-          with layered overrides. All idiomatic ggplot2.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: coord_fixed and annotate with arrow() are ggplot2-specific. Grammar
-          of graphics layering builds up chart naturally. Could push further with
-          ggplot2-exclusive annotation or scale features.
+        comment: geom_path with group, coord_fixed, theme layering — baseline
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: coord_fixed for true-circle geometry and grid::arrow() inside annotate('segment')
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T17:49:02Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -256,8 +246,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - grid-styling
