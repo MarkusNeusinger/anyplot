@@ -14,4 +14,4 @@
   `color=None` inherits a black outline under `theme_minimal()`. In
   `letsplot.md` the grid is INK at 15 % and the minor grid INK at 5 %, as in
   plotnine, instead of full INK; lets-plot reads the alpha from an `rgba()`
-  color.
+  color. (#14017)
