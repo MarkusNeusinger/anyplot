@@ -2,12 +2,12 @@ library: plotly
 language: python
 specification_id: venn-basic
 created: '2025-12-29T22:50:20Z'
-updated: '2026-05-15T22:18:03Z'
+updated: '2026-11-22T00:22:51Z'
 generated_by: claude-sonnet
-workflow_run: 25943161443
+workflow_run: 44965063970
 issue: 2444
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/python/plotly/plot-light.html
@@ -15,94 +15,92 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basi
 quality_score: 82
 review:
   strengths:
-  - Correct Okabe-Ito palette (Python=#009E73, JS=#D55E00, SQL=#0072B2) with appropriate
-    transparency for overlap regions
-  - Proportional circle sizing (area proportional to set count) adds informational
-    value
-  - All seven regions labeled with counts and descriptive text - full coverage of
-    the Venn diagram data structure
-  - Hover tooltips with detailed per-circle breakdown are a genuine Plotly advantage
-    over static libraries
-  - Correct square canvas (3600x3600) chosen for a symmetric diagram
-  - 'Theme adaptation fully working: both renders pass legibility and correct background
-    checks'
-  - Deterministic data with realistic, neutral programming-language survey context
+  - 'Area-proportional layout: radii from the set sizes and centre distances solved
+    by bisection on the lens area, so overlaps follow the intersection sizes'
+  - Exclusive region counts derived by inclusion-exclusion from inclusive sizes and
+    placed at each region's centroid
+  - Imprint palette positions 1-3 with 0.45 alpha fills and solid outlines; blends
+    readable and text legible in both themes
+  - Plotly-native hovertext gives each circle's size and shared counts in the HTML
+    output
+  - 'Change request applied: cloud-platform scenario instead of programming languages'
   weaknesses:
-  - Design excellence is functional but not polished - no visual hierarchy or storytelling
-    emphasis beyond showing raw counts
-  - Minor empty space at the bottom of the canvas reduces layout balance
-  - Region description font (18px) is on the small side for the canvas - could be
-    larger for better readability at full resolution
-  - No standout Plotly-distinctive technique beyond hover tooltips - interactive features
-    could be richer (e.g., click to highlight, dynamic filtering)
+  - 'VQ-02 (both): the triple-overlap count ''10'' is drawn across the AWS and GCP
+    outlines because the triple region is a thin sliver → a count clear of the outlines,
+    by a smaller count font in that region or overlap sizes that give the triple region
+    more room. Likely cause: annotation at the region centroid with font size 17 regardless
+    of region extent.'
+  - 'CQ-01 (code): lines 64-82 define two helper functions, lens_area and centre_distance
+    → inline the lens-area formula and the bisection in the centre block, or compute
+    the distances with scipy.optimize.brentq on an inline lambda. Likely cause: geometry
+    factored into def blocks.'
+  - 'Suggestion: the band between the title and the top of the AWS circle is wider
+    than the side margins; tightening the top padding would centre the diagram.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "venn-basic · plotly · anyplot.ai" is dark and clearly readable. Set labels ("Python (100)", "JavaScript (80)", "SQL (60)") are bold dark text outside each circle, fully legible. Region count annotations (60, 35, 25, 20, 10, 15, 10) and descriptive labels ("Only Python", "Only JavaScript", "Only SQL", "All") are readable against the circle fill colors.
-      Data: Three overlapping circles - Python (green #009E73, top), JavaScript (orange #D55E00, bottom-left), SQL (blue #0072B2, bottom-right). Each filled at 0.45 alpha. Overlaps show color blending. All seven regions are labeled.
-      Legibility verdict: PASS - all text reads clearly against the off-white background and circle fills.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'venn-basic · python · plotly · anyplot.ai' dark and centred; bold set names AWS/Azure/GCP with plain sizes 100/80/60 outside each circle; all readable.
+      Data: three translucent circles, AWS #009E73 (largest, left), Azure #C475FD (right), GCP #4467A3 (bottom); bold dark counts 60, 35, 25, 20, 10, 15 and triple 10; the triple '10' crosses the AWS and GCP outlines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) - correct, not pure black
-      Chrome: Title and all set labels are light-colored (#F0EFE8) and clearly visible against the dark background. Region count annotations use light ink and are fully readable. No dark-on-dark failures detected anywhere.
-      Data: Data colors are identical to the light render - Python circle is the same teal-green (#009E73), JavaScript the same orange (#D55E00), SQL the same blue (#0072B2). Only the background and text chrome flipped.
-      Legibility verdict: PASS - both renders fully readable with no theme-adaptation failures.
+      Background: warm near-black #1A1A17.
+      Chrome: title, set names and sizes in light ink; no dark-on-dark.
+      Data: identical outline/fill colors to the light render; counts in light ink readable on every blended fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Sizes explicitly set (title 36px, set labels 28px, region annotations
-          24px, descriptions 18px). Readable in both themes. Region description text
-          (18px) is on the small side for the canvas.
+        comment: Explicit sizes (title 18, counts 17 bold, set labels 16 at scale
+          4); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
-        passed: true
-        comment: No significant overlap; intersection region annotations (10, 20,
-          10, 15) are tight but distinct and readable.
+        passed: false
+        comment: The triple-overlap count '10' sits across the AWS and GCP outlines
+          (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All three circles clearly visible with 0.45 alpha transparency showing
-          overlapping regions.
+        comment: Circles at 0.45 alpha with 2.5 px outlines, every region and outline
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; three distinct colors (green/orange/blue)
-          distinguishable without relying on hue alone.
+        comment: Green / lilac / blue are CVD-distinct; counts carry the values, not
+          hue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Diagram fills 60-70% of canvas. Balanced overall, but some empty
-          space at the bottom of the square canvas.
+        comment: 2400x2400 square canvas, diagram fills the frame, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'venn-basic · plotly · anyplot.ai' is correct. No axis labels
-          needed (axes hidden for Venn diagram).
+        comment: Axes hidden (N/A for a Venn); set names and sizes labelled at each
+          circle
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Python=#009E73 (position 1), JS=#D55E00 (position 2), SQL=#0072B2
-          (position 3). Background #FAF8F1/#1A1A17. Text uses INK tokens. Full compliance
-          in both renders.'
+        comment: 'Imprint positions 1-3 (#009E73, #C475FD, #4467A3); #FAF8F1 / #1A1A17
+          backgrounds; identical data colors in both themes'
     design_excellence:
       score: 9
       max: 20
@@ -111,24 +109,22 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Well-configured with correct Okabe-Ito palette + transparency and
-          proportional circles. Looks like a polished library default but no exceptional
-          design thought.
+        passed: false
+        comment: 'Style-guide baseline: bold counts, bold set name over plain size;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Axes hidden, no grid, clean background, sensible margins. Some empty
-          canvas at bottom. Beyond minimal but not fully polished.
+        passed: false
+        comment: Set labels placed radially away from the diagram centre, computed
+          from the layout, so they never collide with the circles
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data is displayed correctly but no visual hierarchy, emphasis, or
-          storytelling. All regions treated equally with no focal point.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3-circle Venn diagram with overlapping regions.
+        comment: Three-set Venn, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 3 circles, transparency, area-proportional
-          sizing, counts in each region, distinct colors, set labels.'
+        comment: Area-proportional circles, pairwise distances solved from the intersection
+          sizes, exclusive counts in each region, translucent distinct colors, set
+          labels outside
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All seven regions correctly calculated and labeled with counts.
+        comment: Radii from sqrt(size/pi), overlaps from the lens-area bisection;
+          layout-positioned type
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'venn-basic · plotly · anyplot.ai' correct. No legend (showlegend=False);
-          set labels annotated directly on diagram instead.
+        comment: Title 'venn-basic · python · plotly · anyplot.ai'; no legend needed
+          (direct labels)
     data_quality:
       score: 15
       max: 15
@@ -168,89 +166,90 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: exclusive regions, all pairwise intersections,
-          triple intersection, proportional sizing.'
+        comment: All seven regions, pairwise and triple overlaps present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Programming language preference survey (Python, JavaScript, SQL)
-          is a real, neutral, plausible scenario.
+        comment: Cloud platforms (AWS, Azure, GCP) used by surveyed engineering teams;
+          neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Set sizes (100, 80, 60) and overlaps (30, 20, 25, triple=10) are
-          logically consistent and plausible.
+        comment: 'Checked: exclusives 60/35/25 and pairwise-only 20/10/15, triple
+          10 fall out of the inclusion-exclusion loop (lines 53-61) from 100/80/60
+          and 30/20/25/10'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Linear structure: imports → data → calculations → traces → annotations
-          → layout → save. No functions or classes.'
+        passed: false
+        comment: Two helper functions lens_area and centre_distance (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data. No randomness so no seed needed.
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects — all used.
+        comment: os, combinations, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Loop for circle traces is clean. Manual position
-          calculations are necessary for Venn diagrams.
+        comment: Geometry is necessary for proportional layout; nothing a call replaces
+          at a fraction of the length
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API. Correct
-          filenames.
+        comment: plot-{THEME}.png and .html, current API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: go.Scatter with fill='toself' for circles, fig.add_annotation() for
-          labels, fig.update_layout() for theme. Correct Plotly patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Hover tooltips (hoverinfo/hovertext) with per-circle breakdowns are
-          a genuine Plotly advantage. HTML export included. Could go further with
-          e.g. click-to-highlight or annotation-on-hover.
+        passed: false
+        comment: 'go.Scatter fill=''toself'', add_annotation, scaleanchor for equal
+          aspect: standard patterns'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Per-circle hovertext with set size and shared counts in the HTML
+          output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T00:19:13Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - hover-tooltips
   - html-export
-  - patches
   patterns:
+  - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - set-operations
   styling:
   - alpha-blending
   - minimal-chrome
