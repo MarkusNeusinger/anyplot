@@ -2,45 +2,51 @@ library: plotnine
 language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:15:55Z'
-updated: '2026-05-17T16:43:48Z'
-generated_by: claude-haiku
-workflow_run: 25996427092
+updated: '2026-11-22T07:26:31Z'
+generated_by: claude-sonnet
+workflow_run: 44997774698
 issue: 3418
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality with excellent legibility in both light and dark themes
-  - Flawless spec compliance and data quality
-  - Clean, reproducible code with proper theme tokens
-  - Idiomatic plotnine usage with grammar of graphics
-  - Okabe-Ito palette correctly implemented with brand green (#009E73) as first series
-  - Theme-adaptive chrome properly implemented across both renders
+  - 'All four characteristic properties hold: straight segments at shared bin midpoints,
+    every polygon closed on a zero baseline that starts the frequency axis'
+  - 'Theme tokens threaded through every chrome element; Imprint order kept from the
+    data via scale limits, so Students get #009E73 in both renders'
+  - Markers and a translucent fill (alpha 0.18), both allowed by the Notes, keep the
+    overlapping Students/Professionals polygons readable
+  - Customer-age scenario gives three clearly different shapes (narrow tall, broad,
+    shifted right) with descriptive axis titles carrying units
   weaknesses:
-  - 'Design Excellence modest (9/20): well-configured defaults but lacks exceptional
-    aesthetic polish'
-  - All four spines retained (could remove top/right for minimalist style per guide)
-  - No visual hierarchy or emphasis to create data storytelling
+  - 'VQ-05 (both): the legend title ''Segment'' and the label ''Professionals'' touch
+    the legend frame with no inner padding → leave about 4-6 px between text and frame.
+    Likely cause: legend_background frame with default legend_box_margin/legend_margin;
+    set legend_margin or drop the frame color.'
+  - 'Suggestion: x-axis breaks only at 30, 50 and 70; breaks every 10 years would
+    make the bin positions easier to read.'
+  - 'Suggestion: compute the polygon with plotnine''s stat_bin (geom_freqpoly with
+    shared breaks plus a stat_bin area layer) instead of numpy to showcase the grammar.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title "frequency-polygon-basic · plotnine · anyplot.ai" in dark text (clearly readable); X-axis "Response Time (ms)" with units; Y-axis "Frequency"; all tick labels in soft gray; legend "Condition" on right with green/orange/blue entries—all readable with no overlap
-      Data: Three frequency polygon lines with semi-transparent fill: Control (#009E73), Treatment A (#D55E00), Treatment B (#0072B2)—Okabe-Ito canonical order; lines clearly visible and overlapping appropriately; fills enhance without obscuring data
-      Legibility verdict: PASS - All elements perfectly readable
+      Background: warm off-white #FAF8F1, 3200x1800 landscape
+      Chrome: title 'frequency-polygon-basic · python · plotnine · anyplot.ai' in dark ink; x-axis 'Customer age (years)', y-axis 'Frequency (customers per bin)', soft-ink tick labels (30/50/70; 0-125); L-shaped axis lines, subtle grid; framed legend 'Segment' on the right. All readable.
+      Data: three frequency polygons with markers and translucent fill: Students #009E73 (tall narrow peak ~126 at age ~22), Professionals #C475FD (broad peak ~88 at ~36), Retirees #4467A3 (peak ~61 at ~68). Shared bins; every line starts and ends at zero on the baseline.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title in light text clearly readable against dark background; axis labels and tick labels all light-colored (INK and INK_SOFT tokens properly applied); legend has elevated background (#242420) with light text—all readable
-      Data: Three frequency polygon lines identical in color to light render (#009E73, #D55E00, #0072B2); fills visible; no dark-on-dark failures; text colors flipped to light for readability
-      Legibility verdict: PASS - All elements readable; theme adaptation correct
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles in light ink, tick labels in light soft ink, legend on elevated #242420 with light text; no dark-on-dark text.
+      Data: identical line, marker and fill colors to the light render; fills read darker on the dark surface as expected; #009E73 clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -48,49 +54,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 24pt, labels 20pt, ticks 16pt;
-          all perfectly readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (style-guide
+          references); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all labels and legend have proper spacing
+        comment: No text collides with text or data; crossing polygons stay apart
+          through translucent fills
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Three frequency polygon lines clearly visible; transparent fill visible
-          and appropriate
+        comment: Lines 0.9 and markers 1.6 suit 21 vertices per group; legend glyphs
+          (line, dot, fill swatch) visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good contrast; no red-green-only signal
+        comment: Green, violet and blue differ in hue and lightness; no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 16:9 landscape utilizes canvas well; balanced margins; legend near
-          plot
+        passed: false
+        comment: Canvas 3200x1800, balanced proportions; legend title and the 'Professionals'
+          label abut the legend frame (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis includes units (Response Time (ms)); descriptive labels
+        comment: '''Customer age (years)'' and ''Frequency (customers per bin)'' are
+          descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand), then #D55E00, #0072B2 (Okabe-Ito order);
-          backgrounds correct; theme chrome correct in both renders'
+        comment: 'First group #009E73, then #C475FD and #4467A3 in Imprint order;
+          backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -98,22 +107,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with proper palette and theme support;
-          clean but not exceptional design
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and reasonable whitespace; all four spines retained (could
-          remove top/right for cleaner aesthetic)
+        comment: L-shaped spines and subtle grid as the style guide asks; nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly; no explicit visual hierarchy or emphasis
-          to guide viewer
+        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency polygon implementation using geom_freqpoly()
+        comment: Frequency polygon, one per group, with the markers and translucent
+          fill the Notes allow; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: distinct line colors, legend, semi-transparent
-          fill, multiple distributions'
+        comment: 'C1 straight segments at bin midpoints, C2 closed on a zero baseline,
+          C3 shared bin edges, C4 color plus legend, C5 basic variant: all met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; full range visible
+        comment: Vertices at bin midpoints and their counts; full range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title 'frequency-polygon-basic · python · plotnine · anyplot.ai';
+          legend 'Segment' with reader labels
     data_quality:
       score: 15
       max: 15
@@ -152,19 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows different means and spreads across conditions
+        comment: Three groups differ in centre, spread, height and range; skew visible
+          at the clipped student tail
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world scenario from experimental psychology; neutral domain
+        comment: 'Customer ages by segment (students, professionals, retirees): plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times and frequencies factually correct and plausible
+        comment: Ages 18-90 and counts up to ~126 per bin from 1,050 customers are
+          sensible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -174,53 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure; no functions or classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set; deterministic data generation
+        comment: np.random.default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; no over-engineering or fake UI elements
+        comment: np.histogram with shared edges; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API; proper dpi=300
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi 400, current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert grammar of graphics usage; high-level API
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Good use of theme system; somewhat standard for plotnine
+        comment: Grammar of graphics with layered geoms and manual scales; the binning
+          is done in numpy rather than plotnine's stat_bin
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-22T07:22:58Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - binning
   styling:
-  - grid-styling
+  - alpha-blending
