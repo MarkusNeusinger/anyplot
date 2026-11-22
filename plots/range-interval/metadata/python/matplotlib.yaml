@@ -2,45 +2,46 @@ library: matplotlib
 language: python
 specification_id: range-interval
 created: '2026-01-09T23:47:28Z'
-updated: '2026-05-18T10:39:05Z'
-generated_by: claude-haiku
-workflow_run: 26028174285
+updated: '2026-11-22T12:28:01Z'
+generated_by: claude-sonnet
+workflow_run: 45021874090
 issue: 3577
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 86
 review:
   strengths:
-  - Exceptional theme adaptation with perfectly readable text in both light and dark
-    renders
-  - Visual hierarchy clearly communicates seasonal temperature patterns through bar
-    size variation
-  - Thoughtful marker design with dual types (triangles for extremes, circles for
-    midpoints) creating visual meaning
-  - All text explicitly sized and perfectly readable at 4800x2700px resolution
-  - Professional polish with semi-transparent bars, subtle grid, refined legend styling,
-    and balanced whitespace
+  - Floating bars via ax.bar(bottom=lows, height=highs-lows) make the span itself
+    the mark, on a shared temperature axis that does not start at zero
+  - Directional v/^ markers sit exactly on each bound and encode minimum vs maximum
+    by shape, not color; the grey midpoint stays subordinate
+  - 'Theme tokens threaded through title, ticks, spines, grid, legend frame and bound
+    labels: both renders fully readable'
+  - Bound labels positioned with annotate(textcoords='offset points') so their gap
+    to the markers is fixed in points
+  - Data block driven by column constants and a tidy df; ticks and limits come from
+    the data
   weaknesses:
-  - DE-01 could be elevated with more distinctive aesthetic choices (custom color
-    palette, bolder typography hierarchy)
-  - LM-02 could leverage more matplotlib-specific techniques (custom spine styling,
-    path effects on markers)
+  - 'Suggestion: the 7 pt bound labels could match the 8 pt tick labels for a slightly
+    calmer type scale.'
+  - 'Suggestion: a subtle emphasis on the warmest and coldest months could give the
+    seasonal arc a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme-adaptive surface
-      Chrome: Title "range-interval · python · matplotlib · anyplot.ai" in dark text (INK, #1A1A17), clearly readable at 24pt. Axis labels "Month" and "Temperature (°C)" in dark text at 20pt, fully readable. Tick labels in soft gray (INK_SOFT, #4A4A44) at 16pt - easily legible. Y-axis grid is subtle (alpha=0.10). Legend positioned upper right with light frame (#FFFDF6) and gray text.
-      Data: Range bars in brand green (#009E73) with alpha=0.7 and gray edge colors. Min/max triangles (s=150) at bar endpoints in green with gray edges. Midpoint circles (s=100) in muted gray (INK_MUTED, #6B6A63). Temperature value annotations (°C) in soft gray text above/below bars - all readable.
-      Legibility verdict: PASS - All text is clearly readable against the light background with no contrast failures. Data elements are distinct and well-defined.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "range-interval · python · matplotlib · anyplot.ai" in dark INK at 12 pt, about half the width with room above; axis titles "Month" and "Temperature (°C)" dark; tick labels Jan–Dec and 0–30 in INK_SOFT; subtle horizontal grid; top/right spines removed; legend upper left (Minimum ▼, Maximum ▲, Midpoint ●) on an elevated off-white frame.
+      Data: 12 floating bars in #009E73 at alpha 0.7 with grey edges, chronological; green down-triangles on each minimum and up-triangles on each maximum, a dark-grey midpoint circle centred in each bar; 7 pt degree labels below each minimum and above each maximum (e.g. Jul 24°–31°, Dec 2°–14°).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title in light text (#F0EFE8), readable at 24pt against dark background. Axis labels in light text at 20pt - clearly visible. Tick labels in light gray (#B8B7B0) at 16pt - well-contrasted. Y-axis grid is subtle with dark-theme opacity. Legend frame is dark (#242420) with light gray text.
-      Data: Range bars maintain identical brand green (#009E73) from light render - data color consistency confirmed. Min/max triangles and midpoint circles remain unchanged in position and relative color, only chrome has adapted.
-      Legibility verdict: PASS - All text is clearly readable with no dark-on-dark failures. Light text contrasts well against dark background. Green data colors remain highly visible and distinguishable. Both renders are equally readable.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light INK, ticks and bound labels in light grey INK_SOFT, grid subtle, legend frame #242420 with light text; no dark-on-dark text.
+      Data: identical #009E73 bars and triangle fills as the light render; marker and bar edges and midpoints flip to light grey as chrome tokens; all ends of every range visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,73 +52,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: All sizes explicit (title 12 pt, axis titles 10 pt, ticks/legend
+          8 pt, bound labels 7 pt); every text readable in both themes at full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all elements fully readable
+        comment: Bound labels sit clear of their triangle markers; legend in the empty
+          upper-left area clear of Jan's range
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Range bars, min/max markers (s=150), and midpoint circles (s=100)
-          optimally sized for 12 categories
+        comment: 12 ranges with s=70 triangles and s=40 midpoints, prominent for sparse
+          data; legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green (#009E73) CVD-safe; good contrast and luminance across
-          themes
+        comment: Single hue, min/max told apart by marker direction, not color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout at 4800x2700px; plot fills 60-70% of canvas with balanced
-          margins
+        comment: 3200x1800 canvas (gate passed); balanced margins, title about half
+          the width with room above
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format; Temperature (°C) includes units
+        comment: Month / Temperature (°C) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct brand green; backgrounds #FAF8F1 (light) and #1A1A17 (dark);
-          no theme failures'
+        comment: 'Single series in #009E73; backgrounds #FAF8F1 / #1A1A17; chrome
+          flips correctly'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with dual marker types, semi-transparent bars, custom
-          legend styling. Above defaults but not publication-extreme.
+        comment: Directional v/^ glyphs encode minimum vs maximum and a neutral INK_MUTED
+          midpoint creates a three-level mark hierarchy within one hue
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed; subtle grid; generous whitespace; edge
-          colors for definition. Nearly perfect.
+        comment: Bound labels offset in points just outside each marker, y padding
+          computed from the data span, legend placed in the one empty corner
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Seasonal pattern clearly told through visual hierarchy and size variation;
-          visual emphasis guides viewer.
+        comment: Seasonal arc is shown by the data; no focal point chosen beyond the
+          Notes
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct range interval chart with all subtypes
+        comment: Floating range bars from min to max (C1)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: range bars, categories, min/max markers,
-          midpoints, annotations'
+        comment: C1 floating spans, C2 one width/even spacing/chronological, C3 markers
+          exactly on bounds readable in both themes, C4 semi-transparent fill, C5
+          midpoint subordinate and centred
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis months, Y-axis temperature; all data visible
+        comment: Months on x, temperature on y; all ranges inside the axis; marks
+          at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec format; legend labels accurate
+        comment: Mandated title; legend Minimum / Maximum / Midpoint
     data_quality:
       score: 15
       max: 15
@@ -156,19 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of range-interval; seasonal variation evident
+        comment: Ranges of varying length and position, overlapping spans along the
+          value axis
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real scenario (coastal city temperatures); plausible and neutral
+        comment: Monthly temperature range, the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct proportions for seasonal temperature range
+        comment: 2–31 °C with a summer peak is plausible for a temperate coastal climate;
+          midpoints checked as (low+high)/2; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -178,33 +183,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; linear flow
+        comment: Linear script, six zones
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy; all used
+        comment: os, matplotlib, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; no over-engineering
+        comment: Column constants and df-driven ticks/limits; nothing written out
+          that a call computes
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300
+        comment: plot-{THEME}.png at dpi=400, no bbox_inches='tight'; current set_xticks(x,
+          labels) API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -212,30 +219,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Axes methods; proper theme handling; correct figure sizing
+        comment: ax.bar(..., bottom=lows) for floating spans and set_xticks(x, labels)
+          in one call
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses alpha blending, custom edge colors, dual marker types, styled
-          legend
-    score_caps:
-      applied: false
-      notes: All criteria passed without invoking score caps
-    total:
-      score: 92
-      max: 100
+        comment: annotate with textcoords='offset points' keeps label gaps fixed in
+          points independent of the data scale
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-22T12:23:57Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
   dataprep: []
   styling:
-  - edge-highlighting
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
