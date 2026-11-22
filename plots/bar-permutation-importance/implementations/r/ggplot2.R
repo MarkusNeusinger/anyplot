@@ -50,7 +50,7 @@ df <- tibble::tibble(
   arrange(desc(importance_mean))
 
 # --- Plot -------------------------------------------------------------------
-anyplot_theme <- theme_minimal(base_size = 14) +
+anyplot_theme <- theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
@@ -58,13 +58,13 @@ anyplot_theme <- theme_minimal(base_size = 14) +
     panel.grid.major.y = element_blank(),
     panel.grid.minor  = element_blank(),
     panel.border      = element_blank(),
-    axis.title        = element_text(color = INK, size = 20),
-    axis.text.x       = element_text(color = INK_SOFT, size = 16),
-    axis.text.y       = element_text(color = INK_SOFT, size = 16),
+    axis.title        = element_text(color = INK, size = 10),
+    axis.text.x       = element_text(color = INK_SOFT, size = 8),
+    axis.text.y       = element_text(color = INK_SOFT, size = 8),
     axis.line.x       = element_line(color = INK_SOFT, linewidth = 0.5),
     axis.line.y       = element_blank(),
     axis.ticks.y      = element_blank(),
-    plot.title        = element_text(color = INK, size = 24, face = "plain"),
+    plot.title        = element_text(color = INK, size = 12, face = "plain"),
     plot.margin       = margin(t = 20, r = 20, b = 20, l = 20)
   )
 
@@ -78,10 +78,11 @@ p <- ggplot(df, aes(x = importance_mean, y = reorder(feature, importance_mean)))
     color = NA
   ) +
   # Error bars showing variability
-  geom_errorbarh(
+  geom_errorbar(
     aes(xmin = importance_mean - importance_std,
         xmax = importance_mean + importance_std),
-    height = 0.3,
+    orientation = "y",
+    width = 0.3,
     color = INK_SOFT,
     linewidth = 0.5,
     alpha = 0.7
@@ -89,21 +90,21 @@ p <- ggplot(df, aes(x = importance_mean, y = reorder(feature, importance_mean)))
   # Continuous color gradient for importance
   scale_fill_gradient(
     low = IMPRINT[1],
-    high = IMPRINT[2],
+    high = "#4467A3",
     name = "Mean Importance",
     labels = label_number(accuracy = 0.001)
   ) +
   labs(
     x = "Permutation Importance (decrease in model score)",
     y = "Feature",
-    title = "bar-permutation-importance · ggplot2 · anyplot.ai"
+    title = "bar-permutation-importance · r · ggplot2 · anyplot.ai"
   ) +
   anyplot_theme +
   theme(
     legend.position = "right",
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.5),
-    legend.text = element_text(color = INK_SOFT, size = 16),
-    legend.title = element_text(color = INK, size = 18),
+    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
+    legend.text = element_text(color = INK_SOFT, size = 8),
+    legend.title = element_text(color = INK, size = 10),
     legend.margin = margin(t = 10, r = 10, b = 10, l = 10)
   )
 
@@ -112,8 +113,8 @@ ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
