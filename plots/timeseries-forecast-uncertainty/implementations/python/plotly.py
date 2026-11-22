@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-19
@@ -11,7 +11,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 
-# Theme and chrome colors
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
@@ -19,73 +19,73 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 
-# Okabe-Ito palette
-COLOR_HISTORICAL = "#009E73"  # Position 1 - brand green
-COLOR_FORECAST = "#C475FD"  # Position 2 - vermillion
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+COLOR_HISTORICAL = IMPRINT_PALETTE[0]
+COLOR_FORECAST = IMPRINT_PALETTE[1]
 
-# Data generation
+
+def rgba(hex_color, alpha):
+    r, g, b = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+    return f"rgba({r}, {g}, {b}, {alpha})"
+
+
+# Columns: set these to your table's column names
+DATE = "Month"  # role: date
+ACTUAL = "Measured capacity (% of rated)"  # role: actual
+FORECAST = "Forecast capacity (% of rated)"  # role: forecast
+LOWER_80 = "Lower 80%"  # role: lower_80
+UPPER_80 = "Upper 80%"  # role: upper_80
+LOWER_95 = "Lower 95%"  # role: lower_95
+UPPER_95 = "Upper 95%"  # role: upper_95
+Y_LABEL = "Battery capacity (% of rated)"
+
+# Data: replace this block with your own table, for example df = pd.read_csv("capacity.csv")
+# Battery capacity fade: exponential decay toward a plateau, 36 months measured, 12 forecast.
 np.random.seed(42)
-n_historical = 36
-n_forecast = 12
-dates_hist_range = pd.date_range("2023-01-01", periods=n_historical, freq="MS")
-dates_historical = dates_hist_range.strftime("%Y-%m-%d").tolist()
-dates_forecast_range = pd.date_range(dates_hist_range[-1] + pd.DateOffset(months=1), periods=n_forecast, freq="MS")
-dates_forecast = dates_forecast_range.strftime("%Y-%m-%d").tolist()
+n_hist, n_fore = 36, 12
+months = pd.date_range("2022-01-01", periods=n_hist + n_fore, freq="MS")
+t = np.arange(n_hist + n_fore)
+trend = 100 * (0.62 + 0.38 * np.exp(-t / 20))
+measured = trend[:n_hist] + np.random.normal(0, 0.7, n_hist)
+horizon = np.arange(1, n_fore + 1)
+spread = 0.8 + 0.55 * np.sqrt(horizon)
+nan_hist = np.full(n_hist, np.nan)
+df = pd.DataFrame(
+    {
+        DATE: months,
+        ACTUAL: np.concatenate([measured, np.full(n_fore, np.nan)]),
+        FORECAST: np.concatenate([nan_hist, trend[n_hist:]]),
+        LOWER_80: np.concatenate([nan_hist, trend[n_hist:] - 1.28 * spread]),
+        UPPER_80: np.concatenate([nan_hist, trend[n_hist:] + 1.28 * spread]),
+        LOWER_95: np.concatenate([nan_hist, trend[n_hist:] - 1.96 * spread]),
+        UPPER_95: np.concatenate([nan_hist, trend[n_hist:] + 1.96 * spread]),
+    }
+)
 
-# Historical data: trend + seasonality + noise
-time_idx = np.arange(n_historical)
-trend = 100 + 2.5 * time_idx
-seasonality = 15 * np.sin(2 * np.pi * time_idx / 12)
-noise = np.random.normal(0, 8, n_historical)
-actual = trend + seasonality + noise
+# Plot
+hist = df[df[ACTUAL].notna()]
+fore = df[df[FORECAST].notna()]
+forecast_start = fore[DATE].min() if len(fore) else hist[DATE].max()
 
-# Forecast values
-forecast_time_idx = np.arange(n_historical, n_historical + n_forecast)
-forecast_trend = 100 + 2.5 * forecast_time_idx
-forecast_seasonality = 15 * np.sin(2 * np.pi * forecast_time_idx / 12)
-forecast_values = forecast_trend + forecast_seasonality
 
-# Confidence intervals (widening over time)
-uncertainty_base = 10
-uncertainty_growth = np.sqrt(np.arange(1, n_forecast + 1)) * 5
-lower_80 = forecast_values - (uncertainty_base + uncertainty_growth * 0.8)
-upper_80 = forecast_values + (uncertainty_base + uncertainty_growth * 0.8)
-lower_95 = forecast_values - (uncertainty_base + uncertainty_growth * 1.3)
-upper_95 = forecast_values + (uncertainty_base + uncertainty_growth * 1.3)
+def band(lower, upper, name, alpha):
+    return go.Scatter(
+        x=pd.concat([fore[DATE], fore[DATE][::-1]]),
+        y=pd.concat([fore[upper], fore[lower][::-1]]),
+        fill="toself",
+        fillcolor=rgba(COLOR_FORECAST, alpha),
+        line={"color": rgba(COLOR_FORECAST, 0)},
+        name=name,
+        hoverinfo="skip",
+    )
 
-# Create figure
+
 fig = go.Figure()
-
-# 95% confidence band (lighter)
-fig.add_trace(
-    go.Scatter(
-        x=dates_forecast + dates_forecast[::-1],
-        y=np.concatenate([upper_95, lower_95[::-1]]),
-        fill="toself",
-        fillcolor="rgba(196, 117, 253, 0.10)",
-        line=dict(color="rgba(196, 117, 253, 0)"),
-        name="95% CI",
-        showlegend=True,
-        hoverinfo="skip",
-    )
-)
-
-# 80% confidence band (darker)
-fig.add_trace(
-    go.Scatter(
-        x=dates_forecast + dates_forecast[::-1],
-        y=np.concatenate([upper_80, lower_80[::-1]]),
-        fill="toself",
-        fillcolor="rgba(196, 117, 253, 0.32)",
-        line=dict(color="rgba(196, 117, 253, 0)"),
-        name="80% CI",
-        showlegend=True,
-        hoverinfo="skip",
-    )
-)
+fig.add_trace(band(LOWER_95, UPPER_95, "95% CI", 0.18))
+fig.add_trace(band(LOWER_80, UPPER_80, "80% CI", 0.38))
 
 # Forecast start marker
-forecast_start = dates_forecast[0]
 fig.add_shape(
     type="line",
     x0=forecast_start,
@@ -93,93 +93,89 @@ fig.add_shape(
     y0=0,
     y1=1,
     yref="paper",
-    line=dict(color=INK_SOFT, width=2, dash="dash"),
+    line={"color": INK_SOFT, "width": 2, "dash": "dash"},
 )
-
-# Forecast start annotation
 fig.add_annotation(
-    x=forecast_start, y=1.02, yref="paper", text="Forecast Start", showarrow=False, font=dict(size=16, color=INK_SOFT)
+    x=forecast_start, y=1.02, yref="paper", text="Forecast start", showarrow=False, font={"size": 16, "color": INK_SOFT}
 )
 
-# Historical data (solid line)
+# Historical line (solid)
 fig.add_trace(
     go.Scatter(
-        x=dates_historical,
-        y=actual,
+        x=hist[DATE],
+        y=hist[ACTUAL],
         mode="lines",
         name="Historical",
-        line=dict(color=COLOR_HISTORICAL, width=3),
-        hovertemplate="Date: %{x}<br>Sales: %{y:.1f}<extra></extra>",
+        line={"color": COLOR_HISTORICAL, "width": 3},
+        hovertemplate="%{x|%b %Y}<br>Measured: %{y:.1f}%<extra></extra>",
     )
 )
 
 # Forecast line (dashed)
 fig.add_trace(
     go.Scatter(
-        x=dates_forecast,
-        y=forecast_values,
+        x=fore[DATE],
+        y=fore[FORECAST],
         mode="lines",
         name="Forecast",
-        line=dict(color=COLOR_FORECAST, width=3, dash="dash"),
-        hovertemplate="Date: %{x}<br>Forecast: %{y:.1f}<extra></extra>",
+        line={"color": COLOR_FORECAST, "width": 3, "dash": "dash"},
+        hovertemplate="%{x|%b %Y}<br>Forecast: %{y:.1f}%<extra></extra>",
     )
 )
 
-# Connection line between historical and forecast
+# Dotted connector from the last measurement to the first forecast point
 fig.add_trace(
     go.Scatter(
-        x=[dates_historical[-1], dates_forecast[0]],
-        y=[actual[-1], forecast_values[0]],
+        x=[hist[DATE].iloc[-1], forecast_start],
+        y=[hist[ACTUAL].iloc[-1], fore[FORECAST].iloc[0] if len(fore) else hist[ACTUAL].iloc[-1]],
         mode="lines",
-        line=dict(color=COLOR_HISTORICAL, width=2, dash="dot"),
+        line={"color": COLOR_HISTORICAL, "width": 2, "dash": "dot"},
         showlegend=False,
         hoverinfo="skip",
     )
 )
 
-# Layout with theme-adaptive colors and chrome
 fig.update_layout(
-    title=dict(
-        text="timeseries-forecast-uncertainty · python · plotly · anyplot.ai",
-        font=dict(size=28, color=INK),
-        x=0.5,
-        xanchor="center",
-    ),
-    xaxis=dict(
-        title=dict(text="Date", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        showgrid=False,
-        showline=True,
-        mirror=False,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-    ),
-    yaxis=dict(
-        title=dict(text="Monthly Sales (Units)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        showgrid=True,
-        gridcolor=GRID,
-        showline=True,
-        mirror=False,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-    ),
+    autosize=False,
+    title={
+        "text": "timeseries-forecast-uncertainty · python · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "title": {"text": DATE, "font": {"size": 18, "color": INK}},
+        "tickfont": {"size": 16, "color": INK_SOFT},
+        "showgrid": False,
+        "showline": True,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": Y_LABEL, "font": {"size": 18, "color": INK}},
+        "tickfont": {"size": 16, "color": INK_SOFT},
+        "showgrid": True,
+        "gridcolor": GRID,
+        "showline": True,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    legend=dict(
-        font=dict(size=18, color=INK_SOFT),
-        x=0.02,
-        y=0.98,
-        xanchor="left",
-        yanchor="top",
-        bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
-    ),
-    margin=dict(l=100, r=60, t=100, b=100),
+    legend={
+        "font": {"size": 16, "color": INK_SOFT},
+        "x": 0.02,
+        "y": 0.04,
+        "xanchor": "left",
+        "yanchor": "bottom",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
+    margin={"l": 100, "r": 60, "t": 100, "b": 80},
     hovermode="x unified",
 )
 
-# Save outputs
+# Save
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
