@@ -2,38 +2,43 @@ library: matplotlib
 language: python
 specification_id: parliament-basic
 created: '2025-12-30T00:03:27Z'
-updated: '2026-05-17T13:44:36Z'
-generated_by: claude-haiku
-workflow_run: 25992288730
+updated: '2026-11-22T05:59:53Z'
+generated_by: claude-sonnet
+workflow_run: 44991330234
 issue: 2499
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 82
 review:
   strengths:
-  - Perfect visual quality with all text readable in both light and dark themes
-  - Excellent theme adaptation with all chrome elements correctly color-mapped
-  - Complete spec implementation with elegant majority threshold annotation
-  - Strong data quality with realistic, neutral scenario and appropriate scale
-  - Clean, professional design using Okabe-Ito palette idiomatically
-  - Elegant code with clear structure and perfect reproducibility
-  weaknesses: []
+  - 'Vectorized seat layout: np.concatenate builds the arcs, np.argsort orders them
+    by angle and np.repeat assigns each party exactly its seat count, giving contiguous
+    left-to-right blocks'
+  - Exact 3200x1800 canvas via figsize=(8, 4.5) at dpi=400 with subplots_adjust instead
+    of bbox_inches='tight'
+  - Theme tokens threaded through title, legend text, legend frame and seat edges;
+    both renders read cleanly
+  - Neutral fictional party names (noun plus group word) and a computed majority of
+    201
+  weaknesses:
+  - 'Suggestion: the band between the innermost arc ends and the legend is a little
+    roomy; lowering the bottom margin slightly would tighten the composition.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct)
-      Chrome: Title in dark INK (#1A1A17), legend and annotation in INK_SOFT (#4A4A44) — all clearly readable against light background
-      Data: Six parties rendered in Okabe-Ito colors starting with brand green (#009E73 for Green Alliance), followed by vermillion, blue, reddish purple, orange, sky blue. Seats arranged in concentric arcs, well-spaced and distinct.
-      Legibility verdict: PASS (excellent contrast, all text explicitly sized and readable)
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'parliament-basic · python · matplotlib · anyplot.ai' in dark ink at the top, italic 'Majority threshold: 201 seats' in INK_SOFT between the innermost arc ends, a three-column framed legend at the bottom; all readable.
+      Data: 400 equal dots in 8 concentric semicircular arcs; contiguous wedges left to right: Harbor Union #009E73 (98), Willow Assembly #C475FD (87), Granite League #4467A3 (76), Meadow Circle #BD8233 (65), Lantern Alliance #AE3030 (48), Copper Guild #2ABCCD (26). No axes or grid.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct)
-      Chrome: Title in light INK (#F0EFE8), legend and annotation in light INK_SOFT (#B8B7B0) — all clearly readable against dark background. No dark-on-dark failures.
-      Data: Data colors identical to light render — all six party colors are the same Okabe-Ito values. Only chrome (text, background) has flipped to light colors.
-      Legibility verdict: PASS (excellent contrast, no dark-on-dark failures, theme adaptation perfect)
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, majority label and legend text in light INK_SOFT, legend frame on #242420; no dark-on-dark text.
+      Data: identical seat colors and layout to the light render; only chrome flips. Brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -44,70 +49,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly set; title 24pt, legend 16pt, annotation 14pt;
-          perfectly readable in both themes
+        comment: Title 12 pt, legend and majority label 8 pt, all at the library prompt's
+          reference sizes; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text overlap; legend and annotation positioned without collisions
+        comment: No text collides; the majority label sits in the open floor between
+          the innermost arc ends
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 400 seats with s=160, white edges; density-appropriate and clearly
-          distinguishable
+        comment: 400 seats at s=40 with a thin page-colored edge are clearly visible;
+          legend glyphs match the seat colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, good contrast throughout
+        comment: Six Imprint hues, adjacent blocks distinguishable, CVD-safe order
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px; parliament fills ~60% with balanced margins
+        comment: 3200x1800 canvas; the half circle fills the width with balanced margins;
+          title about 52 % of the width; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; axes off appropriately
+        comment: N/A for axes (seat position is layout); title in the mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order respected; backgrounds #FAF8F1/#1A1A17;
-          theme-adaptive chrome perfect in both renders'
+        comment: 'First party #009E73, then Imprint positions 2-6 in canonical order;
+          backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional palette use and minimalist design; well above generic
-          defaults but not custom-level
+        passed: false
+        comment: Style-guide baseline (theme tokens, Imprint, explicit sizes); nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Axes off, custom legend styling, white edges, generous whitespace
+        passed: false
+        comment: Axes off as the spec requires, elevated legend frame; no refinement
+          beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Parliament layout clearly shows party composition; visual hierarchy
-          guides viewer to Green Alliance dominance
+        passed: false
+        comment: Composition displayed; no hierarchy chosen beyond what the Notes
+          prescribe
     spec_compliance:
       score: 15
       max: 15
@@ -117,27 +125,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct semicircular parliament chart
+        comment: Semicircular parliament chart of concentric arcs, one dot per seat;
+          no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: individual seats, party colors, legend, majority
-          threshold'
+        comment: C1 one equal-size dot per seat in 8 concentric arcs, no axes; C2
+          contiguous left-to-right party blocks; C3 legend with names and seat counts;
+          C4 no threshold line drawn (optional), majority given as a text label clear
+          of the seats; C5 single chamber
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle and radius correctly map to political position and row; all
-          data visible
+        comment: Each party gets exactly its seat count via np.repeat over the angle-sorted
+          seats (98+87+76+65+48+26 = 400); every seat inside the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels match data exactly
+        comment: Title 'parliament-basic · python · matplotlib · anyplot.ai'; legend
+          entries 'Party (seats)' match the data
     data_quality:
       score: 15
       max: 15
@@ -147,22 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows party size variation (98 to 26), spectrum representation, threshold
-          context
+        comment: Six parties from 98 down to 26 seats show large and small blocks
+          and the stepped boundaries
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic election results, neutral party names, plausible 400-seat
-          parliament
+        comment: Clearly fictional parliament; names built from a neutral noun plus
+          a group word (Harbor Union, Copper Guild); no ideological labels
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Majority calculation correct (201); proportions realistic and factually
-          sound
+        comment: 'Checked: 400 seats total, majority 400 // 2 + 1 = 201 computed in
+          code and shown as 201'
     code_quality:
       score: 10
       max: 10
@@ -172,57 +184,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow without functions or classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib, numpy — all used
+        comment: os, matplotlib.pyplot, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Vectorized layout with np.concatenate / np.argsort / np.repeat; appropriate
+          complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: High-level API usage (scatter, legend, text); theme tokens handled
-          idiomatically
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Custom legend construction, theme-adaptive implementation via environment
-          variables, geometric arrangement
+        passed: false
+        comment: Axes-level scatter per party with labels and fig.legend from get_legend_handles_labels;
+          nothing beyond the prompt's patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing distinctive beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-22T05:56:36Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - custom-legend
-  - annotations
+  techniques: []
   patterns:
-  - data-generation
+  - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
