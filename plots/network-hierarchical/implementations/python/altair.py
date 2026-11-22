@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-17
@@ -7,8 +7,8 @@ Quality: 94/100 | Updated: 2026-05-17
 import os
 
 import altair as alt
-import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -18,164 +18,144 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for levels
-LEVEL_COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per level in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Organizational chart with 25 employees across 4 levels
-np.random.seed(42)
+# Columns: set these to your table's column names
+NODE_ID = "Node ID"  # role: nodes
+LABEL = "Label"  # role: extra
+PARENT = "Parent ID"  # role: edges
+LEVEL = "Level"  # role: level
+TIER = "Role"  # role: extra
 
-# Define hierarchical structure: CEO -> VPs -> Directors -> Managers
-nodes = [
-    # Level 0 - CEO
-    {"id": 0, "label": "CEO", "level": 0, "parent": None},
-    # Level 1 - VPs (4 reports)
-    {"id": 1, "label": "VP Eng", "level": 1, "parent": 0},
-    {"id": 2, "label": "VP Sales", "level": 1, "parent": 0},
-    {"id": 3, "label": "VP Mkt", "level": 1, "parent": 0},
-    {"id": 4, "label": "VP Ops", "level": 1, "parent": 0},
-    # Level 2 - Directors (8 total, 2 per VP)
-    {"id": 5, "label": "Frontend", "level": 2, "parent": 1},
-    {"id": 6, "label": "Backend", "level": 2, "parent": 1},
-    {"id": 7, "label": "East", "level": 2, "parent": 2},
-    {"id": 8, "label": "West", "level": 2, "parent": 2},
-    {"id": 9, "label": "Digital", "level": 2, "parent": 3},
-    {"id": 10, "label": "Brand", "level": 2, "parent": 3},
-    {"id": 11, "label": "Logistics", "level": 2, "parent": 4},
-    {"id": 12, "label": "Facilities", "level": 2, "parent": 4},
-    # Level 3 - Managers/Team Leads (12 total)
-    {"id": 13, "label": "UI", "level": 3, "parent": 5},
-    {"id": 14, "label": "UX", "level": 3, "parent": 5},
-    {"id": 15, "label": "API", "level": 3, "parent": 6},
-    {"id": 16, "label": "NE", "level": 3, "parent": 7},
-    {"id": 17, "label": "SE", "level": 3, "parent": 7},
-    {"id": 18, "label": "NW", "level": 3, "parent": 8},
-    {"id": 19, "label": "Social", "level": 3, "parent": 9},
-    {"id": 20, "label": "Content", "level": 3, "parent": 9},
-    {"id": 21, "label": "PR", "level": 3, "parent": 10},
-    {"id": 22, "label": "Design", "level": 3, "parent": 10},
-    {"id": 23, "label": "Supply", "level": 3, "parent": 11},
-    {"id": 24, "label": "Office", "level": 3, "parent": 12},
+# Data: replace this block with your own table, for example df = pd.read_csv("org.csv")
+# Organizational chart: 25 employees across 4 management levels (root has no parent)
+rows = [
+    (0, "CEO", None, 0, "Executive"),
+    (1, "VP Eng", 0, 1, "VP"),
+    (2, "VP Sales", 0, 1, "VP"),
+    (3, "VP Mkt", 0, 1, "VP"),
+    (4, "VP Ops", 0, 1, "VP"),
+    (5, "Frontend", 1, 2, "Director"),
+    (6, "Backend", 1, 2, "Director"),
+    (7, "East", 2, 2, "Director"),
+    (8, "West", 2, 2, "Director"),
+    (9, "Digital", 3, 2, "Director"),
+    (10, "Brand", 3, 2, "Director"),
+    (11, "Logistics", 4, 2, "Director"),
+    (12, "Facilities", 4, 2, "Director"),
+    (13, "UI", 5, 3, "Manager"),
+    (14, "UX", 5, 3, "Manager"),
+    (15, "API", 6, 3, "Manager"),
+    (16, "NE", 7, 3, "Manager"),
+    (17, "SE", 7, 3, "Manager"),
+    (18, "NW", 8, 3, "Manager"),
+    (19, "Social", 9, 3, "Manager"),
+    (20, "Content", 9, 3, "Manager"),
+    (21, "PR", 10, 3, "Manager"),
+    (22, "Design", 10, 3, "Manager"),
+    (23, "Supply", 11, 3, "Manager"),
+    (24, "Office", 12, 3, "Manager"),
 ]
+df = pd.DataFrame(rows, columns=[NODE_ID, LABEL, PARENT, LEVEL, TIER])
+df[PARENT] = df[PARENT].astype("Int64")
 
-# Build children map
-children = {n["id"]: [] for n in nodes}
-for n in nodes:
-    if n["parent"] is not None:
-        children[n["parent"]].append(n["id"])
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
 
-# Compute subtree widths iteratively (bottom-up)
-subtree_width = {}
-for level in [3, 2, 1, 0]:
-    for n in nodes:
-        if n["level"] == level:
-            nid = n["id"]
-            if not children[nid]:
-                subtree_width[nid] = 1
-            else:
-                subtree_width[nid] = sum(subtree_width[c] for c in children[nid])
+# Tree layout: leaves get one slot each, a parent sits above the middle of its subtree
+children = {node: df.loc[df[PARENT] == node, NODE_ID].tolist() for node in df[NODE_ID]}
+by_level = df.sort_values(LEVEL, kind="stable")
+slots = {}
+for node in by_level[NODE_ID][::-1]:
+    slots[node] = max(1, sum(slots[c] for c in children[node]))
 
-# Assign positions using BFS (level by level)
-node_positions = {}
-# Start with root
-node_positions[0] = (subtree_width[0] / 2, 0)
-queue = [0]
-ranges = {0: (0, subtree_width[0])}
+start = {}
+cursor = 0
+for node in df.loc[df[PARENT].isna(), NODE_ID]:
+    start[node] = cursor
+    cursor += slots[node]
+for node in by_level[NODE_ID]:
+    cursor = start[node]
+    for child in children[node]:
+        start[child] = cursor
+        cursor += slots[child]
 
-while queue:
-    nid = queue.pop(0)
-    x_start, x_end = ranges[nid]
-    x = (x_start + x_end) / 2
-    level = next(n["level"] for n in nodes if n["id"] == nid)
-    y = -level  # Negative so root is at top
-    node_positions[nid] = (x, y)
+nodes = df.copy()
+nodes["pos_x"] = nodes[NODE_ID].map(lambda n: start[n] + slots[n] / 2)
+nodes["pos_y"] = -nodes[LEVEL]
+position = nodes.set_index(NODE_ID)[["pos_x", "pos_y"]]
 
-    kids = children[nid]
-    if kids:
-        total_w = sum(subtree_width[c] for c in kids)
-        current_x = x_start
-        for child in kids:
-            child_w = subtree_width[child]
-            child_end = current_x + (x_end - x_start) * child_w / total_w
-            ranges[child] = (current_x, child_end)
-            queue.append(child)
-            current_x = child_end
-
-# Create nodes DataFrame with positions
-nodes_df = pd.DataFrame(nodes)
-nodes_df["x"] = nodes_df["id"].map(lambda i: node_positions[i][0])
-nodes_df["y"] = nodes_df["id"].map(lambda i: node_positions[i][1])
-
-# Create edges DataFrame with line segments (two points per edge for mark_line)
-edges_data = []
-edge_id = 0
-for n in nodes:
-    if n["parent"] is not None:
-        parent_id = n["parent"]
-        child_id = n["id"]
-        # Each edge has two points: parent and child
-        edges_data.append({"edge_id": edge_id, "x": node_positions[parent_id][0], "y": node_positions[parent_id][1]})
-        edges_data.append({"edge_id": edge_id, "x": node_positions[child_id][0], "y": node_positions[child_id][1]})
-        edge_id += 1
-edges_df = pd.DataFrame(edges_data)
-
-# Create edge layer - lines connecting nodes using mark_line with detail encoding
-edge_layer = (
-    alt.Chart(edges_df)
-    .mark_line(strokeWidth=3, opacity=0.4, color=INK_SOFT)
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), detail="edge_id:N")
+# Edges: two points per parent-child pair, grouped by the child id
+links = df.dropna(subset=[PARENT])
+edges = pd.concat(
+    [
+        position.loc[links[PARENT].astype(int)].reset_index(drop=True).assign(edge=links[NODE_ID].to_numpy()),
+        position.loc[links[NODE_ID]].reset_index(drop=True).assign(edge=links[NODE_ID].to_numpy()),
+    ]
 )
 
-# Create node layer - circles for each employee
+x_enc = alt.X("pos_x:Q", axis=None, scale=alt.Scale(domain=[-0.5, cursor + 0.5], nice=False))
+y_enc = alt.Y("pos_y:Q", axis=None, scale=alt.Scale(domain=[-df[LEVEL].max() - 0.45, 0.55], nice=False))
+
+edge_layer = (
+    alt.Chart(edges).mark_line(strokeWidth=1.2, opacity=0.5, color=INK_SOFT).encode(x=x_enc, y=y_enc, detail="edge:N")
+)
+
 node_layer = (
-    alt.Chart(nodes_df)
-    .mark_circle(size=1200, stroke=INK, strokeWidth=3)
+    alt.Chart(nodes)
+    .mark_circle(size=330, stroke=INK, strokeWidth=1.2, opacity=1)
     .encode(
-        x=alt.X("x:Q", axis=None),
-        y=alt.Y("y:Q", axis=None),
+        x=x_enc,
+        y=y_enc,
         color=alt.Color(
-            "level:N",
-            scale=alt.Scale(domain=[0, 1, 2, 3], range=LEVEL_COLORS),
-            legend=alt.Legend(
-                title="Level",
-                labelFontSize=16,
-                titleFontSize=18,
-                symbolSize=300,
-                labelExpr="datum.value == 0 ? 'Executive' : datum.value == 1 ? 'VP' : datum.value == 2 ? 'Director' : 'Manager'",
-            ),
+            TIER.translate(ESCAPE),
+            type="nominal",
+            title=TIER,
+            sort=None,
+            scale=alt.Scale(range=IMPRINT_PALETTE),
+            legend=alt.Legend(symbolSize=200, labelFontSize=11, titleFontSize=12),
         ),
-        tooltip=["label:N", "level:O"],
+        tooltip=[alt.Tooltip(LABEL.translate(ESCAPE), title=LABEL), alt.Tooltip(TIER.translate(ESCAPE), title=TIER)],
     )
 )
 
-# Create label layer - text labels for nodes (adjusted vertical spacing to prevent overlap)
 label_layer = (
-    alt.Chart(nodes_df)
-    .mark_text(dy=-35, fontSize=18, fontWeight="bold")
-    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="label:N", color=alt.value(INK))
+    alt.Chart(nodes)
+    .mark_text(dy=-17, fontSize=9.5, fontWeight="bold", color=INK)
+    .encode(x=x_enc, y=y_enc, text=alt.Text(LABEL.translate(ESCAPE), type="nominal"))
 )
 
-# Combine layers
 chart = (
     alt.layer(edge_layer, node_layer, label_layer)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
+        background=PAGE_BG,
         title=alt.Title(
-            "network-hierarchical · altair · anyplot.ai",
-            fontSize=28,
+            "network-hierarchical · python · altair · anyplot.ai",
+            fontSize=16,
+            color=INK,
             anchor="middle",
-            subtitle="Organizational Chart: 25 employees across 4 management levels",
-            subtitleFontSize=18,
+            subtitle=f"Organizational chart: {len(df)} employees across {df[LEVEL].nunique()} management levels",
+            subtitleFontSize=11,
             subtitleColor=INK_SOFT,
         ),
-        background=PAGE_BG,
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
-    .configure_legend(
-        orient="right", padding=20, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK
-    )
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=8)
 )
 
 # Save as PNG and HTML
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the canonical landscape canvas
+TARGET_W, TARGET_H = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_W or img.height > TARGET_H:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, exceeds {TARGET_W}x{TARGET_H}; shrink width/height")
+if img.size != (TARGET_W, TARGET_H):
+    canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+    canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
+    canvas.save(f"plot-{THEME}.png")
