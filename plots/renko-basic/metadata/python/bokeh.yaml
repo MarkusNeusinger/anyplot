@@ -2,43 +2,48 @@ library: bokeh
 language: python
 specification_id: renko-basic
 created: '2026-01-08T16:05:31Z'
-updated: '2026-05-17T11:48:28Z'
-generated_by: claude-haiku
-workflow_run: 25989682660
+updated: '2026-11-22T05:20:17Z'
+generated_by: claude-sonnet
+workflow_run: 44988403355
 issue: 3294
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 81
 review:
   strengths:
-  - Pixel-perfect theme adaptation with no dark-on-dark or light-on-light failures
-  - Explicit font sizing throughout ensures readability at 4800×2700px
-  - Correct Okabe-Ito palette usage with proper first-series green
-  - Clean, professional code with proper random seed
-  - Accurate Renko algorithm implementation with proper trend reversal logic
-  - Legend and grid styling show attention to detail
+  - 'Correct Renko construction: each brick one $2 step above or below the last, reversals
+    need a two-brick move, one column per brick (C1-C4)'
+  - Bricks alone with a 0.10-alpha grid, as the basic variant asks (C5)
+  - Theme tokens threaded through every chrome element; text readable in both renders
+  - Correct 3200x1800 canvas with toolbar_location=None and CDP viewport pinning
+  - Per-direction HoverTool shows brick index, price range and direction in the HTML
+    view
+  - 'Compact adaptable code: column constants, one marked Data block, a 10-line brick
+    loop'
   weaknesses:
-  - 'Design could be elevated: consider removing top/right spines for more refined
-    appearance'
-  - Data storytelling could add emphasis (e.g., highlight a specific trend reversal
-    or support/resistance level)
-  - Could explore more Bokeh-specific features for added sophistication
+  - 'DQ-02 (both): the series is an unnamed stock with a generic ''Close price ($)''
+    axis and no instrument, so the scenario reads as abstract price data → name a
+    fictional but concrete instrument (e.g. a ticker in the y title or the close constant).
+    Likely cause: the CLOSE constant and the data comment.'
+  - 'Suggestion: a slightly larger, sparser x tick set (every 5 bricks) would echo
+    the $5 price gridlines.'
+  - 'Suggestion: the legend could drop its border to sit more quietly in the corner.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) per specification
-      Chrome: Title "renko-basic · bokeh · anyplot.ai" clearly visible in dark text; axis labels "Brick Number" and "Price ($)" are readable; tick labels well-spaced and legible
-      Data: Bullish bricks in green (#009E73), bearish bricks in orange (#D55E00); bricks uniform and well-separated; legend with proper labels
-      Legibility verdict: PASS - All text, labels, and data elements are clearly readable against light background
+      Background: warm off-white #FAF8F1, no outline frame.
+      Chrome: title 'renko-basic · python · bokeh · anyplot.ai' bold dark text top-left; axis titles 'Brick number' and 'Close price ($)' in italic dark ink; ticks 0-40 and 75-105 in INK_SOFT; legend top-left on an elevated box; subtle grid. All readable.
+      Data: 41 bricks of $2 in diagonal staircases: green #009E73 rise 100-108, long red #AE3030 decline to 78, several reversals between 76 and 86, a final rally to 90 and two red bricks. Small horizontal gap between columns.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) per specification
-      Chrome: Title clearly visible in light text; axis labels and tick labels all readable in light color; no dark-on-dark failures observed
-      Data: Green (#009E73) and orange (#D55E00) bricks identical to light render - only chrome elements changed theme; all bricks and prices remain equally visible
-      Legibility verdict: PASS - All elements readable against dark background; proper theme adaptation with no contrast failures
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light grey INK_SOFT, legend on a #242420 box with light labels; grid faint but visible. No dark-on-dark text.
+      Data: identical green and red bricks at the same positions as the light render; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,70 +54,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 28pt, labels 22pt, ticks 18pt); perfect
-          readability in both themes
+        comment: All sizes set explicitly (title 50pt, axis titles 42pt, ticks and
+          legend 34pt); readable in both themes; title spans ~40% of width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Bricks well-spaced, no overlapping text, all elements readable
+        comment: No text collisions; legend sits in the empty top-left corner clear
+          of the bricks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bricks perfectly sized and distinguishable; optimal adaptation to
-          data density
+        comment: 41 bricks at width 0.85, solid fill, prominent in both themes; legend
+          swatches match the bricks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors are CVD-safe with excellent contrast
+        comment: Imprint green and red differ in luminance; direction is also carried
+          by the staircase slope
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, plot fills 50-80% of canvas, balanced margins
+        comment: Correct 3200x1800 canvas, plot fills ~85% of it with balanced margins;
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title and axis labels with units
+        comment: '''Brick number'' and ''Close price ($)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct; all text colors theme-adaptive;
-          both renders theme-correct'
+        comment: 'Bullish #009E73, bearish Imprint red #AE3030, identical in both
+          renders; #FAF8F1 / #1A1A17 backgrounds; theme-correct chrome'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Clean professional design; well above defaults but not exceptional
+        comment: 'Style-guide baseline: Imprint palette, theme tokens, explicit sizes;
+          nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Grid explicitly styled with 0.10 alpha; legend has custom styling;
-          some refinement visible
+        comment: Outline removed and grid at 0.10 alpha meet the baseline; nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Color coding guides viewer through trends; visual hierarchy present
-          but not emphasized
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +130,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Renko chart with proper brick logic
+        comment: Correct Renko chart, bricks only, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bullish/bearish bricks, colors, grid, spacing'
+        comment: Green/red bricks, uniform size with gap, brick-index x-axis, subtle
+          grid; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis brick index, Y-axis price; all data visible
+        comment: Each brick spans exactly one $2 brick at its computed level; one
+          column per brick; all 41 bricks visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows proper labels
+        comment: Title 'renko-basic · python · bokeh · anyplot.ai' correct; legend
+          Bullish/Bearish
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -150,19 +161,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows uptrends, downtrends, reversals, full price range
+        comment: 'Long downtrend, several reversals, short rallies and a final up-then-down
+          move: both directions and reversals shown'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Stock price data is realistic and neutral
+        passed: false
+        comment: Daily stock closes over 200 days is the spec's own example, but the
+          instrument is unnamed (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Brick size and price range are sensible
+        comment: 'Checked: first brick 100-102 from closes[0]≈101 floored to the $2
+          grid; reversal needs a two-brick move (code lines 53-61); 41 bricks from
+          200 closes inside the spec''s 20-50; prices 76-108 plausible'
     code_quality:
       score: 10
       max: 10
@@ -172,49 +187,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no functions/classes
+        comment: Linear Imports → constants → Data → Plot → Save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; no over-engineering
+        comment: Compact 10-line Renko loop with no available equivalent; no dead
+          code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via the mandated Selenium
+          path; current Bokeh 3 API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: Correct ColumnDataSource and vbar usage; theme-adaptive design well-executed
+        comment: ColumnDataSource per direction, vbar with bottom/top; correct but
+          standard usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses HoverTool and HTML export; could leverage more Bokeh-specific
-          features
+        comment: Per-renderer HoverTool is native interactivity but generic; nothing
+          beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-22T05:16:48Z'
 impl_tags:
   dependencies:
   - selenium
@@ -223,7 +244,9 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   - columndatasource
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
   - grid-styling
