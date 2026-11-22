@@ -2,47 +2,56 @@ library: letsplot
 language: python
 specification_id: network-hierarchical
 created: '2026-01-08T22:03:38Z'
-updated: '2026-05-17T06:31:44Z'
-generated_by: claude-haiku
-workflow_run: 25983445204
+updated: '2026-11-22T03:35:41Z'
+generated_by: claude-sonnet
+workflow_run: 44980824006
 issue: 3343
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality with full legibility in both light and dark themes
-  - Tree layout algorithm well-implemented with thoughtful recursive positioning
-  - Correct Okabe-Ito palette usage mapped to organizational hierarchy levels
-  - Excellent spec compliance across all dimensions
-  - Theme-adaptive styling works seamlessly; data colors maintain identity across
-    themes
+  - 'Clean top-down tree layout: every level on its own row, parents centered over
+    their leaf span, siblings grouped (C1, C2)'
+  - Straight, thin, semi-transparent INK_SOFT edges without arrowheads stay subordinate
+    to the nodes and are traceable in both themes (C3)
+  - 'Correct Imprint palette in canonical order, #009E73 for the root, theme tokens
+    threaded through title, labels and legend'
+  - Node size decreasing with depth makes the CEO the focal point
+  - Tidy one-row-per-employee table with column constants, easy to swap for real data
   weaknesses:
-  - Design Excellence could be more refined—edges are simple lines and could use more
-    sophisticated styling (curves, bundling)
-  - Library Mastery reflects competent but basic usage; could leverage letsplot's
-    interactive features more prominently
-  - Visual storytelling could gain impact through strategic color emphasis or additional
-    emphasis techniques
+  - 'VQ-02 (both): every incoming edge runs through the child''s label because the
+    label sits directly above the node at label_y = y + 0.04 (visible on Mgr FE, Mgr
+    QA, VP Sales, VP Ops, Dev 3, Dev 4, Rep 2, IT 1) → place the labels where no edge
+    arrives, e.g. below the node (y − offset) or beside it, so no edge crosses text.
+    Likely cause: geom_text at y + 0.04 on a top-down tree.'
+  - 'CQ-01 (code): the layout is written as two recursive functions count_leaves and
+    assign_layout → keep the layout but write it as an iterative pass in the Plot
+    zone (e.g. leaves counted bottom-up over a reversed breadth-first order). Likely
+    cause: recursive helper functions.'
+  - 'Suggestion: a curved edge (geom_curve) or a short elbow connector would give
+    the org chart a more refined look than straight diagonals.'
+  - 'Suggestion: lets-plot tooltips (layer_tooltips) with name, level and manager
+    would enrich the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1 ✓
-      Chrome: Title "network-hierarchical · letsplot · anyplot.ai" in bold 24pt dark text; node labels in bold 8pt dark text; legend "Level" in 14pt secondary text (#4A4A44). All clearly readable against light background.
-      Data: CEO node (15pt, #009E73), VPs (12pt, #D55E00), Managers (10.5pt, #0072B2), Staff (9pt, #CC79A7) following Okabe-Ito positions 1-4. Gray edges at 1.5 width with 0.6 alpha showing hierarchy connections.
-      Legibility verdict: PASS ✓ - All text elements fully readable, high contrast against light surface.
+      Background: warm off-white #FAF8F1, no axes or grid.
+      Chrome: bold dark title 'network-hierarchical · python · letsplot · anyplot.ai' top-left; bold dark node labels above each node; legend 'Level' at the right with Executive/VP/Manager/Staff in INK_SOFT. All readable.
+      Data: four-row tree, CEO (#009E73, largest) at top, three VPs (#C475FD), eight managers (#4467A3), eighteen staff (#BD8233, smallest) on the bottom row; thin grey straight edges. Incoming edges pass through the labels sitting above the child nodes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17 ✓
-      Chrome: Title in light bold text (#F0EFE8) clearly visible on dark background; node labels in white bold text; legend in 14pt secondary text (#B8B7B0). All text readable with no dark-on-dark failures.
-      Data: Data colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7). Node sizes and positions match light render. Gray edges visible and distinguishable from background.
-      Legibility verdict: PASS ✓ - All elements readable on dark surface; data colors maintain integrity; theme adaptation successful.
+      Background: warm near-black #1A1A17.
+      Chrome: title, node labels and legend title in light ink, legend entries in light grey; no dark-on-dark text.
+      Data: node colors identical to the light render; edges lighter grey and still visible; #009E73 root reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -50,72 +59,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt bold, node labels 8pt bold, legend 14pt, all readable
-          in both light and dark themes
+        comment: Title 16 pt, node labels geom_text size 4 bold, legend 12/10 pt;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Node labels positioned above nodes (y+0.035), no collisions, clean
-          layout
+        passed: false
+        comment: Incoming edges run through the child labels drawn directly above
+          each node (Mgr FE, Mgr QA, VP Sales, Dev 3, Rep 2 …) (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 30 nodes clearly visible, sizes decrease by level (18→9pt), edges
-          visible at 1.5 width
+        comment: 30 nodes sized by level (9→4.5), edges 0.6 wide at alpha 0.6 — visible,
+          thinner and lighter than the nodes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette positions 1-4 used; CVD-safe; adequate contrast
+        comment: Four Imprint hues with good contrast on both surfaces; level also
+          encoded by row position and size
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 base (4800×2700 at scale 3x), 16:9 aspect, nothing cut off
+        comment: 3200×1800 canvas, tree fills the panel, legend balanced at the right,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; node labels descriptive
+        comment: N/A for axes (layout positions, axes removed by design); title correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; follows Okabe-Ito order; backgrounds #FAF8F1/#1A1A17
-          correct; both theme-correct'
+        comment: 'Executive #009E73, then #C475FD, #4467A3, #BD8233 in canonical order;
+          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional hierarchy visualization with level-based color encoding
-          and size variation
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, bold labels, removed axes; nothing
+          beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Axes/grid removed; generous whitespace; node strokes add definition.
-          Edges could be more refined.
+        passed: false
+        comment: Axes and grid removed as the spec requires; no refinement beyond
+          the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Clear hierarchy through size and positioning; CEO focal point; top-down
-          flow clear. Could use additional emphasis.
+        passed: false
+        comment: Node size shrinking by depth makes the CEO the focal point and reinforces
+          the level reading beyond what the Notes ask
     spec_compliance:
       score: 15
       max: 15
@@ -125,26 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Hierarchical network with tree layout; root at top; parent-child
-          edges clear
+        comment: Hierarchical tree layout, root at top
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: node labels, edges, level-based organization'
+        comment: 'C1 rows per level, C2 tree layout with siblings grouped, C3 straight
+          edges without arrows, thinner than nodes, C4 leaf labels stay apart: all
+          met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y positions via tree layout; all 30 nodes and edges rendered
+        comment: Layout-positioned type; every node at its computed level and column,
+          parents centered over children
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend with proper category names
+        comment: Title 'network-hierarchical · python · letsplot · anyplot.ai'; legend
+          'Level' with Executive/VP/Manager/Staff
     data_quality:
       score: 15
       max: 15
@@ -154,81 +168,85 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates hierarchy, branching, structure, appropriate complexity
+        comment: Shows depth, branching of 1–3 children, subtrees of unequal size
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech company org chart; plausible role names; neutral professional
-          context
+        comment: Neutral tech-company org chart with plausible role names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 nodes, 4 levels, realistic branching factors
+        comment: 30 employees across 4 levels as the spec example; no check values
+          in the spec — checked node count 30 and depth 4 in data and render
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Helper functions necessary; straightforward data structures
+        passed: false
+        comment: Two recursive helper functions count_leaves / assign_layout (defect
+          line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); all data deterministic
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; no unused code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake interactivity
+        comment: 'Hand-rolled tree layout is needed: networkx is not available and
+          no installed call computes an org-tree layout'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html; current API
+        comment: Saves plot-{THEME}.png and .html; current lets-plot 4 API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: ggplot2-style grammar with + composition; aes() correct; appropriate
-          geoms
+        passed: false
+        comment: ggplot grammar with geom_segment/geom_point/geom_text layers and
+          scale_size_identity; nothing beyond the default idioms
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: HTML export and theme-adaptive styling shown; basic usage; could
-          leverage more advanced features
+        passed: false
+        comment: Nothing beyond the HTML export the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-22T03:31:51Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
+  - html-export
+  patterns: []
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
   - alpha-blending
