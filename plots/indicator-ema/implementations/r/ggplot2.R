@@ -52,16 +52,16 @@ df_long$series <- factor(df_long$series,
 p <- ggplot(df_long, aes(x = date, y = price, color = series)) +
     geom_vline(data = crossovers, aes(xintercept = date),
                color = INK_SOFT, linetype = "dashed",
-               linewidth = 0.4, alpha = 0.7) +
+               linewidth = 0.3, alpha = 0.7) +
     geom_line(aes(linewidth = series, alpha = series)) +
     geom_point(data = crossovers, aes(x = date, y = ema12),
-               shape = 21, size = 4, fill = PAGE_BG,
-               color = IMPRINT[["EMA (12)"]], stroke = 1.5,
+               shape = 21, size = 2.5, fill = PAGE_BG,
+               color = IMPRINT[["EMA (12)"]], stroke = 1.0,
                inherit.aes = FALSE) +
     scale_color_manual(name = NULL, values = IMPRINT,
                        breaks = c("Price", "EMA (12)", "EMA (26)")) +
     scale_linewidth_manual(
-        values = c("Price" = 1.5, "EMA (12)" = 1.1, "EMA (26)" = 1.1),
+        values = c("Price" = 1.0, "EMA (12)" = 0.75, "EMA (26)" = 0.75),
         guide  = "none") +
     scale_alpha_manual(
         values = c("Price" = 0.80, "EMA (12)" = 1.0, "EMA (26)" = 1.0),
@@ -73,7 +73,7 @@ p <- ggplot(df_long, aes(x = date, y = price, color = series)) +
         x     = "Date",
         y     = "Closing Price (USD)"
     ) +
-    theme_minimal(base_size = 14) +
+    theme_minimal(base_size = 8) +
     theme(
         plot.background    = element_rect(fill = PAGE_BG,     color = PAGE_BG),
         panel.background   = element_rect(fill = PAGE_BG,     color = NA),
@@ -81,23 +81,23 @@ p <- ggplot(df_long, aes(x = date, y = price, color = series)) +
         panel.grid.major.x = element_blank(),
         panel.grid.minor   = element_blank(),
         panel.border       = element_blank(),
-        axis.title         = element_text(color = INK,        size = 20),
-        axis.text          = element_text(color = INK_SOFT,   size = 16),
+        axis.title         = element_text(color = INK,        size = 10),
+        axis.text          = element_text(color = INK_SOFT,   size = 8),
         axis.line          = element_line(color = INK_SOFT,   linewidth = 0.5),
-        plot.title         = element_text(color = INK,        size = 24, face = "bold"),
+        plot.title         = element_text(color = INK,        size = 12, face = "bold"),
         legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
-        legend.text        = element_text(color = INK_SOFT,   size = 16),
+        legend.text        = element_text(color = INK_SOFT,   size = 8),
         legend.key         = element_rect(fill = ELEVATED_BG, color = NA),
         legend.position    = "bottom",
-        plot.margin        = margin(20, 20, 20, 20, unit = "pt")
+        plot.margin        = margin(10, 10, 10, 10, unit = "pt")
     )
 
 ggsave(
     filename = sprintf("plot-%s.png", THEME),
     plot     = p,
     device   = ragg::agg_png,
-    width    = 16,
-    height   = 9,
+    width    = 8,
+    height   = 4.5,
     units    = "in",
-    dpi      = 300
+    dpi      = 400
 )
