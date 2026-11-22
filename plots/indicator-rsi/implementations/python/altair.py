@@ -1,98 +1,86 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-16
 """
 
 import os
-import sys
-from importlib.machinery import SourceFileLoader
 
+import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-venv_path = sys.executable
-site_packages = os.path.join(os.path.dirname(venv_path), "..", "lib", "python3.13", "site-packages")
-altair_init = os.path.join(site_packages, "altair", "__init__.py")
-
-loader = SourceFileLoader("altair", altair_init)
-alt = loader.load_module()
-
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-np.random.seed(42)
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+OVERSOLD_COLOR = IMPRINT_PALETTE[2]
+OVERBOUGHT_COLOR = IMPRINT_PALETTE[4]
+
+# Constants
+LOOKBACK = 14  # standard RSI period
+OVERSOLD = 30
+OVERBOUGHT = 70
+CENTERLINE = 50
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+RSI = "RSI value"  # role: rsi
+
+# Data: replace this block with your own table, for example df = pd.read_csv("rsi.csv")
+rng = np.random.default_rng(42)
 n_periods = 140
 dates = pd.date_range(start="2024-01-01", periods=n_periods, freq="D")
+change = rng.standard_normal(n_periods) * 4
+change[0] = 0
+gains = np.where(change > 0, change, 0.0)
+losses = np.where(change < 0, -change, 0.0)
 
-price_changes = np.random.randn(n_periods) * 4
+avg_gain = np.full(n_periods, np.nan)
+avg_loss = np.full(n_periods, np.nan)
+avg_gain[LOOKBACK] = gains[1 : LOOKBACK + 1].mean()
+avg_loss[LOOKBACK] = losses[1 : LOOKBACK + 1].mean()
+for i in range(LOOKBACK + 1, n_periods):
+    avg_gain[i] = (avg_gain[i - 1] * (LOOKBACK - 1) + gains[i]) / LOOKBACK
+    avg_loss[i] = (avg_loss[i - 1] * (LOOKBACK - 1) + losses[i]) / LOOKBACK
 
-lookback = 14
-gains = np.zeros(n_periods)
-losses = np.zeros(n_periods)
+rsi = 100 - 100 / (1 + avg_gain / avg_loss)
+df = pd.DataFrame({DATE: dates, RSI: rsi})
 
-for i in range(1, n_periods):
-    change = price_changes[i]
-    if change > 0:
-        gains[i] = change
-    else:
-        losses[i] = abs(change)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+y_scale = alt.Scale(domain=[0, 100])
 
-avg_gain = np.zeros(n_periods)
-avg_loss = np.zeros(n_periods)
-avg_gain[lookback] = np.mean(gains[1 : lookback + 1])
-avg_loss[lookback] = np.mean(losses[1 : lookback + 1])
-
-for i in range(lookback + 1, n_periods):
-    avg_gain[i] = (avg_gain[i - 1] * (lookback - 1) + gains[i]) / lookback
-    avg_loss[i] = (avg_loss[i - 1] * (lookback - 1) + losses[i]) / lookback
-
-with np.errstate(divide="ignore", invalid="ignore"):
-    rs = np.where(avg_loss != 0, avg_gain / avg_loss, 0)
-    rsi = np.where(avg_loss != 0, 100 - (100 / (1 + rs)), 100)
-rsi[:lookback] = 50
-
-df = pd.DataFrame({"date": dates, "rsi": rsi})
-
-overbought_df = pd.DataFrame({"y": [70], "y2": [100]})
-oversold_df = pd.DataFrame({"y": [0], "y2": [30]})
-
-overbought_zone = (
-    alt.Chart(overbought_df)
-    .mark_rect(opacity=0.12, color="#E74C3C")
-    .encode(y=alt.Y("y:Q", scale=alt.Scale(domain=[0, 100])), y2=alt.Y2("y2:Q"))
+zones = alt.layer(
+    *[
+        alt.Chart(pd.DataFrame({"low": [low], "high": [high]}))
+        .mark_rect(opacity=0.14, color=color)
+        .encode(y=alt.Y("low:Q", scale=y_scale), y2="high:Q")
+        for low, high, color in [(0, OVERSOLD, OVERSOLD_COLOR), (OVERBOUGHT, 100, OVERBOUGHT_COLOR)]
+    ]
 )
 
-oversold_zone = (
-    alt.Chart(oversold_df)
-    .mark_rect(opacity=0.12, color="#27AE60")
-    .encode(y=alt.Y("y:Q", scale=alt.Scale(domain=[0, 100])), y2=alt.Y2("y2:Q"))
-)
-
-threshold_df = pd.DataFrame({"y": [30, 50, 70], "label": ["Oversold (30)", "Neutral (50)", "Overbought (70)"]})
-
-threshold_lines = (
-    alt.Chart(threshold_df)
-    .mark_rule(strokeDash=[8, 4], strokeWidth=2)
+level_names = [f"Oversold ({OVERSOLD})", f"Centerline ({CENTERLINE})", f"Overbought ({OVERBOUGHT})"]
+levels_df = pd.DataFrame({"level": [OVERSOLD, CENTERLINE, OVERBOUGHT], "label": level_names})
+levels = (
+    alt.Chart(levels_df)
+    .mark_rule(strokeDash=[6, 3], strokeWidth=1.2)
     .encode(
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, 100])),
+        y=alt.Y("level:Q", scale=y_scale),
         color=alt.Color(
             "label:N",
-            scale=alt.Scale(
-                domain=["Oversold (30)", "Neutral (50)", "Overbought (70)"], range=["#27AE60", INK_SOFT, "#E74C3C"]
-            ),
+            sort=None,
+            title=f"{LOOKBACK}-period levels",
+            scale=alt.Scale(domain=level_names, range=[OVERSOLD_COLOR, INK_SOFT, OVERBOUGHT_COLOR]),
             legend=alt.Legend(
-                title="Thresholds",
-                orient="bottom-left",
-                titleFontSize=16,
-                labelFontSize=14,
-                fillColor=ELEVATED_BG,
-                strokeColor=INK_SOFT,
+                orient="right", titleFontSize=10, labelFontSize=10, symbolType="stroke", symbolStrokeWidth=2
             ),
         ),
     )
@@ -100,34 +88,35 @@ threshold_lines = (
 
 rsi_line = (
     alt.Chart(df)
-    .mark_line(strokeWidth=3, color="#4467A3")
+    .mark_line(strokeWidth=1.8, clip=True, color=IMPRINT_PALETTE[0])
     .encode(
-        x=alt.X("date:T", title="Date", axis=alt.Axis(format="%b %Y")),
-        y=alt.Y("rsi:Q", title="RSI Value", scale=alt.Scale(domain=[0, 100])),
+        x=alt.X(DATE.translate(ESCAPE), type="temporal", title=DATE, axis=alt.Axis(format="%b %Y", tickCount="month")),
+        y=alt.Y(RSI.translate(ESCAPE), type="quantitative", title=RSI, scale=y_scale),
         tooltip=[
-            alt.Tooltip("date:T", title="Date", format="%Y-%m-%d"),
-            alt.Tooltip("rsi:Q", title="RSI", format=".1f"),
+            alt.Tooltip(DATE.translate(ESCAPE), type="temporal", title=DATE, format="%Y-%m-%d"),
+            alt.Tooltip(RSI.translate(ESCAPE), type="quantitative", title=RSI, format=".1f"),
         ],
     )
 )
 
 chart = (
-    alt.layer(overbought_zone, oversold_zone, threshold_lines, rsi_line)
+    alt.layer(zones, levels, rsi_line)
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title(
-            "indicator-rsi · altair · anyplot.ai",
-            fontSize=28,
-            anchor="middle",
-            subtitle="14-Period RSI with Overbought/Oversold Zones",
-            subtitleFontSize=18,
-        ),
+        width=560,
+        height=290,
         background=PAGE_BG,
+        title=alt.Title(
+            "indicator-rsi · python · altair · anyplot.ai",
+            fontSize=16,
+            anchor="middle",
+            subtitle=f"{LOOKBACK}-period RSI with overbought and oversold zones",
+            subtitleFontSize=11,
+            subtitleColor=INK_SOFT,
+        ),
     )
     .configure_axis(
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=10,
+        titleFontSize=12,
         gridOpacity=0.10,
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -136,9 +125,20 @@ chart = (
         titleColor=INK,
     )
     .configure_title(color=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=6)
     .configure_view(strokeWidth=0, fill=PAGE_BG)
 )
 
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the exact 3200 x 1800 target
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TW}x{TH}; shrink width/height")
+if (w, h) != (TW, TH):
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
