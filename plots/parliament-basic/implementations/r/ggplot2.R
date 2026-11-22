@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' parliament-basic: Parliament Seat Chart
-#' Library: ggplot2 | R
-#' Quality: pending | Created: 2026-05-17
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 84/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(ragg)
