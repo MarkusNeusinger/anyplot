@@ -2,63 +2,51 @@ library: ggplot2
 language: r
 specification_id: parliament-basic
 created: '2026-05-17T13:53:48Z'
-updated: '2026-05-17T13:57:50Z'
-generated_by: claude-haiku
-workflow_run: 25992701725
+updated: '2026-11-22T06:15:40Z'
+generated_by: claude-sonnet
+workflow_run: 44992408793
 issue: 2499
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 84
 review:
   strengths:
-  - Perfect theme-adaptive styling with correct chrome tokens applied to both renders
-  - All text elements properly sized and readable in both light (#FAF8F1) and dark
-    (#1A1A17) themes
-  - Okabe-Ito palette correctly applied with first series as brand green (#009E73),
-    multi-series colors in canonical order
-  - Correct parliament chart geometry with semicircular arrangement and proper coordinate
-    mapping using coord_fixed()
-  - Data colors are identical between light and dark renders; only chrome changes
-    appropriately
-  - Clean, idiomatic ggplot2 code with proper use of shape=21 (circle with outline),
-    aes mappings, and theme composition
-  - Realistic and appropriate example data with 7 parties and plausible seat distribution
-    totaling 620 seats
-  - Zero overlapping elements; all markers clearly visible and distinguishable at
-    full resolution
+  - Seats laid out in ten concentric arcs whose seat counts scale with radius, so
+    spacing stays even and the half circle is solid
+  - Party blocks are contiguous wedges following the data order from left to right,
+    sorted by angle across all arcs
+  - Legend lists every party with its seat count through scale_fill_manual labels,
+    and guide_legend(override.aes) enlarges the swatches
+  - Theme tokens are applied throughout; page-coloured seat strokes keep seats crisp
+    in both renders
+  - Neutral invented party names and an Imprint palette in canonical order
   weaknesses:
-  - dplyr and tidyr libraries imported but not used in code — recommend removing unused
-    imports
+  - 'VQ-05 (both): the hemicycle and legend fill only about 62% of the canvas height,
+    with roughly 20% empty canvas above the title and 18% below the bottom arc → tighten
+    the vertical whitespace so the chart fills about 80% of the height. Likely cause:
+    coord_fixed on a 1:2 hemicycle in a 16:9 panel next to a wide right-hand legend,
+    which shrinks the panel width and thus its height.'
+  - 'Suggestion: a labelled majority threshold (311 seats) is the one optional layer
+    the Notes allow.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Title: "parliament-basic · ggplot2 · anyplot.ai" centered at top, dark text (INK color) at 24pt, clearly readable
-      Data representation: Semicircular parliament arrangement with 620 individual seat dots arranged in concentric arcs from center outward
-      Colors: Okabe-Ito palette in correct order — green (#009E73) forms the majority center, followed by orange (#D55E00), blue (#0072B2), purple (#CC79A7), yellow (#F0E442), sky blue (#56B4E9), orange at edges
-      Legend: Right side, showing 7 party names, legend text at 16pt in dark color (INK_SOFT), legend frame uses ELEVATED_BG (#FFFDF6)
-      Axes: Hidden (no axis lines, ticks, or labels) — appropriate for parliament visualization
-      Grid: Removed — appropriate, no clutter
-      Overall legibility: PASS — all text readable, all markers clearly visible, no overlaps, excellent contrast between elements and background
+      Background: warm off-white #FAF8F1, no axes or grid.
+      Chrome: title 'parliament-basic · r · ggplot2 · anyplot.ai' in dark ink above the hemicycle; legend on the right on an elevated card with a thin border, headed 'Party (seats)', entries 'Harbor Union  (142)' ... 'Lantern Circle  (48)' in soft dark ink. All text readable.
+      Data: 620 seat dots in ten concentric semicircular arcs, each outlined in the page colour; contiguous wedges left to right: green #009E73 Harbor Union, purple Ridgeline Front, blue Cobalt Guild, ochre Meadow League, red Quarry Alliance, cyan Willow Assembly, plum Lantern Circle. Block boundaries are stepped.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Title: Same format, now rendered in light text (INK color for dark theme at #F0EFE8), clearly readable against dark background
-      Data representation: Identical semicircular parliament arrangement with same 620 seat dots in same positions
-      Colors: Data colors are IDENTICAL to light render — green (#009E73), orange, blue, purple, yellow all maintain exact same hex values. Only chrome changed, not data colors. ✓
-      Legend: Light text (INK_SOFT for dark theme at #B8B7B0), legend frame now uses dark ELEVATED_BG (#242420)
-      Axes: Hidden as in light render
-      Grid: Removed as in light render
-      Theme readability: PASS — no dark-on-dark text failures, all text is light-colored and readable on dark background, brand green (#009E73) is still highly visible and distinguishable
-      Chrome flip: Perfect — only background, text, and legend box colors changed; all data colors remain identical between themes
-
-    Both renders: Theme-adaptive styling correctly implemented with proper token application. Legibility verdict for both: PASS
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, legend card #242420 with a light border, legend title light, entries in soft light grey. No dark-on-dark text.
+      Data: identical seat positions and colours as the light render; seat outlines now near-black. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,72 +54,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, legend 16pt, all text explicitly sized and readable in
-          both themes
+        comment: Title 12 pt, legend title 11 pt, legend text 10 pt, all at or above
+          the ggplot2 references; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all fully readable
+        comment: No text collisions; neighbouring seats touch but each stays distinguishable
+          by its page-coloured outline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers size=5 perfectly adapted for 620 seats, alpha=0.85 provides
-          visibility
+        comment: 620 seats at size 4.6 with a 0.5 page-coloured stroke read clearly;
+          legend swatches filled and sized up via override.aes in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe, good contrast throughout
+        comment: Imprint neighbours (green/purple/blue/ochre/red/cyan/plum) all distinct
+          from each other and from both pages
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 16:9 landscape format with balanced margins, plot fills 60-70% of
-          canvas
+        passed: false
+        comment: Canonical 3200x1800 canvas; the hemicycle and legend sit in a middle
+          band with about 20% empty canvas above the title and 18% below the arcs
+          (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title in correct format; axes appropriately hidden
+        comment: 'N/A: seat position is layout, no axes by design; title in mandated
+          format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order preserved, backgrounds #FAF8F1/#1A1A17
-          correct, data colors identical across themes'
+        comment: 'Parties in canonical Imprint order, first #009E73; backgrounds #FAF8F1
+          / #1A1A17; data colours identical across renders'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Professional polish with intentional radial hierarchy, uses standard
-          Okabe-Ito palette
+        passed: false
+        comment: 'Raised from 4: page-coloured seat strokes give each seat a crisp
+          edge in both themes, and the legend pairs name and count with spaced parentheses
+          on an elevated card'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: All spines removed, no grid, generous margins, legend styled with
-          ELEVATED_BG
+        passed: false
+        comment: 'Raised from 2: seats per arc scale with radius so spacing along
+          every arc is even and the hemicycle reads as a solid fan'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear focal point with center mass showing majority; radial arrangement
-          guides viewer
+        passed: false
+        comment: 'Default: composition displayed with no hierarchy beyond the data
+          order'
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parliament seat chart in semicircular arrangement
+        comment: Correct parliament hemicycle, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All requirements met: semicircular arcs, individual seat dots, color
-          by party, legend with names'
+        comment: Concentric semicircular arcs (C1), contiguous left-to-right party
+          blocks (C2), legend with names and seat counts (C3); no threshold line (optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Seat positions correctly mapped to semicircular geometry, all 620
-          seats displayed
+        comment: One dot per seat, 620 in total; each party's count matches its data
+          (rep(times = seats))
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct 'parliament-basic · ggplot2 · anyplot.ai', legend
-          shows party names
+        comment: Title 'parliament-basic · r · ggplot2 · anyplot.ai'; legend 'Party
+          (seats)' lists 'Harbor Union  (142)' etc.
     data_quality:
       score: 15
       max: 15
@@ -172,24 +165,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 7 parties with varied seat counts, majority and
-          minorities represented'
+        comment: Seven parties from a large bloc to a small one; all aspects of the
+          plot type shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic election scenario with plausible party names and neutral
-          representation
+        comment: Invented neutral names (Harbor Union, Ridgeline Front, Cobalt Guild...)
+          built from neutral nouns plus group words; no real politics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 620 total seats appropriate for national parliament, proportions
-          factually correct
+        comment: 620 seats in a plausible chamber size; per-arc counts computed so
+          their sum equals the total (floor plus remainder), checked in code
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -197,57 +190,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward structure: imports → data → plot → save'
+        comment: Linear script; only an anonymous function inside lapply for per-arc
+          seat generation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42), hardcoded deterministic data
+        comment: Fully deterministic data and layout
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: dplyr and tidyr imported but not used
+        passed: true
+        comment: ggplot2 and ragg both used; tibble used via namespace
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic ggplot2, no over-engineering or fake UI
+        comment: Vectorised geometry in about 15 lines; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png using current ggsave API
+        comment: ggsave to plot-{THEME}.png with ragg at 8x4.5 in, 400 dpi
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of ggplot2 grammar: geom_point, scale_manual, coord_fixed,
-          proper theming'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: 'Uses ggplot2-specific features: shape=21 with stroke, theme_minimal
-          + custom theme composition, proper chrome token mapping'
+        passed: false
+        comment: 'Raised from 3: scale_fill_manual with a labels vector for count
+          labels, guide_legend(override.aes) for swatch size, coord_fixed(clip = ''off'')'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: 'Default: nothing beyond the mandated ggplot2 theming'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T06:11:46Z'
 impl_tags:
-  dependencies: []
-  techniques:
-  - custom-legend
+  dependencies:
+  - ragg
+  techniques: []
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - edge-highlighting

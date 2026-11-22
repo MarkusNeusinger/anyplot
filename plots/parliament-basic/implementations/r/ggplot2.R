@@ -1,126 +1,89 @@
 #' anyplot.ai
 #' parliament-basic: Parliament Seat Chart
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 91/100 | Created: 2026-05-17
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 84/100 | Updated: 2026-11-22
 
 library(ggplot2)
-library(dplyr)
-library(tidyr)
 library(ragg)
 
-set.seed(42)
-
-# --- Theme tokens -----------------------------------------------------------
+# Theme tokens
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
-                 "#AE3030", "#2ABCCD", "#954477")
 
-# --- Data -------------------------------------------------------------------
-# Create party data with seat counts
-parties <- data.frame(
-  party = c("Progressive Alliance", "Democratic Union", "Conservative Coalition",
-            "Labor Front", "Green Bloc", "Reform Party", "Centrist Movement"),
-  seats = c(142, 118, 97, 85, 68, 62, 48),
-  stringsAsFactors = FALSE
+# Imprint palette, canonical order
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                     "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Columns: set these to your table's column names
+PARTY <- "Party"  # role: group
+SEATS <- "Seats"  # role: value
+
+# Data: replace this block with your own table, for example df <- read.csv("chamber.csv", check.names = FALSE)
+df <- tibble::tibble(
+  !!PARTY := c("Harbor Union", "Ridgeline Front", "Cobalt Guild", "Meadow League",
+               "Quarry Alliance", "Willow Assembly", "Lantern Circle"),
+  !!SEATS := c(142, 118, 97, 85, 68, 62, 48)
 )
 
-# Generate seat coordinates in semicircular parliament layout
-# Semicircle arrangement: left to right, bottom to top (multiple arcs)
-seats_per_row <- 18
-total_seats <- sum(parties$seats)
-num_rows <- ceiling(total_seats / seats_per_row)
+# Plot: reads only df and the constants above
+df[[PARTY]] <- factor(df[[PARTY]], levels = unique(df[[PARTY]]))
+n_seats <- sum(df[[SEATS]])
 
-# Create seat positions
-seat_data <- data.frame()
-seat_idx <- 1
+# Concentric arcs: seats per arc grow with its radius, so spacing stays even
+n_rows <- 10
+radii  <- seq(1, 2.5, length.out = n_rows)
+per_row <- floor(n_seats * radii / sum(radii))
+short <- n_seats - sum(per_row)
+per_row[n_rows - seq_len(short) + 1] <- per_row[n_rows - seq_len(short) + 1] + 1
 
-for (i in 1:nrow(parties)) {
-  party_name <- parties$party[i]
-  party_seats <- parties$seats[i]
-  party_color_idx <- min(i, length(IMPRINT))
+seats <- do.call(rbind, lapply(seq_len(n_rows), function(i) {
+  k <- seq_len(per_row[i])
+  data.frame(angle = pi * (1 - (k - 0.5) / per_row[i]), radius = radii[i])
+}))
+# Left to right across all arcs, so each party fills one contiguous wedge
+seats <- seats[order(-round(seats$angle, 9), seats$radius), ]
+seats$party <- rep(df[[PARTY]], times = df[[SEATS]])
+seats$x <- seats$radius * cos(seats$angle)
+seats$y <- seats$radius * sin(seats$angle)
 
-  for (j in 1:party_seats) {
-    row_idx <- ceiling(seat_idx / seats_per_row)
-    col_idx <- ((seat_idx - 1) %% seats_per_row) + 1
+legend_labels <- sprintf("%s  (%d)", df[[PARTY]], df[[SEATS]])
+party_colors  <- setNames(IMPRINT_PALETTE[seq_len(nrow(df))], levels(df[[PARTY]]))
 
-    # Semicircular geometry: position seats in concentric arcs
-    # Angle spans from 0 to pi (semicircle)
-    angle <- (col_idx - 1) / (seats_per_row - 1) * pi
-    radius <- 1.5 + (row_idx - 1) * 0.8
-
-    x <- radius * cos(angle)
-    y <- radius * sin(angle)
-
-    seat_data <- rbind(seat_data, data.frame(
-      x = x,
-      y = y,
-      party = party_name,
-      color_idx = party_color_idx,
-      seat_id = seat_idx,
-      stringsAsFactors = FALSE
-    ))
-
-    seat_idx <- seat_idx + 1
-  }
-}
-
-# Map color indices to actual colors
-seat_data$color <- IMPRINT[seat_data$color_idx]
-
-# --- Plot -------------------------------------------------------------------
-p <- ggplot(seat_data, aes(x = x, y = y, fill = party)) +
-  geom_point(
-    aes(color = party),
-    size = 5,
-    alpha = 0.85,
-    shape = 21,
-    stroke = 0.3,
-    show.legend = TRUE
-  ) +
-  scale_color_manual(
-    values = setNames(IMPRINT[1:nrow(parties)], parties$party),
-    guide = guide_legend(ncol = 1, title = "Party", title.position = "top")
-  ) +
-  scale_fill_manual(
-    values = setNames(IMPRINT[1:nrow(parties)], parties$party),
-    guide = "none"
-  ) +
-  coord_fixed() +
-  labs(
-    title = "parliament-basic · ggplot2 · anyplot.ai",
-    x = NULL,
-    y = NULL
-  ) +
-  theme_minimal(base_size = 14) +
+p <- ggplot(seats, aes(x = x, y = y, fill = party)) +
+  geom_point(shape = 21, size = 4.6, color = PAGE_BG, stroke = 0.5) +
+  scale_fill_manual(values = party_colors, labels = legend_labels) +
+  coord_fixed(clip = "off") +
+  labs(title = "parliament-basic · r · ggplot2 · anyplot.ai",
+       fill = sprintf("%s (%s)", PARTY, tolower(SEATS))) +
+  guides(fill = guide_legend(override.aes = list(size = 6))) +
+  theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_blank(),
-    panel.grid.minor  = element_blank(),
-    panel.border      = element_blank(),
+    panel.grid        = element_blank(),
     axis.title        = element_blank(),
     axis.text         = element_blank(),
     axis.ticks        = element_blank(),
-    plot.title        = element_text(color = INK, size = 24, hjust = 0.5, margin = margin(b = 20)),
-    plot.margin       = margin(20, 20, 20, 20),
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
-    legend.text       = element_text(color = INK_SOFT, size = 16),
-    legend.title      = element_text(color = INK, size = 18),
+    plot.title        = element_text(color = INK, size = 12, hjust = 0.5, margin = margin(b = 8)),
+    plot.margin       = margin(16, 16, 16, 16),
+    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
+    legend.key        = element_rect(fill = ELEVATED_BG, color = NA),
+    legend.text       = element_text(color = INK_SOFT, size = 10),
+    legend.title      = element_text(color = INK, size = 11),
     legend.position   = "right",
-    legend.margin     = margin(10, 10, 10, 10)
+    legend.margin     = margin(10, 12, 10, 12)
   )
 
-# --- Save -------------------------------------------------------------------
+# Save
 ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
