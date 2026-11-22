@@ -2,127 +2,130 @@ library: seaborn
 language: python
 specification_id: contour-filled
 created: '2025-12-30T00:02:08Z'
-updated: '2026-05-15T22:23:39Z'
-generated_by: claude-haiku
-workflow_run: 25672461628
+updated: '2026-11-22T00:17:23Z'
+generated_by: claude-sonnet
+workflow_run: 44965384726
 issue: 2500
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 80
 review:
   strengths:
-  - Perfect spec compliance — filled contour with overlaid isolines (15 levels), colorbar
-    with label, viridis colormap, 80×80 grid resolution
-  - Excellent data storytelling via annotations with arrows pointing to Cold Trough
-    (≈4°C) and Warm Peak (≈32°C)
-  - Both light (#FAF8F1) and dark (#1A1A17) themes render cleanly with all text readable
-    and correct background colors
-  - Appropriate viridis colormap for the continuous temperature field — perceptually
-    uniform and CVD-safe
-  - Clean code with seed for reproducibility, proper theme-adaptive tokens throughout,
-    correct save pattern
+  - Correct imprint_seq ramp for a single-signed temperature field, with fill colors
+    identical in both themes
+  - Thin INK_SOFT isolines (0.4 px, alpha 0.5) trace every band boundary in both themes
+    while the fills stay the main signal
+  - 'Full theme-token threading: title, labels, ticks, colorbar outline and ticks
+    all adapt; no dark-on-dark text'
+  - 'Adaptable-code structure: column constants with role comments, a tidy df pivoted
+    to a grid, levels computed from the data'
+  - Exact 3200x1800 canvas without bbox_inches='tight'
   weaknesses:
-  - All four spines retained (full box frame) — for a non-geographic static plot,
-    removing top+right spines (L-shaped) would be more refined per style guide
-  - 'Annotation boxes use default matplotlib styling (grey/neutral fill, default border)
-    rather than theme-adaptive ELEVATED_BG tokens (#FFFDF6 light / #242420 dark)'
-  - seaborn library mastery is limited — sns.set_theme and sns.color_palette are the
-    only seaborn contributions; the core plot is matplotlib contourf (unavoidable,
-    but limits LM score)
+  - 'VQ-05 (both): with ax.set_aspect(''equal'') the 2:1 lon/lat axes only fill about
+    57 % of the canvas height (axes y ≈ 390–1425 px of 1800), leaving about 22 % empty
+    above the title and 12 % below the x-axis title → axes spanning about 75 % of
+    the height (+≈18 %). Likely cause: default subplot margins plus the colorbar steal
+    width, so the equal-aspect axes are width-limited; tighten with fig.subplots_adjust(left=…,
+    right=…) or a narrower colorbar (fraction/pad).'
+  - 'DQ-02 (both): the field is framed as global temperature but both poles sit at
+    the same 10 °C baseline as the mid-latitudes, with one 4 °C trough near 65 °N
+    → a baseline that falls with |latitude| (e.g. 10 + 15·cos(lat)). Likely cause:
+    the constant `+ 10` baseline in the Data block.'
+  - 'Suggestion: round level values (e.g. 0–33 °C in steps of 2.5 °C) would give the
+    colorbar readable ticks instead of 1.05, 5.56, 10.08 ….'
+  - 'Suggestion: the unused IMPRINT_PALETTE constant could be dropped for a continuous-only
+    plot.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "contour-filled · seaborn · anyplot.ai" in dark ink, clearly readable. Axis labels "Longitude (°E)" and "Latitude (°N)" in dark ink at appropriate size. Tick labels in muted dark grey, readable. Colorbar label "Temperature (°C)" and tick values readable.
-      Data: Filled contour plot showing a global temperature field with viridis colormap (purple=cold, yellow=warm). Two warm peaks visible (one at ~(-100,-40), one at ~(100,20)) and one cold trough (~(30,70)). Subtle contour isoline overlay at 0.5 width. Two annotation boxes with arrows: "Cold Trough ≈4°C" pointing to purple region and "Warm Peak ≈32°C" pointing to yellow peak.
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: title 'contour-filled · python · seaborn · anyplot.ai' in dark ink at 12 pt; axis titles 'Longitude (°E)' / 'Latitude (°N)' in dark ink; tick labels and colorbar ticks (1.05 … 32.64) in dark grey INK_SOFT; colorbar label 'Temperature (°C)'; all readable. Equal-aspect 2:1 axes leave wide empty bands above and below.
+      Data: filled contour with 15 levels on the imprint_seq ramp, brand green #009E73 at the low end to blue #4467A3 at the high end; two warm blue peaks near (60°E, 25°N) and (80°W, 40°S), a green cold trough near (35°E, 68°N); thin grey isolines on every band boundary; smooth boundaries, no holes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, and tick labels all rendered in light ink (#F0EFE8 range), clearly readable against dark background. Colorbar label and ticks in light muted color, readable. No dark-on-dark failures observed.
-      Data: Identical viridis colormap colors as light render — same purple cold region and yellow warm peaks. Annotation boxes adapt to dark background, text remains readable. Data colors are theme-independent (Okabe-Ito rule respected for viridis continuity).
-      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark issues
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title and axis titles in light ink, ticks and colorbar ticks in light grey; no dark-on-dark text; frame and colorbar outline in light grey.
+      Data: fill colors identical to the light render (same green → blue ramp); isolines switch to light grey and stay visible but thin.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt — all correctly sized and
-          readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and colorbar ticks 8 pt per
+          the library prompt; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Annotation boxes positioned without major overlap; slight tightness
-          near plot edges
+        comment: No text collides with text or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled contours, isoline overlay, colorbar all clearly visible in
-          both themes
+        comment: Bands fill the grid; 0.4 px INK_SOFT isolines at alpha 0.5 visible
+          in both themes without dominating
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is perceptually uniform and CVD-safe; no red-green sole signal
+        comment: Two-stop imprint_seq ramp, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 16:9 canvas, equal aspect ratio appropriate for geographic coordinates,
-          colorbar well-proportioned
+        passed: false
+        comment: Equal aspect leaves the axes using only about 57 % of the canvas
+          height, with wide empty bands above and below (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°E), Latitude (°N), colorbar Temperature (°C) — all descriptive
-          with units
+        comment: Longitude (°E), Latitude (°N), Temperature (°C) — descriptive with
+          units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'viridis correct for continuous data; #FAF8F1 light background, #1A1A17
-          dark background — both correct'
+        comment: 'imprint_seq for a single-signed field; #FAF8F1 / #1A1A17 backgrounds;
+          fill colors identical in both renders'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional geographic temperature field, meaningful context, annotations
-          add intentional hierarchy
+        passed: false
+        comment: Style-guide baseline typography and tokens, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid removed, equal aspect, subtle isolines; all 4 spines retained
-          and annotation boxes use default matplotlib styling
+        passed: false
+        comment: Grid off and thin isolines meet the baseline; full box frame, no
+          refinement beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Annotations with arrows pointing to Cold Trough and Warm Peak create
-          clear focal points and guide the viewer
+        passed: false
+        comment: Field displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -132,30 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled contour plot using contourf
+        comment: Filled contour via contourf, no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled contours, isoline overlay, colorbar, 80x80 grid — all spec
-          requirements met
+        comment: 'Colorbar, 15 levels, contour-line overlay, 80x80 grid; C1–C5 met:
+          full coverage, smooth boundaries, evenly stepped levels, sequential cmap
+          with named colorbar, thin isolines on band boundaries'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude/Latitude/Temperature correctly mapped; full axis ranges
-          shown
+        comment: Longitude on x, latitude on y, full −180..180 / −90..90 extent
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'contour-filled · seaborn · anyplot.ai' exact format; colorbar
-          serves as legend with proper label
+        comment: Title 'contour-filled · python · seaborn · anyplot.ai' correct; colorbar
+          labelled Temperature (°C)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -163,22 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows filled bands, isolines, colorbar, multiple peaks and troughs
-          — full feature showcase
+        comment: Two warm peaks, one cold trough, steep and flat regions, closed bands
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Global temperature field is realistic, neutral, and scientifically
-          plausible
+        passed: false
+        comment: Global temperature framing, but the poles sit at the same 10 °C as
+          the mid-latitudes (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 80x80 grid within 30-100 spec range; temperatures 1-32°C realistic;
-          full globe coordinates
+        comment: 1–33 °C on an 80x80 lon/lat grid; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -188,59 +189,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear top-to-bottom script
+        comment: Linear script in the six zones; column constants and Data/Plot markers
+          present
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: Deterministic analytic field
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, seaborn — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with facecolor=PAGE_BG
+        comment: Saves plot-{THEME}.png at 400 dpi, no bbox_inches='tight'
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: sns.set_theme() with rc dict is idiomatic; core contourf is matplotlib
-          (unavoidable for this plot type)
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: sns.color_palette as_cmap is seaborn-specific but the plot is fundamentally
-          matplotlib; limited seaborn distinctiveness
+        comment: sns.set_theme rc block is the library-prompt pattern; the plot itself
+          is matplotlib contourf, nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T00:13:38Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
-  - explicit-figure
+  - long-to-wide
+  - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
-  - alpha-blending
+  - minimal-chrome
