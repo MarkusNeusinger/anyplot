@@ -1,7 +1,7 @@
 """ anyplot.ai
 renko-basic: Basic Renko Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-17
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-22
 """
 
 import os
@@ -16,6 +16,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir]
 import altair as alt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402
 
 
 # Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
@@ -25,74 +26,74 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito colors (positions 1 and 2 for bullish/bearish)
-BULLISH = "#009E73"  # Okabe-Ito position 1
-BEARISH = "#AE3030"  # imprint red — bearish
+# Imprint palette: bullish takes position 1, bearish the red at position 5
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BULLISH = IMPRINT_PALETTE[0]
+BEARISH = IMPRINT_PALETTE[4]
 
-# Data - Generate realistic stock price data
+# Constants
+BRICK_SIZE = 2.0  # price move that draws one brick
+BRICK_GAP = 0.15  # share of a column left empty between neighbouring bricks
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close price (USD)"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 250
-
-# Simulate stock price with random walk and trend
 returns = np.random.normal(0.001, 0.015, n_days)
-price = 100 * np.cumprod(1 + returns)
+df = pd.DataFrame({DATE: pd.bdate_range("2024-01-02", periods=n_days), CLOSE: 100 * np.cumprod(1 + returns)})
 
-# Calculate Renko bricks
-brick_size = 2.0  # $2 brick size
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
 
-bricks = []
-last_brick_price = round(price[0] / brick_size) * brick_size
+# Build Renko bricks: one brick per BRICK_SIZE move away from the last brick's close
+prices = df[CLOSE].to_numpy()
+last_close = round(prices[0] / BRICK_SIZE) * BRICK_SIZE
+rows = []
+for p in prices:
+    while abs(p - last_close) >= BRICK_SIZE:
+        step = BRICK_SIZE if p > last_close else -BRICK_SIZE
+        rows.append(
+            {
+                "brick": len(rows),
+                "low": min(last_close, last_close + step),
+                "high": max(last_close, last_close + step),
+                "direction": "Bullish" if step > 0 else "Bearish",
+                "close": last_close + step,
+            }
+        )
+        last_close += step
+bricks = pd.DataFrame(rows)
+bricks["brick_end"] = bricks["brick"] + 1 - BRICK_GAP
 
-for p in price:
-    while True:
-        if p >= last_brick_price + brick_size:
-            # Bullish brick
-            brick_open = last_brick_price
-            brick_close = last_brick_price + brick_size
-            bricks.append({"brick_idx": len(bricks), "open": brick_open, "close": brick_close, "direction": "Bullish"})
-            last_brick_price = brick_close
-        elif p <= last_brick_price - brick_size:
-            # Bearish brick
-            brick_open = last_brick_price
-            brick_close = last_brick_price - brick_size
-            bricks.append({"brick_idx": len(bricks), "open": brick_open, "close": brick_close, "direction": "Bearish"})
-            last_brick_price = brick_close
-        else:
-            break
-
-df_bricks = pd.DataFrame(bricks)
-
-# Calculate brick positions for visualization
-df_bricks["y1"] = df_bricks[["open", "close"]].min(axis=1)
-df_bricks["y2"] = df_bricks[["open", "close"]].max(axis=1)
-df_bricks["x1"] = df_bricks["brick_idx"]
-df_bricks["x2"] = df_bricks["brick_idx"] + 0.85  # Gap between bricks
-
-# Create Renko chart
 chart = (
-    alt.Chart(df_bricks)
+    alt.Chart(bricks)
     .mark_rect(strokeWidth=1, stroke=INK_SOFT)
     .encode(
-        x=alt.X("x1:Q", title="Brick Index", scale=alt.Scale(nice=False)),
-        x2="x2:Q",
-        y=alt.Y("y1:Q", title="Price ($)", scale=alt.Scale(zero=False)),
-        y2="y2:Q",
+        x=alt.X("brick", type="quantitative", title="Brick index", scale=alt.Scale(nice=False)),
+        x2="brick_end",
+        y=alt.Y("low", type="quantitative", title=CLOSE, scale=alt.Scale(zero=False)),
+        y2="high",
         color=alt.Color(
-            "direction:N",
+            "direction",
+            type="nominal",
+            title="Direction",
             scale=alt.Scale(domain=["Bullish", "Bearish"], range=[BULLISH, BEARISH]),
-            legend=alt.Legend(title="Direction", titleFontSize=18, labelFontSize=16, orient="top-right"),
+            legend=alt.Legend(titleFontSize=18, labelFontSize=16, orient="right"),
         ),
         tooltip=[
-            alt.Tooltip("brick_idx:Q", title="Brick #"),
-            alt.Tooltip("open:Q", title="Open", format="$.2f"),
-            alt.Tooltip("close:Q", title="Close", format="$.2f"),
-            alt.Tooltip("direction:N", title="Direction"),
+            alt.Tooltip("brick", type="quantitative", title="Brick #"),
+            alt.Tooltip("low", type="quantitative", title="Low", format="$.2f"),
+            alt.Tooltip("high", type="quantitative", title="High", format="$.2f"),
+            alt.Tooltip("direction", type="nominal", title="Direction"),
         ],
     )
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title("renko-basic · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        width=570,
+        height=320,
+        title=alt.Title("renko-basic · python · altair · anyplot.ai", fontSize=28, anchor="middle"),
         background=PAGE_BG,
     )
     .interactive()
@@ -112,5 +113,16 @@ chart = (
 )
 
 # Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) to the exact landscape target canvas
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. Shrink width/height.")
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
