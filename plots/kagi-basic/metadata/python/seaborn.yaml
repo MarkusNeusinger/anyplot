@@ -2,42 +2,52 @@ library: seaborn
 language: python
 specification_id: kagi-basic
 created: '2026-01-08T21:53:52Z'
-updated: '2026-05-17T08:05:14Z'
-generated_by: claude-haiku
-workflow_run: 25985156901
+updated: '2026-11-22T03:47:41Z'
+generated_by: claude-sonnet
+workflow_run: 44981785643
 issue: 3341
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 79
 review:
   strengths:
-  - Excellent theme-adaptive implementation with proper token usage throughout
-  - Perfect Okabe-Ito palette compliance with correct colors for Yang/Yin
-  - Clean visual distinction between bullish and bearish trends via linewidth
-  - Strong text legibility in both light and dark renders
-  - Proper title/legend formatting matching spec requirements
-  - Realistic and appropriate synthetic cryptocurrency data
-  - No AR-08 violations — static implementation with no simulated interactivity
+  - Theme tokens threaded through sns.set_theme rc so chrome flips correctly in both
+    renders
+  - Clear weight contrast (2.6 pt vs 0.8 pt) with color agreeing with thickness everywhere
+  - Exact 3200x1800 canvas with subplots_adjust and default bbox
+  - 'Adaptable data block: tidy df with column constants feeding the plot'
   weaknesses:
-  - Design could be enhanced with additional visual polish (e.g., custom palette refinements,
-    more sophisticated layout)
-  - Could include subtle annotations to guide interpretation of trend reversals
+  - 'SC-02 (both): line weight follows direction instead of the shoulder/waist rule:
+    line 8 rises from about 6330 past the previous shoulder at about 7030 to 7830
+    but stays thin, and line 3 falls from about 9220 to 7920 and turns thin at once
+    instead of at the previous waist (about 8780); the line never changes weight mid-segment
+    → split each vertical segment at the previous shoulder/waist price, thick above
+    a broken shoulder and thin below a broken waist, otherwise keep the prior weight.
+    Likely cause: segments carry one yang flag set from direction and the all-time
+    last_high/last_low instead of the previous shoulder and waist.'
+  - 'LM-01 (code): seaborn draws nothing; every mark is a matplotlib ax.plot call
+    in a per-segment loop plus hand-built plt.Line2D legend handles → draw the tidy
+    line table with sns.lineplot(data=lines, x=''x'', y=''y'', units=''segment'',
+    hue=''type'', size=''type'', estimator=None, sort=False) and let it build the
+    legend. Likely cause: the ax.plot loop over segment ids.'
+  - 'Suggestion: label the reversal threshold (5%) in the axis or title prefix so
+    the reader knows what turns the line.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all rendered in dark text and clearly readable against light background
-      Data: Yang (bullish) rendered as thick lines in green (#009E73 — Okabe-Ito position 1), Yin (bearish) as thin lines in orange/vermillion (#D55E00 — position 2). First series is correct Okabe-Ito color.
-      Legibility verdict: PASS — all text is readable, no light-on-light failures
+      Background: warm off-white #FAF8F1
+      Chrome: title 'kagi-basic · python · seaborn · anyplot.ai', axis labels 'Kagi Line Index' / 'Closing price (USD)', ticks 0-25 and 6000-12000, framed legend upper right; all dark text, readable
+      Data: one Kagi line of 27 columns; thick #009E73 yang verticals and shoulders, thin #AE3030 yin elsewhere; legend shows a thick green and a thin red sample
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title, axis labels, tick labels all rendered in light text and clearly readable against dark background. No dark-on-dark failures detected.
-      Data: Yang (#009E73) and Yin (#D55E00) colors are identical to light render, confirming proper theme-independence for data colors
-      Legibility verdict: PASS — all text is readable on dark background, proper Chrome adaptation
+      Background: warm near-black #1A1A17
+      Chrome: same title, labels, ticks and legend in light ink; no dark-on-dark text
+      Data: identical green and red line colors and weights as the light render
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,69 +58,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized and colored for theme, 24pt title, 20pt labels,
-          16pt ticks
+        comment: Title 12 pt, axis labels 10 pt, ticks 8 pt, legend 8 pt; dark text
+          on light, light text on dark, all readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no text collisions
+        comment: No text collisions; legend upper right sits clear of the line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick (4.5pt) and thin (1.5pt) lines are clearly distinct
+        comment: Yang 2.6 pt vs yin 0.8 pt clearly distinct in both themes; legend
+          line samples match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe, adequate contrast
+        comment: Green/red pair backed by line weight, so color is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper proportions, tight_layout, generous margins
+        comment: 3200x1800 canvas, balanced margins, title ~43% of width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, correct title format
+        comment: '''Kagi Line Index'' and ''Closing price (USD)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Yang=#009E73, Yin=#D55E00, backgrounds correct, both renders theme-compliant
+        comment: 'Yang #009E73, yin #AE3030 (Imprint red anchor), backgrounds #FAF8F1/#1A1A17,
+          chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional polish with custom linewidths and intentional color
-          choice
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, good whitespace
+        passed: false
+        comment: Spine and grid rules met (y-only grid at low alpha), nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy with Yang/Yin distinction guides viewer
+        passed: false
+        comment: Data displayed with yang/yin as the Notes prescribe, no extra hierarchy
+          chosen
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -118,26 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kagi chart implementation
+        comment: Correct Kagi chart, single line, no extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Thick lines (yang), thin lines (yin), colors, reversal threshold
-          all present
+        passed: false
+        comment: Thickness flips with direction instead of at the previous shoulder/waist
+          (defect line, C2)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows line index, Y-axis shows price with appropriate scale
+        comment: Vertical segments at reversal price levels, x as line index, all
+          data in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format, legend labels clearly identify series
+        comment: Title 'kagi-basic · python · seaborn · anyplot.ai'; legend labels
+          Yang (Bullish)/Yin (Bearish)
     data_quality:
       score: 15
       max: 15
@@ -147,19 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates all Kagi chart aspects with multiple reversals
+        comment: 27 Kagi lines with many reversals, shoulders and waists, open last
+          segment
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic crypto volatility, neutral domain, appropriate data
+        comment: Crypto-like daily closes around 6000-12000 USD with 5% reversal,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 180 periods sensible, 5% reversal threshold appropriate for crypto
+        comment: 180 daily observations (spec 100-500), 5% threshold in the spec's
+          example range; no Check values in Notes
     code_quality:
       score: 10
       max: 10
@@ -169,48 +186,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct algorithm, no unnecessary abstractions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no AR-08 violations
+        comment: Kagi construction has no library call; plotting loop proportionate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png output
+        comment: Saves plot-{THEME}.png at default bbox, current API
     library_mastery:
-      score: 9
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 2
         max: 5
         passed: true
-        comment: Proper matplotlib/seaborn patterns, sns.set_theme() usage
+        comment: Only sns.set_theme; all marks drawn with ax.plot and plt.Line2D (defect
+          line)
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Custom legend with Line2D, theme-adaptive rc configuration
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T03:44:35Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -218,7 +239,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - kagi-construction
   styling:
-  - publication-ready
-  - grid-styling
+  - minimal-chrome
