@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 mosaic-categorical: Mosaic Plot for Categorical Association Analysis
-Library: pygal 3.1.3 | Python 3.13.14
-Quality: pending | Updated: 2026-05-19
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 87/100 | Updated: 2026-11-22
 """
 
 import os
