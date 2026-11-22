@@ -1,97 +1,88 @@
 #' anyplot.ai
 #' lollipop-grouped: Grouped Lollipop Chart
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 84/100 | Created: 2026-05-17
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 82/100 | Updated: 2026-11-22
 
 library(ggplot2)
 library(dplyr)
 library(ragg)
 
+# Theme tokens
+THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
+PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                     "#AE3030", "#2ABCCD", "#954477", "#99B314")  # Imprint palette
+
+# Columns: set these to your table's column names
+REGION  <- "Region"               # role: category
+PRODUCT <- "Product"              # role: group
+REVENUE <- "Revenue ($ millions)" # role: value
+
+# Data: replace this block with your own table, for example df <- read.csv("sales.csv", check.names = FALSE)
 set.seed(42)
-
-# --- Theme tokens -----------------------------------------------------------
-THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
-PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
-INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
-                 "#AE3030", "#2ABCCD", "#954477")
-
-# --- Data -------------------------------------------------------------------
-# Sales revenue (millions) by product line across regions
-data <- tibble::tibble(
-  region = rep(c("North", "South", "East", "West"), each = 12),
-  product = rep(rep(c("Product A", "Product B", "Product C"), times = 4), times = 4),
-  revenue = c(
-    2.8, 2.2, 1.9,  # North
-    3.1, 2.5, 2.1,
-    2.4, 1.8, 1.5,
-    2.9, 2.3, 1.7,
-
-    3.2, 2.7, 2.4,  # South
-    2.9, 2.1, 1.8,
-    3.3, 2.8, 2.5,
-    3.0, 2.4, 2.0,
-
-    2.6, 2.0, 1.7,  # East
-    3.2, 2.6, 2.3,
-    2.7, 2.1, 1.9,
-    3.1, 2.5, 2.2,
-
-    3.0, 2.4, 2.1,  # West
-    2.8, 2.3, 1.9,
-    2.9, 2.2, 1.8,
-    3.3, 2.7, 2.4
-  )
+df <- tibble::tibble(
+  !!REGION  := rep(c("North", "South", "East", "West"), each = 3),
+  !!PRODUCT := rep(c("Product A", "Product B", "Product C"), times = 4),
+  !!REVENUE := c(2.8, 2.2, 1.9,
+                 3.2, 2.7, 2.4,
+                 2.6, 2.0, 1.7,
+                 3.0, 2.4, 2.1)
 )
 
-# --- Plot -------------------------------------------------------------------
-p <- ggplot(data, aes(x = region, y = revenue, color = product)) +
-  geom_segment(
-    aes(xend = region, y = 0, yend = revenue),
-    position = position_dodge(width = 0.6),
-    linewidth = 0.8,
-    alpha = 0.6
+# Plot: reads only df and the constants above
+# Regions sorted by total revenue (descending); products keep their data order
+region_order <- df |>
+  group_by(.data[[REGION]]) |>
+  summarise(total = sum(.data[[REVENUE]]), .groups = "drop") |>
+  arrange(desc(total)) |>
+  pull(1)
+df[[REGION]]  <- factor(df[[REGION]], levels = region_order)
+df[[PRODUCT]] <- factor(df[[PRODUCT]], levels = unique(df[[PRODUCT]]))
+
+dodge <- position_dodge(width = 0.6)
+
+p <- ggplot(df, aes(x = .data[[REGION]], y = .data[[REVENUE]], color = .data[[PRODUCT]])) +
+  geom_linerange(
+    aes(ymin = 0, ymax = .data[[REVENUE]]),
+    position = dodge,
+    linewidth = 0.9
   ) +
-  geom_point(
-    position = position_dodge(width = 0.6),
-    size = 5,
-    alpha = 0.9
-  ) +
-  scale_color_manual(
-    name = "Product",
-    values = c("Product A" = IMPRINT[1],
-               "Product B" = IMPRINT[2],
-               "Product C" = IMPRINT[3])
-  ) +
+  geom_point(position = dodge, size = 5.5) +
+  scale_color_manual(values = IMPRINT_PALETTE) +
+  scale_y_continuous(limits = c(0, max(df[[REVENUE]], na.rm = TRUE) * 1.1),
+                     expand = expansion(mult = c(0, 0.02))) +
   labs(
-    title = "lollipop-grouped · R · ggplot2 · anyplot.ai",
-    x = "Region",
-    y = "Revenue ($ Millions)"
+    title = "lollipop-grouped · r · ggplot2 · anyplot.ai",
+    x = REGION,
+    y = REVENUE,
+    color = PRODUCT
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
-    plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
-    panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.y = element_line(color = INK_SOFT, linewidth = 0.3),
-    panel.grid.minor  = element_blank(),
+    plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
+    panel.background   = element_rect(fill = PAGE_BG, color = NA),
+    panel.grid.major.y = element_line(color = INK_SOFT, linewidth = 0.2),
+    panel.grid.minor   = element_blank(),
     panel.grid.major.x = element_blank(),
-    axis.title        = element_text(color = INK, size = 20),
-    axis.text         = element_text(color = INK_SOFT, size = 16),
-    plot.title        = element_text(color = INK, size = 24),
-    legend.background = element_rect(fill = PAGE_BG, color = NA),
-    legend.text       = element_text(color = INK_SOFT, size = 16),
-    legend.title      = element_text(color = INK, size = 18),
-    legend.position   = "right"
+    axis.title         = element_text(color = INK, size = 10),
+    axis.text          = element_text(color = INK_SOFT, size = 8),
+    plot.title         = element_text(color = INK, size = 12),
+    legend.background  = element_rect(fill = PAGE_BG, color = NA),
+    legend.key         = element_rect(fill = PAGE_BG, color = NA),
+    legend.text        = element_text(color = INK_SOFT, size = 8),
+    legend.title       = element_text(color = INK, size = 10),
+    legend.position    = "right"
   )
 
-# --- Save -------------------------------------------------------------------
+# Save
 ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
