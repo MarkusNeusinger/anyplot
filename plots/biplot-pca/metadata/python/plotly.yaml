@@ -12,38 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 76
 review:
   strengths:
-  - 'Excellent visual quality: all text explicitly sized and readable in both themes'
-  - 'Flawless theme compliance: data colors identical across light/dark, chrome perfectly
-    adapted'
-  - Correct biplot implementation with proper loading vector scaling
-  - Clean, reproducible code with zero dependencies issues
-  - Perfect specification compliance and data quality
-  - Well-balanced canvas utilization and layout
+  - Arrows drawn from the exact origin with one common scale factor
+  - Equal-aspect axes via scaleanchor
+  - Theme tokens applied to all chrome; identical data colors across themes
   weaknesses:
-  - 'Design Excellence is modest: implementation is competent but generic (DE-01=4,
-    no visual hierarchy in DE-03=2)'
-  - Limited use of Plotly-specific features; could leverage more sophisticated annotation
-    patterns
-  - Loading vectors rendered in muted color reduce visual prominence; arrows could
-    be more visually distinctive
+  - 'VQ-05 (both): the canvas is 4800x2700, not one of the canonical sizes → 3200x1800
+    (-1600 x -900). Likely cause: write_image(width=1600, height=900, scale=3) → width=800,
+    height=450, scale=4.'
+  - 'SC-04 (both): the title ''biplot-pca · plotly · anyplot.ai'' lacks the language
+    segment → ''biplot-pca · python · plotly · anyplot.ai''. Likely cause: the title
+    string.'
+  - 'SC-02 (both): the ''petal length'' and ''sepal length'' names float about 0.3-0.4
+    units away from their arrow tips instead of at them (C3) → names anchored at the
+    tips. Likely cause: the hand-typed label_offsets dict.'
+  - 'CQ-04 (code): lines ~67-76 add a go.Scatter line trace for each arrow shaft that
+    the annotation arrow (ax=0, ay=0) already draws, and the per-variable label_offsets
+    dict is retyped on every loop iteration → drop the duplicate trace and anchor
+    labels with xanchor/yanchor plus xshift/yshift. Likely cause: the two-part arrow
+    construction.'
+  - 'Suggestion: a legend title naming the grouping (Species).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme color
-      Chrome: Title, axis labels (PC1 73.0%, PC2 22.99%), tick labels all dark text, clearly readable
-      Data: Three iris species as colored points (Setosa #009E73, Versicolor #D55E00, Virginica #0072B2), four loading vectors as dark gray lines with labeled arrows from origin
-      Legibility verdict: PASS - all elements readable, proper contrast
+      Background: warm off-white #FAF8F1, canvas 4800x2700
+      Chrome: title 'biplot-pca · plotly · anyplot.ai' (no language segment), axis titles 'PC1 (73.0%)' / 'PC2 (22.9%)', legend top-left without a title; all text dark and readable
+      Data: Setosa #009E73, Versicolor #C475FD, Virginica #4467A3 scores; four dark-grey arrows from the exact origin; 'sepal length' and 'petal length' names float noticeably away from their tips
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme color
-      Chrome: Title, axis labels, tick labels all light text, clearly readable against dark background, no dark-on-dark failures
-      Data: Data colors identical to light render (#009E73, #D55E00, #0072B2), loading vectors light-colored and fully visible
-      Legibility verdict: PASS - all elements readable, theme-adapted correctly
+      Background: warm near-black #1A1A17
+      Chrome: all text light and readable; no dark-on-dark
+      Data: identical data colors; light-grey arrows clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -51,68 +56,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        comment: All text sized explicitly; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Arrow labels have smart offsets; no overlapping elements
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and arrows properly scaled for visibility
+        comment: Markers and arrows clearly visible in both themes; legend glyphs
+          match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette inherently CVD-safe
+        comment: CVD-safe hues
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Plot fills 65-70% of canvas with balanced margins
+        passed: false
+        comment: Canvas is 4800x2700, not one of the canonical 3200x1800 / 2400x2400
+          sizes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes show variance percentages; descriptive title
+        comment: PC1 (73.0%) and PC2 (22.9%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series Okabe-Ito; theme-correct backgrounds
-          and text'
+        comment: 'Setosa #009E73, then #C475FD, #4467A3; theme-correct backgrounds
+          and chrome'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured default, not exceptional
+        passed: true
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: false
-        comment: Subtle grid, minimal embellishment beyond defaults
+        passed: true
+        comment: Spine and grid rules met, nothing beyond; labels placed by typed
+          offsets
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Technical display without visual hierarchy or emphasis
+        passed: true
+        comment: Data displayed, no hierarchy beyond the Notes
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -120,25 +128,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct biplot with scores and loadings
+        comment: Correct PCA biplot
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: points, arrows, labels, variance explained'
+        passed: false
+        comment: The 'petal length' and 'sepal length' names float about 0.3-0.4 units
+          away from their tips instead of at them (C3, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: PC1/PC2 correctly mapped; all observations visible
+        comment: Scores at their coordinates; arrows start exactly at the origin
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; legend labels match species
+        passed: false
+        comment: Title 'biplot-pca · plotly · anyplot.ai' lacks the language segment
+          (defect line); legend names the species
     data_quality:
       score: 15
       max: 15
@@ -148,21 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All species and features well-represented
+        comment: Group separation and loading structure all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic iris dataset, neutral and scientific
+        comment: Iris, neutral and real
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Variance explained and scaling factually correct
+        comment: Checked PC1 73.0% and PC2 22.9% on the axes
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -170,31 +180,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow without unnecessary functions
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic iris dataset
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no dead code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, no fake UI
+        passed: false
+        comment: A separate Scatter line trace redraws the shaft the annotation arrow
+          already draws, and a per-variable label_offsets dict is retyped inside the
+          loop (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and current API
+        comment: Saves plot-{THEME}.png and .html; canvas size scored in VQ-05
     library_mastery:
       score: 6
       max: 10
@@ -204,14 +216,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Plotly Graph Objects usage; solid patterns
+        comment: Graph objects per group, scaleanchor for an equal-aspect biplot
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Generic usage without distinctive Plotly features
+        passed: true
+        comment: Annotation arrowheads in data coordinates; hover in HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
 impl_tags:
   dependencies:
   - sklearn
