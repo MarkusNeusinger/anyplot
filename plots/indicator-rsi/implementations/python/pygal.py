@@ -1,29 +1,16 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-16
 """
 
 import os
-import sys
 
 import numpy as np
+import pandas as pd
+import pygal
+from pygal.style import Style
 
-
-# Clear the local module from sys.modules if it was somehow loaded
-if "pygal" in sys.modules and "implementations" in sys.modules["pygal"].__file__:
-    del sys.modules["pygal"]
-
-# Remove current directory from path to prevent local file from being imported
-_original_path = sys.path[:]
-sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd())]
-
-try:
-    import pygal
-    from pygal.style import Style
-finally:
-    # Restore path
-    sys.path = _original_path
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -31,106 +18,116 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - Generate realistic RSI values over 120 trading days
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+OVERBOUGHT = 70  # RSI above this level reads as overbought
+OVERSOLD = 30  # RSI below this level reads as oversold
+MIDLINE = 50  # bullish / bearish bias line
+LOOKBACK = 14  # standard RSI lookback period
+
+# Columns: set these to your table's column names
+DATE = "Trading date"  # role: date
+RSI = "RSI (14-period)"  # role: rsi
+
+# Data: replace this block with your own table, for example df = pd.read_csv("rsi.csv")
 np.random.seed(42)
-
 n_days = 120
-lookback = 14
+changes = np.random.randn(n_days) * 0.8
+changes[15:32] += 4.0  # strong uptrend pushes RSI above 70
+changes[75:92] += 4.5
+changes[40:57] -= 4.0  # strong downtrend pushes RSI below 30
+changes[100:115] -= 3.5
+changes = pd.Series(changes)
+avg_gain = changes.clip(lower=0).ewm(alpha=1 / LOOKBACK, adjust=False, min_periods=LOOKBACK).mean()
+avg_loss = (-changes.clip(upper=0)).ewm(alpha=1 / LOOKBACK, adjust=False, min_periods=LOOKBACK).mean()
+rsi_values = 100 - 100 / (1 + avg_gain / avg_loss)
+df = pd.DataFrame({DATE: pd.bdate_range("2025-01-02", periods=n_days), RSI: rsi_values})
 
-# Generate price changes that produce RSI entering both overbought (>70) and oversold (<30) zones
-base_changes = np.random.randn(n_days) * 0.8
+# Plot: reads only df and the constants above
 
-# Strong uptrend periods (push RSI above 70)
-base_changes[15:32] += 4.0
-base_changes[75:92] += 4.5
 
-# Strong downtrend periods (push RSI below 30)
-base_changes[40:57] -= 4.0
-base_changes[100:115] -= 3.5
+def blend(color, share):
+    """Mix a hex color into the page background at the given share, giving an opaque tint."""
+    mixed = [round(int(color[i : i + 2], 16) * share + int(PAGE_BG[i : i + 2], 16) * (1 - share)) for i in (1, 3, 5)]
+    return f"#{mixed[0]:02X}{mixed[1]:02X}{mixed[2]:02X}"
 
-price_changes = base_changes
 
-# Calculate RSI using exponential moving average
-gains = np.where(price_changes > 0, price_changes, 0)
-losses = np.where(price_changes < 0, -price_changes, 0)
+rsi_color = IMPRINT_PALETTE[0]
+overbought_color = IMPRINT_PALETTE[4]
+oversold_color = IMPRINT_PALETTE[2]
+n = len(df)
 
-# Initialize EMA
-avg_gain = np.zeros(n_days)
-avg_loss = np.zeros(n_days)
+# Series are drawn in the order they are added, so the colors follow the same order:
+# zone fills first, threshold lines above them, the RSI line on top.
+series_colors = (
+    blend(overbought_color, 0.16),
+    PAGE_BG,
+    blend(oversold_color, 0.16),
+    overbought_color,
+    oversold_color,
+    INK_MUTED,
+    rsi_color,
+)
 
-# First average
-avg_gain[lookback - 1] = np.mean(gains[:lookback])
-avg_loss[lookback - 1] = np.mean(losses[:lookback])
-
-# EMA for subsequent values
-alpha = 1 / lookback
-for i in range(lookback, n_days):
-    avg_gain[i] = alpha * gains[i] + (1 - alpha) * avg_gain[i - 1]
-    avg_loss[i] = alpha * losses[i] + (1 - alpha) * avg_loss[i - 1]
-
-# Calculate RSI (avoid division by zero)
-with np.errstate(divide="ignore", invalid="ignore"):
-    rs = np.divide(avg_gain, avg_loss, out=np.full_like(avg_gain, 100.0), where=avg_loss > 0)
-rsi = 100 - (100 / (1 + rs))
-rsi[:lookback] = 50
-
-# Okabe-Ito palette with brand green as first series
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
-
-# Custom style for theme-adaptive rendering
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=18,
-    major_label_font_size=16,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    colors=series_colors,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=38,
+    value_font_size=36,
+    stroke_width=6,
+    opacity=1,
+    opacity_hover=1,
 )
 
-# Create chart
+dates = df[DATE].dt.strftime("%b %d").tolist()
 chart = pygal.Line(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="indicator-rsi · pygal · anyplot.ai",
-    x_title="Trading Period (120 days, 14-period RSI lookback)",
-    y_title="RSI Value (0-100)",
+    title="indicator-rsi · python · pygal · anyplot.ai",
+    x_title=f"{DATE} ({n} days)",
+    y_title=RSI,
     show_dots=False,
     show_x_guides=False,
     show_y_guides=True,
     range=(0, 100),
-    interpolate="cubic",
     legend_at_bottom=True,
-    legend_box_size=40,
-    margin=60,
-    margin_bottom=180,
-    show_x_labels=False,
+    legend_at_bottom_columns=4,
+    legend_box_size=36,
+    margin=40,
+    margin_bottom=150,
+    x_label_rotation=0,
+    show_minor_x_labels=False,
+    truncate_label=-1,
 )
+chart.x_labels = dates
+chart.x_labels_major = dates[::20]
 
-# Add threshold lines with colorblind-safe styling
-overbought_line = [70] * n_days
-oversold_line = [30] * n_days
-centerline = [50] * n_days
+# Shaded zones: the 100 fill is tinted red, the neutral band is painted over it in the page color,
+# and the oversold fill sits below 30
+chart.add(f"Overbought zone (>{OVERBOUGHT})", [100] * n, fill=True, show_dots=False, stroke_style={"width": 0})
+chart.add(
+    f"Neutral band ({OVERSOLD}-{OVERBOUGHT})", [OVERBOUGHT] * n, fill=True, show_dots=False, stroke_style={"width": 0}
+)
+chart.add(f"Oversold zone (<{OVERSOLD})", [OVERSOLD] * n, fill=True, show_dots=False, stroke_style={"width": 0})
 
-# Overbought threshold (using Okabe-Ito position 2 - vermillion)
-chart.add("Overbought (70)", overbought_line, stroke_style={"width": 4, "dasharray": "20,10"}, show_dots=False)
+# Threshold and centerline references
+chart.add(f"Overbought ({OVERBOUGHT})", [OVERBOUGHT] * n, stroke_style={"width": 4, "dasharray": "20,10"})
+chart.add(f"Oversold ({OVERSOLD})", [OVERSOLD] * n, stroke_style={"width": 4, "dasharray": "20,10"})
+chart.add(f"Centerline ({MIDLINE})", [MIDLINE] * n, stroke_style={"width": 2, "dasharray": "10,10"})
 
-# Oversold threshold (using Okabe-Ito position 3 - blue)
-chart.add("Oversold (30)", oversold_line, stroke_style={"width": 4, "dasharray": "20,10"}, show_dots=False)
+# RSI line last so it sits on top; the first LOOKBACK days stay empty until the window is filled
+chart.add(RSI, [None if pd.isna(v) else float(v) for v in df[RSI]], stroke_style={"width": 7})
 
-# Centerline (using muted ink color)
-chart.add("Centerline (50)", centerline, stroke_style={"width": 2, "dasharray": "10,10"}, show_dots=False)
-
-# Add RSI data last so it appears on top with thicker line (brand green - first series)
-chart.add("RSI (14)", list(rsi), stroke_style={"width": 6}, show_dots=False)
-
-# Save as PNG and HTML with theme-suffixed filenames
 chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
