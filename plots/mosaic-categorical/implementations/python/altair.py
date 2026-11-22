@@ -1,7 +1,7 @@
 """ anyplot.ai
 mosaic-categorical: Mosaic Plot for Categorical Association Analysis
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-19
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-22
 """
 
 import os
@@ -13,6 +13,7 @@ sys.path.pop(0)
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -22,125 +23,121 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito positions 1 and 2
-COLOR_SURVIVED = "#009E73"
-COLOR_NOT_SURVIVED = "#C475FD"
+# Imprint palette: all eight positions, one per level in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Titanic survival by passenger class (contingency table)
-data = pd.DataFrame(
+# Columns: set these to your table's column names
+PASSENGER_CLASS = "Passenger class"  # role: category_1
+OUTCOME = "Survival status"  # role: category_2
+PASSENGERS = "Passengers"  # role: frequency
+
+# Data: replace this block with your own table, for example df = pd.read_csv("titanic_counts.csv")
+df = pd.DataFrame(
     {
-        "Class": ["1st", "1st", "2nd", "2nd", "3rd", "3rd", "Crew", "Crew"],
-        "Survival": [
-            "Survived",
-            "Did Not Survive",
-            "Survived",
-            "Did Not Survive",
-            "Survived",
-            "Did Not Survive",
-            "Survived",
-            "Did Not Survive",
-        ],
-        "Count": [203, 122, 118, 167, 178, 528, 212, 673],
+        PASSENGER_CLASS: ["1st", "1st", "2nd", "2nd", "3rd", "3rd", "Crew", "Crew"],
+        OUTCOME: ["Survived", "Did not survive"] * 4,
+        PASSENGERS: [203, 122, 118, 167, 178, 528, 212, 673],
     }
 )
 
-# Calculate mosaic layout: widths from marginal proportions, heights from conditional proportions
-class_totals = data.groupby("Class")["Count"].sum().reset_index()
-class_totals.columns = ["Class", "ClassTotal"]
-total = class_totals["ClassTotal"].sum()
-class_totals["Width"] = class_totals["ClassTotal"] / total
+# Plot: reads only df and the constants above
+# Column widths follow the marginal share of the first variable, heights the conditional share of the second
+columns = list(dict.fromkeys(df[PASSENGER_CLASS]))
+levels = list(dict.fromkeys(df[OUTCOME]))
+table = df.pivot_table(index=PASSENGER_CLASS, columns=OUTCOME, values=PASSENGERS, aggfunc="sum", sort=False)
+table = table.reindex(index=columns, columns=levels)
+col_total = table.sum(axis=1)
+width_share = col_total / col_total.sum()
+x_end = width_share.cumsum()
+x_start = x_end - width_share
 
-class_order = ["1st", "2nd", "3rd", "Crew"]
-class_totals["ClassOrder"] = class_totals["Class"].map({c: i for i, c in enumerate(class_order)})
-class_totals = class_totals.sort_values("ClassOrder")
-class_totals["x_start"] = class_totals["Width"].cumsum() - class_totals["Width"]
-class_totals["x_end"] = class_totals["Width"].cumsum()
-class_totals["x_mid"] = (class_totals["x_start"] + class_totals["x_end"]) / 2
+tiles = table.melt(ignore_index=False, var_name="level", value_name="count").rename_axis("column").reset_index()
+tiles["share"] = tiles["count"] / tiles["column"].map(col_total)
+tiles["y_end"] = 1 - tiles.groupby("column", sort=False)["share"].cumsum() + tiles["share"]
+tiles["y_start"] = tiles["y_end"] - tiles["share"]
+tiles["x_start"] = tiles["column"].map(x_start)
+tiles["x_end"] = tiles["column"].map(x_end)
+tiles["x_mid"] = (tiles["x_start"] + tiles["x_end"]) / 2
+tiles["y_mid"] = (tiles["y_start"] + tiles["y_end"]) / 2
+tiles["percent"] = (tiles["count"] / tiles["count"].sum() * 100).round(1)
+tiles["label"] = tiles["count"].map(lambda c: f"{c:g}")
 
-data = data.merge(class_totals[["Class", "Width", "x_start", "x_end", "x_mid", "ClassTotal"]], on="Class")
-data["Height"] = data["Count"] / data["ClassTotal"]
+column_labels = pd.DataFrame({"column": columns, "x_mid": ((x_start + x_end) / 2).reindex(columns).to_numpy()})
 
-survival_order = {"Survived": 0, "Did Not Survive": 1}
-data["SurvivalOrder"] = data["Survival"].map(survival_order)
-data = data.sort_values(["Class", "SurvivalOrder"])
-
-y_positions = []
-for cls in class_order:
-    cls_data = data[data["Class"] == cls].sort_values("SurvivalOrder")
-    cumsum = 0.0
-    for idx in cls_data.index:
-        y_positions.append({"index": idx, "y_start": cumsum, "y_end": cumsum + data.loc[idx, "Height"]})
-        cumsum += data.loc[idx, "Height"]
-
-y_df = pd.DataFrame(y_positions).set_index("index")
-data["y_start"] = data.index.map(y_df["y_start"])
-data["y_end"] = data.index.map(y_df["y_end"])
-data["y_mid"] = (data["y_start"] + data["y_end"]) / 2
-data["Percentage"] = (data["Count"] / total * 100).round(1)
-
-# Plot: mosaic rectangles with axis titles for both categorical dimensions
 mosaic = (
-    alt.Chart(data)
-    .mark_rect(stroke=PAGE_BG, strokeWidth=3)
+    alt.Chart(tiles)
+    .mark_rect(stroke=PAGE_BG, strokeWidth=2)
     .encode(
-        x=alt.X("x_start:Q", axis=alt.Axis(title="Passenger Class", labels=False, ticks=False, domain=False)),
-        x2=alt.X2("x_end:Q"),
-        y=alt.Y("y_start:Q", axis=alt.Axis(title="Proportion", labels=False, ticks=False, domain=False)),
-        y2=alt.Y2("y_end:Q"),
+        x=alt.X("x_start:Q", axis=alt.Axis(title=PASSENGER_CLASS, labels=False, ticks=False, domain=False)),
+        x2="x_end:Q",
+        y=alt.Y("y_start:Q", axis=alt.Axis(title="Share within class", format="%", tickCount=5, grid=False)),
+        y2="y_end:Q",
         color=alt.Color(
-            "Survival:N",
-            scale=alt.Scale(domain=["Survived", "Did Not Survive"], range=[COLOR_SURVIVED, COLOR_NOT_SURVIVED]),
-            legend=alt.Legend(
-                title="Survival Status", titleFontSize=20, labelFontSize=18, orient="right", symbolSize=400
-            ),
+            "level:N",
+            title=OUTCOME,
+            sort=None,
+            scale=alt.Scale(domain=levels, range=IMPRINT_PALETTE),
+            legend=alt.Legend(orient="right", symbolType="square", symbolSize=500),
         ),
-        tooltip=["Class:N", "Survival:N", "Count:Q", "Percentage:Q"],
+        tooltip=[
+            alt.Tooltip("column:N", title=PASSENGER_CLASS),
+            alt.Tooltip("level:N", title=OUTCOME),
+            alt.Tooltip("count:Q", title=PASSENGERS),
+            alt.Tooltip("percent:Q", title="Share of all (%)"),
+        ],
     )
 )
 
-# Count labels — white on green (survived), theme ink on vermillion (did not survive)
-labels = (
-    alt.Chart(data)
-    .mark_text(fontSize=22, fontWeight="bold", align="center", baseline="middle")
-    .encode(
-        x=alt.X("x_mid:Q"),
-        y=alt.Y("y_mid:Q"),
-        text=alt.Text("Count:Q"),
-        color=alt.condition(alt.datum.Survival == "Survived", alt.value("white"), alt.value(INK)),
-    )
+# Count labels: dark ink reads on both Imprint fills in either theme
+counts = (
+    alt.Chart(tiles)
+    .mark_text(fontSize=11, fontWeight="bold", color="#1A1A17")
+    .encode(x="x_mid:Q", y="y_mid:Q", text="label:N")
 )
 
-# Class name labels at top of each column
-class_labels_df = class_totals[["Class", "x_mid"]].copy()
-class_labels = (
-    alt.Chart(class_labels_df)
-    .mark_text(fontSize=20, fontWeight="bold", baseline="top", dy=15, color=INK)
-    .encode(x=alt.X("x_mid:Q"), y=alt.value(1.0), text="Class:N")
+# Column names just above the top edge of each column
+names = (
+    alt.Chart(column_labels)
+    .mark_text(fontSize=12, fontWeight="bold", baseline="bottom", dy=-4, color=INK)
+    .encode(x="x_mid:Q", y=alt.value(0), text="column:N")
 )
 
-# Combine layers with theme-adaptive chrome
 chart = (
-    alt.layer(mosaic, labels, class_labels)
+    alt.layer(mosaic, counts, names)
     .properties(
-        width=1600,
-        height=900,
+        width=560,
+        height=370,
         background=PAGE_BG,
-        title=alt.Title("mosaic-categorical · python · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        title=alt.Title("mosaic-categorical · python · altair · anyplot.ai", fontSize=16, anchor="middle"),
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
-        gridColor=INK,
-        gridOpacity=0.10,
         labelColor=INK_SOFT,
         titleColor=INK,
-        titleFontSize=22,
+        titleFontSize=13,
+        labelFontSize=11,
     )
     .configure_title(color=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        titleFontSize=12,
+        labelFontSize=11,
+        padding=8,
+    )
 )
 
-# Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save outputs, padding (never cropping) to the canonical landscape canvas
+TARGET_W, TARGET_H = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_W or img.height > TARGET_H:
+    raise SystemExit(f"altair rendered {img.width}x{img.height}, exceeds {TARGET_W}x{TARGET_H}; shrink width/height")
+canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
 chart.save(f"plot-{THEME}.html")
