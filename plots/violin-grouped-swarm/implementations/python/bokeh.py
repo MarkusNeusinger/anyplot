@@ -1,29 +1,22 @@
 """ anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-18
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-22
 """
 
 import os
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem
+from bokeh.plotting import figure
 from scipy import stats
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-
-# noqa: E402 - imports after sys.path manipulation to fix shadowing
-_cwd = os.getcwd()
-sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(__file__)]
-from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem  # noqa: E402
-from bokeh.plotting import figure  # noqa: E402
-
-
-sys.path.insert(0, os.path.dirname(__file__))
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -32,180 +25,158 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Response times (ms) across 3 task types and 2 expertise levels
+# Columns: set these to your table's column names
+TASK = "Task type"  # role: category
+EXPERTISE = "Expertise"  # role: group
+RESPONSE = "Response time (ms)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("response_times.csv")
 np.random.seed(42)
+tasks = ["Simple", "Moderate", "Complex"]
+levels = ["Novice", "Expert"]
+rows = []
+for t_idx, task in enumerate(tasks):
+    for level in levels:
+        # Experts are faster, complex tasks take longer
+        mean = 200 + t_idx * 150 - (80 if level == "Expert" else 0)
+        sd = 30 + t_idx * 15
+        for value in np.clip(np.random.normal(mean, sd, 40), 50, 900):
+            rows.append({TASK: task, EXPERTISE: level, RESPONSE: value})
+df = pd.DataFrame(rows)
 
-categories = ["Simple", "Moderate", "Complex"]
-groups = ["Novice", "Expert"]
+# Plot: reads only df and the constants above
+categories = list(df[TASK].unique())
+groups = list(df[EXPERTISE].unique())
+colors = {group: IMPRINT_PALETTE[i] for i, group in enumerate(groups)}
+slot = 0.8 / len(groups)  # width of one group's slot inside a category
+offsets = {group: (i - (len(groups) - 1) / 2) * slot for i, group in enumerate(groups)}
+max_half_width = slot * 0.42
+top = df[RESPONSE].max()
 
-# Generate realistic response time data for each combination
-data = []
-for cat_idx, category in enumerate(categories):
-    for _grp_idx, group in enumerate(groups):
-        # Experts faster, complex tasks take longer
-        base = 200 + cat_idx * 150
-        expert_adjust = -80 if group == "Expert" else 0
-        mean = base + expert_adjust
-        std = 30 + cat_idx * 15
-        values = np.random.normal(mean, std, 40)
-        values = np.clip(values, 50, 900)
-        for val in values:
-            data.append({"category": category, "group": group, "value": val})
-
-# Color mapping
-colors = {group: IMPRINT[i] for i, group in enumerate(groups)}
-
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="violin-grouped-swarm · Python · bokeh · anyplot.ai",
-    x_axis_label="Task Type",
-    y_axis_label="Response Time (ms)",
-    x_range=[-0.5, 2.5],
-    y_range=[0, 750],
+    width=3200,
+    height=1800,
+    title="violin-grouped-swarm · python · bokeh · anyplot.ai",
+    x_axis_label=TASK,
+    y_axis_label=RESPONSE,
+    x_range=(-0.5, len(categories) - 0.5),
+    y_range=(0, top * 1.1),
     tools="",
     toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Theme-adaptive styling
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
-p.title.text_font_size = "28pt"
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-
-# Grid styling
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
-# Positioning
-cat_positions = {cat: i for i, cat in enumerate(categories)}
-group_offsets = {"Novice": -0.2, "Expert": 0.2}
-
-# Store legend items
-legend_items = []
-
-# Draw violin shapes and swarm points for each category-group combination
-for _grp_idx, group in enumerate(groups):
-    first_violin = None
-
-    for _cat_idx, category in enumerate(categories):
-        # Get values for this category-group
-        values = np.array([d["value"] for d in data if d["category"] == category and d["group"] == group])
-
-        base_x = cat_positions[category] + group_offsets[group]
-
-        # Compute kernel density estimate for violin
-        kde = stats.gaussian_kde(values)
-        y_range = np.linspace(values.min() - 15, values.max() + 15, 100)
-        density = kde(y_range)
-
-        # Scale density to reasonable width
-        max_width = 0.17
-        density_scaled = density / density.max() * max_width
-
-        # Create violin polygon
-        violin_x = np.concatenate([base_x - density_scaled, (base_x + density_scaled)[::-1]])
-        violin_y = np.concatenate([y_range, y_range[::-1]])
-
-        # Draw violin
-        v_glyph = p.patch(
-            violin_x, violin_y, fill_color=colors[group], fill_alpha=0.5, line_color=colors[group], line_width=3
-        )
-
-        if first_violin is None:
-            first_violin = v_glyph
-
-        # Create swarm points - bin values and assign jittered x positions
-        swarm_x = []
-        bin_width = 20
-        value_bins = {}
-
-        for val in values:
-            bin_key = int(val // bin_width)
-            if bin_key not in value_bins:
-                value_bins[bin_key] = 0
-            count = value_bins[bin_key]
-            # Alternate sides with increasing offset
-            offset = (count // 2 + 1) * 0.025 * (1 if count % 2 == 0 else -1)
-            if count == 0:
-                offset = 0
-            # Clamp offset within violin width
-            max_offset = density_scaled[min(int((val - y_range[0]) / (y_range[-1] - y_range[0]) * 99), 99)] * 0.7
-            offset = np.clip(offset, -max_offset, max_offset)
-            swarm_x.append(base_x + offset)
-            value_bins[bin_key] += 1
-
-        swarm_source = ColumnDataSource(
-            data={"x": swarm_x, "y": values, "group": [group] * len(values), "category": [category] * len(values)}
-        )
-
-        # Add hover tool for swarm points
-        hover = HoverTool(
-            tooltips=[("Task Type", "@category"), ("Expertise", "@group"), ("Response Time", "@y{0.0f} ms")]
-        )
-        p.add_tools(hover)
-
-        p.scatter(
-            "x",
-            "y",
-            source=swarm_source,
-            size=15,
-            fill_color=colors[group],
-            fill_alpha=0.75,
-            line_color="white",
-            line_width=2,
-        )
-
-    # Add legend item for this group
-    legend_items.append(LegendItem(label=group, renderers=[first_violin]))
-
-# Custom x-axis with category labels
 p.xaxis.ticker = list(range(len(categories)))
-p.xaxis.major_label_overrides = dict(enumerate(categories))
+p.xaxis.major_label_overrides = {i: str(c) for i, c in enumerate(categories)}
 
-# Add legend with larger sizing
+legend_items = []
+swarm_renderers = []
+for group in groups:
+    first_violin = None
+    for c_idx, category in enumerate(categories):
+        values = df.loc[(df[TASK] == category) & (df[EXPERTISE] == group), RESPONSE].dropna().to_numpy(dtype=float)
+        center = c_idx + offsets[group]
+
+        # Mirrored violin from a kernel density estimate
+        grid = np.linspace(values.min() - 15, values.max() + 15, 100)
+        half_width = stats.gaussian_kde(values)(grid)
+        half_width = half_width / half_width.max() * max_half_width
+        violin = p.patch(
+            np.concatenate([center - half_width, (center + half_width)[::-1]]),
+            np.concatenate([grid, grid[::-1]]),
+            fill_color=colors[group],
+            fill_alpha=0.45,
+            line_color=colors[group],
+            line_width=2.5,
+        )
+        if first_violin is None:
+            first_violin = violin
+
+        # Swarm: points stay at their value; only the x position is spread within the violin
+        step = max_half_width / 5
+        seen = {}
+        swarm_x = []
+        for value in values:
+            key = int(value // 20)
+            n = seen.get(key, 0)
+            seen[key] = n + 1
+            side = 1 if n % 2 == 0 else -1
+            offset = 0.0 if n == 0 else (n // 2 + 1) * step * side
+            local = np.interp(value, grid, half_width) * 0.8
+            swarm_x.append(center + np.clip(offset, -local, local))
+
+        source = ColumnDataSource(
+            {"x": swarm_x, "y": values, "cat": [category] * len(values), "grp": [group] * len(values)}
+        )
+        swarm_renderers.append(
+            p.scatter(
+                "x",
+                "y",
+                source=source,
+                size=11,
+                fill_color=colors[group],
+                fill_alpha=0.8,
+                line_color=PAGE_BG,
+                line_width=1.5,
+            )
+        )
+    legend_items.append(LegendItem(label=str(group), renderers=[first_violin]))
+
+p.add_tools(HoverTool(renderers=swarm_renderers, tooltips=[(TASK, "@cat"), (EXPERTISE, "@grp"), (RESPONSE, "@y{0.0}")]))
+
 legend = Legend(
     items=legend_items,
-    location="top_right",
-    label_text_font_size="20pt",
+    location="top_left",
+    title=EXPERTISE,
+    title_text_font_size="30pt",
+    title_text_color=INK,
+    label_text_font_size="30pt",
     label_text_color=INK_SOFT,
-    glyph_width=50,
-    glyph_height=50,
-    spacing=20,
-    padding=25,
+    glyph_width=40,
+    glyph_height=40,
+    spacing=12,
+    padding=20,
     background_fill_color=ELEVATED_BG,
     background_fill_alpha=0.95,
     border_line_color=INK_SOFT,
     border_line_width=2,
 )
-p.add_layout(legend, "right")
+p.add_layout(legend, "center")
 
-# Save HTML
+# Save HTML and screenshot it with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with Selenium
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -219,6 +190,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
