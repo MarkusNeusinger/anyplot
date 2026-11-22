@@ -2,42 +2,43 @@ library: altair
 language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:21:12Z'
-updated: '2026-05-10T22:39:10Z'
-generated_by: claude-haiku
-workflow_run: 25641590217
+updated: '2026-11-22T00:01:51Z'
+generated_by: claude-sonnet
+workflow_run: 44964047707
 issue: 2377
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/altair/plot-dark.html
-quality_score: 96
+quality_score: 82
 review:
   strengths:
-  - Flawless visual quality in both light and dark renders with perfect theme compliance
-    and legibility
-  - Expert use of altair's distinctive x2 encoding for Gantt duration bars
-  - Professional phase-based color mapping using full Okabe-Ito palette with proper
-    category hierarchy
-  - Comprehensive realistic data example showing 5 project phases, varying durations,
-    and task parallelism
-  - Clean, Pythonic code with proper environment-based theme adaptation and configuration
-  weaknesses: []
+  - Bars sit exactly at their start and end dates through Altair's native x/x2 temporal
+    range encoding, ordered by start date into a clean staircase
+  - Canonical 3200x1800 canvas with the pad-only contract; theme tokens threaded through
+    axis, title and legend so both renders read cleanly
+  - 'Imprint palette in canonical order, first phase #009E73, identical data colors
+    in both themes'
+  - HTML output carries formatted start/end tooltips and zoom/pan via .interactive()
+  weaknesses:
+  - 'Suggestion: the year appears nowhere in the static render; a ''%b %d, %Y'' tick
+    format on the first tick or a year in the x-axis title would date the schedule.'
+  - 'Suggestion: the biweekly date labels have room to sit horizontally; labelAngle=0
+    would read faster than -45.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with appropriate contrast against data elements.
-      Chrome: Title "gantt-basic · altair · anyplot.ai" is dark and prominent (28px). Axis labels "Project Timeline 2024" (x) and "Tasks" (y) are dark (22px). Date tick labels and task names are dark (18px) and clearly legible. Grid lines are subtle at 8% opacity. Legend box has elevated background. All text passes legibility check against light surface.
-      Data: Five colored bars representing project phases (Planning #009E73 green, Design #D55E00 orange, Development #0072B2 blue, Testing #CC79A7 purple, Deployment #E69F00 yellow). Bars have rounded corners (3px radius) and appropriate height (32px). Horizontal bars span from start to end dates across timeline. All 13 tasks are clearly visible with no overlap. Legend labels all five phases correctly.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: title 'gantt-basic · python · altair · anyplot.ai' in dark ink, centered; y-axis title 'Task' and x-axis title 'Project timeline' dark and bold; task names and -45° rotated biweekly date ticks (Jan 07 ... May 12) in soft dark grey; weekly grid lines subtle; legend 'Phase' in an elevated off-white box with a thin dark frame. All readable.
+      Data: 13 horizontal rounded bars stepping down-right by start date: Planning #009E73 (2), Design #C475FD (3), Development #4467A3 (3), Testing #BD8233 (3), Deployment #AE3030 (2). Clear gaps between rows; overlaps (Backend/Frontend/API) visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with no purity issues.
-      Chrome: Title is light-colored (#F0EFE8) and clearly visible. Axis labels and tick labels are light gray (#B8B7B0) with excellent contrast against dark background. No dark-on-dark issues detected. Grid lines are subtle light-colored lines at 8% opacity. Legend box has appropriate dark elevated background (#242420). All text passes legibility check against dark surface.
-      Data: Bar colors are IDENTICAL to light render—Planning remains green #009E73, Design orange #D55E00, Development blue #0072B2, Testing purple #CC79A7, Deployment yellow #E69F00. Only chrome has flipped to dark theme; data colors remain constant per spec requirement. All bars and labels are clearly distinguishable. Legend maintains consistent labeling.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, task names and date ticks in light grey, faint light grid, legend in a #242420 box with a light frame. No dark-on-dark text.
+      Data: bar and legend colors identical to the light render; brand green clearly visible.
       Legibility verdict: PASS
-
-    Both renders fully pass theme-readability checks. Data colors are identical between themes (only chrome adapts). Text is readable in both light and dark contexts.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,72 +49,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (Title 28px, Labels 22px, Ticks 18px);
-          perfectly readable in both themes
+        comment: Sizes set explicitly (title 16, axis titles 12, ticks/legend labels
+          10 at scale 4, the library prompt's sizes); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; task names, dates, legend all clearly spaced
+        comment: 'No collisions: task labels, rotated date ticks and legend entries
+          all clear'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar height 32px with rounded corners optimal for 13 tasks; all elements
-          clearly visible
+        comment: 13 bars at 15 px (60 px rendered) with clear gaps between rows; legend
+          swatches match the bar colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Okabe-Ito palette with good contrast in both themes
+        comment: Five well-separated Imprint hues on both backgrounds; task names
+          on the y-axis carry identity, color is only grouping
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900px (4800×2700 at 3.0×); ~70% canvas utilization with balanced
-          margins
+        comment: Canonical 3200x1800 canvas (no gate file); plot area fills most of
+          the canvas, legend sits beside the plot with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with timeline context; title follows format
+        comment: '''Project timeline'' over date ticks and ''Task'' are descriptive;
+          the date ticks carry the unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; phases follow Okabe-Ito order; backgrounds
-          theme-correct; data colors identical between renders'
+        comment: 'Planning #009E73 first, then #C475FD, #4467A3, #BD8233, #AE3030
+          in canonical order; #FAF8F1 / #1A1A17 backgrounds; chrome theme-correct;
+          data colors identical in both renders'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional Okabe-Ito palette with intentional phase-based mapping;
-          thoughtful hierarchy and clean typography
+        passed: false
+        comment: Style-guide baseline (Imprint palette, theme tokens, explicit sizes);
+          nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid, clean background, rounded corners, generous whitespace,
-          refined legend styling
+        passed: false
+        comment: 'No view stroke, subtle grid at 0.12 opacity: the baseline, nothing
+          beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Gantt structure guides viewer through project lifecycle; color-by-phase
-          creates visual hierarchy
+        passed: false
+        comment: Data displayed in a staircase by start date; no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -123,27 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar Gantt with x2 duration encoding
+        comment: 'Correct basic Gantt: x/x2 bars per task, no extra layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: task names, dates, category colors, tooltips,
-          logical ordering'
+        comment: Bars on a time axis, date format suits the ~4.5-month range, color
+          by phase with legend, ordered by start date, row gaps; current-date line
+          not applicable to a completed 2024 project
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X (start), X2 (end), Y (tasks with custom sort), Color (category
-          with mapping)
+        comment: start/end on x/x2, tasks on y; every bar sits at its dates; full
+          range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels all 5 phases accurately
+        comment: Title 'gantt-basic · python · altair · anyplot.ai' correct; legend
+          'Phase' with five readable entries
     data_quality:
       score: 15
       max: 15
@@ -153,22 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 5 phases, varying durations (2-7 weeks), overlapping/sequential
-          tasks, full lifecycle
+        comment: Overlapping tasks, sequential handoffs, very different durations
+          (12 to 49 days), five phases
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real software project scenario (planning→design→development→testing→deployment);
-          neutral, universal
+        comment: Neutral, real software-project schedule
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5-month timeline realistic; task durations plausible; proportions
-          correct
+        comment: 'Checked: bars read off the axis match the data (Backend Feb 19 to
+          Apr 08, Deployment Prep May 01 to May 13); durations plausible'
     code_quality:
       score: 10
       max: 10
@@ -178,54 +184,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → constants → data → chart → save'
+        comment: Linear zones, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data, fully deterministic
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, altair, pandas; all used
+        comment: os, sys, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity; pad block and column constants are the mandated
+          contract
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct format: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current Altair
+          6 API
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Expert high-level API usage with proper encoding declarations
+        passed: false
+        comment: Correct declarative encodings (x/x2 temporal, sorted nominal y, typed
+          escaped fields); the patterns the library prompt prescribes, nothing beyond
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Uses x2 encoding for duration, tooltip formatting, Scale domain/range,
-          Legend customization, theme tokens
+        passed: false
+        comment: x2 range bars, tooltips and .interactive() are the standard calls
+          every Altair Gantt would use
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-21T23:58:00Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - hover-tooltips
-  - custom-legend
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+  - html-export
+  patterns: []
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
