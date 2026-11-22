@@ -12,41 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 71
 review:
   strengths:
-  - Flawless theme adaptation with data colors constant across light/dark renders
-    and chrome correctly theme-responsive
-  - Excellent text legibility with all font sizes explicitly set (24/20/16pt) and
-    perfectly readable in both themes
-  - Clear visual hierarchy through frontier curve emphasis, distinct key portfolio
-    markers, and Sharpe ratio color encoding
-  - Idiomatic plotnine usage of grammar of graphics, scale_color_cmap for continuous
-    colormaps, and comprehensive theme customization
-  - Realistic and pedagogical data demonstrating efficient frontier concept with proper
-    financial parameters (5-asset universe, realistic covariance, 3% risk-free rate)
-  - High code quality with clean KISS structure, full reproducibility via seed, and
-    no unused imports
+  - Frontier computed with scipy.optimize.minimize under long-only constraints and
+    drawn as a thick, clearly distinct line
+  - Minimum variance and maximum Sharpe portfolios marked with different shapes and
+    direct labels
+  - Theme tokens threaded through all chrome; both renders readable
   weaknesses:
-  - 'Design Excellence capped at 15/20: implementation is professionally correct but
-    uses standard plotnine defaults; reaching 6-8 on DE-01 would require exploring
-    distinctive color treatment, custom annotation styling with callout boxes, or
-    custom typography hierarchy to achieve publication-ready aesthetics'
+  - 'VQ-05 (both): canvas is 4800x2700 → 3200x1800 (-1600 x -900 px). Likely cause:
+    figure_size=(16, 9) with ggsave dpi=300; use figure_size=(8, 4.5), dpi=400.'
+  - 'VQ-07 (both): Sharpe ratio colored with viridis, a forbidden colormap → imprint_seq
+    (#009E73 to #4467A3). Likely cause: scale_color_cmap(cmap_name=''viridis''); use
+    scale_color_gradient(low=''#009E73'', high=''#4467A3'').'
+  - 'VQ-02 (both): the ''Max Sharpe'' label is drawn on top of the dense scatter around
+    risk 0.20-0.23, return 0.117 → clear of the cloud, for example up-left of the
+    diamond in the empty region above the frontier. Likely cause: annotate text at
+    max_sharpe_risk + 0.012 on the cloud side.'
+  - 'SC-02 (both): the frontier line continues below the minimum-variance square down
+    to about return 0.089 (the inefficient branch) → start the curve at the minimum-variance
+    portfolio. Likely cause: target_returns below the minimum-variance return are
+    kept.'
+  - 'SC-04 (both): title ''frontier-efficient · plotnine · anyplot.ai'' lacks the
+    language segment → ''frontier-efficient · python · plotnine · anyplot.ai''. Likely
+    cause: the title string.'
+  - 'CQ-01 (code): line 94 ends the Data block with df_frontier, not one tidy df;
+    no column constants for the risk and return roles; the plot reads df_portfolios,
+    df_frontier and the min/max-Sharpe scalars bound in the Data block → one df with
+    column constants above the block, frontier and key portfolios derived from df
+    below it. Likely cause: data prepared as several frames inside the Data block.'
+  - 'Suggestion: a capital market line from the risk-free rate through the maximum-Sharpe
+    diamond would make the tangency explicit (the Notes allow it).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct light theme surface)
-      Chrome: Title (24pt dark ink), axis labels "Risk (Standard Deviation)" and "Expected Return" (20pt dark ink), tick labels (16pt dark gray), all clearly readable with excellent contrast
-      Data: 300 scatter points color-mapped via viridis (yellow=high Sharpe to purple=low Sharpe), frontier curve in teal #009E73 (Okabe-Ito position 1), Min Var marked with orange square, Max Sharpe marked with orange diamond, both with dark ink annotations
-      Legibility verdict: PASS - All text and data elements perfectly readable; no contrast failures; grid lines subtle but visible
+      Background: warm off-white #FAF8F1, canvas 4800x2700.
+      Chrome: title "frontier-efficient · plotnine · anyplot.ai", axis titles "Risk (Standard Deviation)" and "Expected Return", tick labels and the "Sharpe Ratio" colorbar in dark/soft ink; all readable.
+      Data: 300 random portfolios colored by Sharpe ratio on viridis (purple to yellow); efficient frontier as a thick #009E73 line from risk 0.16 to 0.39 that continues slightly below the minimum-variance point; red square "Min Var" and red diamond "Max Sharpe" markers with labels; the "Max Sharpe" label sits on the dense scatter.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct dark theme surface)
-      Chrome: Title and axis labels in light ink #F0EFE8, tick labels in light gray #B8B7B0, all clearly readable with excellent contrast; NO dark-on-dark failures
-      Data: Viridis scatter points IDENTICAL to light render (color-preservation confirmed), frontier line IDENTICAL teal #009E73 (Okabe-Ito position 1), key point markers unchanged, annotations in light ink
-      Legibility verdict: PASS - All text and data elements perfectly readable in dark context; theme-adaptive chrome working correctly; brand green #009E73 clearly visible and distinct
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks and legend in light ink; no dark-on-dark text.
+      Data: viridis scatter, green frontier and red markers identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 22
       max: 30
       items:
       - id: VQ-01
@@ -54,74 +66,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (Title 24pt, Labels 20pt, Ticks 16pt);
-          perfectly readable in both themes
+        comment: Sizes set explicitly (24/20/16/18 pt at 16x9 in); readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: No overlapping text; annotations positioned clearly
+        passed: false
+        comment: '''Max Sharpe'' label sits on top of the dense scatter'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 300 scatter points (size=3, alpha=0.6) well-adapted; frontier line
-          (size=2.5) prominent
+        comment: 300 points at size 3, alpha 0.6; prominent frontier
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis CVD-safe and perceptually uniform; good contrast throughout
+        comment: Good contrast; markers told apart by shape
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Plot fills ~65% of canvas with balanced margins; legend appropriately
-          positioned
+        passed: false
+        comment: Canvas 4800x2700, not one of the two canonical sizes
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes descriptive with units; title matches spec format
+        comment: Risk (Standard Deviation) / Expected Return
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Frontier #009E73, scatter viridis, backgrounds #FAF8F1/#1A1A17,
-          theme-adaptive chrome correct'
+        passed: false
+        comment: Sharpe coloring uses viridis via scale_color_cmap, a forbidden colormap
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Professional appearance with correct palette; above defaults but
-          not distinctive
+        comment: Style-guide baseline, nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid, clean borders, generous whitespace, high attention to
-          detail
+        passed: false
+        comment: Baseline grid and frame, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear hierarchy: frontier emphasized, key portfolios highlighted,
-          Sharpe ratio guides understanding'
+        passed: false
+        comment: Data displayed; hierarchy only what the Notes prescribe
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -129,26 +135,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct efficient frontier scatter + curve
+        comment: Efficient frontier with scatter
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: portfolios, frontier, Min Var, Max Sharpe,
-          Sharpe coloring'
+        passed: false
+        comment: Curve continues below the minimum-variance point (inefficient branch)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: risk, Y: return, Color: Sharpe ratio all correct'
+        comment: Marks at their values
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; legend labeled
+        passed: false
+        comment: Title lacks the 'python' language segment
     data_quality:
       score: 15
       max: 15
@@ -158,73 +163,74 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects demonstrated: frontier concept, suboptimal vs optimal,
-          key points, Sharpe distribution'
+        comment: All aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic portfolio optimization; 5-asset universe with plausible
-          covariance; 3% risk-free rate
+        comment: Five-asset portfolio optimisation, plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Returns 8-18%, risks 15-45%, Sharpe 0.35-0.45 all factually correct
+        comment: 'Checked: returns 8-18 %, vols 20-50 %, rf 3 %, Sharpe 0.32-0.45
+          consistent with colorbar; max Sharpe on frontier'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear flow; no unnecessary abstractions
+        passed: false
+        comment: Data block does not end in one df; no column constants; plot reads
+          data-block variables
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; fully deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; no cruft
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; appropriate scipy.optimize usage
+        comment: scipy minimize; appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct ggsave output as plot-{THEME}.png
+        comment: plot-{THEME}.png
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Idiomatic ggplot() + geoms; high-level API throughout
+        comment: Correct ggplot + geoms + annotate
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Theme customization with element_*; scale_color_cmap for viridis;
-          grammar-of-graphics approach
+        passed: false
+        comment: Generic usage
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies:
   - scipy
