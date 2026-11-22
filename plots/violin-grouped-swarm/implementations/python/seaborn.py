@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-18
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-22
 """
 
 import os
@@ -19,38 +19,35 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Cognitive test performance across different test types and experience levels
+# Columns: set these to your table's column names
+TEST_TYPE = "Test Type"  # role: category
+EXPERIENCE = "Experience"  # role: group
+SCORE = "Score"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-
 test_types = ["Reading Comprehension", "Arithmetic", "Pattern Recognition"]
 experience_levels = ["Novice", "Expert"]
-
-data = []
+# (mean, std) of the cognitive test score per test type, for Novice then Expert
+profiles = {
+    "Reading Comprehension": [(72, 12), (88, 6)],
+    "Arithmetic": [(65, 15), (85, 8)],
+    "Pattern Recognition": [(58, 18), (82, 10)],
+}
+rows = []
 for test_type in test_types:
-    for exp_level in experience_levels:
-        # Create different distributions based on test type and experience
-        if test_type == "Reading Comprehension":
-            base_mean = 72 if exp_level == "Novice" else 88
-            base_std = 12 if exp_level == "Novice" else 6
-        elif test_type == "Arithmetic":
-            base_mean = 65 if exp_level == "Novice" else 85
-            base_std = 15 if exp_level == "Novice" else 8
-        else:  # Pattern Recognition
-            base_mean = 58 if exp_level == "Novice" else 82
-            base_std = 18 if exp_level == "Novice" else 10
-
-        scores = np.random.normal(base_mean, base_std, 45)
-        scores = np.clip(scores, 20, 100)  # Keep scores in 0-100 range
-
-        for score in scores:
-            data.append({"Test Type": test_type, "Experience": exp_level, "Score": score})
-
-df = pd.DataFrame(data)
+    for exp_level, (mean, std) in zip(experience_levels, profiles[test_type], strict=True):
+        scores = np.clip(np.random.normal(mean, std, 45), 20, 100)
+        rows.extend({TEST_TYPE: test_type, EXPERIENCE: exp_level, SCORE: score} for score in scores)
+df = pd.DataFrame(rows)
 
 # Plot
+n_groups = df[EXPERIENCE].nunique()
+palette = IMPRINT_PALETTE[:n_groups]
+
 sns.set_theme(
     style="ticks",
     rc={
@@ -68,45 +65,33 @@ sns.set_theme(
     },
 )
 
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Violin plot with transparency
+# Translucent violins so the swarm points stay visible
 sns.violinplot(
-    data=df, x="Test Type", y="Score", hue="Experience", palette=IMPRINT, alpha=0.5, inner=None, ax=ax, linewidth=2
+    data=df, x=TEST_TYPE, y=SCORE, hue=EXPERIENCE, palette=palette, alpha=0.5, inner=None, ax=ax, linewidth=1
 )
 
-# Swarm overlay with matching colors and dodging
+# Swarm overlay dodged onto each violin, in the hue of its group
 sns.swarmplot(
-    data=df,
-    x="Test Type",
-    y="Score",
-    hue="Experience",
-    palette=IMPRINT,
-    dodge=True,
-    size=3.5,
-    alpha=0.7,
-    ax=ax,
-    legend=False,
+    data=df, x=TEST_TYPE, y=SCORE, hue=EXPERIENCE, palette=palette, dodge=True, size=2, alpha=0.7, ax=ax, legend=False
 )
 
-# Labels and styling
-ax.set_xlabel("Test Type", fontsize=20, color=INK)
-ax.set_ylabel("Score", fontsize=20, color=INK)
-ax.set_title("violin-grouped-swarm · Python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Style
+ax.set_xlabel(TEST_TYPE, fontsize=10, color=INK)
+ax.set_ylabel(SCORE, fontsize=10, color=INK)
+ax.set_title("violin-grouped-swarm · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Remove top and right spines
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-# Subtle grid on y-axis
 ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Legend styling
-ax.legend(title="Experience", fontsize=16, title_fontsize=18, loc="upper right")
+ax.legend(title=EXPERIENCE, fontsize=8, title_fontsize=9, loc="lower right")
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
