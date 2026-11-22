@@ -2,55 +2,69 @@ library: bokeh
 language: python
 specification_id: point-and-figure-basic
 created: '2026-01-15T21:41:57Z'
-updated: '2026-05-20T03:56:12Z'
+updated: '2026-11-22T18:38:45Z'
 generated_by: claude-sonnet
-workflow_run: 26139309720
+workflow_run: 45055410147
 issue: 3755
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/bokeh/plot-dark.html
-quality_score: 93
+quality_score: 78
 review:
   strengths:
-  - Complete, correct P&F algorithm with proper 3-box reversal state machine and column
-    building
-  - 'All 4 Okabe-Ito colors applied in canonical order (X=green #009E73, O=orange
-    #D55E00, support=blue #0072B2, resistance=purple #CC79A7)'
-  - Theme-adaptive chrome correctly implemented in both light and dark renders — no
-    dark-on-dark failures
-  - 'Bokeh-specific features well-leveraged: BoxAnnotation column shading, FixedTicker
-    for box-interval Y-grid, HoverTool, p.text() glyphs'
-  - All spec requirements satisfied including support/resistance 45-degree trend lines
-    and box-interval Y-grid
-  - Data generation includes engineered trending periods to produce meaningful, realistic-looking
-    P&F patterns
+  - 'Correct Point and Figure construction: a compact 3-box reversal state machine
+    over the closes, one symbol per $2 box, columns alternating X/O'
+  - Y-grid pinned to exact box-size intervals with FixedTicker, so every symbol sits
+    on a price row
+  - 'Semantic green #009E73 for X and Imprint red #AE3030 for O, with shape as a second
+    channel'
+  - 'Theme-adaptive chrome is correct in both renders: warm backgrounds, light text
+    on dark, elevated legend surface'
+  - Renders on the canonical 3200x1800 canvas with a device-metrics override, so the
+    x-axis and its title are fully visible
   weaknesses:
-  - 'DE-01 MINOR: Design is functional and intentional but stops short of exceptional
-    — column shading at 5% alpha is subtle but the X/O text rendering lacks additional
-    polish (e.g., no box border around each symbol cell to reinforce the grid structure)'
-  - 'DE-02 MINOR: Top and right axis lines could be hidden for a cleaner L-frame look;
-    outline_line_color=None removes the box frame but axis lines remain on all four
-    sides'
-  - 'DE-03 MINOR: No emphasis on breakout points or column count annotations that
-    would deepen the storytelling for viewers unfamiliar with P&F charts'
+  - 'VQ-02 (both): the legend box in the top-left covers the start of the resistance
+    line (it begins at about $122 on column 0, behind the legend) → keep the legend
+    off the data, e.g. place it outside the plot area (p.add_layout(p.legend[0], ''right''))
+    or in an empty corner. Likely cause: p.legend.location = ''top_left''.'
+  - 'VQ-03 (both): the ''X — Bullish'' and ''O — Bearish'' legend entries show no
+    glyph or colour swatch, only uncoloured text, so the legend does not tie the green
+    and red symbols to their meaning → give each entry a visible coloured glyph (e.g.
+    a scatter marker ''x'' / ''circle'' renderer in X_COLOR / O_COLOR as the legend
+    item). Likely cause: text glyphs render an empty legend glyph in Bokeh.'
+  - 'SC-02 (both): the support and resistance lines start one box beyond the global
+    minimum and maximum at column 0, not at the column lows and highs they should
+    connect. The resistance line cuts through the X column at $114 and the O columns
+    at $112 and $108, and the support line cuts through columns 3 and 4 → anchor support
+    at a column low and resistance at a column high (spec C4), so the 45° lines run
+    alongside the columns and leave the symbols readable. Likely cause: support_start
+    = min_price - BOX_SIZE and resistance_start = max_price + BOX_SIZE drawn from
+    x=0.'
+  - 'DQ-02 (both): the series is an unnamed generic price (''Price ($)'' only, no
+    instrument) → name a plausible fictional instrument in the y-axis label or a descriptive
+    title prefix. Likely cause: the data block and the axis label.'
+  - 'Suggestion: tick every column on the x-axis (FixedTicker over range(n_cols))
+    instead of every second column with quarter-column minor ticks.'
+  - 'Suggestion: a HoverTool showing column and box price would add value in the HTML
+    view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "point-and-figure-basic · python · bokeh · anyplot.ai" in dark ink — clearly readable. Y-axis label "Price ($)" and X-axis label "Column (Reversal)" in dark ink — readable. Tick labels in INK_SOFT (#4A4A44) — readable. Legend in top-left with elevated background — readable.
-      Data: ~12 alternating columns of green (#009E73) bold X glyphs and orange (#D55E00) bold O glyphs. Blue (#0072B2) ascending support line and purple (#CC79A7) descending resistance line span the full width. Very subtle 5%-alpha alternating column shading.
+      Background: Warm off-white #FAF8F1 on a 3200x1800 canvas, no outline frame.
+      Chrome: Bold title "point-and-figure-basic · python · bokeh · anyplot.ai" at the top left in dark ink. Y-axis title "Price ($)" and x-axis title "Column (Reversal)" in dark italic. Tick labels 80–120 and 0–8 in soft ink. Subtle 10 % grid with rows every $2. The legend box at top left has an elevated surface. All readable.
+      Data: 9 alternating columns (X, O, X, O, X, O, X, O, X) of bold 30pt glyphs. X is green #009E73 and O is red #AE3030. The tallest column is the X column 4 ($82–$120). A blue ascending support line runs from $78 at column 0 to $94 at column 8, and an ochre descending resistance line runs from $122 to $106. The resistance line crosses symbols in columns 4, 5 and 7, and its start runs behind the legend. The X/O legend entries have no visible glyph.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light (#F0EFE8) ink — clearly readable against dark surface. Axis labels in light ink — readable. Tick labels in (#B8B7B0) — readable. Legend box uses dark elevated background (#242420) with light text. No dark-on-dark failures detected.
-      Data: X (#009E73 green) and O (#D55E00 orange) glyph colors are identical to the light render — only chrome flipped. Support (blue) and resistance (purple) lines unchanged.
+      Background: Warm near-black #1A1A17.
+      Chrome: Title and axis titles in light ink (#F0EFE8). Tick labels in #B8B7B0. Legend on a dark elevated surface with light text. No dark-on-dark text.
+      Data: Same green X and red O glyphs and the same blue and ochre trend lines as the light render. Only the chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -58,77 +72,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          tick/legend, 30pt symbols). Both themes readable and proportionally balanced.
+        comment: All sizes set explicitly (50pt title, 42pt axis titles, 34pt ticks
+          and legend, 30pt bold symbols). Everything reads clearly in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or symbol collisions. Legend positioned in sparse
-          region.
+        comment: The legend box covers the start of the resistance line in the top-left
+          corner (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bold 30pt X/O glyphs clearly visible in box grid. Support/resistance
-          lines at width=4 prominent.
+        comment: Symbols and lines are clearly visible, but the X and O legend entries
+          have no visible glyph or colour swatch (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Dual encoding (shape + color) makes chart accessible to CVD viewers.
+        comment: Shape (X/O) and colour both encode direction, so the red/green pair
+          is not the only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced min_border margins. Nothing
-          cut off.
+        comment: 3200x1800 canvas, nothing clipped, title at about 56 % width, balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Price ($)' with units; X-axis 'Column (Reversal)' descriptive.
-          Title format correct.
+        comment: '''Price ($)'' carries units and ''Column (Reversal)'' explains the
+          construction axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito in canonical order: X=#009E73, O=#D55E00, support=#0072B2,
-          resistance=#CC79A7. Light/dark backgrounds correct. Both themes chrome-correct.'
+        comment: 'X is #009E73 and O is the Imprint red #AE3030 (the semantic pair
+          the Notes ask for). The trend lines use Imprint blue and ochre. Backgrounds
+          are #FAF8F1 and #1A1A17, and the chrome is correct in both themes'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above well-configured default: intentional BoxAnnotation column
-          shading and purposeful 4-color Okabe-Ito assignment. Not yet at strong-design
-          level.'
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Subtle grid at box-interval with alpha=0.10; outline_line_color=None
-          removes frame. Good but top/right axis lines not removed.
+        comment: Spine and grid rules met (subtle 10 % grid, no outline), nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Color-coded columns immediately communicate bullish/bearish. Support/resistance
-          lines guide viewer. Engineered trending periods create realistic patterns.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,29 +149,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P&F chart with X/O columns and reversal mechanism.
+        comment: A true P&F chart with only the symbols, the box-interval price grid
+          and the two trend lines the Notes ask for. No extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features present: X/O symbols, green/orange colors, column-based
-          X-axis, 45-degree support/resistance lines, box-interval grid, 3-box reversal.'
+        comment: C1, C2, C3 and C5 are met. C4 is missed because the trend lines are
+          anchored one box outside the global min and max, not at the column lows
+          and highs, and they cut through several symbol columns (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis=column index, Y-axis=price level. Correct P&F mapping.
+        comment: x = column index, y = box price. Every symbol sits at its box value
+          and all data is in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct. Legend: X — Bullish, O — Bearish, Support,
-          Resistance.'
+        comment: Title format is correct, and the legend labels read X — Bullish,
+          O — Bearish, Support, Resistance
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -166,22 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both bullish and bearish columns, multiple reversals, ascending
-          and descending phases, support and resistance zones.
+        comment: 9 alternating columns of very different heights, both trends, and
+          revisited price levels
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Stock price simulation starting at $100, 300 trading days. Neutral
-          financial domain with engineered trends.
+        comment: Plausible daily stock series but an unnamed, generic instrument (defect
+          line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $2 box size (2%) on $100 stock is realistic. 3-box reversal is standard
-          convention. Price range ~78-122 is plausible.
+        comment: 300 observations (inside 200–500), $2 box on a ~$100 stock, 3-box
+          reversal, price range ~80–120. The spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -191,65 +207,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme → data → P&F algorithm → plot → save.
-          No functions or classes.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, time, Path, numpy, pandas, bokeh models, selenium).
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: P&F algorithm cleanly implemented. No over-engineering.
+        comment: Compact reversal state machine and one loop over both symbol kinds
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium. Correct
-          naming.
+        comment: Writes plot-{THEME}.html and plot-{THEME}.png with a fixed device-metrics
+          override
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Proper figure(), ColumnDataSource, Range1d, min_border_*, toolbar_location=None.
-          All recommended Bokeh patterns.
+        comment: figure(), p.text glyphs with legend_label, Range1d and FixedTicker.
+          Standard Bokeh patterns
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
         passed: true
-        comment: BoxAnnotation for column shading, FixedTicker for exact box-interval
-          grid, HoverTool with formatted tooltips, p.text() glyph renderer — all Bokeh-specific.
+        comment: Nothing beyond what the library prompt mandates. FixedTicker serves
+          the box grid the Notes ask for
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-22T18:34:11Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - hover-tooltips
-  - html-export
   - manual-ticks
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
   dataprep:
+  - binning
   - time-series
   styling:
-  - alpha-blending
   - grid-styling

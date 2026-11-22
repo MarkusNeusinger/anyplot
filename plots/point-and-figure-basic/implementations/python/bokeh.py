@@ -1,7 +1,7 @@
 """ anyplot.ai
 point-and-figure-basic: Point and Figure Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-20
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 78/100 | Updated: 2026-11-22
 """
 
 import os
@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import BoxAnnotation, ColumnDataSource, FixedTicker, HoverTool, Range1d
+from bokeh.models import FixedTicker, Range1d
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -24,107 +24,90 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette positions used
+# Imprint palette positions used
 X_COLOR = "#009E73"  # position 1 — brand green, bullish X columns
 O_COLOR = "#AE3030"  # imprint red — bearish O columns
-SUPPORT_COLOR = "#4467A3"  # position 3 — blue, ascending support line
-RESISTANCE_COLOR = "#BD8233"  # position 4 — purple, descending resistance line
+SUPPORT_COLOR = "#4467A3"  # Imprint position 3 — blue, ascending support line
+RESISTANCE_COLOR = "#BD8233"  # Imprint position 4 — ochre, descending resistance line
 
-# Data
+# Constants
+BOX_SIZE = 2.0  # price per box, in dollars
+REVERSAL = 3  # boxes of reverse movement that start a new column
+UP, DOWN = "X", "O"  # symbols of rising and falling columns
+
+# Columns: set these to your table's column names
+DATE = "date"  # role: date
+HIGH = "high"  # role: high
+LOW = "low"  # role: low
+CLOSE = "close"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 300
-start_price = 100
 daily_returns = np.random.normal(0.0005, 0.015, n_days)
 
-# Add trending periods for visible breakout patterns
+# Trending periods give the chart visible breakouts
 daily_returns[50:80] += 0.003
 daily_returns[100:140] -= 0.004
 daily_returns[180:220] += 0.0035
 daily_returns[240:280] -= 0.003
 
-close_prices = start_price * np.cumprod(1 + daily_returns)
+close_prices = 100 * np.cumprod(1 + daily_returns)
 volatility = np.abs(np.random.normal(0, 0.01, n_days))
-high_prices = close_prices * (1 + volatility)
-low_prices = close_prices * (1 - volatility)
-dates = pd.date_range("2024-01-01", periods=n_days, freq="D")
-df = pd.DataFrame({"date": dates, "high": high_prices, "low": low_prices, "close": close_prices})
-
-# Point and Figure algorithm
-box_size = 2.0  # $2 per box
-reversal = 3  # 3-box reversal to start a new column
-
-columns = []
-current_direction = None
-current_column_start = None
-current_column_end = None
-
-first_price = df["close"].iloc[0]
-box_start = np.floor(first_price / box_size) * box_size
-
-for row in df.itertuples():
-    price = row.close
-    box_price = np.floor(price / box_size) * box_size
-
-    if current_direction is None:
-        current_column_start = box_start
-        current_column_end = box_start
-        if price >= box_start + box_size:
-            current_direction = "X"
-            current_column_end = box_price
-        elif price <= box_start - box_size:
-            current_direction = "O"
-            current_column_end = box_price
-    elif current_direction == "X":
-        if box_price >= current_column_end + box_size:
-            current_column_end = box_price
-        elif box_price <= current_column_end - reversal * box_size:
-            columns.append({"type": "X", "start": current_column_start, "end": current_column_end})
-            current_direction = "O"
-            current_column_start = current_column_end - box_size
-            current_column_end = box_price
-    else:
-        if box_price <= current_column_end - box_size:
-            current_column_end = box_price
-        elif box_price >= current_column_end + reversal * box_size:
-            columns.append({"type": "O", "start": current_column_start, "end": current_column_end})
-            current_direction = "X"
-            current_column_start = current_column_end + box_size
-            current_column_end = box_price
-
-if current_direction is not None:
-    columns.append({"type": current_direction, "start": current_column_start, "end": current_column_end})
-
-# Prepare plotting data
-x_cols, x_prices, x_labels = [], [], []
-o_cols, o_prices, o_labels = [], [], []
-
-for col_idx, col in enumerate(columns):
-    if col["type"] == "X":
-        lo = min(col["start"], col["end"])
-        hi = max(col["start"], col["end"])
-        for box in np.arange(lo, hi + box_size / 2, box_size):
-            x_cols.append(col_idx)
-            x_prices.append(float(box))
-            x_labels.append("X")
-    else:
-        lo = min(col["start"], col["end"])
-        hi = max(col["start"], col["end"])
-        for box in np.arange(lo, hi + box_size / 2, box_size):
-            o_cols.append(col_idx)
-            o_prices.append(float(box))
-            o_labels.append("O")
-
-all_prices = x_prices + o_prices
-min_price = min(all_prices)
-max_price = max(all_prices)
-
-# Grid ticks at exact box-size intervals
-price_ticks = list(
-    np.arange(np.floor(min_price / box_size) * box_size, np.ceil(max_price / box_size) * box_size + box_size, box_size)
+df = pd.DataFrame(
+    {
+        DATE: pd.date_range("2024-01-01", periods=n_days, freq="D"),
+        HIGH: close_prices * (1 + volatility),
+        LOW: close_prices * (1 - volatility),
+        CLOSE: close_prices,
+    }
 )
 
 # Plot
-hover = HoverTool(tooltips=[("Price", "@price{$0.00}"), ("Column", "@col")])
+# Point and Figure algorithm: build columns of boxes from the closing prices
+closes = df[CLOSE].to_numpy()
+box_start = np.floor(closes[0] / BOX_SIZE) * BOX_SIZE
+columns = []  # (symbol, first box, last box)
+direction = None
+col_start = col_end = box_start
+
+for price in closes:
+    box_price = np.floor(price / BOX_SIZE) * BOX_SIZE
+    if direction is None:
+        if price >= box_start + BOX_SIZE:
+            direction, col_end = UP, box_price
+        elif price <= box_start - BOX_SIZE:
+            direction, col_end = DOWN, box_price
+    elif direction == UP:
+        if box_price >= col_end + BOX_SIZE:
+            col_end = box_price
+        elif box_price <= col_end - REVERSAL * BOX_SIZE:
+            columns.append((direction, col_start, col_end))
+            direction, col_start, col_end = DOWN, col_end - BOX_SIZE, box_price
+    else:
+        if box_price <= col_end - BOX_SIZE:
+            col_end = box_price
+        elif box_price >= col_end + REVERSAL * BOX_SIZE:
+            columns.append((direction, col_start, col_end))
+            direction, col_start, col_end = UP, col_end + BOX_SIZE, box_price
+if direction is not None:
+    columns.append((direction, col_start, col_end))
+
+# One symbol per box
+symbols = {UP: ([], []), DOWN: ([], [])}
+for col_idx, (kind, start, end) in enumerate(columns):
+    boxes = np.arange(min(start, end), max(start, end) + BOX_SIZE / 2, BOX_SIZE)
+    symbols[kind][0].extend([col_idx] * len(boxes))
+    symbols[kind][1].extend(boxes.tolist())
+
+n_cols = len(columns)
+all_prices = symbols[UP][1] + symbols[DOWN][1]
+min_price, max_price = min(all_prices), max(all_prices)
+
+# Grid ticks at exact box-size intervals
+price_ticks = np.arange(
+    np.floor(min_price / BOX_SIZE) * BOX_SIZE, np.ceil(max_price / BOX_SIZE) * BOX_SIZE + BOX_SIZE, BOX_SIZE
+).tolist()
 
 p = figure(
     width=3200,
@@ -133,8 +116,7 @@ p = figure(
     x_axis_label="Column (Reversal)",
     y_axis_label="Price ($)",
     toolbar_location=None,
-    tools=[hover],
-    x_range=Range1d(-0.5, len(columns) - 0.5),
+    x_range=Range1d(-0.5, n_cols - 0.5),
     min_border_bottom=160,
     min_border_left=180,
     min_border_top=110,
@@ -169,62 +151,40 @@ p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
-# Alternating column background shading via BoxAnnotation (Bokeh-native feature)
-for col_idx, col in enumerate(columns):
-    fill = X_COLOR if col["type"] == "X" else O_COLOR
-    p.add_layout(
-        BoxAnnotation(left=col_idx - 0.5, right=col_idx + 0.5, fill_color=fill, fill_alpha=0.05, line_color=None)
+# X symbols for rising columns, O symbols for falling columns
+for kind, color, label in ((UP, X_COLOR, "X — Bullish"), (DOWN, O_COLOR, "O — Bearish")):
+    cols, prices = symbols[kind]
+    p.text(
+        x=cols,
+        y=prices,
+        text=[kind] * len(cols),
+        text_font_size="30pt",
+        text_color=color,
+        text_align="center",
+        text_baseline="middle",
+        text_font_style="bold",
+        legend_label=label,
     )
 
-# X markers — bullish rising price columns
-x_source = ColumnDataSource(data={"col": x_cols, "price": x_prices, "label": x_labels})
-p.text(
-    x="col",
-    y="price",
-    text="label",
-    source=x_source,
-    text_font_size="30pt",
-    text_color=X_COLOR,
-    text_align="center",
-    text_baseline="middle",
-    text_font_style="bold",
-    legend_label="X — Bullish",
-)
-
-# O markers — bearish falling price columns
-o_source = ColumnDataSource(data={"col": o_cols, "price": o_prices, "label": o_labels})
-p.text(
-    x="col",
-    y="price",
-    text="label",
-    source=o_source,
-    text_font_size="30pt",
-    text_color=O_COLOR,
-    text_align="center",
-    text_baseline="middle",
-    text_font_style="bold",
-    legend_label="O — Bearish",
-)
-
-# Support trend line (45-degree ascending from lowest point)
-support_price_start = min_price - box_size
-support_price_end = support_price_start + (len(columns) - 1) * box_size
-if support_price_end <= max_price + 2 * box_size:
+# Support trend line: 45 degrees up, one box per column
+support_start = min_price - BOX_SIZE
+support_end = support_start + (n_cols - 1) * BOX_SIZE
+if support_end <= max_price + 2 * BOX_SIZE:
     p.line(
-        x=[0, len(columns) - 1],
-        y=[support_price_start, support_price_end],
+        x=[0, n_cols - 1],
+        y=[support_start, support_end],
         line_width=4,
         line_color=SUPPORT_COLOR,
         legend_label="Support",
     )
 
-# Resistance trend line (45-degree descending from highest point)
-resistance_price_start = max_price + box_size
-resistance_price_end = resistance_price_start - (len(columns) - 1) * box_size
-if resistance_price_end >= min_price - 2 * box_size:
+# Resistance trend line: 45 degrees down, one box per column
+resistance_start = max_price + BOX_SIZE
+resistance_end = resistance_start - (n_cols - 1) * BOX_SIZE
+if resistance_end >= min_price - 2 * BOX_SIZE:
     p.line(
-        x=[0, len(columns) - 1],
-        y=[resistance_price_start, resistance_price_end],
+        x=[0, n_cols - 1],
+        y=[resistance_start, resistance_end],
         line_width=4,
         line_color=RESISTANCE_COLOR,
         legend_label="Resistance",
@@ -256,6 +216,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
