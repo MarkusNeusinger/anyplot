@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-17
@@ -17,11 +17,13 @@ from lets_plot import (
     element_text,
     geom_line,
     geom_point,
+    geom_text,
     ggplot,
     ggsave,
     ggsize,
     labs,
-    scale_color_viridis,
+    scale_color_gradient,
+    scale_fill_manual,
     theme,
     theme_minimal,
 )
@@ -37,20 +39,23 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Generate simulated asset data
+# Constants
+RISK_FREE_RATE = 0.03  # annual risk-free rate for the Sharpe ratio and the capital market line
+
+# Columns: set these to your table's column names
+RISK = "Risk (standard deviation)"  # role: risk
+RETURN = "Expected return"  # role: return
+SHARPE = "Sharpe ratio"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("portfolios.csv")
 np.random.seed(42)
 n_assets = 6
 n_portfolios = 300
-risk_free_rate = 0.03
-
-# Asset expected returns and volatilities
 asset_returns = np.array([0.08, 0.10, 0.12, 0.15, 0.07, 0.18])
 asset_volatility = np.array([0.12, 0.15, 0.18, 0.25, 0.10, 0.30])
-
-# Correlation matrix
 corr_matrix = np.array(
     [
         [1.00, 0.30, 0.25, 0.20, 0.50, 0.15],
@@ -63,26 +68,18 @@ corr_matrix = np.array(
 )
 cov_matrix = np.outer(asset_volatility, asset_volatility) * corr_matrix
 
-# Generate random portfolios
 portfolio_returns = []
 portfolio_risks = []
-sharpe_ratios = []
-
 for _ in range(n_portfolios):
     weights = np.random.random(n_assets)
     weights /= np.sum(weights)
-    port_return = np.sum(weights * asset_returns)
-    port_vol = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-    portfolio_returns.append(port_return)
-    portfolio_risks.append(port_vol)
-    sharpe_ratios.append((port_return - risk_free_rate) / port_vol)
+    portfolio_returns.append(np.sum(weights * asset_returns))
+    portfolio_risks.append(np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights))))
 
-# Generate efficient frontier
-target_returns = np.linspace(0.07, 0.18, 50)
+# Frontier: lowest-risk random portfolio near each target return
 frontier_risks = []
 frontier_returns = []
-
-for target in target_returns:
+for target in np.linspace(0.07, 0.18, 50):
     best_risk = float("inf")
     for _ in range(2000):
         weights = np.random.random(n_assets)
@@ -95,67 +92,79 @@ for target in target_returns:
         frontier_risks.append(best_risk)
         frontier_returns.append(target)
 
-# Find special portfolios
-min_var_idx = np.argmin(frontier_risks)
-min_var_risk = frontier_risks[min_var_idx]
-min_var_return = frontier_returns[min_var_idx]
+risks = np.array(portfolio_risks + frontier_risks)
+returns = np.array(portfolio_returns + frontier_returns)
+df = pd.DataFrame({RISK: risks, RETURN: returns, SHARPE: (returns - RISK_FREE_RATE) / risks})
 
-sharpe_frontier = [(r - risk_free_rate) / s for r, s in zip(frontier_returns, frontier_risks, strict=False)]
-max_sharpe_idx = np.argmax(sharpe_frontier)
-tangency_risk = frontier_risks[max_sharpe_idx]
-tangency_return = frontier_returns[max_sharpe_idx]
+# Plot: reads only df and the constants above
+# Efficient frontier: portfolios that beat every lower-risk portfolio on return
+by_risk = df.sort_values(RISK)
+frontier = by_risk[by_risk[RETURN] >= by_risk[RETURN].cummax()]
+cloud = df
 
-# DataFrames
-df_portfolios = pd.DataFrame({"risk": portfolio_risks, "return": portfolio_returns, "sharpe": sharpe_ratios})
-df_frontier = pd.DataFrame({"risk": frontier_risks, "return": frontier_returns})
-df_special = pd.DataFrame(
+min_var = frontier.loc[frontier[RISK].idxmin()]
+max_sharpe = frontier.loc[frontier[SHARPE].idxmax()]
+special = pd.DataFrame(
     {
-        "risk": [min_var_risk, tangency_risk],
-        "return": [min_var_return, tangency_return],
-        "label": ["Min Variance", "Max Sharpe"],
+        RISK: [min_var[RISK], max_sharpe[RISK]],
+        RETURN: [min_var[RETURN], max_sharpe[RETURN]],
+        "label": ["Minimum variance", "Maximum Sharpe"],
     }
 )
 
-# Capital Market Line
-cml_risks = np.array([0, tangency_risk * 1.8])
-cml_returns = risk_free_rate + (tangency_return - risk_free_rate) / tangency_risk * cml_risks
-df_cml = pd.DataFrame({"risk": cml_risks, "return": cml_returns})
+# Capital market line: from the risk-free rate at zero risk through the tangency portfolio
+cml_risks = np.array([0.0, max_sharpe[RISK] * 1.8])
+cml = pd.DataFrame({RISK: cml_risks, RETURN: RISK_FREE_RATE + max_sharpe[SHARPE] * cml_risks})
 
-# Custom theme
+title = "frontier-efficient · python · letsplot · anyplot.ai"
+
 anyplot_theme = theme(
-    plot_background=element_rect(fill=PAGE_BG),
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major_x=element_line(color=RULE, size=0.3),
-    panel_grid_major_y=element_line(color=RULE, size=0.3),
+    panel_grid_major=element_line(color=RULE, size=0.3),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(size=20, color=INK),
-    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_title=element_text(size=12, color=INK),
+    axis_text=element_text(size=10, color=INK_SOFT),
     axis_line=element_line(color=INK_SOFT, size=0.5),
-    plot_title=element_text(size=24, color=INK),
+    plot_title=element_text(size=16, color=INK),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(size=16, color=INK_SOFT),
-    legend_title=element_text(size=18, color=INK),
+    legend_text=element_text(size=10, color=INK_SOFT),
+    legend_title=element_text(size=11, color=INK),
+    legend_position="right",
 )
 
-# Plot
 plot = (
     ggplot()
-    + geom_point(data=df_portfolios, mapping=aes(x="risk", y="return", color="sharpe"), size=4, alpha=0.6)
-    + geom_line(data=df_frontier, mapping=aes(x="risk", y="return"), color=IMPRINT[2], size=3)
-    + geom_line(data=df_cml, mapping=aes(x="risk", y="return"), color=INK_SOFT, size=1.5, linetype="dashed")
-    + geom_point(data=df_special, mapping=aes(x="risk", y="return"), color=IMPRINT[1], size=10, shape=18)
-    + labs(
-        x="Risk (Standard Deviation)",
-        y="Expected Return",
-        title="frontier-efficient · letsplot · anyplot.ai",
-        color="Sharpe Ratio",
+    + geom_point(data=cloud, mapping=aes(x=RISK, y=RETURN, color=SHARPE), size=2.2, alpha=0.65)
+    + geom_line(data=cml, mapping=aes(x=RISK, y=RETURN), color=INK_SOFT, size=0.8, linetype="dashed")
+    + geom_line(data=frontier, mapping=aes(x=RISK, y=RETURN), color=INK, size=1.6)
+    + geom_point(
+        data=special,
+        mapping=aes(x=RISK, y=RETURN, fill="label"),
+        color=INK,
+        size=6,
+        shape=23,
+        stroke=1.2,
+        show_legend=False,
     )
-    + scale_color_viridis()
-    + ggsize(1600, 900)
+    + geom_text(
+        data=special,
+        mapping=aes(x=RISK, y=RETURN, label="label"),
+        color=INK,
+        size=4,
+        hjust="left",
+        nudge_x=0.004,
+        nudge_y=-0.006,
+        show_legend=False,
+    )
+    + scale_color_gradient(low=IMPRINT_PALETTE[0], high=IMPRINT_PALETTE[2])
+    + scale_fill_manual(values=[IMPRINT_PALETTE[1], IMPRINT_PALETTE[3]])
+    + labs(title=title)
+    + ggsize(800, 450)
     + theme_minimal()
     + anyplot_theme
 )
 
 # Save
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
