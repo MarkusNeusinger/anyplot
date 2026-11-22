@@ -1,12 +1,13 @@
 """ anyplot.ai
 heatmap-geographic: Geographic Heatmap for Spatial Density
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-18
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-22
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -17,74 +18,78 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 MAP_STYLE = "carto-positron" if THEME == "light" else "carto-darkmatter"
 
-# Data - Activity density around San Francisco Bay Area
-np.random.seed(42)
+# Imprint palette: continuous single-polarity scale (green to blue)
+IMPRINT_SEQ = [[0.0, "#009E73"], [1.0, "#4467A3"]]
 
-# Hotspot 1: Downtown SF
-lat1 = np.random.normal(37.79, 0.02, 400)
-lon1 = np.random.normal(-122.40, 0.02, 400)
-val1 = np.random.uniform(0.6, 1.0, 400)
+# Columns: set these to your table's column names
+LATITUDE = "Latitude"  # role: latitude
+LONGITUDE = "Longitude"  # role: longitude
+INTENSITY = "Trips per hour"  # role: value
 
-# Hotspot 2: Oakland
-lat2 = np.random.normal(37.80, 0.025, 350)
-lon2 = np.random.normal(-122.27, 0.025, 350)
-val2 = np.random.uniform(0.5, 0.9, 350)
-
-# Hotspot 3: Berkeley
-lat3 = np.random.normal(37.87, 0.015, 250)
-lon3 = np.random.normal(-122.26, 0.015, 250)
-val3 = np.random.uniform(0.4, 0.8, 250)
-
-# Hotspot 4: South SF
-lat4 = np.random.normal(37.65, 0.03, 300)
-lon4 = np.random.normal(-122.40, 0.03, 300)
-val4 = np.random.uniform(0.3, 0.7, 300)
-
-# Scattered background points
-lat_bg = np.random.uniform(37.5, 38.0, 200)
-lon_bg = np.random.uniform(-122.6, -122.1, 200)
-val_bg = np.random.uniform(0.1, 0.4, 200)
-
-# Combine all data
-latitudes = np.concatenate([lat1, lat2, lat3, lat4, lat_bg])
-longitudes = np.concatenate([lon1, lon2, lon3, lon4, lon_bg])
-values = np.concatenate([val1, val2, val3, val4, val_bg])
+# Data: replace this block with your own table, for example df = pd.read_csv("trips.csv")
+# Bike-share trip starts around Sydney: (lat, lon, spread in degrees, trips, mean intensity)
+rng = np.random.default_rng(42)
+hotspots = [
+    (-33.869, 151.209, 0.020, 450, 0.85),  # CBD
+    (-33.898, 151.179, 0.015, 280, 0.60),  # Newtown
+    (-33.892, 151.277, 0.012, 220, 0.55),  # Bondi
+    (-33.797, 151.284, 0.012, 180, 0.45),  # Manly
+    (-33.815, 151.001, 0.020, 260, 0.50),  # Parramatta
+]
+parts = [
+    pd.DataFrame(
+        {
+            LATITUDE: rng.normal(lat, spread, n),
+            LONGITUDE: rng.normal(lon, spread * 1.2, n),
+            INTENSITY: np.clip(rng.normal(level, 0.12, n), 0.05, 1.0),
+        }
+    )
+    for lat, lon, spread, n, level in hotspots
+]
+parts.append(
+    pd.DataFrame(
+        {
+            LATITUDE: rng.uniform(-34.0, -33.7, 200),
+            LONGITUDE: rng.uniform(150.95, 151.35, 200),
+            INTENSITY: rng.uniform(0.05, 0.3, 200),
+        }
+    )
+)
+df = pd.concat(parts, ignore_index=True)
 
 # Plot
-fig = go.Figure()
-
-fig.add_trace(
+fig = go.Figure(
     go.Densitymap(
-        lat=latitudes,
-        lon=longitudes,
-        z=values,
-        radius=15,
-        colorscale="YlOrRd",
-        opacity=0.7,
-        showscale=True,
+        lat=df[LATITUDE],
+        lon=df[LONGITUDE],
+        z=df[INTENSITY],
+        radius=8,
+        colorscale=IMPRINT_SEQ,
+        opacity=0.75,
         colorbar={
-            "title": {"text": "Intensity", "font": {"size": 20, "color": INK}},
-            "tickfont": {"size": 16, "color": INK_SOFT},
+            "title": {"text": INTENSITY, "font": {"size": 12, "color": INK}},
+            "tickfont": {"size": 10, "color": INK_SOFT},
             "len": 0.6,
-            "thickness": 25,
-            "x": 1.02,
+            "thickness": 14,
         },
-        hovertemplate="Lat: %{lat:.4f}<br>Lon: %{lon:.4f}<br>Value: %{z:.2f}<extra></extra>",
+        hovertemplate=f"{LATITUDE}: %{{lat:.4f}}<br>{LONGITUDE}: %{{lon:.4f}}<br>{INTENSITY}: %{{z:.2f}}<extra></extra>",
     )
 )
 
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "Activity Density · heatmap-geographic · python · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "Bike-Share Trip Density · heatmap-geographic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
-    map={"style": MAP_STYLE, "center": {"lat": 37.75, "lon": -122.35}, "zoom": 9.5},
+    map={"style": MAP_STYLE, "center": {"lat": df[LATITUDE].median(), "lon": df[LONGITUDE].median()}, "zoom": 9.5},
     paper_bgcolor=PAGE_BG,
-    margin={"l": 20, "r": 100, "t": 80, "b": 20},
+    font={"color": INK},
+    margin={"l": 10, "r": 10, "t": 50, "b": 10},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

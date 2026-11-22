@@ -2,99 +2,103 @@ library: plotly
 language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T08:16:18Z'
-updated: '2026-05-18T23:50:59Z'
+updated: '2026-11-22T14:36:35Z'
 generated_by: claude-sonnet
-workflow_run: 26066433362
+workflow_run: 45033087797
 issue: 3638
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 84
 review:
   strengths:
-  - Theme-adaptive basemap style selection (carto-positron / carto-darkmatter) elegantly
-    mirrors the page theme in both renders
-  - 'Full spec compliance: density map with colorbar, basemap, interactive zoom, and
-    realistic SF Bay Area data'
-  - Clean code structure with explicit font sizes and proper theme tokens throughout
-  - Realistic, well-placed hotspot centers with factually correct Bay Area coordinates
+  - 'Continuous imprint_seq ramp (#009E73 to #4467A3) at opacity 0.75 keeps the streets
+    and coastline readable beneath the hot spots'
+  - Basemap style follows the theme (carto-positron / carto-darkmatter), so the map
+    chrome flips while the data colors stay identical
+  - Native go.Densitymap with zoomable MapLibre tiles and a hovertemplate built from
+    the column constants
+  - Real Sydney localities (CBD, Newtown, Bondi, Manly, Parramatta) give the hot spots
+    a recognisable geography
   weaknesses:
-  - YlOrRd colorscale used instead of the default recommendation (viridis/cividis)
-    for sequential continuous data
-  - DE-01 could be pushed higher with a slightly more polished title font weight or
-    colorbar positioning refinement
-  - LM-01 could be more idiomatic by leveraging plotly's mapbox_style via px.density_mapbox
-    (Express API)
+  - 'SC-02 (both): smoothing does not match the scale everywhere (C5): the Parramatta
+    cluster breaks into mottled pale patches instead of one smooth hot spot, while
+    the nearby CBD and Newtown clusters merge into a single plateau → a radius that
+    keeps Parramatta continuous, about 12–14 px (+4 to +6 px), with the data''s Newtown
+    spread kept clear of the CBD. Likely cause: Densitymap radius=8.'
+  - 'DQ-03 (code): each point is one trip start, yet its weight is drawn 0.05–1.0
+    and labelled ''Trips per hour'', an implausible unit for a single trip → a plausible
+    weight such as station trips per hour in the tens, or a relative density label.
+    Likely cause: the INTENSITY column generation and its name.'
+  - 'Suggestion: centering on the land extent rather than the median longitude would
+    give the open sea on the right less of the frame.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Activity Density · heatmap-geographic · python · plotly · anyplot.ai" at 28px, dark ink, centered — readable. Colorbar label "Intensity" at 20px, tick labels at 16px — all readable. Geographic basemap labels from carto-positron clearly visible.
-      Data: YlOrRd colorscale showing density from dark purple (low ~0.1) through blue-green to bright yellow (high ~1.0). Four distinct hotspots (Downtown SF, Oakland, Berkeley, South SF) clearly visible over light basemap. opacity=0.7 allows basemap context to show through.
+      Background: warm off-white #FAF8F1 page around a carto-positron basemap of Sydney (light land, grey sea).
+      Chrome: title "Bike-Share Trip Density · heatmap-geographic · python · plotly · anyplot.ai" centered in dark ink, about 66 % of the width; colorbar at right titled "Trips per hour" with ticks 0.2–1 in INK_SOFT; basemap labels (Parramatta, Chatswood, North Sydney, SYDNEY, Manly, Liverpool) and the OSM/CARTO attribution all readable.
+      Data: density layer in the imprint_seq ramp, pale green at low density to blue #4467A3 at the top; blue hot spots over the CBD/Newtown (merged plateau), Bondi and Manly, a fainter mottled green-blue cluster over Parramatta, faint specks of background points, open sea on the right third.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light ink (#F0EFE8) clearly readable against dark background. Colorbar label and tick labels rendered in INK/INK_SOFT light tokens — all readable. Basemap labels from carto-darkmatter visible. No dark-on-dark failures observed.
-      Data: YlOrRd colorscale colors identical to light render — only basemap and page chrome flip between themes. Hotspot density patterns identical.
+      Background: warm near-black #1A1A17 page around a carto-darkmatter basemap.
+      Chrome: title, colorbar title and ticks in light ink, clearly readable; basemap labels light on dark; attribution box light grey with dark text. No dark-on-dark text.
+      Data: the same green-to-blue density layer and hot spots as the light render; only the basemap and chrome flip.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title (28px), colorbar title (20px), colorbar ticks (16px) all explicitly
-          set; basemap labels uncontrollable but clear
+        comment: Title 16 px, colorbar title 12 px, ticks 10 px (style-guide sizes
+          for the 800x450 canvas); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; title, colorbar, and map labels all clearly separated
+        comment: No text collisions; title, map and colorbar clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density hotspots clearly visible at radius=15; opacity=0.7 allows
-          basemap context to show through
+        comment: Hot spots clearly visible over both basemaps at opacity 0.75
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential colorscale with sufficient luminance range; basemap provides
-          geographic context
+        comment: Green-to-blue ramp with luminance change, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Map fills canvas well; colorbar proportioned correctly; generous
-          margins
+        comment: 3200x1800 canvas, map fills the frame, colorbar well proportioned;
+          open sea on the right is permitted (large parts of the map with no color)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes (geographic map); colorbar has Intensity label;
-          title is descriptive
+        comment: Colorbar titled 'Trips per hour'; descriptive title prefix
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: YlOrRd is sequential but not the default recommendation (viridis/cividis);
-          mentioned in spec but partial compliance only; both theme backgrounds correct
+        passed: true
+        comment: 'imprint_seq #009E73 -> #4467A3 for density; #FAF8F1 / #1A1A17 page
+          backgrounds; data colors identical in both themes'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -102,24 +106,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Theme-adaptive basemap selection is sophisticated; well-calibrated
-          radius and opacity; above configured default but not exceptional
+        comment: Basemap style paired to the theme (carto-positron / carto-darkmatter)
+          so the map itself follows the page surface
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Generous margins, well-sized colorbar, clean layout; geographic maps
-          have fewer refinement levers
+        comment: Slim 14 px colorbar at 60 % length and 10 px side margins give the
+          map nearly the full canvas
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Four distinct activity clusters create clear geographic narrative;
-          background scatter provides spatial context; realistic hotspot hierarchy
+        comment: Data displayed; CBD, Bondi and Manly saturate to the same blue, so
+          no hierarchy beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -127,30 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct geographic heatmap using go.Densitymap
+        comment: Geographic density heatmap via go.Densitymap
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Continuous color gradient, colorbar legend, basemap, interactive
-          zoom, KDE density all present
+        comment: 'Sequential map with transparency, colorbar, basemap, zoom present;
+          C5 partly missed: Parramatta breaks into mottled patches (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon correctly mapped to geographic coordinates; values mapped
-          to z for density weighting
+        comment: lat/lon/z mapped correctly; all hot spots in view
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title follows correct format with descriptive prefix: Activity Density
-          · heatmap-geographic · python · plotly · anyplot.ai'
+        comment: '''Bike-Share Trip Density · heatmap-geographic · python · plotly
+          · anyplot.ai''; colorbar legend titled'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -158,22 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple distinct hotspots with varying intensity + scattered background;
-          demonstrates full density range
+        comment: Five hot spots of different spread plus background scatter
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SF Bay Area activity density is a real, neutral, comprehensible business/urban-planning
-          scenario
+        comment: Sydney bike-share trip starts at real localities (CBD, Newtown, Bondi,
+          Manly, Parramatta); neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Geographic coordinates accurate for target locations (37.79/-122.40
-          for downtown SF, etc.)
+        comment: Coordinates correct for Sydney; the per-trip weight 0.05-1.0 labelled
+          'Trips per hour' is an implausible unit (defect line). No Check values in
+          the spec.
     code_quality:
       score: 10
       max: 10
@@ -183,33 +186,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: theme tokens → data → plot → save'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic; multiple hotspots organized clearly; no over-engineering
+        comment: Hot spots as a data table plus one comprehension
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: plot-{THEME}.png at 800x450 scale 4 + plot-{THEME}.html; current
+          Densitymap/map API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -217,16 +221,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Densitymap is correct plotly trace for geographic KDE; proper
-          map layout configuration
+        comment: go.Densitymap with the MapLibre layout.map block, f-string hovertemplate
+          built from the column constants
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: go.Densitymap with basemap integration is distinctly plotly; interactive
-          hovertemplate; dual HTML+PNG output
+        comment: Native tile basemap with theme-paired Carto styles, zoomable in the
+          HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
+  rendered_at: '2026-11-22T14:32:37Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -235,7 +242,9 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - kde
   styling:
   - custom-colormap
   - alpha-blending
