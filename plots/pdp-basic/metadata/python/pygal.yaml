@@ -2,45 +2,58 @@ library: pygal
 language: python
 specification_id: pdp-basic
 created: '2025-12-31T21:35:47Z'
-updated: '2026-05-15T22:47:49Z'
-generated_by: claude-haiku
-workflow_run: 25944833462
+updated: '2026-11-22T00:36:45Z'
+generated_by: claude-sonnet
+workflow_run: 44966928033
 issue: 2922
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 79
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and no text overlap
-  - Flawless palette compliance with Okabe-Ito colors and theme-adaptive chrome on
-    both renders
-  - 'Excellent specification compliance: all required features (PDP line, confidence
-    intervals, rug plot) correctly implemented'
-  - Clean, reproducible code with proper seeding and idiomatic pygal usage
-  - Strong visual hierarchy with main effect line emphasized and uncertainty context
-    provided through CI bands
-  - Theme-adaptive styling using pygal Style object with proper INK tokens for both
-    light and dark renders
+  - Partial dependence and ICE spread both come from sklearn.inspection.partial_dependence
+    on a fitted GradientBoostingRegressor, so the stepped tree-model curve is the
+    real model output on a 100-point grid
+  - Text sized at the pygal 3200x1800 references (title 66, ticks 44) and readable
+    in both themes; theme tokens threaded through one Style object
+  - 'Clear weight hierarchy: 8 px solid green PD line over 3 px dashed interval bounds'
+  - Per-series show_dots/stroke_style overrides keep the rug as dots-only and the
+    lines dot-free in one pygal.XY chart; interactive HTML tooltips in the detail
+    view
   weaknesses:
-  - Grid could be even more subtle or conditionally hidden for cleaner appearance
-  - Design could benefit from additional visual refinement techniques (e.g., subtle
-    spine removal or enhanced typography hierarchy)
+  - 'SC-02 (both): the 95% interval is drawn as two separate dashed lines in two hues
+    (purple upper, blue lower) with two legend entries, so it reads as two series
+    rather than one uncertainty band lighter than the PD line → draw both bounds in
+    one lighter colour as one interval element (or a filled band) with a single legend
+    entry. Likely cause: separate chart.add calls for CI upper and CI lower taking
+    palette positions 2 and 3.'
+  - 'SC-02 (both): the rug is drawn as round dots at a fixed y below the curves, not
+    as short ticks along the x axis → short vertical tick marks at the observed values.
+    Likely cause: the rug series uses dots (dots_size=7) instead of a tick-shaped
+    marker.'
+  - 'DQ-02 (both): the scenario is an abstract make_regression model with the x axis
+    ''Feature value (standardized)'' and an unitless ''Partial dependence'', which
+    reads as generic → a named model and feature with real units (e.g. predicted house
+    price vs. living area in m²). Likely cause: make_regression data and generic column
+    labels.'
+  - 'Suggestion: a lighter, finer grid on the x axis would let the stepped curve stand
+    out more.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) surface with subtle grid lines
-      Chrome: Title "pdp-basic · pygal · anyplot.ai" is clearly visible and readable in dark text. Axis labels "Feature Value (standardized)" and "Partial Dependence" are descriptive and fully legible. Tick labels on both axes are small but clearly readable against the light background. Legend at bottom displays all four data series with clear labels.
-      Data: Three line series are rendered: "Partial Dependence" in brand green (#009E73, solid, thickest stroke), "95% CI Upper" in orange (#D55E00, dashed), "95% CI Lower" in blue (#0072B2, dashed). "Training Data (rug)" series shown as small dots at bottom in gray. Data colors follow Okabe-Ito palette in correct order.
-      Legibility verdict: PASS - All text is crisp and readable. No dark-on-light or light-on-light failures. Title and labels are clearly legible. Grid lines are subtle but visible.
+      Background: warm off-white #FAF8F1, 3200x1800, dotted grid on both axes, pygal zero axis lines.
+      Chrome: title 'pdp-basic · python · pygal · anyplot.ai' at top centre, y title 'Partial dependence', x title 'Feature value (standardized)', ticks -2.4..2.4 and -40..30, two-column legend at the bottom; all dark ink, all readable.
+      Data: solid green #009E73 stepped PD line (thickest), purple #C475FD dashed upper CI, blue #4467A3 dashed lower CI, ochre #BD8233 rug dots in a row below the curves spanning about -2.7..2.6.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) surface with subtle grid lines visible as light strokes
-      Chrome: Title and axis labels are rendered in light text against the dark background and are clearly legible. No dark-on-dark failures detected. Tick labels are visible and readable. Legend at bottom uses light text on dark background with good contrast.
-      Data: The three line series render identically to the light render: green (#009E73), orange (#D55E00), blue (#0072B2) - confirming data colors are constant across themes. Only chrome (background, text, grid) has adapted to dark theme. "Training Data (rug)" points remain visible.
-      Legibility verdict: PASS - All text is legible on the dark background. Grid lines are subtle and don't compete with data. No dark-on-dark text failures. Data colors are identical to light render, confirming proper theme adaptation.
+      Background: warm near-black #1A1A17, same layout.
+      Chrome: title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark; grid faint but visible.
+      Data: identical colours to the light render; green line and ochre rug clearly visible, blue lower bound darker but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,77 +64,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px,
-          legend 16px. Perfect readability in both themes.'
+        comment: Title 66, axis titles 56, ticks and legend 44 on 3200x1800, at the
+          pygal reference sizes; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Legend properly positioned at bottom, axes labels
-          clear.
+        comment: No text collisions; legend below the axis title, rug clear of the
+          curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main line (width 5) prominent, CI bounds (width 2 dashed) clearly
-          visible, rug plot points distinct.
+        comment: PD line 8 px is the strongest mark, CI bounds 3 px dashed, rug dots
+          7 px visible in both themes; legend squares visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette: #009E73, #D55E00, #0072B2. All CVD-safe with
-          good contrast.'
+        comment: Green/purple/blue/ochre distinct under CVD; dashed vs solid adds
+          a second channel
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape 4800×2700, generous margins (margin_bottom=150), balanced
-          composition.
+        comment: Canonical 3200x1800 canvas, balanced margins, title ~50% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Feature Value (standardized)'', Y: ''Partial Dependence'',
-          Title: ''pdp-basic · pygal · anyplot.ai''.'
+        comment: '''Feature value (standardized)'' and ''Partial dependence'' read
+          for a person'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓, multi-series Okabe-Ito order ✓, backgrounds
-          #FAF8F1/#1A1A17 ✓, theme-adaptive chrome ✓.'
+        comment: 'First series #009E73, Imprint order, #FAF8F1/#1A1A17 backgrounds,
+          theme-adaptive chrome'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Custom Style with theme adaptation and clear hierarchy. Thoughtful
-          design but not publication-exceptional.
+        comment: 'Style-guide baseline: Style tokens, Imprint palette, explicit sizes;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Grid visible with theme-adaptive muted color, good whitespace, balanced
-          margins. Could be more minimal.
+        comment: Default pygal dotted grid on both axes; nothing refined beyond the
+          baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clear focal point (main line in green), CI bands provide uncertainty
-          context, rug plot shows data distribution. Visual hierarchy guides interpretation.
+        comment: Hierarchy is line weight only, which C2 already asks for
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -129,28 +140,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY line chart for partial dependence plot.
+        comment: Partial dependence line over the grid with uncertainty and rug; no
+          extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All features present: PDP line, 95% CI bounds, rug plot for data
-          distribution.'
+        passed: false
+        comment: 'C2 partly missed: the interval is two differently coloured dashed
+          lines, not one lighter band element; C4 partly missed: rug drawn as dots,
+          not short ticks (defect lines)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Feature values on X, partial dependence on Y, axes show full range.
+        comment: Grid values on x, average prediction on y, unsmoothed; rug at the
+          observed values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels clear and accurate.
+        comment: Title 'pdp-basic · python · pygal · anyplot.ai'; legend entries readable
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -158,22 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of PDP: main effect, uncertainty quantification,
-          data distribution.'
+        comment: Shows the PD curve, a CI and the training-value distribution
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Data from sklearn make_regression, GradientBoostingRegressor trained
-          realistically, neutral ML context.
+        passed: false
+        comment: make_regression with 'Feature value (standardized)' is a generic,
+          abstract scenario (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standardized features, 500 samples, 100 grid points, appropriate
-          ranges. All scales plausible.
+        comment: 100 grid points from sklearn partial_dependence; values fall out
+          of the model, no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -183,57 +196,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure with no unnecessary functions or classes.
+        comment: Linear script with Data and Plot blocks; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42), sklearn random_state=42 in all operations.
+        comment: np.random.seed(42) and random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, numpy, pygal, sklearn.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Python, no fake UI, proper sklearn.inspection usage.
+        comment: Uses sklearn partial_dependence for both average and ICE; no hand-roll
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html, current pygal API.
+        comment: Saves plot-{THEME}.png and .html; current pygal 3 API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expertly uses pygal.XY, Style object for theme customization, chart.add(),
-          idiomatic render methods.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses pygal's Style for theme adaptation, interactive HTML export,
-          stroke_style customization. Distinctive but could explore more library features.
-    score_caps_applied: []
+        comment: pygal.XY with per-series show_dots/stroke_style overrides and a theme
+          Style object
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates (interactive HTML
+          is mandated)
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-22T00:32:57Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
+  - layer-composition
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
-  styling:
-  - publication-ready
+  dataprep:
+  - regression
+  styling: []

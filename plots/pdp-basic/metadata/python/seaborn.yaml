@@ -2,48 +2,43 @@ library: seaborn
 language: python
 specification_id: pdp-basic
 created: '2025-12-31T05:33:10Z'
-updated: '2026-05-15T22:51:34Z'
-generated_by: claude-haiku
-workflow_run: 25944713879
+updated: '2026-11-22T00:39:43Z'
+generated_by: claude-sonnet
+workflow_run: 44967187464
 issue: 2922
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing, no text overlap, and all elements
-    optimally visible
-  - 'Complete specification compliance: PDP line, 95% confidence interval, rug plot,
-    centered values all present and working'
-  - Excellent theme adaptation with consistent theme tokens across light and dark
-    renders—data colors identical, only chrome flips
-  - Clean, reproducible code with proper seaborn idioms (sns.set_theme, axes-level
-    functions) and sklearn integration
-  - 'Strong visual hierarchy: main PDP line focal point, confidence band provides
-    context, rug plot shows data distribution, reference line aids interpretation'
-  - Realistic housing price prediction scenario with appropriate feature scale and
-    ML model choice (GradientBoostingRegressor)
+  - Uses one sklearn partial_dependence(kind='both') call and draws the 10th–90th
+    percentile ICE spread as a light band behind a 2.5 pt average line, so the partial
+    dependence stays the strongest mark in both themes
+  - Energy demand against temperature gives a clear U-shape with a flat comfort plateau
+    and tree-model steps, on axes that carry units
+  - 'Follows the adaptable-code layout: column constants with roles, one # Data block
+    ending in df, and sns.rugplot(data=df, x=TEMPERATURE) reading the table directly'
+  - 'Theme tokens threaded through sns.set_theme rc, so chrome flips cleanly while
+    the #009E73 data colors stay identical'
   weaknesses:
-  - Design is competent but not particularly innovative—follows style guide prescriptively
-    rather than adding distinctive aesthetic choices
-  - Could benefit from more visual emphasis or color strategy to enhance data storytelling
-    beyond functional hierarchy
+  - 'Suggestion: partial_dependence(..., percentiles=(0, 1)) would let the curve span
+    the full −8 to 38 °C range the rug covers.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle warm tone, not pure white - correct theme color
-      Chrome: Title "pdp-basic · seaborn · anyplot.ai" in dark text (clearly readable); X-axis label "Square Feet" and Y-axis label "Partial Dependence (centered)" in dark text (clearly readable); tick labels in soft dark gray (#4A4A44) - all fully readable with proper contrast
-      Data: Main PDP line in brand green (#009E73) with linewidth=3 showing feature-prediction relationship; confidence band in light green fill (#009E73 with alpha 0.25) providing uncertainty context; rug plot at bottom in soft gray showing training data distribution; reference line at y=0 in dashed soft gray providing interpretation anchor; legend in upper-left with white background and soft gray border
-      Legibility verdict: PASS - All text is clearly visible, data elements are distinctly rendered, no dark-on-light contrast issues, grid is subtle without competing with data
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'pdp-basic · python · seaborn · anyplot.ai' in dark ink, x axis 'Temperature (°C)' (-10 to 40), y axis 'Partial dependence of demand (GWh/day, centered)' (-30 to 50); soft gray ticks, subtle horizontal grid, top/right spines removed; framed legend at top center. All readable.
+      Data: #009E73 partial dependence line forming a U (about +41 at -5 °C, plateau near -20 between 10 and 19 °C, +37 at 35 °C) with tree steps; light green ICE 10th–90th percentile band behind it; dashed gray zero line; dense gray rug ticks along the bottom.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle warm tone, not pure black - correct theme color
-      Chrome: Title and axis labels in light cream text (#F0EFE8) - clearly readable on dark background; tick labels in soft light gray (#B8B7B0) - clearly readable, NO dark-on-dark failures; legend maintains same styling with light text on dark background - proper theme adaptation
-      Data: Main PDP line in identical brand green (#009E73) as light render - data colors unchanged; confidence band in same light green - visual consistency maintained; rug plot and reference line identical in styling to light render; colors are theme-independent (correct per spec)
-      Legibility verdict: PASS - All text is clearly visible with proper light-on-dark contrast, no dark-on-dark issues, data colors remain identical to light render, full theme adaptation successful across all chrome elements
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light gray, legend box on elevated dark surface with light text; no dark-on-dark text.
+      Data: same #009E73 line and band (band reads as a dark green tint, still visible), light gray rug and zero line; data colors identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,55 +49,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt,
-          legend 16pt); all text perfectly readable in both light and dark themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, all set explicitly;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend positioned upper-left without obscuring
-          data; axis labels and tick labels properly spaced
+        comment: 'No collisions: the legend sits in the headroom above the curve,
+          rug clear of the curve'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main PDP line (linewidth=3) clearly visible; confidence band (alpha=0.25)
-          visible and appropriate; rug plot (alpha=0.5, height=0.03) subtle but informative;
-          reference line visible
+        comment: 2.5 pt partial dependence line dominant, ICE band at alpha 0.22 behind
+          it, 600 rug ticks at alpha 0.5 readable as density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single data color #009E73 (Okabe-Ito brand position 1, colorblind-safe);
-          strong contrast on both light and dark backgrounds'
+        comment: Single hue plus neutral ink; band and line separated by lightness,
+          not hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: figsize=(16,9) with tight_layout and bbox_inches='tight'; plot fills
-          60-70% of canvas; balanced margins; nothing cut-off
+        comment: 3200x1800 canvas, plot fills about 75% with balanced margins; title
+          about 42% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''pdp-basic · seaborn · anyplot.ai''; X-axis
-          ''Square Feet'' descriptive; Y-axis ''Partial Dependence (centered)'' with
-          context'
+        comment: '''Temperature (°C)'' and ''Partial dependence of demand (GWh/day,
+          centered)'' both carry units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; Background #FAF8F1 (light) and #1A1A17 (dark)
-          ✓; Text colors theme-correct in both renders ✓; Data colors identical across
-          themes, only chrome flips ✓'
+        comment: 'Line and band #009E73 identical in both renders; backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -110,26 +102,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured standard PDP implementation with proper theming;
-          professional execution but follows style guide prescriptively rather than
-          with innovation; not publication-ready but competent
+        comment: The style-guide baseline (Imprint, tokens, explicit sizes), nothing
+          decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Deliberate choices visible: subtle grid (alpha=0.2), proper spine
-          removal, intentional legend styling (frameon, edgecolor, facecolor), generous
-          whitespace; above default but not exceptional'
+        comment: Spine and grid rules met (despine, y-grid only), nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Clear visual hierarchy: main PDP line focal point (linewidth=3,
-          brand green) > confidence context (light fill) > data distribution (rug
-          plot) > reference anchor (y=0 line); centering choice shows interpretive
-          thought; guides reader but not exceptionally emphasized'
+        comment: Data displayed; the U-shape reads clearly but no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +126,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct partial dependence plot showing feature-prediction relationship
+        comment: Partial dependence line for one feature and one model; only the allowed
+          zero line on a centered plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: PDP line, 95% confidence interval, rug
-          plot, centered values for interpretation'
+        comment: C1 line through every grid value; C2 ICE spread band lighter and
+          behind; C3 y axis reads as centered partial dependence; C4 rug as short
+          ticks clear of the curve
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: feature range (Square Feet) correct; Y-axis: centered partial
-          dependence correct; grid_resolution=80 for smooth curve appropriate; all
-          data visible'
+        comment: Temperature on x, centered partial dependence on y, 80-point grid
+          drawn unsmoothed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'pdp-basic · seaborn · anyplot.ai' correct; legend labels
-          'Partial Dependence' and '95% Confidence Interval' descriptive
+        comment: Title 'pdp-basic · python · seaborn · anyplot.ai'; legend entries
+          'ICE spread (10th–90th pct.)' and 'Partial dependence' read well
     data_quality:
       score: 15
       max: 15
@@ -171,25 +159,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full range of feature effects (negative to positive); demonstrates
-          both positive and negative partial dependence values; confidence band shows
-          uncertainty across range; rug plot shows data distribution
+        comment: Curve that falls and rises with a flat comfort plateau and tree-model
+          steps; band width varies along the range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price prediction scenario (realistic); GradientBoostingRegressor
-          (standard ML model); 500 samples with 5 features (plausible); Square Feet
-          feature with expected relationship (more area → higher price)
+        comment: Daily energy demand against temperature, a real and neutral grid-planning
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Feature values ~-3 to +3 (standardized range, sensible); partial
-          dependence -35 to +35 (plausible regression output); confidence interval
-          ±5-10 (appropriate uncertainty bounds)
+        comment: 'Checked: temperatures -8 to 38 °C, demand minimum near 16 °C (formula
+          line 40), centered range about -20 to +41 GWh/day consistent with 0.135·(T−16)²
+          plus the humid cooling term; no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -199,67 +185,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear execution: imports → data generation → model training → PDP
-          calculation → plotting → save; no unnecessary functions or classes'
+        comment: 'Imports, constants, one # Data block ending in df, # Plot block,
+          save; no functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; GradientBoostingRegressor(random_state=42)
-          set; fully reproducible execution
+        comment: default_rng(42) and random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.pyplot, numpy, seaborn, sklearn
-          modules; no extraneous imports'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured, readable; uses seaborn idiomatically (sns.set_theme,
-          axes-level functions); no over-engineering; no fake UI
+        comment: One partial_dependence(kind='both') call; band from np.percentile
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG;
-          no deprecated functions
+        comment: plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses sns.set_theme() with comprehensive rc dict for theme-adaptation
-          (idiomatic); uses axes-level functions sns.lineplot and sns.rugplot (preferred);
-          proper matplotlib integration
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses sns.rugplot() for data distribution (distinctive to seaborn);
-          uses sns.set_theme() for comprehensive theming (seaborn-specific); integrates
-          with sklearn's partial_dependence; however, these are expected/standard
-          usage for PDP implementations, not particularly innovative
+        comment: Correct axes-level sns.lineplot / sns.rugplot(data=df, x=...) with
+          sns.set_theme rc; standard usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Rug is the one the Notes ask for, drawn with the usual call; nothing
+          beyond
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T00:35:39Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
-  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - regression
+  - normalization
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
