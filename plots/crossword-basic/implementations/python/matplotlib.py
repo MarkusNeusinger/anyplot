@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -110,4 +110,4 @@ ax.axis("off")
 ax.set_title("crossword-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=20)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
