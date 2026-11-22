@@ -1,13 +1,10 @@
 #' anyplot.ai
 #' logistic-regression: Logistic Regression Curve Plot
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-05-18
+#' Library: ggplot2 | R
+#' Palette: Imprint
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
-
-set.seed(42)
 
 # --- Theme tokens -----------------------------------------------------------
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
@@ -15,86 +12,86 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-IMPRINT   <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
-                 "#AE3030", "#2ABCCD", "#954477")
 
-# --- Data -------------------------------------------------------------------
+# Imprint palette
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                     "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# --- Columns: set these to your table's column names ------------------------
+BIOMARKER <- "Biomarker level"  # role: x (predictor)
+STATUS    <- "Status"           # role: group (binary outcome label)
+
+# --- Data: replace this block with your own table ---------------------------
 # Medical diagnostic context: biomarker level predicts disease probability
+set.seed(42)
 n <- 150
 biomarker <- rnorm(n, mean = 5, sd = 2)
-# Logistic function: P(disease) = 1 / (1 + exp(-(intercept + slope*biomarker)))
-true_prob <- 1 / (1 + exp(-(0.8 * biomarker - 2)))
-disease <- rbinom(n, size = 1, prob = true_prob)
-
-# Fit logistic regression
-model <- glm(disease ~ biomarker, family = binomial(link = "logit"))
-
-# Generate prediction data for smooth curve
-biomarker_range <- seq(min(biomarker) - 0.5, max(biomarker) + 0.5, length.out = 300)
-pred_data <- data.frame(biomarker = biomarker_range)
-pred <- predict(model, newdata = pred_data, type = "response", se.fit = TRUE)
-
-pred_data$probability <- pred$fit
-pred_data$se <- pred$se.fit
-pred_data$upper <- pmin(pred$fit + 1.96 * pred$se.fit, 1)
-pred_data$lower <- pmax(pred$fit - 1.96 * pred$se.fit, 0)
-
-# Prepare data for plotting with jitter on y-axis
-plot_data <- data.frame(
-  biomarker = biomarker,
-  disease = factor(disease, labels = c("No Disease", "Disease")),
-  y_jittered = disease + rnorm(n, mean = 0, sd = 0.03)
+disease <- rbinom(n, size = 1, prob = 1 / (1 + exp(-(0.8 * biomarker - 2))))
+df <- tibble::tibble(
+  !!BIOMARKER := biomarker,
+  !!STATUS    := factor(disease, levels = c(0, 1), labels = c("No Disease", "Disease"))
 )
 
-# --- Plot -------------------------------------------------------------------
+# --- Plot: reads only df and the constants above ----------------------------
+status_num <- as.integer(df[[STATUS]]) - 1L
+fit <- glm(status_num ~ x, family = binomial(link = "logit"),
+           data = data.frame(x = df[[BIOMARKER]]))
+
+# Smooth curve with a 95% interval built on the link scale (stays within 0..1)
+x_range <- range(df[[BIOMARKER]])
+curve <- data.frame(x = seq(x_range[1] - 0.5, x_range[2] + 0.5, length.out = 300))
+pred <- predict(fit, newdata = curve, type = "link", se.fit = TRUE)
+curve$probability <- plogis(pred$fit)
+curve$ci_lower    <- plogis(pred$fit - 1.96 * pred$se.fit)
+curve$ci_upper    <- plogis(pred$fit + 1.96 * pred$se.fit)
+
+# Jitter along y only, so every point keeps its exact x value
+points_df <- data.frame(
+  x      = df[[BIOMARKER]],
+  y      = status_num + rnorm(nrow(df), sd = 0.03),
+  status = df[[STATUS]]
+)
+
 p <- ggplot() +
-  # Confidence interval band
-  geom_ribbon(data = pred_data, aes(x = biomarker, ymin = lower, ymax = upper),
-              fill = IMPRINT[1], alpha = 0.15) +
-  # Fitted curve
-  geom_line(data = pred_data, aes(x = biomarker, y = probability),
-            color = IMPRINT[1], linewidth = 1.2) +
-  # Data points colored by class
-  geom_point(data = plot_data, aes(x = biomarker, y = y_jittered, color = disease),
-             size = 3, alpha = 0.65) +
-  # Decision threshold line
+  geom_ribbon(data = curve, aes(x = x, ymin = ci_lower, ymax = ci_upper),
+              fill = INK_SOFT, alpha = 0.18) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = INK_SOFT,
-             linewidth = 0.7) +
-  # Scales
-  scale_color_manual(values = c(IMPRINT[1], IMPRINT[2])) +
-  scale_y_continuous(limits = c(-0.15, 1.15), breaks = seq(0, 1, 0.25)) +
-  # Labels
+             linewidth = 0.5) +
+  geom_point(data = points_df, aes(x = x, y = y, color = status),
+             size = 2.5, alpha = 0.6) +
+  geom_line(data = curve, aes(x = x, y = probability),
+            color = INK, linewidth = 1.2) +
+  scale_color_manual(values = IMPRINT_PALETTE[1:2]) +
+  scale_y_continuous(limits = c(-0.1, 1.1), breaks = seq(0, 1, 0.25)) +
   labs(
     title = "logistic-regression · r · ggplot2 · anyplot.ai",
-    x = "Biomarker Level",
+    x = BIOMARKER,
     y = "Probability",
-    color = "Status"
+    color = STATUS
   ) +
-  # Theme
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK_SOFT, linewidth = 0.3),
+    panel.grid.major  = element_line(color = alpha(INK, 0.15), linewidth = 0.3),
     panel.grid.minor  = element_blank(),
-    panel.border      = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.5),
-    axis.title        = element_text(color = INK, size = 20),
-    axis.text         = element_text(color = INK_SOFT, size = 16),
-    plot.title        = element_text(color = INK, size = 24, face = "plain"),
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.5),
-    legend.text       = element_text(color = INK_SOFT, size = 16),
-    legend.title      = element_text(color = INK, size = 18),
-    legend.position   = "topleft"
+    axis.title        = element_text(color = INK, size = 10),
+    axis.text         = element_text(color = INK_SOFT, size = 8),
+    plot.title        = element_text(color = INK, size = 12),
+    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
+    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.title      = element_text(color = INK, size = 10),
+    legend.position   = "inside",
+    legend.position.inside = c(0.12, 0.62)
   )
 
 # --- Save -------------------------------------------------------------------
-output_file <- sprintf("plot-%s.png", THEME)
 ggsave(
-  filename = output_file,
+  filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
