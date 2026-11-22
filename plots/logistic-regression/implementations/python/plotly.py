@@ -1,19 +1,15 @@
-""" anyplot.ai
+"""anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-18
 """
 
 import os
-import sys
 
-
-# Remove current directory from path to avoid importing local plotly.py
-sys.path = [p for p in sys.path if p not in ("", ".", os.path.dirname(__file__))]
-
-import numpy as np  # noqa: E402
-import plotly.graph_objects as go  # noqa: E402
-from sklearn.linear_model import LogisticRegression  # noqa: E402
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from sklearn.linear_model import LogisticRegression
 
 
 # Theme tokens
@@ -22,142 +18,140 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # First series - bluish green
-ACCENT = "#C475FD"  # Second series - vermillion
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - medical biomarker vs disease diagnosis
-np.random.seed(42)
-n_samples = 150
+# Constants
+THRESHOLD = 0.5  # default decision threshold of a binary classifier
 
-# Generate biomarker values (e.g., cholesterol, glucose level)
-biomarker = np.concatenate(
-    [
-        np.random.normal(150, 25, n_samples // 2),  # Patients without disease
-        np.random.normal(220, 30, n_samples // 2),  # Patients with disease
-    ]
+# Columns: set these to your table's column names
+BIOMARKER = "Biomarker level (mg/dL)"  # role: x
+DISEASE = "Disease present"  # role: y
+PROBABILITY = "Disease probability"  # role: probability
+CI_LOWER = "95% CI lower"  # role: ci_lower
+CI_UPPER = "95% CI upper"  # role: ci_upper
+
+# Data: replace this block with your own table, for example df = pd.read_csv("patients.csv")
+rng = np.random.default_rng(42)
+n_per_class = 75
+df = pd.DataFrame(
+    {
+        BIOMARKER: np.clip(
+            np.concatenate([rng.normal(150, 25, n_per_class), rng.normal(220, 30, n_per_class)]), 80, 300
+        ),
+        DISEASE: np.repeat([0, 1], n_per_class),
+    }
 )
-biomarker = np.clip(biomarker, 80, 300)
 
-# Binary outcome (0=no disease, 1=disease present)
-y = np.array([0] * (n_samples // 2) + [1] * (n_samples // 2))
+# Plot: reads only df and the constants above
+obs = df.dropna(subset=[BIOMARKER, DISEASE])
+x_obs = obs[BIOMARKER].to_numpy(dtype=float)
+y_obs = (obs[DISEASE].to_numpy(dtype=float) > 0.5).astype(int)
+classes = [0, 1]
 
-# Shuffle data
-shuffle_idx = np.random.permutation(len(biomarker))
-biomarker = biomarker[shuffle_idx]
-y = y[shuffle_idx]
+# The curve and band need both classes present
+x_curve = np.linspace(x_obs.min(), x_obs.max(), 200)
+if len(np.unique(y_obs)) == len(classes):
+    model = LogisticRegression().fit(x_obs.reshape(-1, 1), y_obs)
+    accuracy = model.score(x_obs.reshape(-1, 1), y_obs)
+    y_proba = model.predict_proba(x_curve.reshape(-1, 1))[:, 1]
+else:
+    accuracy = np.nan
+    y_proba = np.full_like(x_curve, np.nan)
 
-# Fit logistic regression
-X = biomarker.reshape(-1, 1)
-model = LogisticRegression()
-model.fit(X, y)
+# Approximate 95% band from the binomial standard error
+se = 1.96 * np.sqrt(y_proba * (1 - y_proba) / len(obs))
+curve = pd.DataFrame(
+    {
+        BIOMARKER: x_curve,
+        PROBABILITY: y_proba,
+        CI_LOWER: np.clip(y_proba - se, 0, 1),
+        CI_UPPER: np.clip(y_proba + se, 0, 1),
+    }
+)
 
-# Generate smooth curve for predictions
-x_curve = np.linspace(80, 300, 200)
-y_proba = model.predict_proba(x_curve.reshape(-1, 1))[:, 1]
+# Jitter along y only; x stays at the observed value
+jitter = np.random.default_rng(0).uniform(-0.02, 0.02, len(obs))
+y_jittered = np.clip(y_obs + jitter, 0, 1)
 
-# Calculate confidence intervals (approximate using standard error)
-se = np.sqrt(y_proba * (1 - y_proba) / n_samples) * 1.96
-y_upper = np.clip(y_proba + se, 0, 1)
-y_lower = np.clip(y_proba - se, 0, 1)
-
-# Jitter y values for visibility (constrained to [0, 1])
-y_jittered = y + np.random.uniform(-0.02, 0.02, len(y))
-y_jittered = np.clip(y_jittered, 0, 1)
-
-# Model accuracy
-accuracy = model.score(X, y)
-
-# Create figure
 fig = go.Figure()
 
-# Confidence interval band
 fig.add_trace(
     go.Scatter(
-        x=np.concatenate([x_curve, x_curve[::-1]]),
-        y=np.concatenate([y_upper, y_lower[::-1]]),
+        x=np.concatenate([curve[BIOMARKER], curve[BIOMARKER][::-1]]),
+        y=np.concatenate([curve[CI_UPPER], curve[CI_LOWER][::-1]]),
         fill="toself",
         fillcolor="rgba(0, 158, 115, 0.2)",
         line={"color": "rgba(0,0,0,0)"},
         name="95% CI",
-        showlegend=True,
         hoverinfo="skip",
     )
 )
 
-# Logistic regression curve
 fig.add_trace(
     go.Scatter(
-        x=x_curve,
-        y=y_proba,
+        x=curve[BIOMARKER],
+        y=curve[PROBABILITY],
         mode="lines",
-        line={"color": BRAND, "width": 4},
-        name="Logistic Curve",
+        line={"color": IMPRINT_PALETTE[0], "width": 2.5},
+        name="Logistic curve",
         hovertemplate="<b>Biomarker:</b> %{x:.1f}<br><b>Probability:</b> %{y:.3f}<extra></extra>",
     )
 )
 
-# Decision threshold line at 0.5
 fig.add_trace(
     go.Scatter(
-        x=[80, 300],
-        y=[0.5, 0.5],
+        x=[x_curve[0], x_curve[-1]],
+        y=[THRESHOLD, THRESHOLD],
         mode="lines",
-        line={"color": INK_SOFT, "width": 2, "dash": "dash"},
-        name="Decision Threshold (0.5)",
+        line={"color": INK_SOFT, "width": 1.5, "dash": "dash"},
+        name=f"Decision threshold ({THRESHOLD})",
         hoverinfo="skip",
     )
 )
 
-# Data points - Class 0 (No Disease)
-mask_0 = y == 0
-fig.add_trace(
-    go.Scatter(
-        x=biomarker[mask_0],
-        y=y_jittered[mask_0],
-        mode="markers",
-        marker={"size": 12, "color": BRAND, "opacity": 0.6, "line": {"width": 1, "color": PAGE_BG}},
-        name="No Disease (0)",
-        hovertemplate="<b>Biomarker:</b> %{x:.1f}<br><b>Outcome:</b> No Disease<extra></extra>",
+for i, cls in enumerate(classes):
+    mask = y_obs == cls
+    fig.add_trace(
+        go.Scatter(
+            x=x_obs[mask],
+            y=y_jittered[mask],
+            mode="markers",
+            marker={"size": 8, "color": IMPRINT_PALETTE[i], "opacity": 0.6, "line": {"width": 0.5, "color": PAGE_BG}},
+            name=f"{DISEASE} = {cls}",
+            hovertemplate=f"<b>{BIOMARKER}:</b> %{{x:.1f}}<br><b>{DISEASE}:</b> {cls}<extra></extra>",
+        )
     )
-)
 
-# Data points - Class 1 (Disease Present)
-mask_1 = y == 1
-fig.add_trace(
-    go.Scatter(
-        x=biomarker[mask_1],
-        y=y_jittered[mask_1],
-        mode="markers",
-        marker={"size": 12, "color": ACCENT, "opacity": 0.6, "line": {"width": 1, "color": PAGE_BG}},
-        name="Disease Present (1)",
-        hovertemplate="<b>Biomarker:</b> %{x:.1f}<br><b>Outcome:</b> Disease Present<extra></extra>",
-    )
-)
-
-# Layout
+# Style
+span = x_obs.max() - x_obs.min()
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 70, "r": 30, "t": 60, "b": 60},
     title={
         "text": "logistic-regression · python · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Biomarker Level (mg/dL)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
-        "range": [75, 305],
-        "gridcolor": "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)",
+        "title": {"text": BIOMARKER, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "range": [x_obs.min() - 0.03 * span, x_obs.max() + 0.03 * span],
+        "gridcolor": GRID,
         "gridwidth": 1,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Disease Probability", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": PROBABILITY, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "range": [-0.05, 1.05],
-        "gridcolor": "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
@@ -166,7 +160,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     legend={
-        "font": {"size": 16, "color": INK_SOFT},
+        "font": {"size": 10, "color": INK_SOFT},
         "x": 0.02,
         "y": 0.98,
         "bgcolor": ELEVATED_BG,
@@ -175,22 +169,21 @@ fig.update_layout(
     },
     annotations=[
         {
-            "x": 265,
-            "y": 0.15,
+            "xref": "paper",
+            "yref": "paper",
+            "x": 0.97,
+            "y": 0.2,
+            "xanchor": "right",
             "text": f"Accuracy: {accuracy:.1%}",
             "showarrow": False,
-            "font": {"size": 18, "color": INK},
+            "font": {"size": 11, "color": INK},
             "bgcolor": ELEVATED_BG,
             "bordercolor": INK_SOFT,
             "borderwidth": 1,
-            "borderpad": 6,
+            "borderpad": 4,
         }
     ],
-    margin={"l": 80, "r": 60, "t": 100, "b": 80},
 )
 
-# Save as PNG (4800x2700)
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
