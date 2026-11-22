@@ -7,7 +7,6 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(ragg)
-library(grid)
 
 set.seed(42)
 
@@ -60,12 +59,23 @@ routes <- left_join(routes, stations %>% select(id, x, y), by = c("source_id" = 
   left_join(stations %>% select(id, x, y), by = c("target_id" = "id")) %>%
   rename(x_end = x, y_end = y)
 
-# Calculate midpoint for edge labels and format label text
+# Shorten each edge so the arrowhead ends at the destination node border, and
+# bend it to the right of travel so opposite routes between a pair separate
+NODE_R <- 0.17
+CURV   <- 0.18
 routes <- routes %>%
   mutate(
-    x_mid = (x_start + x_end) / 2,
-    y_mid = (y_start + y_end) / 2,
-    label = paste0(route_id, " | ", departure_time, " → ", arrival_time)
+    len     = sqrt((x_end - x_start)^2 + (y_end - y_start)^2),
+    ux      = (x_end - x_start) / len,
+    uy      = (y_end - y_start) / len,
+    xs      = x_start + ux * NODE_R,
+    ys      = y_start + uy * NODE_R,
+    xe      = x_end - ux * NODE_R,
+    ye      = y_end - uy * NODE_R,
+    # label sits at the bulge of the curve (right of travel = (uy, -ux))
+    x_mid   = (x_start + x_end) / 2 + uy * CURV * len / 2,
+    y_mid   = (y_start + y_end) / 2 - ux * CURV * len / 2,
+    label   = paste0(route_id, " | ", departure_time, " → ", arrival_time)
   )
 
 # --- Custom theme -----------------------------------------------------------
@@ -78,32 +88,33 @@ anyplot_theme <- theme_minimal(base_size = 14) +
     axis.title        = element_blank(),
     axis.text         = element_blank(),
     axis.ticks        = element_blank(),
-    plot.title        = element_text(color = INK, size = 24, hjust = 0.5, margin = margin(b = 20)),
+    plot.title        = element_text(color = INK, size = 12, hjust = 0.5, margin = margin(b = 8)),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
-    legend.text       = element_text(color = INK_SOFT, size = 16),
-    legend.title      = element_text(color = INK, size = 18),
-    plot.margin       = margin(20, 20, 20, 20)
+    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.title      = element_text(color = INK, size = 10),
+    plot.margin       = margin(8, 8, 8, 8)
   )
 
 # --- Plot --------------------------------------------------------------------
 p <- ggplot() +
   # Draw edges with arrows
-  geom_segment(
+  geom_curve(
     data = routes,
-    aes(x = x_start, y = y_start, xend = x_end, yend = y_end, color = route_type),
-    arrow = arrow(length = unit(0.3, "cm"), type = "closed", angle = 20),
-    linewidth = 0.8,
-    alpha = 0.7
+    aes(x = xs, y = ys, xend = xe, yend = ye, color = route_type),
+    curvature = CURV * 2,
+    arrow = arrow(length = unit(0.15, "cm"), type = "closed", angle = 20),
+    linewidth = 0.4,
+    alpha = 0.85
   ) +
   # Draw edge labels with background
   geom_label(
     data = routes,
     aes(x = x_mid, y = y_mid, label = label),
-    size = 3.5,
+    size = 1.7,
     color = INK,
     fill = ELEVATED_BG,
-    label.padding = unit(0.3, "lines"),
-    label.size = 0.3,
+    label.padding = unit(0.12, "lines"),
+    linewidth = 0.15,
     label.r = unit(0.15, "lines"),
     alpha = 0.85
   ) +
@@ -111,22 +122,22 @@ p <- ggplot() +
   geom_point(
     data = stations,
     aes(x = x, y = y),
-    size = 8,
+    size = 4.5,
     color = INK_SOFT,
     fill = PAGE_BG,
-    stroke = 2,
+    stroke = 1,
     shape = 21
   ) +
   # Draw station labels with subtle background
   geom_label(
     data = stations,
     aes(x = x, y = y, label = label),
-    size = 4.5,
+    size = 2.6,
     color = INK,
     fill = ELEVATED_BG,
-    label.padding = unit(0.4, "lines"),
-    label.size = 0.2,
-    vjust = -1.2,
+    label.padding = unit(0.2, "lines"),
+    linewidth = 0.15,
+    vjust = -0.9,
     hjust = 0.5,
     alpha = 0.9
   ) +
@@ -135,7 +146,7 @@ p <- ggplot() +
     name = "Route Type",
     values = c("Regional" = IMPRINT[1], "Express" = IMPRINT[2], "Local" = IMPRINT[3])
   ) +
-  coord_fixed(ratio = 1) +
+  coord_fixed(ratio = 1, xlim = c(0.6, 9.4), ylim = c(0.2, 10.0), expand = FALSE) +
   labs(title = "network-transport-static · r · ggplot2 · anyplot.ai") +
   anyplot_theme
 
@@ -144,8 +155,8 @@ ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
