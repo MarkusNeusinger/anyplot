@@ -12,35 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 72
 review:
   strengths:
-  - Exceptional theme-adaptive design with explicit color tokens threading through
-    all elements
-  - Perfect text legibility across both renders with no dark-on-dark or light-on-light
-    failures
-  - 'Thoughtful visual hierarchy: main trend → uncertainty band → individual variation
-    → data distribution'
-  - Idiomatic matplotlib usage with clean, readable code
-  - Complete spec implementation with all optional features included (confidence band,
-    ICE lines, rug plot)
-  - Realistic ML scenario that meaningfully demonstrates PDP utility
-  weaknesses: []
+  - Uses sklearn's partial_dependence(kind='both') so the PD line and ICE curves come
+    straight from the fitted model
+  - Rug shows the full distribution of the observed feature values
+  - 'Theme tokens threaded through all chrome: both renders readable, data colors
+    identical'
+  - PD line is clearly the strongest mark, band and ICE lines lighter and behind it
+  weaknesses:
+  - 'VQ-05 (both): canvas is 4766x2670 instead of 3200x1800 (+1566 × +870 px), and
+    the PD curve fills only the middle half of the x axis between wide empty sides
+    → figsize=(8, 4.5), dpi=400 and no bbox_inches=''tight''. Likely cause: figsize=(16,
+    9), savefig(dpi=300, bbox_inches=''tight'').'
+  - 'SC-04 (both): title ''pdp-basic · matplotlib · anyplot.ai'' lacks the language
+    segment → ''pdp-basic · python · matplotlib · anyplot.ai''. Likely cause: the
+    title string.'
+  - 'VQ-07 (both): the rug is drawn in #AE3030, the semantic red anchor, which has
+    no bad/loss/error role here → a non-semantic Imprint position or INK_SOFT. Likely
+    cause: ACCENT = ''#AE3030''.'
+  - 'VQ-03 (both): ICE lines at alpha 0.08 almost vanish inside the 0.2-alpha band,
+    worst on dark, and the rug legend glyph is barely visible on dark → ICE alpha
+    about 0.15–0.2 and a more opaque rug legend handle. Likely cause: alpha=0.08 in
+    the ICE loop.'
+  - 'VQ-02 (both): the legend box sits over the upper ICE outlier line (y ≈ 280–300,
+    x -1.57 to -0.8) and hides that part of it → a legend position clear of data.
+    Likely cause: loc=''upper left''.'
+  - 'DQ-02 (both): make_regression with the axis label ''Feature Value'' and no domain
+    reads as an abstract example → a named feature and target from a plausible model.
+    Likely cause: synthetic data with generic labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "pdp-basic · matplotlib · anyplot.ai", axis labels "Feature Value" and "Partial Dependence (Predicted Value)", tick labels all clearly visible in dark text (INK colors)
-      Data: Brand green line (#009E73) shows upward trend; semi-transparent green confidence band; faint green ICE lines; orange rug plot (#E69F00) at bottom showing feature value distribution
-      Legibility verdict: PASS - all text explicit font sizes (title 24pt, labels 20pt, ticks 16pt), no overlaps, excellent contrast
+      Background: warm off-white #FAF8F1, 4766x2670 (off canvas).
+      Chrome: title 'pdp-basic · matplotlib · anyplot.ai' (no language segment); x label 'Feature Value', y label 'Partial Dependence (Predicted Value)'; large readable ticks -2..3 and -300..400; subtle grid; top/right spines removed; legend upper left (95% Confidence Interval, Partial Dependence, Data Distribution).
+      Data: thick #009E73 PD line rising from about -28 to +40 over x -1.57..1.53, light green band and faint ICE lines; red #AE3030 rug ticks spanning the full observed range -2.7..3.1, so the curve occupies only the middle half of the x axis.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title, axis labels, tick labels all clearly visible in light text (light INK colors #F0EFE8, INK_SOFT #B8B7B0); no dark-on-dark failures
-      Data: Brand green line, band, and ICE lines are IDENTICAL to light render; orange rug plot is IDENTICAL to light render; only chrome colors have flipped to light theme
-      Legibility verdict: PASS - all text properly theme-adapted, excellent contrast against dark background, no readability issues
+      Background: warm near-black #1A1A17.
+      Chrome: title, labels and ticks in light ink; no dark-on-dark text; legend on dark elevated frame.
+      Data: identical green line/band/ICE and red rug; ICE lines very faint on dark.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -48,76 +64,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
-          perfectly readable in both themes'
+        comment: Explicit sizes (title 24, labels 20, ticks 16) on the large canvas;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: All text fully readable with no overlapping elements
+        passed: false
+        comment: The legend box covers the upper ICE outlier line between x -1.57
+          and -1.0 (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Main line (linewidth=4), confidence band (alpha=0.2), ICE lines (alpha=0.08),
-          rug plot all clearly visible and density-appropriate
+        passed: false
+        comment: PD line, band and rug visible; the ICE lines at alpha 0.08 nearly
+          vanish inside the band on dark and the rug legend glyph is faint (defect
+          line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #E69F00); colorblind-safe; good contrast
-          with appropriate alpha blending'
+        comment: Single green hue plus red rug; no red-green contrast carries meaning
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Plot fills ~60% of canvas with balanced margins; excellent space
-          utilization
+        passed: false
+        comment: Canvas is 4766x2670 instead of 3200x1800 (bbox_inches='tight', figsize
+          16x9 at 300 dpi); the curve spans only the middle half of the x axis (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with context: ''Feature Value'' and ''Partial Dependence
-          (Predicted Value)''; correct title format'
+        comment: '''Feature Value'' and ''Partial Dependence (Predicted Value)'' are
+          reader text'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
-          chrome theme-correct in both renders; data colors identical across themes'
+        passed: false
+        comment: 'Brand green first series and correct backgrounds, but the rug uses
+          the semantic red anchor #AE3030 without a bad/loss role (defect line)'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful theme-adaptive design with explicit color tokens; intentional
-          visual hierarchy; well above defaults
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Top/right spines removed; subtle grid; custom legend frame styling;
-          generous whitespace
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear visual hierarchy guides viewer: thick line → uncertainty band
-          → ICE context → data distribution'
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,51 +140,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct partial dependence plot with all required components
+        comment: Correct PDP; ICE lines, band and rug are all offered by the spec
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Partial dependence line, confidence interval, ICE lines, rug plot
-          all present
+        comment: PD line (C1), band and ICE lines behind it (C2), y axis reads as
+          average prediction (C3), rug as short ticks clear of the curve (C4), one
+          feature one model (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: feature values; Y: partial dependence; axes scale correctly'
+        comment: PD at its grid values; the rug shows every observed feature value
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Correct title format; clear descriptive legend labels
+        passed: false
+        comment: Title 'pdp-basic · matplotlib · anyplot.ai' lacks the language segment
+          (defect line)
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows upward trend, varying confidence width, heterogeneous ICE lines,
+        comment: Rising PD with tree-model steps, ICE spread, crossing ICE lines,
           data distribution
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Synthetic but realistic ML pipeline: 500 samples, GradientBoostingRegressor,
-          proper relationships'
+        passed: false
+        comment: make_regression data with the abstract label 'Feature value' reads
+          generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Feature values (-3 to 3) and PDP range (-250 to 250) realistic for
-          regression scenario
+        comment: Values consistent with the computed model; no Check values in the
+          spec
     code_quality:
       score: 10
       max: 10
@@ -179,50 +196,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → model → PDP → plot → save'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and model random_state=42 set; fully deterministic
+        comment: random_state=42 throughout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib, numpy, sklearn'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no over-engineering
+        comment: Appropriate complexity; sklearn partial_dependence computes PD and
+          ICE
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current matplotlib API
+        comment: Saves plot-{THEME}.png; current API (canvas size scored under VQ-05)
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Expert use: subplots with figsize, Axes methods, spine handling,
-          legend customization, theme-aware styling'
+        passed: false
+        comment: Axes methods, fill_between and scatter rug; rug y read from get_ylim
+          at draw time rather than an axis transform
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses fill_between() for confidence band, custom legend frame styling,
-          scatter marker='|' for rug
+        passed: false
+        comment: fill_between and marker='|' are standard; nothing beyond the library
+          prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
 impl_tags:
   dependencies:
   - sklearn
