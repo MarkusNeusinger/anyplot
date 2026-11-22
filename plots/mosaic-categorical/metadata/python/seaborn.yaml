@@ -12,129 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 76
 review:
   strengths:
-  - Correct mosaic plot with proportional rectangle widths and heights accurately
-    encoding class distribution and conditional survival rates
-  - 'Perfect Okabe-Ito palette compliance — Survived uses #009E73 (position 1), Did
-    Not Survive uses #D55E00 (position 2)'
-  - 'Full theme-adaptive chrome: both renders pass readability check with warm off-white/near-black
-    backgrounds and correct ink tokens'
-  - Frequency count labels inside rectangles add quantitative precision to the proportional
-    areas
-  - FancyBboxPatch with rounded corners and gap spacing gives a polished, refined
-    look above library defaults
-  - Real Titanic dataset produces factually accurate, instantly recognizable data
-    story
+  - Correct mosaic geometry with widths from class totals and heights from conditional
+    survival shares
+  - Real Titanic data loaded with sns.load_dataset, the spec's own example
+  - Direct edge labels for both variables' levels plus a matching legend
+  - Theme tokens threaded through set_theme rc; both renders readable with correct
+    surfaces
   weaknesses:
-  - 'Library Mastery is low: seaborn plotting API (sns.scatterplot, sns.heatmap, etc.)
-    is not used — the entire mosaic is drawn with raw matplotlib patches; seaborn
-    contributes only theming and dataset loading, which does not demonstrate seaborn-specific
-    plotting capabilities'
-  - 'DE-01 ceiling: while the custom mosaic is well-executed, it lacks the publication-ready
-    polish (no annotation callouts, no percentage annotations alongside counts, no
-    class-proportion axis ticks) that would push it to 8/8 aesthetic sophistication'
-  - 'DE-03 storytelling gap: the visual hierarchy could be strengthened — e.g., adding
-    percentage labels (62% survived) alongside raw counts would make the class-survival
-    comparison immediately obvious without requiring mental arithmetic from the viewer'
+  - 'VQ-05 (both): canvas is 5042x2636 instead of the landscape 3200x1800 → 3200x1800
+    (-1842 x -836 px). Likely cause: figsize=(16, 9) at dpi=300 with bbox_inches=''tight''.'
+  - 'CQ-05 (code): savefig uses dpi=300 with bbox_inches=''tight'' on a 16x9 figure,
+    which the library prompt forbids → figsize=(8, 4.5), dpi=400, bbox_inches left
+    at None. Likely cause: the plt.subplots and plt.savefig calls.'
+  - 'VQ-01 (both): the 24 pt bold title spans ~98% of the canvas width and runs to
+    the left edge → under 90% of the width (about -4 pt at the canonical canvas).
+    Likely cause: set_title fontsize=24.'
+  - 'CQ-04 (code): comments call the colours an ''Okabe-Ito palette'' and the second
+    colour ''vermillion'', but IMPRINT[1] is the purple #C475FD → comments that name
+    the Imprint palette and the real colour. Likely cause: stale comments above IMPRINT
+    and color_not_survived.'
+  - 'Suggestion: percentage labels alongside the counts, which the Notes allow, would
+    make the survival shares direct to read.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white.
-      Chrome: Title "Titanic Passenger Survival by Class · mosaic-categorical · python · seaborn · anyplot.ai" in bold dark ink (#1A1A17), fontsize 24, clearly readable. Axis labels "Passenger Class" (x, fontsize 20) and "Survival Status" (y, fontsize 20) in bold dark ink. Class labels "First", "Second", "Third" below mosaic columns in bold dark ink (fontsize 18). Row labels "Survived" and "Did Not Survive" to the left of the mosaic in bold dark ink (fontsize 18). Legend with Survived/Did Not Survive in a warm elevated box (#FFFDF6).
-      Data: Six mosaic rectangles — three columns (First, Second, Third class by width) each split vertically into Survived (#009E73, bottom) and Did Not Survive (#D55E00, top). Widths proportional to class totals; heights proportional to conditional survival rates per class. White bold frequency counts inside each rectangle (136, 80, 87, 97, 119, 372). FancyBboxPatch with rounded corners and gap spacing gives polished separation.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: warm off-white #FAF8F1.
+      Chrome: 24 pt bold dark title 'Titanic Passenger Survival by Class · mosaic-categorical · python · seaborn · anyplot.ai' running across ~98% of the 5042x2636 canvas from the left edge; a wide empty band below it; bold dark labels First/Second/Third, Survived / Did Not Survive at the left, axis titles 'Passenger Class' and 'Survival Status'; legend at the right. All readable.
+      Data: six rounded tiles: Survived #009E73 bottom, Did Not Survive #C475FD top, Third class widest; white counts 136/80, 87/97, 119/372.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title, axis labels, class labels, row labels, and legend text all rendered in light ink (#F0EFE8 / #B8B7B0 range), clearly readable against the dark background. Legend box uses elevated dark surface (#242420). No dark-on-dark text failures observed.
-      Data: Mosaic rectangle colors (green #009E73 and orange #D55E00) are identical to the light render — only chrome flips, data colors stay constant. White frequency count labels remain readable against the colored rectangles.
-      Legibility verdict: PASS — all text readable against the near-black background; no dark-on-dark failures detected.
+      Background: warm near-black #1A1A17.
+      Chrome: all text in light ink; legend on the dark elevated box; no dark-on-dark text.
+      Data: tile colours identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, class/row
-          labels 18pt, frequency counts 22pt, legend 16pt. Both renders perfectly
-          readable.'
+        passed: false
+        comment: Readable in both themes, but the 24 pt title runs to ~98% of the
+          canvas width (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements — mosaic rectangles, labels, and legend are
-          all clearly separated.
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All six mosaic rectangles clearly visible with appropriate sizing.
-          Frequency labels visible inside each cell.
+        comment: All six tiles clearly visible; legend swatches match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 vs #D55E00 provides strong luminance contrast;
-          CVD-safe palette.'
+        comment: Green vs purple well separated
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Mosaic fills ~65% of canvas, balanced margins, legend anchored in
-          right margin without wasted space.
+        passed: false
+        comment: Canvas 5042x2636 instead of 3200x1800 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Passenger Class'', ''Survival Status''. Full
-          title with spec-id format.'
+        comment: '''Passenger Class'', ''Survival Status'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Survived) = #009E73; second = #D55E00. Background
-          #FAF8F1 light / #1A1A17 dark. Theme-adaptive chrome correct in both renders.'
+        comment: 'Survived #009E73, second level #C475FD; backgrounds and chrome correct
+          in both themes'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: 'Strong design: custom mosaic with FancyBboxPatch rounded corners,
-          intentional Okabe-Ito palette, white frequency labels create crisp contrast.
-          Above library defaults but lacks percentage annotations that would push
-          to publication quality.'
+        passed: false
+        comment: Style-guide baseline; bold edge labels, nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: ax.axis('off') for clean axes, gap spacing between rectangles, rounded
-          corners, theme-adaptive legend. Highly refined; minor dock for slightly
-          imprecise row-label vertical positioning.
+        passed: false
+        comment: 'Beyond baseline: rounded tiles with even gaps, axis-free layout
+          with direct edge labels'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear story: Third class has dominant orange area (372 deaths vs
-          119 survived); First class is roughly balanced. Proportional widths show
-          Third class was largest group. Story is readable but percentage labels would
-          strengthen it.'
+        passed: false
+        comment: Data displayed; no focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -144,29 +129,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct mosaic plot: widths = marginal proportions of class, heights
-          = conditional survival proportions, area = cell frequency.'
+        comment: Correct mosaic
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: proportional widths, proportional heights,
-          gap spacing, color coding, clear labels for both categorical variables.'
+        comment: 'C1-C4 met: tiles, gaps, edge labels for both variables, color =
+          survival with legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Passenger Class (column widths), Y = Survival Status (cell heights).
-          All data visible.
+        comment: Tiles at their proportions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Titanic Passenger Survival by Class · mosaic-categorical
-          · python · seaborn · anyplot.ai''. Legend labels match data categories.'
+        comment: Title in the mandated format with a descriptive prefix; legend labels
+          match
     data_quality:
       score: 15
       max: 15
@@ -176,24 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all mosaic plot features: 3×2 contingency table with varying
-          proportions across all cells.'
+        comment: 3x2 table with strongly different survival profiles and widths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Titanic survival data — famous, neutral historical dataset with well-known
-          context. Not controversial.
+        comment: Real Titanic data, the spec's own example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Uses actual sns.load_dataset('titanic') — factually correct values
-          (136, 80, 87, 97, 119, 372).
+        comment: 'Checked: counts 136/80, 87/97, 119/372 from sns.load_dataset(''titanic'')'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -201,55 +181,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: theme tokens → data → proportions → draw rectangles
-          → labels → save.'
+        comment: Flat structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: sns.load_dataset('titanic') is deterministic; no random operations.
+        comment: Deterministic dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports (os, mpatches, plt, np, sns) are used in the code.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic code. Manual mosaic drawing is necessarily verbose
-          but appropriate for this chart type.
+        passed: false
+        comment: Comments name an Okabe-Ito palette and 'vermillion' for a purple
+          Imprint colour (defect line)
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG.
+        passed: false
+        comment: figsize=(16, 9), dpi=300 with bbox_inches='tight' instead of the
+          canonical canvas (defect line)
     library_mastery:
-      score: 3
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Seaborn's plotting API is not used — sns.set_theme() and sns.load_dataset()
-          are the only seaborn calls. The entire mosaic visualization is built with
-          raw matplotlib patches. Seaborn doesn't have a native mosaic function, but
-          this means the implementation doesn't demonstrate seaborn plotting patterns.
+        comment: set_theme rc tokens and load_dataset; drawing is matplotlib patches
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No distinctive seaborn plotting features used. Could be reproduced
-          identically with only matplotlib and os imports (replacing sns.set_theme
-          with plt.rcParams and sns.load_dataset with pd.read_csv).
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
 impl_tags:
   dependencies: []
   techniques:
