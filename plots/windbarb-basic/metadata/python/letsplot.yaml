@@ -12,148 +12,149 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 74
 review:
   strengths:
-  - All wind barb types (calm, half-barb, full-barb, pennant) correctly rendered with
-    proper meteorological geometry
-  - Speed-based color coding creates clear visual hierarchy — viewer can immediately
-    scan for high-wind regions
-  - Subtitle explaining barb notation makes the plot self-contained for readers unfamiliar
-    with meteorological symbology
-  - Both light and dark themes render correctly with no readability failures — theme
-    tokens properly applied
-  - Realistic spatially-varying wind field with plausible speed range (calm to ~54
-    kts) and np.random.seed for reproducibility
+  - 'Barb geometry correct: upwind staffs, pennants/full/half barbs on one side adding
+    up to the speed'
+  - Subtitle key decodes the notation, which the spec allows
+  - Calm stations drawn as empty open rings without a staff
+  - Theme tokens applied throughout; both renders readable
   weaknesses:
-  - Multi-speed color categories use non-canonical Okabe-Ito order (positions 1→5→2
-    instead of 1→2→3); should follow canonical order or use a sequential colormap
-    (viridis/cividis) since wind speed is ordinal data
-  - Subtitle font size not explicitly set in theme — may rely on library default rather
-    than explicit size specification
-  - Legend frame background not styled with ELEVATED_BG token; could be more refined
-    with explicit background and border color
-  - Interactive HTML output does not leverage letsplot tooltip features to show wind
-    speed/direction on barb hover
+  - 'VQ-05 (both): the canvas is 4800×2700, not one of the canonical 3200×1800 / 2400×2400
+    sizes, and coord_fixed leaves transparent bands at both sides → ggsize(800, 450)
+    with scale=4. Likely cause: ggsize(1600, 900) with scale=3.'
+  - 'SC-01 (both): barbs are coloured by a derived speed category (Light/Moderate/Strong)
+    with a ''Wind Speed'' legend, an encoding the -basic spec does not ask for → draw
+    every barb in #009E73 and drop the legend. Likely cause: a speed-category colour
+    mapping on the segment layer.'
+  - 'SC-01 (both): a ''~54 kts (pennant)'' callout floats above the two pennant stations,
+    a callout the -basic spec excludes → remove it. Likely cause: a geom_text annotation
+    layer.'
+  - 'VQ-07 (both): the ordered speed categories use green, amber and vermillion instead
+    of ordered steps of one Imprint ramp → removing the derived colour channel resolves
+    it. Likely cause: a manual colour scale over the categories.'
+  - 'CQ-04 (code): lines 157–159 add a separate geom_polygon layer per pennant in
+    a loop → one geom_polygon over a single pennant DataFrame with aes(group=pennant_id).
+    Likely cause: pennants stored as per-triangle dicts.'
+  - 'Suggestion: lets-plot tooltips on the staff layer could show speed and direction
+    per station in the HTML output.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "windbarb-basic · python · letsplot · anyplot.ai" in dark ink — clearly readable. Subtitle "Half barb = 5 kts | full barb = 10 kts | pennant (triangle) = 50 kts" readable. Axis labels "Longitude (°E)" / "Latitude (°N)" in dark ink with units. Tick labels dark and legible. Grid lines subtle gray. "Wind Speed" legend on right side readable.
-      Data: Wind barbs colored by speed — Light (<15 kts) in #009E73 brand green (first series correct), Moderate (15-30 kts) in warm orange, Strong (>30 kts) in deeper orange-red. Calm circles (2 stations) as open rings. Pennant barbs at ~54 kts stations visible. Annotation "~54 kts (pennant)" near high-speed stations.
-      Legibility verdict: PASS — all text dark on light background, no light-on-light issues
+      Background: warm off-white #FAF8F1 panel; 4800×2700 canvas with transparent side bands
+      Chrome: title 'windbarb-basic · python · letsplot · anyplot.ai' and a subtitle key 'Half barb = 5 kts | full barb = 10 kts | pennant (triangle) = 50 kts'; axis titles with units; dark ticks; subtle grid; 'Wind Speed' legend on the right. All readable
+      Data: 8×6 station grid; barbs coloured by speed category — Light (<15 kts) #009E73, Moderate (15-30 kts) amber, Strong (>30 kts) vermillion; two pennant stations at (80,40)/(100,40); two empty calm rings; a '~54 kts (pennant)' text callout above the pennant stations
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title, subtitle, axis labels, tick labels all in light-colored ink — clearly readable against dark background. Legend text light-colored and legible. Annotation text light-colored. Grid lines subtle dark lines visible. No dark-on-dark failures detected anywhere.
-      Data: Data colors are identical to light render — #009E73 for light wind barbs, same orange and orange-red for moderate/strong categories. Calm circles same green. Color identity preserved across themes.
-      Legibility verdict: PASS — all text light on dark background, no dark-on-dark failures
+      Background: warm near-black #1A1A17 panel; same transparent side bands
+      Chrome: title, subtitle, axis titles, ticks, legend and callout in light ink, all readable; no dark-on-dark
+      Data: identical category colours to the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title=24, axis=20, tick=16). Both themes
-          readable. Subtitle font size may not be explicitly set.
+        comment: Title 24, axis 20, ticks 16 at ggsize 1600×900; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Grid spacing prevents barb collision; no text overlap.
+        comment: No text overlap; barbs well spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All barb types clearly visible at proper scale; calm circles appropriately
-          sized.
+        comment: All barb types and calm rings visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Okabe-Ito colors; no red-green sole signal.
+        comment: Green/amber/vermillion distinguishable, high contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 0
         max: 4
-        passed: true
-        comment: coord_fixed maintains geographic aspect ratio. Some edge padding
-          but usable area is solid.
+        passed: false
+        comment: Canvas 4800×2700, not one of the canonical 3200×1800 / 2400×2400
+          sizes; transparent side bands (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°E) and Latitude (°N) with units.
+        comment: Longitude (°E) / Latitude (°N) with units
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'First series is #009E73 correct. Backgrounds correct. Speed categories
-          use non-canonical Okabe-Ito order (1→5→2 instead of 1→2→3).'
+        comment: Ordered speed categories coloured green/amber/vermillion instead
+          of ordered steps of one Imprint ramp (defect line)
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Speed-based color coding, subtitle, annotation raise this above well-configured
-          default. Not publication-ready but shows intentional design thought.
+        comment: Style-guide baseline; the colour layer is an unasked addition and
+          earns nothing
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Subtle grid, clean theme_minimal base, coord_fixed. Above defaults
-          but room for more refinement.
+        comment: Subtle grid and axis line per the style guide
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Color coding by speed creates visual hierarchy. Subtitle makes notation
-          self-explanatory. Annotation draws attention to pennant example.
+        comment: Hierarchy comes from an unasked speed-colour channel and a callout,
+          which earn no credit
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct meteorological wind barb visualization.
+        passed: false
+        comment: Barb plot with a derived speed-category colour channel and a '~54
+          kts (pennant)' callout on a -basic spec (defect lines)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All barb components present: half barbs (5 kts), full barbs (10
-          kts), pennants (50 kts), calm circles (< 2.5 kts), staff direction.'
+        comment: Upwind staffs, 5/10/50 notation on one side, empty calm rings, notation
+          key in subtitle
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=longitude, y=latitude, u/v wind components used for angle/speed
-          calculation.
+        comment: Staffs anchored at station positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title matches required format: windbarb-basic · python · letsplot
-          · anyplot.ai'
+        comment: Title format correct; legend labels readable
     data_quality:
       score: 15
       max: 15
@@ -163,24 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All wind barb types demonstrated including calm, half-barb, full-barb,
-          and pennant stations.
+        comment: Calm, half, full and pennant barbs all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic meteorological station grid with spatially varying wind
-          field. Neutral scientific context.
+        comment: Neutral surface-station wind field
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds range from calm (< 2.5 kts) to ~54 kts, realistic for
-          surface observations.
+        comment: 'Checked: 54 kt stations show one pennant + half barb; calm stations
+          ring only'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -188,53 +187,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → geometry → plot → save. No functions
-          or classes.'
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Barb geometry loop is appropriately complex for this visualization;
-          well-organized.
+        passed: false
+        comment: One geom_polygon layer added per pennant in a loop (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and .html
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct grammar-of-graphics with layered geoms (segment, polygon,
-          point). Uses coord_fixed, ggsize, theme system appropriately.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML output leverages letsplot's interactive export. Multi-layer
-          geom composition demonstrates letsplot grammar strength. Could exploit interactive
-          tooltip features.
+        comment: Layered geoms, coord_fixed, theme system; standard
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond the mandated HTML export
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
 impl_tags:
   dependencies: []
   techniques:
