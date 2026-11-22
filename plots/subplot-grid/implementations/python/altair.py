@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-grid: Subplot Grid Layout
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 98/100 | Updated: 2026-05-13
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -18,111 +19,123 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
-BRAND = IMPRINT[0]
-SECONDARY = IMPRINT[1]
+# Imprint palette: all eight positions, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
+SECONDARY = IMPRINT_PALETTE[1]
 
-# Data
-np.random.seed(42)
+# Constants
+TARGET_GROWTH = 0.4  # the sales target ramps up by this share over the year
 
-# Panel 1: Scatter plot - Product metrics
-n_products = 50
-products_df = pd.DataFrame(
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: extra
+REGION = "Region"  # role: extra
+UNITS = "Units sold"  # role: x
+ORDER_VALUE = "Order value ($)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("orders.csv")
+rng = np.random.default_rng(42)
+n_orders = 240
+regions = ["North", "South", "East", "West", "Central"]
+df = pd.DataFrame(
     {
-        "Units Sold": np.random.randint(100, 1000, n_products),
-        "Revenue ($K)": np.random.uniform(10, 100, n_products),
-        "Product": [f"P{i}" for i in range(n_products)],
+        MONTH: np.repeat(pd.date_range("2024-01", periods=12, freq="MS"), n_orders // 12),
+        REGION: rng.choice(regions, n_orders),
+        UNITS: rng.integers(100, 1000, n_orders),
     }
 )
+df[ORDER_VALUE] = (df[UNITS] * rng.lognormal(mean=-2.6, sigma=0.5, size=n_orders)).round(2)
 
-# Panel 2: Line plot - Monthly performance
-months = pd.date_range("2024-01", periods=12, freq="ME")
-monthly_df = pd.DataFrame(
-    {"Month": months, "Sales": np.cumsum(np.random.normal(50, 15, 12)) + 500, "Target": np.linspace(500, 700, 12)}
-)
-monthly_df = monthly_df.melt(id_vars=["Month"], var_name="Metric", value_name="Value")
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+MONTH_F, REGION_F, UNITS_F, VALUE_F = (c.translate(ESCAPE) for c in (MONTH, REGION, UNITS, ORDER_VALUE))
 
-# Panel 3: Bar plot - Regional performance
-regions_df = pd.DataFrame(
-    {"Region": ["North", "South", "East", "West", "Central"], "Performance": [85, 72, 91, 68, 79]}
-)
+SALES_TREND = "Monthly sales ($K)"
+SALES, TARGET = "Sales", "Target"
+SERIES, REGION_MEAN = "Series", "Mean order value ($)"
 
-# Panel 4: Histogram - Distribution of order values
-order_values = np.random.lognormal(mean=4.5, sigma=0.5, size=200)
-histogram_df = pd.DataFrame({"Order Value ($)": order_values})
+# Line panel: monthly sales against a linear target ramp
+monthly = df.groupby(MONTH, sort=False)[ORDER_VALUE].sum().div(1000).rename(SALES).reset_index()
+monthly[TARGET] = np.linspace(monthly[SALES].iloc[0], monthly[SALES].iloc[0] * (1 + TARGET_GROWTH), len(monthly))
+monthly = monthly.melt(id_vars=MONTH, var_name=SERIES, value_name=SALES_TREND)
 
-# Chart 1: Scatter plot
+# Bar panel: mean order value per region, highlighting regions above the overall mean
+by_region = df.groupby(REGION, sort=False)[ORDER_VALUE].mean().round(1).rename(REGION_MEAN).reset_index()
+overall_mean = df[ORDER_VALUE].mean()
+
+PANEL_W, PANEL_H, GAP = 340, 138, 32
+FS_AXIS_TITLE, FS_AXIS_LABEL, FS_PANEL = 9, 8, 11
+
+
+def panel_title(text):
+    return alt.Title(text, fontSize=FS_PANEL, anchor="start", offset=6)
+
+
 scatter = (
-    alt.Chart(products_df)
-    .mark_circle(size=120, opacity=0.7)
+    alt.Chart(df)
+    .mark_circle(size=24, opacity=0.7, color=BRAND)
     .encode(
-        x=alt.X("Units Sold:Q", title="Units Sold"),
-        y=alt.Y("Revenue ($K):Q", title="Revenue ($K)"),
-        color=alt.value(BRAND),
-        tooltip=["Product", "Units Sold", "Revenue ($K)"],
+        x=alt.X(UNITS_F, type="quantitative", title=UNITS),
+        y=alt.Y(VALUE_F, type="quantitative", title=ORDER_VALUE),
+        tooltip=[alt.Tooltip(UNITS_F, title=UNITS), alt.Tooltip(VALUE_F, title=ORDER_VALUE)],
     )
-    .properties(width=750, height=420, title=alt.Title("Product Performance", fontSize=22, anchor="start"))
+    .properties(width=PANEL_W, height=PANEL_H, title=panel_title("Units vs order value"))
 )
 
-# Chart 2: Line plot
 line = (
-    alt.Chart(monthly_df)
-    .mark_line(strokeWidth=3)
+    alt.Chart(monthly)
+    .mark_line(strokeWidth=2)
     .encode(
-        x=alt.X("Month:T", title="Month"),
-        y=alt.Y("Value:Q", title="Sales ($K)", scale=alt.Scale(zero=False)),
+        x=alt.X(MONTH_F, type="temporal", title=MONTH, axis=alt.Axis(format="%b")),
+        y=alt.Y(SALES_TREND.translate(ESCAPE), type="quantitative", title=SALES_TREND, scale=alt.Scale(zero=False)),
         color=alt.Color(
-            "Metric:N",
-            scale=alt.Scale(domain=["Sales", "Target"], range=[BRAND, SECONDARY]),
-            legend=alt.Legend(title="Metric", titleFontSize=16, labelFontSize=14),
+            SERIES,
+            type="nominal",
+            sort=None,
+            scale=alt.Scale(range=IMPRINT_PALETTE),
+            legend=alt.Legend(title=None, orient="top-left", offset=4, padding=3),
         ),
         strokeDash=alt.StrokeDash(
-            "Metric:N", scale=alt.Scale(domain=["Sales", "Target"], range=[[0], [5, 5]]), legend=None
+            SERIES, type="nominal", sort=None, scale=alt.Scale(range=[[1, 0], [5, 4]]), legend=None
         ),
     )
-    .properties(width=750, height=420, title=alt.Title("Monthly Sales Trend", fontSize=22, anchor="start"))
+    .properties(width=PANEL_W, height=PANEL_H, title=panel_title("Monthly sales vs target"))
 )
 
-# Chart 3: Bar plot
 bar = (
-    alt.Chart(regions_df)
-    .mark_bar(size=60)
+    alt.Chart(by_region)
+    .mark_bar(size=34)
     .encode(
-        x=alt.X("Region:N", title="Region", axis=alt.Axis(labelAngle=0)),
-        y=alt.Y("Performance:Q", title="Performance Score", scale=alt.Scale(domain=[0, 100])),
-        color=alt.condition(alt.datum.Performance >= 80, alt.value(BRAND), alt.value(SECONDARY)),
-        tooltip=["Region", "Performance"],
+        x=alt.X(REGION_F, type="nominal", title=REGION, sort=None, axis=alt.Axis(labelAngle=0)),
+        y=alt.Y(REGION_MEAN.translate(ESCAPE), type="quantitative", title=REGION_MEAN),
+        color=alt.condition(alt.datum[REGION_MEAN] >= overall_mean, alt.value(BRAND), alt.value(SECONDARY)),
+        tooltip=[alt.Tooltip(REGION_F, title=REGION), alt.Tooltip(REGION_MEAN.translate(ESCAPE), title=REGION_MEAN)],
     )
-    .properties(width=750, height=420, title=alt.Title("Regional Performance", fontSize=22, anchor="start"))
+    .properties(width=PANEL_W, height=PANEL_H, title=panel_title("Regional order value"))
 )
 
-# Chart 4: Histogram
 histogram = (
-    alt.Chart(histogram_df)
-    .mark_bar(opacity=0.8)
+    alt.Chart(df)
+    .mark_bar(opacity=0.85, color=BRAND)
     .encode(
-        x=alt.X("Order Value ($):Q", bin=alt.Bin(maxbins=25), title="Order Value ($)"),
-        y=alt.Y("count():Q", title="Frequency"),
-        color=alt.value(BRAND),
-        tooltip=[alt.Tooltip("count()", title="Count")],
+        x=alt.X(VALUE_F, type="quantitative", bin=alt.Bin(maxbins=25), title=ORDER_VALUE),
+        y=alt.Y("count()", type="quantitative", title="Orders"),
+        tooltip=[alt.Tooltip("count()", title="Orders")],
     )
-    .properties(width=750, height=420, title=alt.Title("Order Value Distribution", fontSize=22, anchor="start"))
+    .properties(width=PANEL_W, height=PANEL_H, title=panel_title("Order value distribution"))
 )
 
-# Combine into 2x2 grid
-row1 = alt.hconcat(scatter, line, spacing=60)
-row2 = alt.hconcat(bar, histogram, spacing=60)
-
+title = "subplot-grid · python · altair · anyplot.ai"
 chart = (
-    alt.vconcat(row1, row2, spacing=60)
-    .properties(
-        background=PAGE_BG,
-        title=alt.Title("subplot-grid · altair · anyplot.ai", fontSize=28, anchor="middle", offset=20),
+    alt.vconcat(
+        alt.hconcat(scatter, line, spacing=GAP).resolve_legend(color="independent"),
+        alt.hconcat(bar, histogram, spacing=GAP),
+        spacing=GAP,
     )
+    .properties(background=PAGE_BG, title=alt.Title(title, fontSize=15, anchor="middle", offset=12, color=INK))
     .configure_axis(
-        labelFontSize=16,
-        titleFontSize=18,
+        labelFontSize=FS_AXIS_LABEL,
+        titleFontSize=FS_AXIS_TITLE,
         gridOpacity=0.10,
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -131,17 +144,22 @@ chart = (
         titleColor=INK,
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
-    .configure_title(color=INK, fontSize=22)
+    .configure_title(color=INK)
     .configure_legend(
-        fillColor=ELEVATED_BG,
-        strokeColor=INK_SOFT,
-        labelColor=INK_SOFT,
-        titleColor=INK,
-        titleFontSize=16,
-        labelFontSize=14,
+        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, labelFontSize=9, symbolStrokeWidth=2
     )
 )
 
-# Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Output: pad (never crop) to the canonical landscape canvas
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TW or img.height > TH:
+    # Other data can widen the tick labels; re-render the whole chart smaller instead of cropping
+    fit = min(TW / img.width, TH / img.height) * 0.99
+    chart.save(f"plot-{THEME}.png", scale_factor=4.0 * fit)
+    img = Image.open(f"plot-{THEME}.png").convert("RGB")
+canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+canvas.paste(img, ((TW - img.width) // 2, (TH - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
