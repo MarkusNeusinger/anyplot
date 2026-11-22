@@ -1,52 +1,52 @@
 """ anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-17
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 79/100 | Updated: 2026-11-22
 """
 
 import os
-import sys
 
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import pandas as pd
 
-# Workaround for module name conflict: ensure we import the actual matplotlib package
-# by removing the current directory from sys.path temporarily
-_original_path = sys.path[:]
-_remove_items = ["", ".", os.path.dirname(__file__)]
-sys.path = [p for p in sys.path if p not in _remove_items]
-
-import matplotlib.patches as patches  # noqa: E402
-import matplotlib.pyplot as plt  # noqa: E402
-
-
-sys.path = _original_path
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-HIGHLIGHT = "#FFD700" if THEME == "light" else "#FFD700"  # Subtle gold for mate threat
 
-# Unicode chess symbols
+# Board colors (identical in both themes, as on a physical board)
+LIGHT_SQUARE = "#F0D9B5"
+DARK_SQUARE = "#B58863"
+HIGHLIGHT = "#FFD700"  # mate-threat square
+
+# Unicode chess symbols: white U+2654-2659, black U+265A-265F
 PIECE_SYMBOLS = {
-    "K": "♔",  # White King
-    "Q": "♕",  # White Queen
-    "R": "♖",  # White Rook
-    "B": "♗",  # White Bishop
-    "N": "♘",  # White Knight
-    "P": "♙",  # White Pawn
-    "k": "♚",  # Black King
-    "q": "♛",  # Black Queen
-    "r": "♜",  # Black Rook
-    "b": "♝",  # Black Bishop
-    "n": "♞",  # Black Knight
-    "p": "♟",  # Black Pawn
+    "K": "♔",
+    "Q": "♕",
+    "R": "♖",
+    "B": "♗",
+    "N": "♘",
+    "P": "♙",
+    "k": "♚",
+    "q": "♛",
+    "r": "♜",
+    "b": "♝",
+    "n": "♞",
+    "p": "♟",
 }
 
-# Scholar's Mate position - a famous quick checkmate
-# After 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? 4.Qxf7#
-pieces = {
-    # White pieces
+# Column constants
+SQUARE = "square"  # role: square
+PIECE = "piece"  # role: piece
+
+# Constants
+MATE_SQUARE = "f7"  # square highlighted as the mate threat
+
+# Data: Scholar's Mate after 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? 4.Qxf7#
+position = {
     "a1": "R",
     "b1": "N",
     "c1": "B",
@@ -62,7 +62,6 @@ pieces = {
     "c4": "B",
     "e4": "P",
     "f7": "Q",
-    # Black pieces
     "a8": "r",
     "b8": "n",
     "c8": "b",
@@ -79,58 +78,49 @@ pieces = {
     "e5": "p",
     "f6": "n",
 }
+df = pd.DataFrame({SQUARE: list(position.keys()), PIECE: list(position.values())})
 
-# Create figure (square format for chessboard)
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+# Plot
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Board colors (elegant chess board)
-light_color = "#F0D9B5"  # Light squares
-dark_color = "#B58863"  # Dark squares
-
-# Draw board squares using patch collection for efficiency
-squares = []
-colors = []
 for row in range(8):
     for col in range(8):
-        color = light_color if (col + row) % 2 == 1 else dark_color
-        rect = patches.Rectangle((col, row), 1, 1, linewidth=0, facecolor=color)
-        ax.add_patch(rect)
+        color = LIGHT_SQUARE if (col + row) % 2 == 1 else DARK_SQUARE
+        ax.add_patch(patches.Rectangle((col, row), 1, 1, linewidth=0, facecolor=color))
 
-# Highlight the mate threat (f7 - where white queen delivers checkmate)
-mate_col, mate_row = 5, 6  # f7 in 0-indexed coordinates
-highlight = patches.Rectangle((mate_col, mate_row), 1, 1, linewidth=0, facecolor=HIGHLIGHT, alpha=0.15, zorder=2)
-ax.add_patch(highlight)
+# Highlight the mate square (the last piece's square: the queen delivering mate)
+mate_col, mate_row = ord(MATE_SQUARE[0]) - ord("a"), int(MATE_SQUARE[1]) - 1
+ax.add_patch(patches.Rectangle((mate_col, mate_row), 1, 1, linewidth=0, facecolor=HIGHLIGHT, alpha=0.15, zorder=2))
 
-# Draw pieces using text (DejaVu Sans renders Unicode pieces well)
-for square, piece in pieces.items():
+# Pieces centered on their squares
+for square, piece in zip(df[SQUARE], df[PIECE], strict=True):
     col = ord(square[0]) - ord("a")
     row = int(square[1]) - 1
-    symbol = PIECE_SYMBOLS[piece]
-    ax.text(col + 0.5, row + 0.5, symbol, fontsize=56, ha="center", va="center", fontfamily="DejaVu Sans", zorder=3)
+    ax.text(
+        col + 0.5,
+        row + 0.5,
+        PIECE_SYMBOLS[piece],
+        fontsize=34,
+        ha="center",
+        va="center",
+        fontfamily="DejaVu Sans",
+        zorder=3,
+    )
 
-# Add coordinate labels
-file_labels = "abcdefgh"
-rank_labels = "12345678"
-
+# Coordinate labels at the rim: files a-h below, ranks 1-8 left
 for i in range(8):
-    # File labels (a-h) at bottom
-    ax.text(i + 0.5, -0.35, file_labels[i], fontsize=20, ha="center", va="center", fontweight="bold", color=INK)
-    # Rank labels (1-8) on left
-    ax.text(-0.35, i + 0.5, rank_labels[i], fontsize=20, ha="center", va="center", fontweight="bold", color=INK)
+    ax.text(i + 0.5, -0.32, "abcdefgh"[i], fontsize=12, ha="center", va="center", fontweight="bold", color=INK)
+    ax.text(-0.32, i + 0.5, "12345678"[i], fontsize=12, ha="center", va="center", fontweight="bold", color=INK)
 
-# Board border using custom patch
-border = patches.Rectangle((0, 0), 8, 8, linewidth=4, edgecolor=INK_SOFT, facecolor="none", zorder=4)
-ax.add_patch(border)
+ax.add_patch(patches.Rectangle((0, 0), 8, 8, linewidth=2, edgecolor=INK_SOFT, facecolor="none", zorder=4))
 
-# Styling
-ax.set_xlim(-0.6, 8.2)
-ax.set_ylim(-0.6, 8.6)
+ax.set_xlim(-0.7, 8.3)
+ax.set_ylim(-0.7, 8.7)
 ax.set_aspect("equal")
 ax.axis("off")
 
-# Title
-ax.set_title("chessboard-pieces · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", pad=20, color=INK)
+ax.set_title("chessboard-pieces · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", pad=8, color=INK)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.94, bottom=0.02)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
