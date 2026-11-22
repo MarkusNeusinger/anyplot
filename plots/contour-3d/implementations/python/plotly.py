@@ -1,7 +1,7 @@
 """ anyplot.ai
 contour-3d: 3D Contour Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-16
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-22
 """
 
 import os
@@ -14,115 +14,107 @@ _here = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if p != "" and os.path.abspath(p or ".") != _here]
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
 # Theme tokens
-THEME = os.environ.get("ANYPLOT_THEME", "light")
+THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-GRID_DARK = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Data - create a mathematical surface with interesting contour features
-n = 40  # Grid size for clear visualization
+# Imprint palette: sequential colormap from the first two positions
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_SEQ = [[0.0, IMPRINT_PALETTE[0]], [1.0, IMPRINT_PALETTE[2]]]
 
-x = np.linspace(-3, 3, n)
-y = np.linspace(-3, 3, n)
-X, Y = np.meshgrid(x, y)
+# Constants
+N_LEVELS = 12  # number of regularly spaced contour levels
 
-# Create a surface with peaks and valleys - good for showing contours
-# Combination of Gaussian peaks and a saddle point
-Z = (
-    1.5 * np.exp(-((X - 1) ** 2 + (Y - 1) ** 2))  # Peak at (1, 1)
-    + 1.0 * np.exp(-((X + 1) ** 2 + (Y + 1) ** 2))  # Peak at (-1, -1)
-    - 0.8 * np.exp(-((X + 1) ** 2 + (Y - 1) ** 2))  # Valley at (-1, 1)
-    + 0.3 * (X**2 - Y**2) * 0.1  # Subtle saddle point contribution
-)
+# Columns: set these to your table's column names
+X_POS = "Position x (cm)"  # role: x
+Y_POS = "Position y (cm)"  # role: y
+HEIGHT = "Water surface height (mm)"  # role: z
 
-# Create figure with 3D contour surface
-fig = go.Figure()
+# Data: ripples spreading from a drop that hits a water tank, replace with your own long table of x, y, z
+grid = np.linspace(-6, 6, 45)
+gx, gy = np.meshgrid(grid, grid)
+radius = np.hypot(gx, gy)
+ripple = 4.0 * np.sinc(radius / 1.6) * np.exp(-0.12 * radius)
+df = pd.DataFrame({X_POS: gx.ravel(), Y_POS: gy.ravel(), HEIGHT: ripple.ravel()})
 
-# Add the 3D surface with contour lines
-fig.add_trace(
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=Y_POS, columns=X_POS, values=HEIGHT, sort=False)
+z_min, z_max = np.nanmin(table.to_numpy()), np.nanmax(table.to_numpy())
+level_size = (z_max - z_min) / N_LEVELS
+
+fig = go.Figure(
     go.Surface(
-        x=X,
-        y=Y,
-        z=Z,
-        colorscale="Viridis",
-        showscale=True,
+        x=table.columns,
+        y=table.index,
+        z=table.to_numpy(),
+        colorscale=IMPRINT_SEQ,
+        cmin=z_min,
+        cmax=z_max,
         contours={
             "z": {
                 "show": True,
-                "usecolormap": True,
-                "highlightcolor": INK,
-                "project_z": True,  # Project contours onto the base plane
-                "width": 3,  # More prominent contour lines
-            },
-            "x": {"show": False},
-            "y": {"show": False},
+                "start": z_min,
+                "end": z_max,
+                "size": level_size,
+                "usecolormap": False,
+                "color": INK,
+                "project": {"z": True},
+                "width": 2,
+            }
         },
+        lighting={"ambient": 0.8, "diffuse": 0.6, "specular": 0.1},
         colorbar={
-            "title": {"text": "Height (z)", "font": {"size": 22, "color": INK}},
-            "tickfont": {"size": 18, "color": INK_SOFT},
+            "title": {"text": HEIGHT, "font": {"size": 12, "color": INK}, "side": "right"},
+            "tickfont": {"size": 10, "color": INK_SOFT},
             "len": 0.7,
-            "thickness": 28,
-            "x": 1.02,
+            "thickness": 16,
             "tickcolor": INK_SOFT,
             "bordercolor": INK_SOFT,
             "borderwidth": 1,
             "bgcolor": ELEVATED_BG,
         },
-        hovertemplate="<b>Surface Value</b><br>X: %{x:.2f}<br>Y: %{y:.2f}<br>Z: %{z:.3f}<extra></extra>",
+        hovertemplate="x: %{x:.1f}<br>y: %{y:.1f}<br>height: %{z:.2f}<extra></extra>",
     )
 )
 
-# Update layout for large canvas and clear visualization
+axis_style = {
+    "tickfont": {"size": 10, "color": INK_SOFT},
+    "gridcolor": GRID,
+    "showbackground": True,
+    "backgroundcolor": PAGE_BG,
+    "linecolor": INK_SOFT,
+    "zerolinecolor": INK_SOFT,
+}
+
+# Style
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "contour-3d · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "contour-3d · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     scene={
-        "xaxis": {
-            "title": {"text": "X Coordinate", "font": {"size": 22, "color": INK}},
-            "tickfont": {"size": 18, "color": INK_SOFT},
-            "gridcolor": GRID_DARK,
-            "showbackground": True,
-            "backgroundcolor": PAGE_BG,
-            "linecolor": INK_SOFT,
-        },
-        "yaxis": {
-            "title": {"text": "Y Coordinate", "font": {"size": 22, "color": INK}},
-            "tickfont": {"size": 18, "color": INK_SOFT},
-            "gridcolor": GRID_DARK,
-            "showbackground": True,
-            "backgroundcolor": PAGE_BG,
-            "linecolor": INK_SOFT,
-        },
-        "zaxis": {
-            "title": {"text": "Height (z)", "font": {"size": 22, "color": INK}},
-            "tickfont": {"size": 18, "color": INK_SOFT},
-            "gridcolor": GRID_DARK,
-            "showbackground": True,
-            "backgroundcolor": PAGE_BG,
-            "linecolor": INK_SOFT,
-        },
-        "camera": {"eye": {"x": 1.5, "y": 1.5, "z": 1.2}},  # Good viewing angle
-        "aspectratio": {"x": 1, "y": 1, "z": 0.7},
+        "xaxis": {**axis_style, "title": {"text": X_POS, "font": {"size": 12, "color": INK}}},
+        "yaxis": {**axis_style, "title": {"text": Y_POS, "font": {"size": 12, "color": INK}}},
+        "zaxis": {**axis_style, "title": {"text": HEIGHT, "font": {"size": 12, "color": INK}}},
+        "camera": {"eye": {"x": 1.4, "y": -1.4, "z": 0.9}},
+        "aspectratio": {"x": 1, "y": 1, "z": 0.55},
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin={"l": 20, "r": 100, "t": 80, "b": 20},
+    margin={"l": 20, "r": 40, "t": 60, "b": 20},
     font={"color": INK},
 )
 
-# Save as PNG (4800 x 2700 px)
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML version
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

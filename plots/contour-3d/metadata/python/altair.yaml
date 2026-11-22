@@ -2,51 +2,65 @@ library: altair
 language: python
 specification_id: contour-3d
 created: '2026-05-16T12:42:59Z'
-updated: '2026-05-16T12:57:45Z'
-generated_by: claude-haiku
-workflow_run: 25962155797
+updated: '2026-11-22T01:21:14Z'
+generated_by: claude-sonnet
+workflow_run: 44970245166
 issue: 3230
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/altair/plot-dark.html
-quality_score: 82
+quality_score: 81
 review:
   strengths:
-  - Perfect theme adaptation with both renders readable and correct color/chrome adaptation
-  - 'Correct palette choice: brownbluegreen diverging colormap for continuous elevation
-    data'
-  - Clean, simple code with proper imports and output files (PNG + HTML)
-  - Multi-modal Gaussian surface effectively demonstrates contour structure
-  - 'Theme token mastery: all chrome elements correctly use INK/INK_SOFT/PAGE_BG/ELEVATED_BG
-    tokens'
+  - 'True oblique 3D view built in Altair: level curves lifted to their heights, repeated
+    on the base plane, with x, y and z axes drawn'
+  - imprint_seq height ramp shared by lifted curves, base contours and a colorbar
+    titled 'Elevation (m)' covering the level range
+  - Clear three-weight stroke hierarchy separates lifted curves, base contours and
+    the faint wireframe surface in both themes
+  - Idiomatic path drawing with alt.Detail and alt.Order over one tidy frame, with
+    shared scales across layered charts
   weaknesses:
-  - True 3D visualization not possible with Altair (2D-only library); uses 2D heatmap
-    adaptation instead
-  - Contours represented as point scatter with grey color rather than actual contour
-    lines/curves with visual variety
-  - All contour levels rendered identically without size variation, line weight, or
-    color coding emphasis
-  - Minimal use of distinctive Altair features (no selections, transforms, or advanced
-    interactions)
-  - Generic heatmap + overlay styling without custom visual polish or design refinement
+  - 'VQ-02 (both): the z-axis tick label ''110'' runs into the vertical z rule at
+    the top of the axis → clear it by a few px. Likely cause: mark_text centred at
+    u - 0.16 instead of align=''right'' with a dx offset.'
+  - 'VQ-05 (both): the 3D box fills only about 45 % of the canvas width and leaves
+    a ~300 px empty band before the legend plus wide top and bottom margins → let
+    the drawing fill more of the view. Likely cause: VIEW_W, VIEW_H = 520, 300 and
+    the 1.04 domain padding with the legend placed far right.'
+  - 'VQ-06 (both): axis titles ''X coordinate'' and ''Y coordinate'' carry no unit
+    next to ''Elevation (m)'' → titles with units, e.g. ''Easting (km)''. Likely cause:
+    X_COORD / Y_COORD constants.'
+  - 'SC-02 (code): the Notes ask to enable rotation for interactive libraries; the
+    HTML is a static projection with no rotation or other interaction → bind AZIMUTH/ELEVATION
+    to an Altair param or add native interaction. Likely cause: projection computed
+    in pandas before charting.'
+  - 'CQ-01 (code): a `def project` helper (lines 65-71) and a `nice` lambda kept with
+    `# noqa: E731` (line 132) → inline the projection as vectorised expressions and
+    replace the lambda with a plain np.linspace expression. Likely cause: helper-style
+    structure.'
+  - 'Suggestion: the hand-written marching squares (lines 91-117) could come from
+    a contour utility such as skimage/contourpy if one is installed.'
+  - 'Suggestion: tooltips on the lifted curves (level value) would add native interactivity
+    to the HTML.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "contour-3d · altair · anyplot.ai" in dark text (INK token), axis labels "X Coordinate" and "Y Coordinate", tick labels from -6 to 6 - all readable in dark text
-      Data: Brownbluegreen diverging colormap showing 3D surface elevation; grey contour point overlay at levels 10, 30, 50, 70, 90, 110, 130, 150; "Elevation Contour" legend on right; multi-modal Gaussian peaks visible
-      Legibility verdict: PASS - all text legible, colors distinct, no light-on-light issues
+      Background: warm off-white #FAF8F1, 3200x1800 canvas.
+      Chrome: bold title 'contour-3d · python · altair · anyplot.ai' in dark ink; bold axis titles 'Elevation (m)' (above the z axis), 'Y coordinate', 'X coordinate' along the oblique box; grey tick labels -3/0/3 on x and y, 10-110 on z; colorbar in an elevated light box titled 'Elevation (m)' with ticks 20-100. All readable; '110' touches the z rule.
+      Data: lifted contour rings in a green (#009E73) to blue (#4467A3) ramp stacked to a peak of tight rings near 110 m, thinner base-plane contours below in the same colors, faint grey wireframe surface.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title in light text (INK token for dark), axis labels readable, tick labels readable, legend background uses elevated dark token (#242420)
-      Data: Brownbluegreen colors identical to light render (data colors theme-independent), grey contour points preserved, colormap and contours appear identical to light render
-      Legibility verdict: PASS - all text legible, no dark-on-dark failures, proper theme adaptation confirmed
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels light grey, box frame light grey, colorbar box on #242420 — no dark-on-dark text.
+      Data: contour colors identical to the light render; wireframe soft grey still visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -54,154 +68,171 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes appropriate (title 28px,
-          labels 22px, ticks 18px)
+        comment: All font sizes set explicitly (title 24, axis titles 21 bold, ticks
+          17, legend 16/18 at scale 4); every text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping elements; clean layout
+        passed: false
+        comment: The z-axis tick label '110' touches the vertical z rule (defect line);
+          no other text collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap and contour overlay clearly visible
+        comment: Lifted curves 5.5 px, base contours 2.2 px, wireframe soft at 0.35
+          opacity; colorbar gradient visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brownbluegreen is colorblind-safe diverging colormap
+        comment: Green-to-blue sequential ramp carries height; no red-green signal;
+          good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Good proportions, nothing cut off
+        passed: false
+        comment: Canvas 3200x1800 correct, nothing clipped, but the 3D box fills only
+          about 45 % of the canvas width with a wide empty gap before the legend (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels with coordinates
+        passed: false
+        comment: '''Elevation (m)'' has units; ''X coordinate'' / ''Y coordinate''
+          carry no unit (defect line)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brownbluegreen diverging correct; backgrounds #FAF8F1/#1A1A17 correct;
-          theme tokens properly applied'
+        comment: 'imprint_seq (#009E73 -> #4467A3) for height; backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Default score; standard heatmap + contour overlay without distinctive
-          visual polish
+        comment: 'Beyond baseline: a three-weight stroke hierarchy (thick lifted curves,
+          thin base contours, faint wireframe) and bold axis titles placed along the
+          oblique box edges'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Default score; minimal customization beyond required theme tokens
+        comment: Round stroke caps, wireframe thinned to every fifth grid line at
+          low opacity, colorbar ticks at every second level to avoid crowding
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Clear surface hierarchy with contour reference; could enhance with
-          color-coded groups or emphasis
+        comment: The weight hierarchy puts the lifted relief in front and keeps the
+          base projection as a quieter reference
     spec_compliance:
       score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Specification requires true 3D; Altair is 2D-only. 2D heatmap adaptation
-          is reasonable approximation
+        comment: 'Correct type: level curves lifted to their heights in an oblique
+          3D box'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Contour levels, surface elevation, colorbar/legend all present
+        passed: false
+        comment: Level curves at 10 m intervals, base-plane projection and colorbar
+          present; the Notes' rotation for interactive libraries is absent, the HTML
+          is a static drawing (defect line). C1-C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z mapping correct; axes show full data range
+        comment: Curves computed by marching squares at their exact levels and projected
+          without displacement; full x/y range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend labels correct format
+        comment: Title 'contour-3d · python · altair · anyplot.ai' correct; colorbar
+          titled 'Elevation (m)'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multi-modal Gaussian demonstrates contours well; 50x50 grid adequate
+        comment: Three overlapping hills give nested rings, a shoulder and an open
+          edge contour; base and lifted contours both shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Gaussian mixture data is plausible and neutral
+        comment: Terrain elevation of a hill landscape, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible scale for surface structure demonstration
+        comment: Heights 0-111 m, levels every 10 m from 20 to 110; colorbar range
+          20-110 matches the levels
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No unnecessary functions/classes
+        passed: false
+        comment: 'A `def project` helper and a `nice` lambda kept alive with `# noqa:
+          E731` (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Deterministic analytic surface, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, numpy, pandas, altair; all used
+        comment: os, sys, numpy, pandas, PIL, altair all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Hand-built projection and marching squares are what Altair cannot
+          do natively; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG/HTML output files
+        comment: Saves plot-{THEME}.png padded to 3200x1800 and plot-{THEME}.html;
+          current Altair 6 API
     library_mastery:
       score: 5
       max: 10
@@ -210,24 +241,36 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Altair idioms used correctly; theme token structure standard
+        passed: false
+        comment: Many polylines from one tidy frame via alt.Detail + alt.Order, shared
+          Scale objects across six layers, escaped field names
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Default score; no selections, transforms, or advanced interactions
+        comment: 'Default: nothing beyond what the library prompt mandates'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T01:16:11Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - 3d-projection
   - layer-composition
-  - hover-tooltips
+  - colorbar
+  - manual-ticks
+  - annotations
   - html-export
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  - long-to-wide
+  dataprep:
+  - interpolation
   styling:
+  - custom-colormap
   - alpha-blending
+  - minimal-chrome
