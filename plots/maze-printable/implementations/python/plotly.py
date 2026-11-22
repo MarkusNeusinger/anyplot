@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-printable: Printable Maze Puzzle
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-16
@@ -14,167 +14,100 @@ import plotly.graph_objects as go
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Maze generation parameters
-np.random.seed(42)
-width = 25
-height = 25
+# Imprint palette: position 1 marks start and goal
+BRAND = "#009E73"
 
-# Initialize maze grid (True = wall, False = passage)
-# Using cells and walls representation
-maze = np.ones((2 * height + 1, 2 * width + 1), dtype=bool)
+# Data: maze parameters; replace these to get a different puzzle
+WIDTH = 25  # cells horizontally
+HEIGHT = 25  # cells vertically
+SEED = 42
 
-# Mark all cells as passages initially (odd indices)
-for y in range(height):
-    for x in range(width):
-        maze[2 * y + 1, 2 * x + 1] = False
+rng = np.random.default_rng(SEED)
 
-# DFS maze generation algorithm
-visited = np.zeros((height, width), dtype=bool)
-stack = [(0, 0)]
+# Grid of 2*n+1 tiles per axis: odd tiles are cells, even tiles are walls (True = wall)
+maze = np.ones((2 * HEIGHT + 1, 2 * WIDTH + 1), dtype=bool)
+maze[1::2, 1::2] = False
+
+# Depth-first carving: a spanning tree of cells, so exactly one route joins any two cells
+visited = np.zeros((HEIGHT, WIDTH), dtype=bool)
 visited[0, 0] = True
-
-directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # right, down, left, up
-
+stack = [(0, 0)]
 while stack:
     cy, cx = stack[-1]
-
-    # Find unvisited neighbors
-    neighbors = []
-    for dy, dx in directions:
-        ny, nx = cy + dy, cx + dx
-        if 0 <= ny < height and 0 <= nx < width and not visited[ny, nx]:
-            neighbors.append((ny, nx, dy, dx))
-
-    if neighbors:
-        # Choose random neighbor
-        ny, nx, dy, dx = neighbors[np.random.randint(len(neighbors))]
-        # Remove wall between current cell and neighbor
+    options = [
+        (cy + dy, cx + dx, dy, dx)
+        for dy, dx in ((0, 1), (1, 0), (0, -1), (-1, 0))
+        if 0 <= cy + dy < HEIGHT and 0 <= cx + dx < WIDTH and not visited[cy + dy, cx + dx]
+    ]
+    if options:
+        ny, nx, dy, dx = options[rng.integers(len(options))]
         maze[2 * cy + 1 + dy, 2 * cx + 1 + dx] = False
         visited[ny, nx] = True
         stack.append((ny, nx))
     else:
         stack.pop()
 
-# Create entrance (top of first cell) and exit (bottom of last cell)
-maze[0, 1] = False  # Entrance opening at top-left
-maze[2 * height, 2 * width - 1] = False  # Exit opening at bottom-right
+# Entrance above the first cell, exit below the last cell
+maze[0, 1] = False
+maze[-1, -2] = False
 
-# Create figure
+# Plot
+rows, cols = maze.shape
+
+# All wall tiles as one SVG path; row 0 is drawn at the top
+tiles = [
+    f"M{x - 0.5},{rows - 1.5 - y}L{x + 0.5},{rows - 1.5 - y}L{x + 0.5},{rows - 0.5 - y}L{x - 0.5},{rows - 0.5 - y}Z"
+    for y, x in zip(*np.nonzero(maze), strict=True)
+]
+
 fig = go.Figure()
-
-# Theme-specific colors for maze elements
-if THEME == "light":
-    # Light theme: black walls on white background (printable)
-    wall_color = INK
-    passage_color = None  # Passages implicit as white background
-else:
-    # Dark theme: explicitly draw passages as medium gray for visibility
-    wall_color = INK_SOFT  # Light gray walls
-    passage_color = "#4A4A44"  # Medium gray passages (distinct from dark bg and light walls)
-
-# Draw maze elements as shapes
-wall_shapes = []
-
-for y in range(maze.shape[0]):
-    for x in range(maze.shape[1]):
-        if maze[y, x]:  # Wall
-            wall_shapes.append(
-                {
-                    "type": "rect",
-                    "x0": x - 0.5,
-                    "y0": (maze.shape[0] - 1 - y) - 0.5,
-                    "x1": x + 0.5,
-                    "y1": (maze.shape[0] - 1 - y) + 0.5,
-                    "fillcolor": wall_color,
-                    "line": {"width": 0},
-                }
-            )
-        elif THEME == "dark" and passage_color:  # Passage in dark theme
-            wall_shapes.append(
-                {
-                    "type": "rect",
-                    "x0": x - 0.5,
-                    "y0": (maze.shape[0] - 1 - y) - 0.5,
-                    "x1": x + 0.5,
-                    "y1": (maze.shape[0] - 1 - y) + 0.5,
-                    "fillcolor": passage_color,
-                    "line": {"width": 0},
-                }
-            )
-
-# Add start marker "START" above entrance opening with arrow pointing down
-start_x = 1  # Entrance column in maze coordinates
-start_y = maze.shape[0] - 1 - 0  # Top row (entrance)
-
 fig.add_annotation(
-    x=start_x,
-    y=start_y + 2,  # Position above the maze
+    x=1,
+    y=rows - 1,
     text="<b>START</b>",
-    font={"size": 32, "color": BRAND},
+    font={"size": 15, "color": BRAND},
     showarrow=True,
     arrowhead=2,
-    arrowsize=2,
-    arrowwidth=4,
+    arrowsize=1.5,
+    arrowwidth=2.5,
     arrowcolor=BRAND,
-    ay=-50,  # Arrow points down
     ax=0,
+    ay=-30,
     yanchor="bottom",
 )
-
-# Add goal marker "GOAL" below exit opening with arrow pointing up
-goal_x = maze.shape[1] - 2  # Exit column in maze coordinates
-goal_y = 0  # Bottom row (exit)
-
 fig.add_annotation(
-    x=goal_x,
-    y=goal_y - 2,  # Position below the maze
+    x=cols - 2,
+    y=0,
     text="<b>GOAL</b>",
-    font={"size": 32, "color": BRAND},
+    font={"size": 15, "color": BRAND},
     showarrow=True,
     arrowhead=2,
-    arrowsize=2,
-    arrowwidth=4,
+    arrowsize=1.5,
+    arrowwidth=2.5,
     arrowcolor=BRAND,
-    ay=50,  # Arrow points up
     ax=0,
+    ay=30,
     yanchor="top",
 )
 
-# Update layout
 fig.update_layout(
     title={
-        "text": "maze-printable · plotly · anyplot.ai",
-        "font": {"size": 36, "color": INK},
+        "text": "maze-printable · python · plotly · anyplot.ai",
+        "font": {"size": 17, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
-    shapes=wall_shapes,
-    xaxis={
-        "showgrid": False,
-        "zeroline": False,
-        "showticklabels": False,
-        "scaleanchor": "y",
-        "scaleratio": 1,
-        "range": [-3, maze.shape[1] + 2],
-        "showline": False,
-    },
-    yaxis={
-        "showgrid": False,
-        "zeroline": False,
-        "showticklabels": False,
-        "range": [-4, maze.shape[0] + 3],
-        "showline": False,
-    },
+    shapes=[{"type": "path", "path": "".join(tiles), "fillcolor": INK, "line": {"width": 0}}],
+    xaxis={"visible": False, "range": [-1.5, cols + 0.5], "scaleanchor": "y", "scaleratio": 1, "constrain": "domain"},
+    yaxis={"visible": False, "range": [-5, rows + 4], "constrain": "domain"},
     plot_bgcolor=PAGE_BG,
     paper_bgcolor=PAGE_BG,
-    margin={"l": 60, "r": 60, "t": 100, "b": 60},
-    width=3600,
-    height=3600,
+    autosize=False,
+    margin={"l": 40, "r": 40, "t": 60, "b": 30},
+    width=600,
+    height=600,
 )
 
-# Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=3600, height=3600, scale=1)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
