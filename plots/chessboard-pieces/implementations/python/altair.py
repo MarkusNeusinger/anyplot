@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
-Library: altair 6.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-17
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-22
 """
 
 import os
