@@ -2,44 +2,53 @@ library: seaborn
 language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:20:47Z'
-updated: '2026-05-17T15:38:57Z'
-generated_by: claude-haiku
-workflow_run: 25994909126
+updated: '2026-11-22T06:46:18Z'
+generated_by: claude-sonnet
+workflow_run: 44994765607
 issue: 3415
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - Excellent visual quality with perfect theme adaptation in both light and dark
-    renders
-  - Correct Voronoi diagram implementation with proper clipping, seed point highlighting,
-    and Okabe-Ito color cycling
-  - Professional use of seaborn theming, context management, and alpha-blended cells
-    for visual depth
-  - All text elements (title, axis labels, tick labels) readable in both themes with
-    proper color tokens
+  - 'Exact Voronoi geometry: distant helper seeds make every real cell finite and
+    each cell polygon is cut at the 0–100 km box with a Rectangle clip path, so all
+    20 cells tile the box without gaps and every seed sits inside its own convex cell
+    in both renders'
+  - Neighbour-aware colouring from vor.ridge_points gives every pair of cells that
+    share an edge a different Imprint fill (green, lavender, blue, ochre, red), meeting
+    the spec's adjacent-cell distinction with only five palette positions
+  - Seeds drawn via sns.scatterplot(data=df, x=X, y=Y) in INK with a page-coloured
+    halo stand out from every fill in both themes
+  - 'Theme tokens threaded through sns.set_theme(rc=...) — title, axis titles, ticks,
+    spines and cell edges all flip correctly between #FAF8F1 and #1A1A17 while the
+    fills stay identical'
+  - Square 2400×2400 canvas with equal aspect, default savefig bbox and style-guide
+    font sizes (12/10/8 pt)
   weaknesses:
-  - Design Excellence is adequate but not exceptional - implementation follows standard
-    styling guidelines without distinctive embellishments
-  - Library Mastery focuses on seaborn theming rather than distinctive seaborn-specific
-    features beyond palette and context management
+  - 'DQ-02 (both): the axes read ''X coordinate (km)'' / ''Y coordinate (km)'' over
+    uniform random seeds, an abstract plane with no service-area or territory context
+    → name the scenario in the labels, e.g. ''Easting (km)'' / ''Northing (km)'' for
+    store or station sites. Likely cause: the X/Y column constants and the bare rng.uniform
+    data block.'
+  - 'Suggestion: optional short seed labels (the Data allows a label column) placed
+    next to each seed would tie the cells to named sites.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface color
-      Chrome: Title "voronoi-basic · seaborn · anyplot.ai" is bold and readable; X/Y axis labels "Coordinate (km)" are clear; tick labels (0–100) are visible in soft gray (INK_SOFT)
-      Data: Voronoi cells use Okabe-Ito palette positions 1–7 with 0.7 alpha blending for visual depth; seed points marked as green circles (#009E73) with white edges and dark outline for clear definition; polygon edges in soft gray
-      Legibility verdict: PASS — all elements fully readable, proper contrast throughout
+      Background: warm off-white #FAF8F1, 2400×2400 square canvas
+      Chrome: title "voronoi-basic · python · seaborn · anyplot.ai" in dark ink at ~60% width; axis titles "X coordinate (km)" / "Y coordinate (km)" and 0–100 ticks in dark soft grey; four spines frame the bounding box; no grid. All readable.
+      Data: 20 convex Voronoi cells tiling the 0–100 box, filled with Imprint green #009E73, lavender, blue, ochre and red at alpha 0.75 with dark-grey edges; adjacent cells always differ in colour; outer cells cut cleanly at the box. Seeds are near-black dots with off-white halos, each inside its own cell.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface color
-      Chrome: Title, axis labels, and tick labels all readable in light text colors; no dark-on-dark failures; tick labels properly use light gray (INK_SOFT equivalent)
-      Data: Okabe-Ito colors identical to light render (only chrome flipped as expected); seed points still visible as cyan-edged circles on dark surface; polygon edges remain in light gray
-      Legibility verdict: PASS — all text readable, theme adaptation correct, data colors consistent across both renders
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles in light ink; ticks, spines and cell edges in light grey #B8B7B0; no dark-on-dark text.
+      Data: same cells and same Imprint fill colours as the light render (alpha over the dark page darkens them, as expected); seeds are off-white dots with dark halos, clearly visible on every fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,47 +59,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; proper font sizes and colors
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt; all readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; clean separation of cells and labels
+        comment: No text collisions; seeds well separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Seed points clearly marked; Voronoi cells well-differentiated via
-          color
+        comment: s=60 seeds with halo stand out on every fill; edges visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; no problematic color combinations
+        comment: Imprint fills plus visible edges; neighbours always differ
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape format; good proportions; nothing cut off
+        comment: 2400×2400 square, equal aspect, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows format; axes labeled with units (km)
+        comment: Axis titles with km units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green; Okabe-Ito order maintained; backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark)'
+        comment: 'Imprint positions in canonical order starting at #009E73; correct
+          backgrounds'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -98,22 +108,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional polish with seaborn theming; intentional visual hierarchy
-          through seed point emphasis
+        comment: Softened 0.75-alpha fills paired with page-coloured seed halos and
+          round edge joins form a coordinated look beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clean design; grid appropriately absent for plot type; whitespace
-          generous
+        comment: Grid dropped for a map-like partition and the four spines used as
+          the bounding box itself
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy via color differentiation; seed points guide
-          viewer understanding; effective spatial narrative
+        passed: false
+        comment: Partition displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -123,28 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Voronoi diagram visualization with proper spatial partitioning
+        comment: Voronoi diagram, single partition, no overlays
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shows seed points, cell boundaries, colored regions, clipped to bounding
-          box
+        comment: Clipped to box (C1), straight convex edges (C2), seeds inside own
+          cells (C3), adjacent cells differ (C4), no overlays (C6)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates correct; axes display full data range (0–100)
+        comment: Seeds at their exact coordinates; full 0–100 box shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Correct title format: ''voronoi-basic · seaborn · anyplot.ai'''
+        comment: Correct title format; legend N/A
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -152,19 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All Voronoi aspects shown: cells, edges, seed points, spatial regions'
+        comment: Interior cells, clipped border cells, clustered small and large cells
+          all shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Synthetic but plausible spatial data; neutral context with km units
+        comment: Abstract coordinate plane with generic labels (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range 0–100 km is sensible for territorial/service area analysis
+        comment: 20 seeds within the spec's 10–50; 0–100 km box sensible; no Check
+          values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -174,50 +185,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; straightforward implementation
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic results
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib, numpy, pandas, seaborn, scipy'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; proper implementation
+        comment: Helper-seed + clip-path approach is compact; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current API
+        comment: plot-{THEME}.png at dpi 400, default bbox
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Good use of sns.set_theme, sns.set_context, sns.set_palette, sns.scatterplot;
-          matplotlib.patches used appropriately for geometry
+        comment: sns.set_theme rc and sns.scatterplot(data=df) as the library prompt
+          mandates
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Standard seaborn theming and palette features; scipy.spatial.Voronoi
-          is not seaborn-specific
+        comment: Nothing seaborn-specific beyond the mandated theming; geometry is
+          matplotlib/scipy
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T06:42:49Z'
 impl_tags:
   dependencies:
   - scipy
@@ -229,4 +243,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - publication-ready
+  - edge-highlighting
