@@ -2,45 +2,51 @@ library: altair
 language: python
 specification_id: indicator-rsi
 created: '2026-01-07T20:20:20Z'
-updated: '2026-05-16T16:56:04Z'
-generated_by: claude-haiku
-workflow_run: 25967325906
+updated: '2026-11-22T02:04:59Z'
+generated_by: claude-sonnet
+workflow_run: 44973872613
 issue: 3229
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - Excellent theme adaptation with perfect text contrast in both light and dark renders
-  - Clean altair layering combining multiple chart types (line, rectangles, threshold
-    rules)
-  - Realistic RSI data showing proper oscillation across overbought/oversold zones
-  - 'Strong code quality: deterministic seed, clean structure, idiomatic altair patterns'
-  - Professional layout with clear legend, descriptive axis labels, and explanatory
-    subtitle
-  - All required spec features present and well-implemented
+  - 'RSI line in brand green #009E73 stands out clearly from the dashed level lines
+    and tinted zones in both themes'
+  - 'Semantic zone coloring: overbought in matte red #AE3030, oversold in Imprint
+    blue, centerline in the neutral INK_SOFT token'
+  - Wilder-smoothed RSI computed honestly, with the line starting only once the 14-period
+    lookback is filled
+  - Native altair legend for the threshold rules via a nominal color encoding with
+    stroke symbols
+  - Lookback period noted in the subtitle; fully theme-adaptive chrome with readable
+    text in both renders
+  - HTML output carries date/RSI tooltips
   weaknesses:
-  - 'RSI line uses #0072B2 (Okabe-Ito position 3) instead of #009E73 (position 1/brand
-    green); spec allows blue but style guide requires first series = #009E73 — consider
-    changing to brand green for strict compliance'
+  - 'VQ-05 (both): the 560x290 inner view fills only about 70 % of the canvas width
+    and 65 % of its height, leaving wide empty padding bands → the landscape inner
+    view of about 620x320 (+60 x +30). Likely cause: .properties(width=560, height=290).'
+  - 'Suggestion: the legend title ''14-period levels'' reads as if the thresholds
+    depended on the lookback; a title such as ''RSI levels'' would keep the lookback
+    note in the subtitle only.'
+  - 'Suggestion: start the x-axis domain at the first computed RSI value to trim the
+    empty first two weeks.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Dark text throughout (title, axis labels "RSI Value"/"Date", tick labels, legend) — all clearly readable on light background
-      Data: RSI line in teal/blue (#0072B2), semi-transparent green zone (0-30, oversold), semi-transparent red zone (70-100, overbought), dashed threshold lines at 30/50/70 — all clearly distinguishable
-      Grid: Subtle at 10% opacity, visible but not dominant
-      Legibility verdict: PASS — all text readable, no contrast failures
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: centered bold title 'indicator-rsi · python · altair · anyplot.ai' with gray subtitle '14-period RSI with overbought and oversold zones'; y-axis 'RSI value' 0-100 in steps of 10, x-axis 'Date' with monthly ticks Jan-May 2024; boxed legend '14-period levels' on the right listing Oversold (30), Centerline (50), Overbought (70). All text dark and readable.
+      Data: green #009E73 RSI line from mid-January to mid-May, dipping below 30 in April and touching 70 in February; light red tint 70-100, light blue tint 0-30; dashed red 70, blue 30 and dark-gray 50 lines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Light text throughout (title, axis labels, tick labels, legend) — all clearly readable on dark background; NO dark-on-dark failures
-      Data: RSI line color identical to light render (#0072B2), zone colors identical (green/red), threshold line colors identical — proper data color invariance across themes
-      Grid: Subtle at 10% opacity, visible and well-integrated
-      Legibility verdict: PASS — all text readable with excellent contrast against dark surface; no dark-on-dark issues
+      Background: warm near-black #1A1A17.
+      Chrome: title in near-white, subtitle, ticks and legend labels in light gray, legend box on #242420; grid faint but visible; no dark-on-dark text.
+      Data: identical green line, red and blue zone tints and dashed levels; centerline flips to light gray.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -51,65 +57,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly set; perfectly readable in both themes
+        comment: Font sizes set explicitly (title 16, subtitle 11, axis titles 12,
+          ticks/legend 10 at scale 4); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping elements; legend well-placed
+        comment: No text collisions; legend sits outside the plot area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly visible and well-adapted to density
+        comment: 1.8 px green line clearly visible over both tinted zones; legend
+          stroke glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Excellent contrast; CVD-safe Okabe-Ito palette
+        comment: Zones separated by position and labels as well as red/blue hue; good
+          contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Optimal use of space; balanced margins
+        comment: Canvas 3200x1800 (gate passed), but the 560x290 inner view leaves
+          wide empty bands around the chart (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context; subtitle explains methodology
+        comment: '''Date'' and ''RSI value'' are reader text; RSI is unitless'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'RSI line uses #0072B2 instead of #009E73; theme chrome perfect'
+        passed: true
+        comment: 'RSI line #009E73; overbought zone/line matte red #AE3030 (semantic),
+          oversold #4467A3; centerline INK_SOFT; backgrounds #FAF8F1/#1A1A17'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured defaults; intentional but not exceptional
+        comment: Clear title/subtitle hierarchy with subtitle in INK_SOFT, legend
+          on elevated surface, consistent dashed level styling
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Some customization; mostly library defaults
+        comment: Thin 1.2 px dashed levels kept subordinate to the 1.8 px line, grid
+          at 0.10 opacity, monthly x ticks chosen for the 140-day window
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Zone shading guides interpretation; visual hierarchy present
+        passed: false
+        comment: Data and the requested zones displayed; no extra hierarchy beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -119,25 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct technical indicator chart
+        comment: Correct RSI oscillator chart, standalone panel as allowed
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: RSI line, zones, thresholds, centerline'
+        comment: Fixed 0-100 axis, 30/70 lines, optional 50 centerline, both zones
+          shaded, 14-period lookback noted in subtitle and legend title (C1-C4 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct axes; all data visible
+        comment: Line drawn at computed values, starting once the lookback is filled;
+          all data within axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: Title 'indicator-rsi · python · altair · anyplot.ai'; legend labels
+          name each level
     data_quality:
       score: 15
       max: 15
@@ -147,19 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full RSI behavior across zones
+        comment: Line crosses 50 repeatedly, dips below 30 in April and touches 70
+          in February
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible 140-day stock data; neutral scenario
+        comment: Plausible daily-RSI scenario over 140 trading days, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct proportions and values
+        comment: 'Checked: Wilder smoothing with SMA seed over 14 periods (lines 47-53),
+          RSI = 100 - 100/(1+RS); values stay in 0-100'
     code_quality:
       score: 10
       max: 10
@@ -169,54 +188,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow; no over-engineering
+        comment: Linear zones, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for deterministic output
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering
+        comment: Concise; zones built from one comprehension
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG/HTML output format
+        comment: Saves plot-{THEME}.png and .html, pads to target without cropping
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of altair API: marks, layering, encodings'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Multi-mark layering, custom legend, theme-aware config
+        comment: Layered alt.Chart composition, shared Scale object, escaped fields
+          with explicit types, configure_* theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Nominal color encoding on mark_rule produces a native stroke-symbol
+          legend for the levels; HTML tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T02:01:00Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
