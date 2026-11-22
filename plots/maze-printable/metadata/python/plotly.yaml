@@ -2,12 +2,12 @@ library: plotly
 language: python
 specification_id: maze-printable
 created: '2026-01-07T20:21:47Z'
-updated: '2026-05-16T15:03:05Z'
-generated_by: claude-haiku
-workflow_run: 25964755764
+updated: '2026-11-22T01:38:51Z'
+generated_by: claude-sonnet
+workflow_run: 44971983223
 issue: 3232
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/plotly/plot-light.html
@@ -15,30 +15,36 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-prin
 quality_score: 85
 review:
   strengths:
-  - Perfect theme adaptation with identical data colors across light/dark renders
-  - Excellent clarity in light theme with black-on-white contrast ideal for printing
-  - Correct DFS maze algorithm guaranteeing single solution path
-  - Clean, reproducible code with explicit random seed
-  - All specification requirements met precisely
-  - Good use of annotations with arrows to guide viewer
+  - All 1,300-odd wall tiles are drawn as one SVG path layout shape, so the walls
+    render seamlessly without the hairline seams that per-cell rectangles leave
+  - Walls and passages are equal-width tiles, giving thick, print-friendly walls and
+    passages wide enough for a pencil, with INK walls on the page in both themes for
+    strong contrast
+  - Depth-first carving over a spanning tree guarantees exactly one route; the entrance
+    and exit openings sit exactly under the START and GOAL arrows
+  - scaleanchor/constrain keep the cells square on the 2400×2400 canvas with an even
+    margin around the maze
+  - Maze parameters (WIDTH, HEIGHT, SEED) sit in one data block with a seeded default_rng,
+    so the puzzle is reproducible and easy to resize
   weaknesses:
-  - Dark theme contrast is lower than light theme (light gray walls on medium gray
-    passages)
+  - 'Suggestion: the start and goal share the brand green; a second Imprint hue for
+    GOAL (or a star glyph) would separate them even faster than the labels and positions
+    already do.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "maze-printable · plotly · anyplot.ai" in dark text (#1A1A17), START and GOAL labels in green (#009E73) with arrows - all perfectly readable
-      Data: Black maze walls (#1A1A17) on white passages with excellent contrast, 25×25 grid structure with clear paths
-      Legibility verdict: PASS - all elements perfectly readable in light theme
+      Background: warm off-white #FAF8F1 across the whole 2400×2400 canvas.
+      Chrome: title "maze-printable · python · plotly · anyplot.ai" centered at the top in near-black, about 54 % of the width; no axes, ticks, grid or legend (none expected).
+      Data: a 25×25 maze of near-black (#1A1A17) wall tiles, walls as thick as the passages, closed outer boundary with an opening at top-left and bottom-right. A bold green (#009E73) "START" label with a downward arrow points into the top-left opening; a green "GOAL" label with an upward arrow sits under the bottom-right opening. Even margin on all sides; nothing touches the edge.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title in light text (#F0EFE8), START and GOAL labels in green (#009E73) with arrows - all readable against dark background
-      Data: Light gray walls (#B8B7B0) on medium gray passages (#4A4A44) - visible but lower contrast than light render; maze structure remains clear
-      Legibility verdict: PASS - all text and maze structure readable despite lower contrast in dark theme. Data colors (#009E73) identical to light render, confirming proper theme adaptation.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink #F0EFE8, fully readable; no dark-on-dark text.
+      Data: identical maze with walls flipped to light ink #F0EFE8 on the dark page, strong contrast. START/GOAL markers in the same #009E73 as in the light render, clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -46,70 +52,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, START, GOAL all explicitly sized (36px, 32px) and perfectly
-          readable in both themes
+        comment: Title 17 px and bold START/GOAL 15 px at scale 4, all crisp in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: START above maze, GOAL below maze, title at top—zero overlap
+        comment: Labels sit outside the maze, title well clear
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Light theme has excellent black-on-white contrast; dark theme lower
-          contrast but maze clearly visible
+        comment: Thick walls in INK contrast strongly with passages in both themes;
+          arrows prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Uses #009E73 (Okabe-Ito position 1), colorblind-safe'
+        comment: Monochrome maze plus one green accent, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format appropriate for square maze, ~60% canvas fill, balanced
-          margins
+        comment: 2400×2400, square cells, even margins, maze fills about 73 % of the
+          width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format, START/GOAL labels descriptive
+        comment: 'N/A: no data axes by design; title correct'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First color #009E73, correct backgrounds, theme-appropriate chrome,
-          identical data colors'
+        comment: '#009E73 markers, correct page backgrounds, theme-correct ink'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Functional design, no custom palette or intentional sophistication
-          beyond defaults
+        passed: true
+        comment: Style-guide baseline, clean but nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Minimal customization, library defaults with appropriate axis hiding
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clear focal point (maze), visual hierarchy, color guides to start/goal
+        comment: Single-path walls with no tile seams; markers aligned exactly over
+          the openings
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: true
+        comment: 'Default: maze displayed, markers as the Notes prescribe'
     spec_compliance:
       score: 15
       max: 15
@@ -119,26 +124,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct maze puzzle visualization with DFS single-solution guarantee
+        comment: Printable rectangular maze, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: maze generation, start marker, goal marker,
-          arrows'
+        comment: DFS single solution, marked start/goal, consistent thick walls, margins,
+          contrast in both themes (C1–C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Start at top-left, goal at bottom-right, structure correct
+        comment: Start top-left, goal bottom-right, cells on the grid
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, descriptive labels, no legend needed
+        comment: Mandated title format; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -148,19 +153,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete maze structure with all aspects
+        comment: Full maze with dead ends, winding corridors, entrance and exit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world use case (printable puzzles), educational, neutral
+        comment: Printable puzzle sheet, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25×25 grid practical for printable puzzle difficulty
+        comment: 25×25, the spec's example size
     code_quality:
       score: 10
       max: 10
@@ -170,56 +175,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward flow
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: default_rng(SEED)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly—all used
+        comment: os, numpy, plotly all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no over-engineering
+        comment: Slicing for cells, one path shape for walls
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: plot-{THEME}.png at 600×600 scale 4 plus HTML
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Figure() and shapes API correctly, follows patterns
+        comment: Layout shapes plus scaleanchor/constrain=domain for an equal-aspect
+          canvas
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses plotly annotations with arrows and theme-adaptive tokens
-    score_caps: []
+        comment: Plotly SVG path shape to draw the whole wall set as one element
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T01:35:23Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-shapes
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - publication-ready
