@@ -2,91 +2,104 @@ library: letsplot
 language: python
 specification_id: contour-3d
 created: '2026-05-16T12:53:05Z'
-updated: '2026-05-16T13:28:47Z'
-generated_by: claude-haiku
-workflow_run: 25962323414
+updated: '2026-11-22T01:22:47Z'
+generated_by: claude-sonnet
+workflow_run: 44970488302
 issue: 3230
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 78
 review:
   strengths:
-  - Excellent theme adaptation with correct background colors and readable text in
-    both renders
-  - Perfect data color consistency between light and dark (viridis identical)
-  - Clean, deterministic code with KISS structure and no functions/classes
-  - 'Complete feature coverage: colorbar, proper axis labels, grid control, semantic
-    fill mapping'
-  - Proper use of letsplot grammar of graphics with ggplot() + geom_tile()
+  - imprint_div built with scale_fill_gradient2(midpoint=0) and a theme-adaptive midpoint
+    fits the signed heights, with identical poles in both themes
+  - Native geom_contour(bins=12) gives regular-interval isolines in ink that stays
+    readable over the fill in both themes
+  - Correct 3200x1800 canvas via ggsize(800, 450) + scale=4, panel flush to the data
+    with expand=[0,0]
+  - 'Clean structure: column constants, a single Data block, explicit imports'
   weaknesses:
-  - 'DE-01: Generic styling with standard viridis and no custom design touches'
-  - 'DE-02: Minimal visual refinement; mostly library defaults'
-  - 'DE-03: No visual hierarchy or narrative emphasis to guide viewer interpretation'
-  - 'SC-01: 2D tile-based representation rather than true 3D surface as spec implies'
-  - 'LM-02: Limited use of distinctive letsplot features; generic usage'
+  - 'SC-01, SC-02 (both): the plot is a flat 2D heatmap with isolines seen from straight
+    above, so the field does not read as relief (C1) and the Notes'' rotation is missing
+    → draw the level curves lifted to their z heights in a 3D oblique view with all
+    three axes, lets-plot has no native 3D geom, so project the contour paths (stat
+    from geom_contour or computed levels) and the three axis lines through an oblique
+    view transform into screen x/y and draw them with geom_path. Likely cause: geom_tile
+    + geom_contour on the x-y plane.'
+  - 'DQ-02 (both): the axes are labelled ''X coordinate'', ''Y coordinate'' and ''Height
+    (z)'', which reads as a generic test function → a concrete scenario such as terrain
+    (''Easting (km)'', ''Northing (km)'', ''Elevation (m)''). Likely cause: the column
+    constants.'
+  - 'Suggestion: project the contours onto a base plane under the lifted level curves,
+    as the Notes suggest.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "contour-3d · letsplot · anyplot.ai" in dark (#1A1A17), axis labels "X Coordinate"/"Y Coordinate" in dark (#1A1A17), tick labels in soft gray (#4A4A44), colorbar labeled "Height (z)"
-      Data: 45×45 grid of tiles filled with viridis colormap (purple → cyan → green → yellow), representing a mathematical surface with peaks and valleys
-      Legibility verdict: PASS — all text readable, no contrast issues, grid subtle and appropriate
+      Background: warm off-white #FAF8F1, correct
+      Chrome: title 'contour-3d · python · letsplot · anyplot.ai' in dark ink; axis titles 'X coordinate'/'Y coordinate' and ticks -3..3 in soft ink; colorbar 'Height (z)' with ticks -0.5..1 on an elevated panel; panel framed, no grid; all readable
+      Data: 45x45 tile field in imprint_div — blue #4467A3 for the 1.5 peak at (1,1) and the 1.0 bump at (-1,-1), red #AE3030 for the -0.8 pit at (-1,1), near-page midpoint at 0; 12-bin contour lines in dark ink at alpha 0.7. A flat 2D top-down view, no 3D relief
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title in light (#F0EFE8), axis labels in light (#F0EFE8), tick labels in light gray (#B8B7B0), colorbar present and readable
-      Data: Viridis colormap identical to light render (proof of proper theme separation); tiles show identical patterns and value distributions
-      Legibility verdict: PASS — all text readable in light colors, no dark-on-dark failures, data colors unchanged from light render
+      Background: warm near-black #1A1A17, correct
+      Chrome: title, axis titles, ticks and colorbar text in light ink, readable; no dark-on-dark text
+      Data: same red/blue poles as light, midpoint flips to the dark page color as imprint_div specifies; contour lines in light ink, clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set; readable in both themes
+        comment: Title 16, axis titles 12, ticks and colorbar text 10 at 800x450;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No text collisions; colorbar sits clear of the panel
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tiles optimally sized for 45x45 grid
+        comment: Contour lines (INK at alpha 0.7) stand out from the fill in both
+          themes; colorbar gradient visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Red/blue diverging ramp is CVD-safe; contours add a non-color cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 4800x2700 landscape with balanced margins
+        comment: 3200x1800 canvas; panel fills the canvas with balanced margins, title
+          ~45% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with clear semantic meaning
+        comment: 'X coordinate / Y coordinate / Height (z): descriptive for a unitless
+          function'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap + theme-correct backgrounds and text
+        comment: 'imprint_div (#AE3030 / theme page midpoint / #4467A3) centred at
+          0 for signed heights; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 9
       max: 20
@@ -96,49 +109,54 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default; no custom design touches
+        comment: 'Style-guide baseline: tokens, explicit sizes; nothing beyond'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Some grid customization; mostly library defaults
+        comment: Panel flush to the data with expand=[0,0] and the grid dropped for
+          the filled field, so the frame encloses exactly the surface
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no narrative emphasis or hierarchy
+        comment: Field displayed; no hierarchy chosen beyond the data
     spec_compliance:
-      score: 14
+      score: 10
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Correct contour representation; 2D rather than true 3D
+        passed: false
+        comment: 'A flat 2D heatmap with isolines, a related but different form: no
+          3D surface, no lifted level curves, no oblique view (defect line)'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: 'All features present: contours, isolines, colorbar, grid'
+        comment: C1 (relief in three dimensions, oblique view, three axes) and the
+          Notes' rotation are missed; regular-interval contours (C2) and the colorbar
+          (C4) are present (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped; all data visible
+        comment: x, y, z mapped correctly; full grid shown edge to edge
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar labeled
+        comment: Title 'contour-3d · python · letsplot · anyplot.ai' correct; colorbar
+          titled 'Height (z)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -146,19 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows multiple peaks, valleys, saddle regions
+        comment: 'Two peaks, a pit, a saddle and a gentle tilt: varied relief for
+          level curves'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Mathematical function with real-world applications
+        comment: Abstract coordinates and 'Height (z)' read as a generic test function
+          (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions physically sound
+        comment: 'Checked: peak 1.5 at (1,1), pit about -0.8 at (-1,1), colorbar range
+          -0.8..1.5 matches the formula'
     code_quality:
       score: 10
       max: 10
@@ -168,33 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions/classes
+        comment: Imports, constants, Data block, Plot, Save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data
+        comment: Deterministic analytic surface
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used, explicit names
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering
+        comment: Concise; meshgrid + ravel, native contour stat
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming and format
+        comment: ggsave plot-{THEME}.png (scale=4) and .html with path='.'
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -202,21 +223,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot() + geom_tile() + theme() patterns
+        comment: Native geom_contour(bins=) stat and scale_fill_gradient2(midpoint=0)
+          instead of hand-computed levels
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Generic usage; limited distinctive letsplot features
+        comment: Standard grammar-of-graphics layers; nothing distinctive to lets-plot
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-22T01:18:40Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - colorbar
+  - contour-lines
+  - heatmap
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - column-constants
+  dataprep:
+  - meshgrid
   styling:
-  - custom-colormap
-  - grid-styling
+  - diverging-colormap
+  - alpha-blending
+  - theme-adaptive
