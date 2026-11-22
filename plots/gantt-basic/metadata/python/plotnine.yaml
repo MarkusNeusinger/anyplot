@@ -2,46 +2,51 @@ library: plotnine
 language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:21:04Z'
-updated: '2026-05-10T22:41:39Z'
-generated_by: claude-haiku
-workflow_run: 25641632268
+updated: '2026-11-22T00:03:29Z'
+generated_by: claude-sonnet
+workflow_run: 44964278220
 issue: 2377
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and legibility in both themes
-  - Flawless spec compliance with correct chart type, features, data mapping, and
-    title format
-  - Excellent data quality with realistic project timeline and comprehensive feature
-    coverage
-  - Proper theme-adaptive chrome with identical data colors across light/dark renders
-  - Clean, idiomatic plotnine code with good structure and readability
+  - 'Idiomatic geom_segment Gantt: bars run exactly from start to end on a shared
+    date axis, sorted by start date into a clean staircase'
+  - Full eight-position Imprint palette with scale_color_manual limits in data order,
+    so the legend reads Planning → Deployment in schedule order
+  - Theme tokens threaded through every chrome element; both renders readable with
+    identical data colors
+  - 'Adaptable structure: column constants and a self-contained Data block; the current-date
+    line is computed from the data'
   weaknesses:
-  - Design Excellence is solid but conservative—could benefit from more sophisticated
-    visual refinement or intentional hierarchy beyond color grouping
-  - Library Mastery is competent but not exceptional—uses core plotnine patterns well
-    but doesn't leverage distinctive features creatively
+  - 'VQ-05 (both): the legend entry ''Development'' runs into the right edge of the
+    legend frame, leaving no padding, while the frame itself sits about 20 px from
+    the canvas edge → keep at least a few px of padding inside the frame (for example
+    legend_key_spacing or a slightly smaller legend_text, -1 pt). Likely cause: legend_position=''right''
+    with the framed legend_background and no legend padding set.'
+  - 'Suggestion: the legend key backgrounds draw faint rectangles behind each swatch
+    (visible in the dark render); legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG)
+    would remove them.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title bold and dark, axis labels "Date" and "Task" clearly visible, task names and dates readable, legend properly positioned on right
-      Data: 10 horizontal bars in Okabe-Ito colors - Planning (#009E73), Design (#D55E00), Development (#0072B2), QA (#CC79A7), Deployment (#E69F00). Dashed vertical line marks current date (2025-02-10). All bars clearly distinguishable.
-      Legibility verdict: PASS - All text perfectly readable against light background
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: bold dark title "gantt-basic · python · plotnine · anyplot.ai" centered; axis titles "Date" and "Task" in dark ink; task names and 45°-rotated ISO date ticks (2025-01-15 … 2025-03-15) in soft ink; subtle vertical grid; framed legend "Phase" on the right on an elevated background. All readable.
+      Data: 10 horizontal bars stepping down by start date: Requirements green #009E73 (Planning), UI Design and Backend Architecture purple (Design), Database Setup to Integration blue (Development), Testing and Documentation ochre (QA), Deployment red (Deployment). Dashed semi-transparent vertical today line at about Feb 12/13 crossing API and Frontend Development.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title and axis labels rendered in light text, all fully readable against dark background, no dark-on-dark failures detected
-      Data: Identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00) confirming theme-independent data colors. Dashed line visible.
-      Legibility verdict: PASS - All text perfectly readable against dark background, no legibility issues
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks and task names in light grey; legend frame light grey on #242420. No dark-on-dark text; the 'Development' legend entry touches the legend frame's right edge, as in the light render.
+      Data: bar colors identical to the light render; brand green clearly visible; dashed today line in light ink at the same position.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,65 +54,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, perfect readability in both themes
+        comment: All sizes explicit at the library prompt's reference (title 12, axis
+          titles 10, ticks 8, legend 9/8); INK/INK_SOFT text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, proper spacing on x-axis dates and y-axis tasks
+        comment: Rotated date ticks clear of each other; task labels one per row;
+          no text on data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars optimally sized for 10-task density
+        comment: 10 bars at segment size 6 are prominent; legend swatches match the
+          bar colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety and good contrast
+        comment: Five Imprint hues, distinct in lightness and hue; category also readable
+          from row position
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills 65% of canvas with balanced margins
+        comment: 3200x1800 canvas, balanced plot area; the legend entry 'Development'
+          runs into the legend frame's right edge (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels and correct title format
+        comment: '''Date'' and ''Task'' are reader text; a time axis needs no unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order followed, theme chrome correct'
+        comment: 'Full eight-position Imprint list, Planning (first category) #009E73,
+          canonical order; backgrounds #FAF8F1 / #1A1A17; data colors identical across
+          themes'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Professional palette and hierarchy, well-configured but conservative
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, clean whitespace, minimal customization
+        comment: Y grid removed and x grid subtle as the style guide asks; nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Color grouping and current date marker create narrative
+        comment: Phase colors and today line are what the Notes prescribe; no further
+          hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -117,25 +131,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart implementation
+        comment: 'Basic Gantt: task bars, category color and the allowed current-date
+          line only'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Tasks, dates, category coloring, current date marker all present
+        comment: C1 bars start-to-end on a shared time axis; C2 sorted by start date,
+          staircase; C3 one thickness with gaps, legend per phase; C4 ISO date ticks
+          at half-month steps; C5 nothing beyond the basic variant
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Date, Y=Task, Color=Category, all data visible
+        comment: x = start/end, y = task; all bars inside the axis range, marks at
+          their dates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: Title 'gantt-basic · python · plotnine · anyplot.ai'; legend 'Phase'
+          with entries in schedule order
     data_quality:
       score: 15
       max: 15
@@ -145,19 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varying durations, overlapping tasks, multiple phases
+        comment: Overlapping tasks, varied durations, five phases, parallel tasks
+          starting the same day
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real software development project, neutral and comprehensible
+        comment: Software project schedule with real task names; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic timeline and task durations
+        comment: 1-4 week tasks over ~11 weeks, plausible; no check values in the
+          spec; checked that the today line (midpoint, ~Feb 12/13) falls out of the
+          computation on line 108
     code_quality:
       score: 10
       max: 10
@@ -167,55 +189,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports, data, plot, save'
+        comment: 'Six zones: tokens, column constants, Data block, Plot, Save; no
+          functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic date data
+        comment: Deterministic dates
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unnecessary dependencies
+        comment: Every plotnine import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi 400
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper ggplot API usage with aes, geoms, and theme
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_segment and geom_vline appropriately, theme-adaptive colors
+        comment: Correct grammar-of-graphics usage (geom_segment, scale_*, theme);
+          default
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-22T00:00:07Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - reference-lines
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
-  - alpha-blending
+  - theme-adaptive
+  - minimal-chrome
