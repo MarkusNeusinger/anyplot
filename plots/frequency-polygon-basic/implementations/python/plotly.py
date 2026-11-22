@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-17
@@ -7,6 +7,7 @@ Quality: 91/100 | Updated: 2026-05-17
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -16,112 +17,85 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26, 26, 23, 0.2)" if THEME == "light" else "rgba(240, 239, 232, 0.2)"
+GRID = "rgba(26, 26, 23, 0.15)" if THEME == "light" else "rgba(240, 239, 232, 0.15)"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
-OKABE_VERMILLION = "#C475FD"  # Okabe-Ito position 2
-OKABE_BLUE = "#4467A3"  # Okabe-Ito position 3
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Reaction times (ms) for three experimental conditions
-np.random.seed(42)
+# Constants
+N_BINS = 20  # bins shared by every group
+FILL_ALPHA = 0.2
+LINE_DASHES = ["solid", "solid", "dash", "dot"]  # style is the second cue besides color
 
-# Control group - normal distribution centered around 350ms
-control = np.random.normal(loc=350, scale=60, size=200)
+# Columns: set these to your table's column names
+DELIVERY_TIME = "Delivery time (min)"  # role: values
+COURIER = "Courier"  # role: group
 
-# Caffeine group - faster reactions, centered around 280ms
-caffeine = np.random.normal(loc=280, scale=50, size=200)
+# Data: replace this block with your own table, for example df = pd.read_csv("deliveries.csv")
+rng = np.random.default_rng(42)
+df = pd.DataFrame(
+    {
+        DELIVERY_TIME: np.concatenate(
+            [
+                rng.normal(loc=22, scale=5, size=300),
+                rng.normal(loc=36, scale=8, size=300),
+                rng.lognormal(mean=np.log(52), sigma=0.3, size=300),
+            ]
+        ),
+        COURIER: ["Bike courier"] * 300 + ["Van fleet"] * 300 + ["Postal service"] * 300,
+    }
+)
 
-# Sleep deprived group - slower and more variable reactions
-sleep_deprived = np.random.normal(loc=450, scale=90, size=200)
+# Plot: reads only df and the constants above
+# One set of bin edges for all groups, so every polygon has its vertices at the same x positions
+edges = np.linspace(df[DELIVERY_TIME].min(), df[DELIVERY_TIME].max(), N_BINS + 1)
+width = edges[1] - edges[0]
+centers = (edges[:-1] + edges[1:]) / 2
+# Close each polygon on the baseline one bin beyond the first and last midpoint
+x_closed = np.concatenate([[centers[0] - width], centers, [centers[-1] + width]])
 
-# Define consistent bins for all groups
-bin_edges = np.linspace(100, 700, 31)
-bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-
-# Calculate frequency for each group
-control_freq, _ = np.histogram(control, bins=bin_edges)
-caffeine_freq, _ = np.histogram(caffeine, bins=bin_edges)
-sleep_deprived_freq, _ = np.histogram(sleep_deprived, bins=bin_edges)
-
-# Extend to zero at both ends to close polygon
-extended_centers = np.concatenate([[bin_edges[0]], bin_centers, [bin_edges[-1]]])
-control_extended = np.concatenate([[0], control_freq, [0]])
-caffeine_extended = np.concatenate([[0], caffeine_freq, [0]])
-sleep_deprived_extended = np.concatenate([[0], sleep_deprived_freq, [0]])
-
-# Create figure
 fig = go.Figure()
-
-# Add frequency polygons with semi-transparent fill
-fig.add_trace(
-    go.Scatter(
-        x=extended_centers,
-        y=control_extended,
-        mode="lines+markers",
-        name="Control",
-        line={"color": BRAND, "width": 4},
-        marker={"size": 10, "color": BRAND},
-        fill="tozeroy",
-        fillcolor="rgba(0, 158, 115, 0.2)",
+for i, (group, rows) in enumerate(df.groupby(COURIER, sort=False)):
+    counts, _ = np.histogram(rows[DELIVERY_TIME], bins=edges)
+    color = IMPRINT_PALETTE[i]
+    r, g, b = (int(color[k : k + 2], 16) for k in (1, 3, 5))
+    fig.add_trace(
+        go.Scatter(
+            x=x_closed,
+            y=np.concatenate([[0], counts, [0]]),
+            mode="lines+markers",
+            name=str(group),
+            line={"color": color, "width": 3, "dash": LINE_DASHES[i % len(LINE_DASHES)]},
+            marker={"size": 7, "color": color},
+            fill="tozeroy",
+            fillcolor=f"rgba({r}, {g}, {b}, {FILL_ALPHA})",
+        )
     )
-)
 
-fig.add_trace(
-    go.Scatter(
-        x=extended_centers,
-        y=caffeine_extended,
-        mode="lines+markers",
-        name="Caffeine",
-        line={"color": OKABE_VERMILLION, "width": 4},
-        marker={"size": 10, "color": OKABE_VERMILLION},
-        fill="tozeroy",
-        fillcolor="rgba(196, 117, 253, 0.2)",
-    )
-)
-
-fig.add_trace(
-    go.Scatter(
-        x=extended_centers,
-        y=sleep_deprived_extended,
-        mode="lines+markers",
-        name="Sleep Deprived",
-        line={"color": OKABE_BLUE, "width": 4, "dash": "dash"},
-        marker={"size": 10, "color": OKABE_BLUE},
-        fill="tozeroy",
-        fillcolor="rgba(68, 103, 163, 0.2)",
-    )
-)
-
-# Update layout with theme-adaptive colors
+# Style
 fig.update_layout(
-    title={
-        "text": "frequency-polygon-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    width=800,
+    height=450,
+    title={"text": "frequency-polygon-basic · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}},
     xaxis={
-        "title": {"text": "Reaction Time (ms)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
-        "showgrid": True,
+        "title": {"text": DELIVERY_TIME, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
-        "gridwidth": 1,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
-        "range": [80, 720],
     },
     yaxis={
-        "title": {"text": "Frequency", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
-        "showgrid": True,
+        "title": {"text": "Frequency (deliveries)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
-        "gridwidth": 1,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
+        "rangemode": "tozero",
     },
     legend={
-        "font": {"size": 16, "color": INK_SOFT},
+        "title": {"text": COURIER, "font": {"size": 10, "color": INK}},
+        "font": {"size": 10, "color": INK_SOFT},
         "x": 0.98,
         "y": 0.98,
         "xanchor": "right",
@@ -132,9 +106,9 @@ fig.update_layout(
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin={"l": 80, "r": 60, "t": 100, "b": 80},
+    font={"color": INK},
+    margin={"l": 70, "r": 40, "t": 60, "b": 60},
 )
 
-# Save as PNG and HTML with theme suffix
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
