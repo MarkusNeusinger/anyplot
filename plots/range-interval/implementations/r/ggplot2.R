@@ -16,7 +16,7 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
-BRAND       <- "#009E73"  # Okabe-Ito position 1 — first categorical series
+BRAND       <- "#009E73"  # Imprint palette position 1 — first categorical series
 
 # --- Data -------------------------------------------------------------------
 df <- data.frame(
@@ -31,19 +31,19 @@ df <- data.frame(
 p <- ggplot(df, aes(x = month, ymin = min_temp, ymax = max_temp)) +
   geom_linerange(
     color = BRAND,
-    linewidth = 5.5,
+    linewidth = 2.8,
     alpha = 0.85
   ) +
   geom_point(
     aes(y = min_temp),
     color = BRAND,
-    size = 3.5,
+    size = 2.2,
     alpha = 0.95
   ) +
   geom_point(
     aes(y = max_temp),
     color = BRAND,
-    size = 3.5,
+    size = 2.2,
     alpha = 0.95
   ) +
   labs(
@@ -51,7 +51,7 @@ p <- ggplot(df, aes(x = month, ymin = min_temp, ymax = max_temp)) +
     x = "Month",
     y = "Temperature (°C)"
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
@@ -59,15 +59,15 @@ p <- ggplot(df, aes(x = month, ymin = min_temp, ymax = max_temp)) +
     panel.grid.minor = element_blank(),
     panel.grid.major.y = element_line(
       color = INK_SOFT,
-      linewidth = 0.2
+      linewidth = 0.1
     ),
     panel.border = element_blank(),
-    axis.title = element_text(color = INK, size = 20),
-    axis.text = element_text(color = INK_SOFT, size = 16),
-    axis.ticks = element_line(color = INK_SOFT, linewidth = 0.4),
-    axis.line.y = element_line(color = INK_SOFT, linewidth = 0.4),
+    axis.title = element_text(color = INK, size = 10),
+    axis.text = element_text(color = INK_SOFT, size = 8),
+    axis.ticks = element_line(color = INK_SOFT, linewidth = 0.25),
+    axis.line.y = element_line(color = INK_SOFT, linewidth = 0.25),
     axis.line.x = element_blank(),
-    plot.title = element_text(color = INK, size = 24),
+    plot.title = element_text(color = INK, size = 12),
     legend.position = "none"
   )
 
@@ -76,8 +76,8 @@ ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 16,
-  height   = 9,
+  width    = 8,
+  height   = 4.5,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
