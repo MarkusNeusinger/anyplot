@@ -1,7 +1,7 @@
 """ anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-17
+Quality: 73/100 | Updated: 2026-05-17
 """
 
 import os
