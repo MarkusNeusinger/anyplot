@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-17
@@ -11,6 +11,7 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_blank,
     element_line,
     element_rect,
     element_text,
@@ -34,82 +35,79 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+RULE = "#E4E1D8" if THEME == "light" else "#33332E"  # solid hex: lets-plot ignores rgba alpha in grid colors
 
-# Okabe-Ito palette for up/down
-UP_COLOR = "#009E73"  # Brand green (position 1)
-DOWN_COLOR = "#AE3030"  # imprint red — down bars
+# Imprint palette: position 1 for up bars, position 5 (red) for down bars
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+UP_COLOR = IMPRINT_PALETTE[0]
+DOWN_COLOR = IMPRINT_PALETTE[4]
 
-# Data: Generate 50 trading days of OHLC data
-np.random.seed(42)
-n_days = 50
-dates = pd.date_range("2024-06-01", periods=n_days, freq="B")
+# Constants
+TICK_OFFSET = pd.Timedelta(hours=8)  # length of the open / close ticks, shorter than half a trading day
 
-# Simulate price movements with random walk
-price = 150.0
-opens, highs, lows, closes = [], [], [], []
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+OPEN = "Open (USD/t)"  # role: open
+HIGH = "High (USD/t)"  # role: high
+LOW = "Low (USD/t)"  # role: low
+CLOSE = "Close (USD/t)"  # role: close
+DIRECTION = "Direction"  # role: extra
 
-for _ in range(n_days):
-    daily_return = np.random.normal(0, 0.02)
-    daily_volatility = np.random.uniform(0.01, 0.03)
+# Data: replace this block with your own table, for example df = pd.read_csv("copper.csv")
+# Daily copper futures, a random walk where each open is the prior close
+rng = np.random.default_rng(2025)
+n_days = 60
+dates = pd.date_range("2025-09-01", periods=n_days, freq="B")
+returns = rng.normal(0.0004, 0.012, n_days)
+ranges = rng.uniform(0.004, 0.016, (n_days, 2))
+closes = 9800.0 * np.cumprod(1 + returns)
+opens = np.concatenate([[9800.0], closes[:-1]])
+df = pd.DataFrame(
+    {
+        DATE: dates,
+        OPEN: opens,
+        HIGH: np.maximum(opens, closes) * (1 + ranges[:, 0]),
+        LOW: np.minimum(opens, closes) * (1 - ranges[:, 1]),
+        CLOSE: closes,
+    }
+)
 
-    open_price = price
-    close_price = price * (1 + daily_return)
-    high_price = max(open_price, close_price) * (1 + daily_volatility)
-    low_price = min(open_price, close_price) * (1 - daily_volatility)
-
-    opens.append(open_price)
-    highs.append(high_price)
-    lows.append(low_price)
-    closes.append(close_price)
-
-    price = close_price
-
-df = pd.DataFrame({"date": dates, "open": opens, "high": highs, "low": lows, "close": closes})
-
-# Add direction for coloring
-df["direction"] = np.where(df["close"] >= df["open"], "up", "down")
-
-# Calculate tick offsets (in milliseconds for datetime axis)
-tick_offset = pd.Timedelta(hours=8)
-df["date_left"] = df["date"] - tick_offset
-df["date_right"] = df["date"] + tick_offset
-
-# Build OHLC bar chart using segments
-# 1. Vertical line from low to high
-# 2. Left tick at open price
-# 3. Right tick at close price
+# Plot: reads only df and the constants above
+df[DIRECTION] = np.where(df[CLOSE] >= df[OPEN], "Up", "Down")
+df["date_left"] = df[DATE] - TICK_OFFSET
+df["date_right"] = df[DATE] + TICK_OFFSET
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major_y=element_line(color=RULE, size=0.3),
     panel_grid_major_x=element_line(color=RULE, size=0.3),
-    axis_title=element_text(size=20, color=INK),
-    axis_text=element_text(size=16, color=INK_SOFT),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(size=12, color=INK),
+    axis_text=element_text(size=10, color=INK_SOFT),
     axis_line=element_line(color=INK_SOFT, size=0.5),
-    plot_title=element_text(size=24, color=INK),
+    plot_title=element_text(size=16, color=INK),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(size=16, color=INK_SOFT),
-    legend_title=element_text(size=18, color=INK),
+    legend_text=element_text(size=10, color=INK_SOFT),
+    legend_title=element_text(size=12, color=INK),
 )
 
 plot = (
-    ggplot()
-    # High-Low vertical line
-    + geom_segment(aes(x="date", y="low", xend="date", yend="high", color="direction"), data=df, size=1.2)
-    # Open tick (left)
-    + geom_segment(aes(x="date_left", y="open", xend="date", yend="open", color="direction"), data=df, size=1.5)
-    # Close tick (right)
-    + geom_segment(aes(x="date", y="close", xend="date_right", yend="close", color="direction"), data=df, size=1.5)
-    + scale_color_manual(values={"up": UP_COLOR, "down": DOWN_COLOR}, name="Direction")
+    ggplot(df)
+    # High-low vertical line
+    + geom_segment(aes(x=DATE, y=LOW, xend=DATE, yend=HIGH, color=DIRECTION), size=0.9)
+    # Open tick to the left
+    + geom_segment(aes(x="date_left", y=OPEN, xend=DATE, yend=OPEN, color=DIRECTION), size=1.1)
+    # Close tick to the right
+    + geom_segment(aes(x=DATE, y=CLOSE, xend="date_right", yend=CLOSE, color=DIRECTION), size=1.1)
+    + scale_color_manual(values={"Up": UP_COLOR, "Down": DOWN_COLOR}, name=DIRECTION)
     + scale_x_datetime(format="%b %d")
-    + labs(title="ohlc-bar · letsplot · anyplot.ai", x="Date", y="Price (USD)")
+    + labs(title="Copper Futures · ohlc-bar · python · letsplot · anyplot.ai", x=DATE, y="Price (USD per tonne)")
     + theme_minimal()
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x for 4800 × 2700 px) and HTML
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save as PNG (scale 4x for 3200 × 1800 px) and HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
