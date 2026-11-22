@@ -2,44 +2,53 @@ library: letsplot
 language: python
 specification_id: kagi-basic
 created: '2026-01-08T22:38:03Z'
-updated: '2026-05-17T08:20:45Z'
-generated_by: claude-haiku
-workflow_run: 25985451870
+updated: '2026-11-22T04:00:00Z'
+generated_by: claude-sonnet
+workflow_run: 44982652235
 issue: 3341
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 80
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing (24pt title, 20pt labels, 16pt
-    ticks)
-  - Excellent theme implementation with warm backgrounds and proper text contrast
-    in both renders
-  - Strong spec compliance with all Kagi features (thick/thin lines, shoulders/waists,
-    semantic colors)
-  - Clean code with deterministic data, KISS structure, and proper letsplot API usage
-  - Identical data colors across light and dark renders with only chrome adaptation
+  - 'Thick yang / thin yin segments in Imprint green #009E73 and red #AE3030, weight
+    and color agreeing everywhere'
+  - 'Correct theme-adaptive chrome: readable title, axis titles and ticks on both
+    #FAF8F1 and #1A1A17'
+  - Construction x-axis labelled 'Line index' with one even column per reversal
+  - 'Adaptable layout: column constants and a marked Data block, CLOSE reused as the
+    y-axis title'
   weaknesses:
-  - Design Excellence could be improved by removing top/right spines for enhanced
-    minimalism
-  - Library Mastery uses generic ggplot-style approach; letsplot-specific interactive
-    features not leveraged
+  - 'SC-02 (both): thickness flips at every reversal instead of where the line crosses
+    the previous shoulder or waist (C2): the rise at line index 2 (82 → 87) is drawn
+    thick although it stays far below the 110 shoulder, and the fall at index 1 is
+    thin from its top although it only drops below a previous waist near 82 → keep
+    the current weight until the price passes the previous shoulder (turn thick) or
+    waist (turn thin), splitting the vertical segment at that level. Likely cause:
+    line_type is set from the reversal direction in the loop, not from a shoulder/waist
+    comparison.'
+  - 'DE-02 (both): the panel is enclosed by a four-sided frame, so the top and right
+    spines the style guide removes by default are drawn → an L-shaped frame (left
+    and bottom only) or none. Likely cause: the panel border drawn by the theme; set
+    panel_border=element_blank() and keep axis_line.'
+  - 'Suggestion: richer tooltips in the HTML export (price range per segment) would
+    use lets-plot''s layer_tooltips.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme
-      Chrome: Title "kagi-basic · letsplot · anyplot.ai" in 24pt dark text, Y-axis "Price ($)" in 20pt, X-axis "Line Index" in 20pt, tick labels in 16pt - all clearly readable
-      Data: Thick green lines (#009E73) for uptrends (yang), thin red lines (#E74C3C) for downtrends (yin), horizontal segments at reversals - colors correct and visible
-      Legibility verdict: PASS - all elements readable with dark text on light background
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'kagi-basic · python · letsplot · anyplot.ai' top left in dark ink; y-axis 'Close price ($)', x-axis 'Line index', ticks 85–110 and 0–13 in INK_SOFT; subtle grid; four-sided panel frame
+      Data: one Kagi line over 14 columns; thick green #009E73 rising segments and shoulders, thin red #AE3030 falling segments and waists; last segment open at about 100
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme
-      Chrome: Title, axis labels, and tick labels all in light text (INK/INK_SOFT tokens) - clearly visible against dark background
-      Data: Identical colors to light render - thick green and thin red lines showing same trend reversals
-      Legibility verdict: PASS - all elements readable, no dark-on-dark text, brand green #009E73 vibrant
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink, all readable; no dark-on-dark text; grid subtle
+      Data: identical green and red segments and weights as the light render; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,69 +59,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        comment: Title 16, axis titles 12, ticks 10 set explicitly (library-prompt
+          reference); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all labels well-positioned
+        comment: No text collisions; segments never cover labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Segments optimally sized for density; thick and thin lines clearly
-          distinguishable
+        comment: Thick 2.5 vs thin 0.9 segments clearly different in weight on both
+          backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; CVD-safe; thickness adds non-hue distinction
+        comment: Green/red backed by line weight, so hue is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance; plot fills 60-70% of canvas; generous whitespace
+        comment: 3200x1800 canvas, balanced margins, title ~45% of width, nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price ($) with units; Line Index descriptive; title format correct
+        comment: '''Close price ($)'' with unit, ''Line index'' describes the construction
+          axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds correct; theme-adaptive chrome
-          perfect'
+        comment: 'Yang #009E73, yin Imprint red #AE3030; backgrounds #FAF8F1 / #1A1A17;
+          chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Semantic color coding shows intent; professional but not exceptional
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
         passed: false
-        comment: Good refinement; could improve by removing top/right spines
+        comment: Four-sided panel frame instead of the L-shaped/no-spine baseline
+          (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Color and thickness create clear hierarchy; trend reversals obvious
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -120,47 +133,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kagi chart implementation
+        comment: Correct Kagi chart, single line, no added layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: thick/thin lines, reversals, semantic colors'
+        passed: false
+        comment: Shoulders/waists, 4% reversal, green/red present; weight switches
+          per direction, not at shoulder/waist crossings (C2, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all data visible
+        comment: Verticals run between the turning price levels; x steps one column
+          per reversal; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct; no legend (appropriate)
+        comment: Title 'kagi-basic · python · letsplot · anyplot.ai' correct; no legend
+          needed
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Shows uptrends, downtrends, reversals; good variety
+        passed: true
+        comment: Many reversals of very different length, both trend states, open
+          last segment
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price scenario; 200 days, 4% reversal threshold
+        comment: Plausible daily closing prices over 200 business days with a 4% reversal
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range (82-111) is plausible
+        comment: 'Prices 82–110 around a 100 start: sensible for a stock; no Check
+          values in the Notes'
     code_quality:
       score: 10
       max: 10
@@ -170,13 +188,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean structure; no functions/classes
+        comment: Flat script; Data block and column constants marked
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -188,36 +206,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; appropriate complexity
+        comment: Straightforward loop; no available call computes Kagi segments
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert letsplot usage
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Theme-token approach is generic to ggplot-style libraries
+        comment: Standard ggplot grammar with geom_segment per state; nothing beyond
+          the library prompt
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-22T03:56:13Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - grid-styling
