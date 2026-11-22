@@ -2,171 +2,179 @@ library: plotly
 language: python
 specification_id: smith-chart-basic
 created: '2026-01-15T21:53:02Z'
-updated: '2026-05-20T01:33:55Z'
+updated: '2026-11-22T17:39:09Z'
 generated_by: claude-sonnet
-workflow_run: 26134961433
+workflow_run: 45049867422
 issue: 3792
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 81
 review:
   strengths:
-  - 'Perfect spec compliance: resistance circles, reactance arcs, normalized reflection
-    coefficient, locus trajectory, frequency annotations all correctly implemented'
-  - Excellent theme adaptation throughout — SMITH_GRID, annotation boxes, colorbar,
-    and legend all use the correct theme tokens in both renders; no dark-on-dark failures
-  - 'Correct palette usage: brand green for the locus line, Okabe-Ito orange for the
-    matched marker, viridis for continuous frequency colorscale'
-  - Realistic and physically plausible antenna impedance data with correct Z0=50 ohm
-    normalization and a locus that stays within the unit circle
-  - Clean flat code structure with np.random.seed(42) for reproducibility and only
-    3 imports
+  - Reactance labels sit exactly at each arc's boundary endpoint (+j0.2 … ±j5), computed
+    from the arc equation
+  - 'Imprint palette throughout: #009E73 locus, #C475FD matched marker, imprint_seq
+    ramp; every chrome element on theme tokens, readable in both renders'
+  - scaleanchor/scaleratio keep the boundary a true circle and the grid traces skip
+    hover, so the HTML hover shows only the locus
+  - Per-point hover text with frequency and complex impedance in ohms for the interactive
+    HTML
+  - Adaptable data block with column constants and a tidy df; flat, seeded script
   weaknesses:
-  - The 1.0 GHz annotation box overlaps the +j0.5 reactance label in the upper-right
-    area (only +.5 is legible) — reposition annotation (change ay from -30 to -55)
-    or shift reactance label to (0.55, 0.85) to avoid collision
-  - Smith chart grid stroke weight (width=1) could be reduced to 0.7-0.8 to give the
-    impedance locus more visual dominance over the background grid structure
-  - Resistance labels along the real axis (yshift=-16) render close to the grid lines;
-    a larger yshift (-20) or subtle background box would improve legibility at mobile
-    scale
+  - 'SC-02, VQ-02 (both): resistance values are printed at each circle''s center,
+    not on its circle — ''0'' sits at the chart center on the locus (the r=0 circle
+    is the boundary), ''1'' at Re(Γ)=0.5 where the r=1 circle does not pass → place
+    each label where its circle crosses the real axis, at Re(Γ)=(r−1)/(r+1) (r=0 →
+    −1, r=1 → 0). Likely cause: annotation x=r/(r+1), the circle center, while the
+    comment says ''crossing''.'
+  - 'SC-02 (both): Cartesian Re(Γ)/Im(Γ) axes with ticks, tick labels and axis lines
+    frame the Smith grid, against the spec''s ''grid in place of Cartesian axes''
+    → hide them (showticklabels=False, showline=False, no axis titles), keeping the
+    equal-aspect range. Likely cause: xaxis/yaxis dicts keep title, tickfont and linecolor.'
+  - 'SC-01 (both): on a -basic spec the locus markers carry a frequency colour channel
+    with its own colorbar, an encoding the spec neither requires nor offers → single-colour
+    markers in the locus green; the frequency labels already show the sweep. Likely
+    cause: marker color=freq_ghz, colorscale=imprint_seq, showscale=True.'
+  - 'DQ-02 (both): 5 Ω of random noise on every resistance sample makes the locus
+    zigzag between neighbouring frequencies, which a measured antenna sweep does not
+    do → generate a smooth impedance model (e.g. a series RLC or resonant antenna
+    formula). Likely cause: `+ 5 * np.random.randn(50)` in Z_REAL.'
+  - 'Suggestion: place a frequency label at the point of closest match to Γ = 0 so
+    the key resonance is named.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "smith-chart-basic · python · plotly · anyplot.ai" in dark ink (#1A1A17), readable. Axis labels "Re(Γ)" and "Im(Γ)" in dark ink. Tick labels in secondary ink (#4A4A44). Resistance labels (0–5) along real axis. Reactance labels (+j0.5, -j0.5, +j1, -j1) near chart boundary.
-      Data: Impedance locus as brand-green (#009E73) line with viridis-colored dot markers (dark purple=1 GHz to yellow-green=6 GHz). Orange X marker (#D55E00) at center for matched condition. Smith chart grid in semi-transparent gray. Unit circle boundary clearly drawn. Viridis colorbar labeled "GHz".
-      Overlap: "1.0 GHz" annotation box clips "+j0.5" reactance label — only "+.5" legible in upper-right area.
-      Legibility verdict: PASS (minor overlap noted above)
+      Background: warm off-white #FAF8F1.
+      Chrome: title "smith-chart-basic · python · plotly · anyplot.ai" in dark ink, centered; Re(Γ)/Im(Γ) axis titles with Cartesian ticks −1…1 and axis lines on the left and bottom; resistance values 0, 0.2, 0.5, 1, 2, 5 below the real axis (placed at the circle centers); reactance labels +j0.2 … ±j5 just outside the boundary at each arc's endpoint. Legend (Impedance Locus, Matched) lower left and GHz colorbar (1, 3.5, 6) right, both on elevated boxes. All text readable.
+      Data: Smith grid in thin translucent grey, dark boundary circle, #009E73 locus line with markers on the imprint_seq ramp (green 1 GHz → blue 6 GHz) and page-coloured outlines; purple #C475FD X at the chart center; four frequency boxes (1.0, 2.6, 4.3, 6.0 GHz) with green arrows. The '0' resistance label sits on the locus just below the center.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Title and axis labels in light ink (#F0EFE8), clearly readable against dark surface. Tick labels in secondary light ink (#B8B7B0). Annotation boxes use elevated dark background (#242420) with light font — no dark-on-dark failure. Legend and colorbar use themed dark elevated backgrounds.
-      Data: Viridis colorscale markers and brand-green line color are identical to the light render. Orange X marker unchanged. Smith chart grid uses lighter semi-transparent tone. Unit circle boundary drawn in lighter ink. All data elements clearly distinguishable from dark background.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks, grid labels in light ink (#F0EFE8 / #B8B7B0), all readable; annotation boxes, legend and colorbar on the dark elevated token with light text and light borders; no dark-on-dark text.
+      Data: locus green, marker ramp and purple matched marker identical to the light render; grid in a lighter translucent grey, boundary in light ink, marker outlines in the dark page colour.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set per style guide (title 16, axis 12, ticks
-          10). All text readable in both themes. Minor: resistance axis labels at
-          yshift=-16 are small at mobile scale.'
+        comment: Title 16, axis titles 12, ticks and grid labels 10, annotations 11
+          at the style-guide sizes; every text element readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: false
-        comment: 1.0 GHz annotation box clips the +j0.5 reactance label in upper-right
-          area; only '+.5' is legible. Other annotations are clear.
+        comment: The resistance label '0' sits on the locus line and markers just
+          below the chart center (defect line); frequency boxes, reactance labels
+          and legend are clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Locus line width 4.0 with 50 markers is prominent for medium-density
-          data. Smith chart grid is subtle without competing with locus.
+        comment: Locus width 4 with 7 px outlined markers is prominent for 50 points;
+          grid thin but traceable; legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green + orange (Okabe-Ito) are CVD-safe. Viridis colorscale
-          is perceptually uniform.
+        comment: Green locus, purple matched marker and green-to-blue ramp have good
+          contrast in both themes; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 px is correct for symmetric polar chart. Margins
-          accommodate colorbar. Minor crowding in upper-right annotation area.
+        comment: Square 2400x2400 canvas, chart centered, colorbar and legend inside
+          the margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Re(Γ) and Im(Γ) are descriptive with correct symbols. Title matches
-          mandated format exactly.
+        comment: Re(Γ)/Im(Γ) axis titles and a GHz colorbar title, all reader text
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Locus line #009E73 (Okabe-Ito pos 1). Matched marker #D55E00 (pos
-          2). Viridis for continuous frequency data. Backgrounds #FAF8F1/#1A1A17.
-          Both renders theme-correct.'
+        comment: 'Locus #009E73, matched marker #C475FD (Imprint position 2), frequency
+          ramp imprint_seq #009E73→#4467A3; backgrounds #FAF8F1/#1A1A17, chrome flips
+          correctly'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Themed annotation boxes with elevated backgrounds and branded arrow
-          colors. Custom SMITH_GRID semi-transparent token. Viridis colorbar styled
-          with INK_SOFT borders. Above generic defaults but annotation clutter in
-          upper-right reduces polish.
+        passed: false
+        comment: Annotation boxes and colorbar on the ELEVATED_BG token with INK_SOFT
+          borders and green arrows, a dedicated SMITH_GRID token; a modest step beyond
+          the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: No Cartesian grid (appropriate for polar chart). Custom Smith chart
-          grid as visual scaffold. Generous margins. Grid stroke width=1 could be
-          reduced to 0.7-0.8 for better locus dominance.
+        passed: false
+        comment: Reactance labels placed exactly at each arc's boundary endpoint and
+          the grid thinned to 0.8 px so the locus dominates
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Viridis colorscale guides viewer through frequency sweep. Arrow annotations
-          mark key frequencies. Matched-condition reference marker provides engineering
-          anchor. Reactance/resistance grid labels add domain context.
+        passed: false
+        comment: Data displayed with the required frequency labels; no hierarchy chosen
+          beyond the Notes (the frequency colour ramp is an unasked encoding and earns
+          no credit)
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct Smith chart with manually constructed constant-resistance
-          circles and constant-reactance arcs.
+        passed: false
+        comment: Correct Smith chart, but on a -basic spec the markers carry an unasked
+          frequency colour channel with a colorbar (defect line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Resistance circles, reactance arcs, normalized impedance, connected
-          locus curve, frequency labels all present. VSWR circles optional and reasonably
-          omitted.
+        passed: false
+        comment: 'Grid, normalization, connected locus and frequency labels present;
+          C1 missed: Cartesian Re(Γ)/Im(Γ) axes with ticks drawn around the Smith
+          grid; C4 missed: resistance values sit at circle centers, not on their circles
+          (defect lines)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Reflection coefficient gamma correctly computed from normalized impedance.
-          Real/imaginary parts mapped to x/y axes. All data within unit circle.
+        comment: Γ computed from Z/Z0 and plotted at its value; every point inside
+          the unit disc
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: smith-chart-basic · python · plotly · anyplot.ai. Legend:
-          Impedance Locus and Matched (Z = Z₀).'
+        comment: Title 'smith-chart-basic · python · plotly · anyplot.ai' exact; legend
+          'Impedance Locus' and 'Matched (Z = Z₀)' match the marks
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -174,25 +182,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Smith chart grid, unit circle boundary, locus with frequency coloring,
-          four frequency annotations, matched-condition marker, resistance and reactance
-          axis labels.
+        comment: Shows grid, boundary, a looping locus crossing inductive and capacitive
+          halves, near-match passage and four frequency labels
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Realistic antenna impedance sweep 1-6 GHz with physically plausible
-          trajectory through inductive, resonant, and capacitive regions. Neutral
-          RF engineering context.
+        passed: false
+        comment: Antenna S11 sweep 1–6 GHz is a neutral RF context, but 5 Ω random
+          noise on the resistance makes the locus zigzag point to point, unlike a
+          measured sweep (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Z0=50 ohm (standard RF reference). Impedance values (25-65 ohm real,
-          +-60 ohm imaginary) are realistic for antenna measurements. Gamma values
-          within unit circle.
+        comment: Z0 = 50 Ω, R 25–70 Ω, X ±60 Ω are realistic; checked that Γ stays
+          inside |Γ| < 1 and the matched marker sits at Γ = 0
     code_quality:
       score: 10
       max: 10
@@ -202,68 +208,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script with no functions or classes. Logically organized: theme
-          tokens -> data generation -> Smith chart grid -> locus -> annotations ->
-          layout.'
+        comment: Flat script following the six adaptable-code zones, no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used.
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for custom Smith chart. For-loops over r_values
-          and x_values are clean. No fake interactivity.
+        comment: Grid built from the closed-form circle equations in short loops;
+          nothing a shorter call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image(plot-{THEME}.png, width=600, height=600, scale=4) and
-          write_html(plot-{THEME}.html) both present.
+        comment: write_image plot-{THEME}.png at 600x600 scale 4 and write_html plot-{THEME}.html;
+          autosize=False with explicit size
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Correctly uses go.Scatter() traces to manually build Smith chart
-          grid — right approach for Plotly with no built-in Smith primitive. add_annotation()
-          for frequency callouts. scaleanchor/scaleratio for equal-aspect-ratio axes.
+        passed: false
+        comment: scaleanchor/scaleratio for a true circle, hoverinfo='skip' on grid
+          traces, add_annotation with arrow offsets — idiomatic graph objects
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Interactive hover tooltips with custom formatted text per point.
-          Viridis colorbar with full theming (bgcolor, bordercolor, tickfont). HTML
-          export. Good use of Plotly's interactive strengths.
+        passed: false
+        comment: Per-point formatted hover text (frequency and complex impedance)
+          in the HTML output; little else distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
+  rendered_at: '2026-11-22T17:34:55Z'
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - custom-colormap
   - edge-highlighting
+  - grid-styling
