@@ -2,51 +2,61 @@ library: bokeh
 language: python
 specification_id: smith-chart-basic
 created: '2026-01-15T21:53:06Z'
-updated: '2026-05-20T01:33:55Z'
+updated: '2026-11-22T17:36:10Z'
 generated_by: claude-sonnet
-workflow_run: 26135024222
+workflow_run: 45049584707
 issue: 3792
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/bokeh/plot-dark.html
-quality_score: 91
+quality_score: 80
 review:
   strengths:
-  - Perfect spec compliance with all required Smith chart elements including optional
-    VSWR reference circle
-  - 'Excellent data quality: physically realistic series RLC antenna model with correct
-    impedance-to-gamma derivation'
-  - Intentional color semantics using Okabe-Ito — green=data locus, blue=physical
-    boundary, orange=engineering reference points — create clear visual hierarchy
-  - 'Perfect code quality: flat KISS structure, reproducible with seed, correct Selenium/HTML
-    export pattern'
-  - Both themes fully readable with correctly adapted chrome tokens; no dark-on-dark
-    failures
+  - The Smith grid replaces the Cartesian axes entirely, inside a true-circle boundary
+    on a square 2400x2400 canvas (match_aspect=True)
+  - Physically plausible series-RLC antenna sweep normalised to Z0=50 Ω, with resonance
+    landing beside the matched centre
+  - Frequency labels placed radially outward from each key point with Label screen-pixel
+    offsets, so the sweep direction reads from 1.0 to 6.0 GHz
+  - HoverTool on a ColumnDataSource gives frequency, R, X and Γ per point in the HTML
+  - Theme tokens threaded through title, grid and labels; both renders fully readable
   weaknesses:
-  - '"4.8 GHz" and "6.0 GHz" frequency labels are tightly spaced in the upper-right
-    quadrant — increase vertical offset for one to create more breathing room'
-  - Standard Bokeh axis spines remain visible around the circular chart; consider
-    reducing outline_line_alpha or hiding axis lines for cleaner circular framing
-  - Core Smith chart grid is hand-computed in numpy rather than using bokeh-distinctive
-    rendering (Arc glyph or patches) — limits LM-02 score
+  - 'SC-02 (both): the reactance arcs for x=±0.2 and x=±0.5 stop at the vertical centre
+    line (Re Γ = 0) instead of reaching the boundary, and every arc is closed by a
+    straight chord from its boundary end to the right-hand point, so the grid is not
+    the standard Smith grid (C1) and the x=0.5 label sits where no arc arrives (C4)
+    → draw each arc in full inside the unit circle with no chord. Likely cause: the
+    mask `ax >= -0.001` and the argsort over `arctan2` angles that wrap at ±π in the
+    reactance-arc loop.'
+  - 'SC-02 (both): the r=0.2/0.5/1/2 labels sit at each circle''s centre r/(1+r) instead
+    of on the circle, so ''r=2'' lands at Re Γ=0.67 where the r=5 circle crosses the
+    axis (C4) → place each at the circle''s left crossing (r−1)/(r+1). Likely cause:
+    `x=r / (1 + r)` in the resistance-label loop.'
+  - 'VQ-02 (both): the 2.3 GHz, 4.8 GHz and 6.0 GHz labels are struck through by the
+    boundary circle and the converging arcs, and the x=0.5/x=−0.5 labels are crossed
+    by the boundary → clear the lines by at least a few pixels. Likely cause: the
+    fixed 90 px radial offset puts labels for points near |Γ|=1 right on the boundary;
+    the reactance labels'' 10 px offsets.'
+  - 'Suggestion: a slightly shorter radial offset for near-centre labels would keep
+    3.5 GHz tighter to its point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "smith-chart-basic · python · bokeh · anyplot.ai" in dark ink — readable. Axis labels "Real(Γ) (dimensionless)" and "Imag(Γ) (dimensionless)" in dark ink — readable. Tick labels in softer dark tone — readable. Grid arc labels (r=, x=) in muted dark tone — readable.
-      Data: First series (impedance locus) in #009E73 (brand green) ✓. Boundary circle in #0072B2 (blue). Matched condition marker in #D55E00 (orange). All colors identical to dark render.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas, no Cartesian axes or frame.
+      Chrome: title 'smith-chart-basic · python · bokeh · anyplot.ai' in dark ink at top-left (~62% width); muted grey grid labels r=0.2..2 below the horizontal axis and x=±0.5, ±1, ±2 at the boundary; all readable.
+      Data: blue (#4467A3) unit-circle boundary, grey resistance circles and reactance arcs at low alpha, green (#009E73) locus with 60 markers looping from 1.0 GHz (lower right edge) through 2.3 and 3.5 GHz (beside the centre) up to 4.8 and 6.0 GHz (upper right), bold blue frequency labels, purple matched-centre dot with 'Z=Z₀' and dashed purple VSWR=1.5 circle. Arcs for x=±0.2/±0.5 stop at the vertical centre line and straight chords run from boundary points to the right-hand point.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct theme surface
-      Chrome: Title in #F0EFE8 (light) — readable. Axis labels in light tone — readable. Tick labels in #B8B7B0 — readable against dark background. Grid arc labels in #A8A79F — adequate contrast. No dark-on-dark failures detected.
-      Data: Colors identical to light render — green locus (#009E73), blue boundary (#0072B2), orange markers (#D55E00). VSWR dashed outline visible; fill nearly invisible at 8% alpha (intentional).
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, grid labels in light grey; no dark-on-dark text.
+      Data: identical colours to the light render (green locus, blue boundary and labels, purple centre/VSWR); grid lines lighter grey, subtle but traceable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,75 +64,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 50pt, axis labels 42pt, tick
-          labels 34pt, annotations 20-26pt). Well-proportioned in both themes.
+        comment: Title 50pt, frequency labels 26pt bold, grid labels 20-22pt; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Minor label proximity between 4.8 GHz and 6.0 GHz labels in upper-right
-          quadrant; all other labels well-separated.
+        passed: false
+        comment: Frequency labels 2.3/4.8/6.0 GHz and the x=±0.5 labels are struck
+          through by the boundary circle and grid lines (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Locus line_width=5 with size=14 markers, boundary circle line_width=4,
-          matched marker size=24. Optimal for 60-point dataset.
+        comment: Locus line_width=5 with size-14 markers for 60 points; boundary and
+          center marker clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, good luminance contrast in both themes.
+        comment: Green/purple/blue distinct in luminance and hue; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas appropriate for symmetric circular plot.
-          min_border_* correctly set.
+        comment: Square 2400x2400 canvas, disc centred with balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with dimensionless notation. Title format correct.
+        comment: 'N/A: Smith grid replaces Cartesian axes; title correct'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito positions 1-3 used. Backgrounds
-          #FAF8F1/#1A1A17. All chrome tokens theme-adapted.'
+        comment: 'Locus #009E73, Imprint positions 2-3 for marker and boundary, backgrounds
+          #FAF8F1/#1A1A17, chrome theme-adapted'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Strong design with intentional color semantics. Clearly above configured
-          default but not publication-ready level.
+        passed: false
+        comment: Style-guide baseline with consistent colour roles; nothing beyond
+          it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Cartesian grid disabled, custom arcs at 30% alpha. Standard axis
-          frame remains visible.
+        passed: false
+        comment: Grid at 30% alpha and axes removed meet the baseline; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good visual hierarchy through color. VSWR circle and frequency labels
-          create impedance sweep narrative.
+        passed: false
+        comment: Data displayed with labels; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -130,28 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Smith chart with unit circle, resistance circles, reactance
-          arcs, and impedance locus.
+        comment: Smith chart with one locus, optional VSWR circle and matched-centre
+          mark
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: All spec requirements present including optional VSWR circle.
+        passed: false
+        comment: 'C1 missed: x=±0.2 and x=±0.5 arcs stop at Re(Γ)=0 and straight chords
+          are drawn across the grid; C4 missed: r labels sit at circle centres, not
+          on their circles (defect lines)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Real(Gamma), Y=Imag(Gamma), correctly derived. Axes span full Smith
-          chart domain.
+        comment: Γ computed from Z/Z0; locus points at their values; matched condition
+          at the centre
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No formal legend needed; elements labeled via
-          annotations.
+        comment: Title in the mandated format; no legend needed, elements labelled
+          directly
     data_quality:
       score: 15
       max: 15
@@ -161,22 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Locus covers inductive, capacitive, and near-matched regions. Shows
-          resonance behavior at 3.5 GHz.
+        comment: Locus spans inductive and capacitive halves and passes through the
+          VSWR circle near resonance
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic RF antenna S11 sweep 1-6 GHz, series RLC model, Q=5, Z0=50
-          ohm standard.
+        comment: Antenna S11 sweep 1-6 GHz, series RLC, 50 Ω reference
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: R~45-55 ohm at resonance (realistic), correct series RLC reactance
-          formula, proper gamma derivation.
+        comment: R 45-55 Ω, resonance at 3.5 GHz near the centre; checked the 3.5
+          GHz label sits next to the point closest to Γ=0
     code_quality:
       score: 10
       max: 10
@@ -186,67 +195,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports -> theme tokens -> canvas -> data -> plot
-          -> save. No functions/classes.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: Deterministic data, seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. noqa comments are import-ordering pragmatics, not
-          lint suppression.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Numpy math for Smith chart arcs is correct approach.
-          No fake UI.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium per bokeh.md
-          pattern.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: ColumnDataSource, match_aspect=True, add_layout(Label), HoverTool,
-          output_file+save, Selenium screenshot — all idiomatic bokeh patterns.
+        passed: false
+        comment: ColumnDataSource, match_aspect=True, Label with screen-pixel x_offset/y_offset
+          for radial label placement
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: HoverTool for interactive impedance readout, dual HTML+PNG output,
-          match_aspect for geometric correctness. Core arcs are numpy geometry rather
-          than bokeh-distinctive rendering.
+        passed: false
+        comment: HoverTool with formatted frequency/R/X/Γ readout in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-22T17:31:51Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
