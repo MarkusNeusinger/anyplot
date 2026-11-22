@@ -2,122 +2,139 @@ library: letsplot
 language: python
 specification_id: parliament-basic
 created: '2025-12-30T00:08:54Z'
-updated: '2026-05-17T14:03:16Z'
-generated_by: claude-haiku
-workflow_run: 25992657331
+updated: '2026-11-22T06:28:06Z'
+generated_by: claude-sonnet
+workflow_run: 44992632136
 issue: 2499
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 79
 review:
   strengths:
-  - Perfect spec compliance with all required features (semicircular arrangement,
-    individual seats, color-coded divisions, legend with seat counts, majority line)
-  - 'Flawless theme-adaptive implementation: both light and dark renders pass readability
-    checks with correct background colors and text contrast'
-  - 'Excellent visual quality with no overlap, clear element visibility, and proper
-    use of Okabe-Ito palette (first series #009E73)'
-  - Clean, straightforward code with deterministic data generation and proper theme
-    environment variable handling
-  - 'Proper letsplot idioms: ggplot composition, scale_color_manual with theme tokens,
-    coord_fixed for semicircle geometry, ggsave with both PNG and HTML output'
+  - Seats are swept left to right by angle and handed out party by party, so every
+    party is one contiguous wedge across all eight arcs
+  - Rows hold seats in proportion to their radius, giving evenly spaced seats of one
+    size throughout the chamber
+  - Majority threshold computed from the data (201 of 400), placed between seat 201
+    and 202 and drawn only in the inner and outer gaps so it never covers a seat
+  - theme_void + coord_fixed give a clean axis-free half circle; Imprint palette in
+    canonical order, identical in both themes
+  - Legend lists every party with its seat count in data order via scale_color_manual
+    breaks
   weaknesses:
-  - Font sizes for axis labels, tick labels, and legend text are not explicitly set
-    (relying on library defaults rather than explicit pt values)
-  - 'Design Excellence above average but not exceptional: aesthetic sophistication
-    is solid (proper palette and theme tokens) but lacks the custom refinement or
-    visual storytelling emphasis that would reach publication-ready level'
+  - 'VQ-05 (both): coord_fixed letterboxes the 3200x1800 canvas, leaving about 69
+    px transparent strips at the left and right edges instead of the page color, and
+    the legend box ends flush against the right strip with no padding → page color
+    edge to edge and at least ~40 px between legend and canvas edge. Likely cause:
+    plot_margin=[24, 0, 0, 0] with coord_fixed; give the plot a right margin and widen
+    the x range or drop coord_fixed''s letterboxing.'
+  - 'DQ-02 (both): the groups are corporate departments (Finance Committee, Marketing
+    Team, Legal Advisory …) holding 400 seats, which reads as generic rather than
+    as a fictional chamber → invented party names from a neutral noun plus a group
+    word (e.g. ''Riverbank Alliance'', ''Weavers'' Union''). Likely cause: the party
+    list in the data block.'
+  - 'CQ-04 (code): the Color column (COLOR) is defined in the data but never read
+    — colors come from IMPRINT_PALETTE, so editing the column changes nothing; the
+    two one-row threshold frames repeat the same geom_segment → map the column with
+    scale_color_manual(values=list(df[COLOR])) or drop it, and use one two-row segment
+    frame. Likely cause: lines 52–64 and 85–100.'
+  - 'Suggestion: the legend key column draws a page-colored strip behind the swatches
+    inside the elevated legend box; a legend_key fill matching ELEVATED_BG would make
+    the box read as one surface.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly theme-adapted for light surface
-      Chrome: Title "parliament-basic · letsplot · anyplot.ai" in dark text (INK color), clearly visible at 24pt. X and Y axis labels visible with dark tick labels (INK_SOFT). Legend on right side displays "Division (Seats)" with party names and counts, all readable with proper contrast.
-      Data: Six concentric semicircular arcs of individual dots, each arc colored with Okabe-Ito palette. Innermost arc (Finance Committee, 85 seats) is #009E73 (brand green), followed by #D55E00 (Technology Board), #0072B2 (Operations), #CC79A7 (Research Council), #E69F00 (Marketing Team), #56B4E9 (Legal Advisory). Dashed majority line at y=0 with annotation "Majority" visible. Bottom annotation "Total: 400 seats | Majority: 201" centered and readable.
-      Legibility verdict: PASS - All text is clearly readable against the light background with excellent contrast. Data colors are vibrant and distinct.
+      Background: warm off-white #FAF8F1 across the plot; about 69 px transparent strips at the far left and right edges (coord_fixed letterboxing).
+      Chrome: title "parliament-basic · python · letsplot · anyplot.ai" centered above the chamber in dark ink; label "Majority: 201 of 400" in INK_SOFT above the top arc; legend at right on an elevated #FFFDF6 box titled "Division (seats)" listing six entries with counts. All text readable. No axes or grid.
+      Data: 400 equal dots in 8 concentric semicircular arcs; contiguous wedges left to right: Finance Committee #009E73 (85), Technology Board #C475FD (72), Operations Division #4467A3 (58), Research Council #BD8233 (35), Marketing Team #AE3030 (95), Legal Advisory #2ABCCD (55). Two short dark ticks at the vertical center inside and outside the arcs mark the majority cut.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly theme-adapted for dark surface
-      Chrome: Title in light text (F0EFE8), clearly visible and readable on dark background. X and Y axis labels visible with light tick labels. Legend displays same content with light-colored text, good contrast against elevated background (#242420).
-      Data: Identical to light render - all six Okabe-Ito colors (positions 1-6) remain exactly the same, confirming proper theme-independent data coloring. Dashed majority line visible at y=0. Bottom annotation remains readable in light text.
-      Legibility verdict: PASS - No dark-on-dark failures detected. All chrome elements (title, axis labels, ticks, legend text) are light-colored and readable against the dark background. Data colors are distinct and identical to light render, confirming proper theme separation between data and chrome.
+      Background: warm near-black #1A1A17, same transparent side strips.
+      Chrome: title in light ink, majority label in light grey, legend box #242420 with light text — all readable, no dark-on-dark.
+      Data: seat colors identical to the light render; threshold ticks flip to light ink and stay visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title explicitly sized at 24pt, all text readable; axis/legend sizes
-          rely on defaults not explicit sizing
+        comment: Title 16 pt, legend 11/12 pt and the 5 mm threshold label are explicit
+          and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend positioned right with good spacing
+        comment: No text collides with seats or other text; threshold ticks and label
+          sit in the gaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 400 data points clearly visible with size=5, alpha=0.9; appropriate
-          density
+        comment: 400 seats at size 3.2 with even spacing, legend glyphs match the
+          seats in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with adequate contrast
+        comment: Six Imprint colors, color is backed by contiguous position blocks
+          and the legend
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 4800x2700px canvas well-utilized, balanced margins, nothing cut off
+        comment: 3200x1800 canvas; coord_fixed leaves transparent letterbox strips
+          at both sides and the legend ends flush against the right one (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows format, axes labeled
+        comment: No axes by design (layout chart); title and legend title read well
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓, Okabe-Ito order followed, backgrounds #FAF8F1/#1A1A17
-          ✓, both renders theme-correct'
+        comment: 'Imprint in canonical order starting #009E73, backgrounds #FAF8F1
+          / #1A1A17, data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Uses proper Okabe-Ito palette and theme tokens, majority line annotation
-          is thoughtful; above default but not exceptional design
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: theme_void() used appropriately, clean legend styling, good whitespace;
-          above default refinement
+        comment: Rows sized in proportion to their radius give even seat spacing;
+          the threshold is drawn as two ticks in the inner and outer gaps so it never
+          covers a seat
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Majority line with annotation creates reference point, color guides
-          viewer; decent visual hierarchy
+        comment: Data displayed, the threshold is the one the Notes allow; no hierarchy
+          chosen beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -127,28 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chart type with all required elements
+        comment: Semicircular parliament chart, only the optional majority threshold
+          added
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: semicircle arrangement, individual seats,
-          party coloring, legend with counts, majority line'
+        comment: C1 one dot per seat in 8 arcs, no axes; C2 contiguous blocks left
+          to right; C3 legend with seat counts; C4 threshold at seat 201, labeled,
+          clear of seats; C5 single chamber
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates correctly mapped to semicircle
+        comment: Seat counts per party equal the data; positions are layout
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Title parliament-basic · python · letsplot · anyplot.ai; legend 'Division
+          (seats)' with name (count)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -156,21 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 6 divisions with varying seat counts'
+        comment: Six groups of clearly different sizes
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Board of directors scenario is neutral and realistic
+        passed: false
+        comment: Corporate departments holding 400 seats read as generic, not as the
+          fictional parties the spec asks for (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 400 total seats reasonable, distributions sensible
+        comment: 'Checked: total 400 and majority 201 (400 // 2 + 1) computed in code
+          and shown in the label; the cut sits between seat 201 and 202 of the sweep'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -178,59 +200,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports→data→plot→save, no functions/classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data is deterministic
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Explicit imports, all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, no over-engineering
+        passed: false
+        comment: The Color column is defined but never read; the two one-row threshold
+          frames could be one two-row frame (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html correctly
+        comment: plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Good ggplot2-style composition, proper use of geoms and theme
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
+        passed: true
+        comment: 'Standard grammar composition: geom_point + coord_fixed + theme_void
+          + scale_color_manual'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
         passed: false
-        comment: Uses ggsave() for PNG/HTML export and theme composition; some distinctive
-          features but fairly standard
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-22T06:23:40Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
-  - custom-legend
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
+  - html-export
+  patterns: []
   dataprep: []
   styling:
   - minimal-chrome
-  - alpha-blending

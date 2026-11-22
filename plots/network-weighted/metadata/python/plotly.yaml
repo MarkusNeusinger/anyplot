@@ -2,55 +2,56 @@ library: plotly
 language: python
 specification_id: network-weighted
 created: '2026-01-08T15:58:57Z'
-updated: '2026-05-17T14:41:40Z'
-generated_by: claude-haiku
-workflow_run: 25993713029
+updated: '2026-11-22T06:25:23Z'
+generated_by: claude-sonnet
+workflow_run: 44993129318
 issue: 3290
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 83
 review:
   strengths:
-  - 'Perfect theme-adaptive implementation: data colors (#009E73 nodes, green edges)
-    identical in both light and dark renders; only chrome (background, text, borders)
-    correctly flips'
-  - Excellent visual quality with intelligent node label positioning algorithm preventing
-    overlap while maintaining readability
-  - 'Strong data quality: realistic international trade scenario with plausible values
-    and full feature coverage (major hubs, peripheral nodes, varied edge weights)'
-  - Clean, reproducible code with deterministic seed (np.random.seed(42))
-  - Thoughtful annotation explaining weight scale, essential for understanding edge
-    thickness mapping
-  - Proper use of node sizing by weighted degree, creating additional visual dimension
-    beyond edge thickness
-  - Plotly interactive features (hover tooltips with trade volume details, zoom/pan)
-    complement static visualization
+  - Edge width and opacity both rise with weight, so the USA–Canada/Mexico/China corridor
+    dominates and light links recede, in both themes
+  - Label slots chosen from each node's outward direction keep most labels off the
+    edges
+  - Caption explains edge width with the data's real thin/thick values and names node
+    size as weighted degree
+  - 'Theme tokens threaded through title, labels, caption box and node outlines; identical
+    #009E73 data colours in both renders'
+  - Per-edge and per-node hover text with weights in the HTML output
+  - 'Adaptable data block: an edge-list DataFrame with column constants drives everything'
   weaknesses:
-  - Force-directed layout manually implemented with numpy rather than using plotly's
-    native graph layout capabilities (go.Network, plotly.graph_objects for graphs)
-    - missed opportunity to leverage library-specific graph features
-  - 'Could enhance design sophistication: consider customizing edge color gradient
-    more intentionally or adding subtle styling refinements to match FiveThirtyEight
-    publication standards'
+  - 'VQ-02 (both): the Japan label sits below-left of its node, between Japan and
+    Australia, with the thin Japan–Australia and S. Korea–Australia edges running
+    through the text → a label slot clear of edges, about 0 edge crossings. Likely
+    cause: the outward-angle slot picks ''bottom left'' for Japan, the direction its
+    Australia edge leaves the node.'
+  - 'SC-02 (both): C5 — the Japan and S. Korea nodes overlap and their China edges
+    (320 and 280) merge into one band, so neither thickness reads on its own → nodes
+    at least one node diameter apart. Likely cause: the repulsion constant k=0.5 against
+    the weight-boosted attraction (1 + w / w_max) in the layout loop.'
+  - 'Suggestion: a small sample of two or three line widths in the caption, labeled
+    with their weights, would let the reader read edge values off the static PNG.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with clean L-shaped frame
-      Chrome: Title "network-weighted · plotly · anyplot.ai" in dark text (28px), centered and clearly readable. Axis labels/ticks hidden (appropriate for network). Weight scale annotation in top-left with light background and dark border, all text crisp and legible.
-      Data: 15 country nodes colored in #009E73 (brand green), sized by weighted degree. 30 edges with thickness scaled from 2-18px representing trade volume (35B-620B USD). Edge colors gradient from light to darker green with alpha blending, creating visual hierarchy. Node labels positioned intelligently to avoid overlap (Japan top-right, S. Korea bottom-left, etc.).
-      Legibility verdict: PASS - All text readable, no overlap, excellent contrast on light surface.
+      Background: warm off-white #FAF8F1, no axes or grid.
+      Chrome: centred title 'network-weighted · python · plotly · anyplot.ai' in dark ink; 15 country labels in dark ink on the outer side of their nodes; bottom-left caption box (elevated bg, INK_SOFT border) reading 'Edge width = Trade volume (billion USD) / thin: 35 · thick: 620 / Node size = weighted degree'. All readable.
+      Data: #009E73 nodes sized by weighted degree (USA and China largest), 29 green edges 1.5–10.5 px with opacity rising with weight; USA–Canada, USA–Mexico, USA–China thickest. European cluster (Germany, France, Italy, Spain, Netherlands, UK) to the right. Japan and S. Korea nodes overlap; the Japan label sits between Japan and Australia with thin edges through it.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with L-shaped frame, free of artifacts
-      Chrome: Title in light text, centered and perfectly readable against dark background. Weight annotation box uses dark background with light border and light text.
-      Data: Node colors identical to light render (#009E73), edges preserve identical green shades and alpha levels - only chrome (background, text color, box styling) flipped from light theme. All elements remain clearly distinguishable.
-      Legibility verdict: PASS - All text light-colored and readable on dark surface. No dark-on-dark failures. Data colors (edges and nodes) unmistakably visible with perfect contrast.
+      Background: warm near-black #1A1A17.
+      Chrome: title, node labels and caption text in light ink; caption box dark elevated with light border. No dark-on-dark text.
+      Data: identical #009E73 nodes and edges, same layout; light edges read darker on the dark surface but the thinnest (India–UK, Spain–Italy) remain visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -58,80 +59,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 16px, annotation
-          18px) and perfectly readable in both themes
+        comment: Title 16 px, node labels and caption 10 px at scale 4, the plotly
+          references; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Smart label positioning algorithm eliminates overlap; specific nodes
-          positioned (Japan top-right, S. Korea bottom-left, Italy top-left, France
-          bottom-right)
+        passed: false
+        comment: The Japan label sits below-left of its node, between Japan and Australia,
+          and the thin Japan/S. Korea–Australia edges run through it (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes sized 20-70px by weighted degree, edges scaled 2-18px; all
-          elements clearly visible and differentiated
+        comment: Edges 1.5–10.5 px with an alpha ramp; the thinnest (India–UK, Spain–Italy)
+          still visible on both backgrounds; nodes 9–33 px with an INK_SOFT outline
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single #009E73 with alpha-blended edges; good contrast, CVD-safe
-          Okabe-Ito palette'
+        comment: Single hue plus width encoding; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance; plot fills 60-70% of 1600x900 canvas with generous
-          margins
+        comment: 3200×1800 canvas; network fills the plot area, caption bottom-left
+          clear of nodes, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format 'network-weighted · plotly · anyplot.ai'; axes
-          hidden appropriately for network graph
+        comment: Axes hidden as a network requires; caption names the weight and its
+          unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; background #FAF8F1 light / #1A1A17 dark
-          ✓; theme-adaptive chrome perfect in both renders ✓'
+        comment: 'Nodes and edges #009E73 in both renders; backgrounds #FAF8F1 / #1A1A17;
+          chrome flips correctly'
     design_excellence:
-      score: 17
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Strong design with brand-color consistency, weighted degree sizing,
-          force-directed layout, thoughtful annotation. Not quite FiveThirtyEight-level
-          publication polish but clearly above default
+        comment: 'The style-guide baseline: brand hue, theme tokens, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: Axes hidden, margins generous, node borders use INK_SOFT for definition,
-          annotation box properly styled with borders and padding
+        comment: Labels placed on the outer side of each node away from its neighbours'
+          mean direction, so most labels sit off the edges
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Visual hierarchy clear: edge thickness immediately shows trade strength,
-          USA/China emerge as hubs, peripheral nodes obvious. Real-world context (trade
-          volumes) guides interpretation'
+        comment: Edge opacity rises with weight together with width, so the USA–Canada/Mexico/China
+          corridor reads as the focal hub and light links recede
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -139,27 +136,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct weighted network graph with edge thickness representing weight
+        comment: Weighted network graph with edge thickness by weight
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: labeled nodes, variable edge thickness, weighted
-          degree sizing, weight scale annotation'
+        passed: false
+        comment: C1, C2, C3, C4 met (width grows with weight, spring layout without
+          axes, caption with thin/thick values, node size named as weighted degree);
+          C5 missed where the Japan and S. Korea nodes overlap and their China edges
+          merge (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Force-directed layout correct, edge thickness mapped to weight, node
-          size mapped to weighted degree
+        comment: Edge width linear in weight, node size linear in weighted degree;
+          positions from the layout (layout-positioned type)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend N/A (single series)
+        comment: Title 'network-weighted · python · plotly · anyplot.ai'; no legend
+          needed, caption explains both encodings
     data_quality:
       score: 15
       max: 15
@@ -169,22 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 countries, 30 edges showing full range (35B-620B USD); strong
-          hubs (USA, China, Germany) and peripheral nodes; diverse edge weights
+        comment: '15 nodes, 29 edges from 35 to 620: hubs, a European cluster, peripheral
+          single-link nodes, a wide weight range'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real international trade scenario, plausible values (USA-China ~580B
-          is correct order of magnitude), neutral context
+        comment: Plausible bilateral trade network in billion USD, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct trade relationships; proportions align with real-world
-          data
+        comment: Magnitudes plausible (USA–Canada 620, USA–China 580); caption values
+          35 and 620 match the data min and max
     code_quality:
       score: 10
       max: 10
@@ -194,52 +193,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → force-directed layout → figure → save; no functions/classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; reproducible output
+        comment: Seeded default_rng(42) for the layout start
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects; all necessary and used
+        comment: os, numpy, pandas, plotly.graph_objects, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; smart label positioning algorithm is elegant;
-          no fake UI
+        comment: Fruchterman-Reingold written out because networkx is not installed;
+          label slots computed in four lines; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html using current API
+        comment: write_image plot-{THEME}.png 800×450 scale 4 plus write_html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Uses go.Scatter correctly for nodes/edges, but force-directed layout
-          manually computed with numpy rather than leveraging plotly's native graph
-          layout (go.Network)
+        passed: true
+        comment: go.Scatter traces for edges and nodes with textposition per point;
+          the standard plotly network pattern, nothing beyond it
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses plotly-specific hover tooltips and HTML export; could leverage
-          more graph-native features
+        comment: Per-edge hover text with the weight and per-node hovertext with the
+          weighted degree in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T06:21:13Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -247,9 +248,8 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - matrix-construction
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending

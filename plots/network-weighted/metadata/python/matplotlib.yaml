@@ -2,40 +2,61 @@ library: matplotlib
 language: python
 specification_id: network-weighted
 created: '2026-01-08T16:00:04Z'
-updated: '2026-05-17T14:36:58Z'
-generated_by: claude-haiku
-workflow_run: 25993617084
+updated: '2026-11-22T06:22:21Z'
+generated_by: claude-sonnet
+workflow_run: 44992905385
 issue: 3290
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 99
+quality_score: 82
 review:
   strengths:
-  - Custom force-directed layout algorithm demonstrates deep matplotlib mastery
-  - Perfect theme adaptation with consistent Okabe-Ito palette across light/dark renders
-  - Exceptional visual hierarchy and data storytelling through node sizing and edge
-    thickness
-  - Excellent legibility with all text clearly readable in both themes
-  - Sophisticated styling including rounded edges, alpha blending, and custom legend
-    construction
-  - Proper KISS code structure with deterministic seeding for reproducibility
-  weaknesses: []
+  - Legend samples drawn with the same width mapping as the edges and labeled 20 /
+    220 / 410 papers, so the scale agrees with the marks
+  - Labels carry matplotlib patheffects withStroke halos in the page color and sit
+    above nodes, readable over edges in both themes
+  - Two legends kept together with ax.add_artist in a left column the layout transform
+    keeps free of data
+  - Node area encodes weighted degree and is named in a caption; node color encodes
+    research focus in Imprint order
+  - Theme tokens threaded through every chrome element; data colors identical in both
+    renders
+  weaknesses:
+  - 'SC-02 (both): C5 missed where avoidable: the EMBL-Pasteur edge runs straight
+    under the Broad node and DESY-KEK under the CERN node, so each reads as two edges
+    and their thickness cannot be followed along the length → a layout where no edge
+    passes beneath a third node (for example stronger repulsion or another seed).
+    Likely cause: the force layout''s repulsion constant 5*k*k against the weighted
+    pull 0.2+0.5*w packs each cluster into a line.'
+  - 'DQ-02 (both): real institutes (CERN, DESY, EMBL, Sanger, MILA, CSAIL …) carry
+    invented co-authorship counts → fictional or generic institute names, or counts
+    from a real source. Likely cause: the focus_of and links lists.'
+  - 'CQ-01 (code): line 31 assigns ENDPOINTS the list ["Institute A", "Institute B"],
+    not a column-name string → one string constant per required column role above
+    the Data block, each with a trailing # role: <role> comment. Likely cause: the
+    two endpoint columns bound to one constant.'
+  - 'CQ-01 (code): lines 97-100 define a helper function line_width that repeats the
+    widths formula of lines 93-94 → compute the legend sample widths with the same
+    vectorised expression and no def. Likely cause: the legend samples reusing the
+    mapping through a function.'
+  - 'Suggestion: a focal cue on the Computing cluster that bridges the three disciplines
+    would give the chart a reading order.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), exactly matching spec requirements
-      Chrome: Title "network-weighted · matplotlib · anyplot.ai" in large bold dark text (INK color); node labels positioned above nodes in dark bold text; legend with "Region" title and four regional categories (Americas, Europe, Asia, Oceania) in legend box with light background; edge thickness annotation in rounded callout box at bottom-left
-      Data: Nodes colored by region using Okabe-Ito palette (#009E73 for Americas, #D55E00 for Europe, #0072B2 for Asia, #CC79A7 for Oceania); nodes sized by weighted degree creating visual hierarchy; 27 edges rendered in gray (#4A4A44) with thickness scaled from 1.5 to 11.5 units based on trade volume (20B-650B USD); edges have alpha blending (0.3-0.8) creating visual depth without losing edges
-      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light failures, all data elements (nodes, edges, labels) are clearly distinguishable
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'Research collaboration · network-weighted · python · matplotlib · anyplot.ai' in dark ink, about 66 % of the width; bold dark node labels with page-colored halos above each node; framed legends 'Research focus' (top left) and 'Edge thickness' (bottom left, 20/220/410 papers samples) on #FFFDF6 with soft-ink text; italic caption 'Node size: total co-authored papers' at bottom right. All readable.
+      Data: 14 nodes in four clusters: Particle physics #009E73 (CERN, DESY, FNAL, KEK), Life sciences #C475FD (EMBL, Broad, Sanger, Pasteur), Climate science #4467A3 (PIK, NCAR, AWI), Computing #BD8233 (ETH AI, CSAIL, MILA) in the middle bridging the others; 26 grey edges from 1.2 to 9 pt; CERN and EMBL are the largest nodes. EMBL-Pasteur passes under Broad and DESY-KEK under CERN, showing darker doubled bands.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), properly theme-adaptive
-      Chrome: Title in light text (INK color) clearly visible; node labels in light text properly positioned; legend with elevated background (#242420) and light text, all readable; edge thickness annotation box maintains contrast and readability
-      Data: Okabe-Ito colors are identical to light render (green, orange, blue, pink nodes), confirming no data color shift between themes; edge gray is slightly lighter for dark background visibility; node sizing and edge thickness relationships are identical to light render
-      Legibility verdict: PASS - all text is clearly readable against the dark background, no dark-on-dark failures, brand green (#009E73) remains highly visible on dark surface, all chrome elements properly theme-adapted
+      Background: warm near-black #1A1A17.
+      Chrome: title and node labels in light ink, legends on #242420 with light-grey text and frame, caption in soft light grey; no dark-on-dark text.
+      Data: node colors identical to the light render; edges in the lighter soft ink, the thinnest still visible; node outlines in the dark page color. Same layout and same doubled bands under Broad and CERN.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -46,80 +67,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text fully readable in both light and dark themes; font sizes
-          appropriately scaled for 4800x2700 resolution
+        comment: Title 10 pt (scaled to the 77-char prefixed title), bold 7 pt node
+          labels with page-colored halos, 7/8 pt legends; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Node labels positioned with proper offset; no overlapping text or
-          data elements; force-directed layout naturally separates nodes
+        comment: No text collides with text, nodes or edges; legends sit in a reserved
+          left column
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All nodes clearly visible with size range 400-2400; edges with varying
-          thickness (1.5-11.5) and alpha (0.3-0.8) remain visible
+        comment: Thinnest 1.2 pt edge visible on both surfaces; 14 nodes prominent;
+          legend glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides colorblind-safe colors; neutral gray edges
-          avoid redundant encoding; adequate contrast throughout
+        comment: Imprint hues plus labels; weight carried by width in neutral ink
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Standard 16:9 landscape (4800x2700); generous whitespace; nothing
-          cut off; tight_layout and bbox_inches ensure proper framing
+        comment: 3200x1800, gate passed; balanced layout, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title properly formatted; region legend labels match spec; edge thickness
-          annotation explains weight scale
+        comment: No axes by design (N/A); legend titles and caption are reader text
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series uses #009E73; multi-series follows Okabe-Ito order;
-          backgrounds are #FAF8F1/#1A1A17; theme adaptation perfect in both renders'
+        comment: 'Imprint positions 1-4 in order, first #009E73; #FAF8F1 / #1A1A17
+          backgrounds; data colors identical across themes'
     design_excellence:
-      score: 19
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: Custom force-directed algorithm shows professional implementation;
-          node sizing by weighted degree adds intentional design; rounded edge caps,
-          custom legend styling demonstrate polish
+        passed: false
+        comment: 'Beyond baseline: a dedicated legend column kept free by the layout
+          transform, bold labels with page-colored stroke halos, an italic secondary
+          caption for node size'
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Axes off for minimal aesthetic; node edges provide definition; alpha
-          blending creates depth; legend frame styling refined; generous whitespace
-          throughout
+        passed: false
+        comment: 'Beyond baseline: graph rescaled into the right 70 % so legends never
+          touch data; round caps; node outlines in page color separate nodes from
+          edges'
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy with central hubs (CHN, USA) standing out;
-          region color coding creates immediate grouping; edge thickness reveals trade
-          importance; layout guides viewer through network structure
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -127,32 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct weighted network graph implementation with proper edge thickness
-          encoding
+        comment: Weighted network with edge width encoding weight
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec requirements met: edge thickness mapped to weight, node
-          sizing by weighted degree, force-directed layout, legend and annotation
-          present'
+        passed: false
+        comment: 'C1, C2, C3, C4 met; C5 partly missed: EMBL-Pasteur runs under Broad
+          and DESY-KEK under CERN (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 13 nodes and 27 edges properly displayed; weight mapping accurate
-          and visible; positions derived from algorithm
+        comment: Width linear in paper count; node area by weighted degree; layout-positioned
+          type
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; region legend labels match spec; edge annotation
-          explains mapping
+        comment: Descriptive prefix + mandated title; legend titles 'Research focus'
+          / 'Edge thickness', samples labeled in papers
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -160,90 +174,93 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive network visualization showing all aspects: positioning,
-          edge thickness, node sizing, regional grouping'
+        comment: Heavy vs light links, hubs, clusters bridged by Computing, peripheral
+          single links
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Trade network context is realistic; volumes (20B-650B USD) plausible;
-          network structure believable with USA and China as hubs; neutral educational
-          context
+        passed: false
+        comment: Plausible research-collaboration story, but real institutes carry
+          invented paper counts (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 13 nodes within spec recommendation (10-50); trade volumes in sensible
-          units; weight and degree ranges provide good visual distinction
+        comment: 14 nodes in the 10-50 range; 25-410 co-authored papers plausible;
+          no Check values in the Notes
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Straightforward procedural script with no unnecessary functions or
-          classes
+        passed: false
+        comment: A helper function line_width and a list-valued column constant (defect
+          lines)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic force-directed layout
+        comment: default_rng(19)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy imported; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; appropriate complexity; force-directed
-          algorithm well-structured
+        comment: Vectorised repulsion; written-out FR layout is fine since networkx
+          is not available
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300 and facecolor parameter; current
-          matplotlib API
+        comment: plot-{THEME}.png, dpi=400, default bbox
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Proper axes methods usage (not pyplot); high-level API with scatter,
-          plot, annotate; standard parameters; theme-aware os.getenv implementation
+        passed: false
+        comment: Axes API throughout, ax.add_artist to keep two legends, offset-points
+          annotations sized from the marker radius
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Custom force-directed algorithm shows deep matplotlib knowledge;
-          proper zorder layering; manual legend construction; sophisticated positioning
-          calculations; solid_capstyle='round' refinement
+        passed: false
+        comment: matplotlib.patheffects withStroke halos behind node labels
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-22T06:18:43Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - annotations
+  - path-effects
+  - network-layout
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - force-directed-layout
+  - weighted-degree
   styling:
-  - publication-ready
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
+  - theme-adaptive

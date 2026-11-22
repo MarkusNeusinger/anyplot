@@ -1,12 +1,13 @@
 """ anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-17
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-22
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -16,243 +17,180 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Data - Trade network between countries (billions USD)
-np.random.seed(42)
+# Imprint palette: a single series uses position 1
+BRAND = "#009E73"
 
-# Define nodes (countries)
-countries = [
-    "USA",
-    "China",
-    "Germany",
-    "Japan",
-    "UK",
-    "France",
-    "Canada",
-    "Mexico",
-    "Brazil",
-    "India",
-    "Australia",
-    "S. Korea",
-    "Netherlands",
-    "Italy",
-    "Spain",
-]
-n_nodes = len(countries)
-node_idx = {name: i for i, name in enumerate(countries)}
+# Constants
+LAYOUT_SEED = 42  # fixes the start of the force-directed layout
+LAYOUT_STEPS = 200  # iterations of the spring layout
 
-# Create weighted edges (trade relationships)
-edges = [
-    # Major trade routes (high weight)
-    ("USA", "China", 580),
-    ("USA", "Canada", 620),
-    ("USA", "Mexico", 550),
-    ("China", "Japan", 320),
-    ("China", "S. Korea", 280),
-    ("China", "Germany", 190),
-    ("Germany", "France", 180),
-    ("Germany", "Netherlands", 210),
-    ("Germany", "Italy", 140),
-    ("UK", "Germany", 130),
-    ("UK", "USA", 140),
-    ("UK", "Netherlands", 90),
-    ("Japan", "USA", 200),
-    ("Japan", "S. Korea", 85),
-    # Medium trade routes
-    ("France", "Italy", 95),
-    ("France", "Spain", 110),
-    ("Spain", "Italy", 50),
-    ("Canada", "Mexico", 40),
-    ("Brazil", "USA", 75),
-    ("Brazil", "China", 100),
-    ("India", "USA", 90),
-    ("India", "China", 115),
-    ("India", "UK", 35),
-    ("Australia", "China", 145),
-    ("Australia", "Japan", 55),
-    ("Australia", "S. Korea", 45),
-    # Lower trade routes
-    ("Netherlands", "UK", 65),
-    ("S. Korea", "USA", 120),
-    ("Mexico", "China", 70),
-]
+# Columns: set these to your table's column names
+SOURCE = "Exporter"  # role: edges
+TARGET = "Importer"  # role: nodes
+WEIGHT = "Trade volume (billion USD)"  # role: weight
 
-# Compute force-directed layout (Fruchterman-Reingold algorithm)
-pos = np.random.rand(n_nodes, 2) * 2 - 1
+# Data: replace this block with your own edge list, for example df = pd.read_csv("trade.csv")
+df = pd.DataFrame(
+    [
+        ("USA", "China", 580),
+        ("USA", "Canada", 620),
+        ("USA", "Mexico", 550),
+        ("China", "Japan", 320),
+        ("China", "S. Korea", 280),
+        ("China", "Germany", 190),
+        ("Germany", "France", 180),
+        ("Germany", "Netherlands", 210),
+        ("Germany", "Italy", 140),
+        ("UK", "Germany", 130),
+        ("UK", "USA", 140),
+        ("UK", "Netherlands", 90),
+        ("Japan", "USA", 200),
+        ("Japan", "S. Korea", 85),
+        ("France", "Italy", 95),
+        ("France", "Spain", 110),
+        ("Spain", "Italy", 50),
+        ("Canada", "Mexico", 40),
+        ("Brazil", "USA", 75),
+        ("Brazil", "China", 100),
+        ("India", "USA", 90),
+        ("India", "China", 115),
+        ("India", "UK", 35),
+        ("Australia", "China", 145),
+        ("Australia", "Japan", 55),
+        ("Australia", "S. Korea", 45),
+        ("Netherlands", "UK", 65),
+        ("S. Korea", "USA", 120),
+        ("Mexico", "China", 70),
+    ],
+    columns=[SOURCE, TARGET, WEIGHT],
+)
+
+# Plot: reads only df and the constants above
+nodes = list(pd.unique(df[[SOURCE, TARGET]].to_numpy().ravel()))
+node_idx = {name: i for i, name in enumerate(nodes)}
+src = df[SOURCE].map(node_idx).to_numpy()
+dst = df[TARGET].map(node_idx).to_numpy()
+weights = df[WEIGHT].to_numpy(dtype=float)
+w_min, w_max = weights.min(), weights.max()
+w_norm = (weights - w_min) / (w_max - w_min) if w_max > w_min else np.full(len(weights), 0.5)
+
+# Weighted degree: sum of the weights of all edges at a node
+degree = np.zeros(len(nodes))
+np.add.at(degree, src, weights)
+np.add.at(degree, dst, weights)
+
+# Force-directed layout (Fruchterman-Reingold): heavier edges pull their nodes closer
+rng = np.random.default_rng(LAYOUT_SEED)
+pos = rng.random((len(nodes), 2)) * 2 - 1
 k = 0.5
-for _ in range(200):
-    displacement = np.zeros((n_nodes, 2))
-    # Repulsive forces
-    for i in range(n_nodes):
+for step in range(LAYOUT_STEPS):
+    disp = np.zeros_like(pos)
+    for i in range(len(nodes)):
         diff = pos[i] - pos
-        dist = np.sqrt((diff**2).sum(axis=1))
-        dist = np.where(dist < 0.01, 0.01, dist)
-        rep_force = k**2 / dist
-        rep_force[i] = 0
-        displacement[i] += (diff * rep_force[:, np.newaxis]).sum(axis=0)
-    # Attractive forces along edges
-    for source, target, weight in edges:
-        i, j = node_idx[source], node_idx[target]
-        diff = pos[j] - pos[i]
+        dist = np.maximum(np.sqrt((diff**2).sum(axis=1)), 0.01)
+        rep = k**2 / dist
+        rep[i] = 0
+        disp[i] += (diff * rep[:, None]).sum(axis=0)
+    for a, b, w in zip(src, dst, weights, strict=True):
+        diff = pos[b] - pos[a]
         dist = np.sqrt((diff**2).sum())
         if dist > 0.01:
-            attr_force = dist**2 / k * (1 + weight / 200)
-            displacement[i] += diff / dist * attr_force
-            displacement[j] -= diff / dist * attr_force
-    # Update positions
-    length = np.sqrt((displacement**2).sum(axis=1))
-    length = np.where(length < 0.01, 0.01, length)
-    pos += displacement / length[:, np.newaxis] * min(0.1, k)
+            pull = diff / dist * dist**2 / k * (1 + w / w_max)
+            disp[a] += pull
+            disp[b] -= pull
+    length = np.maximum(np.sqrt((disp**2).sum(axis=1)), 0.01)
+    pos += disp / length[:, None] * (0.1 * (1 - step / LAYOUT_STEPS) + 0.005)  # cooling
 
-# Normalize positions
-pos = (pos - pos.min(axis=0)) / (pos.max(axis=0) - pos.min(axis=0))
-pos = pos * 1.6 - 0.8
-pos = pos - pos.mean(axis=0)
-node_positions = {countries[i]: pos[i] for i in range(n_nodes)}
+# Scale uniformly to fit the 16:9 canvas and centre
+span = np.maximum(pos.max(axis=0) - pos.min(axis=0), 1e-9)
+pos = (pos - pos.min(axis=0)) * min(3.2 / span[0], 1.8 / span[1])
+pos -= (pos.max(axis=0) + pos.min(axis=0)) / 2
 
-# Calculate weighted degree for node sizing
-weighted_degree = dict.fromkeys(countries, 0)
-for source, target, weight in edges:
-    weighted_degree[source] += weight
-    weighted_degree[target] += weight
+# Labels sit on the outer side of each node, away from its neighbours, where the edges are not
+label_slots = [
+    "middle right",
+    "top right",
+    "top center",
+    "top left",
+    "middle left",
+    "bottom left",
+    "bottom center",
+    "bottom right",
+]
+neighbour_mean = np.array([pos[np.r_[dst[src == i], src[dst == i]]].mean(axis=0) for i in range(len(nodes))])
+outward = pos - neighbour_mean
+angle = np.degrees(np.arctan2(outward[:, 1], outward[:, 0])) % 360
+label_pos = [label_slots[int(((a + 22.5) % 360) // 45)] for a in angle]
 
-node_sizes = [20 + (weighted_degree[node] / 40) for node in countries]
+# Edge widths and node sizes follow the data
+edge_width = 1.5 + w_norm * 9
+edge_alpha = 0.4 + w_norm * 0.5
+node_size = 9 + degree / degree.max() * 24
 
-# Create edge traces with varying thickness
-edge_traces = []
-min_weight = min(w for _, _, w in edges)
-max_weight = max(w for _, _, w in edges)
-
-for source, target, weight in edges:
-    x0, y0 = node_positions[source]
-    x1, y1 = node_positions[target]
-    # Scale width: 2 to 18 based on weight
-    normalized = (weight - min_weight) / (max_weight - min_weight)
-    line_width = 2 + normalized * 16
-    # Edge color from Okabe-Ito palette (use BRAND with alpha for weight-based opacity)
-    alpha = 0.4 + normalized * 0.5
-    # Parse BRAND hex and create rgba
-    edge_color = f"rgba(0, 158, 115, {alpha})"
-    edge_traces.append(
+fig = go.Figure()
+for a, b, w, lw, alpha in zip(src, dst, weights, edge_width, edge_alpha, strict=True):
+    fig.add_trace(
         go.Scatter(
-            x=[x0, x1, None],
-            y=[y0, y1, None],
+            x=[pos[a, 0], pos[b, 0]],
+            y=[pos[a, 1], pos[b, 1]],
             mode="lines",
-            line={"width": line_width, "color": edge_color},
+            line={"width": lw, "color": f"rgba(0, 158, 115, {alpha:.2f})"},
             hoverinfo="text",
-            text=f"{source} ↔ {target}: ${weight}B",
+            text=f"{nodes[a]} ↔ {nodes[b]}: {w:.0f}",
             showlegend=False,
         )
     )
 
-# Create node trace
-node_x = [node_positions[node][0] for node in countries]
-node_y = [node_positions[node][1] for node in countries]
-
-# Calculate smart label positions to avoid overlap
-label_positions = []
-
-for i, node in enumerate(countries):
-    x, y = node_positions[node]
-    # Find nearby nodes and adjust position
-    nearby_above = 0
-    nearby_below = 0
-    nearby_left = 0
-    nearby_right = 0
-    for j, other in enumerate(countries):
-        if i != j:
-            ox, oy = node_positions[other]
-            dx, dy = x - ox, y - oy
-            dist = np.sqrt(dx**2 + dy**2)
-            if dist < 0.35:
-                if dy > 0:
-                    nearby_below += 1
-                else:
-                    nearby_above += 1
-                if dx > 0:
-                    nearby_left += 1
-                else:
-                    nearby_right += 1
-
-    # Handle specific known close pairs to avoid overlap
-    if node == "Japan":
-        pos_choice = "top right"
-    elif node == "S. Korea":
-        pos_choice = "bottom left"
-    elif node == "Italy":
-        pos_choice = "top left"
-    elif node == "France":
-        pos_choice = "bottom right"
-    elif nearby_above > nearby_below:
-        pos_choice = "bottom center"
-    elif nearby_left > nearby_right:
-        pos_choice = "middle right"
-    elif nearby_right > nearby_left:
-        pos_choice = "middle left"
-    else:
-        pos_choice = "top center"
-    label_positions.append(pos_choice)
-
-node_trace = go.Scatter(
-    x=node_x,
-    y=node_y,
-    mode="markers+text",
-    marker={"size": node_sizes, "color": BRAND, "line": {"width": 2, "color": INK_SOFT}},
-    text=countries,
-    textposition=label_positions,
-    textfont={"size": 16, "color": INK},
-    hoverinfo="text",
-    hovertext=[f"{c}<br>Trade Volume: ${weighted_degree[c]}B" for c in countries],
-    showlegend=False,
+fig.add_trace(
+    go.Scatter(
+        x=pos[:, 0],
+        y=pos[:, 1],
+        mode="markers+text",
+        marker={"size": node_size, "color": BRAND, "line": {"width": 1, "color": INK_SOFT}},
+        text=nodes,
+        textposition=label_pos,
+        textfont={"size": 10, "color": INK},
+        hoverinfo="text",
+        hovertext=[f"{n}<br>Weighted degree: {d:.0f}" for n, d in zip(nodes, degree, strict=True)],
+        showlegend=False,
+    )
 )
 
-# Create figure
-fig = go.Figure()
-
-# Add edges first (behind nodes)
-for trace in edge_traces:
-    fig.add_trace(trace)
-
-# Add nodes
-fig.add_trace(node_trace)
-
-# Add weight scale annotation
+# Weight scale: edge width and node size explained in one caption
 fig.add_annotation(
     x=0.01,
-    y=0.99,
+    y=0.02,
     xref="paper",
     yref="paper",
-    text="Edge Thickness = Trade Volume<br>35B USD (thin) to 620B USD (thick)",
+    text=(
+        f"<b>Edge width</b> = {WEIGHT}<br>thin: {w_min:.0f} · thick: {w_max:.0f}<br><b>Node size</b> = weighted degree"
+    ),
     showarrow=False,
-    font={"size": 18, "color": INK, "family": "Arial"},
+    font={"size": 10, "color": INK},
     align="left",
     xanchor="left",
-    yanchor="top",
+    yanchor="bottom",
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
     borderwidth=1,
-    borderpad=10,
+    borderpad=6,
 )
 
-# Update layout with theme-adaptive colors
+axis = {"showgrid": False, "zeroline": False, "showticklabels": False, "title": "", "showline": False}
 fig.update_layout(
-    title={
-        "text": "network-weighted · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
-    xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "title": "", "linecolor": INK_SOFT},
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "title": "", "linecolor": INK_SOFT},
+    autosize=False,
+    width=800,
+    height=450,
+    title={"text": "network-weighted · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}, "x": 0.5},
+    xaxis={**axis, "range": [pos[:, 0].min() - 0.5, pos[:, 0].max() + 0.5]},
+    yaxis={**axis, "range": [pos[:, 1].min() - 0.3, pos[:, 1].max() + 0.3]},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     showlegend=False,
-    margin={"l": 80, "r": 80, "t": 100, "b": 80},
+    margin={"l": 40, "r": 40, "t": 60, "b": 30},
 )
 
-# Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

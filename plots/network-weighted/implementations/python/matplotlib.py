@@ -1,13 +1,16 @@
 """ anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 99/100 | Updated: 2026-05-17
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-22
 """
 
 import os
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from matplotlib.lines import Line2D
 
 
 # Theme tokens
@@ -17,204 +20,206 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito categorical palette (positions 1-4)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Trade network between countries (billions USD)
-np.random.seed(42)
+# Constants
+LINE_RANGE = (1.2, 9.0)  # edge width in points for the lightest and the heaviest link
+NODE_RANGE = (130, 800)  # node area in points squared for the lowest and the highest weighted degree
 
-# Define nodes (countries) with region groups
-nodes = {
-    "USA": {"group": 0},  # Americas
-    "CAN": {"group": 0},
-    "MEX": {"group": 0},
-    "BRA": {"group": 0},
-    "DEU": {"group": 1},  # Europe
-    "FRA": {"group": 1},
-    "GBR": {"group": 1},
-    "ITA": {"group": 1},
-    "CHN": {"group": 2},  # Asia
-    "JPN": {"group": 2},
-    "KOR": {"group": 2},
-    "IND": {"group": 2},
-    "AUS": {"group": 3},  # Oceania
+# Columns: set these to your table's column names
+ENDPOINTS = ["Institute A", "Institute B"]  # role: edges
+PAPERS = "Co-authored papers"  # role: weight
+INSTITUTE = "Institute"  # role: nodes
+FOCUS = "Research focus"  # role: extra
+
+# Data: replace this block with your own edge list and node table, for example df = pd.read_csv("links.csv")
+focus_of = {
+    "CERN": "Particle physics",
+    "DESY": "Particle physics",
+    "FNAL": "Particle physics",
+    "KEK": "Particle physics",
+    "EMBL": "Life sciences",
+    "Broad": "Life sciences",
+    "Pasteur": "Life sciences",
+    "Sanger": "Life sciences",
+    "PIK": "Climate science",
+    "NCAR": "Climate science",
+    "AWI": "Climate science",
+    "MILA": "Computing",
+    "CSAIL": "Computing",
+    "ETH AI": "Computing",
 }
-
-# Define edges with trade volume weights (billions USD)
-edges = [
-    ("USA", "CAN", 650),
-    ("USA", "MEX", 580),
-    ("USA", "CHN", 520),
-    ("USA", "JPN", 180),
-    ("USA", "DEU", 200),
-    ("USA", "GBR", 130),
-    ("USA", "KOR", 140),
-    ("USA", "BRA", 80),
-    ("CAN", "CHN", 75),
-    ("CAN", "MEX", 40),
-    ("MEX", "CHN", 90),
-    ("DEU", "FRA", 170),
-    ("DEU", "GBR", 120),
-    ("DEU", "ITA", 130),
-    ("DEU", "CHN", 200),
-    ("FRA", "GBR", 90),
-    ("FRA", "ITA", 80),
-    ("FRA", "CHN", 65),
-    ("GBR", "CHN", 95),
-    ("CHN", "JPN", 280),
-    ("CHN", "KOR", 250),
-    ("CHN", "AUS", 180),
-    ("CHN", "IND", 100),
-    ("JPN", "KOR", 70),
-    ("JPN", "AUS", 55),
-    ("IND", "AUS", 30),
-    ("BRA", "DEU", 20),
+nodes = pd.DataFrame({INSTITUTE: list(focus_of), FOCUS: list(focus_of.values())})
+links = [
+    ("CERN", "DESY", 410),
+    ("CERN", "FNAL", 380),
+    ("CERN", "KEK", 190),
+    ("DESY", "FNAL", 120),
+    ("DESY", "KEK", 85),
+    ("FNAL", "KEK", 60),
+    ("CERN", "ETH AI", 70),
+    ("FNAL", "CSAIL", 45),
+    ("EMBL", "Broad", 300),
+    ("EMBL", "Sanger", 340),
+    ("EMBL", "Pasteur", 210),
+    ("Broad", "Sanger", 180),
+    ("Broad", "Pasteur", 95),
+    ("Sanger", "Pasteur", 110),
+    ("Broad", "CSAIL", 130),
+    ("EMBL", "ETH AI", 55),
+    ("Pasteur", "MILA", 25),
+    ("PIK", "NCAR", 230),
+    ("PIK", "AWI", 270),
+    ("NCAR", "AWI", 90),
+    ("AWI", "EMBL", 35),
+    ("NCAR", "CSAIL", 40),
+    ("PIK", "ETH AI", 65),
+    ("MILA", "CSAIL", 240),
+    ("MILA", "ETH AI", 150),
+    ("CSAIL", "ETH AI", 100),
+    ("DESY", "ETH AI", 50),
+    ("KEK", "MILA", 20),
 ]
+df = pd.DataFrame(links, columns=[*ENDPOINTS, PAPERS])
 
-# Force-directed layout computation
-node_list = list(nodes.keys())
-n = len(node_list)
-node_idx = {name: i for i, name in enumerate(node_list)}
+# Plot: reads only df, nodes and the constants above
+names = list(nodes[INSTITUTE])
+index = {name: i for i, name in enumerate(names)}
+src = df[ENDPOINTS[0]].map(index).to_numpy()
+tgt = df[ENDPOINTS[1]].map(index).to_numpy()
+papers = df[PAPERS].to_numpy(dtype=float)
+span = papers.max() - papers.min()
+share = (papers - papers.min()) / span if span > 0 else np.full(len(papers), 0.5)
+widths = LINE_RANGE[0] + share * (LINE_RANGE[1] - LINE_RANGE[0])
 
-# Initialize positions randomly
-pos = np.random.rand(n, 2) * 2 - 1
 
-k = 1.5 / np.sqrt(n)  # Optimal distance
-t = 0.5  # Temperature (step size)
+def line_width(count):
+    """Edge width in points for a paper count, the same mapping the edges use."""
+    frac = (count - papers.min()) / span if span > 0 else 0.5
+    return LINE_RANGE[0] + frac * (LINE_RANGE[1] - LINE_RANGE[0])
 
-for _ in range(300):
-    disp = np.zeros((n, 2))
 
-    # Repulsive forces between all pairs
-    for i in range(n):
-        for j in range(i + 1, n):
-            delta = pos[i] - pos[j]
-            dist = max(np.linalg.norm(delta), 0.01)
-            force = k * k / dist * 1.5
-            direction = delta / dist
-            disp[i] += direction * force
-            disp[j] -= direction * force
+# Weighted degree: total papers on all links of an institute
+degree = np.bincount(src, weights=papers, minlength=len(names)) + np.bincount(tgt, weights=papers, minlength=len(names))
+sizes = NODE_RANGE[0] + degree / degree.max() * (NODE_RANGE[1] - NODE_RANGE[0])
 
-    # Attractive forces along edges (weighted)
-    for src, tgt, weight in edges:
-        i, j = node_idx[src], node_idx[tgt]
-        delta = pos[i] - pos[j]
-        dist = max(np.linalg.norm(delta), 0.01)
-        force = dist * dist / k * (0.8 + weight / 400)
-        direction = delta / dist
-        disp[i] -= direction * force
-        disp[j] += direction * force
+# Force-directed layout (Fruchterman-Reingold): heavier links pull harder
+rng = np.random.default_rng(19)
+pos = rng.random((len(names), 2))
+k = 1 / np.sqrt(len(names))
+step = 0.1
+for _ in range(400):
+    delta = pos[:, None, :] - pos[None, :, :]
+    dist = np.maximum(np.linalg.norm(delta, axis=2), 1e-3)
+    move = (delta / dist[..., None] * (5 * k * k / dist)[..., None]).sum(axis=1)
+    for a, b, w in zip(src, tgt, papers / papers.max(), strict=True):
+        d = pos[a] - pos[b]
+        length = max(np.linalg.norm(d), 1e-3)
+        pull = d / length * length * length / k * (0.2 + 0.5 * w)
+        move[a] -= pull
+        move[b] += pull
+    norm = np.maximum(np.linalg.norm(move, axis=1), 1e-3)
+    pos += move / norm[:, None] * np.minimum(norm, step)[:, None]
+    step *= 0.98
+unit = (pos - pos.min(axis=0)) / (pos.max(axis=0) - pos.min(axis=0))
+pos = np.array([0.27, 0.10]) + unit * np.array([0.69, 0.76])  # left column stays free for the legends
 
-    # Apply displacement with temperature limiting
-    for i in range(n):
-        disp_norm = max(np.linalg.norm(disp[i]), 0.01)
-        pos[i] += disp[i] / disp_norm * min(disp_norm, t)
+groups = list(dict.fromkeys(nodes[FOCUS]))
+colors = [IMPRINT_PALETTE[groups.index(g)] for g in nodes[FOCUS]]
 
-    t *= 0.97  # Cool down
-
-# Normalize positions to [-1, 1]
-pos_min = pos.min(axis=0)
-pos_max = pos.max(axis=0)
-pos = 2 * (pos - pos_min) / (pos_max - pos_min + 0.001) - 1
-pos *= 0.75
-
-positions = {name: pos[node_idx[name]] for name in node_list}
-
-# Compute weighted degree for node sizing
-weighted_degree = dict.fromkeys(nodes, 0)
-for src, tgt, weight in edges:
-    weighted_degree[src] += weight
-    weighted_degree[tgt] += weight
-
-# Region names and group mapping
-region_names = ["Americas", "Europe", "Asia", "Oceania"]
-group_colors = {i: IMPRINT[i] for i in range(4)}
-
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Edge width and alpha scaling
-edge_weights = [w for _, _, w in edges]
-max_weight = max(edge_weights)
-min_weight = min(edge_weights)
-weight_range = max_weight - min_weight
-
-# Draw edges with varying thickness
-for src, tgt, weight in edges:
-    pos_src = positions[src]
-    pos_tgt = positions[tgt]
-    norm_w = (weight - min_weight) / weight_range if weight_range > 0 else 0.5
-    line_width = 1.5 + norm_w * 10
-    alpha = 0.3 + norm_w * 0.5
+# Edges first, nodes and labels on top
+for a, b, w in zip(src, tgt, widths, strict=True):
     ax.plot(
-        [pos_src[0], pos_tgt[0]],
-        [pos_src[1], pos_tgt[1]],
+        [pos[a, 0], pos[b, 0]],
+        [pos[a, 1], pos[b, 1]],
         color=INK_SOFT,
-        linewidth=line_width,
-        alpha=alpha,
+        linewidth=w,
+        alpha=0.55,
         solid_capstyle="round",
         zorder=1,
     )
-
-# Node sizes based on weighted degree
-max_degree = max(weighted_degree.values())
-node_sizes = {name: 400 + (weighted_degree[name] / max_degree) * 2000 for name in nodes}
-
-# Draw nodes
-for name, data in nodes.items():
-    color = group_colors[data["group"]]
-    node_pos = positions[name]
-    ax.scatter(node_pos[0], node_pos[1], s=node_sizes[name], c=color, edgecolors=PAGE_BG, linewidths=2.5, zorder=2)
-
-# Draw node labels (above nodes)
-for name in nodes:
-    node_pos = positions[name]
-    node_radius = np.sqrt(node_sizes[name]) / 100
+ax.scatter(pos[:, 0], pos[:, 1], s=sizes, c=colors, edgecolors=PAGE_BG, linewidths=1.2, zorder=2)
+for i, name in enumerate(names):
     ax.annotate(
         name,
-        (node_pos[0], node_pos[1] + node_radius + 0.06),
-        fontsize=14,
-        fontweight="bold",
+        pos[i],
+        xytext=(0, np.sqrt(sizes[i]) / 2 + 3),
+        textcoords="offset points",
         ha="center",
         va="bottom",
+        fontsize=7,
+        fontweight="bold",
         color=INK,
+        path_effects=[pe.withStroke(linewidth=2.2, foreground=PAGE_BG)],
         zorder=3,
     )
 
-# Region legend
-legend_handles = []
-for i, region in enumerate(region_names):
-    handle = ax.scatter([], [], s=400, c=IMPRINT[i], edgecolors=PAGE_BG, linewidths=2, label=region)
-    legend_handles.append(handle)
-
-leg = ax.legend(
-    handles=legend_handles, loc="upper left", fontsize=16, framealpha=0.95, title="Region", title_fontsize=18
+# Legend 1: node color = research focus
+focus_handles = [
+    Line2D(
+        [],
+        [],
+        marker="o",
+        linestyle="",
+        markersize=8,
+        markerfacecolor=IMPRINT_PALETTE[i],
+        markeredgecolor=PAGE_BG,
+        label=g,
+    )
+    for i, g in enumerate(groups)
+]
+focus_legend = ax.legend(
+    handles=focus_handles, title=FOCUS, loc="upper left", fontsize=7, title_fontsize=8, framealpha=0.95, borderpad=0.8
 )
-if leg:
+ax.add_artist(focus_legend)
+
+# Legend 2: edge thickness = co-authored papers, sample widths labeled with their counts
+samples = np.unique(np.round(np.linspace(papers.min(), papers.max(), len(LINE_RANGE) + 1), -1)).astype(int)
+weight_handles = [
+    Line2D([], [], color=INK_SOFT, alpha=0.55, linewidth=line_width(s), solid_capstyle="round", label=f"{s} papers")
+    for s in samples
+]
+weight_legend = ax.legend(
+    handles=weight_handles,
+    title="Edge thickness",
+    loc="lower left",
+    fontsize=7,
+    title_fontsize=8,
+    framealpha=0.95,
+    borderpad=0.8,
+    labelspacing=0.9,
+    handlelength=3,
+)
+for leg in (focus_legend, weight_legend):
     leg.get_frame().set_facecolor(ELEVATED_BG)
     leg.get_frame().set_edgecolor(INK_SOFT)
     plt.setp(leg.get_texts(), color=INK_SOFT)
     plt.setp(leg.get_title(), color=INK_SOFT)
 
-# Edge thickness legend
-legend_text = f"Edge thickness: Trade volume\n(${min_weight}B - ${max_weight}B USD)"
+# Node size caption
 ax.annotate(
-    legend_text,
-    xy=(0.02, 0.02),
+    "Node size: total co-authored papers",
+    xy=(0.99, 0.02),
     xycoords="axes fraction",
-    fontsize=14,
-    bbox={"boxstyle": "round,pad=0.5", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.95},
-    verticalalignment="bottom",
+    ha="right",
+    va="bottom",
+    fontsize=7,
     color=INK_SOFT,
+    style="italic",
 )
 
 # Style
-ax.set_title("network-weighted · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
-ax.set_xlim(-1.15, 1.15)
-ax.set_ylim(-1.15, 1.15)
-ax.set_aspect("equal")
+ax.set_title(
+    "Research collaboration · network-weighted · python · matplotlib · anyplot.ai",
+    fontsize=10,
+    fontweight="medium",
+    color=INK,
+)
+ax.set_xlim(0, 1)
+ax.set_ylim(0, 1)
 ax.axis("off")
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
