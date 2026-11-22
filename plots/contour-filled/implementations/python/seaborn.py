@@ -1,14 +1,16 @@
 """ anyplot.ai
 contour-filled: Filled Contour Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-15
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-22
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 
 # Theme tokens
@@ -17,6 +19,12 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint sequential colormap for a single-signed field
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
 # Configure seaborn theme
 sns.set_theme(
@@ -36,47 +44,44 @@ sns.set_theme(
     },
 )
 
-# Data: Temperature field across geographic region (application context)
-np.random.seed(42)
-longitude = np.linspace(-180, 180, 80)
-latitude = np.linspace(-90, 90, 80)
-Lon, Lat = np.meshgrid(longitude, latitude)
+# Constants
+N_LEVELS = 15  # number of contour levels (spec: typically 10-20)
 
-# Create realistic temperature field with peaks (hot regions) and valleys (cold regions)
-temp1 = 25 * np.exp(-((Lon - 60) ** 2 + (Lat - 30) ** 2) / 1200)
-temp2 = 20 * np.exp(-((Lon + 80) ** 2 + (Lat + 40) ** 2) / 1500)
-temp3 = -15 * np.exp(-((Lon - 40) ** 2 + (Lat - 60) ** 2) / 800)
-Temperature = temp1 + temp2 + temp3 + 10
+# Columns: set these to your table's column names
+LONGITUDE = "Longitude (°E)"  # role: x
+LATITUDE = "Latitude (°N)"  # role: y
+TEMPERATURE = "Temperature (°C)"  # role: z
 
-# Create figure and plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Data: replace this block with your own table, for example df = pd.read_csv("field.csv")
+lon, lat = np.meshgrid(np.linspace(-180, 180, 80), np.linspace(-90, 90, 80))
+warm_east = 25 * np.exp(-((lon - 60) ** 2 + (lat - 30) ** 2) / 1200)
+warm_west = 20 * np.exp(-((lon + 80) ** 2 + (lat + 40) ** 2) / 1500)
+cold_trough = -15 * np.exp(-((lon - 40) ** 2 + (lat - 60) ** 2) / 800)
+df = pd.DataFrame(
+    {LONGITUDE: lon.ravel(), LATITUDE: lat.ravel(), TEMPERATURE: (warm_east + warm_west + cold_trough + 10).ravel()}
+)
 
-# Create filled contour with viridis colormap
-palette = sns.color_palette("viridis", as_cmap=True)
-levels = np.linspace(Temperature.min(), Temperature.max(), 15)
-contourf = ax.contourf(Lon, Lat, Temperature, levels=levels, cmap=palette)
+# Plot: reads only df and the constants above
+grid = df.pivot_table(index=LATITUDE, columns=LONGITUDE, values=TEMPERATURE)
+levels = np.linspace(np.nanmin(grid.to_numpy()), np.nanmax(grid.to_numpy()), N_LEVELS)
 
-# Overlay contour lines for level identification
-contour_lines = ax.contour(Lon, Lat, Temperature, levels=levels, colors=INK_SOFT, linewidths=0.5, alpha=0.3)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Add colorbar
+contourf = ax.contourf(grid.columns, grid.index, grid.to_numpy(), levels=levels, cmap=imprint_seq)
+ax.contour(grid.columns, grid.index, grid.to_numpy(), levels=levels, colors=INK_SOFT, linewidths=0.4, alpha=0.5)
+
 cbar = fig.colorbar(contourf, ax=ax, shrink=0.85, pad=0.02)
-cbar.set_label("Temperature (°C)", fontsize=20, color=INK)
-cbar.ax.tick_params(labelsize=16, colors=INK_SOFT)
+cbar.set_label(TEMPERATURE, fontsize=10, color=INK)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
 
-# Styling
-ax.set_xlabel("Longitude (°E)", fontsize=20, color=INK)
-ax.set_ylabel("Latitude (°N)", fontsize=20, color=INK)
-ax.set_title("contour-filled · seaborn · anyplot.ai", fontsize=24, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Style
+ax.set_xlabel(LONGITUDE, fontsize=10, color=INK)
+ax.set_ylabel(LATITUDE, fontsize=10, color=INK)
+ax.set_title("contour-filled · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.set_aspect("equal")
-
-# Remove grid
 ax.grid(False)
 
-# Style colorbar ticks
-for label in cbar.ax.get_yticklabels():
-    label.set_color(INK_SOFT)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
