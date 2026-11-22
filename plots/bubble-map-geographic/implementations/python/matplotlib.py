@@ -1,13 +1,14 @@
 """ anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-18
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-22
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
@@ -20,7 +21,16 @@ OCEAN = "#C8DDF0" if THEME == "light" else "#1E3050"
 LAND = "#E5E5E0" if THEME == "light" else "#3A3A34"
 LAND_EDGE = "#888888" if THEME == "light" else "#555550"
 GRATICULE = "#AAAAAA" if THEME == "light" else "#555550"
-BUBBLE_COLOR = "#009E73"  # Okabe-Ito position 1
+BUBBLE_COLOR = "#009E73"  # Imprint palette position 1
+
+# Constants
+MIN_SIZE = 20  # smallest bubble area (pt^2)
+MAX_SIZE = 225  # largest bubble area (pt^2)
+
+LATITUDE = "Latitude (°)"  # role: latitude
+LONGITUDE = "Longitude (°)"  # role: longitude
+GDP = "Metro GDP (billion USD)"  # role: value
+CITY = "City"  # role: label
 
 # Data - Major world cities with GDP (in billion USD) as primary value for bubble size
 np.random.seed(42)
@@ -53,16 +63,10 @@ cities = {
     "Frankfurt": (50.1109, 8.6821, 210),
 }
 
-# Extract data
-names = list(cities.keys())
-lats = np.array([cities[c][0] for c in names])
-lons = np.array([cities[c][1] for c in names])
-gdp = np.array([cities[c][2] for c in names])
+df = pd.DataFrame(
+    [(name, lat, lon, value) for name, (lat, lon, value) in cities.items()], columns=[CITY, LATITUDE, LONGITUDE, GDP]
+)
 
-# Scale bubble area proportionally to GDP
-min_size = 80
-max_size = 900
-sizes = min_size + (gdp - gdp.min()) / (gdp.max() - gdp.min()) * (max_size - min_size)
 
 # Simplified world map coastlines
 continents = [
@@ -388,59 +392,64 @@ continents = [
 ]
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(OCEAN)
 
 # Draw continents
 for continent in continents:
-    poly = plt.Polygon(continent, facecolor=LAND, edgecolor=LAND_EDGE, linewidth=0.6, zorder=1)
+    poly = plt.Polygon(continent, facecolor=LAND, edgecolor=LAND_EDGE, linewidth=0.3, zorder=1)
     ax.add_patch(poly)
 
 # Add graticule
 for lat in range(-60, 90, 30):
-    ax.axhline(y=lat, color=GRATICULE, linewidth=0.4, linestyle=":", alpha=0.6, zorder=0)
+    ax.axhline(y=lat, color=GRATICULE, linewidth=0.2, linestyle=":", alpha=0.6, zorder=0)
 for lon in range(-150, 181, 30):
-    ax.axvline(x=lon, color=GRATICULE, linewidth=0.4, linestyle=":", alpha=0.6, zorder=0)
+    ax.axvline(x=lon, color=GRATICULE, linewidth=0.2, linestyle=":", alpha=0.6, zorder=0)
 
-# Plot bubbles — Okabe-Ito position 1 with edge matching page background
-ax.scatter(lons, lats, s=sizes, c=BUBBLE_COLOR, alpha=0.6, edgecolors=PAGE_BG, linewidths=2, zorder=5)
+# Bubble area scales linearly with GDP, between MIN_SIZE and MAX_SIZE
+gdp_min = df[GDP].min()
+gdp_span = df[GDP].max() - gdp_min
+sizes = MIN_SIZE + (df[GDP] - gdp_min) / gdp_span * (MAX_SIZE - MIN_SIZE)
+
+# Bubbles - Imprint palette position 1, edge matching the page background
+ax.scatter(df[LONGITUDE], df[LATITUDE], s=sizes, c=BUBBLE_COLOR, alpha=0.6, edgecolors=PAGE_BG, linewidths=1, zorder=5)
 
 ax.set_xlim(-180, 180)
 ax.set_ylim(-60, 80)
 
 # Style
-ax.set_xlabel("Longitude (°)", fontsize=20, color=INK)
-ax.set_ylabel("Latitude (°)", fontsize=20, color=INK)
+ax.set_xlabel(LONGITUDE, fontsize=10, color=INK)
+ax.set_ylabel(LATITUDE, fontsize=10, color=INK)
 ax.set_title(
     "City GDP by Location · bubble-map-geographic · python · matplotlib · anyplot.ai",
-    fontsize=24,
+    fontsize=10,
     fontweight="medium",
     color=INK,
-    pad=15,
+    pad=8,
 )
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 for spine in ax.spines.values():
     spine.set_color(INK_SOFT)
 
-# Size legend
-gdp_values = [250, 750, 1500]
-legend_sizes = [min_size + (v - gdp.min()) / (gdp.max() - gdp.min()) * (max_size - min_size) for v in gdp_values]
+# Size legend - reference bubbles drawn with the same scaling as the data
+legend_values = [250, 750, 1500]
+legend_sizes = MIN_SIZE + (np.array(legend_values) - gdp_min) / gdp_span * (MAX_SIZE - MIN_SIZE)
 size_labels = ["$250B", "$750B", "$1.5T"]
 
-size_handles = []
-for sz, label in zip(legend_sizes, size_labels, strict=True):
-    handle = ax.scatter([], [], s=sz, c=BUBBLE_COLOR, alpha=0.6, edgecolors=PAGE_BG, linewidths=1.5, label=label)
-    size_handles.append(handle)
+size_handles = [
+    ax.scatter([], [], s=sz, c=BUBBLE_COLOR, alpha=0.6, edgecolors=PAGE_BG, linewidths=0.75, label=label)
+    for sz, label in zip(legend_sizes, size_labels, strict=True)
+]
 
 leg = ax.legend(
     handles=size_handles,
     title="Metro GDP",
     loc="lower left",
-    fontsize=14,
-    title_fontsize=16,
+    fontsize=8,
+    title_fontsize=8,
     fancybox=True,
-    labelspacing=0.8,
-    borderpad=1.2,
+    labelspacing=1.0,
+    borderpad=0.9,
 )
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
@@ -449,5 +458,5 @@ plt.setp(leg.get_texts(), color=INK_SOFT)
 leg.get_title().set_color(INK)
 
 # Save
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.07, right=0.985, top=0.93, bottom=0.11)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
