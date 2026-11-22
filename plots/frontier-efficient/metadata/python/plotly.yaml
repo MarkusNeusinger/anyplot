@@ -2,51 +2,50 @@ library: plotly
 language: python
 specification_id: frontier-efficient
 created: '2026-01-08T22:39:25Z'
-updated: '2026-05-17T04:46:17Z'
-generated_by: claude-haiku
-workflow_run: 25981505536
+updated: '2026-11-22T02:53:09Z'
+generated_by: claude-sonnet
+workflow_run: 44977554682
 issue: 3342
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 87
 review:
   strengths:
-  - Perfect text legibility across both light and dark themes with explicit font sizing
-  - Flawless Okabe-Ito palette compliance with efficient frontier correctly using
-    brand green (#009E73)
-  - 'Comprehensive efficient frontier visualization with all required elements: frontier
-    curve, random portfolios, key portfolio markers, capital market line, and risk-free
-    rate'
-  - 'Excellent use of Plotly''s interactive features: colorbar legend, hover templates
-    with formatted percentages, HTML export'
-  - Realistic, professional Modern Portfolio Theory scenario with correct risk, return,
-    and Sharpe ratio ranges
-  - Clean, reproducible code with clear variable naming and appropriate complexity
-  - 'Perfect theme adaptation: data colors identical across light/dark, only chrome
-    elements flip to theme-correct colors'
+  - 'Efficient frontier is a 4 px brand-green #009E73 line along the upper-left edge
+    of the cloud, clearly set apart from the 0.65-opacity scatter and the 2 px dashed
+    capital market line'
+  - Minimum variance (blue diamond) and maximum Sharpe (amber star) are taken from
+    the frontier itself, so the diamond sits at its leftmost point and the star exactly
+    where the capital market line touches it
+  - 'Sharpe-ratio coloring uses the Imprint sequential scale (#009E73 → #4467A3) with
+    a shortened, outline-free colorbar; chrome flips cleanly between the two themes
+    while data colors stay identical'
+  - Vectorised portfolio math (np.einsum for the quadratic form) and a pandas cut/groupby/idxmin
+    frontier keep the code short and deterministic with a seed
+  - Plotly-native hovertemplates format risk, return and the per-point Sharpe value
+    (%{marker.color:.2f}) as percentages for the HTML view
   weaknesses:
-  - 'Design Excellence could be elevated: follows standard library-default aesthetic
-    rather than custom design sophistication'
-  - Data storytelling relies on visual hierarchy without explicit annotations for
-    key insights
-  - Library mastery could leverage more advanced Plotly features like interactive
-    callbacks or range sliders
+  - 'Suggestion: colorbar ticks read 0.45 / 0.5 / 0.55; a fixed tickformat of .2f
+    would give them consistent decimals.'
+  - 'Suggestion: the cloud and frontier occupy only the right third of the x-range
+    because the axis starts at the risk-free point; a broken or inset view of the
+    cloud could give its dense core more room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title, axis labels, ticks all clearly visible in dark text; legend positioned top-left with light background and border
-      Data: Efficient frontier as thick green line (#009E73 brand color); random portfolios scattered and colored by Sharpe ratio (Viridis colormap); Capital Market Line in orange (#D55E00); Min Variance marker as blue diamond (#0072B2); Max Sharpe marker as pink star (#CC79A7); risk-free rate as gray dot (#4A4A44)
-      Legibility verdict: PASS - All text perfectly readable; no legibility issues
+      Background: warm off-white #FAF8F1, 3200x1800 landscape canvas.
+      Chrome: centered title "frontier-efficient · python · plotly · anyplot.ai" in dark ink; axis titles "Risk (standard deviation)" and "Expected return (annual)"; percent tick labels 0%-25% and 0%-16% in INK_SOFT; subtle grid; legend top-left on an elevated panel with a thin border (Random portfolios, Capital market line, Efficient frontier, Risk-free rate (3%), Minimum variance, Maximum Sharpe ratio); "Sharpe ratio" colorbar on the right with ticks 0.45-0.55. All readable.
+      Data: about 300 small portfolio dots colored green→blue by Sharpe ratio, clustered between 15% and 28% risk; thick #009E73 frontier along their upper-left edge from about 15% / 10% to 28% / 16.5%; purple #C475FD dashed capital market line from the grey risk-free point at 0% / 3% touching the frontier at the amber star (about 18.5% / 13.3%); blue #4467A3 diamond at the frontier's leftmost point (about 15% / 9.9%).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: All text light-colored and clearly readable against dark background; no dark-on-dark failures; grid subtle and visible
-      Data: All data colors identical to light render - efficient frontier still #009E73, CML still #D55E00, Min Variance still #0072B2, Max Sharpe still #CC79A7; Viridis colormap perceptually identical
-      Legibility verdict: PASS - All text perfectly readable in dark theme; proper theme adaptation confirmed
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks, legend text and colorbar labels in light ink, all readable; legend panel #242420 with light border; grid subtle but visible; no dark-on-dark text.
+      Data: identical colors to the light render (green frontier, purple dashed CML, blue diamond, amber star, green→blue scatter); risk-free marker flips to light grey INK_SOFT as chrome.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,51 +56,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; Title 28px, labels 22px, ticks 18px;
-          perfectly readable in both themes
+        comment: Title 16, axis titles 12, ticks/legend 10 at scale 4, as the library
+          prompt sets; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text collisions; clean positioning of all labels and annotations
+        comment: Legend sits in the empty upper-left region; no text collides with
+          data or other text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (size 10, opacity 0.7) adapted to 300 points; frontier line
-          (width 5) clearly visible
+        comment: 300 points at size 5 / opacity 0.65 keep the core readable; key markers
+          outlined in page color; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette correct; Viridis perceptually uniform; good contrast;
-          CVD-safe
+        comment: Markers differ by shape as well as color; green→blue ramp is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70% of canvas with balanced margins; no cut-off; generous
-          whitespace
+        comment: 3200x1800, no gate file; title ~70% width; empty region left of the
+          frontier is permitted by the spec
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Fully descriptive labels with units: ''Risk (Standard Deviation)''
-          and ''Expected Return (Annual)'''
+        comment: Risk (standard deviation) / Expected return (annual) with percent
+          ticks
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect Okabe-Ito compliance; efficient frontier #009E73; secondary
-          colors in order; Viridis for continuous; theme-correct backgrounds and chrome'
+        comment: 'Frontier #009E73, Imprint order for CML/markers, imprint_seq for
+          Sharpe, correct theme backgrounds'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -109,22 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Strong use of palette; intentional visual hierarchy; professional
-          styling; follows standard patterns rather than custom design
+        comment: 'Deliberate weight hierarchy: 4 px frontier over 2 px dashed CML
+          over faded scatter; distinct diamond/star shapes with page-colored outlines'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid with theme-aware colors; generous whitespace; legend with theme-adaptive
-          styling; grid could be more subtle
+        comment: Colorbar shortened (len 0.6) and outline removed; legend panel placed
+          in the empty quadrant
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clear visual hierarchy with frontier as focal point; guides narrative
-          effectively; lacks explicit annotations for key insights
+        comment: Faded cloud pushes the eye to the frontier and the tangency star;
+          risk-free anchor makes the CML legible
     spec_compliance:
       score: 15
       max: 15
@@ -134,27 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Efficient frontier visualization with all required chart elements
+        comment: Efficient frontier with portfolio cloud
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: frontier, random portfolios, key portfolio
-          markers, CML, risk-free rate'
+        comment: 'C1-C5 met: frontier along the upper-left edge, Sharpe colorbar,
+          min-variance at the frontier''s leftmost point, max-Sharpe where the CML
+          touches, CML from the risk-free rate'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show complete data range
+        comment: Risk on x, return on y; points at their values; axes contain all
+          data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend includes all six series with accurate
-          labels
+        comment: Mandated title format; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -164,21 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete risk-return spectrum with all portfolio types represented
+        comment: Cloud, frontier, both key portfolios, CML, risk-free rate
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Legitimate Modern Portfolio Theory scenario with realistic financial
-          values
+        comment: 5-asset universe with plausible returns 8-18% and covariance
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Risk (0-35%), return (0-25%), Sharpe ratios (0.4-0.5) all factually
-          correct
+        comment: 'Returns 10-16.5%, risk 15-28%, Sharpe 0.43-0.56 with rf 3%: all
+          within the spec''s ranges'
     code_quality:
       score: 10
       max: 10
@@ -188,33 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no unnecessary functions; clean structure
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; all used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity; no fake functionality
+        comment: einsum quadratic form, pd.cut/groupby/idxmin frontier, cummax filter
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct format: plot-{THEME}.png and .html'
+        comment: plot-{THEME}.png at 800x450 scale 4 plus HTML
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -222,26 +221,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of Graph Objects API; follows Plotly best practices; could
-          leverage more advanced features
+        comment: graph_objects traces, axis tickformat '.0%', marker colorbar configured
+          on the trace
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: Uses colorbar, hover templates, HTML export; could add interactive
-          callbacks or range sliders
+        comment: hovertemplate reading %{marker.color} for per-point Sharpe in HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-22T02:48:40Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - groupby-aggregation
+  dataprep:
+  - binning
   styling:
   - custom-colormap
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
