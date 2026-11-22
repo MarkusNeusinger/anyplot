@@ -1,31 +1,25 @@
 """ anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-17
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 76/100 | Updated: 2026-11-22
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series is always #009E73
-IMPRINT = [
-    "#009E73",  # bluish green (brand)
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-    "#BD8233",  # reddish purple
-    "#AE3030",  # orange
-]
+# Imprint palette: all eight positions, one per node type in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Apply seaborn theme
 sns.set_theme(
@@ -41,167 +35,121 @@ sns.set_theme(
     },
 )
 
-# Data: File system directory structure
-# Root: /project with subdirectories for src, config, tests, docs, build
-nodes = [
-    # Level 0 - Root
-    {"id": 0, "label": "project/", "level": 0, "type": "dir"},
-    # Level 1 - Main directories
-    {"id": 1, "label": "src/", "level": 1, "type": "dir"},
-    {"id": 2, "label": "config/", "level": 1, "type": "dir"},
-    {"id": 3, "label": "tests/", "level": 1, "type": "dir"},
-    {"id": 4, "label": "docs/", "level": 1, "type": "dir"},
-    {"id": 5, "label": "build/", "level": 1, "type": "dir"},
-    # Level 2 - Source subdirectories
-    {"id": 6, "label": "components/", "level": 2, "type": "dir"},
-    {"id": 7, "label": "utils/", "level": 2, "type": "dir"},
-    {"id": 8, "label": "models/", "level": 2, "type": "dir"},
-    # Level 2 - Config files
-    {"id": 9, "label": "settings.yaml", "level": 2, "type": "file"},
-    {"id": 10, "label": "env.json", "level": 2, "type": "file"},
-    # Level 2 - Test subdirectories
-    {"id": 11, "label": "unit/", "level": 2, "type": "dir"},
-    {"id": 12, "label": "integration/", "level": 2, "type": "dir"},
-    # Level 2 - Docs files
-    {"id": 13, "label": "api/", "level": 2, "type": "dir"},
-    {"id": 14, "label": "guide.md", "level": 2, "type": "file"},
-    # Level 3 - Component files
-    {"id": 15, "label": "button.py", "level": 3, "type": "file"},
-    {"id": 16, "label": "input.py", "level": 3, "type": "file"},
-    {"id": 17, "label": "form.py", "level": 3, "type": "file"},
-    # Level 3 - Utility files
-    {"id": 18, "label": "helpers.py", "level": 3, "type": "file"},
-    {"id": 19, "label": "validators.py", "level": 3, "type": "file"},
-    # Level 3 - Model files
-    {"id": 20, "label": "user.py", "level": 3, "type": "file"},
-    {"id": 21, "label": "data.py", "level": 3, "type": "file"},
-]
+# Columns: set these to your table's column names
+NODE = "Name"  # role: nodes
+PARENT = "Parent"  # role: edges
+LEVEL = "Depth level"  # role: level
+KIND = "Entry type"  # role: extra
 
-edges = [
-    # Root to Level 1
-    (0, 1),
-    (0, 2),
-    (0, 3),
-    (0, 4),
-    (0, 5),
-    # src to subdirectories
-    (1, 6),
-    (1, 7),
-    (1, 8),
-    # config to files
-    (2, 9),
-    (2, 10),
-    # tests to subdirectories
-    (3, 11),
-    (3, 12),
-    # docs to contents
-    (4, 13),
-    (4, 14),
-    # components to files
-    (6, 15),
-    (6, 16),
-    (6, 17),
-    # utils to files
-    (7, 18),
-    (7, 19),
-    # models to files
-    (8, 20),
-    (8, 21),
-]
+# Data: replace this block with your own table, for example df = pd.read_csv("tree.csv")
+# One row per node; the parent column holds the parent's name (missing for the root).
+df = pd.DataFrame(
+    [
+        ("project/", None, 0, "directory"),
+        ("src/", "project/", 1, "directory"),
+        ("config/", "project/", 1, "directory"),
+        ("tests/", "project/", 1, "directory"),
+        ("docs/", "project/", 1, "directory"),
+        ("build/", "project/", 1, "directory"),
+        ("components/", "src/", 2, "directory"),
+        ("utils/", "src/", 2, "directory"),
+        ("models/", "src/", 2, "directory"),
+        ("settings.yaml", "config/", 2, "file"),
+        ("env.json", "config/", 2, "file"),
+        ("unit/", "tests/", 2, "directory"),
+        ("integration/", "tests/", 2, "directory"),
+        ("api/", "docs/", 2, "directory"),
+        ("guide.md", "docs/", 2, "file"),
+        ("button.py", "components/", 3, "file"),
+        ("input.py", "components/", 3, "file"),
+        ("form.py", "components/", 3, "file"),
+        ("helpers.py", "utils/", 3, "file"),
+        ("validators.py", "utils/", 3, "file"),
+        ("user.py", "models/", 3, "file"),
+        ("data.py", "models/", 3, "file"),
+    ],
+    columns=[NODE, PARENT, LEVEL, KIND],
+)
 
-# Compute hierarchical layout positions
-levels = {}
-for node in nodes:
-    lvl = node["level"]
-    if lvl not in levels:
-        levels[lvl] = []
-    levels[lvl].append(node)
+# Plot: reads only df and the constants above
+# Layout: one row per level, nodes spread evenly and centered within the row
+Y_SPACING = 2.0
+X_PER_NODE = 1.5
+MIN_SPREAD = 6.0
 
-# Calculate positions: levels spread vertically, nodes at each level spread horizontally
-positions = {}
-y_spacing = 2.0
-for lvl in sorted(levels.keys()):
-    nodes_at_level = levels[lvl]
-    n = len(nodes_at_level)
-    spread = max(n * 1.5, 6)
-    x_positions = np.linspace(-spread / 2, spread / 2, n)
-    y_pos = -lvl * y_spacing
-    for i, node in enumerate(nodes_at_level):
-        positions[node["id"]] = (x_positions[i], y_pos)
+pos_x = pd.Series(0.0, index=df.index)
+for _, row_index in df.groupby(LEVEL, sort=True).groups.items():
+    n = len(row_index)
+    spread = max(n * X_PER_NODE, MIN_SPREAD)
+    pos_x[row_index] = np.linspace(-spread / 2, spread / 2, n) if n > 1 else 0.0
+df["x"] = pos_x
+df["y"] = -df[LEVEL] * Y_SPACING
 
-# Prepare data for plotting
-node_x = [positions[n["id"]][0] for n in nodes]
-node_y = [positions[n["id"]][1] for n in nodes]
-node_labels = [n["label"] for n in nodes]
-node_levels = [n["level"] for n in nodes]
-node_types = [n["type"] for n in nodes]
+# Node size shrinks with depth
+df["size"] = np.interp(df[LEVEL], [df[LEVEL].min(), df[LEVEL].max()], [300, 115])
 
-# Color mapping: directories vs files
-colors_by_type = {
-    "dir": IMPRINT[0],  # Brand green for directories
-    "file": IMPRINT[1],  # Vermillion for files
-}
-node_colors = [colors_by_type[nt] for nt in node_types]
+kinds = list(df[KIND].unique())
+kind_colors = {kind: IMPRINT_PALETTE[i] for i, kind in enumerate(kinds)}
 
-# Node sizes based on level
-size_map = {0: 1200, 1: 900, 2: 600, 3: 450}
-node_sizes = [size_map[lvl] for lvl in node_levels]
-
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Draw edges first (underneath nodes)
-for parent, child in edges:
-    x0, y0 = positions[parent]
-    x1, y1 = positions[child]
-    ax.plot([x0, x1], [y0, y1], color=INK_SOFT, linewidth=2.0, alpha=0.4, zorder=1)
+# Edges first (underneath nodes): each node connects to its parent
+coords = df.set_index(NODE)[["x", "y"]]
+for name, parent in zip(df[NODE], df[PARENT], strict=True):
+    if pd.isna(parent):
+        continue
+    x0, y0 = coords.loc[parent]
+    x1, y1 = coords.loc[name]
+    ax.plot([x0, x1], [y0, y1], color=INK_SOFT, linewidth=1.0, alpha=0.4, zorder=1)
 
-# Draw all nodes as a single scatter plot with colors
-ax.scatter(node_x, node_y, s=node_sizes, c=node_colors, edgecolors=INK_SOFT, linewidth=2.0, alpha=0.85, zorder=2)
+# Nodes: color by entry type, size by depth
+sns.scatterplot(
+    data=df,
+    x="x",
+    y="y",
+    hue=KIND,
+    palette=kind_colors,
+    s=df["size"].to_numpy(),
+    edgecolor=INK_SOFT,
+    linewidth=1.0,
+    alpha=0.85,
+    legend=False,
+    zorder=2,
+    ax=ax,
+)
 
-# Add node labels
-for node in nodes:
-    x, y = positions[node["id"]]
-    lvl = node["level"]
-    fontsize = 18 if lvl == 0 else 16 if lvl == 1 else 13 if lvl == 2 else 11
-    fontweight = "bold" if lvl == 0 else "normal"
+# Node labels sit just below their node; the root is larger and bold
+max_level = df[LEVEL].max()
+for name, x, y, level in zip(df[NODE], df["x"], df["y"], df[LEVEL], strict=True):
+    is_root = level == df[LEVEL].min()
     ax.annotate(
-        node["label"],
+        name,
         (x, y),
         textcoords="offset points",
-        xytext=(0, -28),
+        xytext=(0, -14),
         ha="center",
         va="top",
-        fontsize=fontsize,
-        fontweight=fontweight,
+        fontsize=9 if is_root else 8 if level == 1 else 7 if level < max_level else 6.5,
+        fontweight="bold" if is_root else "normal",
         color=INK,
     )
 
-# Style the plot
-ax.set_title("network-hierarchical · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
-
-# Set axis properties
-ax.set_xlabel("Directory/File Distribution", fontsize=20, color=INK)
-ax.set_ylabel("Directory Depth (Level)", fontsize=20, color=INK)
+# Style
+ax.set_title("network-hierarchical · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=10)
+ax.set_xlabel("Directory/File Distribution", fontsize=10)
+ax.set_ylabel("Directory Depth (Level)", fontsize=10)
 ax.set_xticks([])
 ax.set_yticks([])
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Set axis limits with padding
 x_padding = 1.5
 y_padding = 1.0
-ax.set_xlim(min(node_x) - x_padding, max(node_x) + x_padding)
-ax.set_ylim(min(node_y) - y_padding, max(node_y) + y_padding)
+ax.set_xlim(df["x"].min() - x_padding, df["x"].max() + x_padding)
+ax.set_ylim(df["y"].min() - y_padding, df["y"].max() + y_padding)
 
-# Remove spines for cleaner network visualization
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
-
-# Disable grid for network visualization
 ax.grid(False)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
