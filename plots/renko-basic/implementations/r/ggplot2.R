@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' renko-basic: Basic Renko Chart
 #' Library: ggplot2 | R
-#' Quality: 82/100 | Created: 2026-05-17
+#' Quality: pending | Created: 2026-05-17
 
 library(ggplot2)
 library(dplyr)
