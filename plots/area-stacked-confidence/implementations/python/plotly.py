@@ -1,7 +1,7 @@
 """anyplot.ai
 area-stacked-confidence: Stacked Area Chart with Confidence Bands
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-18
+Quality: pending | Updated: 2026-05-18
 """
 
 import os
