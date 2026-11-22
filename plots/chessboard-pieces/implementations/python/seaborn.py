@@ -1,27 +1,17 @@
-""" anyplot.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-17
 """
 
 import os
-import sys
-from pathlib import Path
 
+import matplotlib.patheffects as pe
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 
-# Avoid module shadowing: remove the script's directory from sys.path before importing
-script_dir = Path(__file__).parent.resolve()
-original_path = sys.path.copy()
-sys.path = [p for p in sys.path if Path(p).resolve() != script_dir and p not in ("", ".")]
-
-import matplotlib.patheffects as pe  # noqa: E402
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-import seaborn as sns  # noqa: E402
-
-
-sys.path = original_path
-del original_path
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -30,26 +20,26 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Chess piece Unicode symbols
-PIECE_SYMBOLS = {
-    "K": "♔",
-    "Q": "♕",
-    "R": "♖",
-    "B": "♗",
-    "N": "♘",
-    "P": "♙",  # White pieces
-    "k": "♚",
-    "q": "♛",
-    "r": "♜",
-    "b": "♝",
-    "n": "♞",
-    "p": "♟",  # Black pieces
-}
+# Imprint palette (the board and pieces use chess-specific tones instead)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Italian Game position: After 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 d5 5.exd5 Nxd5
-# This is the Fried Liver starting position - famous and educational
-pieces = {
-    # White pieces
+# Constants
+FILES = "abcdefgh"
+RANKS = "12345678"
+# Solid glyphs (U+265A to U+265F) for both sides: color, not outline shape, tells the sides apart
+SYMBOLS = {"k": "♚", "q": "♛", "r": "♜", "b": "♝", "n": "♞", "p": "♟"}
+BOARD_LIGHT = "#EEEED2"  # tournament-style cream
+BOARD_DARK = "#769656"  # tournament-style green
+WHITE_FILL = "#FFFDF6"
+BLACK_FILL = "#1A1A17"
+
+# Columns: set these to your table's column names
+SQUARE = "Square"  # role: square
+PIECE = "Piece"  # role: piece
+
+# Data: replace this block with your own position, uppercase = white, lowercase = black
+# Position: Fried Liver Attack after 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 d5 5.exd5 Nxd5
+position = {
     "a1": "R",
     "b1": "N",
     "c1": "B",
@@ -66,7 +56,6 @@ pieces = {
     "c4": "B",
     "f3": "N",
     "g5": "N",
-    # Black pieces
     "a8": "r",
     "b8": "n",
     "c8": "b",
@@ -85,16 +74,13 @@ pieces = {
     "f6": "n",
     "c6": "n",
 }
+df = pd.DataFrame({SQUARE: list(position.keys()), PIECE: list(position.values())})
 
-# Create board data for heatmap
-# h1 should be light (chess standard), so pattern needs adjustment
-board_colors = np.zeros((8, 8))
-for row in range(8):
-    for col in range(8):
-        # Checkerboard pattern: h1 (row=7, col=7) should be light (0)
-        board_colors[row, col] = (row + col + 1) % 2
+# Plot
+# Board shade per cell: row 0 is rank 8; the h1 corner (row 7, col 7) is a light square (0)
+rows, cols = np.indices((8, 8))
+board = (rows + cols + 1) % 2
 
-# Set up seaborn theme with theme-adaptive colors
 sns.set_theme(
     style="ticks",
     rc={
@@ -108,69 +94,48 @@ sns.set_theme(
     },
 )
 
-# Create figure with square aspect ratio for chessboard
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 
-# Use seaborn heatmap for the board squares
 sns.heatmap(
-    board_colors,
+    board,
     ax=ax,
-    cmap=["#F0D9B5", "#B58863"],  # Classic chess board colors
+    cmap=[BOARD_LIGHT, BOARD_DARK],
     cbar=False,
     square=True,
-    linewidths=0.5,
-    linecolor="#8B7355",
-    xticklabels=list("abcdefgh"),
-    yticklabels=list("87654321"),
+    linewidths=0,
+    xticklabels=list(FILES),
+    yticklabels=list(reversed(RANKS)),
 )
 
-# Style tick labels with theme-adaptive colors
-ax.tick_params(
-    axis="both",
-    which="both",
-    length=0,
-    labelsize=20,
-    labelbottom=True,
-    labeltop=False,
-    labelleft=True,
-    labelright=False,
-    colors=INK_SOFT,
-)
-ax.set_xticklabels(list("abcdefgh"), fontsize=20, fontweight="bold", color=INK_SOFT)
-ax.set_yticklabels(list("87654321"), fontsize=20, fontweight="bold", color=INK_SOFT)
+ax.tick_params(axis="both", which="both", length=0, labelsize=14, pad=6)
+ax.set_xticklabels(list(FILES), fontsize=14, fontweight="bold", color=INK_SOFT)
+ax.set_yticklabels(list(reversed(RANKS)), fontsize=14, fontweight="bold", color=INK_SOFT, rotation=0)
 
-# Place pieces on the board
-for square, piece in pieces.items():
-    col = ord(square[0]) - ord("a")  # a=0, b=1, ..., h=7
-    row = 8 - int(square[1])  # 8=0, 7=1, ..., 1=7
-
-    symbol = PIECE_SYMBOLS.get(piece, "")
-    # White pieces in white, black pieces in dark
-    piece_color = INK if piece.islower() else "#ffffff"
-    # Outline color adjusted for theme
-    outline_color = INK_SOFT if THEME == "light" else "#4A4A44"
-    # Add path effect for visibility
+# Pieces: centered in their squares, sized with a margin to the edges
+for square, piece in zip(df[SQUARE], df[PIECE], strict=True):
+    col = FILES.index(square[0])
+    row = 8 - int(square[1])
+    is_white = piece.isupper()
     ax.text(
         col + 0.5,
-        row + 0.5,
-        symbol,
-        fontsize=48,
+        row + 0.55,
+        SYMBOLS[piece.lower()],
+        fontsize=30,
         ha="center",
         va="center",
-        color=piece_color,
-        fontweight="bold",
-        path_effects=[pe.withStroke(linewidth=2, foreground=outline_color)],
+        color=WHITE_FILL if is_white else BLACK_FILL,
+        path_effects=[pe.withStroke(linewidth=1.4, foreground=BLACK_FILL if is_white else WHITE_FILL)],
     )
 
-# Title with theme-adaptive color
-ax.set_title(
-    "Italian Game · chessboard-pieces · seaborn · anyplot.ai", fontsize=24, fontweight="bold", pad=20, color=INK
-)
-
-# Remove axis labels
 ax.set_xlabel("")
 ax.set_ylabel("")
+ax.set_title(
+    "Italian Game · chessboard-pieces · python · seaborn · anyplot.ai",
+    fontsize=10,
+    fontweight="bold",
+    pad=14,
+    color=INK,
+)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+fig.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
