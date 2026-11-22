@@ -1,13 +1,14 @@
 """ anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-17
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-22
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
@@ -17,81 +18,83 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (positions 1-3)
-COLORS = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Heights by age group
+# Constants
+N_BINS = 19  # number of histogram bins shared by every group
+PAD = 5  # padding beyond the data range, in the units of the values
+
+# Columns: set these to your table's column names
+HEIGHT = "Height (cm)"  # role: values
+AGE_GROUP = "Age group"  # role: group
+FREQUENCY = "Frequency"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("heights.csv")
 np.random.seed(42)
 n_per_group = 200
-
-# Generate three distinct distributions representing height measurements (cm)
-young_adults = np.random.normal(loc=172, scale=8, size=n_per_group)
-middle_aged = np.random.normal(loc=170, scale=9, size=n_per_group)
-seniors = np.random.normal(loc=166, scale=10, size=n_per_group)
-
-groups = [young_adults, middle_aged, seniors]
 group_names = ["Young Adults (18-25)", "Middle-Aged (40-50)", "Seniors (65+)"]
+df = pd.DataFrame(
+    {
+        HEIGHT: np.concatenate(
+            [
+                np.random.normal(loc=172, scale=8, size=n_per_group),
+                np.random.normal(loc=170, scale=9, size=n_per_group),
+                np.random.normal(loc=166, scale=10, size=n_per_group),
+            ]
+        ),
+        AGE_GROUP: np.repeat(group_names, n_per_group),
+    }
+)
 
-# Create common bin edges for all groups
-all_data = np.concatenate(groups)
-bin_edges = np.linspace(all_data.min() - 5, all_data.max() + 5, 20)
+# Plot: reads only df and the constants above
+bin_edges = np.linspace(df[HEIGHT].min() - PAD, df[HEIGHT].max() + PAD, N_BINS + 1)
 bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+title = "frequency-polygon-basic · python · matplotlib · anyplot.ai"
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-for data, name, color in zip(groups, group_names, COLORS, strict=True):
-    # Calculate histogram frequencies
-    counts, _ = np.histogram(data, bins=bin_edges)
+for i, (group, rows) in enumerate(df.groupby(AGE_GROUP, sort=False)):
+    counts, _ = np.histogram(rows[HEIGHT].dropna(), bins=bin_edges)
 
     # Extend to zero at both ends to close the polygon
     x_extended = np.concatenate([[bin_edges[0]], bin_centers, [bin_edges[-1]]])
     y_extended = np.concatenate([[0], counts, [0]])
 
-    # Plot frequency polygon line
     ax.plot(
         x_extended,
         y_extended,
-        linewidth=3,
-        color=color,
-        label=name,
+        linewidth=2.5,
+        color=IMPRINT_PALETTE[i],
+        label=group,
         marker="o",
-        markersize=6,
-        markerfacecolor=color,
+        markersize=4.5,
         markeredgecolor=PAGE_BG,
-        markeredgewidth=1,
+        markeredgewidth=0.6,
     )
+    ax.fill(x_extended, y_extended, color=IMPRINT_PALETTE[i], alpha=0.15)
 
-    # Add semi-transparent fill
-    ax.fill(x_extended, y_extended, color=color, alpha=0.15)
-
-# Labels and styling
-ax.set_xlabel("Height (cm)", fontsize=20, color=INK)
-ax.set_ylabel("Frequency", fontsize=20, color=INK)
-ax.set_title("frequency-polygon-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Spine styling
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for s in ("left", "bottom"):
-    ax.spines[s].set_color(INK_SOFT)
-
-# Grid styling
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
-
-# Legend with theme-adaptive background
-leg = ax.legend(fontsize=16, loc="upper left", framealpha=0.95)
-if leg:
-    leg.get_frame().set_facecolor(ELEVATED_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    leg.get_frame().set_linewidth(0.8)
-    for text in leg.get_texts():
-        text.set_color(INK_SOFT)
-
-# Ensure y-axis starts at 0
+# Style
+ax.set_xlabel(HEIGHT, fontsize=10, color=INK)
+ax.set_ylabel(FREQUENCY, fontsize=10, color=INK)
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.set_ylim(bottom=0)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+for side in ("top", "right"):
+    ax.spines[side].set_visible(False)
+for side in ("left", "bottom"):
+    ax.spines[side].set_color(INK_SOFT)
+
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+
+leg = ax.legend(title=AGE_GROUP, fontsize=8, title_fontsize=8, loc="upper left", framealpha=0.95)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_frame().set_linewidth(0.8)
+plt.setp(leg.get_texts(), color=INK_SOFT)
+leg.get_title().set_color(INK_SOFT)
+
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
