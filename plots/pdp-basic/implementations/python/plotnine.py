@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pdp-basic: Partial Dependence Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-15
@@ -6,7 +6,6 @@ Quality: 94/100 | Updated: 2026-05-15
 
 import os
 
-import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
@@ -32,73 +31,72 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
-ACCENT = "#C475FD"  # Okabe-Ito position 2 for rug
 
-# Data - Train a model and compute partial dependence
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Generate synthetic data for a regression problem
+# Constants
+CI_Z = 1.96  # band covers mean ± 1.96 standard deviations across the ICE curves
+
+# Columns: set these to your table's column names
+FEATURE = "Room Size (standardized)"  # role: feature_values
+PD = "Partial Dependence (avg. prediction)"  # role: partial_dependence
+CI_LOW = "Lower bound"  # role: confidence_interval
+CI_HIGH = "Upper bound"  # role: extra
+OBSERVED = "Observed room size"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("pdp.csv")
 X, y = make_regression(n_samples=500, n_features=5, noise=10, random_state=42)
-feature_names = ["Energy Consumption", "Room Size", "Occupancy Rate", "Ventilation", "Age"]
-
-# Train a gradient boosting model
-model = GradientBoostingRegressor(n_estimators=100, max_depth=3, random_state=42)
-model.fit(X, y)
-
-# Compute partial dependence for Room Size (feature index 1)
-feature_idx = 1
-
-# Get partial dependence values
-pd_results = partial_dependence(model, X, features=[feature_idx], kind="average", grid_resolution=80)
-grid_actual = pd_results["grid_values"][0]
-
-# Compute ICE curves for confidence interval estimation
-pd_individual = partial_dependence(model, X, features=[feature_idx], kind="individual", grid_resolution=80)
-ice_values = pd_individual["individual"][0]
-
-# Calculate confidence interval (mean ± 1.96 * std for 95% CI)
-pd_mean = ice_values.mean(axis=0)
-pd_std = ice_values.std(axis=0)
-ci_lower = pd_mean - 1.96 * pd_std
-ci_upper = pd_mean + 1.96 * pd_std
-
-# Create DataFrame for plotting
+model = GradientBoostingRegressor(n_estimators=100, max_depth=3, random_state=42).fit(X, y)
+room_size = 1  # column of X used as the feature
+ice = partial_dependence(model, X, features=[room_size], kind="individual", grid_resolution=80)
+ice_curves = ice["individual"][0]
+grid = ice["grid_values"][0]
+mean_curve = ice_curves.mean(axis=0)
+spread = ice_curves.std(axis=0)
 df = pd.DataFrame(
-    {"feature_value": grid_actual, "partial_dependence": pd_mean, "ci_lower": ci_lower, "ci_upper": ci_upper}
+    {
+        FEATURE: grid,
+        PD: mean_curve,
+        CI_LOW: mean_curve - CI_Z * spread,
+        CI_HIGH: mean_curve + CI_Z * spread,
+        OBSERVED: X[: len(grid), room_size],
+    }
 )
 
-# Rug data - sample of training data positioned at the axis baseline
-y_min = df["partial_dependence"].min()
-y_max = df["partial_dependence"].max()
-rug_height = (y_max - y_min) * 0.03
-rug_sample = pd.DataFrame({"x": X[:100, feature_idx], "y": y_min - rug_height, "yend": y_min})
+# Plot: reads only df and the constants above
+rug_height = (df[CI_HIGH].max() - df[CI_LOW].min()) * 0.03
+rug_floor = df[CI_LOW].min() - rug_height
+rug = pd.DataFrame({OBSERVED: df[OBSERVED], "start": rug_floor, "end": df[CI_LOW].min()})
 
-# Plot
 plot = (
-    ggplot(df, aes(x="feature_value", y="partial_dependence"))
-    + geom_ribbon(aes(ymin="ci_lower", ymax="ci_upper"), alpha=0.15, fill=BRAND, color=BRAND, size=0.5)
-    + geom_line(color=BRAND, size=2)
-    + geom_segment(data=rug_sample, mapping=aes(x="x", xend="x", y="y", yend="yend"), color=ACCENT, alpha=0.6, size=0.8)
-    + labs(
-        title="pdp-basic · plotnine · anyplot.ai",
-        x="Room Size (standardized)",
-        y="Partial Dependence (avg. prediction)",
+    ggplot(df, aes(x=FEATURE, y=PD))
+    + geom_ribbon(
+        aes(ymin=CI_LOW, ymax=CI_HIGH), alpha=0.15, fill=IMPRINT_PALETTE[0], color=IMPRINT_PALETTE[0], size=0.25
     )
+    + geom_line(color=IMPRINT_PALETTE[0], size=1.0)
+    + geom_segment(
+        data=rug,
+        mapping=aes(x=OBSERVED, xend=OBSERVED, y="start", yend="end"),
+        color=IMPRINT_PALETTE[1],
+        alpha=0.6,
+        size=0.4,
+    )
+    + labs(title="pdp-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major=element_line(color=INK_SOFT, size=0.3, alpha=0.10),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.15, alpha=0.10),
         panel_grid_minor=element_blank(),
-        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
-        plot_title=element_text(size=24, weight="bold", color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT, size=0.5),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.25),
+        plot_title=element_text(size=12, weight="bold", color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.25),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
