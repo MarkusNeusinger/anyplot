@@ -1,7 +1,7 @@
 """ anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-19
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-22
 """
 
 import os
@@ -24,13 +24,22 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (positions 1-4)
-COLOR_CLOSE = "#009E73"  # brand green — close price (first series)
-COLOR_SMA20 = "#C475FD"  # vermillion
-COLOR_SMA50 = "#4467A3"  # blue
-COLOR_SMA200 = "#BD8233"  # reddish purple
+# Imprint palette: all eight positions, one per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — engineered to produce visible golden cross / death cross signals
+# Constants
+SMA_PERIODS = [20, 50, 200]  # standard short, medium and long windows for daily data
+SMA_DASHES = ["dashed", "dashdot", "dotted"]  # one dash pattern per SMA
+
+# Columns: set these to your table's column names
+DATE = "Trading date"  # role: date
+CLOSE = "Close price ($)"  # role: close
+SMA_SHORT = "SMA 20"  # role: sma_short
+SMA_MEDIUM = "SMA 50"  # role: sma_medium
+SMA_LONG = "SMA 200"  # role: sma_long
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
+# Engineered to produce visible golden cross / death cross signals
 np.random.seed(42)
 n_days = 300
 dates = pd.date_range(start="2024-01-01", periods=n_days, freq="B")
@@ -39,68 +48,74 @@ returns = np.concatenate(
 )
 price = 100 * np.exp(np.cumsum(returns))
 
-df = pd.DataFrame({"date": dates, "close": price})
-df["sma_20"] = df["close"].rolling(window=20).mean()
-df["sma_50"] = df["close"].rolling(window=50).mean()
-df["sma_200"] = df["close"].rolling(window=200).mean()
+close = pd.Series(price)
+df = pd.DataFrame(
+    {
+        DATE: dates,
+        CLOSE: price,
+        SMA_SHORT: close.rolling(window=SMA_PERIODS[0]).mean(),
+        SMA_MEDIUM: close.rolling(window=SMA_PERIODS[1]).mean(),
+        SMA_LONG: close.rolling(window=SMA_PERIODS[2]).mean(),
+    }
+)
 
+# Plot: reads only df and the constants above
+sma_columns = [SMA_SHORT, SMA_MEDIUM, SMA_LONG]
 source = ColumnDataSource(df)
 
-# Plot
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     title="indicator-sma · python · bokeh · anyplot.ai",
-    x_axis_label="Date",
-    y_axis_label="Price ($)",
+    x_axis_label=DATE,
+    y_axis_label=CLOSE,
     x_axis_type="datetime",
     tools="pan,wheel_zoom,box_zoom,reset,save",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-close_line = p.line(x="date", y="close", source=source, line_width=5, color=COLOR_CLOSE, alpha=1.0)
-sma20_line = p.line(x="date", y="sma_20", source=source, line_width=2, color=COLOR_SMA20, alpha=0.8, line_dash="dashed")
-sma50_line = p.line(x="date", y="sma_50", source=source, line_width=2, color=COLOR_SMA50, alpha=0.8, line_dash="dashed")
-sma200_line = p.line(
-    x="date", y="sma_200", source=source, line_width=2, color=COLOR_SMA200, alpha=0.8, line_dash="dashed"
-)
+close_line = p.line(x=DATE, y=CLOSE, source=source, line_width=6, color=IMPRINT_PALETTE[0])
+legend_items = [(CLOSE, [close_line])]
+for i, column in enumerate(sma_columns):
+    line = p.line(
+        x=DATE, y=column, source=source, line_width=5, color=IMPRINT_PALETTE[i + 1], alpha=0.95, line_dash=SMA_DASHES[i]
+    )
+    legend_items.append((column, [line]))
 
 # HoverTool for exact values on mouseover
 hover = HoverTool(
     tooltips=[
-        ("Date", "@date{%F}"),
-        ("Close", "@close{$0.2f}"),
-        ("SMA 20", "@sma_20{$0.2f}"),
-        ("SMA 50", "@sma_50{$0.2f}"),
-        ("SMA 200", "@sma_200{$0.2f}"),
+        (DATE, f"@{{{DATE}}}{{%F}}"),
+        (CLOSE, f"@{{{CLOSE}}}{{$0.2f}}"),
+        (SMA_SHORT, f"@{{{SMA_SHORT}}}{{$0.2f}}"),
+        (SMA_MEDIUM, f"@{{{SMA_MEDIUM}}}{{$0.2f}}"),
+        (SMA_LONG, f"@{{{SMA_LONG}}}{{$0.2f}}"),
     ],
-    formatters={"@date": "datetime"},
+    formatters={f"@{{{DATE}}}": "datetime"},
     mode="vline",
 )
 p.add_tools(hover)
 
 # Legend
-legend = Legend(
-    items=[
-        ("Close Price", [close_line]),
-        ("SMA 20", [sma20_line]),
-        ("SMA 50", [sma50_line]),
-        ("SMA 200", [sma200_line]),
-    ],
-    location="top_left",
-)
+legend = Legend(items=legend_items, location="top_left")
 p.add_layout(legend)
-p.legend.label_text_font_size = "22pt"
+p.legend.label_text_font_size = "34pt"
+p.legend.glyph_width = 90
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 p.legend.label_text_color = INK_SOFT
 
 # Chrome
-p.title.text_font_size = "28pt"
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_color = INK_SOFT
@@ -122,7 +137,7 @@ p.outline_line_color = None
 output_file(f"plot-{THEME}.html")
 save(p)
 
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -136,6 +151,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
