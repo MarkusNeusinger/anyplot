@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-19
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
@@ -16,66 +17,75 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Data - Surface wind observations from western Pacific weather station network
+# Imprint palette: position 1 is the single series
+BRAND = "#009E73"
+
+# Columns: set these to your table's column names
+LONGITUDE = "Longitude (°E)"  # role: x
+LATITUDE = "Latitude (°N)"  # role: y
+U_WIND = "Zonal wind u (kt)"  # role: u
+V_WIND = "Meridional wind v (kt)"  # role: v
+
+# Data: replace this block with your own table, for example df = pd.read_csv("winds.csv")
+# Surface wind observations from a western Pacific weather station network
 np.random.seed(42)
 
 # Grid of observation points: 10 longitude × 6 latitude (120–129°E, 25–30°N)
-lon = np.arange(120, 130, 1)
-lat = np.arange(25, 31, 1)
-LON, LAT = np.meshgrid(lon, lat)
-LON = LON.flatten()
-LAT = LAT.flatten()
+lon, lat = np.meshgrid(np.arange(120, 130, 1), np.arange(25, 31, 1))
+lon = lon.flatten()
+lat = lat.flatten()
 
-# Generate wind components (u: east-west, v: north-south) in knots
-# Realistic mid-latitude westerly pattern with spatial coherence
-base_u = 15 + 10 * np.sin((LON - 120) * 0.5)
-base_v = 5 + 8 * np.cos((LAT - 25) * 0.8)
-U = base_u + np.random.uniform(-5, 5, size=LON.shape)
-V = base_v + np.random.uniform(-5, 5, size=LAT.shape)
+# Wind components (u: east-west, v: north-south) in knots,
+# a mid-latitude westerly pattern with spatial coherence
+base_u = 15 + 10 * np.sin((lon - 120) * 0.5)
+base_v = 5 + 8 * np.cos((lat - 25) * 0.8)
+u = base_u + np.random.uniform(-5, 5, size=lon.shape)
+v = base_v + np.random.uniform(-5, 5, size=lat.shape)
 
-# Include calm winds (< 2.5 knots)
+# Calm winds (< 2.5 knots)
 calm_indices = [0, 25, 45]
-U[calm_indices] = np.random.uniform(-1, 1, size=len(calm_indices))
-V[calm_indices] = np.random.uniform(-1, 1, size=len(calm_indices))
+u[calm_indices] = np.random.uniform(-1, 1, size=len(calm_indices))
+v[calm_indices] = np.random.uniform(-1, 1, size=len(calm_indices))
 
-# Include strong winds with pennants (50+ knots)
+# Strong winds with pennants (50+ knots)
 strong_indices = [12, 38, 55]
-U[strong_indices] = 40 + np.random.uniform(0, 15, size=len(strong_indices))
-V[strong_indices] = 30 + np.random.uniform(0, 10, size=len(strong_indices))
+u[strong_indices] = 40 + np.random.uniform(0, 15, size=len(strong_indices))
+v[strong_indices] = 30 + np.random.uniform(0, 10, size=len(strong_indices))
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+df = pd.DataFrame({LONGITUDE: lon, LATITUDE: lat, U_WIND: u, V_WIND: v})
+
+# Plot: reads only df and the constants above
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 ax.barbs(
-    LON,
-    LAT,
-    U,
-    V,
-    length=8,
+    df[LONGITUDE],
+    df[LATITUDE],
+    df[U_WIND],
+    df[V_WIND],
+    length=6,
     barb_increments={"half": 5, "full": 10, "flag": 50},
     color=BRAND,
-    linewidth=1.5,
+    linewidth=1.1,
     sizes={"emptybarb": 0.15, "spacing": 0.15, "height": 0.5},
 )
 
 # Style
-ax.set_xlabel("Longitude (°E)", fontsize=20, color=INK)
-ax.set_ylabel("Latitude (°N)", fontsize=20, color=INK)
-ax.set_title("windbarb-basic · python · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_xlabel(LONGITUDE, fontsize=10, color=INK)
+ax.set_ylabel(LATITUDE, fontsize=10, color=INK)
+ax.set_title("windbarb-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 
-ax.set_xlim(119.5, 129.5)
-ax.set_ylim(24.5, 30.5)
+ax.set_xlim(df[LONGITUDE].min() - 0.5, df[LONGITUDE].max() + 0.5)
+ax.set_ylim(df[LATITUDE].min() - 2.6, df[LATITUDE].max() + 0.5)  # empty band below the barbs holds the key
 
-# Barb notation legend — placed in bottom-right to avoid overlapping barbs
+# Barb notation key, placed bottom-right clear of the barbs
 legend_text = (
     "Wind Barb Legend:\n○ = Calm (< 2.5 kt)\n╲ = 5 kt (half barb)\n╲╲ = 10 kt (full barb)\n▲ = 50 kt (pennant)"
 )
@@ -84,7 +94,7 @@ ax.text(
     0.02,
     legend_text,
     transform=ax.transAxes,
-    fontsize=14,
+    fontsize=8,
     verticalalignment="bottom",
     horizontalalignment="right",
     fontfamily="monospace",
@@ -92,6 +102,5 @@ ax.text(
     bbox={"boxstyle": "round", "facecolor": ELEVATED_BG, "alpha": 0.9, "edgecolor": INK_SOFT},
 )
 
-# Save
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.97, top=0.92, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
