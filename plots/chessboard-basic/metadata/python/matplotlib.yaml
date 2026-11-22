@@ -2,45 +2,48 @@ library: matplotlib
 language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:52:26Z'
-updated: '2026-05-17T01:46:32Z'
-generated_by: claude-haiku
-workflow_run: 25978156824
+updated: '2026-11-22T02:10:14Z'
+generated_by: claude-sonnet
+workflow_run: 44974391016
 issue: 3340
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 84
 review:
   strengths:
-  - 'Perfect theme adaptation: Both renders legible with properly implemented theme
-    tokens while maintaining consistent chess board colors'
-  - 'Excellent text legibility: Title and axis labels clear and bold across both themes
-    (fontsize=24 for title, 20 for labels)'
-  - 'Full spec compliance: All chess notation requirements met (8×8 grid, a–h columns,
-    1–8 rows, correct h1 light square)'
-  - 'Clean code: Simple, straightforward implementation without unnecessary abstractions'
-  - 'Professional visual design: Custom chess board colors with proper borders and
-    theme-adaptive styling'
+  - 'Correct standard orientation: a1 dark, h1 and a8 light, files a-h left to right
+    along the bottom and ranks 1-8 bottom to top on the left, each centered on its
+    square'
+  - Square 2400x2400 canvas with set_aspect('equal') keeps every square a true square,
+    with balanced margins around the board
+  - 'Theme-tuned board tones and border color keep the classic two-tone contrast and
+    make the board stand out on both #FAF8F1 and #1A1A17'
+  - 'Clear line hierarchy: a 1.6 pt outer frame over 0.6 pt square borders'
+  - Idiomatic tick labeling via set_xticks(positions, labels) and tick_params instead
+    of manual text placement
   weaknesses:
-  - 'Design Excellence is solid but not exceptional: Implementation is functional
-    and well-executed, but lacks additional visual sophistication or embellishment'
-  - 'Library Mastery is good but not distinctive: Idiomatic matplotlib, but doesn''t
-    showcase particularly unique library capabilities beyond Rectangle patching'
+  - 'CQ-04 (code): line 21 defines an IMPRINT_PALETTE list that is never used anywhere
+    in the script and has no effect on either render → remove. Likely cause: palette
+    boilerplate copied from the library template for a plot that uses the spec''s
+    two-tone board colors instead.'
+  - 'Suggestion: a subtle per-theme frame treatment could give the board a little
+    more presence on the page.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "chessboard-basic · matplotlib · anyplot.ai" in bold black (fontsize=24), clearly readable. Column labels a–h and row labels 1–8 in bold black (fontsize=20), centered and legible.
-      Data: Chess squares alternate between light cream (#F0D9B5) and warm brown (#B58863) with brown borders (#5D4037), perfect h1 light-square corner, excellent contrast
-      Legibility verdict: PASS — all text readable, no light-on-light failures
+      Background: Warm off-white #FAF8F1 (pixel-checked), 2400x2400 square canvas
+      Chrome: Bold title "chessboard-basic · python · matplotlib · anyplot.ai" in near-black ink, ~85% of the width, centered above the board. Bold file labels a-h below the board and rank labels 1-8 left of it, each centered on its square; all readable.
+      Data: 8x8 board of cream (#F0D9B5) and walnut (#B58863) squares with thin dark-brown borders and a thicker #5D4037 outer frame. a1 dark, h1 light, a8 light. No pieces or extra layers. (Board colors follow the spec's classic two-tone scheme; no Imprint series apply.)
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title in light off-white text, clearly visible. Column and row labels in light off-white, all readable against dark background — no dark-on-dark failures
-      Data: Lighter cream (#E8D4C4) and darker brown (#6B5047) squares maintain identical pattern to light render, only chrome colors adapted. Border color (#A0967C) visible against dark background. Data colors are identical to light render.
-      Legibility verdict: PASS — all text readable, strong theme adaptation throughout
+      Background: Warm near-black #1A1A17 (pixel-checked), same 2400x2400 canvas and layout
+      Chrome: Title and file/rank labels in light ink #F0EFE8, clearly readable; no dark-on-dark text. Outer frame and square borders in a taupe #A0967C, visible against the page.
+      Data: Same pattern and orientation; board tones adapted to the dark page (#E8D4C4 light squares, #6B5047 dark squares) and still clearly two-tone. The board stands out from the page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,71 +54,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title and labels explicitly set with fontsize 20–24 and bold weight,
-          readable in both themes
+        comment: 'Title 13 pt bold, file/rank labels 13 pt bold, explicitly set; dark
+          ink on #FAF8F1 and light ink on #1A1A17, readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels centered at tick positions, title padded, no collisions
+        comment: Labels centered on their squares with pad=6, title padded; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All squares and borders clearly visible with strong contrast
+        comment: All 64 squares, inner borders and outer frame clearly visible in
+          both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Light/dark distinction is strong and colorblind-safe
+        comment: Light/dark squares differ strongly in lightness, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 1:1 aspect ratio maintained, proper square proportions
+        comment: 2400x2400 square canvas, board centered with balanced margins, 1:1
+          aspect; title ~85% width is expected for the mandated title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format; column/row labels follow chess notation
-          standard
+        comment: Algebraic notation a-h / 1-8 is the labeling; no data axes to title
+          (N/A)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Theme-adaptive colors applied correctly; backgrounds #FAF8F1 (light)
-          and #1A1A17 (dark); both renders pass theme-readability check'
+        comment: 'Backgrounds #FAF8F1 / #1A1A17 correct, chrome theme-correct; the
+          spec''s classic two-tone board scheme replaces categorical data colors'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom chess colors with theme adaptation; professional but functional
-          rather than exceptionally sophisticated
+        comment: Board tones tuned separately per theme (cream/walnut on light, softened
+          tones on dark) with a matching border color
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Custom borders, explicit edge colors, spine styling, and padding
-          applied; well-polished
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Board layout naturally supports chess notation; inherently not a
-          storytelling visualization
+        comment: 'Two-level line hierarchy: 1.6 pt outer frame over 0.6 pt square
+          borders; balanced symmetric margins'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: 'Default: the board is displayed, no hierarchy chosen beyond the
+          Notes (none expected on a basic board)'
     spec_compliance:
       score: 15
       max: 15
@@ -125,26 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 8×8 chess board
+        comment: Empty 8x8 chess board, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 8 rows, 8 columns, alternating colors, algebraic
-          notation'
+        comment: 'C1 equal squares at 1:1, C2 light h1/a8, C3 a-h bottom and 1-8 left
+          centered, C4 clear two-tone in both themes, C5 empty board: all shown'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly labeled; h1 light-square corner verified
+        comment: a1 dark, h1 light, a8 light; files left-to-right, ranks bottom-to-top
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows spec format; no legend needed (N/A)
+        comment: Title 'chessboard-basic · python · matplotlib · anyplot.ai'; no legend
+          needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -154,21 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full chess board coverage with complete notation
+        comment: Full board with complete notation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard chess board in real-world notation; neutral and educational
+        comment: Standard chess board, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8×8 is standard chess board; proportions correct
+        comment: 64 squares, 8 files, 8 ranks; checked h1 and a8 light, a1 dark in
+          the render
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -176,50 +183,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; simple loops and variables
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic; will produce identical output on repeated runs
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, sys, matplotlib.pyplot); all used
+        comment: os, pyplot, pandas, Rectangle all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI; appropriate complexity; no unnecessary abstractions
+        passed: false
+        comment: Dead IMPRINT_PALETTE constant on line 21 is never used (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API usage
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Axes methods used correctly; Rectangle patches for grid-based shapes;
-          theme tokens follow matplotlib guide
+        comment: set_xticks(positions, labels) one-call form, tick_params for label
+          styling, set_aspect('equal'), Rectangle patches
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Good use of patches and theme adaptation; mostly standard matplotlib
-          features
+        passed: false
+        comment: 'Default: nothing beyond standard patches and ticks'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-7c7f27e33c
+  rendered_at: '2026-11-22T02:06:47Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -227,6 +236,7 @@ impl_tags:
   - manual-ticks
   patterns:
   - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
   - edge-highlighting
