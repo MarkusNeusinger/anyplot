@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' ohlc-bar: OHLC Bar Chart
 #' Library: ggplot2 4.0.3 | R 4.4.1
-#' Quality: 87/100 | Updated: 2026-11-22
+#' Quality: pending | Updated: 2026-11-22
 
 library(ggplot2)
 library(dplyr)
