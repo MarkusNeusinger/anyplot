@@ -1,162 +1,122 @@
 """ anyplot.ai
 parliament-basic: Parliament Seat Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-17
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-22
 """
 
 import os
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
-
-
-# Workaround: remove the script directory from sys.path to avoid shadowing bokeh module
-script_dir = os.path.dirname(__file__)
-sys.path = [p for p in sys.path if p != script_dir and os.path.abspath(p) != os.path.abspath(script_dir)]  # noqa: E402
-
-from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource  # noqa: E402
-from bokeh.plotting import figure  # noqa: E402
-from selenium import webdriver  # noqa: E402
-from selenium.webdriver.chrome.options import Options  # noqa: E402
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+# Imprint palette: all eight positions, one per party in data order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Political parties left-to-right by political spectrum
-# Left parties first, then center, then right
-parties = [
-    "Green Coalition",
-    "Labor Party",
-    "Progressive Alliance",
-    "Center Party",
-    "Liberal Democrats",
-    "Conservative Union",
-]
-seats = [42, 52, 85, 58, 67, 96]
-total_seats = sum(seats)
+# Columns: set these to your table's column names
+PARTY = "Party"  # role: party
+SEATS = "Seats"  # role: seats
+COLOR = "Color"  # role: color
 
-# Calculate seat positions in semicircular arcs
-rows = 8
-base_radius = 0.35
-radius_step = 0.12
-
-# Calculate seats per row based on arc length (outer rows have more seats)
-seats_per_row = []
-for i in range(rows):
-    radius = base_radius + i * radius_step
-    row_capacity = int(radius * 30)
-    seats_per_row.append(row_capacity)
-
-# Normalize to match total seats
-total_capacity = sum(seats_per_row)
-seats_per_row = [int(s * total_seats / total_capacity) for s in seats_per_row]
-
-# Adjust to match total exactly
-diff = total_seats - sum(seats_per_row)
-for i in range(abs(diff)):
-    idx = (rows - 1 - i) % rows if diff > 0 else i % rows
-    seats_per_row[idx] += 1 if diff > 0 else -1
-
-# Build party assignment - each seat gets a party in order
-party_assignments = []
-for i, (party, seat_count) in enumerate(zip(parties, seats, strict=True)):
-    party_assignments.extend([(party, IMPRINT[i % len(IMPRINT)])] * seat_count)
-
-# Generate seat positions - fill row by row
-x_positions = []
-y_positions = []
-seat_colors = []
-seat_parties = []
-
-seat_idx = 0
-for row in range(rows):
-    row_seat_count = seats_per_row[row]
-    if row_seat_count <= 0 or seat_idx >= total_seats:
-        continue
-
-    radius = base_radius + row * radius_step
-    angles = np.linspace(np.pi - 0.05, 0.05, row_seat_count)
-
-    for angle in angles:
-        if seat_idx >= total_seats:
-            break
-        x = radius * np.cos(angle)
-        y = radius * np.sin(angle)
-        x_positions.append(x)
-        y_positions.append(y)
-        party, color = party_assignments[seat_idx]
-        seat_colors.append(color)
-        seat_parties.append(party)
-        seat_idx += 1
-
-# Create data source
-source = ColumnDataSource(data={"x": x_positions, "y": y_positions, "color": seat_colors, "party": seat_parties})
-
-# Create figure - landscape format to accommodate legend below
-p = figure(
-    width=4800,
-    height=3200,
-    title="parliament-basic · bokeh · anyplot.ai",
-    tools="",
-    toolbar_location=None,
-    x_range=(-1.35, 1.35),
-    y_range=(-0.8, 1.3),
+# Data: replace this block with your own table, for example df = pd.read_csv("chamber.csv")
+df = pd.DataFrame(
+    {
+        PARTY: ["Harbor Union", "Ember League", "Quarry Alliance", "Meadow Circle", "Cinder Forum", "Willow Bloc"],
+        SEATS: [42, 52, 85, 58, 67, 96],
+        COLOR: ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"],  # Imprint positions 1-6
+    }
 )
 
-# Plot seats - increased size for better canvas visibility
-p.scatter(x="x", y="y", source=source, color="color", size=40, alpha=0.9, line_color=PAGE_BG, line_width=2)
+# Plot: reads only df and the constants above
+counts = df[SEATS].round().astype(int).to_numpy()
+total = int(counts.sum())
+majority = total // 2 + 1
 
-# Create legend with party colors and counts below the chart
-legend_y_pos = -0.7
-for i, (party, seat_count, color) in enumerate(zip(parties, seats, IMPRINT[: len(parties)], strict=True)):
-    # Horizontal spacing for legend items
-    x_offset = -1.1 + i * 0.37
+# Concentric arcs: the seats per arc grow with its radius (largest-remainder rounding)
+n_rows = 10
+radii = 0.4 + 0.095 * np.arange(n_rows)
+share = total * radii / radii.sum()
+per_row = np.floor(share).astype(int)
+order = np.argsort(share - per_row)[::-1]
+per_row[order[: total - per_row.sum()]] += 1
 
-    # Plot legend dot
-    legend_dot = ColumnDataSource(data={"x": [x_offset], "y": [legend_y_pos]})
-    p.scatter(x="x", y="y", source=legend_dot, color=color, size=24, alpha=0.9, line_color=PAGE_BG, line_width=2)
+# Every seat gets a position; sweeping the half circle from left to right makes each party one block
+angle = np.concatenate([np.linspace(np.pi, 0, k) for k in per_row])
+radius = np.repeat(radii, per_row)
+sweep = np.lexsort((radius, -angle))
+x = (radius * np.cos(angle))[sweep]
+y = (radius * np.sin(angle))[sweep]
+seats = ColumnDataSource({"x": x, "y": y, "color": np.repeat(df[COLOR].to_numpy(), counts)})
 
-    # Add legend text
+# Square data units: pixels per unit follows from the plot area and the vertical range
+W, H = 3200, 1800
+border = 40
+y_lo, y_hi = -0.9, radii.max() + 0.15
+units_px = (H - 110 - border) / (y_hi - y_lo)
+half_width = (W - 2 * border) / units_px / 2
+
+p = figure(
+    width=W,
+    height=H,
+    title="parliament-basic · python · bokeh · anyplot.ai",
+    tools="",
+    toolbar_location=None,
+    x_range=(-half_width, half_width),
+    y_range=(y_lo, y_hi),
+    min_border_top=110,
+    min_border_bottom=border,
+    min_border_left=border,
+    min_border_right=border,
+)
+p.scatter(x="x", y="y", source=seats, color="color", size=36, line_color=PAGE_BG, line_width=2)
+
+# Legend below the chamber: one colored seat per party with its name and seat count
+slot = 0.72
+for i, (party, count, color) in enumerate(zip(df[PARTY], counts, df[COLOR], strict=True)):
+    lx = (i - (len(df) - 1) / 2) * slot
+    p.scatter(x=[lx], y=[-0.5], color=color, size=36, line_color=PAGE_BG, line_width=2)
     p.text(
-        x=[x_offset],
-        y=[legend_y_pos - 0.15],
-        text=[f"{party}\n({seat_count})"],
+        x=[lx],
+        y=[-0.58],
+        text=[f"{party}\n{count} seats"],
         text_align="center",
-        text_font_size="16pt",
+        text_baseline="top",
+        text_font_size="24pt",
         text_color=INK_SOFT,
     )
 
-# Add majority threshold annotation
-majority = total_seats // 2 + 1
 p.text(
     x=[0],
-    y=[-0.18],
-    text=[f"Majority threshold: {majority} seats (Total: {total_seats})"],
+    y=[-0.12],
+    text=[f"Majority threshold: {majority} of {total} seats"],
     text_align="center",
-    text_font_size="28pt",
-    text_color=INK_SOFT,
+    text_font_size="26pt",
+    text_font_style="bold",
+    text_color=INK,
 )
 
-# Style the plot
-p.title.text_font_size = "36pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
 p.title.align = "center"
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
-p.outline_line_color = INK_SOFT
+p.outline_line_alpha = 0
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 
@@ -165,7 +125,6 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome via Selenium
-W, H = 4800, 3200  # Match figure dimensions
 opts = Options()
 for arg in (
     "--headless=new",
@@ -177,15 +136,14 @@ for arg in (
 ):
     opts.add_argument(arg)
 
+driver = webdriver.Chrome(options=opts)
 try:
-    driver = webdriver.Chrome(options=opts)
     driver.set_window_size(W, H)
-    html_path = Path(f"plot-{THEME}.html").resolve()
-    driver.get(f"file://{html_path}")
-    time.sleep(2)  # Let bokeh's JS render the canvas
+    driver.execute_cdp_cmd(
+        "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+    )
+    driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+    time.sleep(3)  # let bokeh's JS render the canvas
     driver.save_screenshot(f"plot-{THEME}.png")
 finally:
-    try:
-        driver.quit()
-    except Exception:
-        pass
+    driver.quit()
