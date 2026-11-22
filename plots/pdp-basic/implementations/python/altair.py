@@ -1,7 +1,7 @@
 """anyplot.ai
 pdp-basic: Partial Dependence Plot
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 100/100 | Updated: 2026-05-15
+Quality: pending | Updated: 2026-05-15
 """
 
 import os
