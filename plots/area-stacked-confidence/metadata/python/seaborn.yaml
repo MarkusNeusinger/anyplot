@@ -2,44 +2,49 @@ library: seaborn
 language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:54:03Z'
-updated: '2026-05-18T06:42:48Z'
-generated_by: claude-haiku
-workflow_run: 26017358068
+updated: '2026-11-22T11:44:10Z'
+generated_by: claude-sonnet
+workflow_run: 45018248909
 issue: 3549
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - Perfect visual quality with flawless theme compliance in both light and dark renders
-  - Excellent spec compliance and data quality with realistic portfolio allocation
-    scenario
-  - Professional design with thoughtful use of Okabe-Ito palette and appropriate alpha
-    transparency
-  - Effective confidence band visualization elegantly communicates uncertainty evolution
-  - Clean, reproducible code with proper theme-adaptive tokens for all chrome elements
+  - Each band is computed around its own stacked edge (base_edge + lower/upper), so
+    stack order is consistent between central values and bands at every x
+  - Legend in a single row placed in reserved headroom, its title stating what the
+    shaded bands mean, clear of the data
+  - Exact 3200x1800 canvas with style-guide text sizes; chrome threaded through theme
+    tokens, readable in both themes
+  - Column constants and a cumsum-based stack keep the data and plot zones short and
+    adaptable
   weaknesses:
-  - Limited use of seaborn-specific features; implementation relies on matplotlib
-    for core plotting
+  - 'DQ-03 (both): the four allocation shares add up to between about 93% and 105%
+    across the quarters (peak ~105% early 2021, dip ~93% mid-2023), which a portfolio
+    allocation cannot do → totals of exactly 100% at every quarter (normalize each
+    row, e.g. values / sum * 100, before computing the bands). Likely cause: independent
+    np.random noise added to each series without renormalizing.'
+  - 'Suggestion: x tick labels are four-digit years and would fit unrotated; dropping
+    labelrotation=45 would tidy the bottom edge.'
+  - 'Suggestion: a legend patch for the band itself (a light swatch) would show the
+    band shade next to its explanation.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), perfect for readability
-      Chrome: Title, axis labels ("Quarter", "Portfolio Allocation (%)"), and tick labels all clearly visible in dark text with good sizing (24pt, 20pt, 16pt)
-      Data: Four stacked asset classes in Okabe-Ito colors (#009E73 green, #D55E00 orange, #0072B2 blue, #CC79A7 pink) with semi-transparent confidence bands (alpha=0.25), boundary lines visible
-      Legend: "Asset Class (shaded bands = 90% CI)" positioned upper left with light background
-      Legibility verdict: PASS - all elements readable and well-balanced
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "area-stacked-confidence · python · seaborn · anyplot.ai" in dark ink at top center; y-axis "Portfolio Allocation (%)" 0-120, x-axis "Quarter" with year ticks 2021-2026 rotated 45°; left and bottom spines only, subtle horizontal grid. All text readable.
+      Data: four stacked layers from a zero baseline - Stocks #009E73 (~45-52), Bonds #C475FD, Commodities #4467A3, Real Estate #BD8233 - each with a thin edge line on its stacked top and a semi-transparent lighter band (alpha 0.25) around that edge; bands narrow toward 2026. Stack totals wander between ~93 and ~105. Single-row legend at top left in the headroom, titled "Asset Class (shaded bands = 90% CI)".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), NOT pure black, enabling good contrast
-      Chrome: Title, axis labels, tick labels all clearly visible in light colors; no dark-on-dark failures present; legend uses elevated background (#242420) with light text
-      Data: Okabe-Ito colors identical to light render (perfect consistency); confidence bands and boundary lines equally visible
-      Grid: Y-axis grid subtle and visible in both renders
-      Legibility verdict: PASS - all text readable, theme adaptation perfect, no readability issues on dark surface
-  verdict: APPROVED
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, tick labels in soft light grey, legend on #242420 with light text and light frame; no dark-on-dark text.
+      Data: identical layer, edge and band colors to the light render; bands read as lighter strips over the layers below and as darker translucent strips over the page above the top layer.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,69 +55,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (24pt, 20pt, 16pt), perfectly readable in
-          both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt (style-guide
+          sizes); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; x-axis labels rotated with clear separation
+        comment: Legend sits in the headroom above the stack without touching the
+          data; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked areas and bands clearly visible with appropriate alpha layering
+        comment: Layers, edge lines and bands visible in both themes; legend swatches
+          match the layer fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; good contrast between all series
+        comment: Green, violet, blue, ochre are well separated and CVD-safe; layer
+          order adds position cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% canvas, balanced margins, legend well-positioned
+        comment: 3200x1800 canvas, balanced margins, title ~57% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Portfolio Allocation %)
+        comment: '''Portfolio Allocation (%)'' with unit, ''Quarter'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, colors follow Okabe-Ito order, backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark), all chrome theme-correct'
+        comment: 'Imprint positions 1-4 in canonical order, first series #009E73;
+          #FAF8F1 / #1A1A17 backgrounds, chrome theme-correct'
     design_excellence:
-      score: 16
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional use of Okabe-Ito, intentional hierarchy with main areas
-          and bands; above defaults but not fully custom
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: L-shaped spines, subtle grid, generous whitespace, refined legend
+        passed: false
+        comment: Single-row legend with the band explanation in its title, placed
+          in reserved headroom (ylim x1.15) so it clears the stack
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear narrative: portfolio composition + uncertainty evolution creates
-          visual hierarchy'
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area with confidence bands
+        comment: Stacked area with a band on each stacked edge
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: multiple series, bands, legend with explanation'
+        comment: C1 zero baseline + edge lines, C2 lighter semi-transparent bands
+          (alpha 0.25), C3 bands on their own edge, C4 symmetric bands, C5 legend
+          names the bands
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, all data visible in proper range (0-100%)
+        comment: Dates on x, stacked shares on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Title format correct; legend entries are readable asset class names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -150,21 +159,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: four distinct asset classes, varying uncertainty,
-          temporal change'
+        comment: Four series, bands of different width that narrow over time
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real portfolio allocation scenario with realistic proportions (~45-50%
-          stocks, ~28-30% bonds)
+        comment: Portfolio allocation by asset class, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Values sum to 100%, uncertainty 2-4% appropriate, no impossible values
+        passed: false
+        comment: Allocation shares total 93-105% instead of 100% (defect line)
     code_quality:
       score: 10
       max: 10
@@ -174,13 +181,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple flow: imports → data → plot → save'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -192,39 +199,45 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering
+        comment: cumsum for the stack, one loop over the layers
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Proper sns.set_theme() and theme tokens, but could use sns.set_context()
+        comment: sns.set_theme, sns.despine, sns.lineplot; stacked fills via matplotlib
+          since seaborn has no stacked area
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Relies heavily on matplotlib; limited seaborn-specific patterns
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T11:40:42Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - custom-legend
   patterns:
   - data-generation
+  - iteration-over-groups
   - explicit-figure
   dataprep:
   - cumulative-sum
-  - time-series
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
