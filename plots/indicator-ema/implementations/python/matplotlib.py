@@ -1,7 +1,7 @@
 """ anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-19
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 89/100 | Updated: 2026-11-22
 """
 
 import os
@@ -20,148 +20,119 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# imprint palette — categorical EMAs + semantic crossover markers
-EMA_SHORT_COLOR = "#4467A3"  # imprint blue — 12-day EMA
-EMA_LONG_COLOR = "#BD8233"  # imprint ochre — 26-day EMA
-GOLDEN_COLOR = "#009E73"  # green — bullish crossover (semantic)
-DEATH_COLOR = "#AE3030"  # red — bearish crossover (semantic)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
+# Constants
+SHORT_SPAN = 12  # days in the fast EMA
+LONG_SPAN = 26  # days in the slow EMA
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close price (USD)"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 120
+df = pd.DataFrame(
+    {
+        DATE: pd.date_range("2024-01-02", periods=n_days, freq="B"),
+        CLOSE: 150 * np.cumprod(1 + np.random.normal(0.0005, 0.02, n_days)),
+    }
+)
 
-dates = pd.date_range("2024-01-02", periods=n_days, freq="B")
-returns = np.random.normal(0.0005, 0.02, n_days)
-price = 150 * np.cumprod(1 + returns)
+# Plot: reads only df and the constants above
+ema_short = df[CLOSE].ewm(span=SHORT_SPAN, adjust=False).mean()
+ema_long = df[CLOSE].ewm(span=LONG_SPAN, adjust=False).mean()
+short_label = f"EMA {SHORT_SPAN}"
+long_label = f"EMA {LONG_SPAN}"
 
-df = pd.DataFrame({"date": dates, "close": price})
-df["ema_12"] = df["close"].ewm(span=12, adjust=False).mean()
-df["ema_26"] = df["close"].ewm(span=26, adjust=False).mean()
-
-# Identify crossover signals
-signal = np.sign(df["ema_12"].values - df["ema_26"].values)
+# Crossover signals: index of the last bar before the sign of (short - long) flips
+signal = np.sign(ema_short.to_numpy() - ema_long.to_numpy())
 crossover_idx = np.where(np.diff(signal))[0]
+golden_idx = [i for i in crossover_idx if signal[i] < 0]  # short EMA moves above long EMA
+death_idx = [i for i in crossover_idx if signal[i] > 0]  # short EMA moves below long EMA
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+short_color, long_color, golden_color, death_color = IMPRINT_PALETTE[:4]
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Shaded regime regions between EMA lines
-ax.fill_between(
-    df["date"],
-    df["ema_12"],
-    df["ema_26"],
-    where=df["ema_12"] >= df["ema_26"],
-    alpha=0.12,
-    color=EMA_SHORT_COLOR,
-    interpolate=True,
-)
-ax.fill_between(
-    df["date"],
-    df["ema_12"],
-    df["ema_26"],
-    where=df["ema_12"] < df["ema_26"],
-    alpha=0.12,
-    color=EMA_LONG_COLOR,
-    interpolate=True,
-)
+# Shaded regime between the two EMAs
+for mask, color in ((ema_short >= ema_long, short_color), (ema_short < ema_long, long_color)):
+    ax.fill_between(df[DATE], ema_short, ema_long, where=mask, alpha=0.12, color=color, interpolate=True, linewidth=0)
 
-# Price line (most prominent)
-ax.plot(df["date"], df["close"], linewidth=2.5, color=INK, label="Price", alpha=0.85, zorder=3)
+# Price line (most prominent), EMAs slightly thinner
+ax.plot(df[DATE], df[CLOSE], linewidth=2.5, color=INK, label="Price", alpha=0.85, zorder=3)
+ax.plot(df[DATE], ema_short, linewidth=2, color=short_color, label=short_label, zorder=4)
+ax.plot(df[DATE], ema_long, linewidth=2, color=long_color, label=long_label, zorder=4)
 
-# EMA lines (slightly thinner per spec)
-ax.plot(df["date"], df["ema_12"], linewidth=2, color=EMA_SHORT_COLOR, label="EMA 12", alpha=0.9, zorder=4)
-ax.plot(df["date"], df["ema_26"], linewidth=2, color=EMA_LONG_COLOR, label="EMA 26", alpha=0.9, zorder=4)
-
-# Crossover markers — golden cross (^) vs death cross (v)
-for idx in crossover_idx:
-    x_date = df["date"].iloc[idx]
-    y_val = df["ema_12"].iloc[idx]
-    is_golden = signal[idx] < 0  # EMA12 was below, now crossing above
+# Crossover markers, placed on the short EMA at the bar where the lines cross
+for idxs, color, marker, label in (
+    (golden_idx, golden_color, "^", "Golden Cross"),
+    (death_idx, death_color, "v", "Death Cross"),
+):
     ax.scatter(
-        x_date,
-        y_val,
-        s=280,
-        color=GOLDEN_COLOR if is_golden else DEATH_COLOR,
-        marker="^" if is_golden else "v",
+        df[DATE].iloc[idxs],
+        ema_short.iloc[idxs],
+        s=60,
+        color=color,
+        marker=marker,
         zorder=6,
         edgecolors=PAGE_BG,
-        linewidths=2,
+        linewidths=0.8,
+        label=label,
     )
 
-# Proxy artists for crossover legend entries
-ax.scatter([], [], s=200, color=GOLDEN_COLOR, marker="^", edgecolors=PAGE_BG, linewidths=2, label="Golden Cross")
-ax.scatter([], [], s=200, color=DEATH_COLOR, marker="v", edgecolors=PAGE_BG, linewidths=2, label="Death Cross")
-
-# Annotate first golden cross and first death cross with arrows
-first_golden = True
-first_death = True
-for idx in crossover_idx:
-    x_date = df["date"].iloc[idx]
-    y_val = df["ema_12"].iloc[idx]
-    is_golden = signal[idx] < 0
-    if is_golden and first_golden:
+# Callouts: the first golden and the first death cross, if the data has them
+for idxs, color, text, offset in (
+    (golden_idx, golden_color, "Golden\nCross", (8, -42)),
+    (death_idx, death_color, "Death\nCross", (44, 14)),
+):
+    if idxs:
         ax.annotate(
-            "Golden\nCross",
-            xy=(x_date, y_val),
-            xytext=(38, 22),
+            text,
+            xy=(df[DATE].iloc[idxs[0]], ema_short.iloc[idxs[0]]),
+            xytext=offset,
             textcoords="offset points",
-            fontsize=11,
-            color=GOLDEN_COLOR,
+            fontsize=8,
+            color=color,
             fontweight="semibold",
-            arrowprops={"arrowstyle": "->", "color": GOLDEN_COLOR, "lw": 1.5},
-            bbox={"facecolor": ELEVATED_BG, "edgecolor": GOLDEN_COLOR, "alpha": 0.88, "boxstyle": "round,pad=0.3"},
+            ha="center",
+            arrowprops={"arrowstyle": "->", "color": color, "lw": 1.0},
+            bbox={"facecolor": ELEVATED_BG, "edgecolor": color, "alpha": 0.9, "boxstyle": "round,pad=0.3"},
             zorder=8,
         )
-        first_golden = False
-    elif not is_golden and first_death:
-        ax.annotate(
-            "Death\nCross",
-            xy=(x_date, y_val),
-            xytext=(38, -38),
-            textcoords="offset points",
-            fontsize=11,
-            color=DEATH_COLOR,
-            fontweight="semibold",
-            arrowprops={"arrowstyle": "->", "color": DEATH_COLOR, "lw": 1.5},
-            bbox={"facecolor": ELEVATED_BG, "edgecolor": DEATH_COLOR, "alpha": 0.88, "boxstyle": "round,pad=0.3"},
-            zorder=8,
-        )
-        first_death = False
 
 # Style
-ax.set_xlabel("Date", fontsize=20, color=INK)
-ax.set_ylabel("Price (USD)", fontsize=20, color=INK)
-ax.set_title("indicator-ema · python · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=30)
-# Subtitle for typographic hierarchy
+ax.set_xlabel(DATE, fontsize=10, color=INK)
+ax.set_ylabel(CLOSE, fontsize=10, color=INK)
+ax.set_title("indicator-ema · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=18)
 ax.text(
     0.5,
     1.012,
-    "EMA crossover signals with regime shading  |  120 trading days  |  periods: 12 & 26",
+    f"EMA crossover signals with regime shading  |  {len(df)} trading days  |  periods: {SHORT_SPAN} & {LONG_SPAN}",
     transform=ax.transAxes,
-    fontsize=13,
+    fontsize=7,
     color=INK_MUTED,
     ha="center",
     va="bottom",
 )
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT, length=0)
-
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for s in ("left", "bottom"):
-    ax.spines[s].set_color(INK_SOFT)
-
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT, length=0)
+for side in ("top", "right"):
+    ax.spines[side].set_visible(False)
+for side in ("left", "bottom"):
+    ax.spines[side].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 
-# Date locator/formatter for clean month labels
 ax.xaxis.set_major_locator(MonthLocator())
 ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
-plt.setp(ax.get_xticklabels(), rotation=30, ha="right", fontsize=16, color=INK_SOFT)
+plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
 
-leg = ax.legend(fontsize=14, loc="upper right", framealpha=0.9, ncol=2)
+leg = ax.legend(fontsize=8, loc="upper right", framealpha=0.9, ncol=2)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.98, top=0.88, bottom=0.17)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
