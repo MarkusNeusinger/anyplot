@@ -2,60 +2,64 @@ library: plotly
 language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:53:33Z'
-updated: '2026-05-18T06:45:42Z'
-generated_by: claude-haiku
-workflow_run: 26017437694
+updated: '2026-11-22T11:52:06Z'
+generated_by: claude-sonnet
+workflow_run: 45018730517
 issue: 3549
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/plotly/plot-dark.html
-quality_score: 94
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality with explicitly sized fonts and excellent readability in
-    both themes
-  - Correct Okabe-Ito palette with first series in brand green (#009E73)
-  - Theme-adaptive chrome is flawless - backgrounds, text, and grid colors correctly
-    adapt while data colors remain constant
-  - Strong data storytelling - energy forecast scenario with realistic values and
-    compelling narrative about uncertainty growth
-  - 'Excellent use of plotly-specific features: fill=''toself'' for bands, reversed-list
-    technique for closed paths, proper stacking with fill=''tozeroy'' and fill=''tonexty'''
-  - Clean code structure with proper KISS principle, reproducibility via seed, and
-    all imports used
-  - Perfect spec compliance - all required features present (stacked areas, confidence
-    bands, legend, proper labeling)
-  - Confident band transparency (0.25 for bands, 0.6 for main areas) effectively communicates
-    uncertainty without obscuring data
+  - 'Imprint palette in canonical order with #009E73 first; data colors identical
+    across both themes, only chrome flips'
+  - Bands stacked with the same cumulative order as the central values, so each band
+    follows its own series' edge (C3)
+  - Legend title 'band = lower to upper bound' plus per-series band entries tell the
+    reader what the bands represent (C5)
+  - legendgroup ties each band to its series so a legend click toggles both in the
+    HTML view; hovermode='x unified' with bands excluded from hover
+  - Canvas 3200x1800 with autosize=False and explicit margins, per the plotly canvas
+    rule
   weaknesses:
-  - 'Design Excellence could be elevated: top/right spines are visible (could be removed
-    for cleaner aesthetic)'
-  - 'Visual refinement: grid could be even more subtle or y-axis only (current is
-    functional but standard)'
-  - DE-01 (Aesthetic Sophistication) at 5/8 - execution is strong but design choices
-    are more conventional than exceptional
+  - 'SC-02, SC-03 (both): the Wind and Solar layers fill down to their own band polygon
+    instead of to the stacked edge below, so bare background shows between the top
+    of the Hydro band (about 125 TWh) and the lower edge of the Wind fill (about 160-200
+    TWh), Wind and Solar layer thickness no longer reads as their value, and straight
+    pale wedges from the band polygon''s closing segment cut across the chart (C1)
+    -> each layer fills from the stacked edge of the series below up to its own edge.
+    Likely cause: fill=''tonexty'' on each layer trace, whose previous trace is that
+    series'' band added just before it; add all layer traces first and the bands after
+    them, or give each layer an explicit lower-boundary trace.'
+  - 'VQ-03 (dark): the ''Wind band'' and ''Solar band'' legend swatches (alpha 0.25
+    of #C475FD/#4467A3 on #242420) are barely distinguishable from the legend box
+    -> band alpha nearer the top of the Notes'' 0.2-0.4 range (about 0.35, +0.10)
+    so swatches and bands read on both surfaces. Likely cause: fillcolor=rgba(color,
+    0.25) on the band traces.'
+  - 'CQ-01 (code): lines 55-57 define a helper function def rgba(hex_color, alpha)
+    -> inline the conversion, e.g. f"rgba({'', ''.join(map(str, plotly.colors.hex_to_rgb(color)))},
+    0.25)". Likely cause: hex-to-rgba helper.'
+  - 'Suggestion: list the legend in stack order (Solar on top, Hydro at the bottom)
+    with legend traceorder=''reversed+grouped'' so it reads like the chart.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified - not pure white, provides soft contrast
-      Chrome: Title, axis labels ("Quarter", "Energy Consumption (TWh)"), and tick labels are all dark text on light background and clearly readable
-      Data: Three stacked area series using Okabe-Ito colors - Hydro (#009E73, brand green at bottom), Wind (#D55E00, vermillion in middle), Solar (#0072B2, blue on top). Confidence bands are semi-transparent lighter shades (alpha 0.25) revealing uncertainty. Legend positioned at top-left with light background box. Subtitle provides context about uncertainty growth.
-      Grid: Subtle grid lines visible on both axes without competing with data
-      Legibility verdict: PASS - All text is clearly readable against the light surface. No overlap or readability issues.
+      Background: warm off-white #FAF8F1, canvas 3200x1800
+      Chrome: title 'area-stacked-confidence · python · plotly · anyplot.ai' centered, axis titles 'Quarter' and 'Energy consumption (TWh)', yearly x ticks 2021-2024, y ticks 0-400, y-only subtle grid; legend in the right margin on an elevated box titled 'Source (band = lower to upper bound)' with Hydro / Hydro band / Wind / Wind band / Solar / Solar band. All text dark and readable
+      Data: Hydro #009E73 layer from zero with a darker edge line and a pale green band; Wind #C475FD and Solar #4467A3 layers above with edge lines and translucent bands. The Wind and Solar fills stop at their own band polygons, so background shows between the Hydro band (~125) and the Wind fill (~160-200) and pale straight wedges cross the Wind and Solar regions
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified - not pure black, maintains theme consistency
-      Chrome: Title, axis labels, and tick labels are now light-colored (#F0EFE8) against the dark background and clearly readable. Legend has darker background box (#242420). Grid remains subtle.
-      Data: Data colors are IDENTICAL to light render - Hydro #009E73, Wind #D55E00, Solar #0072B2. The confidence bands show the same structure and transparency. The stacking order is preserved.
-      No "dark-on-dark" issues - text is light-colored with proper contrast
-      Legibility verdict: PASS - All text is clearly readable against the dark surface. Theme adaptation is correct throughout. Data visibility is maintained.
-
-    Both renders confirm: Data colors are identical between themes, only chrome (background, text, grid, legend box) has adapted appropriately. All text is readable in both themes.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles, ticks and legend text in light ink, readable; legend box #242420 with a light border; no dark-on-dark text
+      Data: colors identical to the light render; same gap above the Hydro band and the same dark wedges; the Wind band and Solar band legend swatches are barely distinguishable on the dark legend box
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,74 +67,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, labels 22px, ticks 18px - all explicitly set and readable
-          in both themes
+        comment: Title 16, axis titles 12, ticks 10, legend 9 px set explicitly; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements clearly visible with no overlap or collision
+        comment: No text collisions; legend sits outside the plot area in the right
+          margin
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Areas, bands, and lines all clearly visible and adapted to data density
+        passed: false
+        comment: Lines and layers clear; the Wind band and Solar band legend swatches
+          nearly vanish on the dark legend box (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe, good contrast with appropriate
-          alpha levels
+        comment: Green, purple and blue Imprint hues are CVD-distinguishable; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with plot filling 50-70% of canvas and balanced margins
+        comment: Canvas gate passed (3200x1800); balanced margins, title about 47
+          % of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Quarter'' and ''Energy Consumption
-          (TWh)'''
+        comment: '''Quarter'' and ''Energy consumption (TWh)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, theme chrome
-          correct in both renders'
+        comment: 'Hydro #009E73, Wind #C475FD, Solar #4467A3 in canonical order; #FAF8F1
+          / #1A1A17 backgrounds; data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional execution with correct palette and layout, but design
-          choices are more conventional than exceptional
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Good refinement with subtle grid and proper theme tokens; could be
-          more refined by removing spines
+        passed: false
+        comment: Y-only grid chosen for the stacked values plus a legend grouped series-with-band
+          with gaps between the pairs
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Strong narrative: energy mix + uncertainty growth over time. Subtitle
-          provides clear context.'
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -138,26 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart with confidence bands
+        comment: Stacked area chart with confidence bands
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: stacked areas, confidence bands, legend, multiple
-          series'
+        passed: false
+        comment: 'C1 missed: Wind and Solar layers do not start where the layer below
+          ends (defect line); C2-C5 met, legend title says what the bands are'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X=time (quarters), Y=energy consumption (TWh), stacking order correct
+        passed: false
+        comment: Layer fills of Wind and Solar map to the band polygon, not to the
+          stacked value below (defect line); edges and bands are at their stacked
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title format correct; legend entries per series and band, legend
+          title explains bands
     data_quality:
       score: 15
       max: 15
@@ -167,82 +174,90 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: three sources, confidence bands, time trend,
-          composition'
+        comment: Three series, widening forecast bands, composition over 20 quarters
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Energy consumption by source is real-world scenario. Values and relationships
-          are plausible.
+        comment: Energy consumption by Hydro/Wind/Solar, a plausible neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually reasonable energy values. Uncertainty growth over time
-          is realistic for forecasting.
+        comment: 'Checked: quarterly 80-150 TWh per source and stacked totals 250-460
+          TWh are plausible for a large national grid; no Check values in the spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Simple flow: imports → data → plot → save. No functions or classes.'
+        passed: false
+        comment: A def rgba() helper function (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, pandas, plotly'
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with proper stacking logic and variable names
+        comment: Loop over the series with cumsum stacking; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html correctly
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Expertly uses plotly API: go.Figure, Scatter with fill modes, update_layout,
-          proper write methods'
+        passed: false
+        comment: go.Scatter fill modes plus legendgroup pairing each band with its
+          series and hovermode='x unified'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: 'Uses plotly-specific techniques: fill=''toself'' for bands, fill=''tozeroy''/''tonexty''
-          for stacking, reversed-list paths'
+        passed: false
+        comment: legendgroup toggling of series and band together and hoverinfo='skip'
+          on bands in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3e8cb5ea3d
+  rendered_at: '2026-11-22T11:48:01Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  - time-series
   styling:
   - alpha-blending
+  - minimal-chrome
+  - grid-styling
