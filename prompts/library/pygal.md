@@ -90,7 +90,9 @@ custom_style = Style(
     plot_background=PAGE_BG,
     foreground=INK,                 # primary text
     foreground_strong=INK,          # title
-    foreground_subtle=INK_MUTED,    # tick labels, grid tone
+    foreground_subtle=INK_MUTED,    # tooltips and map outlines; not the grid (see "Grid Opacity")
+    guide_stroke_color=INK_MUTED,          # grid lines: pygal's default is black, lost on the dark page
+    major_guide_stroke_color=INK_MUTED,    # grid lines at the major ticks
     colors=IMPRINT_PALETTE,         # first series = brand green
     # pygal font sizes are unitless integers, rendered into the SVG at the
     # source-pixel grid (no DPI/scale multiplier). To match matplotlib 12pt
@@ -98,8 +100,8 @@ custom_style = Style(
     # source-pixel size — see default-style-guide.md "Why the Native-pixel
     # numbers look so much bigger".
     title_font_size=66,             # kept compact for the long mandated title
-    label_font_size=56,
-    major_label_font_size=44,
+    label_font_size=44,             # tick labels (pygal calls the ticks "labels")
+    major_label_font_size=44,       # major tick labels: the same size, or one axis shows two sizes
     legend_font_size=44,
     value_font_size=36,
     stroke_width=2.5,
@@ -146,7 +148,7 @@ seq_stops = tuple(_lerp_hex("#009E73", "#4467A3", i / (n - 1)) for i in range(n)
 
 ## Grid Opacity
 
-Pygal doesn't expose a grid alpha parameter. The theme-adaptive `foreground_subtle` (tied to `INK_MUTED`) keeps grid lines subtle without manual tuning — both light and dark themes already use the correct muted tone.
+Pygal doesn't expose a grid alpha parameter, and `foreground_subtle` does not color the grid: the guide lines take `guide_stroke_color` and `major_guide_stroke_color`, whose default is black, which almost vanishes on the dark page. Set both from `INK_MUTED` in the `Style`, as above, so the grid stays a muted tone in both themes.
 
 ## Output Files
 

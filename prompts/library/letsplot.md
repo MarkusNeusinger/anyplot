@@ -179,12 +179,15 @@ PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
+# element_line has no alpha argument; lets-plot reads the alpha from an rgba() color
+GRID        = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"   # INK at 15 %, the style guide's grid tone
+GRID_MINOR  = "rgba(26,26,23,0.05)" if THEME == "light" else "rgba(240,239,232,0.05)"   # INK at 5 %, as plotnine's minor grid
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK, size=0.3),
-    panel_grid_minor=element_line(color=INK, size=0.2),
+    panel_grid_major=element_line(color=GRID, size=0.3),
+    panel_grid_minor=element_line(color=GRID_MINOR, size=0.2),
     axis_title=element_text(color=INK),
     axis_text=element_text(color=INK_SOFT),
     axis_line=element_line(color=INK_SOFT),

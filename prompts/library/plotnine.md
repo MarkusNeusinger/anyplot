@@ -163,12 +163,12 @@ anyplot_theme = theme(
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
     panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-    panel_border=element_rect(color=INK_SOFT, fill=None),
     axis_title=element_text(color=INK),
     axis_text=element_text(color=INK_SOFT),
-    axis_line=element_line(color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT),   # left and bottom only: the L-shaped frame, no panel_border
     plot_title=element_text(color=INK),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_background=element_rect(fill=ELEVATED_BG, color="none"),   # no frame; color=None would inherit theme_minimal's black outline
+    legend_key=element_rect(fill=ELEVATED_BG, color="none"),          # keys on the legend's own fill, not on tiles of the page shade
     legend_text=element_text(color=INK_SOFT),
     legend_title=element_text(color=INK),
 )

@@ -56,9 +56,11 @@ The saved PNG must be **exactly** one of these two sizes (post-render gate in `i
 ```python
 fig.update_layout(
     autosize=False,
-    margin=dict(l=80, r=40, t=80, b=60),   # tweak ±20 if needed; never remove
+    margin=dict(l=80, r=40, t=60, b=60),   # explicit margins, never removed; t only as tall as the title needs
 )
 ```
+
+The top margin holds the title and nothing else: raise `t` only for a title that wraps to two lines.
 
 Pick landscape or square based on the spec's content — same decision rule as every other library in the catalog.
 
@@ -67,7 +69,7 @@ Pick landscape or square based on the spec's content — same decision rule as e
 ```python
 fig.update_layout(
     autosize=False,
-    margin=dict(l=80, r=40, t=80, b=60),
+    margin=dict(l=80, r=40, t=60, b=60),
     # Title kept compact — the long mandated "{spec-id} · python · plotly · anyplot.ai"
     # title would overflow at 22+px on this canvas.
     title=dict(text=title, font=dict(size=16)),
