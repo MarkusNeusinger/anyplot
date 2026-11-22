@@ -2,52 +2,53 @@ library: plotnine
 language: python
 specification_id: indicator-bollinger
 created: '2026-01-07T20:18:54Z'
-updated: '2026-05-17T10:00:42Z'
-generated_by: claude-haiku
-workflow_run: 25987511121
+updated: '2026-11-22T04:40:57Z'
+generated_by: claude-sonnet
+workflow_run: 44985671557
 issue: 3237
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 81
 review:
   strengths:
-  - 'Perfect visual quality: all text explicitly sized and readable in both themes'
-  - Flawless spec compliance with all Bollinger Bands features present and correct
-  - Clean, reproducible code with proper seed and deterministic data generation
-  - 'Correct Okabe-Ito palette usage (#009E73 price, #0072B2 bands) with perfect theme
-    adaptation'
-  - Professional theme-adaptive chrome implementation with no legibility issues in
-    either render
-  - Excellent data quality with realistic stock price generation and volatility clustering
-  - All auto-reject checks pass; no structural or functional issues
+  - Bitcoin hourly scenario with a calm squeeze, a single sharp overnight gap and
+    a choppy regime shows band contraction, explosive widening and a band pierce in
+    one view
+  - Bands computed with pandas rolling mean/std and drawn with geom_ribbon plus dashed
+    edges and a dotted middle band, clearly told apart from the green price
+  - Theme tokens threaded through every chrome element; both renders fully legible
+    on the correct surfaces
+  - Adaptable column constants with role comments, so the same code plots a user's
+    own table
+  - Subtitle states the 20-period / ±2σ parameters
   weaknesses:
-  - 'Design excellence is solid but not exceptional: implementation uses well-configured
-    defaults rather than pushing aesthetic boundaries beyond library conventions'
-  - Could explore more distinctive plotnine features to increase Library Mastery score
-    (faceting, custom geoms, advanced stats)
-  - 'Visual refinement could be enhanced: panel border could be simplified to L-shaped
-    spines for more minimal aesthetic'
+  - 'VQ-07 (both): the bands, the second series, are drawn in Imprint position 3 #4467A3
+    while position 2 #C475FD is skipped with no semantic reason → use positions in
+    canonical order (IMPRINT_PALETTE[1] for the bands). Likely cause: band_color =
+    IMPRINT_PALETTE[2].'
+  - 'Suggestion: the seven daily date ticks fit horizontally; dropping the 45° rotation
+    would read more easily.'
+  - 'Suggestion: thousands separators on the price ticks (65,000) would ease reading
+    the BTC prices.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "indicator-bollinger · plotnine · anyplot.ai" in dark text (size 24pt), X-axis label "Date" and Y-axis label "Price (USD)" in dark text (size 20pt), tick labels in secondary text color (size 16pt). All clearly readable. Date labels angled 45° to prevent overlap.
-      Data: Closing price rendered as solid green line (#009E73, brand color, size 1.3) showing price movement 80-115 USD. Upper and lower Bollinger Bands as dashed blue lines (#0072B2, size 0.8) with semi-transparent blue fill (alpha 0.15) creating volatility envelope. SMA as dotted blue line (size 1.0). All elements clearly distinguishable.
-      Grid: Subtle grid lines with low opacity (10% alpha) on both major and minor gridlines
-      Legibility verdict: PASS - All text is readable against light background; no light-on-light failures; all data elements visible
+      Background: warm off-white #FAF8F1, 3200x1800 canvas, thin INK_SOFT panel border.
+      Chrome: title "indicator-bollinger · python · plotnine · anyplot.ai" top-left in dark ink, subtitle "20-period SMA with ±2σ bands" in soft ink; y-axis "Price (USD)" with ticks 55000-65000, x-axis "Time (UTC)" with daily ticks Mar 05 - Mar 11 rotated 45°. All readable; subtle grid.
+      Data: green #009E73 hourly BTC close line, dominant; blue #4467A3 dashed upper/lower bands with a light blue-grey fill (alpha 0.18) and a dotted blue SMA. Narrow bands Mar 06-08, a sharp gap down on Mar 08 that pierces the lower band, bands blowing out to ~65k/54k, then a choppy regime.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title, axis labels, and tick labels in light colors against dark background. All elements readable. No dark-on-dark failures (no near-black text on near-black background). Date labels remain readable.
-      Data: Closing price remains identical green (#009E73) - confirming proper theme adaptation (data colors unchanged). Bollinger Bands remain identical blue (#0072B2). Band fill maintains same transparency and visibility on dark surface. All data elements distinguishable from background.
-      Grid: Subtle grid lines visible (rgba light with 10% alpha on dark)
-      Legibility verdict: PASS - All text is readable against dark background; no dark-on-dark failures; both price line and band envelope clearly visible; data colors identical to light render confirming proper theme-adaptive implementation
+      Background: warm near-black #1A1A17, light panel border.
+      Chrome: title, subtitle, axis titles and tick labels in light ink, all readable; no dark-on-dark text; subtle grid.
+      Data: identical colors to the light render (green price, blue bands, dark-blue tinted fill); the dotted SMA and dashed bands remain visible through the fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,72 +56,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          base 14pt. All readable in both themes.'
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, subtitle 9 pt, all explicit
+          and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels angled 45° with right alignment prevents overlap. No
-          overlapping text.
+        comment: No text collisions; rotated date ticks clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line sizes appropriate for 120 data points. Close=1.3, bands=0.8,
-          SMA=1.0. All clearly visible.
+        comment: Price line 1.0 dominant, dashed bands and dotted SMA visible over
+          the 0.18 fill in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (green + blue) with adequate contrast. CVD-safe.
+        comment: Green price vs blue bands, distinct luminance and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio with balanced margins. Plot fills appropriate canvas
-          percentage.
+        comment: 3200x1800 canvas, gate passed; balanced margins, panel fills the
+          canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units ('Price (USD)'), correct title format.
+        comment: Time (UTC) and Price (USD), descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73 (brand), second #0072B2 (Okabe-Ito pos 3).
-          Backgrounds #FAF8F1/#1A1A17. Chrome theme-correct.'
+        passed: false
+        comment: 'Backgrounds and chrome correct; price #009E73; bands skip position
+          2 and take position 3 #4467A3 (defect line)'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Well-configured with theme tokens but follows defaults rather than
-          exceptional design.
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and clean layout. Could simplify border to L-shaped spines.
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Good data choice with volatility clusters. Visual hierarchy emphasizes
-          price against bands effectively.
+        comment: Data displayed (calm stretch, gap, choppy regime as the change request
+          asked); no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bollinger Bands indicator chart with all subtypes.
+        comment: Bollinger Bands overlay on a price line; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: price line, SMA, upper/lower bands, fill,
-          correct styling.'
+        comment: Prominent price (C1), shared band color with semi-transparent fill
+          (C2), dotted middle band (C3), parameters noted in subtitle; C5 optional,
+          not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped. All 101 data points visible. Proper time series
-          handling.
+        comment: All lines at their computed rolling values; bands begin after the
+          20-period warm-up (permitted)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format. No legend needed (explicit labels sufficient).
+        comment: Title 'indicator-bollinger · python · plotnine · anyplot.ai' correct;
+          no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -160,21 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: volatility expansion, band contractions, price
-          touching/breaking bands.'
+        comment: Squeeze in the calm stretch, explosive widening after the gap, price
+          piercing the lower band, band lag
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock market data (Jan-Jun 2024). Appropriate business
-          domain.
+        comment: Bitcoin hourly closes over a week, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $80-$115 plausible. Realistic volatility and returns.
+        comment: Prices 53k-65k USD plausible for BTC in March 2024; no Check values
+          in the spec; bands computed from rolling(20) mean and std in code
     code_quality:
       score: 10
       max: 10
@@ -184,58 +185,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → calculation → plot → save. No functions.'
+        comment: Linear script, column constants with role comments
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (np.random.seed(42)). Fully deterministic.
+        comment: default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No unused imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. No over-engineering.
+        comment: pandas rolling computes the bands; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with DPI=300.
+        comment: plot-{THEME}.png at dpi=400, 8x4.5 in
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert ggplot2 grammar: aes() mapping, layered geoms, theme configuration.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
+        passed: true
+        comment: Layered grammar with aes on the tidy df, geom_ribbon, scale_x_datetime;
+          baseline
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
         passed: false
-        comment: Uses geom_ribbon() and theme-adaptive chrome effectively. Could explore
-          more distinctive features (faceting, custom stats).
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-22T04:37:00Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  - rolling-window
   dataprep:
   - rolling-window
+  - cumulative-sum
+  - time-series
   styling:
-  - theme-adaptive-chrome
   - alpha-blending
+  - grid-styling
