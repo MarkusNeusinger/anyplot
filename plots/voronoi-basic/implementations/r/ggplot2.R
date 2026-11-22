@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' voronoi-basic: Voronoi Diagram for Spatial Partitioning
 #' Library: ggplot2 | R
-#' Quality: 90/100 | Updated: 2026-11-22
+#' Quality: pending | Updated: 2026-11-22
 
 library(ggplot2)
 library(dplyr)
