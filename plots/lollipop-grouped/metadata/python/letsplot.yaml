@@ -2,44 +2,53 @@ library: letsplot
 language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:25:14Z'
-updated: '2026-05-17T22:46:31Z'
-generated_by: claude-haiku
-workflow_run: 26004696663
+updated: '2026-11-22T08:08:37Z'
+generated_by: claude-sonnet
+workflow_run: 45000853387
 issue: 3485
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 78
 review:
   strengths:
-  - Perfect theme-adaptive implementation with identical data colors across light/dark
-    renders and zero legibility issues
-  - Meticulous explicit font sizing (24/20/16pt) ensuring readability at large canvas
-    resolution
-  - Clean minimalist aesthetic with all spines/grid removed, creating refined visual
-    composition
-  - Comprehensive spec compliance demonstrating all grouped lollipop features correctly
-  - Realistic data scenario with proper proportions and units throughout
+  - Regions sorted by total revenue computed from the data, with one series order
+    in every group, so the East-to-South decline reads at a glance
+  - 'Clean theme-token threading: chrome flips correctly between #FAF8F1 and #1A1A17
+    while the Imprint data colors stay identical'
+  - Canonical lets-plot canvas (ggsize 800x450, scale 4) with the library prompt's
+    text sizes and a y limit derived from the data
+  - Interactive HTML export gives hover tooltips on every lollipop in the detail view
   weaknesses:
-  - No visual hierarchy or data storytelling—plot displays data without highlighting
-    insights or directing viewer attention
-  - Generic styling relying on library defaults rather than distinctive visual emphasis
-    or narrative structure
+  - 'DE-02 (both): all four panel borders are drawn as a full rectangle around the
+    plot area (dark ink in light, grey in dark) where the style guide removes top
+    and right spines by default → remove the frame (no spines, or left and bottom
+    only). Likely cause: panel_background=element_rect(fill=PAGE_BG) without color=PAGE_BG,
+    which lets the rect''s default border draw; set color or add panel_border=element_blank().'
+  - 'DQ-02 (both): the regions are the generic compass labels North, South, East,
+    West, which read as placeholders → named sales regions (e.g. Pacific Northwest,
+    Southeast, Midwest, Northeast). Likely cause: the keys of the raw data dict.'
+  - 'CQ-04 (code): the side-by-side offset is computed by hand (lines 63-70: X_POS,
+    BASELINE, offset, series index arithmetic) where lets-plot computes it → map x=REGION
+    and use position_dodge(width=0.75) on geom_point and on the stem layer (e.g. geom_linerange(ymin=0)
+    or geom_lollipop). Likely cause: hand-rolled dodge.'
+  - 'Suggestion: a subtle y-only grid (15 % ink) would make the values easier to read
+    off the axis for the stems far from it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all dark and clearly readable; legend on right with light background
-      Data: Green (#009E73) Electronics, orange (#D55E00) Furniture, blue (#0072B2) Clothing; thin stems, round markers; East shows highest Electronics value
-      Legibility verdict: PASS - All text readable, proper contrast, no light-on-light issues
+      Background: warm off-white #FAF8F1, 3200x1800 landscape.
+      Chrome: title 'lollipop-grouped · python · letsplot · anyplot.ai' top left in dark ink (about half the width); y-axis 'Revenue ($ thousands)' 0-300 in steps of 50; x-axis 'Region' with East, West, North, South; legend 'Product Line' on an elevated #FFFDF6 box at the right. A full dark rectangle frames the panel on all four sides; no grid. All text readable.
+      Data: 12 lollipops in 4 groups of 3: Electronics #009E73 (highest in every region, East 267), Furniture #C475FD, Clothing #4467A3; thin stems from zero to round markers; wider gaps between groups than within.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)
-      Chrome: Title, axis labels, tick labels all light (#F0EFE8 / #B8B7B0) and clearly readable; legend background elevated (#242420); no dark-on-dark text failures
-      Data: Colors identical to light render (green, orange, blue preserved); stems and markers maintain same structure and visibility
-      Legibility verdict: PASS - All text readable against dark surface, proper contrast, brand green clearly visible
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light #F0EFE8, ticks and legend text in #B8B7B0, legend box #242420; the panel frame is a grey rectangle on all four sides. No dark-on-dark text.
+      Data: colors identical to the light render (green, violet, blue); same layout and positions; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,47 +59,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: Title 16 pt, axis titles 12 pt, ticks and legend 10 pt as the library
+          prompt sets them; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between elements; clean grouping layout
+        comment: No text collisions; lollipops well separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stems and markers properly sized for data density; all clearly visible
+        comment: 12 sparse points with size-4 markers and size-1 stems, clearly visible;
+          legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with high contrast between series
+        comment: Green, violet and blue are well separated in luminance and hue; no
+          red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins
+        comment: 3200x1800 canvas, title about half the width, balanced axis titles,
+          legend fits on the right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units; X-axis descriptive
+        comment: '''Revenue ($ thousands)'' with units and ''Region'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, follows Okabe-Ito order, theme-correct backgrounds
-          and text'
+        comment: 'Imprint palette in canonical order, Electronics #009E73; #FAF8F1
+          / #1A1A17 backgrounds; chrome theme-correct'
     design_excellence:
-      score: 10
+      score: 6
       max: 20
       items:
       - id: DE-01
@@ -98,19 +110,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but not publication-ready
+        comment: 'Default: style-guide typography, nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: Clean spine/grid removal with good whitespace
+        passed: false
+        comment: All four panel borders drawn where nothing requires them (defect
+          line); short of the spine baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: 'Default: data displayed, the sort order comes from the Notes'
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +133,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped lollipop with all subtypes
+        comment: Correct grouped lollipop chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stems, markers, grouping, legend all present
+        comment: Thin stems, circular markers, side-by-side offset with wider gaps
+          between groups, same series order, legend, regions sorted by total (East
+          580, West 551, North 550, South 505)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Region, Y=Revenue, Color=Product; full range visible
+        comment: Regions on x, revenue on y from a zero baseline, color by product
+          line; full range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend properly labeled
+        comment: Title 'lollipop-grouped · python · letsplot · anyplot.ai'; legend
+          'Product Line' with readable entries
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -148,21 +165,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects with variation across regions/products
+        comment: 3 series across 4 groups with rank variation (West Clothing close
+          to Furniture)
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Real quarterly revenue scenario; neutral business context
+        passed: false
+        comment: Retail revenue by product line is plausible, but the regions are
+          the generic compass labels North/South/East/West (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions realistic for business data
+        comment: Values 118-267 k$ are sensible regional quarterly revenues; y limit
+          derived from the data max
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -170,7 +190,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no unnecessary functions
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -182,41 +202,51 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, no fake functionality
+        passed: false
+        comment: The dodge offset is computed by hand (lines 63-70) where position_dodge
+          on the point and segment layers computes it (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format with current API
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert ggplot2-style grammar with proper aes and scale functions
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses ggsize/ggsave but segment+point layering is generic
+        comment: 'Default: grammar layering with column constants and scale_x_continuous
+          breaks; manual dodge instead of the library''s position adjustments'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: 'Default: ggsize/ggsave interactive HTML only, nothing distinctive
+          beyond the mandated pattern'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-22T08:05:10Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  - groupby-aggregation
+  dataprep:
+  - sorting
+  styling:
+  - minimal-chrome
