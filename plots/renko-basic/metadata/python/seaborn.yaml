@@ -2,50 +2,43 @@ library: seaborn
 language: python
 specification_id: renko-basic
 created: '2026-01-08T16:02:10Z'
-updated: '2026-05-17T11:41:34Z'
-generated_by: claude-haiku
-workflow_run: 25989593749
+updated: '2026-11-22T05:13:30Z'
+generated_by: claude-sonnet
+workflow_run: 44987729706
 issue: 3294
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 84
 review:
   strengths:
-  - Perfect theme implementation with correct token usage in both light and dark renders
-  - 'Flawless spec compliance: all Renko features present, correct stair-step pattern,
-    proper bullish/bearish coloring'
-  - Clean, reproducible code with explicit font sizes, proper KISS structure, and
-    deterministic data generation
-  - 'Excellent visual quality: no overlap, all text readable in both themes, proper
-    layout utilization (60-70% of canvas)'
-  - 'Perfect data quality: realistic stock price scenario with good feature coverage
-    showing bullish/bearish reversals and trend patterns'
-  - 'Correct palette usage: green (#009E73) for up, orange (#D55E00) for down (Okabe-Ito
-    positions 1-2), identical across themes'
+  - 'Correct Renko construction on integer price levels: every brick spans exactly
+    one 0.005 brick, one column per brick, reversals need two bricks of movement'
+  - Theme tokens threaded through sns.set_theme rc, so all chrome flips correctly
+    while brick colors stay identical in both renders
+  - Brick size stated in the x-axis title instead of a separate annotation box, keeping
+    the basic variant to bricks alone
+  - Legend placed in the only empty corner of the data, clear of every brick
   weaknesses:
-  - 'Design Excellence is moderate (12/20): styling is professional but relies on
-    library defaults; could benefit from enhanced visual hierarchy or custom palette
-    refinement'
-  - 'Library Mastery is limited (4/10): Renko requires custom matplotlib.patches rendering
-    rather than seaborn''s high-level API, so seaborn-specific features are minimal;
-    this is expected for non-standard chart types but limits opportunity to leverage
-    seaborn''s strengths'
+  - 'Suggestion: one ax.bar call with bottom=renko[''bottom''] and a color list could
+    replace the per-brick Rectangle loop and the hand-built legend handles.'
+  - 'Suggestion: an ELEVATED_BG legend fill, as in the library prompt''s theme mapping,
+    would lift the legend slightly off the page.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with correct theme tokens
-      Chrome: Title "renko-basic · seaborn · anyplot.ai" in dark text (24pt), axis labels "Brick Number" and "Stock Price (USD)" in dark text (20pt), tick labels in gray (16pt) — all clearly readable against light background
-      Data: Green bullish bricks (#009E73, Okabe-Ito position 1) and orange bearish bricks (#D55E00, position 2) render with uniform size and clear visual separation; 37 bricks shown with proper stair-step pattern; legend in upper right with dark text on light background; brick size annotation in lower right; Y-axis grid subtle and non-intrusive
-      Legibility verdict: PASS — all text readable, excellent contrast, no dark-on-light issues
+      Background: warm off-white #FAF8F1 page and axes.
+      Chrome: title 'renko-basic · python · seaborn · anyplot.ai' in dark ink, y-axis title 'EUR/USD close', x-axis title 'Brick index (one brick = 0.005 price move)', gray tick labels 0-40 and 0.980-1.100, left and bottom spines only, faint horizontal grid; all readable.
+      Data: 44 borderless bricks with a small gap, falling from 1.100 to about 0.97 in long red (#AE3030) staircases with two green (#009E73) rallies near bricks 11-14 and 26-31; legend lower left with green and red swatches.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with correct theme tokens
-      Chrome: Title, axis labels, and tick labels rendered in light text (INK/INK_SOFT tokens) — all clearly readable against dark background; no dark-on-dark failures
-      Data: Green bullish bricks and orange bearish bricks are IDENTICAL in color to light render (#009E73 and #D55E00 preserved); stair-step pattern maintained; legend with light border on dark background; annotation box styled appropriately for dark theme; Y-axis grid subtle and light-colored
-      Legibility verdict: PASS — all text readable, data colors identical to light render, no theme-adaptation failures
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light gray, light spines, faint light grid, legend frame and text light; no dark-on-dark text.
+      Data: brick colors identical to the light render (#009E73 and #AE3030), same layout.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,74 +49,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly set (title 24pt, labels 20pt, ticks 16pt), perfectly
-          readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt explicitly
+          set; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, all text fully readable
+        comment: No text collisions; legend sits in the empty lower-left corner clear
+          of all bricks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 37 bricks with uniform size and proper gap ratio (8%), clearly visible
-          and well-adapted to data density
+        comment: 44 solid bricks clearly visible with an even gap; legend swatches
+          match the brick fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (green/orange) provides good contrast, CVD-safe
+        comment: Green/red direction is redundantly encoded by the staircase direction;
+          strong luminance contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect layout: plot fills 60-70% of canvas, balanced margins, legend
-          positioned neatly'
+        comment: 3200x1800 canvas, balanced margins, title about 44% of width, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Stock Price (USD)'', correct title
-          format'
+        comment: '''EUR/USD close'' and ''Brick index (one brick = 0.005 price move)''
+          are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: bullish #009E73, bearish #D55E00, correct backgrounds (#FAF8F1
-          light, #1A1A17 dark), identical data colors across themes'
+        comment: 'Bullish #009E73 (position 1), bearish #AE3030 red anchor; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured defaults with professional polish, but no exceptional
-          custom enhancements or unique design identity
+        passed: true
+        comment: Borderless solid bricks with a 10% gap give a clean, near-square
+          brick rhythm; brick size folded into the x-axis title instead of a separate
+          box
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good refinement: spines removed (top/right), Y-axis grid subtle
-          (alpha=0.10), thoughtful brick gap ratio'
+        comment: Legend placed in the one empty corner of the data; y-grid only at
+          0.02 steps, offset limits leave headroom
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Renko pattern naturally shows trend reversals; color coding (green
-          up/orange down) creates visual hierarchy; stair-step guides the eye through
-          trends
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -133,29 +127,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Renko chart with proper stair-step pattern and bullish/bearish
-          alternation
+        comment: Correct Renko chart, bricks alone with the subtle grid; no extra
+          layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: green/orange colors, uniform bricks, gap separation,
-          subtle grid, brick index X-axis, brick size annotation'
+        comment: 'C1 uniform bricks with gap, C2 one column per brick staircase, C3
+          green/red, C4 brick index axis, C5 bricks alone: all shown'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: brick number (0-37), Y-axis: stock price (85-115 USD), all
-          data visible'
+        comment: Each brick spans exactly 0.005 at its computed level; all 44 bricks
+          inside the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''renko-basic · seaborn · anyplot.ai'' (correct format),
-          legend labels: ''Bullish (Up)'' and ''Bearish (Down)'' (accurate)'
+        comment: Title 'renko-basic · python · seaborn · anyplot.ai'; legend 'Bullish
+          (up)' / 'Bearish (down)'
     data_quality:
       score: 15
       max: 15
@@ -165,22 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: bullish bricks, bearish bricks, trend reversals,
-          different brick sequences, realistic price movement'
+        comment: Long bearish staircases, several reversals, a bullish run and revisited
+          levels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real stock price scenario (100-115 USD range), daily closing prices,
-          neutral and plausible context
+        comment: EUR/USD over one year of business days near 1.10 with 50-pip bricks;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 250-day data generates ~37 bricks (appropriate), $2 brick size realistic,
-          price proportions correct
+        comment: Daily sd 0.35% gives a 1.10 to 0.97 path, plausible for the pair;
+          260 observations yield 44 bricks inside the 20-50 range
     code_quality:
       score: 10
       max: 10
@@ -190,33 +184,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme setup → data generation → Renko calculation
-          → plotting → save, no functions/classes'
+        comment: Linear script with Data and Plot zones and column constants; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib, numpy, pandas, matplotlib.patches'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Renko algorithm clear and correct, Pythonic code, no fake UI or over-engineering
+        comment: Compact integer-level Renko construction; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi=300, bbox_inches='tight',
-          facecolor=PAGE_BG
+        comment: plot-{THEME}.png at dpi=400, no bbox_inches='tight'
     library_mastery:
       score: 4
       max: 10
@@ -226,26 +218,28 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Proper matplotlib figure/axes setup and configuration, but Renko
-          requires custom rectangle rendering (expected limitation)
+        comment: sns.set_theme rc mapping and sns.despine; bricks via matplotlib patches
+          as the chart type requires
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Minimal seaborn-specific features; mostly matplotlib.patches for
-          custom chart; could apply this approach to any library
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T05:09:39Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - patches
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - time-series
   styling:
-  - publication-ready
   - grid-styling
