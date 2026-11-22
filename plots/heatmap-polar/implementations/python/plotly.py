@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 89/100 | Created: 2026-05-13
@@ -7,6 +7,7 @@ Quality: 89/100 | Created: 2026-05-13
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -18,59 +19,68 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Data: website page views by hour of day (angular) and day of week (radial)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Single-polarity continuous scale built from Imprint positions 1 and 3
+imprint_seq = [[0.0, IMPRINT_PALETTE[0]], [1.0, IMPRINT_PALETTE[2]]]
+
+# Columns: set these to your table's column names
+DAY = "Day"  # role: radial
+HOUR = "Hour of day"  # role: angular
+VIEWS = "Page views"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("traffic.csv")
 np.random.seed(42)
-days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-n_days = 7
-n_hours = 24
-
-traffic = np.zeros((n_days, n_hours))
-for d in range(n_days):
-    for h in range(n_hours):
-        morning_peak = np.exp(-0.5 * ((h - 9) / 1.5) ** 2)
-        evening_peak = np.exp(-0.5 * ((h - 20) / 2.0) ** 2)
-        lunch_peak = 0.4 * np.exp(-0.5 * ((h - 13) / 1.0) ** 2)
-        if d >= 5:  # weekend: single midday peak
-            traffic[d, h] = 3500 * np.exp(-0.5 * ((h - 13) / 3.5) ** 2) + np.random.normal(0, 80)
+rows = []
+for day_idx, day_name in enumerate(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]):
+    for hour in range(24):
+        morning_peak = np.exp(-0.5 * ((hour - 9) / 1.5) ** 2)
+        evening_peak = np.exp(-0.5 * ((hour - 20) / 2.0) ** 2)
+        lunch_peak = 0.4 * np.exp(-0.5 * ((hour - 13) / 1.0) ** 2)
+        if day_idx >= 5:  # weekend: single midday peak
+            views = 3500 * np.exp(-0.5 * ((hour - 13) / 3.5) ** 2) + np.random.normal(0, 80)
         else:  # weekday: morning + lunch + evening peaks
-            traffic[d, h] = 5500 * (morning_peak + 0.8 * evening_peak + lunch_peak) + np.random.normal(0, 150)
-
-traffic = np.clip(traffic, 0, None)
-vmin, vmax = traffic.min(), traffic.max()
-
-# Angular layout: 24 hours each occupying 15°, starting at top (midnight), clockwise
-hour_angles = [h * (360.0 / n_hours) for h in range(n_hours)]
-bar_width = 360.0 / n_hours
+            views = 5500 * (morning_peak + 0.8 * evening_peak + lunch_peak) + np.random.normal(0, 150)
+        rows.append({DAY: day_name, HOUR: hour, VIEWS: max(views, 0.0)})
+df = pd.DataFrame(rows)
 
 # Plot
-fig = go.Figure()
+table = df.pivot_table(index=DAY, columns=HOUR, values=VIEWS, sort=False)
+n_days, n_hours = table.shape
+hours = list(table.columns)
+bar_width = 360.0 / n_hours
+hour_angles = [h * bar_width for h in range(n_hours)]
+vmin, vmax = np.nanmin(table.to_numpy()), np.nanmax(table.to_numpy())
 
-for d, day in enumerate(days):
-    hourly = traffic[d].tolist()
+fig = go.Figure()
+for d, day in enumerate(table.index):
+    hourly = table.loc[day].tolist()
     fig.add_trace(
         go.Barpolar(
             r=[1.0] * n_hours,
             base=[d] * n_hours,
             theta=hour_angles,
             width=[bar_width] * n_hours,
-            marker={"color": hourly, "coloraxis": "coloraxis", "line": {"color": PAGE_BG, "width": 0.5}},
-            name=day,
+            marker={"color": hourly, "coloraxis": "coloraxis", "line": {"color": PAGE_BG, "width": 0.4}},
+            name=str(day),
             showlegend=False,
-            customdata=np.column_stack([list(range(n_hours)), hourly]),
+            customdata=np.column_stack([hours, hourly]),
             hovertemplate=(
-                f"<b>{day}</b><br>Hour: %{{customdata[0]:.0f}}:00<br>Page Views: %{{customdata[1]:,.0f}}<extra></extra>"
+                f"<b>{day}</b><br>{HOUR}: %{{customdata[0]:.0f}}:00<br>{VIEWS}: %{{customdata[1]:,.0f}}<extra></extra>"
             ),
         )
     )
 
-# Style
-angular_tickvals = [h * 15 for h in [0, 3, 6, 9, 12, 15, 18, 21]]
-angular_ticktext = ["12am", "3am", "6am", "9am", "12pm", "3pm", "6pm", "9pm"]
+# Style: label every third hour, in 12-hour clock text
+tick_hours = hours[::3]
+angular_tickvals = [h * bar_width for h in tick_hours]
+angular_ticktext = [f"{(h % 12) or 12}{'am' if h < 12 else 'pm'}" for h in tick_hours]
 
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "Website Traffic · heatmap-polar · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "Website Traffic · heatmap-polar · python · plotly · anyplot.ai",
+        "font": {"size": 15, "color": INK},
         "x": 0.44,
         "y": 0.98,
         "xanchor": "center",
@@ -78,13 +88,13 @@ fig.update_layout(
     },
     polar={
         "bgcolor": PAGE_BG,
-        "domain": {"x": [0, 0.82], "y": [0.02, 0.98]},
+        "domain": {"x": [0.07, 0.8], "y": [0.04, 0.9]},
         "angularaxis": {
             "direction": "clockwise",
             "rotation": 90,
             "tickvals": angular_tickvals,
             "ticktext": angular_ticktext,
-            "tickfont": {"size": 18, "color": INK_SOFT},
+            "tickfont": {"size": 11, "color": INK_SOFT},
             "linecolor": INK_SOFT,
             "gridcolor": GRID,
             "gridwidth": 1,
@@ -92,8 +102,8 @@ fig.update_layout(
         "radialaxis": {
             "range": [0, n_days],
             "tickvals": [d + 0.5 for d in range(n_days)],
-            "ticktext": days,
-            "tickfont": {"size": 16, "color": INK_SOFT},
+            "ticktext": list(table.index),
+            "tickfont": {"size": 10, "color": INK_SOFT},
             "gridcolor": GRID,
             "showgrid": True,
             "showline": False,
@@ -102,27 +112,28 @@ fig.update_layout(
         },
     },
     coloraxis={
-        "colorscale": "viridis",
+        "colorscale": imprint_seq,
         "cmin": vmin,
         "cmax": vmax,
         "colorbar": {
-            "title": {"text": "Page Views", "font": {"size": 18, "color": INK}},
-            "tickfont": {"size": 14, "color": INK_SOFT},
+            "title": {"text": VIEWS, "font": {"size": 12, "color": INK}},
+            "tickfont": {"size": 10, "color": INK_SOFT},
             "bgcolor": ELEVATED_BG,
             "bordercolor": INK_SOFT,
             "borderwidth": 1,
-            "thickness": 25,
+            "thickness": 14,
             "len": 0.55,
-            "x": 0.88,
+            "x": 0.9,
             "y": 0.5,
             "yanchor": "middle",
         },
     },
     paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"l": 40, "r": 80, "t": 60, "b": 40},
+    margin={"l": 20, "r": 40, "t": 50, "b": 20},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1200, height=1200, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
