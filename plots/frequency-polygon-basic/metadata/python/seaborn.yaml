@@ -2,53 +2,43 @@ library: seaborn
 language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:16:19Z'
-updated: '2026-05-17T16:37:10Z'
-generated_by: claude-haiku
-workflow_run: 25996237238
+updated: '2026-11-22T07:14:21Z'
+generated_by: claude-sonnet
+workflow_run: 44996847075
 issue: 3418
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 82
 review:
   strengths:
-  - Excellent theme-adaptive styling with flawless contrast in both light and dark
-    modes
-  - Perfect visual clarity with all text properly sized and readable (24pt title,
-    20pt labels, 16pt ticks)
-  - Strong data storytelling—three distributions with different characteristics (normal,
-    shifted, bimodal) are immediately distinguishable
-  - Comprehensive feature implementation—closed polygons, aligned bins, semi-transparent
-    fills, distinct markers all present
-  - 'Clean, reproducible code with proper palette compliance (Okabe-Ito first series
-    #009E73)'
-  - Idiomatic seaborn usage with proper rc-dict theming and theme-token integration
-  weaknesses: []
+  - Shared bin edges from np.histogram_bin_edges put every group's vertices at the
+    same x positions
+  - Each polygon is closed to zero at both ends on a y axis that starts at zero
+  - Groups are separated by Imprint color and by marker shape, so lines stay traceable
+    where they cross in both themes
+  - Three distinct distribution shapes (normal cycling, right-skewed bus, bimodal
+    train) make the comparison informative
+  - Theme tokens threaded through sns.set_theme rc; both renders theme-correct on
+    the exact 3200x1800 canvas
+  weaknesses:
+  - 'Suggestion: a single sns.lineplot call on a long-form polygon table with hue=
+    and palette= would replace the per-group loop.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title (24pt), X-axis label "Test Score" (20pt), Y-axis label "Frequency" (20pt), tick labels (16pt) — all rendered in dark text
-      Legibility: All text perfectly readable against light background, no contrast issues
-      Data: Three frequency polygons in Okabe-Ito colors—Class A green (#009E73), Class B vermillion (#D55E00), Class C blue (#0072B2)
-      Markers: Distinct markers per class (circles, squares, triangles) clearly visible at bin centers
-      Fills: Semi-transparent fills (alpha=0.15) visible beneath each polygon
-      Legend: Upper right, clear background with dark text labels
-      Grid: Subtle y-axis grid (alpha=0.10) visible but not dominant
-      Legibility verdict: PASS — all elements readable with proper theme chrome
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: title 'frequency-polygon-basic · python · seaborn · anyplot.ai', x 'Commute time (min)', y 'Frequency', ticks 0-80 and 20-80, legend 'Transport mode' upper right on an elevated box; all dark text, readable
+      Data: three frequency polygons with light fills - Cycling #009E73 circles (peak ~94 at 21 min), Bus #C475FD squares (right-skewed, peak 43 at ~33 min), Train #4467A3 triangles (bimodal, peaks 61 at ~29 and 28 at ~58 min); each closed to zero at both ends
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title, axis labels, tick labels rendered in light text (INK=#F0EFE8)
-      Legibility: All text perfectly readable against dark background, no dark-on-dark failures
-      Data: Data colors identical to light render—green, orange, blue unchanged (only chrome adapts)
-      Markers: Same distinct markers (circles, squares, triangles) clearly visible
-      Fills: Semi-transparent fills with same alpha values, properly visible
-      Legend: Dark background (#242420) with light text labels, properly themed
-      Grid: Subtle y-axis grid maintained
-      Legibility verdict: PASS — all elements readable, no theme-adaptation issues, colors match light render
+      Background: warm near-black #1A1A17
+      Chrome: title, axis labels, ticks and legend text in light ink; legend box #242420; grid subtle; no dark-on-dark
+      Data: identical colors, markers and shapes to the light render
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -59,70 +49,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          perfect readability in both themes'
+        comment: Explicit sizes (title 12, labels 10, ticks 8, legend 8/9 pt at 8x4.5
+          in); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, legend positioned well
+        comment: No text collisions; legend sits in the empty upper-right corner;
+          crossing lines stay traceable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and lines optimally sized and visible
+        comment: ~20 vertices per group with 5 pt markers and 2 pt lines, white marker
+          edges; legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with good contrast
+        comment: Green / purple / blue plus three marker shapes; not color-only, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout, plot fills 60-70% of canvas, balanced margins
+        comment: 3200x1800 canvas, balanced margins, title ~57% of width, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (Test Score, Frequency) with correct title format
+        comment: '''Commute time (min)'' with unit, ''Frequency'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order followed, correct backgrounds,
-          theme-correct chrome'
+        comment: 'Imprint palette in canonical order, first series #009E73; backgrounds
+          #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 17
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful marker differentiation and fill styling, well-executed
-          but follows established pattern
+        passed: false
+        comment: 'Default: style-guide baseline, nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Excellent spine removal, subtle grid, generous whitespace, polished
-          legend styling
+        passed: false
+        comment: 'Default: despined, subtle y-grid as the style guide asks; nothing
+          beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Excellent visual hierarchy showing three distinct distributions (normal,
-          shifted, bimodal)
+        passed: false
+        comment: 'Default: three distinct shapes (normal, right-skewed, bimodal) displayed,
+          no hierarchy chosen beyond the Notes'
     spec_compliance:
       score: 15
       max: 15
@@ -132,25 +124,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency polygon implementation
+        comment: Frequency polygon, one per group, straight segments, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: colors, legend, markers, fills, aligned bins'
+        comment: Colors plus marker shapes, legend, markers, zero-closed ends, shared
+          bin edges, semi-transparent fill (C1-C5 all met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: Vertices at bin midpoints and counts from np.histogram on shared
+          edges; axes show all data; y starts at 0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, matching legend labels
+        comment: Title in the mandated format; legend titled 'Transport mode' with
+          readable entries
     data_quality:
       score: 15
       max: 15
@@ -160,19 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all distribution aspects: normal, shifted, bimodal'
+        comment: Shows central tendency, spread, skew (bus) and bimodality (train)
+          differences
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test scores by class is realistic and neutral
+        comment: 'Commute times by transport mode: plausible, neutral, real labels'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions and values are factually sound
+        comment: 'Commutes 2-90 min, 300 trips per mode: sensible; no Check values
+          in the spec'
     code_quality:
       score: 10
       max: 10
@@ -182,55 +179,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, linear structure with no functions/classes
+        comment: Linear Imports -> constants -> Data -> Plot -> Save; column constants
+          and full palette
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed 42 ensures reproducibility
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering
+        comment: Shared edges via np.histogram_bin_edges, histogram via np.histogram,
+          one loop over groups
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Proper sns.set_theme() with rc configuration
+        passed: false
+        comment: 'Default: sns.set_theme rc theming and sns.lineplot/despine; per-group
+          loop rather than hue'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses different markers per group, custom theming
+        passed: false
+        comment: 'Default: nothing beyond what the library prompt mandates'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T07:10:58Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - binning
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling

@@ -1,13 +1,14 @@
 """ anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-17
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-22
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -18,46 +19,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series always #009E73
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette, canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Test scores by class
-np.random.seed(42)
-n_per_group = 200
-
-# Class A: well-distributed performance centered around 75
-class_a = np.random.normal(loc=75, scale=12, size=n_per_group)
-
-# Class B: higher achieving class centered around 82
-class_b = np.random.normal(loc=82, scale=10, size=n_per_group)
-
-# Class C: bimodal - mix of high performers and struggling students
-class_c = np.concatenate(
-    [
-        np.random.normal(loc=70, scale=11, size=n_per_group // 2),
-        np.random.normal(loc=88, scale=9, size=n_per_group // 2),
-    ]
-)
-
-# Align bin edges across all groups for accurate comparison
-all_scores = np.concatenate([class_a, class_b, class_c])
-bins = np.linspace(max(0, all_scores.min() - 5), min(100, all_scores.max() + 5), 20)
-bin_centers = (bins[:-1] + bins[1:]) / 2
-
-# Compute frequencies for each class (extend to zero at ends for closed polygon)
-class_a_counts, _ = np.histogram(class_a, bins=bins)
-class_a_x = np.concatenate([[bins[0]], bin_centers, [bins[-1]]])
-class_a_y = np.concatenate([[0], class_a_counts, [0]])
-
-class_b_counts, _ = np.histogram(class_b, bins=bins)
-class_b_x = np.concatenate([[bins[0]], bin_centers, [bins[-1]]])
-class_b_y = np.concatenate([[0], class_b_counts, [0]])
-
-class_c_counts, _ = np.histogram(class_c, bins=bins)
-class_c_x = np.concatenate([[bins[0]], bin_centers, [bins[-1]]])
-class_c_y = np.concatenate([[0], class_c_counts, [0]])
-
-# Create figure with theme-aware styling
 sns.set_theme(
     style="ticks",
     rc={
@@ -75,64 +39,69 @@ sns.set_theme(
     },
 )
 
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Constants
+N_BINS = 20  # number of shared bins across all groups
+MARKERS = ["o", "s", "^", "D", "v", "P", "X", "*"]  # one marker per group, in palette order
+
+# Columns: set these to your table's column names
+COMMUTE = "Commute time (min)"  # role: values
+MODE = "Transport mode"  # role: group
+
+# Data: replace this block with your own table, for example df = pd.read_csv("commutes.csv")
+rng = np.random.default_rng(42)
+n_trips = 300
+cycling = rng.normal(loc=22, scale=6, size=n_trips)
+bus = rng.lognormal(mean=np.log(36), sigma=0.35, size=n_trips)
+train = np.concatenate(
+    [
+        rng.normal(loc=28, scale=5, size=int(n_trips * 0.65)),
+        rng.normal(loc=58, scale=8, size=n_trips - int(n_trips * 0.65)),
+    ]
+)
+df = pd.DataFrame(
+    {
+        COMMUTE: np.clip(np.concatenate([cycling, bus, train]), 2, None),
+        MODE: ["Cycling"] * n_trips + ["Bus"] * n_trips + ["Train"] * n_trips,
+    }
+)
+
+# Plot: reads only df and the constants above
+# Shared bin edges so every polygon has its vertices at the same x positions
+values = df[COMMUTE].dropna()
+edges = np.histogram_bin_edges(values, bins=N_BINS)
+centers = (edges[:-1] + edges[1:]) / 2
+modes = list(df[MODE].unique())
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot frequency polygons using seaborn's lineplot
-# Class A - Okabe-Ito position 1 (brand green)
-sns.lineplot(
-    x=class_a_x,
-    y=class_a_y,
-    ax=ax,
-    linewidth=3,
-    color=IMPRINT[0],
-    label="Class A",
-    marker="o",
-    markersize=8,
-    markevery=slice(1, -1),
-)
-ax.fill_between(class_a_x, class_a_y, alpha=0.15, color=IMPRINT[0])
+for i, mode in enumerate(modes):
+    counts, _ = np.histogram(df.loc[df[MODE] == mode, COMMUTE].dropna(), bins=edges)
+    # Extend to zero at both ends so the polygon closes on the baseline
+    poly = pd.DataFrame({COMMUTE: np.r_[edges[0], centers, edges[-1]], "Frequency": np.r_[0, counts, 0]})
+    sns.lineplot(
+        data=poly,
+        x=COMMUTE,
+        y="Frequency",
+        ax=ax,
+        color=IMPRINT_PALETTE[i],
+        linewidth=2,
+        marker=MARKERS[i],
+        markersize=5,
+        markevery=slice(1, -1),
+        label=mode,
+    )
+    ax.fill_between(poly[COMMUTE], poly["Frequency"], alpha=0.15, color=IMPRINT_PALETTE[i])
 
-# Class B - Okabe-Ito position 2 (vermillion)
-sns.lineplot(
-    x=class_b_x,
-    y=class_b_y,
-    ax=ax,
-    linewidth=3,
-    color=IMPRINT[1],
-    label="Class B",
-    marker="s",
-    markersize=8,
-    markevery=slice(1, -1),
-)
-ax.fill_between(class_b_x, class_b_y, alpha=0.15, color=IMPRINT[1])
-
-# Class C - Okabe-Ito position 3 (blue)
-sns.lineplot(
-    x=class_c_x,
-    y=class_c_y,
-    ax=ax,
-    linewidth=3,
-    color=IMPRINT[2],
-    label="Class C",
-    marker="^",
-    markersize=8,
-    markevery=slice(1, -1),
-)
-ax.fill_between(class_c_x, class_c_y, alpha=0.15, color=IMPRINT[2])
-
-# Styling
-ax.set_xlabel("Test Score", fontsize=20, color=INK)
-ax.set_ylabel("Frequency", fontsize=20, color=INK)
-ax.set_title("frequency-polygon-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for spine in ("left", "bottom"):
-    ax.spines[spine].set_color(INK_SOFT)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
-ax.legend(fontsize=16, loc="upper right", framealpha=0.95, edgecolor=INK_SOFT)
+# Style
+ax.set_title("frequency-polygon-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(COMMUTE, fontsize=10)
+ax.set_ylabel("Frequency", fontsize=10)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.set_ylim(bottom=0)
+sns.despine(ax=ax)
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.legend(title=MODE, fontsize=8, title_fontsize=9, loc="upper right", framealpha=0.95)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
