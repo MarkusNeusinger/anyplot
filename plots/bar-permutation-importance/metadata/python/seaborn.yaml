@@ -12,38 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 72
 review:
   strengths:
-  - Clear, readable horizontal bar chart with proper feature sorting by importance
-  - Excellent theme adaptation with correct light (#FAF8F1) and dark (#1A1A17) backgrounds
-  - All text legible in both renders with proper color contrast
-  - Proper use of viridis colormap for continuous importance values
-  - Correct error bar visualization showing importance variability across permutation
-    repeats
-  - Good visual hierarchy with brightest colors highlighting most important features
-  - Reproducible code with deterministic seed and real dataset (breast cancer)
+  - Correct sns.barplot with hue and legend=False, sorted highest at top
+  - Theme tokens threaded through sns.set_theme rc; all text readable in both themes
+  - Real breast-cancer dataset through sklearn's permutation_importance with n_repeats=10
+  - Error bars and zero line drawn and visible in both themes
   weaknesses:
-  - Design could be more sophisticated with additional visual refinement beyond defaults
-  - Library mastery is basic - uses standard sns.barplot without distinctive seaborn
-    features
-  - Color gradient is effective but not explicitly mapped to importance values (relies
-    on sorted order)
+  - 'VQ-05 (both): the renders are 4744x2653 px, off both canonical canvases → 3200x1800
+    (−1544 × −853). Likely cause: figsize=(16, 9) with savefig(dpi=300, bbox_inches="tight").'
+  - 'VQ-07 (both): the bars use seaborn''s ''viridis'' palette, a colormap outside
+    the Imprint set → a sequential ramp between Imprint #009E73 and #4467A3 (imprint_seq).
+    Likely cause: sns.color_palette("viridis", ...).'
+  - 'SC-04 (both): the title reads ''bar-permutation-importance · seaborn · anyplot.ai''
+    without the language → ''bar-permutation-importance · python · seaborn · anyplot.ai''.
+    Likely cause: the set_title string.'
+  - 'DQ-03 (both): permutation importance is computed on the training data the random
+    forest memorised, so the largest accuracy drop is only 0.0025 and 20 of 30 features
+    are exactly 0 → evaluate on a held-out split so drops reach a realistic 0.01–0.05
+    range. Likely cause: permutation_importance(clf, X, y, ...).'
+  - 'Suggestion: map the gradient to the importance values rather than to the rank
+    position.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle edges - correct theme surface
-      Chrome: Title "bar-permutation-importance · seaborn · anyplot.ai" is prominent and dark; axis labels "Feature" and "Mean Importance (Decrease in Accuracy)" are clear and readable; tick labels for all 30 features are legible with dark text on light background
-      Data: Horizontal bars use reversed viridis palette (yellow at top for high importance, dark blue at bottom), error bars shown in muted gray (#4A4A44), vertical reference line at x=0 is visible with subtle gray color
-      Legibility verdict: PASS - All elements are clearly visible with excellent contrast
+      Background: warm off-white #FAF8F1, correct; canvas 4744x2653 px.
+      Chrome: title 'bar-permutation-importance · seaborn · anyplot.ai' (no language segment) in dark ink; axis titles 'Mean Importance (Decrease in Accuracy)' and 'Feature' large and readable; tick labels at 16 pt; subtle vertical grid; top/right spines removed.
+      Data: 30 horizontal bars sorted highest at top, colored by rank with reversed viridis (yellow at top to green-teal); 20 zero-importance features show no bar; gray error bars with caps; gray zero line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle edges - correct theme surface
-      Chrome: Title is bright and readable; axis labels are light and legible against dark background; tick labels maintain readability with light text on dark background; no dark-on-dark failures detected
-      Data: Bar colors identical to light render (data colors theme-independent per spec), error bars appear in light gray (#B8B7B0) with good contrast against dark background, reference line at x=0 visible
-      Legibility verdict: PASS - All elements readable in both themes with proper color adaptation
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title and axis titles in light ink, ticks in light gray, no dark-on-dark text.
+      Data: bar colors identical to the light render, with thin light bar outlines; light-gray error bars and zero line visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -51,68 +56,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark themes
+        comment: All text set explicitly (title 24, axis titles 20, ticks 16 at figsize
+          16x9) and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 30 features displayed without text collisions
+        comment: No text collisions; 30 feature names stacked without overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, error bars, and reference line all clearly visible
+        comment: Bars, gray error bars and zero line visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis palette is CVD-safe, excellent contrast
+        comment: Blue-to-green sequential ramp plus bar length; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Good proportions, nothing cut off, generous whitespace
+        passed: false
+        comment: Saved with dpi=300 and bbox_inches='tight' -> 4744x2653 px, off both
+          canonical canvases (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, professional title format
+        comment: '''Mean Importance (Decrease in Accuracy)'' and ''Feature'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Viridis correct for continuous data, backgrounds accurate, both renders
-          theme-correct
+        passed: false
+        comment: Bars use seaborn's 'viridis' palette, a forbidden colormap; only
+          imprint_seq/imprint_div are allowed for continuous data (defect line)
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Clean but generic design with default seaborn approach
+        passed: true
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Standard spine removal and grid styling, no exceptional refinement
+        comment: Spine and grid rules met (x-only subtle grid, despine), nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good visual hierarchy through color gradient and feature ordering
+        passed: false
+        comment: Data displayed sorted with a gradient as the Notes ask; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -120,27 +129,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart
+        comment: Horizontal bar chart of permutation importance
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted bars, error bars, color gradient, reference line all present
+        comment: Sorted highest at top, error bars, color gradient by rank (same ranking
+          as length), zero line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct, all data visible, proper scaling
+        comment: Bars at their means, error bars centered on bar ends, negative error
+          extents shown left of zero
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Correct title format, legend appropriately omitted
+        passed: false
+        comment: Title 'bar-permutation-importance · seaborn · anyplot.ai' misses
+          the language segment 'python' (defect line)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -148,19 +160,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All plot aspects shown: sorted bars, error bars, reference line'
+        comment: Shows ranking, variability, error bars crossing zero and the near-zero
+          tail
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real breast cancer dataset with genuine permutation importance
+        comment: Real Wisconsin breast-cancer dataset with a random forest; neutral
+          and plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Sensible importance values and axis scaling
+        passed: false
+        comment: 'Importances are computed on the training set the forest memorised:
+          the largest accuracy drop is 0.0025 and 20 of 30 features are exactly 0,
+          an implausible scale for a validation measure (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -170,31 +186,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward implementation
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses random_state=42 for reproducibility
+        comment: random_state=42 on model and permutation_importance
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used and necessary
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Appropriate complexity; data block and plot block cleanly separated
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output as plot-{THEME}.png
+        comment: Saves plot-{THEME}.png; current API (canvas drift scored under VQ-05)
     library_mastery:
       score: 4
       max: 10
@@ -204,14 +220,17 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct sns.barplot usage and theme setup
+        comment: Correct sns.barplot with hue/palette/legend=False and set_theme rc;
+          baseline
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage without showcasing seaborn's unique strengths
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
 impl_tags:
   dependencies:
   - sklearn
