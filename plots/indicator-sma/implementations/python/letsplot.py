@@ -64,7 +64,7 @@ df = pd.DataFrame(
 
 # Plot: reads only df and the constants above
 series = [CLOSE, SMA_SHORT, SMA_MEDIUM, SMA_LONG]
-colors = dict(zip(series, IMPRINT_PALETTE))
+colors = {name: IMPRINT_PALETTE[i] for i, name in enumerate(series)}
 df_long = df.melt(id_vars=[DATE], value_vars=series, var_name="Series", value_name="Price (USD)")
 
 # Line-weight hierarchy: close thicker, SMAs thinner
