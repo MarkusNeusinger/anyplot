@@ -2,61 +2,66 @@ library: seaborn
 language: python
 specification_id: smith-chart-basic
 created: '2026-01-15T21:52:07Z'
-updated: '2026-05-20T01:41:55Z'
+updated: '2026-11-22T17:44:44Z'
 generated_by: claude-sonnet
-workflow_run: 26134896312
+workflow_run: 45050446965
 issue: 3792
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 76
 review:
   strengths:
-  - Complete Smith chart grid with correct constant resistance circles (r=0,0.2,0.5,1,2,5)
-    and reactance arcs drawn with clipping to the unit circle boundary
-  - 'Sophisticated frequency-gradient encoding: seaborn scatterplot with hue=''freq_ghz''
-    and palette=''viridis'' conveys sweep direction without categorical legend clutter;
-    colorbar decodes it cleanly'
-  - 'Perfect spec compliance — all required elements present: normalized impedance
-    (Gamma formula), connected locus, frequency labels at 5 key points, VSWR 3:1 reference
-    circle, center matched-condition marker'
-  - 'Flawless code quality: reproducible seed, linear KISS structure, clean imports,
-    theme-adaptive chrome through all text/spine/legend elements in both light and
-    dark renders'
-  - Key frequency markers use dark fill + PAGE_BG edge, giving high contrast against
-    both the viridis locus and the chart background in both themes
+  - 'Complete Smith grid: constant-R circles r=0…5 all touching (1,0) and ±x arcs
+    clipped to the unit circle, with a true-circle boundary in equal aspect'
+  - Correct normalization Γ=(Z/Z0−1)/(Z/Z0+1) computed from a tidy df with column
+    constants, so the matched point sits at the center '+' marker
+  - Key frequency markers with a page-colored halo read clearly against the trace
+    in both themes
+  - Theme tokens threaded through sns.set_theme rc, legend frame, colorbar ticks and
+    outline; both renders fully legible
+  - Exact 2400×2400 square canvas with default bbox, as the library prompt requires
   weaknesses:
-  - 'Annotation crowding in center-right area: ''1.0 GHz'', ''2.2 GHz'', ''r=1'',
-    and ''Z₀ (50 Ω)'' labels are clustered near (0.3, ±0.1) — consider adjusting label_offsets
-    for 1.0 GHz from (8,-18) to (15,-25) and Z₀ from (-38,-14) to (-50,-22) to create
-    more breathing room'
-  - DE-01 typography is functional but not exceptional — reference labels (r=, x=)
-    and frequency annotations share the same fontsize=8 and no weight difference;
-    using fontsize=7 italic for grid labels and keeping fontsize=8 bold only for frequency
-    points would create clearer hierarchy
-  - 'LM-01 limitation: the seaborn API surface covers only the scatter calls; all
-    Smith chart geometry (circles, arcs, boundary) is pure matplotlib — this is structurally
-    necessary but limits seaborn showcase depth'
-  - The 'Impedance locus (1–6 GHz)' legend entry visible in the rendered image does
-    not appear as an explicit handle in the current code's legend block (only 3 handles
-    at lines 190–192); likely a version mismatch between stored images and current
-    code — verify that a colorbar is rendering and decoding the viridis gradient as
-    intended
+  - 'SC-01 (both): the locus points are colored by frequency through seaborn hue with
+    an imprint_seq colorbar, an encoding the -basic spec neither requires nor offers
+    (the Notes ask for frequency labels) → one solid locus color (#009E73) with the
+    labeled key points carrying the frequency, colorbar removed. Likely cause: sns.scatterplot(hue=FREQUENCY,
+    palette=imprint_seq) plus fig.colorbar(sm).'
+  - 'VQ-02 (both): the ''1.0 GHz'' annotation overlaps the ''r=2'' grid label on the
+    real axis, the ''r=0.2'' and ''r=1'' labels sit under locus points, and ''4.7
+    GHz'' runs into the trace beside its marker → every text clear of other text and
+    of the locus by a few px. Likely cause: fixed label_offsets in points and r-labels
+    fixed at y=0.03 regardless of where the locus crosses.'
+  - 'VQ-05 (both): about 250 px of empty page above the title and a similar gap below
+    the x-axis title, with the colorbar column pulling the square axes into a short
+    centered box → chart and title using the vertical space (top margin under ~100
+    px). Likely cause: tight_layout with set_aspect(''equal'') and a side colorbar
+    on a square figure.'
+  - 'SC-02 (both): the Cartesian frame (left/bottom spines, −1.0…1.0 ticks, Real(Γ)/Imag(Γ)
+    titles) stays around the Smith grid, where C1 asks for the grid in place of Cartesian
+    axes → hide spines and ticks (ax.axis(''off'')) and let the unit circle frame
+    the chart. Likely cause: ax.set_xlabel/set_ylabel and the spine styling block.'
+  - 'SC-02 (both): the ''1.0 GHz'' label sits about 0.1 Γ below-right of its marker,
+    beside the 3 GHz part of the trace, so it is not clearly tied to its point (C3)
+    → label adjacent to the 1.0 GHz marker, away from other trace sections. Likely
+    cause: label_offsets[0] = (8, -18).'
+  - 'Suggestion: a lighter weight or italic for the r=/x= grid values would separate
+    them further from the bold frequency labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "smith-chart-basic · python · seaborn · anyplot.ai" at fontsize=12 is clearly readable in dark INK (#1A1A17). Axis labels "Real(Γ)" and "Imag(Γ)" at fontsize=10 are readable. Tick labels (−1.0 to 1.0 on both axes) at fontsize=8 are readable. Grid reference labels (r=0.2, r=0.5, r=1, r=5 and x=±0.2 to ±2) at fontsize=8 are readable though dense in places. Legend box has elevated background (#FFFDF6) with INK_SOFT border.
-      Data: Constant resistance circles drawn in INK_SOFT gray; constant reactance arcs in Okabe-Ito orange (#D55E00); impedance locus appears as a thick greenish line (viridis scatter at dense 100 points averages to teal-green in the 1–6 GHz range); VSWR 3:1 dashed circle in Okabe-Ito blue (#0072B2). Five key frequency markers (1.0, 2.2, 3.6, 4.8, 6.0 GHz) shown as large dark dots with PAGE_BG edge for contrast. Center "Z₀ (50 Ω)" cross marker visible. Annotation crowding visible near center-right (1.0 GHz / 2.2 GHz / r=1 area) but no hard overlaps.
-      Legibility verdict: PASS — all text readable against light background; minor crowding near center does not cause overlap failures.
+      Background: warm off-white #FAF8F1, 2400×2400 square canvas.
+      Chrome: title 'smith-chart-basic · python · seaborn · anyplot.ai' in dark ink, Real(Γ)/Imag(Γ) axis titles, −1.0…1.0 ticks in INK_SOFT, legend (R circles, X arcs, VSWR 3:1) on an elevated frame top-left, Frequency (GHz) colorbar right; about 250 px empty above the title. All readable.
+      Data: grey constant-R circles with r= labels on the real axis, lilac #C475FD reactance arcs with x=± labels, dashed #4467A3 VSWR 3:1 circle, locus of 100 points colored green #009E73 → blue #4467A3 by frequency over a faint connecting line, five dark key markers labelled 1.0/2.2/3.5/4.7/6.0 GHz, '+' and 'Z₀ (50 Ω)' at the center. '1.0 GHz' overlaps the 'r=2' label.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light text (INK token = #F0EFE8 in dark mode) — clearly readable against the dark background. No dark-on-dark failures observed. INK_SOFT (#B8B7B0) used for secondary labels (ticks, r= labels). Legend box uses ELEVATED_BG (#242420) with INK_SOFT border — readable.
-      Data: Data colors are identical to the light render — viridis locus appears same teal-green average, orange reactance arcs (#D55E00) and blue VSWR circle (#0072B2) maintain their Okabe-Ito hues unchanged between themes. Constant R circles shift to lighter gray (INK_SOFT in dark = #B8B7B0) against the dark background, which is correct and improves contrast. Key frequency markers remain clearly distinguishable.
-      Legibility verdict: PASS — no dark-on-dark text failures; all elements remain readable and distinguishable on the dark surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks, legend text and colorbar ticks in light ink; legend frame #242420. No dark-on-dark text.
+      Data: identical locus, arc, VSWR and colorbar colors to the light render; grid circles and key markers flip to light tokens (markers light with dark halo). Same label collisions as light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 26
@@ -64,125 +69,114 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, axis=10, ticks=8, annotations=8).
-          Both themes readable. Slight concern: fontsize=8 for r= and x= reference
-          labels inside a dense Smith chart grid, but visually OK at 2400×2400.'
-      - id: VQ-02
-        name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Minor crowding near center-right (1.0 GHz / 2.2 GHz / r=1 / Z₀ labels
-          clustered near (0.3, ±0.1)) but no hard overlap observed in either render.
+        comment: Title 12 pt, axis titles 10 pt, ticks and grid/frequency labels 8
+          pt, all set explicitly; every text readable in both themes at full size
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Grid circles and arcs at linewidth=0.8 + alpha=0.6 are clearly visible.
-          Locus scatter at s=40 with 100 dense points forms a visible strip. Key markers
-          at s=100 with edge contrast are prominent. Colorbar (if rendering) provides
-          frequency decode.
+        comment: 100 locus points at s=40 form a continuous trace, five key markers
+          at s=100 with a page-colored halo stand out; grid, VSWR circle and legend
+          glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is CVD-safe for continuous data. Okabe-Ito orange and blue
-          for categorical overlays are CVD-safe. No red-green sole signal.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: 'Square 2400×2400 canvas is ideal for the circular Smith chart. Plot
-          fills canvas well. tight_layout applied. Colorbar shrink=0.5 keeps it compact.
-          Minor: colorbar presence shifts axes slightly.'
+        comment: Green-to-blue sequence plus dark/light key markers; no red-green
+          sole signal
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real(Γ) and Imag(Γ) are correct descriptive labels with proper mathematical
-          notation. Title matches required format exactly.
+        comment: Real(Γ) / Imag(Γ) are correct, reader-facing axis titles; colorbar
+          titled Frequency (GHz)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Continuous locus uses viridis (correct for sequential frequency data).
-          Categorical reference overlays use Okabe-Ito positions 2 (#D55E00) and 3
-          (#0072B2). Chrome (background, text, grid, legend) is fully theme-adaptive.
-          Both renders pass theme-chrome check.
+        comment: 'Grid, reactance arcs and VSWR circle in Imprint positions; chrome
+          theme-correct (#FAF8F1 / #1A1A17) in both renders'
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: '''1.0 GHz'' overlaps the ''r=2'' grid label, ''r=0.2'' and ''r=1''
+          sit under locus marks, ''4.7 GHz'' touches its neighbour marks (defect line)'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: 2400×2400 canvas correct; a ~250 px empty band above the title and
+          a matching gap below leave the chart vertically off-balance (defect line)
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above generic default: viridis frequency-gradient is a sophisticated
-          choice, key markers with contrast edges add professional polish, different
-          visual weights for reference vs data elements. Not quite publication-ready
-          — typography lacks weight hierarchy between reference labels and frequency
-          annotations.'
+        passed: false
+        comment: 'Style-guide baseline: explicit size hierarchy, theme tokens; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Grid is OFF (correct — Smith chart IS its own grid), top/right spines
-          removed, alpha=0.6 on reference lines, themed legend box. Good refinement
-          visible throughout.
+        passed: false
+        comment: Key markers carry a page-colored halo that separates them from the
+          trace; grid weights (boundary 1.5, circles 0.8 at alpha 0.6) layered behind
+          the locus
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: The viridis gradient encodes frequency sweep direction; 5 key milestones
-          labeled; VSWR reference contextualizes engineering significance; Z₀ center
-          marks the matched-condition goal. Clear engineering narrative.
+        passed: false
+        comment: Frequency labels are required by the Notes and the frequency color
+          channel is variant creep (no credit); no hierarchy chosen beyond that
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct Smith chart with constant R circles, constant X arcs, unit
-          circle boundary, real axis, impedance locus, VSWR circle, and center marker
-          — all expected chart elements present.
+        passed: false
+        comment: Correct Smith chart, but the locus is additionally colored by frequency
+          with a colorbar, an encoding the -basic spec neither requires nor offers
+          (defect line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec requirements met: normalized impedance (Gamma formula correct),
-          connected locus trajectory, frequency labels at key points, VSWR 3:1 reference
-          circle (optional but included), chart boundary = |Gamma|=1, center = matched
-          condition.'
+        passed: false
+        comment: Grid, normalization, connected locus, frequency labels, VSWR circle
+          and center mark present; the Cartesian frame stays beside the grid (C1)
+          and the 1.0 GHz label is not clearly tied to its point (C3) (defect lines)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: gamma_real on x-axis, gamma_imag on y-axis. All 100 points visible
-          within unit circle. Axes span -1.15 to 1.15 with equal aspect — correct
-          Smith chart geometry.
+        comment: Γ real/imag on x/y, equal aspect, all 100 points inside the unit
+          disc at their computed values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'smith-chart-basic · python · seaborn · anyplot.ai' matches
-          required format exactly. Legend entries describe chart elements clearly.
+        comment: Title is smith-chart-basic · python · seaborn · anyplot.ai; legend
+          entries describe R circles, X arcs and the VSWR circle
     data_quality:
       score: 15
       max: 15
@@ -192,100 +186,92 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows ALL Smith chart aspects: 6 resistance values (0,0.2,0.5,1,2,5),
-          5 reactance values (±0.2,±0.5,±1,±2,±5), complete impedance locus loop,
-          VSWR reference, frequency labels, center marker, frequency gradient encoding.'
+        comment: Six resistance circles, ±five reactance arcs, a looping locus crossing
+          inductive and capacitive halves, VSWR 3:1 circle and matched center
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: RF antenna impedance sweep 1–6 GHz with Z₀=50Ω is a standard, neutral,
-          real-world engineering scenario. Frequency range and reference impedance
-          are industry-standard values.
+        comment: 'Antenna impedance sweep 1–6 GHz against 50 Ω: a neutral, standard
+          RF scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Gamma transformation formula is correct: Γ=(z_norm-1)/(z_norm+1).
-          Impedance values (50–100Ω real, ±40Ω imaginary) are realistic for an antenna.
-          All data points fall within unit circle as expected.'
+        comment: Spec has no Check values; checked Γ=(z−1)/(z+1) with z=Z/50, first
+          point Z=65+20j Ω → Γ≈0.16+0.15j, matching the 1.0 GHz marker; resistances
+          45–100 Ω plausible
     code_quality:
       score: 10
       max: 10
       items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear flow: imports → tokens → data → grid drawing → locus → markers
-          → annotations → legend → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is actually deterministic parametric,
-          so seed is belt-and-suspenders — appropriate.
+        comment: Fully deterministic parametric data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all actively used.
-          No unused imports.
+        comment: os, pyplot, numpy, pandas, seaborn, LinearSegmentedColormap all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for Smith chart geometry. Looping over r/x
-          values for grid is the correct pattern. No over-engineering or fake UI elements.
+        comment: Grid loops are the minimal form; no fake UI, no hand-rolled algorithm
+          an available call computes
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear script in the six adaptable-code zones: column constants,
+          a Data block ending in df, plot reads only df'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot-{THEME}.png with dpi=400 and bbox_inches='tight'. Current
-          seaborn/matplotlib API throughout.
+        comment: Saves plot-{THEME}.png with default bbox; current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses sns.scatterplot at axes-level (preferred pattern), sns.set_theme
-          with rc dict for theme adaptation, hue + palette='viridis' with hue_norm
-          for continuous encoding. Smith chart geometry requires matplotlib — appropriate
-          tradeoff.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: The continuous hue encoding (hue='freq_ghz', palette='viridis', hue_norm=(1.0,6.0))
-          combined with legend=False + explicit colorbar is a distinctive seaborn
-          pattern that leverages its statistical color-encoding strengths beyond what
-          raw matplotlib would naturally suggest.
+        passed: false
+        comment: sns.set_theme with an rc dict, axes-level sns.scatterplot on a DataFrame;
+          geometry falls back to matplotlib as required
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: The continuous hue/hue_norm channel is variant creep and earns no
+          credit; nothing else beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
+  rendered_at: '2026-11-22T17:40:01Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - colorbar
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
-  - explicit-figure
   dataprep:
   - normalization
   styling:
-  - custom-colormap
+  - publication-ready
   - alpha-blending
-  - edge-highlighting
