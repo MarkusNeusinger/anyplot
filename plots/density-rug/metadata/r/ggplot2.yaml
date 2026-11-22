@@ -2,44 +2,57 @@ library: ggplot2
 language: r
 specification_id: density-rug
 created: '2026-05-18T00:43:08Z'
-updated: '2026-05-18T00:53:21Z'
-generated_by: claude-haiku
-workflow_run: 26007471626
+updated: '2026-11-22T09:06:29Z'
+generated_by: claude-sonnet
+workflow_run: 45005452721
 issue: 3505
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 78
 review:
   strengths:
-  - 'Perfect visual quality: all text legible in both themes, no overlap, optimal
-    element visibility'
-  - 'Exceptional library mastery: two-layer density approach, environment-based theme
-    tokens, advanced ggplot2 patterns'
-  - Clean, reproducible code following KISS principle with deterministic data generation
-  - 'Thoughtful design: peak annotations and reference lines clearly communicate the
-    bimodal distribution'
-  - Realistic, neutral data scenario with real-world relevance (web response times)
-  - 'Flawless theme adaptation: data colors identical between light/dark renders,
-    chrome correctly flips for readability'
+  - Native geom_density() with semi-transparent fill and geom_rug() ticks give the
+    KDE + rug pairing directly from the grammar
+  - Theme tokens from ANYPLOT_THEME flip all chrome correctly; data colours identical
+    in both renders
+  - Text sizes follow the style guide exactly (12/10/8 pt) on the correct 3200x1800
+    canvas
+  - Bimodal web response-time sample shows clusters, a trough and sparse tails that
+    the curve matches
   weaknesses:
-  - Design aesthetic relies on library defaults rather than exceptional customization
-    (very minor at 95/100)
+  - 'SC-01 (both): dashed reference lines at 150 and 250 ms with ''Peak 1''/''Peak
+    2'' text labels are an unrequested reference-line and annotation layer; ''Peak
+    2'' even sits at 250 while the curve peaks near 268 ms → remove both geom_vline()
+    layers and both annotate() calls. Likely cause: the geom_vline()/annotate(''text'')
+    blocks.'
+  - 'CQ-04 (code): the second geom_density(fill = NA, linewidth = 1.1) layer redraws
+    the outline the first layer already draws, and both pass a redundant stat = ''density''
+    → one geom_density(fill = IMPRINT[1], color = IMPRINT[1], alpha = 0.35, linewidth
+    = 1.1, bw = 20), about −10 lines. Likely cause: a leftover two-layer approach.'
+  - 'LM-01 (code): the data block uses data.frame(value = ...) with a bare aes(x =
+    value) and a typed x label instead of the library prompt''s column constant, tibble::tibble(!!RESPONSE_TIME
+    := ...) and .data[[RESPONSE_TIME]] with labs(x = RESPONSE_TIME) → follow the adaptable-code
+    zones. Likely cause: data block written without the column-constant pattern.'
+  - 'Suggestion: let the density tails taper (e.g. a wider x range via geom_density(bounds)
+    or expand) instead of ending in vertical walls at the outermost ticks.'
+  - 'Suggestion: a lighter grid (a faint INK mix rather than full INK) would let the
+    fill and rug carry more weight.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark color - clearly readable
-      Data: Bimodal density curve with semi-transparent fill and solid outline in #009E73; rug marks show individual data points; reference lines at peaks 150/250ms with "Peak 1"/"Peak 2" annotations
-      Legibility verdict: PASS - all text perfectly readable, no overlap, excellent contrast
+      Background: warm off-white #FAF8F1 with a thin INK_SOFT panel frame and dark grid lines; 3200x1800 canvas
+      Chrome: title 'density-rug · r · ggplot2 · anyplot.ai' top left, axis titles 'Response Time (ms)' and 'Density', ticks 100-300 and 0.000-0.006 in dark grey; all readable
+      Data: bimodal KDE in #009E73 with a translucent green fill and a solid outline, peaks near 148 and 268 ms; ~80 thin translucent rug ticks at the foot; dashed green lines at 150 and 250 ms with 'Peak 1'/'Peak 2' labels at the top
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, tick labels all in light color (#F0EFE8 equivalent) - clearly readable, no dark-on-dark failures
-      Data: Density colors identical to light render (#009E73); rug marks visible; reference lines and annotations clearly distinguish peaks
-      Legibility verdict: PASS - all elements readable against dark background, data colors invariant across themes, perfect theme adaptation
+      Background: warm near-black #1A1A17 with light grid lines and frame
+      Chrome: title, axis titles and ticks in light ink; no dark-on-dark text
+      Data: same #009E73 curve, fill (reads as dark green over the dark page) and rug ticks as the light render; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,97 +63,105 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all explicitly set and perfect
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt (style-guide sizes); all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Peak annotations positioned well, no text collisions
+        comment: No text collides with other text or data marks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Rug marks and density curve optimally adapted to data density
+        comment: Thin rug ticks at alpha 0.7 and a 1.1 mm outline suit 80 observations;
+          visible on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green with strong contrast, CVD-safe
+        comment: Single green series with strong contrast on both surfaces; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: ~65% canvas utilization, balanced margins, excellent proportions
+        comment: 3200x1800 canvas, balanced margins, title ~45% of width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Response Time (ms)'' and ''Density'''
+        comment: '''Response Time (ms)'' with unit and ''Density'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds correct, text colors theme-correct,
-          data colors identical between renders'
+        comment: '#009E73 for all data marks; #FAF8F1 / #1A1A17 backgrounds; chrome
+          flips correctly'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Clean, professional; two-layer density + annotations thoughtful;
-          follows defaults rather than exceptional customization
+        comment: 'Style-guide baseline: default typography and hierarchy, nothing
+          decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid, well-positioned rug marks, generous whitespace, excellent
-          detail
+        passed: false
+        comment: Grid and frame follow the library template; no refinement beyond
+          it
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Peak annotations and reference lines create clear visual hierarchy
-          for bimodal insight
+        passed: false
+        comment: The only hierarchy comes from the unrequested peak lines and labels,
+          which earn no credit (SC-01)
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Correct: KDE density + rug marks'
+        comment: KDE with fill plus rug is correct, but the dashed reference lines
+          at 150/250 and the 'Peak 1'/'Peak 2' annotation layer are unrequested additions
+          (defect line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: curve, rug marks, semi-transparent fill, clarity'
+        comment: Filled semi-transparent KDE, small translucent rug ticks; C1, C2,
+          C3, C5 all met; C4 not applicable (thin ticks, no jitter)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Response Time (x), Density (y), all data visible
+        comment: x = value, y = density from zero; rug ticks at exact values; all
+          data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; single-series (no legend needed)
+        comment: Title 'density-rug · r · ggplot2 · anyplot.ai' in the mandated format;
+          single series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -150,21 +171,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution with 80 points showing dual peaks and rug detail
+        comment: Bimodal sample of 80 shows dense clusters, a gap region, isolated
+          tail ticks
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Web response times (150/250ms) - neutral, real-world plausible
+        comment: 'Web application response times in ms: neutral and plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions factually correct for web latency
+        comment: Values 70-315 ms and density up to ~0.006 /ms are sensible; spec
+          has no Check values
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -172,50 +195,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → tokens → data → plot → save; no functions
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) with deterministic rnorm()
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2, ragg - both necessary
+        comment: ggplot2 and ragg, both used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Two-layer density is elegant and idiomatic
+        comment: A second geom_density layer redraws the outline the first layer already
+          draws (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, 4800x2700px
+        comment: ggsave to plot-{THEME}.png via ragg, current API
     library_mastery:
-      score: 10
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: ggplot() + geom composition, environment tokens, ggsave with ragg
-          - expertly idiomatic
+        passed: false
+        comment: Idiomatic geom_density + geom_rug, but the data block ignores the
+          library prompt's column-constant / tibble / .data[[...]] zones (defect line)
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Two-layer density, key_glyph blank, environment tokens, expansion
-          control - distinctively ggplot2
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-22T09:02:59Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -227,4 +253,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - publication-ready
+  - minimal-chrome
