@@ -2,45 +2,43 @@ library: altair
 language: python
 specification_id: chessboard-basic
 created: '2026-01-08T22:36:40Z'
-updated: '2026-05-17T01:50:39Z'
-generated_by: claude-haiku
-workflow_run: 25978302827
+updated: '2026-11-22T02:13:01Z'
+generated_by: claude-sonnet
+workflow_run: 44974633581
 issue: 3340
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/altair/plot-dark.html
-quality_score: 95
+quality_score: 84
 review:
   strengths:
-  - Excellent theme adaptation with proper INK and INK_SOFT tokens applied to all
-    chrome elements; no dark-on-dark or light-on-light failures in either render.
-  - Perfect 1:1 aspect ratio for a domain-specific visualization; clean, professional
-    presentation.
-  - Correct chess notation and coloring (light square at h1); all 64 squares clearly
-    distinguishable with subtle borders.
-  - Clean, readable code with minimal complexity; properly sized fonts for high-resolution
-    rendering.
+  - 'Standard orientation is correct: light squares at h1 (bottom right) and a8 (top
+    left), computed by the (i + rank - 1) % 2 formula, not placed by hand.'
+  - Exact 2400x2400 canvas via the PAD-only block, with a 460x460 view so every square
+    is a true square.
+  - 'Theme tokens thread through all chrome: INK title and INK_SOFT labels, borders
+    and frame read cleanly on both #FAF8F1 and #1A1A17 while the wheat/brown squares
+    stay constant.'
+  - 'Idiomatic Altair: escaped field constants with explicit type=, ordinal sort for
+    rank order, a domain/range color scale with legend=None.'
   weaknesses:
-  - Design could be enhanced with slightly bolder borders, different spine treatment,
-    or more distinctive color palette (though current colors are appropriate for the
-    domain).
-  - Altair implementation is idiomatic but generic—could showcase more distinctive
-    Altair features (e.g., interactive selection, hover tooltips for piece identification).
+  - 'Suggestion: a tooltip with the square name (e.g. ''e4'') would add value in the
+    HTML view without changing the static board.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — perfectly matches style guide requirements
-      Chrome: Title "chessboard-basic · altair · anyplot.ai" in 32px dark text (#1A1A17); column labels (a-h) at bottom in 24px (#4A4A44); row labels (1-8) on left in same color; all text clearly readable with good contrast
-      Data: 8x8 chessboard with wheat (#F5DEB3) and medium brown (#A0704F) squares in correct chess pattern (light at h1 corner); gray borders (#4A4A44) provide clear definition
-      Legibility verdict: PASS — all text readable, excellent contrast on light surface, no readability issues
+      Background: warm off-white #FAF8F1 on an exact 2400x2400 square canvas
+      Chrome: bold near-black title 'chessboard-basic · python · altair · anyplot.ai' centered at top; ranks 1-8 on the left (8 at top) and files a-h along the bottom in #4A4A44, each centered on its row/column, no ticks; thin INK_SOFT frame and square borders; all readable
+      Data: 8x8 board of wheat (#F5DEB3) and brown (#A0704F) squares; a1 dark, h1 and a8 light (standard orientation); all squares true squares
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — perfectly matches style guide requirements
-      Chrome: Title in 32px light cream text (#F0EFE8); column and row labels in light gray (#B8B7B0); all text clearly readable against dark background with excellent contrast — NO dark-on-dark failures
-      Data: Identical wheat and medium brown squares to light render — confirming data colors stay constant while only chrome adapts to theme
-      Legibility verdict: PASS — all text readable, excellent contrast on dark surface, no theme-adaptation failures
+      Background: warm near-black #1A1A17
+      Chrome: title in light cream, labels and borders in light grey #B8B7B0; no dark-on-dark text
+      Data: identical wheat/brown squares and orientation as the light render; only chrome flips
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,69 +49,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (32px), axis labels (24px) properly sized and readable in both
-          themes
+        comment: Title 24 px bold and 24 px file/rank labels at scale 4 read clearly
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels well-spaced with 10px padding; no collisions
+        comment: No text collisions; labels sit clear of the board
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 64 squares clearly distinguishable with subtle borders
+        comment: All 64 squares distinct, 1.5 px INK_SOFT borders visible on both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Wheat and brown accessible for colorblind viewers
+        comment: Wheat vs brown differ strongly in lightness, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect square proportions (900x900px) with generous margins
+        comment: Exact 2400x2400 canvas, board centered with balanced margins, title
+          ~86% width (expected for mandated title)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title and proper chess notation (a-h, 1-8)
+        comment: 'N/A for axis titles: algebraic notation labels are the axis text;
+          title in mandated format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct background colors (#FAF8F1 light, #1A1A17 dark); both renders
-          theme-correct'
+        comment: 'No data series; classic board colors constant across themes; backgrounds
+          #FAF8F1 / #1A1A17 correct'
     design_excellence:
-      score: 16
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Clean professional design with domain-appropriate colors; somewhat
-          generic palette
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle borders enhance clarity; could use bolder treatment for extra
-          polish
+        passed: false
+        comment: Ticks removed so file/rank labels float centered beside the board
+          with chosen padding, framed board outline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy guides viewer naturally through chessboard
+        passed: false
+        comment: Board displayed, no hierarchy beyond the Notes (appropriate for a
+          basic board)
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +124,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 8x8 grid visualization
+        comment: 8x8 board of rect marks, empty, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: 8 rows/columns, a-h and 1-8 labels, alternating colors,
-          light at h1'
+        comment: 'C1-C5 all met: true squares, light at h1 and a8, a-h bottom / 1-8
+          left, two-tone, empty board'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: columns (a-h), Y-axis: rows (1-8), colors accurate'
+        comment: Files a-h left to right, ranks 1-8 bottom to top
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id, library, anyplot.ai; legend appropriately
+        comment: Title 'chessboard-basic · python · altair · anyplot.ai'; legend correctly
           omitted
     data_quality:
       score: 15
@@ -153,20 +154,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 64 squares with correct chess coloring
+        comment: All 64 squares with correct alternation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Chess board universally recognizable and appropriate for education/game
-          analysis
+        comment: Standard chess board, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible 8x8 grid with appropriately scaled labels
+        comment: Checked h1 and a8 light, a1 dark in render and formula (i + rank
+          - 1) % 2
     code_quality:
       score: 10
       max: 10
@@ -176,53 +177,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data generation
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (pandas, altair components)
+        comment: os, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity with no fake UI
+        comment: Comprehension builds the board; template constants as the library
+          prompt prescribes
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with correct API
+        comment: plot-{THEME}.png padded to 2400x2400 + plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Proper Altair idioms: Chart, mark_rect, encoding, configure_* methods'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Good theme adaptation; could use more distinctive features like interactive
-          selection or tooltips
+        passed: false
+        comment: Tidy df with escaped fields and explicit type=, ordinal sort for
+          rank order, scale domain/range mapping, configure_view/configure_axis
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-22T02:09:58Z'
 impl_tags:
-  dependencies: []
-  techniques: []
+  dependencies:
+  - pillow
+  techniques:
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
