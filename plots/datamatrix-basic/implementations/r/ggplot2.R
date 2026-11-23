@@ -19,7 +19,7 @@ INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 CELL_DARK  <- "#1A1A17"
 CELL_LIGHT <- "#FAF8F1"
 
-# Data Matrix parameters
+# Data: pseudo-encoded 16x16 ECC 200 symbol (replace with your own module matrix)
 N  <- 16L   # 16x16 symbol (ECC 200)
 QZ <- 2L    # quiet zone width in cells
 
