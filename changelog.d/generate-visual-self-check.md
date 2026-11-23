@@ -10,4 +10,4 @@
   page, and whether the axis titles carry units. A "no" is fixed in at most
   two rounds of its own, never by deleting an element, and the commit body
   records the result in a `Visual self-check:` line, so the next regeneration
-  run can measure how much it catches.
+  run can measure how much it catches. (#14240)
