@@ -581,6 +581,7 @@ Every library of a spec is reviewed on its own, without seeing the others. The s
 | A conditional requirement ("for d⁴–d⁷", "if drawn", "where marks overlap") whose condition the chosen data does not meet | Nothing: not SC-02, not DQ-01. At most a `Suggestion:` |
 | The example data does not exhibit an aspect that a Notes bullet or an `A good version shows:` bullet names unconditionally, and the fix is in the data generation or the computation (a candlestick spec that asks for bullish and bearish candles, drawn with rising days only; a matrix block of which only the lowest root becomes a curve) | DQ-01 defect |
 | The example data does not exhibit an aspect nothing in the spec names | At most a `Suggestion:` |
+| An axis that runs far past its data, ticks a value cannot be read off, or a color, line style, marker or shading without a key (the rules under SC-03 and SC-04); the data itself is right | SC-03 defect (axis, ticks) or SC-04 defect (key) |
 | A value, limit, intercept or relation that is wrong for the domain, or a check value missed (DQ-03) | DQ-03 defect |
 | A comment or label that contradicts the code or the data it describes | DQ-03 defect when it misstates the data (a wrong comment above correct data costs a point, not the ladder's whole step), else CQ-04 defect |
 

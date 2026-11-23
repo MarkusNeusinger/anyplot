@@ -193,6 +193,13 @@ class TestPromptStructure:
         for name in ("altair", "bokeh", "ggplot2", "letsplot", "matplotlib", "plotly", "plotnine"):
             assert sentence in (PROMPTS_DIR / "library" / f"{name}.md").read_text(), name
         assert sentence in (PROMPTS_DIR / "adaptable-code.md").read_text()
+        # Both review prompts point their checklist rows at the new rules, and the routing table names them.
+        for prompt in (WORKFLOW_PROMPTS_DIR / "ai-quality-review.md", PROMPTS_DIR / "quality-evaluator.md"):
+            text = prompt.read_text()
+            assert "(`quality-criteria.md` → SC-03)?" in text, prompt.name
+            assert "(`quality-criteria.md` → SC-04)?" in text, prompt.name
+        routing = quality_criteria_content.split("### Which criterion a gap belongs to", 1)[1].split("## Score Caps", 1)[0]
+        assert "| SC-03 defect (axis, ticks) or SC-04 defect (key) |" in routing
 
     def test_quality_criteria_points_sum_to_100(self, quality_criteria_content: str) -> None:
         """Quality criteria point distribution should sum to 100."""
