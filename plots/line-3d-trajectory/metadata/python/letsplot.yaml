@@ -12,42 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 63
 review:
   strengths:
-  - Excellent theme implementation with proper color tokens in both light and dark
-    renders
-  - Compelling data choice - Lorenz attractor effectively demonstrates 3D trajectory
-    complexity
-  - Clean visualization with clear trajectory path and uncluttered design
-  - Fully spec-compliant with connected lines, color progression, and correct title
-    format
-  - Appropriate viridis colormap for continuous time progression - CVD-safe and perceptually
-    uniform
-  - Reproducible code with deterministic seed ensuring consistent output
+  - Lorenz attractor with standard parameters shows the transient and both wings as
+    one continuous smooth path
+  - Theme tokens threaded through title, axis text and legend; both renders readable
   weaknesses:
-  - Top and right spines could be removed for cleaner aesthetics
-  - Major gridlines are somewhat prominent; could be more subtle or optional for minimalist
-    look
-  - Line 56 calculates z_norm but it is never used in the plot - minor code cleanup
-    opportunity
+  - 'VQ-05 (both): canvas is 4800x2700 → 3200x1800 (−1600 × −900). Likely cause: ggsize(1600,
+    900) with scale=3 instead of ggsize(800, 450) with scale=4.'
+  - 'VQ-07, DE-01 (both): time is encoded with viridis (purple-yellow), a colormap
+    outside Imprint → imprint_seq via scale_color_gradient(low=''#009E73'', high=''#4467A3'').
+    Likely cause: scale_color_viridis().'
+  - 'SC-01, SC-02 (both): the trajectory is drawn flat in the x-y plane with no z
+    axis and no oblique view, so it is a 2D line plot rather than a 3D one (C2) →
+    project x, y, z obliquely and draw and label all three axes. Likely cause: aes(x=''x'',
+    y=''y'') on the raw coordinates.'
+  - 'SC-03 (both): z is computed but mapped to nothing, so one of the three data dimensions
+    is not visible → map z through the projection. Likely cause: z left out of aes.'
+  - 'SC-04 (both): title ''line-3d-trajectory · letsplot · anyplot.ai'' lacks the
+    language segment → ''line-3d-trajectory · python · letsplot · anyplot.ai''. Likely
+    cause: the title string.'
+  - 'VQ-06 (both): axis titles ''X Coordinate'' / ''Y Coordinate'' carry nothing beyond
+    the letter → name the Lorenz variables (for example ''x (convection)''). Likely
+    cause: labs(x=..., y=...).'
+  - 'DE-02 (both): major grid drawn in full-opacity INK at size 0.2 competes with
+    the path → INK at 15 % (rgba) or no grid. Likely cause: panel_grid_major=element_line(color=INK).'
+  - 'CQ-03 (code): `from lets_plot import *` with noqa F403/F405 suppressions on every
+    line → named imports. Likely cause: star import.'
+  - 'CQ-04 (code): line 56 computes z_norm, which is never used, and the comments
+    on lines 52 and 59 claim z is encoded as colour while colour is time → remove
+    z_norm and correct the comments. Likely cause: leftover from an abandoned encoding.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "line-3d-trajectory · letsplot · anyplot.ai" clearly visible in dark text (#1A1A17). Axis labels "X Coordinate" and "Y Coordinate" readable. Tick labels in dark gray (#4A4A44). Legend title "Time Progression" readable on right side with elevated background (#FFFDF6).
-      Data: Lorenz attractor trajectory displayed as connected lines with viridis color gradient (purple→cyan→yellow) encoding time progression. 1200-point smooth path with size=1.3 and alpha=0.85. All trajectory segments clearly distinguishable from background.
-      Legibility verdict: PASS - all text is fully readable and properly positioned; no overlaps; data colors contrast well with light background
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'line-3d-trajectory · letsplot · anyplot.ai' in dark ink; axis titles 'X Coordinate' / 'Y Coordinate' and tick labels readable; major grid drawn in dark ink lines across the whole panel; colour bar 'Time Progression' on the right.
+      Data: Lorenz attractor as one continuous path in the x-y plane only (no z axis), coloured with viridis from purple (start) to yellow (late). Canvas 4800x2700.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title clearly visible in light text (#F0EFE8). Axis labels readable in light text. Tick labels in light gray (#B8B7B0). Legend elements properly styled with elevated background (#242420) and light text.
-      Data: Same Lorenz attractor trajectory with identical viridis color colors - data colors are unchanged from light render, confirming correct theme-adaptive implementation. Trajectory path remains crystal clear and distinguishable from dark background.
-      Legibility verdict: PASS - no dark-on-dark failures; all text has proper contrast; chrome elements properly adapted while data colors remain constant
-
-    Both renders demonstrate excellent theme-adaptive implementation with proper color tokens throughout. Only chrome elements (background, text, grid) flip between themes while Okabe-Ito and continuous colormaps (viridis) remain constant.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, axis titles and ticks in light ink; grid in light lines; legend box #242420. No dark-on-dark text.
+      Data: identical path and viridis colours to the light render; the early purple segment is faint against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -55,103 +65,100 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, and tick labels clearly readable in both themes
-          with proper font sizes
+        comment: Title 24, axis titles 20, ticks 16 set explicitly; readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements well-positioned; legend, title, and axes properly spaced
-          without overlap
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Trajectory lines clearly visible with size=1.3 and alpha=0.85; 1200-point
-          smooth path
+        comment: 1200-point path at size 1.3, alpha 0.85; colour bar visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and CVD-safe; adequate contrast
-          throughout
+        comment: Good contrast against both backgrounds
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Landscape format 4800×2700px well-proportioned; margins generous
+        passed: false
+        comment: Canvas 4800x2700, not one of the two canonical sizes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Descriptive axis labels and correct title format with library name
+        comment: '''X Coordinate'' / ''Y Coordinate'' carry nothing beyond the letter
+          (defect line)'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Correct backgrounds #FAF8F1/#1A1A17; viridis appropriate for continuous
-          time; both renders theme-correct'
+        passed: false
+        comment: Continuous time encoded with viridis, a forbidden colormap (defect
+          line)
     design_excellence:
-      score: 12
+      score: 5
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 2
         max: 8
-        passed: true
-        comment: Viridis choice well-justified; theme-adaptive chrome properly implemented.
-          Could benefit from spine removal
+        passed: false
+        comment: 'Short of the baseline: palette outside Imprint (defect line)'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 1
         max: 6
         passed: false
-        comment: Grid is visible but somewhat prominent; could be more subtle or optional
-          for minimalist look
+        comment: Major grid drawn in full-opacity INK, high-contrast against the page
+          (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Lorenz attractor intrinsically compelling; color gradient creates
-          visual hierarchy; good focal point
+        passed: false
+        comment: Data displayed with the time gradient the Notes suggest; nothing
+          beyond
     spec_compliance:
-      score: 15
+      score: 8
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 3D trajectory correctly shown as 2D projection with z encoded as
-          color
+        passed: false
+        comment: A flat 2D x-y line plot, a related but different form of the 3D line
+          plot (defect line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Connected lines, color progression for time, smooth trajectory all
-          present
+        passed: false
+        comment: No z axis, no oblique view (C2 missed) (defect line)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: X/Y correctly mapped to axes; time encoded in viridis; all data visible
+        passed: false
+        comment: z is computed but not mapped to anything (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Correct title format and descriptive legend label
+        comment: Title lacks the language segment 'python' (defect line); legend 'Time
+          Progression' fine
     data_quality:
       score: 15
       max: 15
@@ -161,21 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete Lorenz attractor with chaotic behavior and orbital patterns
+        comment: Transient and both attractor wings
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is real mathematical system with legitimate applications
+        comment: Lorenz attractor, real neutral physics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard parameters; 1200 steps with dt=0.01 provide smooth visualization
+        comment: 'Checked: sigma=10, rho=28, beta=8/3, dt=0.01, 1200 steps'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -183,50 +190,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; straightforward procedural code
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic generation
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: All imports are used; no unused dependencies
+        comment: Star import with noqa suppressions (defect line)
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity; clean Lorenz implementation; no fake UI
+        comment: Dead z_norm and a comment contradicting the code (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and .html; uses current API
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ggplot grammar used correctly; geom_path ideal for trajectory; proper
-          theme customization
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: HTML export utilized; interactive output generated. Standard letsplot
-          usage without specialized techniques
+        comment: Correct grammar usage, nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Only the mandated HTML export
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
 impl_tags:
   dependencies: []
   techniques:
