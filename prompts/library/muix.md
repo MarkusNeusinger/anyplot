@@ -165,8 +165,8 @@ const rampAt = (stops: [number, string][], v: number) => {
   return "#" + [0, 1, 2].map((k) => Math.round(ch(c0, k) + (ch(c1, k) - ch(c0, k)) * f).toString(16).padStart(2, "0")).join("");
 };
 // colorMap: { type: "continuous", min, max, color: (v: number) => rampAt(t.seqMarks, v) }
-// t.seq and t.div are the first release's two-stop ramps, kept only so old files render
-// as before; never use them in new code.
+// t.seq (the first release's two-stop ramp) and t.div (the diverging colours without
+// positions) stay only so old files render as before; never use them in new code.
 ```
 
 Categorical colours are **identical** between light and dark — only the chrome

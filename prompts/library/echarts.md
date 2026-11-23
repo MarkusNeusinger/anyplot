@@ -166,8 +166,9 @@ option.visualMap = { min, max, inRange: { color: even(t.seqFields) } };  // sequ
 ```
 
 Never use ECharts' default palette or named gradients like `viridis`/`rainbow`.
-`t.seq` and `t.div` are the first release's two-stop ramps, kept only so old
-files render as before; never use them in new code.
+`t.seq` (the first release's two-stop ramp) and `t.div` (the diverging colors
+without positions) stay only so old files render as before; never use them in
+new code.
 
 ## Theme-adaptive chrome (ECharts mapping)
 

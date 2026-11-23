@@ -169,8 +169,9 @@ option.colorAxis = { min: -m, max: m, stops: t.divFields };
 ```
 
 Never use Highcharts' default palette or named gradients (viridis / rainbow).
-`t.seq` and `t.div` are the first release's two-stop ramps, kept only so old
-files render as before; never use them in new code.
+`t.seq` (the first release's two-stop ramp) and `t.div` (the diverging colors
+without positions) stay only so old files render as before; never use them in
+new code.
 
 ## Theme-adaptive chrome (Highcharts mapping)
 

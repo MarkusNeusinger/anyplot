@@ -243,8 +243,9 @@ function themeTokens(theme) {
     grid: light ? "rgba(26,26,23,0.15)" : "rgba(240,239,232,0.15)",
     palette: IMPRINT_PALETTE,
     amber: "#DDCC77", // warning / caution (outside the categorical pool)
-    // The first Imprint release's ramps, the same in both themes. New code reads the four
-    // ramps below; these two stay so the catalogue's existing files render as before.
+    // The first Imprint release's tokens: `seq` its two-stop ramp, the same in both themes,
+    // and `div` the diverging colors without positions. New code reads the four ramps
+    // below; these two stay so the catalogue's existing files render as before.
     seq: ["#009E73", "#4467A3"],
     div: ["#AE3030", pageBg, "#4467A3"],
     // The continuous ramps as [position, hex] stops, low → high, with this theme's stops
