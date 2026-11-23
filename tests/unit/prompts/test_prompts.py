@@ -1474,9 +1474,12 @@ class TestAdaptableCode:
         content = GENERATE_PROMPT.read_text()
         step = content[content.index("## Step 4:") : content.index("## Step 5:")]
         assert "`A good version shows:`" in step
-        for criterion in ("SC-02", "VQ-05", "AR-09", "VQ-02", "VQ-03", "SC-04", "VQ-06"):
+        for criterion in ("SC-02", "VQ-07", "VQ-04", "VQ-05", "AR-09", "VQ-02", "VQ-03", "SC-04", "VQ-06"):
             assert f"{criterion}" in step, criterion
         assert "None of them names a value: judge by eye, as the review does." in step
+        # The spec question keeps the review's qualifiers and never invites variant creep on a -basic spec.
+        assert "Keep the spec's qualifiers, as the review does" in step
+        assert "On a `-basic` spec, never add an element to answer yes." in step
         assert 'Never answer a "no" by deleting the element' in step
         assert "This step has up to two fix rounds of its own, apart from the three attempts of Step 3." in step
         # No percentage or pixel threshold leaks into the questions (soft, proportional rules).

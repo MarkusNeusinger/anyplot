@@ -285,10 +285,11 @@ It exits 0 when both themes stay within 0.5 % of differing pixels at the same ca
 Open `plots/{SPEC_ID}/implementations/{LANGUAGE}/plot-light.png` AND `plot-dark.png` next to it at full size and answer every question below for both renders. These are the questions the review scores (`prompts/workflow-prompts/ai-quality-review.md`, steps 5c and 5d, and `prompts/quality-criteria.md`), so each "no" here is a deduction there. None of them names a value: judge by eye, as the review does.
 
 **Spec and theme**
-- **The spec's own points:** read each `A good version shows:` bullet of the spec's `## What a good version looks like` section, and each feature its Notes ask for, and find it in the picture. Is every one there? (SC-01, SC-02)
+- **The spec's own points:** read each `A good version shows:` bullet of the spec's `## What a good version looks like` section, and each feature its Notes require, and find it in the picture. Is every required one there? (SC-01, SC-02) Keep the spec's qualifiers, as the review does: a bullet with a condition ("if drawn", "where marks overlap") asks something only when the plot meets the condition, a feature the Notes only allow or prefer is optional, and `Expected, not a defect:` bullets are permissions. On a `-basic` spec, never add an element to answer yes.
 - Is the visualization clear on the light surface (`#FAF8F1`) AND the dark surface (`#1A1A17`), with title, axis labels and tick labels readable on each?
 - Are the data colors **identical** between light and dark (only chrome flipped)?
-- Is the first categorical series `#009E73`?
+- Is the first categorical series `#009E73`, do further series follow the Imprint order, and does a continuous scale use the Imprint ramps of Step 2? (VQ-07)
+- Does any meaning rest on red against green alone, or on colors a reader with a color-vision deficiency can't tell apart? (VQ-04)
 
 **What the review deducts for**
 - **Canvas:** does the plot use the canvas, with balanced margins and the legend near the plot, or does it sit small in one part of a mostly empty canvas? (VQ-05)
@@ -353,7 +354,7 @@ git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 
 Commit only the implementation file, and use only the packages the runner already has: never run `Pkg.add`, `uv add`, `pip install` or `npm install`. The workflow fails the run when your commit changes `Manifest.toml`, `Project.toml`, `uv.lock`, `pyproject.toml`, `package.json`, `package-lock.json` or `.python-version`, because a re-resolved lock file moves the library version for every implementation of the language.
 
-In every language, first generations included, the commit body carries the result of Step 4 in one `Visual self-check:` line. It says `pass` when every answer was yes at the first look; `fixed` with the questions a round fixed, by their short names (spec, theme, canvas, cut off, overlap, text on marks, legend, dark page, axes, regeneration), and the last round; or `open` with the questions that still fail after the second round. For R, Julia and JavaScript it is the only line:
+In every language, first generations included, the commit body carries the result of Step 4 in one `Visual self-check:` line. It says `pass` when every answer was yes at the first look; `fixed` with the questions a round fixed, by their short names (spec, theme, palette, color vision, canvas, cut off, overlap, text on marks, legend, dark page, axes, regeneration), and the last round; or `open` with the questions that still fail after the second round. For R, Julia and JavaScript it is the only line:
 
 ```bash
 git commit -m "feat({LIBRARY}): implement {SPEC_ID}" -m "Visual self-check: fixed (canvas, legend), round 1"

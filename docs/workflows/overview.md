@@ -124,7 +124,9 @@ Issue + [generate:{library}] label  OR  workflow_dispatch
 impl-generate.yml
   |-- Creates branch: implementation/{spec-id}/{library}
   |-- Python: copies the agent chat's validator for the session's readiness self-check
-  |-- AI generates code (Python: adaptability and readiness self-check, Step 3c)
+  |-- AI generates code (Python: adaptability and readiness self-check, Step 3c;
+  |     every language: visual self-check of both renders with the review's questions,
+  |     Step 4, result in the commit body's "Visual self-check:" line)
   |     or, with source_ref, takes the file from that ref and renders it (adopt mode)
   |-- Fails if the pushed branch doesn't carry the workspace's implementation file, or the commit changes a dependency file
   |-- Creates metadata/{language}/{library}.yaml (initial)
