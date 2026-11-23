@@ -126,7 +126,7 @@ driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
 # reserves a phantom ~143px title-bar height even headless — innerHeight (and
 # thus the screenshot) comes out short of H. Pin the viewport exactly via CDP.
 driver.execute_cdp_cmd("Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False})
-# IMPORTANT: paint the page in the theme's page colour. The canvas edge is
+# IMPORTANT: paint the page in the theme's page color. The canvas edge is
 # anti-aliased, so the browser's default white page shows through it as a 1 px
 # light line along the top and left edge of the PNG (rgb 197,197,196 in dark).
 driver.execute_script("document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG)

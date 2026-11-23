@@ -225,7 +225,7 @@ anyplot_theme <- theme_minimal(base_size = 8) +
 
 # `panel.grid.*` `linewidth` is the line width in mm. `element_line()` has no
 # `alpha` argument: `alpha(INK, 0.15)` (ggplot2 re-exports it from scales) puts
-# the alpha into the colour, and ragg blends the line over PAGE_BG.
+# the alpha into the color, and ragg blends the line over PAGE_BG.
 
 p <- ggplot(df, aes(x = .data[[STUDY_HOURS]], y = .data[[EXAM_SCORE]])) +
   geom_point(color = IMPRINT_PALETTE[1], size = 2.5) +
