@@ -1,7 +1,7 @@
 """anyplot.ai
 line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-11-23
+Quality: pending | Updated: 2026-11-23
 """
 
 import os
