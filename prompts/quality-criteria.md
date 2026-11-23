@@ -169,7 +169,7 @@ So a remark such as "larger tick labels would help" is one of two things, never 
 
 All text must be clearly readable in the full-size render (3200×1800 or 2400×2400 px), in both themes. Judge it there and nowhere else. The site also shows a plot as a thumbnail about 400 px wide, where no plot's tick labels can be read, so a reduced view is never the test: "blurs in the thumbnail" is not a defect and not the reason for one.
 
-**What is too small.** The reference is the size that `prompts/default-style-guide.md` → "Text Sizes" and the library's own prompt give that kind of text: title, axis title, tick label, legend. Text without a row of its own (an annotation, a value label, a caption) is measured against the tick-label size. Text at or above its reference is never too small, and neither is a title shrunk to fit a long text. That settles its size only: such text still fails when its color makes it faint or lost against the background in a theme (step 5c of the review), when it overlaps (VQ-02) or when it is cut off (VQ-05). Text below its reference is a defect when it reads small in the full-size render, beside the plot's other text or for what it carries: labels that are the plot's main content weigh more than a caption. Its defect line names the observed size, the reference and the signed delta. "Proportional Sizing" in the style guide holds the proportional checks.
+**What is too small.** The reference is the size that `prompts/default-style-guide.md` → "Text Sizes" and the library's own prompt give that kind of text: title, axis title, tick label, legend. Text without a row of its own (an annotation, a value label, a caption) is measured against the tick-label size. Text at or above its reference is never too small, and neither is a title shrunk to fit a long text. That settles its size only: such text still fails when its color makes it faint or lost against the background in a theme (step 5c of the review), when it overlaps (VQ-02) or when it is cut off (VQ-05). A label printed on a colored fill takes its color from that fill (light text on a dark fill, dark text on a light one), not one color for every fill; a label that is hard to read on its own fill is such a failure. Text below its reference is a defect when it reads small in the full-size render, beside the plot's other text or for what it carries: labels that are the plot's main content weigh more than a caption. Its defect line names the observed size, the reference and the signed delta. "Proportional Sizing" in the style guide holds the proportional checks.
 
 **Source-of-values is irrelevant** for the visual checks of VQ-01: a size tuned by hand and a size left at the style-guide default score the same when the result is the same — what matters is the visual result. If the AI deviates from the style-guide defaults because the plot looks better that way (e.g. shrinking the title to fit a long mandated string, or growing tick labels for a sparse plot), that is **not** a deduction. Only sizes set nowhere in the code (the row for 5 below) are a defect, and that defect line names the elements and the size they inherit.
 
@@ -238,15 +238,17 @@ This check covers **contrast and CVD safety beyond palette choice** — e.g., ad
 
 | Points | Criterion |
 |--------|-----------|
-| 4 | Perfect layout: plot fills 50-80% of canvas, balanced margins |
-| 2 | Minor issues: plot fills 30-50% of canvas, some wasted space |
-| 0 | **Severe**: plot fills <30% of canvas, OR content cut-off, OR legend isolated |
+| 4 | The drawing uses the canvas: the margins hold the title, the tick labels and the legend and little else, and they are balanced |
+| 2 | Visible waste: the drawing sits small in the canvas, with an empty band on one side, between the title and the plot, or all around a centred chart |
+| 0 | **Severe**: a small drawing lost in a mostly empty canvas, OR content cut-off, OR legend isolated |
 
 **Canvas Utilization Rules:**
-- Plot elements (chart, axes, labels) should use **at least 40%** of the canvas area
+- Judge by eye in the full-size render, without a percentage: would the same drawing, enlarged, still fit with its title, labels and legend? If clearly yes, the canvas is under-used; deduct in proportion to how much larger it could be.
 - Whitespace should be **balanced** around the plot (not all on one side)
-- Legend should be **near** the plot, not floating isolated in empty space
-- Tiny plot in center of huge canvas = **automatic 0 points**
+- Legend should be **near** the plot, not floating isolated in empty space, and its frame no larger than its content
+- A drawing with equal axes or a round shape belongs on a canvas of its own shape: a square drawing in the middle of the landscape canvas, with empty quarters left and right, is under-used
+- Negative example: a chart centred in the canvas with an empty frame on all four sides as wide as its title is tall, and a title set in from the top. Positive example: the same chart with its title near the top edge and its axes reaching toward the sides.
+- Not a deduction: the corner an UpSet or marginal layout leaves free, the corners around a circle on the square canvas, and margins that keep text clear of the canvas edge (AR-09).
 
 ### VQ-06: Axis Labels & Title (2 Points)
 
@@ -366,6 +368,10 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 
 **Data-value integrity: marks sit at their data values.** Changing the generated data (a different seed, a spread-out scenario, rejection sampling) is allowed — the spec does not pin the data. Displacing marks **after** the data exists is not: force or collision layouts applied to data marks, nudge or declutter passes that rewrite plotted x/y values, or offsets that move a mark away from the value its tooltip or axis reports. Deduct SC-03 in proportion to how far marks move relative to the axis range (a few marks shifted by a hair is a small deduction; a cloud rearranged by a simulation loses most of SC-03), and never list such displacement as a strength. A smoothed curve that swings past the values it connects (spline overshoot) also shows values the data does not have; deduct SC-03 in proportion to the overshoot. **Exempt:** jitter in categorical strip and swarm plots (the categorical axis carries no value), and layout-positioned types where position is not data — networks, treemaps, word clouds, packed circles — and any jitter, dodge or offset the spec's Data or Notes ask for (then it is a required feature, not displacement). Moving **labels** to avoid collisions is fine; moving the **marks** is not.
 
+**Axes fitted to the data.** An axis shows all the data and not much besides. It starts at zero where the length of the mark is the value (bars, filled areas) or where zero is a reference the reader needs; otherwise it follows the data with a little room. An axis that runs far past the data, so that part of the plot area stays empty and the data is squeezed, deducts SC-03 in proportion to the area lost. Negative example: both axes of a scatter start at 0 while the points lie between 19 and 98, and the lower part of the plot is empty. Positive example: the same scatter with limits a little outside its smallest and largest point. Not a deduction: a zero baseline for bars, one shared axis across panels that a comparison needs, a range the spec's Notes give.
+
+**Ticks a reader can use.** An axis carries enough labelled ticks to read a value off, at round values, through the whole range the data covers, and large numbers carry separators or a unit suffix. Deduct SC-03 in proportion when values cannot be read off. Negative example: a log axis labelled only at 1 and 2 under curves that end near 0.3; ticks at 403, 806 and 1194; `3000000` as a tick label. Positive example: 0.2, 0.5, 1 and 2 on that log axis; 400, 800 and 1200; `3M`. A color bar is an axis too: both ends are labelled, with a tick or two between them.
+
 ### SC-04: Title & Legend (3 Points)
 
 | Points | Criterion |
@@ -376,6 +382,8 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 | 0 | Missing or wrong |
 
 **Legend labels are text for a reader** (style guide, "Axis and Legend Titles"). A legend title that is a raw column identifier (`Reaktionszeit_ms`) is a legend issue, and so are entries for series reshaped from wide columns that repeat each full original header (`Umsatz Q1 (CHF)`, `Umsatz Q2 (CHF)`) where the level that tells them apart (`Q1`, `Q2`) would do. A full header that is itself readable and is the only distinguishing text ("Temperature (°C)" beside "Rainfall (mm)") is correct.
+
+**Every encoding has a key.** A color, line style, marker shape or shading that a reader must tell apart to read the plot has a legend entry or a direct label. So does a reference or threshold line, and so does the no-data color of a map. Deduct SC-04 in proportion to what stays unexplained. Negative example: volume bars in green and purple with nothing saying which is an up day. Positive example: the same bars with a two-entry legend, or with "green: close at or above open" in the axis title. Not a deduction: a color that only repeats what an axis or direct labels already say, and the one series of a single-series plot.
 
 ---
 
@@ -621,7 +629,7 @@ VISUAL QUALITY (23/30)
   VQ-02: 6/6   (no overlap)
   VQ-03: 5/6   (32 sparse points at 4 px; defect line)
   VQ-04: 2/2   (good contrast, CVD-safe)
-  VQ-05: 2/4   (plot fills about 40% of the canvas, margin all on the right; defect line)
+  VQ-05: 2/4   (the drawing sits in the left of the canvas, an empty band on the right; defect line)
   VQ-06: 2/2   (labels with units)
   VQ-07: 1/2   (Imprint palette, but the first series is #AE3030 instead of #009E73; defect line)
 

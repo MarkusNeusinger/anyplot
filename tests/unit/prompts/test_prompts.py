@@ -173,6 +173,27 @@ class TestPromptStructure:
         assert "## Anti-Inflation" in quality_criteria_content
         assert "72-78" in quality_criteria_content
 
+    def test_vq05_judges_canvas_use_without_percentages(self, quality_criteria_content: str) -> None:
+        """VQ-05 rates canvas use by eye: review rules hold no hard thresholds."""
+        section = quality_criteria_content.split("### VQ-05:", 1)[1].split("### VQ-06:", 1)[0]
+        assert "%" not in section
+        assert "Judge by eye in the full-size render, without a percentage" in section
+
+    def test_the_rules_the_judges_applied_are_stated(self, quality_criteria_content: str) -> None:
+        """Axis fit, readable ticks, a key for every encoding and label color on fills are rules, not taste."""
+        sc03 = quality_criteria_content.split("### SC-03:", 1)[1].split("### SC-04:", 1)[0]
+        sc04 = quality_criteria_content.split("### SC-04:", 1)[1].split("## Data Quality", 1)[0]
+        vq01 = quality_criteria_content.split("### VQ-01:", 1)[1].split("### VQ-02:", 1)[0]
+        assert "**Axes fitted to the data.**" in sc03
+        assert "**Ticks a reader can use.**" in sc03
+        assert "**Every encoding has a key.**" in sc04
+        assert "A label printed on a colored fill takes its color from that fill" in vq01
+        # The generator prompts' zero-start limit example says it is the bar baseline, not the rule.
+        sentence = "a line or point axis takes both limits from the data, a little outside its smallest and largest value"
+        for name in ("altair", "bokeh", "ggplot2", "letsplot", "matplotlib", "plotly", "plotnine"):
+            assert sentence in (PROMPTS_DIR / "library" / f"{name}.md").read_text(), name
+        assert sentence in (PROMPTS_DIR / "adaptable-code.md").read_text()
+
     def test_quality_criteria_points_sum_to_100(self, quality_criteria_content: str) -> None:
         """Quality criteria point distribution should sum to 100."""
         # Check that the point distribution table contains 30+20+15+15+10+10=100

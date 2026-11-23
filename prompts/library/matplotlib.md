@@ -64,7 +64,7 @@ ax.set_ylabel(SALES, fontsize=10, color=INK)
 ax.legend(title=REGION, fontsize=8)
 ```
 
-Ticks and limits come from the data too: `ax.set_xticks(x, table.index)` after a `pivot_table(..., sort=False)`, `ax.set_ylim(0, df[SALES].max() * 1.15)`, never a typed list or number.
+Ticks and limits come from the data too: `ax.set_xticks(x, table.index)` after a `pivot_table(..., sort=False)`, `ax.set_ylim(0, df[SALES].max() * 1.15)`, never a typed list or number. The `0` there is the baseline of a bar or area chart, where the length of the mark is the value; a line or point axis takes both limits from the data, a little outside its smallest and largest value, or stays automatic.
 
 ## Save
 
