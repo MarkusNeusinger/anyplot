@@ -126,6 +126,10 @@ driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
 # reserves a phantom ~143px title-bar height even headless — innerHeight (and
 # thus the screenshot) comes out short of H. Pin the viewport exactly via CDP.
 driver.execute_cdp_cmd("Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False})
+# IMPORTANT: paint the page in the theme's page colour. The canvas edge is
+# anti-aliased, so the browser's default white page shows through it as a 1 px
+# light line along the top and left edge of the PNG (rgb 197,197,196 in dark).
+driver.execute_script("document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG)
 time.sleep(3)  # let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
@@ -145,9 +149,16 @@ p.yaxis.axis_label_text_font_size = '42pt'
 p.xaxis.major_label_text_font_size = '34pt'
 p.yaxis.major_label_text_font_size = '34pt'
 
-# Legend text — apply only when a legend is present
-# (set legend_label= on glyphs or configure p.legend after add_layout)
-# p.legend.label_text_font_size = '34pt'
+# Legend — only when a legend is present (legend_label= on glyphs, or a Legend
+# added with add_layout). bokeh's legend metrics are fixed pixels sized for an
+# 800 px plot: the 20 px key is a speck beside a 34pt label (~45 px) on this canvas.
+if p.legend:
+    p.legend.label_text_font_size = '34pt'
+    p.legend.glyph_height = 40    # key about as tall as the label
+    p.legend.glyph_width = 40
+    p.legend.label_standoff = 16  # key to label
+    p.legend.spacing = 12         # between entries
+    p.legend.padding = 20         # inside the legend frame
 
 # Element sizes (density-aware — see default-style-guide.md)
 p.scatter(..., size=10)        # ~2-3x default

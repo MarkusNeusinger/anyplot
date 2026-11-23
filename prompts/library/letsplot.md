@@ -47,6 +47,21 @@ The saved PNG must be **exactly** one of these two sizes (post-render gate in `i
 
 Don't deviate from these pairs (e.g. `ggsize(900, 500)` lands at 3600×2000, well outside the ±16 px gate). Pick the orientation that suits the spec.
 
+**Paint the whole canvas.** lets-plot paints `plot_background` only behind the plot box it draws, so two kinds of figure leave strips at the canvas edges:
+
+- **A fixed aspect** (`coord_fixed`, `coord_polar`, `coord_map`) narrows the plot box to that aspect and leaves the rest of the canvas **transparent**: strips at the left and right (polar: also top and bottom), 15 to 230 px wide on the square canvas and over 700 px on the landscape one. Take the square canvas (Step 0), and wrap the finished plot in a one-panel `gggrid` that carries the page colour.
+- **A composite** (`gggrid`, `ggbunch`) fills the space around its panels with opaque **white**, about 24 px at each edge in both themes. Give the composite itself the page colour.
+
+```python
+# Fixed aspect: the one-panel grid paints the canvas, the plot keeps its aspect
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+
+# Composite: the page colour on the composite, besides each panel's own anyplot_theme
+plot = gggrid([p1, p2], ncol=2) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+```
+
+`ggbunch([...], [...]) + ggsize(800, 450)` takes the same `theme(...)`.
+
 ## Figure Size & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python

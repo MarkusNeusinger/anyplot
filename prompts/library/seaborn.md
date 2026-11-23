@@ -36,16 +36,22 @@ fig, ax = plt.subplots(figsize=(6, 6), dpi=400)     # → 2400 × 2400 px
 
 **Do not use `bbox_inches="tight"` on `savefig`.** It silently trims the canvas (~30–50 px per axis → 3200×1800 becomes ~3160×1760) and was the documented cause of every seaborn drift in the May 2026 fan-out. Use `bbox_inches=None` (the explicit default) and let `figsize × dpi` produce the exact target. If you need to control padding, use `fig.subplots_adjust(...)` inside the figure or `sns.despine(...)` for spine layout.
 
-For figure-level seaborn plots (`relplot`, `catplot`, `displot`), pass the **same** canvas size via `height=` / `aspect=`:
+**Call `plt.tight_layout()` right before `savefig`** (a figure-level plot: `g.tight_layout()`). It is the layout call the canvas allows: it moves the axes inside the fixed canvas until the title, labels and legend fit, and leaves the PNG size alone. Without it the axes keep matplotlib's default margins (12.5 % left, 10 % right, 11 % bottom, 12 % top), which leaves an empty frame around the chart.
+
+For figure-level seaborn plots (`relplot`, `catplot`, `displot`), pass the **same** canvas size via `height=` / `aspect=`, then set the figure size once more: a `hue` legend is added outside the axes and widens the figure (`height=4.5, aspect=16/9` with a legend saves at about 3900×1800):
 
 ```python
 # Landscape: aspect=16/9 ≈ 1.778, height controls the figure's height in inches; pick height=4.5 → width=8
 g = sns.relplot(..., height=4.5, aspect=16/9)
 g.figure.set_dpi(400)
+g.figure.set_size_inches(8, 4.5)  # back to the canvas after the legend widened it
+g.tight_layout()                  # right before savefig: fits axes and legend inside the canvas
 
 # Square: aspect=1, height=6 → 2400×2400
 g = sns.relplot(..., height=6, aspect=1)
 g.figure.set_dpi(400)
+g.figure.set_size_inches(6, 6)
+g.tight_layout()
 ```
 
 ## Plot Methods
@@ -74,6 +80,7 @@ A long table needs no reshaping. A `sns.load_dataset(...)` call belongs inside t
 ## Save
 
 ```python
+plt.tight_layout()  # fill the canvas: axes grow until the labels fit, the PNG size stays
 plt.savefig(f'plot-{THEME}.png', dpi=400)  # bbox_inches MUST stay default (None) — see "Canvas" above
 ```
 
@@ -186,6 +193,7 @@ sns.set_theme(
 )
 
 # After plotting
+plt.tight_layout()
 plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG)  # do NOT add bbox_inches='tight'
 ```
 

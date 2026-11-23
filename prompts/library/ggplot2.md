@@ -203,27 +203,29 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+GRID        <- alpha(INK, 0.15)  # INK at 15 %, the style guide's grid tone
+GRID_MINOR  <- alpha(INK, 0.05)  # INK at 5 %, as plotnine's minor grid
 
 anyplot_theme <- theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK, linewidth = 0.3),
-    panel.grid.minor  = element_line(color = INK, linewidth = 0.2),
-    panel.border      = element_rect(color = INK_SOFT, fill = NA),
+    panel.grid.major  = element_line(color = GRID, linewidth = 0.3),
+    panel.grid.minor  = element_line(color = GRID_MINOR, linewidth = 0.2),
+    panel.border      = element_blank(),  # axis.line draws the L-shaped frame
     axis.title        = element_text(color = INK),
     axis.text         = element_text(color = INK_SOFT),
-    axis.line         = element_line(color = INK_SOFT),
+    axis.line         = element_line(color = INK_SOFT),  # left and bottom only
     plot.title        = element_text(color = INK),
     plot.subtitle     = element_text(color = INK_SOFT),
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
+    legend.background = element_rect(fill = ELEVATED_BG, color = NA),  # no frame
     legend.text       = element_text(color = INK_SOFT),
     legend.title      = element_text(color = INK)
   )
 
-# `panel.grid.*` `linewidth` is the line width in mm. ggplot2 does not expose
-# `alpha` for grid lines, so use a faint INK color and rely on the natural
-# contrast against PAGE_BG instead.
+# `panel.grid.*` `linewidth` is the line width in mm. `element_line()` has no
+# `alpha` argument: `alpha(INK, 0.15)` (ggplot2 re-exports it from scales) puts
+# the alpha into the colour, and ragg blends the line over PAGE_BG.
 
 p <- ggplot(df, aes(x = .data[[STUDY_HOURS]], y = .data[[EXAM_SCORE]])) +
   geom_point(color = IMPRINT_PALETTE[1], size = 2.5) +
@@ -265,6 +267,8 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+GRID        <- alpha(INK, 0.15)
+GRID_MINOR  <- alpha(INK, 0.05)
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
@@ -288,8 +292,8 @@ p <- ggplot(df, aes(x = .data[[STUDY_HOURS]], y = .data[[EXAM_SCORE]])) +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major = element_line(color = INK, linewidth = 0.3),
-    panel.grid.minor = element_line(color = INK, linewidth = 0.2),
+    panel.grid.major = element_line(color = GRID, linewidth = 0.3),
+    panel.grid.minor = element_line(color = GRID_MINOR, linewidth = 0.2),
     axis.title       = element_text(color = INK,      size = 10),
     axis.text        = element_text(color = INK_SOFT, size = 8),
     plot.title       = element_text(color = INK,      size = 12)
@@ -354,7 +358,7 @@ but renders differently or prints a deprecation warning.
   ggplot2 4.0 moved the default bin edges, so unanchored bins shift between
   versions and rarely land on round values.
 - **`theme_void()` borders:** its root `rect` now has `linewidth = 0`, so a border
-  such as `legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT)`
+  such as `strip.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT)`
   disappears. Give every bordered `element_rect()` an explicit `linewidth`.
 - **Rotated axis text:** set both `hjust` and `vjust`. On a top axis
   (`scale_x_discrete(position = "top")`) use `vjust = 0`; without it ggplot2 4.0
