@@ -18,4 +18,4 @@
   WCAG ratios measured on `#FAF8F1` and `#1A1A17`: lavender, cyan, lime and amber below 3:1 on the
   light page, matte red and rose below it on the dark page. The continuous ramps are no longer
   called perceptually uniform in CAM02-UCS, because they are straight sRGB blends between their
-  stops, and "identical across themes" now covers the categorical colours only.
+  stops, and "identical across themes" now covers the categorical colours only. (#14243)

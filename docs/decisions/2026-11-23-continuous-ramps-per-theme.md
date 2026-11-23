@@ -15,4 +15,4 @@
   rule ordered categories already follow. The categorical hues stay as they are, and the contrast
   sentence now carries numbers measured on the two plot surfaces, which say that matte red and rose
   stay below 3:1 on the dark page.
-- Where: `core/palette.py`, `prompts/default-style-guide.md`
+- Where: #14243
