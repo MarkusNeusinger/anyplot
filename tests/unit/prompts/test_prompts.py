@@ -1192,13 +1192,14 @@ class TestFirstReviewScoring:
         criteria = CRITERIA_PROMPT.read_text()
         table = self._section(criteria, "### Which criterion a gap belongs to", "## Score Caps")
         rows = [line for line in table.splitlines() if line.startswith("| ") and not line.startswith("| Gap")]
-        assert len(rows) == 7
+        assert len(rows) == 8
         for gap, verdict in (
             ("A Notes bullet or an `A good version shows:` property that the render misses or breaks", "SC-02 defect"),
             ("A range, size or example of the Data section that the implementation departs from", "Nothing, unless"),
             ("A conditional requirement", "Nothing: not SC-02, not DQ-01"),
             ("names unconditionally", "DQ-01 defect"),
             ("an aspect nothing in the spec names", "At most a `Suggestion:`"),
+            ("An axis that runs far past its data", "SC-03 defect (axis, ticks) or SC-04 defect (key)"),
             ("or a check value missed", "DQ-03 defect"),
             ("A comment or label that contradicts the code or the data it describes", "else CQ-04 defect"),
         ):
