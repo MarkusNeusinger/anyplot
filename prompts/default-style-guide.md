@@ -110,7 +110,7 @@ Which name holds which ramp, per use; each name already holds the stops of the r
 
 | Language | Fields | Marks | Theme |
 |----------|--------|-------|-------|
-| Python | `SEQ_FIELDS`, `DIV_FIELDS` | `SEQ_MARKS`, `DIV_MARKS` | picked from `THEME` where the lists are defined (Reference Python snippet below, library prompts) |
+| Python | `SEQ_FIELDS`, `DIV_FIELDS` | `SEQ_MARKS`, `DIV_MARKS` | picked from `THEME` where the lists are defined (Reference Python snippet below, library prompts); altair names its diverging pair `DIV_FIELDS_RANGE` / `DIV_MARKS_RANGE`, and plotnine and lets-plot, whose scales take a midpoint, `DIV_MID_FIELDS` / `DIV_MID_MARKS` |
 | R (ggplot2) | `SEQ_FIELDS`, `DIV_MID_FIELDS` | `SEQ_MARKS`, `DIV_MID_MARKS` | picked from `THEME` (`prompts/library/ggplot2.md`) |
 | Julia (Makie) | `ANYPLOT_SEQ_FIELDS`, `ANYPLOT_DIV_FIELDS` | `ANYPLOT_SEQ_MARKS`, `ANYPLOT_DIV_MARKS` | picked from `THEME` (`prompts/library/makie.md`) |
 | JavaScript | `t.seqFields`, `t.divFields` | `t.seqMarks`, `t.divMarks` | the render harness fills the tokens for the theme it renders |
