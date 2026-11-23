@@ -54,8 +54,9 @@ Don't deviate from these pairs (e.g. `ggsize(900, 500)` lands at 3600×2000, wel
 
 ```python
 # Fixed aspect: the one-panel grid paints the canvas, the plot keeps its aspect.
-# ggsize is the canvas Step 0 picks: (600, 600) square or (800, 450) landscape.
-plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+# ggsize is the canvas Step 0 picks, never a third size:
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))  # square
+plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))  # landscape
 
 # Composite: the page color on the composite, besides each panel's own anyplot_theme
 plot = gggrid([p1, p2], ncol=2) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))

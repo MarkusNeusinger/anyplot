@@ -80,7 +80,7 @@ A long table needs no reshaping. A `sns.load_dataset(...)` call belongs inside t
 ## Save
 
 ```python
-plt.tight_layout()  # fill the canvas: axes grow until the labels fit, the PNG size stays
+plt.tight_layout()  # fill the canvas; leave it out after fig.subplots_adjust(...) and for clustermap ("Canvas" above)
 plt.savefig(f'plot-{THEME}.png', dpi=400)  # bbox_inches MUST stay default (None) — see "Canvas" above
 ```
 
