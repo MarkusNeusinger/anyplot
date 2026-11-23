@@ -9,4 +9,4 @@
   percentages: the review asks whether the same drawing, enlarged, would still
   fit with its title, labels and legend. The generator prompts' axis-limit
   example, which started at zero, now says that zero is the baseline of a bar
-  chart and that lines and points take their limits from the data.
+  chart and that lines and points take their limits from the data. (#14241)
