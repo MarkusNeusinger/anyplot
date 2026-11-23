@@ -148,7 +148,7 @@ Trigger AR-09 if you see ANY of:
 - **Legend entries hidden behind / merged into the canvas edge** with letters chopped off.
 - **Any annotation, label, or category text whose bounding box is partially outside the saved PNG** so part of the text is gone.
 
-If found: **Score = 0, note the AR-09 violation** and identify which element(s) were clipped and on which edge (e.g. "title clipped at top edge of light render — top ~10 px of letters missing"), so the next generation can shrink the inner-chart dims and vl-convert / matplotlib / etc. don't push content off the canvas.
+If found: **Score = 0, note the AR-09 violation** and identify which element(s) were clipped and on which edge (e.g. "title clipped at top edge of light render — top ~10 px of letters missing"), so the next generation can fit the chart to the canvas (the library prompt names how) and nothing is pushed off it.
 
 **False-positive guard — do NOT trigger AR-09 for:**
 - Text that extends past the plot/axis bounds but stays *within* the canvas (VQ-05 deduction at most).
@@ -174,7 +174,7 @@ Score so that the reviews of the other libraries of this spec, written without s
 | VQ-02 | No Overlap | 6 | All text readable? No collisions with other text or with data? Data-mark overlap only counts when it hides information — expected overlap handled with alpha/outline is not a deduction. See 5d. |
 | VQ-03 | Element Visibility | 6 | Markers/lines adapted to density? Legend glyphs (size circles, swatches, line samples) visible in BOTH themes and matching the marks? See 5d. |
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette)? No red-green as sole signal? |
-| VQ-05 | Layout & Canvas | 4 | Does the drawing use the canvas, judged by eye without a percentage (would it, enlarged, still fit with its title, labels and legend)? Nothing cut off? Title 50–70% width, balanced axis labels, no overflow — see 5d. |
+| VQ-05 | Layout & Canvas | 4 | Does the drawing use the canvas, judged by eye without a percentage (would it, enlarged, still fit with its title, labels and legend)? Nothing cut off? Title proportion, balanced axis labels and no overflow are the separate checks of 5d. |
 | VQ-06 | Axis Labels & Title | 2 | Descriptive with units? Text for a reader, not a raw column identifier (`Reaktionszeit_ms` → "Reaktionszeit (ms)")? |
 | VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73` (ordered categories excepted)? Multi-series uses Imprint palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Ordered categories (Likert levels, grades, sizes) in ordered steps of one Imprint ramp, in their natural order, with a red or green pole on the matching side? Continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other colormaps allowed? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
 

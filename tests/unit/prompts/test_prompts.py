@@ -189,7 +189,9 @@ class TestPromptStructure:
         assert "**Every encoding has a key.**" in sc04
         assert "A label printed on a colored fill takes its color from that fill" in vq01
         # The generator prompts' zero-start limit example says it is the bar baseline, not the rule.
-        sentence = "a line or point axis takes both limits from the data, a little outside its smallest and largest value"
+        sentence = (
+            "a line or point axis takes both limits from the data, a little outside its smallest and largest value"
+        )
         for name in ("altair", "bokeh", "ggplot2", "letsplot", "matplotlib", "plotly", "plotnine"):
             assert sentence in (PROMPTS_DIR / "library" / f"{name}.md").read_text(), name
         assert sentence in (PROMPTS_DIR / "adaptable-code.md").read_text()
@@ -198,7 +200,9 @@ class TestPromptStructure:
             text = prompt.read_text()
             assert "(`quality-criteria.md` → SC-03)?" in text, prompt.name
             assert "(`quality-criteria.md` → SC-04)?" in text, prompt.name
-        routing = quality_criteria_content.split("### Which criterion a gap belongs to", 1)[1].split("## Score Caps", 1)[0]
+        routing = quality_criteria_content.split("### Which criterion a gap belongs to", 1)[1].split(
+            "## Score Caps", 1
+        )[0]
         assert "| SC-03 defect (axis, ticks) or SC-04 defect (key) |" in routing
 
     def test_quality_criteria_points_sum_to_100(self, quality_criteria_content: str) -> None:
