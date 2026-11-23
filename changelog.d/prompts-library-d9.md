@@ -18,4 +18,4 @@
   `gggrid` and a composite takes the page color, so neither leaves
   transparent or white strips at the canvas edge. In `seaborn.md`
   `plt.tight_layout()` runs before the save, and a figure-level plot resets
-  its size after the legend widened it past the canvas.
+  its size after the legend widened it past the canvas. (#14242)
