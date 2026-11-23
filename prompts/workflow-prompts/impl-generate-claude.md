@@ -282,7 +282,7 @@ It exits 0 when both themes stay within 0.5 % of differing pixels at the same ca
 
 ## Step 4: Visual self-check (BOTH renders)
 
-Open `plot-light.png` AND `plot-dark.png` at full size and answer every question below for both renders. These are the questions the review scores (`prompts/workflow-prompts/ai-quality-review.md`, steps 5c and 5d, and `prompts/quality-criteria.md`), so each "no" here is a deduction there. None of them names a value: judge by eye, as the review does.
+Open `plots/{SPEC_ID}/implementations/{LANGUAGE}/plot-light.png` AND `plot-dark.png` next to it at full size and answer every question below for both renders. These are the questions the review scores (`prompts/workflow-prompts/ai-quality-review.md`, steps 5c and 5d, and `prompts/quality-criteria.md`), so each "no" here is a deduction there. None of them names a value: judge by eye, as the review does.
 
 **Spec and theme**
 - **The spec's own points:** read each `A good version shows:` bullet of the spec's `## What a good version looks like` section, and each feature its Notes ask for, and find it in the picture. Is every one there? (SC-01, SC-02)
@@ -304,7 +304,7 @@ Open `plot-light.png` AND `plot-dark.png` at full size and answer every question
 - Fix the cause in the code, render both themes again (Step 3), re-run Step 3b, and answer the questions again.
 - Never answer a "no" by deleting the element: move a colliding label or change the layout, make room for a cut-off one, and keep every element the spec asks for. Data marks stay at their data values, as the regeneration rules above say.
 - This step has up to two fix rounds of its own, apart from the three attempts of Step 3. If a question still fails after the second round, keep the better version, as long as it renders in both themes and passes Step 3b, and name what remains in the commit body.
-- For Python (`LANGUAGE=python`), run Step 3c once more after the last round that changed the file, so its two commit lines describe the committed file. Fix what it reports when the fix is small and leaves the render as it is; otherwise record it in those lines as usual.
+- For Python (`LANGUAGE=python`), run Step 3c once more after the last round that changed the file, so its two commit lines describe the committed file. This run checks the final file and is not a new attempt: its `Adaptability self-check:` line keeps the attempt number Step 3c reached. Fix what it reports when the fix is small and leaves the render as it is; otherwise record it in those lines as usual.
 - On a regeneration, a fix made here repairs something visible, so it is never "code for changes that don't show".
 
 ## Step 5: Format the code
@@ -347,7 +347,7 @@ ls -la plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}
 git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
 git add plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}
-git commit -m "feat({LIBRARY}): implement {SPEC_ID}"
+git commit -m "feat({LIBRARY}): implement {SPEC_ID}" -m "<the body lines below>"
 git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 ```
 
