@@ -364,6 +364,34 @@ class TestContinuousRamps:
             text = (ROOT / path).read_text(encoding="utf-8")
             assert any(form in text for form in forms), (path, forms[0])
 
+    def test_every_written_copy_of_the_diverging_midpoint_matches_its_use(self) -> None:
+        """Each copy pairs the page midpoint with fields and the muted midpoint with marks, both themes."""
+        page = {t: diverging_stops(t, "fields")[1][1] for t in THEMES}
+        muted = {t: diverging_stops(t, "marks")[1][1] for t in THEMES}
+        names = {
+            "prompts/default-style-guide.md": ("DIV_FIELDS =", "DIV_MARKS  ="),
+            "automation/js-render/render.mjs": ("divFields:", "divMarks:"),
+            "prompts/library/altair.md": ("DIV_FIELDS_RANGE =", "DIV_MARKS_RANGE ="),
+            "prompts/library/ggplot2.md": ("DIV_MID_FIELDS <-", "DIV_MID_MARKS  <-"),
+            "prompts/library/letsplot.md": ("DIV_MID_FIELDS =", "DIV_MID_MARKS ="),
+            "prompts/library/plotnine.md": ("DIV_MID_FIELDS =", "DIV_MID_MARKS ="),
+            "prompts/library/makie.md": ("const ANYPLOT_DIV_FIELDS =", "const ANYPLOT_DIV_MARKS ="),
+            **{
+                f"prompts/library/{library}.md": ("DIV_FIELDS =", "DIV_MARKS =")
+                for library in ("matplotlib", "seaborn", "bokeh", "pygal", "plotly")
+            },
+        }
+        # A copy may name the theme token instead of writing the two hexes out.
+        page_tokens, muted_tokens = ("PAGE_BG", "pageBg"), ("INK_MUTED",)
+        for path, (fields_name, marks_name) in names.items():
+            lines = [line.strip() for line in (ROOT / path).read_text(encoding="utf-8").splitlines()]
+            fields = next(line for line in lines if line.startswith(fields_name))
+            marks = next(line for line in lines if line.startswith(marks_name))
+            assert any(t in fields for t in page_tokens) or all(page[t] in fields for t in THEMES), (path, fields)
+            assert any(t in marks for t in muted_tokens) or all(muted[t] in marks for t in THEMES), (path, marks)
+            assert not any(muted[t] in fields for t in THEMES), (path, fields)
+            assert not any(page[t] in marks for t in THEMES), (path, marks)
+
     def test_ramp_stops_lists_every_new_hex(self) -> None:
         """RAMP_STOPS is what a hex allow-list adds to the palette and the theme tokens."""
         known = {*IMPRINT, AMBER, *PAGE.values(), *(muted_for(t) for t in THEMES), *(neutral_for(t) for t in THEMES)}
