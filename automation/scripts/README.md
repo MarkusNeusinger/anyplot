@@ -51,7 +51,11 @@ first 15 lines, never a line that merely mentions a score. `impl-review.yml`
 runs a copy taken from its own ref. `parse_characteristics` reads the spec's
 characteristic bullets as `C1..Cn` (wrapped lines joined),
 `characteristic_kind` reads each bullet's kind, and an improvement that cites
-an `Expected, not a defect:` bullet is not counted.
+an `Expected, not a defect:` bullet is not counted. `decide` also counts the
+new review's defect lines (`review_weaknesses.json` beside `review_regen.json`)
+and records `defect_lines` and `follow_up_trigger`, plus `follow_up_of` and
+`follow_up_kind` with `--follow-up-of`/`--follow-up-kind`; `retry-note` prints
+a retry follow-up's regression note (see `regen_follow_up.py`).
 
 `weakness_class` reads a stored weakness as a `defect` line
 (`<ID>[, <ID>] (<light|dark|both|code>): …`), a `suggestion`
@@ -149,6 +153,23 @@ passes that result back to `decide` as `--adapt-route-held`. The record gains
 review's floor turned it off, which impl-review labels `regen:adapt-overruled`),
 and with an adapt flag the notice line gains them too, before `reason=`. Without the adapt flags, the route and the
 regression are off, so older argument sets decide as before.
+
+### `regen_follow_up.py`
+Follow-up regenerations (stdlib; imports `regen_gate` from its own directory
+when it runs as a script). After a gated regeneration one more regeneration of
+the pair may follow: a repair round after a merge whose review still names a
+defect line (dispatched by `impl-merge.yml`), or a retry after a keep for a
+regression (dispatched by `impl-review.yml`); see
+[Follow-up regenerations](../../docs/workflows/overview.md#follow-up-regenerations).
+
+- `plan` — whether a follow-up of a kind may be dispatched for a PR: its gate
+  record by the workflow must trigger that kind (`regen_gate.follow_up_trigger`),
+  the PR must not be a follow-up itself, and neither it nor any PR of the pair
+  from the last 7 days may carry a follow-up marker or body line. Prints
+  `dispatch=` and `reason=`; any failed read means no dispatch.
+- `marker` — the comment, with the `<!-- regen-follow-up:v1 {...} -->` marker,
+  that the dispatcher posts before every dispatch.
+- `parse-body` — the predecessor a PR body's `**Follow-up of:**` line names.
 
 ### `regen_writeback.py`
 Review write-back on a kept regeneration (stdlib and PyYAML; imports

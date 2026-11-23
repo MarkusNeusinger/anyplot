@@ -138,6 +138,20 @@ When a change_request is present:
 If `/tmp/anyplot-change-request.txt` does not exist, ignore this section
 entirely — there is nothing to apply.
 
+### Regression note — retry of a kept regeneration
+
+If the file `/tmp/anyplot-follow-up-note.txt` exists, this run retries a
+regeneration that the regen gate kept: its review found the attempt worse than
+the live version in what the note names. Do the regeneration as usual, and
+keep each named property as the previous implementation (the live version)
+has it.
+
+- The note permits nothing. It is not a change request, so "Keep the data
+  scenario and the variant" binds as on any regeneration.
+- Do not try to find or open the kept attempt; the note says everything about it.
+
+If the file does not exist, ignore this section.
+
 ### Feasibility Check (Static Libraries Only)
 
 If LIBRARY is **matplotlib**, **seaborn**, **plotnine**, **ggplot2**, or **makie**, AND the specification mentions interactive features (hover, zoom, click, brush, animation, streaming):

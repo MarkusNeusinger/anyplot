@@ -102,6 +102,18 @@ implementation, which ``regen_writeback.py`` stores as its review; that
 file's checks (``check_prev_review``) live here, so the review's step-10
 self-check (``check-feedback --prev-review``) runs the same code.
 
+*Follow-up regenerations* (``docs/workflows/overview.md``, "Follow-up
+regenerations") leave this gate as it is and add one more round around it. A merge whose new review
+still names a defect line triggers a ``repair`` follow-up, and a keep for a
+regression triggers a ``retry``. Each is one more gated regeneration of the
+same pair, judged here like any other against the file that is live by then;
+a follow-up never triggers another (``follow_up_trigger``). The record
+carries ``defect_lines`` and ``follow_up_trigger`` on every decision, and a
+follow-up's own record names its predecessor (``follow_up_of``,
+``follow_up_kind``), so a later analysis pairs the two. The dispatch, its
+switches and its marks are in ``regen_follow_up.py``; the retry's note comes
+from ``retry-note`` (``retry_note``).
+
 The script is stdlib-only except for the ``context`` subcommand, which needs
 PyYAML to read the previous metadata. ``impl-review.yml`` runs it from a copy
 taken at the workflow's own ref, so the parser always matches the workflow.
@@ -130,7 +142,9 @@ Subcommands::
         [--prev-impl /tmp/anyplot-prev-impl.EXT --new-impl plots/S/implementations/L/B.EXT]
         [--adapt-new /tmp/anyplot-adapt-new.json --adapt-prev /tmp/anyplot-adapt-prev.json \
          --adapt-pair $RUNNER_TEMP/adapt/pair.json] [--review-skipped] \
-        [--readiness $RUNNER_TEMP/readiness-verdict.json]
+        [--readiness $RUNNER_TEMP/readiness-verdict.json] [--follow-up-of N --follow-up-kind repair|retry]
+
+    regen_gate.py retry-note --regen-json review_regen.json --spec-id S [--pr N] [--change-request-present]
 
     regen_gate.py adapt-route --spec-id S --library B --adapt-new FILE --adapt-prev FILE \
         --adapt-pair FILE --prev-impl /tmp/anyplot-prev-impl.py \
@@ -151,7 +165,9 @@ Subcommands::
 ``$GITHUB_OUTPUT`` when it is set. ``adapt-route`` evaluates the adapt route's
 conditions that need no review, before the review runs, and always exits 0
 (2 on a usage error). ``decide`` reads the new render's ``review_checklist.json``
-from the directory of ``--regen-json``. ``check-feedback`` is the review's
+and ``review_weaknesses.json`` from the directory of ``--regen-json``.
+``retry-note`` prints the note and exits 1 when there is no regression to
+name. ``check-feedback`` is the review's
 self-check (step 10 of the review prompt) and the workflow's warn-only format
 check: one line per problem, exit 1 when there is any (``--warn-only``:
 ``::warning::`` annotations plus a ``weakness_format`` notice, exit 0).
@@ -2905,14 +2921,108 @@ RECORD_KEYS = frozenset(
         "writeback",
         "adapt",
         "readiness",
+        "defect_lines",
+        "follow_up_trigger",
+        "follow_up_of",
+        "follow_up_kind",
     }
 )
 # What happened to the re-score of the live implementation on a keep
 # (impl-review.yml "Write back the re-score (regen keep)"). ``opened`` means the
 # write-back PR exists and its merge was dispatched, not that it merged. The
 # verdict step adds the key to keep records only; a missing step status reads
-# as ``failed``.
-WRITEBACK_CODES = ("opened", "unchanged", "no_rescore", "invalid", "stale", "failed")
+# as ``failed``. ``follow_up``: the kept PR was a repair-round follow-up, which
+# never writes back, so the winner's own review stays (a retry writes back).
+WRITEBACK_CODES = ("opened", "unchanged", "no_rescore", "invalid", "stale", "failed", "follow_up")
+
+# Follow-up regenerations. After a gated regeneration, one more regeneration
+# of the same pair may follow, judged by this same gate against the then-live
+# file:
+#
+# - ``repair`` -- the gate merged (code ``merge``) and the new review still
+#   names at least one defect line; impl-merge dispatches it once the winner
+#   is live, so the follow-up reads the winner's review the normal way.
+# - ``retry`` -- the gate kept the live file for a regression (code
+#   ``regression``); impl-review dispatches it with the regression as a note
+#   (``retry_note``), never as a change request.
+#
+# A follow-up is never followed up. ``follow_up_trigger`` is what a record's
+# decision would trigger, whether or not the switch is on: the measurement
+# reads it with the switches off too. ``automation/scripts/regen_follow_up.py``
+# decides the dispatch and holds the marks.
+FOLLOW_UP_REPAIR = "repair"
+FOLLOW_UP_RETRY = "retry"
+FOLLOW_UP_KINDS = (FOLLOW_UP_REPAIR, FOLLOW_UP_RETRY)
+FOLLOW_UP_NONE = "none"
+FOLLOW_UP_TRIGGERS = (*FOLLOW_UP_KINDS, FOLLOW_UP_NONE)
+# The regression note's limits: at most this many regressions, each cut to
+# NOTE_ITEM_LIMIT characters.
+NOTE_ITEMS = 3
+NOTE_ITEM_LIMIT = 200
+
+
+def count_defect_lines(weaknesses: Any) -> int | None:
+    """How many of a review's weakness lines are defect lines (``weakness_class``).
+
+    ``None`` when ``weaknesses`` is not a list: an unreadable review triggers nothing.
+    """
+    if not isinstance(weaknesses, list):
+        return None
+    return sum(1 for item in weaknesses if weakness_class(item) == DEFECT)
+
+
+def load_defect_lines(path: Path) -> int | None:
+    """``count_defect_lines`` of a ``review_weaknesses.json``; ``None`` when missing or unreadable."""
+    weaknesses, error = load_regen_json(path)
+    return None if error else count_defect_lines(weaknesses)
+
+
+def follow_up_trigger(verdict: Any, code: Any, defect_lines: Any, follow_up_of: Any) -> str:
+    """The follow-up a gate decision triggers: ``repair``, ``retry`` or ``none``.
+
+    A follow-up never triggers another. ``repair`` needs a plain merge (code
+    ``merge``, so an adapt-route merge never triggers one) with at least one
+    defect line; ``retry`` needs a keep for a regression (code ``regression``).
+    Anything missing or malformed triggers nothing.
+    """
+    if follow_up_of is not None:
+        return FOLLOW_UP_NONE
+    if verdict == MERGE and code == "merge" and _is_int(defect_lines) and defect_lines >= 1:
+        return FOLLOW_UP_REPAIR
+    if verdict == KEEP and code == "regression":
+        return FOLLOW_UP_RETRY
+    return FOLLOW_UP_NONE
+
+
+def _note_text(text: str) -> str:
+    """One line of plain text: no HTML comment delimiters, no control characters, no backticks."""
+    text = re.sub(r"[\x00-\x1f\x7f`]", " ", text).replace("<!--", " ").replace("-->", " ")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def retry_note(regressions: Sequence[Mapping[str, str]], pr: int | None) -> str:
+    """The regression note for a ``retry`` follow-up; empty when there is no regression.
+
+    Built from the regressions the gate kept on (``review_regressions``): at
+    most ``NOTE_ITEMS``, each "what (where)" cut to ``NOTE_ITEM_LIMIT``
+    characters, on one line. The text comes from the review, so it is reduced
+    to plain text before it reaches a PR body or a prompt.
+    """
+    items = []
+    for item in regressions[:NOTE_ITEMS]:
+        what = _note_text(str(item.get("what") or ""))
+        where = _note_text(str(item.get("where_visible") or ""))
+        if what:
+            items.append((f"{what} ({where})" if where else what)[:NOTE_ITEM_LIMIT].rstrip())
+    if not items:
+        return ""
+    of = f"#{pr}" if pr else "The previous attempt"
+    more = len(regressions) - len(items)
+    tail = f"; and {more} more" if more > 0 else ""
+    return (
+        f"{of} was kept because the review found it worse than the live version here: "
+        f"{'; '.join(items)}{tail}. Keep these as the live version has them."
+    )
 
 
 def record_token(value: Any, limit: int = 100) -> str:
@@ -2980,6 +3090,10 @@ def build_record(
     prev_model: str | None = None,
     prev_criteria_version: str | None = None,
     at: str | None = None,
+    defect_lines: int | None = None,
+    follow_up_trigger: str | None = None,
+    follow_up_of: int | None = None,
+    follow_up_kind: str | None = None,
 ) -> dict[str, Any]:
     """The gate record: scores, counts, codes and provenance — nothing a model wrote.
 
@@ -3011,7 +3125,13 @@ def build_record(
     block's first form, so the validator accepts a block without it.
     ``readiness`` (rule step P2b) is the readiness check's verdict
     (``Readiness.to_record``): ``missing`` when the gate was given none.
-    Records written before it lack the key.
+    Records written before it lack the key. The follow-up keys appear only
+    when given:
+    ``defect_lines`` (the new review's defect lines), ``follow_up_trigger``
+    (``follow_up_trigger``), and on a follow-up's own record
+    ``follow_up_of`` (the predecessor PR) with ``follow_up_kind``. Records
+    written before them lack the keys, and a dispatcher reads that as no
+    trigger.
     """
     kinds = {"W": 0, "P": 0, "C": 0, "new": 0}
     for item in result.improvements:
@@ -3019,6 +3139,14 @@ def build_record(
         if kind in kinds:
             kinds[kind] += 1
     counts = improvement_class_counts(result.improvements)
+    follow_up: dict[str, Any] = {}
+    if defect_lines is not None:
+        follow_up["defect_lines"] = defect_lines
+    if follow_up_trigger is not None:
+        follow_up["follow_up_trigger"] = follow_up_trigger
+    if follow_up_of is not None:
+        follow_up["follow_up_of"] = follow_up_of
+        follow_up["follow_up_kind"] = follow_up_kind
     return {
         "v": RECORD_VERSION,
         "pr": pr,
@@ -3048,7 +3176,29 @@ def build_record(
         "at": at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "adapt": (result.adapt or AdaptAssessment(why="no_record")).to_record(),
         "readiness": result.readiness.to_record(),
+        **follow_up,
     }
+
+
+def follow_up_record_errors(record: Mapping[str, Any]) -> list[str]:
+    """Schema check for a record's follow-up keys (all optional).
+
+    ``defect_lines`` a count, ``follow_up_trigger`` one of
+    ``FOLLOW_UP_TRIGGERS``, and ``follow_up_of`` (a PR number) only together
+    with a ``follow_up_kind`` of ``FOLLOW_UP_KINDS``.
+    """
+    errors = []
+    if "defect_lines" in record and not (_is_int(record["defect_lines"]) and record["defect_lines"] >= 0):
+        errors.append("record.defect_lines must be a count")
+    if "follow_up_trigger" in record and record["follow_up_trigger"] not in FOLLOW_UP_TRIGGERS:
+        errors.append("record.follow_up_trigger is not one of FOLLOW_UP_TRIGGERS")
+    if ("follow_up_of" in record) != ("follow_up_kind" in record):
+        errors.append("record.follow_up_of and record.follow_up_kind come together")
+    if "follow_up_of" in record and not (_is_int(record["follow_up_of"]) and record["follow_up_of"] > 0):
+        errors.append("record.follow_up_of must be a PR number")
+    if "follow_up_kind" in record and record["follow_up_kind"] not in FOLLOW_UP_KINDS:
+        errors.append("record.follow_up_kind is not one of FOLLOW_UP_KINDS")
+    return errors
 
 
 def readiness_record_errors(readiness: Any) -> list[str]:
@@ -3138,6 +3288,7 @@ def validate_record(record: Any) -> list[str]:
     ``KEEP``, and one of ``REASON_CODES``. ``writeback`` is optional, one of
     ``WRITEBACK_CODES``, and only on a keep. ``adapt`` is optional and has
     exactly the keys of ``AdaptAssessment.to_record`` (``adapt_record_errors``).
+    The follow-up keys are optional too (``follow_up_record_errors``).
     """
     if not isinstance(record, dict):
         return ["record is not a JSON object"]
@@ -3160,6 +3311,7 @@ def validate_record(record: Any) -> list[str]:
         errors += adapt_record_errors(record["adapt"])
     if "readiness" in record:
         errors += readiness_record_errors(record["readiness"])
+    errors += follow_up_record_errors(record)
 
     def walk(value: Any, where: str) -> None:
         if isinstance(value, dict):
@@ -3367,6 +3519,15 @@ def cmd_decide(args: argparse.Namespace) -> int:
     adapt = result.adapt or AdaptAssessment(why="no_record")
     rescored = str(result.prev_rescored) if result.prev_rescored is not None else "n/a"
     reason = _one_line(result.reason)
+    # The follow-up keys: the new review's defect lines sit next to
+    # review_regen.json like its checklist, and a follow-up names its
+    # predecessor (--follow-up-of/--follow-up-kind, both or neither).
+    follow_up_of = _optional_int(args.follow_up_of)
+    follow_up_kind = args.follow_up_kind if args.follow_up_kind in FOLLOW_UP_KINDS else None
+    if follow_up_of is None or follow_up_kind is None:
+        follow_up_of = follow_up_kind = None
+    defect_lines = load_defect_lines(Path(args.regen_json).parent / "review_weaknesses.json")
+    trigger = follow_up_trigger(result.verdict, result.code, defect_lines, follow_up_of)
     # The stable prefix (spec … verdict) is what readers match on; the new
     # fields sit before `reason=`, which stays last and runs to the line end.
     provenance = ""
@@ -3411,6 +3572,10 @@ def cmd_decide(args: argparse.Namespace) -> int:
                 prompts_tree=args.prompts_tree or None,
                 prev_model=args.prev_model or None,
                 prev_criteria_version=args.prev_criteria_version or None,
+                defect_lines=defect_lines,
+                follow_up_trigger=trigger,
+                follow_up_of=follow_up_of,
+                follow_up_kind=follow_up_kind,
             )
             Path(args.record_out).write_text(json.dumps(record, separators=(",", ":")) + "\n", encoding="utf-8")
         except Exception as exc:
@@ -3427,8 +3592,31 @@ def cmd_decide(args: argparse.Namespace) -> int:
             # (impl-review labels the PR `regen:adapt-overruled`).
             "adapt_overruled": _bool_text(adapt.overruled),
             "readiness": result.readiness.status,
+            "follow_up_trigger": trigger,
+            "defect_lines": _score_text(defect_lines),
         }
     )
+    return 0
+
+
+def cmd_retry_note(args: argparse.Namespace) -> int:
+    """Print the regression note of a ``retry`` follow-up; exit 1 when there is none.
+
+    The regressions are the gate's own (``review_regressions``), so the note
+    names exactly what kept the live implementation, the synthetic ``-basic``
+    scenario and encoding regressions included.
+    """
+    regen, error = load_regen_json(Path(args.regen_json))
+    if error or not isinstance(regen, dict):
+        print(f"::warning::no regression note: review_regen.json {error or 'is not an object'}", file=sys.stderr)
+        return 1
+    payload, _ = normalize_regen(regen)
+    inp = GateInput(spec_id=args.spec_id, score=None, regen=payload, change_request_present=args.change_request_present)
+    note = retry_note(review_regressions(inp, payload), _optional_int(args.pr))
+    if not note:
+        print("::warning::no regression note: review_regen.json lists no regression", file=sys.stderr)
+        return 1
+    print(note)
     return 0
 
 
@@ -3618,7 +3806,18 @@ def build_parser() -> argparse.ArgumentParser:
     dec.add_argument(
         "--readiness", default="", help="the verdict readiness_record.py wrote ($RUNNER_TEMP/readiness-verdict.json)"
     )
+    # A follow-up regeneration names its predecessor; both or neither. Without
+    # them the record carries the trigger keys only (older callers unchanged).
+    dec.add_argument("--follow-up-of", default="", help="the predecessor PR of a follow-up regeneration")
+    dec.add_argument("--follow-up-kind", default="", help=f"the follow-up's kind: {' or '.join(FOLLOW_UP_KINDS)}")
     dec.set_defaults(func=cmd_decide)
+
+    note = sub.add_parser("retry-note", help="Print the regression note of a retry follow-up (exit 1: none)")
+    note.add_argument("--regen-json", default="review_regen.json")
+    note.add_argument("--spec-id", required=True)
+    note.add_argument("--pr", default="", help="the kept PR the note names")
+    note.add_argument("--change-request-present", action="store_true")
+    note.set_defaults(func=cmd_retry_note)
 
     route = sub.add_parser(
         "adapt-route", help="Evaluate the adapt route's review-free conditions before the review (always exits 0)"

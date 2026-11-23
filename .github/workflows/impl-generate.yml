@@ -9,6 +9,9 @@ run-name: "Generate: ${{ inputs.library || github.event.label.name }} for ${{ in
 # taken from that ref of origin instead of being generated, then rendered,
 # reviewed, repaired and merged like a forced regeneration. source_model
 # names the model that wrote it, recorded as generated_by.
+# Follow-up mode (workflow_dispatch with follow_up=repair:N or retry:N): an
+# ordinary gated regeneration whose PR body names the PR it follows
+# (impl-merge and impl-review dispatch it; automation/scripts/regen_follow_up.py).
 
 on:
   issues:
@@ -73,8 +76,18 @@ on:
         required: false
         type: string
         default: ''
+      follow_up:
+        description: "Follow-up regeneration: repair:N or retry:N names the gated regeneration PR #N it follows (automation/scripts/regen_follow_up.py). Written into the PR body; a follow-up is never followed up. Empty = an ordinary run."
+        required: false
+        type: string
+        default: ''
+      follow_up_note:
+        description: "retry follow-ups only: the regression that kept PR #N, one line (regen_gate.py retry-note). Staged for the generator, never as a change request."
+        required: false
+        type: string
+        default: ''
 
-# Global concurrency: max 3 concurrent implementation workflows
+# Concurrency: one run per (spec, library) pair at a time.
 concurrency:
   group: impl-generate-${{ inputs.specification_id || github.event.issue.number }}-${{ inputs.library || github.event.label.name }}
   cancel-in-progress: false
@@ -216,6 +229,7 @@ jobs:
           EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
           SOURCE_REF_INPUT: ${{ inputs.source_ref }}
           SOURCE_MODEL_INPUT: ${{ inputs.source_model }}
+          FOLLOW_UP_INPUT: ${{ inputs.follow_up }}
         run: |
           # A value that fails its check stops the job with one line that
           # names the input, never its value.
@@ -306,6 +320,22 @@ jobs:
             fi
           fi
 
+          # Follow-up mode: kind:PR of the gated regeneration this run follows
+          # (regen_follow_up.py). It reaches the PR body as the line
+          # "**Follow-up of:** #N (kind)", which marks the follow-up for good.
+          # A follow-up is a gated regeneration, so a forced run drops it.
+          FOLLOW_UP_KIND=""
+          FOLLOW_UP_OF=""
+          if [ -n "${FOLLOW_UP_INPUT:-}" ]; then
+            [[ "$FOLLOW_UP_INPUT" =~ ^(repair|retry):([1-9][0-9]{0,9})$ ]] || bad_input follow_up
+            if [ "$REGEN_GATE" = "false" ]; then
+              echo "::warning::follow_up ignored: a follow-up is a gated regeneration, and this run is forced"
+            else
+              FOLLOW_UP_KIND="${BASH_REMATCH[1]}"
+              FOLLOW_UP_OF="${BASH_REMATCH[2]}"
+            fi
+          fi
+
           # Derive LANGUAGE + EXT from LIBRARY. Mirrors core/constants.py LIBRARIES_METADATA;
           # new non-Python entries get listed here too.
           case "$LIBRARY" in
@@ -380,6 +410,11 @@ jobs:
           echo "model_reason=$MODEL_REASON" >> $GITHUB_OUTPUT
           echo "source_ref=$SOURCE_REF" >> $GITHUB_OUTPUT
           echo "source_model=$SOURCE_MODEL" >> $GITHUB_OUTPUT
+          echo "follow_up_kind=$FOLLOW_UP_KIND" >> $GITHUB_OUTPUT
+          echo "follow_up_of=$FOLLOW_UP_OF" >> $GITHUB_OUTPUT
+          if [ -n "$FOLLOW_UP_KIND" ]; then
+            echo "**Follow-up of:** #${FOLLOW_UP_OF} (${FOLLOW_UP_KIND})" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
           if [ -n "$SOURCE_REF" ]; then
             # No pipeline model writes the code (source_model, when given,
@@ -616,6 +651,20 @@ jobs:
           # checks for the file's existence and reads it if present.
           printf '%s\n' "$CHANGE_REQUEST" > /tmp/anyplot-change-request.txt
           echo "::notice::Change request staged: ${CHANGE_REQUEST}"
+
+      # A retry follow-up's regression note (regen_gate.py retry-note): what
+      # the review found worse in the kept attempt, for the generator to keep
+      # as the live version has it. Its own file, never the change request:
+      # the regen gate lets a change request swap the scenario or add
+      # encodings on a -basic spec, and a note must permit neither.
+      - name: Stage the follow-up note (retry)
+        if: ${{ inputs.follow_up_note != '' && steps.inputs.outputs.follow_up_kind == 'retry' }}
+        env:
+          NOTE: ${{ inputs.follow_up_note }}
+        run: |
+          # One line, cut to 900 characters (cut ends it with a newline).
+          printf '%s' "$NOTE" | tr '\r\n' '  ' | cut -c1-900 > /tmp/anyplot-follow-up-note.txt
+          echo "::notice::Follow-up note staged ($(wc -c < /tmp/anyplot-follow-up-note.txt) bytes)"
 
       # When triggered from a non-main branch via workflow_dispatch (typical for
       # iterative prompt-change testing), overlay the trigger branch's prompts/
@@ -1579,6 +1628,9 @@ jobs:
           SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
           SOURCE_MODEL: ${{ steps.inputs.outputs.source_model }}
           SOURCE_SHA: ${{ steps.adopt.outputs.sha }}
+          FOLLOW_UP_KIND: ${{ steps.inputs.outputs.follow_up_kind }}
+          FOLLOW_UP_OF: ${{ steps.inputs.outputs.follow_up_of }}
+          FOLLOW_UP_NOTE: ${{ inputs.follow_up_note }}
         run: |
           # Label one name per call, retried: the regen label is added after
           # creation (not via --label, which fails the whole create when the
@@ -1670,6 +1722,18 @@ jobs:
               CR_LINE=$(printf '%s' "$CHANGE_REQUEST" | tr '\r\n' '  ')
               BODY="${BODY}
           **Change request:** ${CR_LINE}"
+            fi
+            # A follow-up names the PR it follows (regen_follow_up.py reads
+            # the line back; it is what makes a follow-up final). A retry's
+            # note gets a line of its own, never "Change request:".
+            if [ -n "$FOLLOW_UP_KIND" ] && [ -n "$FOLLOW_UP_OF" ]; then
+              BODY="${BODY}
+          **Follow-up of:** #${FOLLOW_UP_OF} (${FOLLOW_UP_KIND})"
+              if [ "$FOLLOW_UP_KIND" = "retry" ] && [ -n "$FOLLOW_UP_NOTE" ]; then
+                NOTE_LINE=$(printf '%s' "$FOLLOW_UP_NOTE" | tr '\r\n' '  ' | cut -c1-900)
+                BODY="${BODY}
+          **Regression note:** ${NOTE_LINE}"
+              fi
             fi
           fi
 
@@ -1949,6 +2013,10 @@ jobs:
           # Pass via env (not template-interpolated into the script) so hints
           # containing quotes / $ / backticks can't break shell parsing.
           CHANGE_REQUEST: ${{ inputs.change_request }}
+          # Forwarded by the retry as they came in, so a follow-up's retry is
+          # still a follow-up (regen_follow_up.py).
+          FOLLOW_UP: ${{ inputs.follow_up }}
+          FOLLOW_UP_NOTE: ${{ inputs.follow_up_note }}
           # How far back a failure marker still counts toward the 3-attempt cap.
           # Covers a whole campaign (a generate→review→repair→merge cycle runs
           # well under an hour) with room for a stalled tail, without letting
@@ -2225,7 +2293,11 @@ jobs:
           # read from env to keep raw quotes/$/backticks inside the hint from
           # breaking shell parsing. `source_ref` is forwarded too: without it an
           # adopt run's retry would generate the file with Claude instead. And
-          # `source_model`, or the retry's metadata would lose the author.
+          # `source_model`, or the retry's metadata would lose the author. And
+          # `follow_up` with its note: without them a follow-up's retry would
+          # open a PR without the line that makes it final, and its outcome
+          # could be followed up (regen_follow_up.py also refuses that from
+          # the predecessor's marker).
           dispatch_retry() {
             gh workflow run impl-generate.yml --ref "${TRIGGER_REF:-main}" \
               -f specification_id="${SPEC_ID}" \
@@ -2235,7 +2307,9 @@ jobs:
               -f change_request="${CHANGE_REQUEST}" \
               -f regen_gate="${REGEN_GATE}" \
               -f source_ref="${SOURCE_REF}" \
-              -f source_model="${SOURCE_MODEL}"
+              -f source_model="${SOURCE_MODEL}" \
+              -f follow_up="${FOLLOW_UP}" \
+              -f follow_up_note="${FOLLOW_UP_NOTE}"
             if [ -n "${CHANGE_REQUEST}" ]; then
               echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} ($1, model=${MODEL}, change_request=present)"
             else

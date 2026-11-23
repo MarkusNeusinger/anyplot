@@ -903,6 +903,60 @@ def _week(at: Any) -> str:
     return f"{year}-W{week:02d}"
 
 
+FOLLOW_UP_KINDS = ("repair", "retry")
+
+
+def follow_up_summary(records: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """The follow-up regenerations (repair rounds and retries) among production gate records.
+
+    ``triggers`` counts ``follow_up_trigger`` over the records that carry it
+    (``trigger_n``; older records lack the key), with the switches on or off.
+    Per kind, ``triggered`` is that count, ``n`` the follow-ups decided
+    (records with ``follow_up_kind``) and ``merges`` those the gate merged.
+    ``pairs`` lists every follow-up beside its predecessor's record, when the
+    predecessor is among ``records``: the follow-up's ``pr``, ``verdict``,
+    ``code`` and ``new``, and the predecessor's ``verdict``, ``code`` and
+    ``new`` (``None`` when it is not).
+    """
+    by_pr = {r["pr"]: r for r in records if isinstance(r.get("pr"), int)}
+    triggers = Counter(str(r["follow_up_trigger"]) for r in records if isinstance(r.get("follow_up_trigger"), str))
+    kinds: dict[str, Any] = {}
+    for kind in FOLLOW_UP_KINDS:
+        decided = [r for r in records if r.get("follow_up_kind") == kind]
+        merged = sum(1 for r in decided if r.get("verdict") == "merge")
+        kinds[kind] = {
+            "triggered": triggers.get(kind, 0),
+            "n": len(decided),
+            "merges": merged,
+            "merge_rate": merged / len(decided) if decided else None,
+        }
+    pairs = []
+    for record in records:
+        of = record.get("follow_up_of")
+        if not isinstance(of, int):
+            continue
+        before = by_pr.get(of) or {}
+        pairs.append(
+            {
+                "pr": record.get("pr"),
+                "kind": record.get("follow_up_kind"),
+                "verdict": record.get("verdict"),
+                "code": record.get("code"),
+                "new": record.get("new"),
+                "follow_up_of": of,
+                "of_verdict": before.get("verdict"),
+                "of_code": before.get("code"),
+                "of_new": before.get("new"),
+            }
+        )
+    return {
+        "trigger_n": sum(triggers.values()),
+        "triggers": dict(triggers.most_common()),
+        **kinds,
+        "pairs": sorted(pairs, key=lambda p: (p["follow_up_of"], p["pr"] or 0)),
+    }
+
+
 def gate_monitor(
     records: Sequence[dict[str, Any]], comparable: Callable[[dict[str, Any]], bool], *, seed: int = 20260927
 ) -> dict[str, Any]:
@@ -944,6 +998,11 @@ def gate_monitor(
     held). ``code_path_merges`` counts the merges with ``carriers == 0`` and
     ``code >= 1`` — the code path — over the ``code_path_n`` records with both
     keys; suggestions may ride along, so ``visible`` is not tested.
+
+    From the follow-up regenerations on, a record carries ``defect_lines``
+    and ``follow_up_trigger``, and a follow-up's record ``follow_up_of`` and
+    ``follow_up_kind``; ``follow_ups`` is ``follow_up_summary``. A repair
+    round never writes back (``writeback: follow_up``).
     """
     n = len(records)
     merges = sum(1 for r in records if r.get("verdict") == "merge")
@@ -1070,6 +1129,7 @@ def gate_monitor(
         "margin_within_tolerance": share(-1 <= m <= 0 for m in margins),
         "improvements": improvements,
         "writeback": {"n": writeback_n, "counts": dict(writeback.most_common())},
+        "follow_ups": follow_up_summary(records),
         "weekly": {
             week: {
                 "n": len(rs),

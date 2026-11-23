@@ -2212,6 +2212,10 @@ class TestRecordCounts:
                 "writeback",
                 "adapt",
                 "readiness",
+                "defect_lines",
+                "follow_up_trigger",
+                "follow_up_of",
+                "follow_up_kind",
             }
         )
 

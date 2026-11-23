@@ -1525,9 +1525,65 @@ class TestGateReport:
         line = next(line for line in text.splitlines() if line.startswith("- Stored review on a keep"))
         assert line == (
             "- Stored review on a keep (writeback, n=4 keeps): "
-            "opened 2, unchanged 0, no_rescore 1, invalid 1, stale 0, failed 0"
+            "opened 2, unchanged 0, no_rescore 1, invalid 1, stale 0, failed 0, follow_up 0"
         )
         assert all(code in line for code in WRITEBACK_CODES)
+
+    def test_follow_ups_are_counted_and_paired_with_their_predecessor(self):
+        """Follow-ups: triggers per kind, follow-ups decided and merged, and each pair for a later read."""
+        base = {"v": 1, "spec": "s", "lib": "altair"}
+        records = [
+            {
+                **base,
+                "pr": 10,
+                "verdict": "merge",
+                "code": "merge",
+                "new": 86,
+                "defect_lines": 2,
+                "follow_up_trigger": "repair",
+            },
+            {
+                **base,
+                "pr": 11,
+                "verdict": "merge",
+                "code": "merge",
+                "new": 88,
+                "defect_lines": 0,
+                "follow_up_trigger": "none",
+                "follow_up_of": 10,
+                "follow_up_kind": "repair",
+            },
+            {**base, "pr": 12, "verdict": "keep", "code": "regression", "new": 80, "follow_up_trigger": "retry"},
+            {**base, "pr": 13, "verdict": "keep", "code": "merge", "new": 79},  # an older record: no keys
+        ]
+        result = rt.metrics.gate_monitor(records, rt.comparable_record)
+        follow_ups = result["follow_ups"]
+        assert follow_ups["trigger_n"] == 3
+        assert follow_ups["repair"] == {"triggered": 1, "n": 1, "merges": 1, "merge_rate": 1.0}
+        assert follow_ups["retry"] == {"triggered": 1, "n": 0, "merges": 0, "merge_rate": None}
+        assert follow_ups["pairs"] == [
+            {
+                "pr": 11,
+                "kind": "repair",
+                "verdict": "merge",
+                "code": "merge",
+                "new": 88,
+                "follow_up_of": 10,
+                "of_verdict": "merge",
+                "of_code": "merge",
+                "of_new": 86,
+            }
+        ]
+        text = rt.render_gate_report(result)
+        assert "- Repair rounds: triggered 1, decided 1, merged 1 (100%)" in text
+        assert "- Follow-up pairs (predecessor → follow-up): #10 merge 86 → #11 repair merge 88" in text
+
+    def test_a_report_from_before_the_follow_ups_still_renders(self):
+        result = rt.metrics.gate_monitor(
+            [{"v": 1, "spec": "s", "lib": "a", "verdict": "keep", "code": "regression"}], rt.comparable_record
+        )
+        del result["follow_ups"]
+        assert "Follow-up" not in rt.render_gate_report(result)
 
     def test_a_report_without_the_writeback_block_still_renders(self):
         result = rt.metrics.gate_monitor([], rt.comparable_record)

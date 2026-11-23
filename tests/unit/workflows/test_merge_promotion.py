@@ -416,8 +416,11 @@ def test_the_report_follows_the_promotion_and_the_bookkeeping_waits_for_success(
     assert _step(PROMOTE)["id"] == "promote"
     assert _step(REPORT)["if"] == "failure() && steps.promote.outputs.failure != ''"
     # A failed promotion skips the "done" label, the "Complete" comment with its
-    # preview links, the issue close and the sync dispatch.
+    # preview links, the issue close, the sync dispatch and the follow-up
+    # dispatch. Only the follow-up steps run whatever the bookkeeping did, and
+    # only after a promotion that succeeded.
     for step in _steps()[promote + 2 :]:
         condition = step.get("if", "")
-        assert "always()" not in condition, step["name"]
+        if "always()" in condition:
+            assert "steps.promote.outcome == 'success'" in condition, step["name"]
         assert "failure()" not in condition, step["name"]

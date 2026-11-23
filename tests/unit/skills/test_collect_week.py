@@ -194,6 +194,61 @@ class TestRows:
         assert "no_pair_artifact" not in cw.build_row(pull, _comments(record, None), None, [])["flags"]
 
 
+class TestFollowUps:
+    """Follow-up regenerations: each row names its predecessor, and the summary counts both kinds."""
+
+    def _marker(self, kind: str, pr: int) -> dict[str, Any]:
+        from automation.scripts.regen_follow_up import render_marker
+
+        return {
+            "login": "github-actions[bot]",
+            "at": "2026-10-07T04:00:00Z",
+            "body": render_marker(kind, pr, "bar-basic", "altair"),
+        }
+
+    def _rows(self, cw):
+        winner = _record(pr=300, lib="altair", defect_lines=2, follow_up_trigger="repair")
+        follow_up = _record(
+            pr=301,
+            lib="altair",
+            verdict="keep",
+            code="no_defect_improvement",
+            writeback="follow_up",
+            defect_lines=1,
+            follow_up_trigger="none",
+            follow_up_of=300,
+            follow_up_kind="repair",
+        )
+        kept = _record(
+            pr=302, lib="bokeh", verdict="keep", code="regression", writeback="opened", follow_up_trigger="retry"
+        )
+        return [
+            cw.build_row(_pull(300, "altair"), [*_comments(winner, None), self._marker("repair", 300)], None, PAIR),
+            cw.build_row(
+                _pull(301, "altair", ("regen", "regen:kept"), "CLOSED"), _comments(follow_up, None), None, PAIR
+            ),
+            cw.build_row(_pull(302, "bokeh", ("regen", "regen:kept"), "CLOSED"), _comments(kept, None), None, PAIR),
+        ]
+
+    def test_rows_pair_each_follow_up_with_its_predecessor(self, cw):
+        winner, follow_up, kept = self._rows(cw)
+        assert (winner["follow_up_trigger"], winner["follow_up_marked"], winner["defect_lines"]) == ("repair", True, 2)
+        assert (follow_up["follow_up_of"], follow_up["follow_up_kind"]) == (300, "repair")
+        assert not any(f.startswith("writeback_") for f in follow_up["flags"])  # a follow-up never writes back
+        assert (kept["follow_up_trigger"], kept["follow_up_marked"]) == ("retry", False)
+
+    def test_summary_and_digest(self, cw):
+        rows = self._rows(cw)
+        summary = cw.summarize(rows, {}, None)
+        assert summary["follow_ups"] == {
+            "repair": {"triggered": 1, "marked": 1, "decided": 1, "merged": 0},
+            "retry": {"triggered": 1, "marked": 0, "decided": 0, "merged": 0},
+        }
+        text = cw.render_markdown(summary, rows, [], None)
+        assert "| Repair rounds: triggered / marked / decided / merged | – | 1 / 1 / 1 / 0 |" in text
+        assert "keep (no_defect_improvement), repair of #300" in text
+
+
 class TestAggregate:
     def _rows(self, cw):
         rows = []

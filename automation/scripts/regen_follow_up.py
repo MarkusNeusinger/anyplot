@@ -1,0 +1,379 @@
+#!/usr/bin/env python3
+"""Follow-up regenerations: whether one may be dispatched, and the marks that bound it.
+
+After a gated regeneration, the pipeline may run one more regeneration of
+the same (spec, library) pair, a *follow-up*, which goes through
+impl-generate and the regen gate like any other and is judged against the
+file that is live by then (``docs/workflows/overview.md``, "Follow-up
+regenerations"; the two decisions are in ``docs/decisions/``):
+
+- ``repair`` (a repair round): the gate merged the regeneration (code
+  ``merge``) and its review still names at least one defect line. impl-merge
+  dispatches the follow-up after the merge and the promotion. The winner is
+  then live, so the follow-up reads the winner's review the normal way and
+  its defect lines reach the generator as ``W`` lines.
+- ``retry``: the gate kept the live implementation for a regression (code
+  ``regression``). impl-review dispatches the follow-up after the kept
+  attempt's write-back has merged or closed. It carries the regression as a
+  note (``regen_gate.py retry-note``), never as a change request, so the
+  gate's ``-basic`` waiver for a change request stays shut.
+
+Both are behind repository variables, off unless set to exactly ``true``:
+``REGEN_REPAIR_ROUND`` and ``REGEN_RETRY``.
+
+A follow-up is never followed up, and a pair gets at most one per streak. The
+bound reads durable state only, never a label, and fails closed:
+
+1. The follow-up's PR body carries ``**Follow-up of:** #N (kind)``, which
+   impl-generate writes from its ``follow_up`` input and forwards on its own
+   crash retry. Its gate record then carries ``follow_up_of``, and
+   ``regen_gate.follow_up_trigger`` returns ``none`` for it.
+2. Before every dispatch the dispatcher posts a marker comment on the
+   predecessor PR (``<!-- regen-follow-up:v1 {...} -->``, by
+   ``github-actions[bot]``). A comment that cannot be posted means no
+   dispatch.
+3. ``plan`` refuses when the predecessor already carries the marker, or when
+   any PR of the pair created in the last ``WINDOW_DAYS`` days carries the
+   marker or the body line. That covers a follow-up whose body line was lost,
+   because a rescue re-dispatched its generation without the input: its
+   predecessor's marker is still inside the window.
+4. Anything that cannot be read (the PR, its comments, the pair's PRs) means
+   no dispatch.
+
+The gate record is the first valid record by ``github-actions[bot]`` on the
+predecessor PR, read with ``regen_gate.parse_record_markers``. Eligibility is
+recomputed from its verdict, code and ``defect_lines``
+(``regen_gate.follow_up_trigger``), so a record written before the follow-up
+keys triggers nothing.
+
+Subcommands::
+
+    regen_follow_up.py plan --kind repair|retry --pr N --spec-id S --library B [--repo OWNER/NAME] \
+        [--window-days 7]
+    regen_follow_up.py marker --kind repair|retry --pr N --spec-id S --library B
+    regen_follow_up.py parse-body < PR_BODY
+
+``plan`` prints ``dispatch=true|false`` and ``reason=<code>`` (``REASONS``),
+also to ``$GITHUB_OUTPUT`` when it is set, and exits 0; 2 is a usage error.
+``marker`` prints the comment body. ``parse-body`` prints ``follow_up_of=``
+and ``follow_up_kind=`` (empty when the body names no predecessor).
+
+Stdlib only. ``regen_gate`` is imported from this file's own directory, so a
+workflow's copy of the two files never reads the checkout's.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+
+# The type checker reads the package import; at run time the script branch
+# loads the workflow-ref copy next to this file.
+if TYPE_CHECKING or __package__:  # imported as automation.scripts.regen_follow_up (tests, local tools)
+    from automation.scripts import regen_gate
+else:  # run as a script: the regen_gate.py next to this file (the workflow-ref copy)
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import regen_gate
+
+
+BOT = "github-actions[bot]"
+WINDOW_DAYS = 7
+KINDS = regen_gate.FOLLOW_UP_KINDS
+BODY_LINE_RE = re.compile(
+    r"^\*\*Follow-up of:\*\* #(?P<pr>[1-9]\d{0,9}) \((?P<kind>repair|retry)\)[ \t]*$", re.MULTILINE
+)
+MARKER_RE = re.compile(r"<!-- regen-follow-up:v1 (\{[^\n]*?\}) -->")
+TOKEN_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,80}$")
+
+DISPATCH = "dispatch"
+REASONS = (
+    DISPATCH,
+    "is_follow_up",  # the PR is itself a follow-up (body line or record)
+    "no_record",  # no gate record by the workflow on the PR
+    "not_eligible",  # the record's decision triggers no follow-up of this kind
+    "already",  # the PR already carries a follow-up marker
+    "recent_follow_up",  # another PR of the pair in the window has a marker or is a follow-up
+    "unreadable",  # the PR, its comments or the pair's PRs could not be read
+)
+
+SENTENCES = {
+    regen_gate.FOLLOW_UP_REPAIR: (
+        "**Follow-up regeneration (repair round).** This regeneration replaced the live implementation, "
+        "and its review still names defect lines. One more regeneration of this pair follows to fix them; "
+        "the same regen gate judges it against this version, which stays live unless the follow-up beats it. "
+        "A follow-up is never followed up."
+    ),
+    regen_gate.FOLLOW_UP_RETRY: (
+        "**Follow-up regeneration (retry).** The regen gate kept the live implementation for a regression. "
+        "One more regeneration of this pair follows, with that regression named in a note; "
+        "the same regen gate judges it against the live version. A retry is never retried."
+    ),
+}
+
+
+class ReadError(Exception):
+    """A ``gh`` read failed; the plan then refuses (``unreadable``)."""
+
+
+@dataclass(frozen=True)
+class Plan:
+    dispatch: bool
+    reason: str
+
+
+def body_follow_up(body: Any) -> tuple[int, str] | None:
+    """``(predecessor PR, kind)`` from a PR body's ``**Follow-up of:**`` line, else ``None``."""
+    match = BODY_LINE_RE.search(str(body or "").replace("\r", ""))
+    return (int(match.group("pr")), match.group("kind")) if match else None
+
+
+def render_marker(kind: str, pr: int, spec_id: str, library: str) -> str:
+    """The comment body: one sentence for people, then the marker for the bound."""
+    if kind not in KINDS or not (isinstance(pr, int) and pr > 0):
+        raise ValueError("a follow-up marker needs a kind and a PR number")
+    if not (TOKEN_RE.fullmatch(spec_id) and TOKEN_RE.fullmatch(library)):
+        raise ValueError("spec id and library must be plain tokens")
+    payload = json.dumps({"kind": kind, "pr": pr, "spec": spec_id, "lib": library}, separators=(",", ":"))
+    return f"{SENTENCES[kind]}\n\n<!-- regen-follow-up:v1 {payload} -->"
+
+
+def has_marker(comments: Sequence[Mapping[str, Any]]) -> bool:
+    """Whether the workflow posted a follow-up marker among these comments (anyone can paste one)."""
+    return any(c.get("login") == BOT and MARKER_RE.search(str(c.get("body") or "")) for c in comments)
+
+
+def first_gate_record(comments: Sequence[Mapping[str, Any]]) -> dict[str, Any] | None:
+    """The first valid gate record the workflow posted (``collect_week.gate_record``'s rule)."""
+    for comment in sorted(comments, key=lambda c: str(c.get("created_at") or "")):
+        if comment.get("login") != BOT:
+            continue
+        records = regen_gate.parse_record_markers(str(comment.get("body") or ""))
+        if records:
+            return records[0]
+    return None
+
+
+def _within(created: Any, now: datetime, window_days: int) -> bool:
+    """Created inside the window; an unreadable time counts as inside (fail closed)."""
+    try:
+        then = datetime.fromisoformat(str(created).replace("Z", "+00:00"))
+    except ValueError:
+        return True
+    if then.tzinfo is None:
+        then = then.replace(tzinfo=timezone.utc)
+    return now - then <= timedelta(days=window_days)
+
+
+def plan_follow_up(
+    kind: str,
+    pr: int,
+    body: str,
+    comments: Sequence[Mapping[str, Any]],
+    history: Sequence[Mapping[str, Any]],
+    now: datetime,
+    window_days: int = WINDOW_DAYS,
+) -> Plan:
+    """Whether a follow-up of ``kind`` may be dispatched for ``pr``.
+
+    ``comments`` are the PR's own (``login``, ``body``, ``created_at``);
+    ``history`` the pair's other PRs (``number``, ``created_at``, ``body``,
+    ``comments``), of which only those created in the window count.
+    """
+    if kind not in KINDS:
+        raise ValueError(f"unknown follow-up kind {kind!r}")
+    record = first_gate_record(comments)
+    if body_follow_up(body) is not None or (record is not None and "follow_up_of" in record):
+        return Plan(False, "is_follow_up")
+    if record is None:
+        return Plan(False, "no_record")
+    trigger = regen_gate.follow_up_trigger(
+        record.get("verdict"), record.get("code"), record.get("defect_lines"), record.get("follow_up_of")
+    )
+    if trigger != kind:
+        return Plan(False, "not_eligible")
+    if has_marker(comments):
+        return Plan(False, "already")
+    for other in history:
+        if other.get("number") == pr or not _within(other.get("created_at"), now, window_days):
+            continue
+        if body_follow_up(other.get("body")) is not None or has_marker(other.get("comments") or []):
+            return Plan(False, "recent_follow_up")
+    return Plan(True, DISPATCH)
+
+
+# ---------------------------------------------------------------------------
+# gh reads (the only I/O; tests replace ``_gh``)
+# ---------------------------------------------------------------------------
+
+
+def _gh(args: list[str]) -> str:
+    """Run ``gh`` and return stdout; three attempts, then ``ReadError``."""
+    error = ""
+    for attempt in range(1, 4):
+        proc = subprocess.run(["gh", *args], capture_output=True, text=True, check=False)
+        if proc.returncode == 0:
+            return proc.stdout
+        error = (proc.stderr or "").strip().replace("\n", " ")[:300]
+        if attempt < 3:
+            time.sleep(attempt * 5)
+    raise ReadError(f"gh {args[0]} failed: {error}")
+
+
+def _comments(repo: str, number: int) -> list[dict[str, Any]]:
+    out = _gh(
+        [
+            "api",
+            "--paginate",
+            f"repos/{repo}/issues/{number}/comments?per_page=100",
+            "--jq",
+            ".[] | {login: .user.login, body: .body, created_at: .created_at} | @json",
+        ]
+    )
+    try:
+        return [json.loads(line) for line in out.splitlines() if line.strip()]
+    except ValueError as exc:
+        raise ReadError(f"comments of #{number} unreadable") from exc
+
+
+def read_inputs(
+    repo: str, pr: int, spec_id: str, library: str, now: datetime, window_days: int
+) -> tuple[str, list[dict[str, Any]], list[dict[str, Any]]]:
+    """``(body, comments, history)`` for ``plan_follow_up``; ``ReadError`` on any failed read."""
+    head = f"implementation/{spec_id}/{library}"
+    try:
+        pulls = json.loads(
+            _gh(
+                [
+                    "pr",
+                    "list",
+                    "--repo",
+                    repo,
+                    "--state",
+                    "all",
+                    "--head",
+                    head,
+                    "--limit",
+                    "50",
+                    "--json",
+                    "number,body,createdAt",
+                ]
+            )
+            or "[]"
+        )
+        view = json.loads(_gh(["pr", "view", str(pr), "--repo", repo, "--json", "number,body,headRefName"]))
+    except ValueError as exc:
+        raise ReadError("the pair's pull requests are unreadable") from exc
+    if not isinstance(pulls, list) or not isinstance(view, dict):
+        raise ReadError("the pair's pull requests are unreadable")
+    if view.get("headRefName") != head:
+        raise ReadError(f"#{pr} is not a pull request of {head}")
+    history = []
+    for pull in pulls:
+        number = pull.get("number")
+        if not isinstance(number, int) or number == pr or not _within(pull.get("createdAt"), now, window_days):
+            continue
+        history.append(
+            {
+                "number": number,
+                "created_at": pull.get("createdAt"),
+                "body": pull.get("body") or "",
+                "comments": _comments(repo, number),
+            }
+        )
+    return str(view.get("body") or ""), _comments(repo, pr), history
+
+
+def _write_outputs(values: Mapping[str, str]) -> None:
+    lines = "".join(f"{key}={value}\n" for key, value in values.items())
+    sys.stdout.write(lines)
+    path = os.environ.get("GITHUB_OUTPUT")
+    if path:
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(lines)
+
+
+def cmd_plan(args: argparse.Namespace) -> int:
+    if not (TOKEN_RE.fullmatch(args.spec_id) and TOKEN_RE.fullmatch(args.library)):
+        print("::error::bad_input: spec id or library is not a plain token", file=sys.stderr)
+        return 2
+    repo = args.repo or os.environ.get("GITHUB_REPOSITORY", "")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo):
+        print("::error::bad_input: --repo (or GITHUB_REPOSITORY) is not OWNER/NAME", file=sys.stderr)
+        return 2
+    now = datetime.now(timezone.utc)
+    try:
+        body, comments, history = read_inputs(repo, args.pr, args.spec_id, args.library, now, args.window_days)
+    except ReadError as exc:
+        print(f"::warning::no follow-up for #{args.pr}: {exc}", file=sys.stderr)
+        plan = Plan(False, "unreadable")
+    else:
+        plan = plan_follow_up(args.kind, args.pr, body, comments, history, now, args.window_days)
+    print(
+        f"::notice::regen_follow_up kind={args.kind} pr={args.pr} spec={args.spec_id} lib={args.library} "
+        f"dispatch={'true' if plan.dispatch else 'false'} reason={plan.reason}",
+        file=sys.stderr,
+    )
+    _write_outputs({"dispatch": "true" if plan.dispatch else "false", "reason": plan.reason})
+    return 0
+
+
+def cmd_marker(args: argparse.Namespace) -> int:
+    try:
+        print(render_marker(args.kind, args.pr, args.spec_id, args.library))
+    except ValueError as exc:
+        print(f"::error::{exc}", file=sys.stderr)
+        return 2
+    return 0
+
+
+def cmd_parse_body(_args: argparse.Namespace) -> int:
+    found = body_follow_up(sys.stdin.read())
+    _write_outputs({"follow_up_of": str(found[0]) if found else "", "follow_up_kind": found[1] if found else ""})
+    return 0
+
+
+def _pr_number(raw: str) -> int:
+    if not re.fullmatch(r"[1-9]\d{0,9}", raw):
+        raise argparse.ArgumentTypeError("not a PR number")
+    return int(raw)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    plan = sub.add_parser("plan", help="Whether a follow-up may be dispatched (prints dispatch= and reason=)")
+    marker = sub.add_parser("marker", help="Print the marker comment posted before a dispatch")
+    for p in (plan, marker):
+        p.add_argument("--kind", required=True, choices=KINDS)
+        p.add_argument("--pr", required=True, type=_pr_number)
+        p.add_argument("--spec-id", required=True)
+        p.add_argument("--library", required=True)
+    plan.add_argument("--repo", default="", help="OWNER/NAME (default: $GITHUB_REPOSITORY)")
+    plan.add_argument("--window-days", type=int, default=WINDOW_DAYS)
+    plan.set_defaults(func=cmd_plan)
+    marker.set_defaults(func=cmd_marker)
+
+    body = sub.add_parser("parse-body", help="The predecessor a PR body names (stdin)")
+    body.set_defaults(func=cmd_parse_body)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    return int(args.func(args))
+
+
+if __name__ == "__main__":
+    sys.exit(main())
