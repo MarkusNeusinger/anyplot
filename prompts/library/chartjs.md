@@ -42,7 +42,7 @@ browser has no `process.env`, so this is the JS analogue of `ANYPLOT_THEME`):
 
 ```js
 window.ANYPLOT_THEME      // "light" | "dark"
-window.ANYPLOT_TOKENS     // { pageBg, elevatedBg, ink, inkSoft, grid, palette[8], amber, seq[2], div[3] }
+window.ANYPLOT_TOKENS     // { pageBg, elevatedBg, ink, inkSoft, grid, palette[8], amber, seqFields, seqMarks, divFields, divMarks }
 window.ANYPLOT_SIZE       // { width, height } — the CSS mount size
 window.Chart              // the Chart.js global (already loaded)
 ```
@@ -134,8 +134,9 @@ harness does not set it.
 ## Colors — Imprint palette (from `window.ANYPLOT_TOKENS`)
 
 The first categorical series is **always** `#009E73` (`tokens.palette[0]`).
-Multi-series follows the palette order. Data colors are **identical** between
-light and dark — only chrome (text, grid, background) flips.
+Multi-series follows the palette order. Categorical colors are **identical** between
+light and dark — only chrome (text, grid, background) flips, and the continuous
+ramps, whose tokens hold the theme's stops.
 
 ```js
 const t = window.ANYPLOT_TOKENS;
@@ -148,8 +149,27 @@ backgroundColor: quarters.map((_, i) => t.palette[i])
 ```
 
 Never use `viridis`/`rainbow`/`jet` or arbitrary hex. For continuous color use
-`t.seq` (`["#009E73", "#4467A3"]`) or `t.div` (`["#AE3030", midpoint, "#4467A3"]`,
-midpoint is theme-adaptive and already baked into `t.div`).
+the Imprint ramps, which the tokens hold as `[position, hex]` stops, low → high,
+with the theme's stops already chosen (style guide, "Continuous Data"):
+`t.seqFields` / `t.divFields` for colored cells that fill the plot (a matrix or
+heatmap), `t.seqMarks` / `t.divMarks` for points, lines, outlines and bars on the
+page — most Chart.js charts. The diverging midpoint is the page for fields and
+the muted anchor for marks. `t.seq` and `t.div` are the first release's two-stop
+ramps, kept only so old files render as before; never use them in new code.
+Chart.js has no color scale, so color each element yourself:
+
+```js
+// the color at v (0..1) along [position, hex] stops, blended linearly in sRGB
+const rampAt = (stops, v) => {
+  const x = Math.min(1, Math.max(0, v));
+  const i = Math.max(1, stops.findIndex(([p]) => p >= x));
+  const [[p0, c0], [p1, c1]] = [stops[i - 1], stops[i]];
+  const f = (x - p0) / (p1 - p0);
+  const ch = (c, k) => parseInt(c.slice(1 + 2 * k, 3 + 2 * k), 16);
+  return "#" + [0, 1, 2].map((k) => Math.round(ch(c0, k) + (ch(c1, k) - ch(c0, k)) * f).toString(16).padStart(2, "0")).join("");
+};
+backgroundColor: values.map((v) => rampAt(t.seqMarks, (v - lo) / (hi - lo)))
+```
 
 ## Theme-adaptive chrome (Chart.js mapping)
 

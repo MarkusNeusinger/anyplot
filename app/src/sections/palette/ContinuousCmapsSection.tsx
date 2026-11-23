@@ -1,16 +1,83 @@
 import Box from '@mui/material/Box';
 
 import { SectionHeader } from 'src/components/SectionHeader';
-import { proseColumnSx, sectionSx } from 'src/sections/palette/paletteHelpers';
+import {
+  divStops,
+  proseColumnSx,
+  rampGradient,
+  type RampStops,
+  type RampTheme,
+  type RampUse,
+  sectionSx,
+  SEQ_STOPS,
+} from 'src/sections/palette/paletteHelpers';
 import { textStyle, typography } from 'src/theme';
 
-export function ContinuousCmapsSection() {
+const USE_LABEL: Record<RampUse, string> = {
+  fields: 'fields · heatmaps / maps / filled contours',
+  marks: 'marks · points / lines / bars on the page',
+};
+
+const monoSx = { fontFamily: typography.mono, fontSize: '11px' };
+
+function RampRow({ name, use, stops }: { name: string; use: RampUse; stops: RampStops }) {
+  return (
+    <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+          gap: 1,
+          mb: 0.5,
+        }}
+      >
+        <Box sx={{ ...monoSx, fontWeight: 600, color: 'var(--ink)' }}>{name}</Box>
+        <Box sx={{ ...monoSx, color: 'var(--ink-muted)', textAlign: 'right' }}>
+          {USE_LABEL[use]}
+        </Box>
+      </Box>
+      <Box
+        data-testid={`${name}-${use}`}
+        sx={{
+          height: 28,
+          borderRadius: 1,
+          background: rampGradient(stops),
+          boxShadow: '0 0 0 1px var(--rule)',
+        }}
+      />
+      <Box
+        sx={{
+          ...monoSx,
+          display: 'flex',
+          justifyContent: 'space-between',
+          mt: 0.5,
+          color: 'var(--ink-muted)',
+        }}
+      >
+        {stops.hex.map(colour => (
+          <span key={colour}>{colour}</span>
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
+export interface ContinuousCmapsSectionProps {
+  isDark: boolean;
+}
+
+export function ContinuousCmapsSection({ isDark }: ContinuousCmapsSectionProps) {
+  const theme: RampTheme = isDark ? 'dark' : 'light';
   return (
     <Box component="section" sx={sectionSx}>
       <SectionHeader prompt="❯" title={<em>continuous cmaps</em>} />
       <Box sx={proseColumnSx}>
         <Box sx={textStyle}>
-          for continuous data the categorical pool is replaced with two palette-derived colormaps.
+          for continuous data the categorical pool is replaced with two palette-derived ramps. each
+          has its own stops per theme and per use: <strong>fields</strong> for cells that fill the
+          plot, <strong>marks</strong> for points, lines and bars that sit on the page. shown here
+          in the {theme} theme; switch it and the stops change.
         </Box>
         <Box
           sx={{
@@ -20,110 +87,13 @@ export function ContinuousCmapsSection() {
             mt: 2,
           }}
         >
-          {/* Sequential */}
-          <Box>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'baseline',
-                mb: 0.5,
-              }}
-            >
-              <Box
-                sx={{
-                  fontFamily: typography.mono,
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: 'var(--ink)',
-                }}
-              >
-                imprint_seq
-              </Box>
-              <Box
-                sx={{
-                  fontFamily: typography.mono,
-                  fontSize: '11px',
-                  color: 'var(--ink-muted)',
-                }}
-              >
-                single-polarity · density / magnitude
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                height: 28,
-                borderRadius: 1,
-                background: 'linear-gradient(to right, #009E73, #4467A3)',
-                boxShadow: '0 0 0 1px var(--rule)',
-              }}
-            />
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                mt: 0.5,
-                fontFamily: typography.mono,
-                fontSize: '11px',
-                color: 'var(--ink-muted)',
-              }}
-            >
-              <span>#009E73 brand-green</span>
-              <span>#4467A3 blue</span>
-            </Box>
+          <Box sx={{ display: 'grid', gap: 2 }}>
+            <RampRow name="imprint_seq" use="fields" stops={SEQ_STOPS.fields[theme]} />
+            <RampRow name="imprint_seq" use="marks" stops={SEQ_STOPS.marks[theme]} />
           </Box>
-          {/* Diverging */}
-          <Box>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'baseline',
-                mb: 0.5,
-              }}
-            >
-              <Box
-                sx={{
-                  fontFamily: typography.mono,
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: 'var(--ink)',
-                }}
-              >
-                imprint_div
-              </Box>
-              <Box
-                sx={{
-                  fontFamily: typography.mono,
-                  fontSize: '11px',
-                  color: 'var(--ink-muted)',
-                }}
-              >
-                diverging · correlations / signed deviations
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                height: 28,
-                borderRadius: 1,
-                background: 'linear-gradient(to right, #AE3030, var(--bg-surface), #4467A3)',
-                boxShadow: '0 0 0 1px var(--rule)',
-              }}
-            />
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                mt: 0.5,
-                fontFamily: typography.mono,
-                fontSize: '11px',
-                color: 'var(--ink-muted)',
-              }}
-            >
-              <span>#AE3030 red</span>
-              <span style={{ color: 'var(--ink-muted)' }}>theme-adaptive midpoint</span>
-              <span>#4467A3 blue</span>
-            </Box>
+          <Box sx={{ display: 'grid', gap: 2 }}>
+            <RampRow name="imprint_div" use="fields" stops={divStops('fields', theme)} />
+            <RampRow name="imprint_div" use="marks" stops={divStops('marks', theme)} />
           </Box>
         </Box>
         <Box
@@ -135,10 +105,11 @@ export function ContinuousCmapsSection() {
             lineHeight: 1.55,
           }}
         >
-          the diverging midpoint flips per theme — <code>#FAF8F1</code> on cream bg /{' '}
-          <code>#1A1A17</code>
-          on warm-near-black — so the zero point reads as part of the page rather than as a grey
-          blob.
+          in both themes high values stand out from the page and low values recede into it: the
+          sequential ramp runs light → dark on cream and dark → bright on warm-near-black. fields
+          span the wider lightness range; every colour of the marks ramps keeps 3:1 against its
+          page. the diverging midpoint is the page for fields and the muted ink for marks, so a
+          point at zero does not vanish.
         </Box>
       </Box>
     </Box>

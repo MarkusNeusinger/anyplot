@@ -51,7 +51,7 @@ browser has no `process.env`, so this is the JS analogue of `ANYPLOT_THEME`):
 
 ```js
 window.ANYPLOT_THEME      // "light" | "dark"
-window.ANYPLOT_TOKENS     // { pageBg, elevatedBg, ink, inkSoft, grid, palette[8], amber, seq[2], div[3] }
+window.ANYPLOT_TOKENS     // { pageBg, elevatedBg, ink, inkSoft, grid, palette[8], amber, seqFields, seqMarks, divFields, divMarks }
 window.ANYPLOT_SIZE       // { width, height } — the CSS mount size
 window.Highcharts         // the Highcharts global (already loaded)
 ```
@@ -153,19 +153,24 @@ harness does not set it.
 ## Colors — Imprint palette (from `window.ANYPLOT_TOKENS`)
 
 The first categorical series is **always** `#009E73` (`tokens.palette[0]`). Set
-Highcharts' top-level `colors` array to the Imprint palette. Data colors are
-**identical** between light and dark — only chrome flips.
+Highcharts' top-level `colors` array to the Imprint palette. Categorical colors are
+**identical** between light and dark — only chrome flips, and the continuous
+ramps, whose tokens hold the theme's stops.
 
 ```js
 const t = window.ANYPLOT_TOKENS;
 option.colors = t.palette;                 // categorical cycle, first = brand green
-// continuous (heatmap / treemap colorAxis) — build from the Imprint stops:
-option.colorAxis = { stops: [[0, t.seq[0]], [1, t.seq[1]]] };          // sequential
-// diverging (meaningful midpoint):
-option.colorAxis = { stops: [[0, t.div[0]], [0.5, t.div[1]], [1, t.div[2]]] };
+// continuous (colorAxis) — the Imprint ramps as [position, hex] stops, low → high, with
+// the theme's stops already chosen; colorAxis.stops takes them as they are:
+option.colorAxis = { stops: t.seqFields };  // colored cells that fill the plot (heatmap, treemap, map)
+option.colorAxis = { stops: t.seqMarks };   // colored points, lines, outlines and bars on the page
+// diverging (meaningful midpoint, set min: -m, max: m): page midpoint for fields, muted for marks
+option.colorAxis = { min: -m, max: m, stops: t.divFields };
 ```
 
 Never use Highcharts' default palette or named gradients (viridis / rainbow).
+`t.seq` and `t.div` are the first release's two-stop ramps, kept only so old
+files render as before; never use them in new code.
 
 ## Theme-adaptive chrome (Highcharts mapping)
 

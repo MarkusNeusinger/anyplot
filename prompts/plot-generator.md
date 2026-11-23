@@ -553,7 +553,7 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — a
 - Follow minimalism: every element must earn its place
 - Remove top and right spines by default
 - **Use the Imprint palette** — first series **always** `#009E73` (brand green); additional series follow the canonical order: `#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`. Plus 3 semantic anchors outside the pool: `#DDCC77` (amber, warning), theme-adaptive `palette.neutral` (totals/baseline), theme-adaptive `palette.muted` (other/rest). Never invent custom hexes for categorical data. When referring to the palette in code comments, metadata, or review notes, always call it **Imprint** (not "anyplot palette").
-- Continuous data: `imprint_seq` (single-polarity, `["#009E73", "#4467A3"]`) or `imprint_div` (diverging, `["#AE3030", midpoint, "#4467A3"]` where midpoint is `#FAF8F1` on light / `#1A1A17` on dark). No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
+- Continuous data: `imprint_seq` (single-polarity) or `imprint_div` (diverging), built from the `(position, hex)` stops of the render's theme in `prompts/default-style-guide.md` "Continuous Data": the fields stops where colored cells fill the plot, the marks stops where colored points, lines, outlines or bars sit on the page. `imprint_div` takes the page color as midpoint for fields and the `muted` anchor for marks. No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
 - Color restraint: 2-3 colors ideal, 4-5 max. For n≥5, add redundant encoding (marker shape, linestyle, label) — see "Series count guidance" in default-style-guide.md.
 - **Theme-adaptive chrome** (background, text, grid, spines, legend, annotations) — read `ANYPLOT_THEME` from env, use the token palette from `prompts/default-style-guide.md`. Plot background: `#FAF8F1` light / `#1A1A17` dark. Never pure white or black.
 - Grid: prefer none for simple plots; when used, y-axis only for bar/line, both for scatter; opacity 10-15%
@@ -604,7 +604,7 @@ After generating the code:
 2. **Check `plot-light.png` AND `plot-dark.png`** — visually verify both:
    - Does each show the expected visualization?
    - Are labels readable against their respective backgrounds (no dark text on dark, no light text on light)?
-   - Is the first series `#009E73` in both renders (data colors stay identical; only chrome flips)?
+   - Is the first series `#009E73` in both renders (categorical colors stay identical; only chrome and continuous ramps flip)?
    - Does the background match `#FAF8F1` (light) or `#1A1A17` (dark)?
    - Are top/right spines removed?
    - Is the design polished beyond defaults?

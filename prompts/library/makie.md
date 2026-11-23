@@ -186,23 +186,34 @@ scatter!(ax, x, y; color = IMPRINT_PALETTE[1])
 # Multi-series — categorical
 scatter!(ax, x, y; color = group, colormap = IMPRINT_PALETTE)
 
-# Continuous — only the two Imprint palette-derived cmaps are allowed.
-using ColorSchemes
-const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])                                    # sequential / single-polarity
-const _midpoint   = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"                         # theme-adaptive
-const ANYPLOT_DIV = cgrad([colorant"#AE3030", _midpoint, colorant"#4467A3"])                         # diverging
-# Sequential heatmap:  heatmap!(ax, z; colormap = ANYPLOT_SEQ)
-# Diverging heatmap:   heatmap!(ax, z; colormap = ANYPLOT_DIV)
+# Continuous — only the two Imprint ramps are allowed: colors and their stop
+# positions, low → high, with their own stops per theme (style guide,
+# "Continuous Data"). FIELDS: colored cells that fill the plot (heatmap,
+# contourf, surface, map polygons). MARKS: colored points, lines, outlines or
+# bars on the page. Keep only the ramps the plot uses.
+const ANYPLOT_SEQ_FIELDS = THEME == "light" ?
+    cgrad([colorant"#66E2B2", colorant"#009E73", colorant"#4467A3", colorant"#002850"], [0.0, 0.368, 0.582, 1.0]) :
+    cgrad([colorant"#00573D", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.467, 1.0])
+const ANYPLOT_SEQ_MARKS = THEME == "light" ?
+    cgrad([colorant"#009E73", colorant"#4467A3", colorant"#002850"], [0.0, 0.338, 1.0]) :
+    cgrad([colorant"#007755", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.32, 1.0])
+# Diverging: the midpoint is the page for fields and the muted anchor for marks
+const ANYPLOT_DIV_FIELDS = cgrad([colorant"#AE3030", THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17", colorant"#4467A3"])
+const ANYPLOT_DIV_MARKS = cgrad([colorant"#AE3030", THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F", colorant"#4467A3"])
+# Sequential heatmap:  heatmap!(ax, z; colormap = ANYPLOT_SEQ_FIELDS)
+# Colored scatter:     scatter!(ax, x, y; color = v, colormap = ANYPLOT_SEQ_MARKS)
+# Diverging heatmap:   heatmap!(ax, z; colormap = ANYPLOT_DIV_FIELDS, colorrange = (-m, m))
 ```
 
 Never use `:viridis`, `:cividis`, `:BrBG`, `:Reds`/`:Blues`/`:Greens`,
 `:rainbow`, `:jet`, `:hsv`, `:gist_rainbow`, or any other named
-colormap — only the two anyplot stops above are allowed.
+colormap — only the two Imprint ramps above are allowed.
 
 ## Theme-adaptive Chrome (Makie mapping)
 
-Read `ANYPLOT_THEME` from the environment and flip chrome tokens. Data
-colors stay identical between themes — only the surrounding chrome changes.
+Read `ANYPLOT_THEME` from the environment and flip chrome tokens. Categorical
+colors stay identical between themes — only the surrounding chrome changes, and
+the continuous ramps take their theme's stops.
 
 ```julia
 const THEME       = get(ENV, "ANYPLOT_THEME", "light")

@@ -24,15 +24,20 @@ Layout
   ``palette.neutral(theme)``, ``palette.muted(theme)``. The neutrals are
   theme-adaptive — they flip between light and dark themes by design,
   same pattern as Apple HIG / Material Design / GitHub Primer.
-- Sequential cmap (``imprint_seq``): brand-green → blue.
-- Diverging cmap (``imprint_div_light`` / ``imprint_div_dark``): matte-red
-  ↔ near-neutral ↔ blue. Theme-adaptive via ``diverging(theme)`` factory.
+- Continuous ramps, per theme and per use (``fields`` or ``marks``), as
+  ``(position, hex)`` stops: ``sequential_stops(theme, use)`` (``imprint_seq``,
+  brand green and blue, light → dark on the light page and dark → bright on
+  the dark one) and ``diverging_stops(theme, use)`` (``imprint_div``, matte
+  red ↔ midpoint ↔ blue). Matplotlib cmaps via ``sequential(theme, use)`` and
+  ``diverging(theme, use)``. Categorical colours stay identical across themes;
+  the continuous ramps do not.
 """
 
 from __future__ import annotations
 
+from itertools import pairwise
 from types import SimpleNamespace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 
 # matplotlib is a heavy optional dep — import lazily inside the cmap helpers so
@@ -80,6 +85,8 @@ _INK_LIGHT: str = "#1A1A17"  # full-contrast neutral on cream bg
 _INK_DARK: str = "#F0EFE8"  # full-contrast neutral on warm near-black bg
 _INK_MUTED_LIGHT: str = "#6B6A63"  # soft-contrast neutral on cream bg
 _INK_MUTED_DARK: str = "#A8A79F"  # soft-contrast neutral on warm near-black bg
+_PAGE_LIGHT: str = "#FAF8F1"  # plot surface, light theme
+_PAGE_DARK: str = "#1A1A17"  # plot surface, dark theme (same hex as the light theme's ink)
 
 
 def neutral_for(theme: str = "light") -> str:
@@ -140,31 +147,134 @@ palette = SimpleNamespace(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Sequential + diverging cmaps
+# Continuous ramps: imprint_seq (sequential) and imprint_div (diverging)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Sequential + diverging cmaps. Constructed lazily on attribute access via
-# ``__getattr__`` below — keeps ``import core.palette`` matplotlib-free for
-# callers that only need the hex constants. Public names preserved:
-#   core.palette.imprint_seq, .imprint_div_light, .imprint_div_dark
+# A ramp is a tuple of (position, hex) stops from the lowest value (0.0) to the
+# highest (1.0); colours between two stops blend linearly in sRGB, as
+# matplotlib's ``from_list`` and the libraries' gradient scales do. Each ramp
+# exists per theme and per use:
+#
+# - "fields": coloured areas whose cells touch and fill the plot (heatmaps,
+#   spectrograms, filled contours, maps, tiles). Wide lightness range; the low
+#   end sits close to the page.
+# - "marks": coloured marks that sit on the page themselves (points, lines,
+#   outlines). Every colour of the sequential marks ramp keeps WCAG 3:1 against
+#   its page (WCAG 2.1 SC 1.4.11), so no mark fades into the page.
+#
+# In both themes the high values stand out from the page and the low values
+# recede into it: the light ramps run light → dark, the dark ramps dark →
+# bright. Stop positions are proportional to CIELAB L*, so lightness runs
+# linearly along each sequential ramp. Design and numbers:
+# docs/decisions/2026-11-23-continuous-ramps-per-theme.md.
+
+Theme = Literal["light", "dark"]
+Use = Literal["fields", "marks"]
+Stops = tuple[tuple[float, str], ...]
+
+_SEQUENTIAL: dict[tuple[str, str], Stops] = {
+    # pale mint → brand green → blue → navy (L* 82 → 16)
+    ("fields", "light"): ((0.0, "#66E2B2"), (0.368, GREEN), (0.582, BLUE), (1.0, "#002850")),
+    # deep green → brand green → pale blue (L* 32 → 87)
+    ("fields", "dark"): ((0.0, "#00573D"), (0.467, GREEN), (1.0, "#CDD9FF")),
+    # brand green → blue → navy (L* 58 → 16)
+    ("marks", "light"): ((0.0, GREEN), (0.338, BLUE), (1.0, "#002850")),
+    # dark green → brand green → pale blue (L* 44 → 87)
+    ("marks", "dark"): ((0.0, "#007755"), (0.32, GREEN), (1.0, "#CDD9FF")),
+}
+
+#: Every hex of the continuous ramps that is not already a palette colour or a
+#: theme token. ``automation/scripts/contract_check.py`` allows these too.
+RAMP_STOPS: tuple[str, ...] = ("#66E2B2", "#002850", "#00573D", "#CDD9FF", "#007755")
 
 
-def diverging(theme: str = "light") -> LinearSegmentedColormap:
-    """Diverging cmap: matte-red ↔ near-neutral ↔ blue.
+def _key(theme: str, use: str) -> tuple[str, str]:
+    if theme not in ("light", "dark"):
+        raise ValueError(f"theme must be 'light' or 'dark', not {theme!r}")
+    if use not in ("fields", "marks"):
+        raise ValueError(f"use must be 'fields' or 'marks', not {use!r}")
+    return use, theme
 
-    The midpoint flips per theme to keep the diverging "zero" reading as
-    part of the chart bg rather than as an opaque grey blob.
+
+def sequential_stops(theme: Theme = "light", use: Use = "fields") -> Stops:
+    """``imprint_seq`` stops for one theme and one use, low value → high value.
 
     Parameters
     ----------
     theme : "light" | "dark", default "light"
-        On light bg, midpoint = warm cream #FAF8F1; on dark bg, midpoint
-        = warm near-black #1A1A17.
+    use : "fields" | "marks", default "fields"
+        "fields" for areas whose cells touch (heatmaps, spectrograms, filled
+        contours, maps, tiles); "marks" for points, lines and outlines that sit
+        on the page, where every colour keeps 3:1 against it.
+    """
+    return _SEQUENTIAL[_key(theme, use)]
+
+
+def diverging_stops(theme: Theme = "light", use: Use = "fields") -> Stops:
+    """``imprint_div`` stops: matte red ↔ midpoint ↔ blue.
+
+    The midpoint is the page colour for fields, so a cell at the midpoint
+    reads as part of the page; for marks it is the ``muted`` anchor, because a
+    page-coloured mark would vanish against the page (the rule ordered
+    categories follow too).
+    """
+    use_, theme_ = _key(theme, use)
+    if use_ == "fields":
+        midpoint = _PAGE_LIGHT if theme_ == "light" else _PAGE_DARK
+    else:
+        midpoint = muted_for(theme_)
+    return ((0.0, RED), (0.5, midpoint), (1.0, BLUE))
+
+
+def ramp_color(stops: Stops, value: float) -> str:
+    """The hex at ``value`` (0.0 to 1.0, clamped) of a ramp, blended linearly in sRGB between its stops."""
+    value = min(1.0, max(0.0, value))
+    for (p0, c0), (p1, c1) in pairwise(stops):
+        if value <= p1:
+            share = (value - p0) / (p1 - p0) if p1 > p0 else 0.0
+            channels = (
+                round(int(c0[i : i + 2], 16) + (int(c1[i : i + 2], 16) - int(c0[i : i + 2], 16)) * share)
+                for i in (1, 3, 5)
+            )
+            return "#" + "".join(f"{channel:02X}" for channel in channels)
+    return stops[-1][1]
+
+
+def _cmap_name(base: str, theme: str, use: str) -> str:
+    return f"{base}_{theme}" if use == "fields" else f"{base}_marks_{theme}"
+
+
+def sequential(theme: Theme = "light", use: Use = "fields") -> LinearSegmentedColormap:
+    """``imprint_seq`` as a matplotlib cmap, named ``imprint_seq_{theme}`` or ``imprint_seq_marks_{theme}``."""
+    from matplotlib.colors import LinearSegmentedColormap
+
+    stops = sequential_stops(theme, use)
+    return LinearSegmentedColormap.from_list(_cmap_name("imprint_seq", theme, use), list(stops))
+
+
+def diverging(theme: Theme = "light", use: Use = "fields") -> LinearSegmentedColormap:
+    """``imprint_div`` as a matplotlib cmap, named ``imprint_div_{theme}`` or ``imprint_div_marks_{theme}``.
+
+    Parameters
+    ----------
+    theme : "light" | "dark", default "light"
+        For fields the midpoint is the page: warm cream #FAF8F1 on light,
+        warm near-black #1A1A17 on dark.
+    use : "fields" | "marks", default "fields"
+        For marks the midpoint is the ``muted`` anchor (#6B6A63 / #A8A79F).
     """
     from matplotlib.colors import LinearSegmentedColormap
 
-    midpoint = "#FAF8F1" if theme == "light" else "#1A1A17"
-    return LinearSegmentedColormap.from_list(f"imprint_div_{theme}", [RED, midpoint, BLUE])
+    stops = diverging_stops(theme, use)
+    return LinearSegmentedColormap.from_list(_cmap_name("imprint_div", theme, use), list(stops))
+
+
+# The three cmap module attributes of the first Imprint release stay, built
+# lazily on first access via ``__getattr__`` below, which keeps
+# ``import core.palette`` matplotlib-free: ``imprint_div_light`` and
+# ``imprint_div_dark`` are the fields ramps of their theme, and
+# ``imprint_seq`` is the light theme's fields ramp under its old name.
+# Theme-aware callers use ``sequential(theme, use)`` and ``diverging(theme, use)``.
 
 
 def __getattr__(name: str) -> LinearSegmentedColormap:
@@ -175,7 +285,7 @@ def __getattr__(name: str) -> LinearSegmentedColormap:
     if name == "imprint_seq":
         from matplotlib.colors import LinearSegmentedColormap
 
-        cm = LinearSegmentedColormap.from_list("imprint_seq", [GREEN, BLUE])
+        cm = LinearSegmentedColormap.from_list("imprint_seq", list(sequential_stops("light", "fields")))
         globals()[name] = cm
         return cm
     if name == "imprint_div_light":
@@ -195,9 +305,12 @@ def __getattr__(name: str) -> LinearSegmentedColormap:
 
 
 def register_with_matplotlib() -> None:
-    """Register imprint_seq + both diverging cmap variants with matplotlib.
+    """Register every Imprint ramp with matplotlib.
 
-    Idempotent — re-registering an existing cmap is silently skipped.
+    Registers ``imprint_seq`` and ``imprint_div`` for both themes and both
+    uses (``imprint_seq_light``, ``imprint_seq_marks_dark``, …) plus the old
+    name ``imprint_seq``. Idempotent — re-registering an existing cmap is
+    silently skipped.
     """
     # Resolve via module globals so the lazy ``__getattr__`` builds each cmap
     # on first access (avoids a top-level matplotlib import here too).
@@ -206,7 +319,12 @@ def register_with_matplotlib() -> None:
     import matplotlib
 
     mod = sys.modules[__name__]
-    for cm in (mod.imprint_seq, mod.imprint_div_light, mod.imprint_div_dark):
+    cmaps = [mod.imprint_seq, mod.imprint_div_light, mod.imprint_div_dark]
+    themes: tuple[Theme, ...] = ("light", "dark")
+    for theme in themes:
+        cmaps.append(sequential(theme, "fields"))
+        cmaps.extend(factory(theme, "marks") for factory in (sequential, diverging))
+    for cm in cmaps:
         try:
             matplotlib.colormaps.register(cm)
         except ValueError:
@@ -234,12 +352,18 @@ __all__ = [
     "muted_for",
     # named API
     "palette",
+    # continuous ramps
+    "RAMP_STOPS",
+    "sequential_stops",
+    "diverging_stops",
+    "ramp_color",
+    "sequential",
+    "diverging",
     # cmaps — resolved lazily via module __getattr__ (avoids module-level
     # matplotlib import; see explanation at top of file)
     "imprint_seq",  # noqa: F822
     "imprint_div_light",  # noqa: F822
     "imprint_div_dark",  # noqa: F822
-    "diverging",
     # mpl integration
     "register_with_matplotlib",
 ]

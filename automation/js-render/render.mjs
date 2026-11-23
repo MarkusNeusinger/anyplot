@@ -243,8 +243,21 @@ function themeTokens(theme) {
     grid: light ? "rgba(26,26,23,0.15)" : "rgba(240,239,232,0.15)",
     palette: IMPRINT_PALETTE,
     amber: "#DDCC77", // warning / caution (outside the categorical pool)
-    seq: ["#009E73", "#4467A3"], // single-polarity continuous
-    div: ["#AE3030", pageBg, "#4467A3"], // diverging (theme-adaptive midpoint)
+    // The first Imprint release's ramps, the same in both themes. New code reads the four
+    // ramps below; these two stay so the catalogue's existing files render as before.
+    seq: ["#009E73", "#4467A3"],
+    div: ["#AE3030", pageBg, "#4467A3"],
+    // The continuous ramps as [position, hex] stops, low → high, with this theme's stops
+    // (prompts/default-style-guide.md, "Continuous Data", and core/palette.py). Fields:
+    // colored cells that fill the plot; marks: points, lines, outlines and bars on the page.
+    seqFields: light
+      ? [[0, "#66E2B2"], [0.368, "#009E73"], [0.582, "#4467A3"], [1, "#002850"]]
+      : [[0, "#00573D"], [0.467, "#009E73"], [1, "#CDD9FF"]],
+    seqMarks: light
+      ? [[0, "#009E73"], [0.338, "#4467A3"], [1, "#002850"]]
+      : [[0, "#007755"], [0.32, "#009E73"], [1, "#CDD9FF"]],
+    divFields: [[0, "#AE3030"], [0.5, pageBg], [1, "#4467A3"]], // midpoint: the page
+    divMarks: [[0, "#AE3030"], [0.5, light ? "#6B6A63" : "#A8A79F"], [1, "#4467A3"]], // midpoint: muted
   };
 }
 

@@ -117,11 +117,40 @@ geom_density()     # Density
 + scale_color_manual(values=IMPRINT_PALETTE)
 + scale_fill_manual(values=IMPRINT_PALETTE)
 
-# Continuous — only the two Imprint palette-derived cmaps are allowed:
-+ scale_color_gradient(low='#009E73', high='#4467A3')                              # sequential
-+ scale_fill_gradient(low='#009E73',  high='#4467A3')
-+ scale_color_gradient2(low='#AE3030', mid='#FAF8F1', high='#4467A3', midpoint=0)  # diverging
-+ scale_fill_gradient2(low='#AE3030',  mid='#FAF8F1', high='#4467A3', midpoint=0)
+# Continuous — only the two Imprint ramps are allowed, as (position, hex) stops, low → high,
+# with their own stops per theme (style guide, "Continuous Data"). FIELDS: colored cells that
+# fill the plot (geom_tile, geom_raster, filled contours, map polygons). MARKS: colored points,
+# lines, outlines or bars on the page. Keep only the ramps the plot uses.
+from itertools import pairwise
+SEQ_FIELDS = (
+    [(0.0, '#66E2B2'), (0.368, '#009E73'), (0.582, '#4467A3'), (1.0, '#002850')]
+    if THEME == 'light'
+    else [(0.0, '#00573D'), (0.467, '#009E73'), (1.0, '#CDD9FF')]
+)
+SEQ_MARKS = (
+    [(0.0, '#009E73'), (0.338, '#4467A3'), (1.0, '#002850')]
+    if THEME == 'light'
+    else [(0.0, '#007755'), (0.32, '#009E73'), (1.0, '#CDD9FF')]
+)
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return '#' + ''.join(
+        f'{round(int(c0[i:i + 2], 16) * (1 - share) + int(c1[i:i + 2], 16) * share):02X}' for i in (1, 3, 5)
+    )
+
+# Sequential: lets-plot's gradientn takes evenly spaced colors only (no stop positions),
+# so sample the stops at 256 even steps
++ scale_fill_gradientn(colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)])
++ scale_color_gradientn(colors=[ramp_color(SEQ_MARKS, k / 255) for k in range(256)])
+# Diverging: mid is the page for fields and the muted anchor for marks
+DIV_MID_FIELDS = '#FAF8F1' if THEME == 'light' else '#1A1A17'
+DIV_MID_MARKS = '#6B6A63' if THEME == 'light' else '#A8A79F'
++ scale_fill_gradient2(low='#AE3030', mid=DIV_MID_FIELDS, high='#4467A3', midpoint=0)
++ scale_color_gradient2(low='#AE3030', mid=DIV_MID_MARKS, high='#4467A3', midpoint=0)
 # Forbidden: scale_color_viridis / scale_fill_viridis or any non-anyplot stops.
 
 # Axis scales

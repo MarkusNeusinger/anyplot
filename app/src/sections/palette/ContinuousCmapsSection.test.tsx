@@ -1,23 +1,62 @@
 import { describe, expect, it } from 'vitest';
 
 import { ContinuousCmapsSection } from 'src/sections/palette/ContinuousCmapsSection';
+import { divStops, rampGradient, SEQ_STOPS } from 'src/sections/palette/paletteHelpers';
 import { render, screen } from 'src/test-utils';
 
 describe('ContinuousCmapsSection', () => {
-  it('renders sequential (imprint_seq) and diverging (imprint_div) colormaps with endpoint stops', () => {
-    render(<ContinuousCmapsSection />);
+  it('renders the light theme stops of both ramps for fields and for marks', () => {
+    render(<ContinuousCmapsSection isDark={false} />);
 
     expect(screen.getByRole('heading', { name: /continuous cmaps/i })).toBeInTheDocument();
-    expect(screen.getByText('imprint_seq')).toBeInTheDocument();
-    expect(screen.getByText('single-polarity · density / magnitude')).toBeInTheDocument();
-    expect(screen.getByText('#009E73 brand-green')).toBeInTheDocument();
+    expect(screen.getAllByText('imprint_seq')).toHaveLength(2);
+    expect(screen.getAllByText('imprint_div')).toHaveLength(2);
+    expect(screen.getAllByText('fields · heatmaps / maps / filled contours')).toHaveLength(2);
+    expect(screen.getAllByText('marks · points / lines / bars on the page')).toHaveLength(2);
+    expect(screen.getByText(/shown here in the light theme/)).toBeInTheDocument();
 
-    expect(screen.getByText('imprint_div')).toBeInTheDocument();
-    expect(screen.getByText('diverging · correlations / signed deviations')).toBeInTheDocument();
-    expect(screen.getByText('#AE3030 red')).toBeInTheDocument();
-    expect(screen.getByText('theme-adaptive midpoint')).toBeInTheDocument();
-    expect(screen.getAllByText('#4467A3 blue')).toHaveLength(2);
+    // pale mint and navy end the fields ramp; navy ends the marks ramp too
+    expect(screen.getByText('#66E2B2')).toBeInTheDocument();
+    expect(screen.getAllByText('#002850')).toHaveLength(2);
+    // the diverging midpoint: the page for fields, the muted ink for marks
     expect(screen.getByText('#FAF8F1')).toBeInTheDocument();
+    expect(screen.getByText('#6B6A63')).toBeInTheDocument();
+    expect(screen.queryByText('#00573D')).not.toBeInTheDocument();
+  });
+
+  it('switches to the dark theme stops', () => {
+    render(<ContinuousCmapsSection isDark />);
+
+    expect(screen.getByText(/shown here in the dark theme/)).toBeInTheDocument();
+    expect(screen.getByText('#00573D')).toBeInTheDocument();
+    expect(screen.getByText('#007755')).toBeInTheDocument();
+    expect(screen.getAllByText('#CDD9FF')).toHaveLength(2);
     expect(screen.getByText('#1A1A17')).toBeInTheDocument();
+    expect(screen.getByText('#A8A79F')).toBeInTheDocument();
+    expect(screen.queryByText('#66E2B2')).not.toBeInTheDocument();
+  });
+});
+
+describe('ramp helpers', () => {
+  it('places every stop at its position in the gradient', () => {
+    expect(rampGradient(SEQ_STOPS.fields.light)).toBe(
+      'linear-gradient(to right, #66E2B2 0%, #009E73 36.8%, #4467A3 58.2%, #002850 100%)'
+    );
+    expect(rampGradient(divStops('marks', 'dark'))).toBe(
+      'linear-gradient(to right, #AE3030 0%, #A8A79F 50%, #4467A3 100%)'
+    );
+  });
+
+  it('keeps one position per colour, from 0 to 1, in every ramp', () => {
+    for (const use of ['fields', 'marks'] as const) {
+      for (const theme of ['light', 'dark'] as const) {
+        for (const { at, hex } of [SEQ_STOPS[use][theme], divStops(use, theme)]) {
+          expect(at).toHaveLength(hex.length);
+          expect(at[0]).toBe(0);
+          expect(at[at.length - 1]).toBe(1);
+          expect([...at].sort((a, b) => a - b)).toEqual(at);
+        }
+      }
+    }
   });
 });

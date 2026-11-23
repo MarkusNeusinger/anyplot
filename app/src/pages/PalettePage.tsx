@@ -112,7 +112,7 @@ export function PalettePage() {
         <SemanticAnchorsSection copiedHex={copiedHex} copyHex={copyHex} />
 
         {/* 3b. CONTINUOUS CMAPS — sequential + diverging */}
-        <ContinuousCmapsSection />
+        <ContinuousCmapsSection isDark={isDark} />
 
         {/* 4. COPY SNIPPETS */}
         <CopySnippetsSection

@@ -6,6 +6,14 @@
  * Refresh) and snippet() stays unit-testable in PalettePage.snippet.test.ts.
  */
 
+import {
+  divStops,
+  type RampStops,
+  type RampTheme,
+  type RampUse,
+  SEQ_STOPS,
+} from 'src/sections/palette/paletteHelpers';
+
 export type Swatch = {
   hex: string;
   name: string;
@@ -142,6 +150,73 @@ export const PALETTE: Swatch[] = [
 
 export type Lang = 'python' | 'r' | 'julia' | 'js';
 
+type Ramp = (use: RampUse, theme: RampTheme) => RampStops;
+const seqRamp: Ramp = (use, theme) => SEQ_STOPS[use][theme];
+
+const pyFloat = (n: number) => (Number.isInteger(n) ? n.toFixed(1) : String(n));
+const pyStops = ({ at, hex }: RampStops) =>
+  `[${hex.map((h, i) => `(${pyFloat(at[i])}, "${h}")`).join(', ')}]`;
+const rStops = ({ at, hex }: RampStops) =>
+  `list(colours = c(${hex.map(h => `"${h}"`).join(', ')}), values = c(${at.join(', ')}))`;
+const jlStops = ({ at, hex }: RampStops) =>
+  `(colors = [${hex.map(h => `colorant"${h}"`).join(', ')}], values = [${at.map(pyFloat).join(', ')}])`;
+const jsStops = ({ at, hex }: RampStops) =>
+  `[${hex.map((h, i) => `[${at[i]}, "${h}"]`).join(', ')}]`;
+
+const RAMPS: [string, Ramp][] = [
+  ['seq', seqRamp],
+  ['div', divStops],
+];
+const USES: RampUse[] = ['fields', 'marks'];
+
+/** The `seq` and `div` entries of the IMPRINT object, nested by use and theme, in one language's syntax. */
+function rampEntries(lang: Lang): string {
+  return RAMPS.map(([name, ramp]) => {
+    const per = (use: RampUse, format: (stops: RampStops) => string) => [
+      format(ramp(use, 'light')),
+      format(ramp(use, 'dark')),
+    ];
+    switch (lang) {
+      case 'python':
+        return [
+          `    ${name}=SimpleNamespace(`,
+          ...USES.map(use => {
+            const [light, dark] = per(use, pyStops);
+            return `        ${use}=SimpleNamespace(\n            light=${light},\n            dark=${dark},\n        ),`;
+          }),
+          '    ),',
+        ].join('\n');
+      case 'r':
+        return [
+          `  ${name} = list(`,
+          USES.map(use => {
+            const [light, dark] = per(use, rStops);
+            return `    ${use} = list(\n      light = ${light},\n      dark  = ${dark}\n    )`;
+          }).join(',\n'),
+          '  )',
+        ].join('\n');
+      case 'julia':
+        return [
+          `    ${name} = (`,
+          ...USES.map(use => {
+            const [light, dark] = per(use, jlStops);
+            return `        ${use} = (\n            light = ${light},\n            dark = ${dark},\n        ),`;
+          }),
+          '    ),',
+        ].join('\n');
+      case 'js':
+        return [
+          `  ${name}: {`,
+          ...USES.map(use => {
+            const [light, dark] = per(use, jsStops);
+            return `    ${use}: {\n      light: ${light},\n      dark: ${dark},\n    },`;
+          }),
+          '  },',
+        ].join('\n');
+    }
+  }).join(lang === 'r' ? ',\n' : '\n');
+}
+
 export function snippet(lang: Lang, oklch: boolean, sortedPalette: Swatch[]): string {
   // CSS `oklch()` literals are only consumable where the runtime parses CSS
   // colours (JS / CSS). matplotlib, ggplot2 and Makie can't read them, so those
@@ -151,13 +226,9 @@ export function snippet(lang: Lang, oklch: boolean, sortedPalette: Swatch[]): st
   const colorVal = (s: Swatch) => (useLiteral ? s.oklch : s.hex);
   const hueComment = (s: Swatch) => (oklch && lang !== 'js' ? `  # ${s.oklch}` : '');
   const amberVal = useLiteral ? 'oklch(0.841 0.108 98.3)' : '#DDCC77';
-  const seqStart = useLiteral ? 'oklch(0.620 0.130 165.5)' : '#009E73';
-  const seqEnd = useLiteral ? 'oklch(0.516 0.104 260.6)' : '#4467A3';
-  const divStart = useLiteral ? 'oklch(0.503 0.163 25.2)' : '#AE3030';
-  const divEnd = useLiteral ? 'oklch(0.516 0.104 260.6)' : '#4467A3';
-  // Theme-adaptive neutrals + diverging midpoints are kept as hex in both
-  // modes — they are structural near-greys, and converting them to OKLCH adds
-  // noise without helping anyone paste them.
+  // Theme-adaptive neutrals and the continuous ramps are kept as hex in both
+  // modes — the ramps are positioned stops, the neutrals structural near-greys,
+  // and converting them to OKLCH adds noise without helping anyone paste them.
   switch (lang) {
     case 'python':
       return `from types import SimpleNamespace
@@ -170,19 +241,17 @@ ${sortedPalette.map(s => `        "${s.hex}",${hueComment(s)}`).join('\n')}
     amber="${amberVal}",  # warning / caution
     neutral=SimpleNamespace(light="#1A1A17", dark="#F0EFE8"),
     muted=SimpleNamespace(light="#6B6A63", dark="#A8A79F"),
-    seq=["${seqStart}", "${seqEnd}"],  # sequential: green -> blue
-    div=SimpleNamespace(               # diverging: red <-> midpoint <-> blue
-        light=["${divStart}", "#FAF8F1", "${divEnd}"],
-        dark=["${divStart}", "#1A1A17", "${divEnd}"],
-    ),
+    # continuous ramps: (position, hex) stops, low -> high, per use and theme
+${rampEntries('python')}
 )
 
 color = IMPRINT.hues[0]  # first series is ALWAYS slot 0 (brand green)
 
-# continuous data — build matplotlib cmaps from the stops
+# continuous data — build matplotlib cmaps from the stops: fields for cells
+# that fill the plot, marks for points / lines / bars; .dark on dark bg
 from matplotlib.colors import LinearSegmentedColormap
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", IMPRINT.seq)
-imprint_div = LinearSegmentedColormap.from_list("imprint_div", IMPRINT.div.light)  # .dark on dark bg`;
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", IMPRINT.seq.fields.light)
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", IMPRINT.div.fields.light)`;
     case 'r':
       return `# imprint — anyplot's palette (https://anyplot.ai/palette)
 IMPRINT <- list(
@@ -192,18 +261,18 @@ ${sortedPalette.map((s, i, arr) => `    "${s.hex}"${i < arr.length - 1 ? ',' : '
   amber = "${amberVal}",  # warning / caution
   neutral = list(light = "#1A1A17", dark = "#F0EFE8"),
   muted   = list(light = "#6B6A63", dark = "#A8A79F"),
-  seq = c("${seqStart}", "${seqEnd}"),  # sequential: green -> blue
-  div = list(                           # diverging: red <-> midpoint <-> blue
-    light = c("${divStart}", "#FAF8F1", "${divEnd}"),
-    dark  = c("${divStart}", "#1A1A17", "${divEnd}")
-  )
+  # continuous ramps: stops (colours and positions), low -> high, per use and theme
+${rampEntries('r')}
 )
 
 color <- IMPRINT$hues[1]  # first series = slot 0, brand green (R is 1-based: index 1)
 
-# continuous data — ggplot2 gradient scales
-scale_color_gradientn(colours = IMPRINT$seq)        # sequential
-scale_color_gradient2(low = IMPRINT$div$light[1], mid = IMPRINT$div$light[2], high = IMPRINT$div$light[3], midpoint = 0)  # diverging — 0 maps to the neutral midpoint (light theme)`;
+# continuous data — ggplot2 gradient scales: fields for cells that fill the
+# plot, marks for points / lines / bars; $dark on dark bg
+stops <- IMPRINT$seq$fields$light
+scale_fill_gradientn(colours = stops$colours, values = stops$values)  # sequential
+poles <- IMPRINT$div$fields$light$colours
+scale_fill_gradient2(low = poles[1], mid = poles[2], high = poles[3], midpoint = 0)  # diverging — 0 maps to the midpoint`;
     case 'julia':
       return `using Colors  # colorant"#..."
 
@@ -215,17 +284,17 @@ ${sortedPalette.map(s => `        colorant"${s.hex}",${hueComment(s)}`).join('\n
     amber = colorant"${amberVal}",  # warning / caution
     neutral = (light = colorant"#1A1A17", dark = colorant"#F0EFE8"),
     muted   = (light = colorant"#6B6A63", dark = colorant"#A8A79F"),
-    seq = [colorant"${seqStart}", colorant"${seqEnd}"],
-    div = (light = [colorant"${divStart}", colorant"#FAF8F1", colorant"${divEnd}"],
-           dark  = [colorant"${divStart}", colorant"#1A1A17", colorant"${divEnd}"]),
+    # continuous ramps: stops (colours and positions), low -> high, per use and theme
+${rampEntries('julia')}
 )
 
 color = IMPRINT.hues[1]  # first series = slot 0, brand green (Julia is 1-based: index 1)
 
-# continuous data — Makie / ColorSchemes
-using ColorSchemes
-imprint_seq = cgrad(IMPRINT.seq)
-imprint_div = cgrad(IMPRINT.div.light)  # .dark on dark bg`;
+# continuous data — Makie colormaps: fields for cells that fill the plot,
+# marks for points / lines / bars; .dark on dark bg
+using CairoMakie  # cgrad
+imprint_seq = cgrad(IMPRINT.seq.fields.light.colors, IMPRINT.seq.fields.light.values)
+imprint_div = cgrad(IMPRINT.div.fields.light.colors, IMPRINT.div.fields.light.values)`;
     case 'js':
       return `// imprint — anyplot's palette (https://anyplot.ai/palette)
 const IMPRINT = {
@@ -235,17 +304,15 @@ ${sortedPalette.map(s => `    "${colorVal(s)}",`).join('\n')}
   amber: "${amberVal}", // warning / caution
   neutral: { light: "#1A1A17", dark: "#F0EFE8" },
   muted:   { light: "#6B6A63", dark: "#A8A79F" },
-  seq: ["${seqStart}", "${seqEnd}"], // sequential: green -> blue
-  div: {                             // diverging: red <-> midpoint <-> blue
-    light: ["${divStart}", "#FAF8F1", "${divEnd}"],
-    dark:  ["${divStart}", "#1A1A17", "${divEnd}"],
-  },
+  // continuous ramps: [position, hex] stops, low -> high, per use and theme
+${rampEntries('js')}
 };
 
 const color = IMPRINT.hues[0]; // first series is ALWAYS slot 0 (brand green)
 
-// continuous data — [stop, color] pairs for your charting lib
-const imprintSeq = IMPRINT.seq.map((c, i, a) => [i / (a.length - 1), c]);
-const imprintDiv = IMPRINT.div.light.map((c, i, a) => [i / (a.length - 1), c]);`;
+// continuous data — [position, color] stops for your charting lib: fields for
+// cells that fill the plot, marks for points / lines / bars; .dark on dark bg
+const imprintSeq = IMPRINT.seq.fields.light;
+const imprintDiv = IMPRINT.div.fields.light;`;
   }
 }

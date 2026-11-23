@@ -46,7 +46,7 @@ browser has no `process.env`, so this is the JS analogue of `ANYPLOT_THEME`):
 
 ```js
 window.ANYPLOT_THEME      // "light" | "dark"
-window.ANYPLOT_TOKENS     // { pageBg, elevatedBg, ink, inkSoft, grid, palette[8], amber, seq[2], div[3] }
+window.ANYPLOT_TOKENS     // { pageBg, elevatedBg, ink, inkSoft, grid, palette[8], amber, seqFields, seqMarks, divFields, divMarks }
 window.ANYPLOT_SIZE       // { width, height } — the CSS mount size
 window.echarts            // the echarts global (already loaded)
 ```
@@ -141,18 +141,33 @@ Do not read that global yourself: the harness does not set it.
 ## Colors — Imprint palette (from `window.ANYPLOT_TOKENS`)
 
 The first categorical series is **always** `#009E73` (`tokens.palette[0]`). Set
-ECharts' top-level `color` array to the Imprint palette. Data colors are
-**identical** between light and dark — only chrome flips.
+ECharts' top-level `color` array to the Imprint palette. Categorical colors are
+**identical** between light and dark — only chrome flips, and the continuous
+ramps, whose tokens hold the theme's stops.
 
 ```js
 const t = window.ANYPLOT_TOKENS;
 option.color = t.palette;                 // categorical cycle, first = brand green
-// continuous (heatmap visualMap): build from the Imprint stops
-option.visualMap = { inRange: { color: t.seq } };     // sequential
-// diverging: { inRange: { color: t.div } }            // midpoint theme-adaptive
+// continuous — the Imprint ramps as [position, hex] stops, low → high, with the theme's
+// stops already chosen: t.seqFields / t.divFields for colored cells that fill the plot
+// (heatmap, map), t.seqMarks / t.divMarks for points, lines, outlines and bars on the page.
+// visualMap takes evenly spaced colors only, so sample the stops at 256 even steps:
+const rampAt = (stops, v) => {
+  const x = Math.min(1, Math.max(0, v));
+  const i = Math.max(1, stops.findIndex(([p]) => p >= x));
+  const [[p0, c0], [p1, c1]] = [stops[i - 1], stops[i]];
+  const f = (x - p0) / (p1 - p0);
+  const ch = (c, k) => parseInt(c.slice(1 + 2 * k, 3 + 2 * k), 16);
+  return "#" + [0, 1, 2].map((k) => Math.round(ch(c0, k) + (ch(c1, k) - ch(c0, k)) * f).toString(16).padStart(2, "0")).join("");
+};
+const even = (stops) => Array.from({ length: 256 }, (_, k) => rampAt(stops, k / 255));
+option.visualMap = { min, max, inRange: { color: even(t.seqFields) } };  // sequential
+// diverging: { min: -m, max: m, inRange: { color: even(t.divFields) } } — midpoint on 0
 ```
 
 Never use ECharts' default palette or named gradients like `viridis`/`rainbow`.
+`t.seq` and `t.div` are the first release's two-stop ramps, kept only so old
+files render as before; never use them in new code.
 
 ## Theme-adaptive chrome (ECharts mapping)
 

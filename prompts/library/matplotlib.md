@@ -141,19 +141,36 @@ color = IMPRINT_PALETTE[0]  # '#009E73'
 # and don't slice the list to the sample's group count
 ax.set_prop_cycle(color=IMPRINT_PALETTE)
 
-# Continuous data — only the two Imprint palette-derived cmaps are allowed
-# (no viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow):
+# Continuous data — only the two Imprint ramps are allowed
+# (no viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow). Each is a list of
+# (position, hex) stops, low → high, with its own stops per theme (style guide,
+# "Continuous Data"). FIELDS: colored cells that fill the plot (heatmaps,
+# spectrograms, filled contours, maps, tiles). MARKS: colored points, lines,
+# outlines or bars on the page. Keep only the ramps the plot uses.
 from matplotlib.colors import LinearSegmentedColormap
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
-midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"  # theme-adaptive
-imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])
-# Sequential / single-polarity heatmaps: cmap=imprint_seq
-# Diverging (signed deviations, residuals, correlations):  cmap=imprint_div
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+# imprint_div: the midpoint is the page for fields and the muted anchor for marks
+DIV_FIELDS = [(0.0, "#AE3030"), (0.5, "#FAF8F1" if THEME == "light" else "#1A1A17"), (1.0, "#4467A3")]
+DIV_MARKS = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#A8A79F"), (1.0, "#4467A3")]
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_FIELDS)  # SEQ_MARKS on marks
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", DIV_FIELDS)  # DIV_MARKS on marks
+# Sequential / single-polarity: cmap=imprint_seq
+# Diverging (signed deviations, residuals, correlations): cmap=imprint_div, with
+# norm=TwoSlopeNorm(vcenter=0) when the meaningful midpoint is not the data's middle
 ```
 
 ## Theme-adaptive Chrome (matplotlib mapping)
 
-The pipeline runs each implementation twice: `ANYPLOT_THEME=light` → `plot-light.png`, `ANYPLOT_THEME=dark` → `plot-dark.png`. Backgrounds, text, grid, spines, legend frames, and annotation boxes all flip; only the Imprint palette data colors stay constant.
+The pipeline runs each implementation twice: `ANYPLOT_THEME=light` → `plot-light.png`, `ANYPLOT_THEME=dark` → `plot-dark.png`. Backgrounds, text, grid, spines, legend frames, and annotation boxes all flip; only the Imprint categorical colors stay constant (the continuous ramps take their theme's stops).
 
 ```python
 import os
