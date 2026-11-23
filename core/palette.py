@@ -152,8 +152,9 @@ palette = SimpleNamespace(
 
 # A ramp is a tuple of (position, hex) stops from the lowest value (0.0) to the
 # highest (1.0); colours between two stops blend linearly in sRGB, as
-# matplotlib's ``from_list`` and the libraries' gradient scales do. Each ramp
-# exists per theme and per use:
+# matplotlib's ``from_list`` does (Vega-Lite and ggplot2 blend in HCL and
+# CIELAB by default, which moves the colours between the stops a little,
+# never the stops). Each ramp exists per theme and per use:
 #
 # - "fields": coloured areas whose cells touch and fill the plot (heatmaps,
 #   spectrograms, filled contours, maps, tiles). Wide lightness range; the low

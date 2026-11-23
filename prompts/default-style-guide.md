@@ -87,7 +87,7 @@ Practical: in matplotlib `plt.plot(x, y, color="#DDCC77")` for a "warning" annot
 
 Categorical palettes on continuous data produce misleading banding. anyplot ships exactly two Imprint-derived continuous colormaps, `imprint_seq` and `imprint_div`; **no other cmap is allowed** — not viridis, not cividis, not BrBG, not Blues/Greens/Reds, and never jet/hsv/rainbow.
 
-Each ramp is a list of `(position, hex)` stops from the lowest value (position 0) to the highest (position 1). Colors between two stops blend linearly in sRGB, as `LinearSegmentedColormap.from_list` and the libraries' gradient scales do, so the ramps are not perceptually uniform; the sequential stops sit at positions proportional to CIELAB lightness, so lightness changes evenly along the ramp. Each ramp has its own stops per theme and per use:
+Each ramp is a list of `(position, hex)` stops from the lowest value (position 0) to the highest (position 1). Colors between two stops blend linearly in sRGB, as `LinearSegmentedColormap.from_list` does; a library that blends in another space by default (Vega-Lite in HCL, ggplot2 in CIELAB) moves the colors between the stops a little, never the stops. The ramps are not perceptually uniform; the sequential stops sit at positions proportional to CIELAB lightness, so lightness changes about evenly along the ramp. Each ramp has its own stops per theme and per use:
 
 - **Fields:** colored areas whose cells touch and fill the plot — heatmaps, spectrograms, filled contours, maps, tiles, hexbins.
 - **Marks:** colored marks that sit on the page themselves — points, lines, outlines, and bars colored by a value.
@@ -99,7 +99,7 @@ Each ramp is a list of `(position, hex)` stops from the lowest value (position 0
 | Fields | `(0, "#66E2B2")`, `(0.368, "#009E73")`, `(0.582, "#4467A3")`, `(1, "#002850")`: pale mint → brand green → blue → navy | `(0, "#00573D")`, `(0.467, "#009E73")`, `(1, "#CDD9FF")`: deep green → brand green → pale blue |
 | Marks | `(0, "#009E73")`, `(0.338, "#4467A3")`, `(1, "#002850")`: brand green → blue → navy | `(0, "#007755")`, `(0.32, "#009E73")`, `(1, "#CDD9FF")`: dark green → brand green → pale blue |
 
-The fields ramps span the wider lightness range, and their low end sits close to the page: right for a field, whose cells are read against each other, wrong for a mark, which is read against the page. Every color of the marks ramps keeps WCAG 3:1 against its page (WCAG 2.1 SC 1.4.11), so no mark fades into the page.
+The fields ramps span the wider lightness range, and their low end sits close to the page: right for a field, whose cells are read against each other, wrong for a mark, which is read against the page. Every color of the sequential marks ramps keeps WCAG 3:1 against its page (WCAG 2.1 SC 1.4.11), so no mark fades into the page.
 
 **`imprint_div` (diverging):** matte red ↔ midpoint ↔ blue, `(0, "#AE3030")`, `(0.5, midpoint)`, `(1, "#4467A3")`, for data with a meaningful midpoint (correlations, residuals, signed deviations, diverging heatmaps); the midpoint sits at the data's meaningful value, often 0.
 

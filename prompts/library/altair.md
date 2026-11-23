@@ -174,11 +174,14 @@ SEQ_MARKS = (
     if THEME == "light"
     else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
 )
-# Sequential: a piecewise scale, one domain value per stop, placed by its position in the data's range
+# Sequential: a piecewise scale, one domain value per stop, placed by its position in the data's range.
+# Vega-Lite blends a color range in HCL unless told otherwise; interpolate="rgb" blends in sRGB
+# like the other libraries, so the colors between the stops are the style guide's.
 lo, hi = df[DENSITY].min(), df[DENSITY].max()
 alt.Color(DENSITY.translate(ESCAPE), type="quantitative", scale=alt.Scale(
     domain=[lo + p * (hi - lo) for p, _ in SEQ_FIELDS],  # SEQ_MARKS on marks
     range=[c for _, c in SEQ_FIELDS],
+    interpolate="rgb",
 ))
 # Diverging: three-stop range with domainMid at 0; the midpoint is the page for fields
 # and the muted anchor for marks
@@ -187,6 +190,7 @@ DIV_MARKS_RANGE = ['#AE3030', '#6B6A63' if THEME == 'light' else '#A8A79F', '#44
 alt.Color(CHANGE.translate(ESCAPE), type="quantitative", scale=alt.Scale(
     range=DIV_FIELDS_RANGE,
     domainMid=0,
+    interpolate="rgb",
 ))
 # Forbidden: scheme='viridis'/'cividis'/'brownbluegreen' and any other named scheme for continuous data.
 ```
