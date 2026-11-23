@@ -106,7 +106,16 @@ The fields ramps span the wider lightness range, and their low end sits close to
 - **Fields:** the midpoint is the page color, `#FAF8F1` on light and `#1A1A17` on dark, so a cell at the midpoint reads as part of the page.
 - **Marks:** the midpoint is the `muted` anchor, `#6B6A63` on light and `#A8A79F` on dark (a SHAP beeswarm, scatter points colored by a signed value). A page-colored midpoint would make the marks near the midpoint vanish against the page; ordered categories follow the same rule.
 
-Build in matplotlib with `LinearSegmentedColormap.from_list("imprint_seq", SEQ_FIELDS)` or `LinearSegmentedColormap.from_list("imprint_div", DIV_MARKS)`, with the stop lists of the Reference Python snippet below, or with the library's equivalent gradient API that takes stop positions. A library whose gradient API takes evenly spaced colors only gets the ramp sampled at even steps; the library prompts show how.
+Which name holds which ramp, per use; each name already holds the stops of the render's theme:
+
+| Language | Fields | Marks | Theme |
+|----------|--------|-------|-------|
+| Python | `SEQ_FIELDS`, `DIV_FIELDS` | `SEQ_MARKS`, `DIV_MARKS` | picked from `THEME` where the lists are defined (Reference Python snippet below, library prompts) |
+| R (ggplot2) | `SEQ_FIELDS`, `DIV_MID_FIELDS` | `SEQ_MARKS`, `DIV_MID_MARKS` | picked from `THEME` (`prompts/library/ggplot2.md`) |
+| Julia (Makie) | `ANYPLOT_SEQ_FIELDS`, `ANYPLOT_DIV_FIELDS` | `ANYPLOT_SEQ_MARKS`, `ANYPLOT_DIV_MARKS` | picked from `THEME` (`prompts/library/makie.md`) |
+| JavaScript | `t.seqFields`, `t.divFields` | `t.seqMarks`, `t.divMarks` | the render harness fills the tokens for the theme it renders |
+
+Build in matplotlib with `LinearSegmentedColormap.from_list("imprint_seq", SEQ_FIELDS)` or `LinearSegmentedColormap.from_list("imprint_div", DIV_MARKS)`, or with the library's equivalent gradient API that takes stop positions. A library whose gradient API takes evenly spaced colors only (bokeh's `LinearColorMapper`, pygal, lets-plot's `scale_*_gradientn`, ECharts' `visualMap`, Chart.js) samples the stops at 256 even steps with the one helper its library prompt gives, `ramp_color` in Python and `rampAt` in JavaScript. The tokens `t.seq` and `t.div` are the first release's two-stop ramps, kept only so existing files render as before; new code never uses them.
 
 Pick `imprint_seq` vs `imprint_div` from the data's polarity, and fields vs marks from what carries the color. Never substitute a matplotlib/library-native cmap "because it looks nicer" — Imprint identity is part of the brand.
 
