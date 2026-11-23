@@ -12,117 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 0
 review:
   strengths:
-  - Clean deterministic Lorenz attractor generation with proper physics and reproducible
-    seeding
-  - Flawless theme adaptation with both renders passing legibility checks
-  - Correct use of INK tokens for theme-adaptive text colors
-  - Perceptually-uniform viridis colormap effectively showing time progression
-  - Font sizes (title=24pt, axis=20pt, ticks=16pt) correctly scaled for high-resolution
-    output
-  - Proper title format following anyplot.ai convention
+  - Deterministic Lorenz attractor with standard parameters and 2000 steps
+  - Theme tokens used for title, axis titles and ticks
   weaknesses:
-  - 'Critical: Code-plot mismatch - rendered plots show legend and markers not generated
-    by implementation code'
-  - Generic design with all defaults - no custom styling, spine removal, or intentional
-    visual choices
-  - Low design excellence scores (DE-01=4/8, DE-02=2/6) indicating minimal aesthetic
-    sophistication
-  - Axis labels not descriptive (X, Y, Z only) - could enhance understanding with
-    semantic context
-  - Limited exploration of mplot3d distinctive features (viewing angles, surface properties)
-  - Potential pipeline issue producing plots from different code version
+  - 'VQ-05 (both): AR-09, the Z axis title is chopped at the right canvas edge with
+    part of the glyph missing → keep the label inside the canvas. Likely cause: bbox_inches=''tight''
+    cropping plus a default zlabel position.'
+  - 'VQ-05 (both): canvas is 2161x2298 instead of 3200x1800 or 2400x2400 → 3200x1800
+    (+1039 x -498). Likely cause: figsize=(16, 9) at dpi=300 with bbox_inches=''tight''.'
+  - 'VQ-01, VQ-07 (dark): legend entries ''Trajectory Start'' / ''Trajectory End''
+    render black on the #1A1A17 background and cannot be read → INK text color. Likely
+    cause: legend text color not set from INK.'
+  - 'VQ-07 (both): time coloring uses viridis → imprint_seq. Likely cause: plt.cm.viridis.'
+  - 'VQ-06 (both): axis titles are bare X, Y, Z → name the quantities. Likely cause:
+    set_xlabel(''X'') etc.'
+  - 'SC-04 (both): title ''line-3d-trajectory · seaborn · anyplot.ai'' lacks the language
+    segment → ''line-3d-trajectory · python · seaborn · anyplot.ai''. Likely cause:
+    title string.'
+  - 'SC-02 (both): the time gradient has no colorbar or legend naming the variable
+    it encodes (C3) → add a colorbar labeled with the time variable. Likely cause:
+    no fig.colorbar call.'
+  - 'VQ-02 (both): x tick labels -20 and -15 run into each other → fewer or smaller
+    ticks. Likely cause: default x locator at 16 pt tick size.'
+  - 'CQ-04 (code): lines 46-47 draw the path with 1999 separate ax.plot calls → one
+    Line3DCollection with set_array. Likely cause: per-segment loop.'
+  - 'CQ-05 (code): savefig uses bbox_inches=''tight'' at dpi=300, which the seaborn
+    prompt forbids → dpi=400 with default bbox. Likely cause: savefig arguments.'
+  - 'Suggestion: transparent panes would reduce chrome around the attractor.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "line-3d-trajectory · seaborn · anyplot.ai" clearly visible in dark text (#1A1A17); axis labels (X, Y, Z) and tick labels all readable and properly spaced
-      Data: Viridis colormap with smooth progression from deep blue (start) through cyan/green to yellow (end), showing time-based coloring of trajectory
-      Grid: Subtle (alpha=0.1) but visible, provides spatial reference without competing with data
-      Legibility verdict: PASS - all text elements maintain excellent contrast
+      Background: warm off-white #FAF8F1 on a near-square 2161x2298 canvas.
+      Chrome: title "line-3d-trajectory · seaborn · anyplot.ai" in dark ink; bold single-letter axis titles X, Y, Z; the Z title is chopped at the right canvas edge; legend box top-left naming Trajectory Start and Trajectory End.
+      Data: Lorenz attractor as a thick line colored by the viridis colormap from purple to yellow, purple start circle and yellow end cross; no colorbar.
+      Legibility verdict: FAIL (Z axis title clipped at the right edge)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: All text transitions to light colors (#F0EFE8 for title, #B8B7B0 for ticks) with excellent contrast; no dark-on-dark failures detected
-      Data: Viridis colors **identical** to light render (only chrome changed theme), confirming proper theme separation
-      Grid: Visible and subtle, appropriate for dark background
-      Legibility verdict: PASS - both text and data clearly distinguishable
-
-    Both renders meet theme-readability requirements with proper color handling and text contrast in their respective color schemes.
+      Background: warm near-black #1A1A17.
+      Chrome: title, ticks and X/Y titles in light ink; the legend text 'Trajectory Start' / 'Trajectory End' is black on the dark legend box and nearly invisible; Z title clipped at the right edge.
+      Data: same viridis colors as the light render.
+      Legibility verdict: FAIL (dark-on-dark legend text, clipped Z title)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 13
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: Title, labels, ticks all readable in both themes with proper color
-          tokens
+        passed: false
+        comment: Legend text renders black on the dark background and cannot be read
+          (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: Clean spacing, no collisions between text and data elements
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Trajectory clearly visible; minor deduction for potential overlap
-          in dense center
+        comment: X tick labels -20 and -15 crowd into each other (defect line)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line and markers clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe and perceptually uniform
+        comment: Sequential ramp, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Figure 16x9, DPI 300, all data visible in 3D space
+        passed: false
+        comment: Canvas 2161x2298 instead of a canonical size; Z title clipped at
+          the right edge (defect lines)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Title correct format; X/Y/Z standard for 3D
+        passed: false
+        comment: Axis titles are bare X, Y, Z (defect line)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Viridis correct for continuous data; backgrounds match spec
+        passed: false
+        comment: viridis colormap instead of imprint_seq; legend text wrong-theme
+          in dark (defect line)
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Generic styling with defaults, no custom palette or design intent
+        passed: true
+        comment: Default mplot3d styling
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Standard grid, no customization beyond defaults
+        comment: Default grey panes and grid
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Color gradient shows progression but lacks intentional visual hierarchy
+        comment: Gradient shows progression; no further hierarchy
     spec_compliance:
-      score: 14
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -130,49 +135,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: True 3D line plot showing trajectory as connected lines
+        comment: 3D line trajectory
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Sequential connection, smooth progression, color gradient all present
+        passed: false
+        comment: 'C3 missed: color gradient has no colorbar naming the variable (defect
+          line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z properly mapped with full extent
+        comment: Full extent shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 1
         max: 3
         passed: false
-        comment: Title correct but rendered plots show legend not in code
+        comment: Title lacks the python segment (defect line)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lorenz attractor shows characteristic chaotic structure
+        comment: Both lobes and spirals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Physically meaningful, domain-neutral, real-world applicable
+        comment: Lorenz attractor, the spec's example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2000 points yields smooth curves with realistic parameters
+        comment: Standard parameters sigma=10, rho=28, beta=8/3; z 0-50 checked
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -180,48 +186,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear code
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI or simulated interactivity
+        passed: false
+        comment: 1999 separate ax.plot calls where one Line3DCollection does it (defect
+          line)
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png with proper handling
+        passed: false
+        comment: figsize 16x9 at dpi 300 with bbox_inches='tight' (defect line)
     library_mastery:
-      score: 6
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct projection='3d' and theme token usage
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Basic 3D usage, limited exploration of mplot3d features
-  verdict: REJECTED
+        comment: No seaborn theme; per-segment plot loop
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing seaborn-specific
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-6cea623138
 impl_tags:
   dependencies: []
   techniques:
