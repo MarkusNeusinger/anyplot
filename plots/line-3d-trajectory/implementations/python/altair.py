@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-16
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -18,104 +19,122 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Lorenz attractor trajectory (chaotic system)
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Lorenz system parameters
-sigma = 10.0
-rho = 28.0
-beta = 8.0 / 3.0
+# Constants
+AZIMUTH_DEG = 135  # view rotation around the vertical axis
+ELEVATION_DEG = 20  # view tilt that opens the Lorenz wings
 
-# Generate trajectory using Euler integration
+# Columns: set these to your table's column names
+X = "X"  # role: x
+Y = "Y"  # role: y
+Z = "Z"  # role: z
+TIME = "Time step"  # role: color
+
+# Data: replace this block with your own table, for example df = pd.read_csv("trajectory.csv")
+# Lorenz attractor (sigma=10, rho=28, beta=8/3) integrated with Euler steps
 n_points = 1500
 dt = 0.01
-
-x_traj = np.zeros(n_points)
-y_traj = np.zeros(n_points)
-z_traj = np.zeros(n_points)
-
-# Initial conditions
-x_traj[0], y_traj[0], z_traj[0] = 1.0, 1.0, 1.0
-
+sigma, rho, beta = 10.0, 28.0, 8.0 / 3.0
+path = np.zeros((n_points, 3))
+path[0] = (1.0, 1.0, 1.0)
 for i in range(1, n_points):
-    x, y, z = x_traj[i - 1], y_traj[i - 1], z_traj[i - 1]
-    x_traj[i] = x + sigma * (y - x) * dt
-    y_traj[i] = y + (x * (rho - z) - y) * dt
-    z_traj[i] = z + (x * y - beta * z) * dt
+    px, py, pz = path[i - 1]
+    path[i] = (px + sigma * (py - px) * dt, py + (px * (rho - pz) - py) * dt, pz + (px * py - beta * pz) * dt)
+df = pd.DataFrame({X: path[:, 0], Y: path[:, 1], Z: path[:, 2], TIME: np.arange(n_points)})
 
-# 3D to 2D isometric projection (elevation=20°, azimuth=135° for good view of Lorenz wings)
-elev_rad = np.radians(20)
-azim_rad = np.radians(135)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+azim = np.radians(AZIMUTH_DEG)
+elev = np.radians(ELEVATION_DEG)
 
-# Rotation around z-axis (azimuth)
-x_rot = x_traj * np.cos(azim_rad) - y_traj * np.sin(azim_rad)
-y_rot = x_traj * np.sin(azim_rad) + y_traj * np.cos(azim_rad)
+# Oblique projection: rotate around the vertical axis, then tilt toward the viewer
+horizontal = df[X] * np.cos(azim) - df[Y] * np.sin(azim)
+depth = df[X] * np.sin(azim) + df[Y] * np.cos(azim)
+vertical = depth * np.sin(elev) + df[Z] * np.cos(elev)
 
-# Rotation around x-axis (elevation) and project to 2D
-x_proj = x_rot
-z_proj = y_rot * np.sin(elev_rad) + z_traj * np.cos(elev_rad)
+# One row per segment: start point, end point, and the original 3D values for the tooltip
+H0, V0, H1, V1 = "h0", "v0", "h1", "v1"
+segments = pd.DataFrame(
+    {
+        H0: horizontal[:-1].to_numpy(),
+        V0: vertical[:-1].to_numpy(),
+        H1: horizontal[1:].to_numpy(),
+        V1: vertical[1:].to_numpy(),
+        X: df[X][:-1].to_numpy(),
+        Y: df[Y][:-1].to_numpy(),
+        Z: df[Z][:-1].to_numpy(),
+        TIME: df[TIME][:-1].to_numpy(),
+    }
+)
 
-# Create line segments dataframe for mark_rule (each row is a segment)
-segments = []
-for i in range(n_points - 1):
-    segments.append(
-        {
-            "x": x_proj[i],
-            "y": z_proj[i],
-            "x2": x_proj[i + 1],
-            "y2": z_proj[i + 1],
-            "time": i,
-            "x_orig": x_traj[i],
-            "y_orig": y_traj[i],
-            "z_orig": z_traj[i],
-        }
-    )
-
-df_segments = pd.DataFrame(segments)
-
-# Create trajectory using mark_rule for line segments with color gradient
 trajectory = (
-    alt.Chart(df_segments)
-    .mark_rule(strokeWidth=2.5, strokeCap="round")
+    alt.Chart(segments)
+    .mark_rule(strokeWidth=2.2, strokeCap="round", opacity=0.9)
     .encode(
-        x=alt.X("x:Q", axis=alt.Axis(title="X-Y Projection (Horizontal)", labelFontSize=18, titleFontSize=22)),
-        y=alt.Y("y:Q", axis=alt.Axis(title="Z Projection (Vertical)", labelFontSize=18, titleFontSize=22)),
-        x2="x2:Q",
-        y2="y2:Q",
+        x=alt.X(H0, type="quantitative", title="X-Y projection (horizontal)"),
+        y=alt.Y(V0, type="quantitative", title="Z projection (vertical)"),
+        x2=H1,
+        y2=V1,
         color=alt.Color(
-            "time:Q",
-            scale=alt.Scale(scheme="viridis"),
-            legend=alt.Legend(title="Time Step", titleFontSize=20, labelFontSize=16, orient="right"),
+            TIME.translate(ESCAPE), type="quantitative", title=TIME, scale=alt.Scale(range=["#009E73", "#4467A3"])
         ),
         tooltip=[
-            alt.Tooltip("x_orig:Q", title="X", format=".2f"),
-            alt.Tooltip("y_orig:Q", title="Y", format=".2f"),
-            alt.Tooltip("z_orig:Q", title="Z", format=".2f"),
-            alt.Tooltip("time:Q", title="Time Step"),
+            alt.Tooltip(X, type="quantitative", format=".2f"),
+            alt.Tooltip(Y, type="quantitative", format=".2f"),
+            alt.Tooltip(Z, type="quantitative", format=".2f"),
+            alt.Tooltip(TIME.translate(ESCAPE), type="quantitative", title=TIME),
         ],
     )
 )
 
-# Add pan and zoom interactivity
+# Pan and zoom
 pan_zoom = alt.selection_interval(bind="scales", encodings=["x", "y"])
 
-# Final chart
 chart = (
     trajectory.add_params(pan_zoom)
     .properties(
-        width=1600,
-        height=900,
+        width=600,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title(text="line-3d-trajectory · altair · anyplot.ai", fontSize=28, color=INK),
+        title=alt.Title(text="line-3d-trajectory · python · altair · anyplot.ai", fontSize=18, color=INK),
     )
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
     .configure_axis(
-        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=12,
+        titleFontSize=14,
     )
     .configure_title(color=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=12,
+        titleFontSize=14,
+        titleLimit=120,
+        labelLimit=80,
+    )
 )
 
 # Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad to the canvas target (never crop)
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TW}x{TH}; shrink width/height")
+if (w, h) != (TW, TH):
+    canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+    canvas.save(f"plot-{THEME}.png")
