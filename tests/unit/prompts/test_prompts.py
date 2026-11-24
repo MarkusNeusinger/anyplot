@@ -180,24 +180,31 @@ class TestPromptStructure:
         assert "Judge by eye in the full-size render, without a percentage" in section
 
     def test_the_rules_the_judges_applied_are_stated(self, quality_criteria_content: str) -> None:
-        """Axis fit, readable ticks, a key for every encoding and label color on fills are rules, not taste."""
+        """Axis fit, readable ticks, a key for every encoding and labels readable on fills are rules, not taste."""
         sc03 = quality_criteria_content.split("### SC-03:", 1)[1].split("### SC-04:", 1)[0]
         sc04 = quality_criteria_content.split("### SC-04:", 1)[1].split("## Data Quality", 1)[0]
         vq01 = quality_criteria_content.split("### VQ-01:", 1)[1].split("### VQ-02:", 1)[0]
         assert "**Axes fitted to the data.**" in sc03
         assert "**Ticks a reader can use.**" in sc03
         assert "**Every encoding has a key.**" in sc04
-        assert "A label printed on a colored fill takes its color from that fill" in vq01
+        assert "A label printed on a colored fill stays readable on that fill in both themes" in vq01
+        assert "Deduct VQ-01 in proportion to the labels that are hard to read." in vq01
         # The generator prompts' zero-start limit example says it is the bar baseline, not the rule.
         sentence = (
             "a line or point axis takes both limits from the data, a little outside its smallest and largest value"
         )
-        for name in ("altair", "bokeh", "ggplot2", "letsplot", "matplotlib", "plotly", "plotnine"):
-            assert sentence in (PROMPTS_DIR / "library" / f"{name}.md").read_text(), name
+        # Every library prompt that carries the example, so a prompt the edit missed fails here.
+        with_example = [path for path in sorted((PROMPTS_DIR / "library").glob("*.md")) if "* 1.15" in path.read_text()]
+        assert with_example, "no library prompt carries the `* 1.15` axis-limit example"
+        for path in with_example:
+            assert sentence in path.read_text(), path.name
         assert sentence in (PROMPTS_DIR / "adaptable-code.md").read_text()
+        # ECharts keeps zero on a value axis by default, so its prompt says how a line or point axis leaves it.
+        assert "`scale: true`" in (PROMPTS_DIR / "library" / "echarts.md").read_text()
         # Both review prompts point their checklist rows at the new rules, and the routing table names them.
         for prompt in (WORKFLOW_PROMPTS_DIR / "ai-quality-review.md", PROMPTS_DIR / "quality-evaluator.md"):
             text = prompt.read_text()
+            assert "(`quality-criteria.md` → VQ-01)?" in text, prompt.name
             assert "(`quality-criteria.md` → SC-03)?" in text, prompt.name
             assert "(`quality-criteria.md` → SC-04)?" in text, prompt.name
         routing = quality_criteria_content.split("### Which criterion a gap belongs to", 1)[1].split(

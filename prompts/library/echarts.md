@@ -131,7 +131,10 @@ chart.setOption({
   n in order.
 - Axis names and series names come from the constants.
 - A missing value stays `null`, which ECharts draws as a gap.
-- Limits come from the data or stay automatic, never typed numbers.
+- Limits come from the data or stay automatic, never typed numbers. ECharts'
+  default `scale: false` keeps zero on a value axis, which suits these bars,
+  where the length of the mark is the value; a line or point value axis sets
+  `scale: true` or takes its `min` and `max` from the data.
 
 A single series can also read the records directly: `dataset: { source: data }`
 with `encode: { x: DAY, y: VISITS }` on the series. The "Use with my data"
