@@ -293,8 +293,8 @@ _CATEGORIES: tuple[tuple[str, str, str], ...] = (
     (
         "built-in-dataset",
         "Example dataset loaded at",
-        "take the data from columns of df = load_user_data() instead and drop the import only the loader used; "
-        "the adapted code may not load it.",
+        "take the data from columns of df = load_user_data() instead and drop every import that only the loader "
+        "uses; the adapted code may not load it.",
     ),
     ("synthetic-data", "Synthetic data generation at", "replace it with columns of df = load_user_data()."),
 )

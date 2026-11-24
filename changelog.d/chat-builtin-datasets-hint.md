@@ -9,8 +9,12 @@
   adapted code that keeps the loader or its import is refused as before, and
   scikit-learn's own downloads (`fetch_*`) and path readers stay refused in the
   original too. 68 of the 69 Python files that load such a dataset (the
-  machine-learning specs) become eligible. The readiness self-check accepts
-  these files, and the generator prompts no longer tell the sessions to keep a
-  dataset refusal. The eval harness's preflight renders a catalogue file only
-  when it passes the adapted code's security profile, so nothing renders an
-  original that profile refuses. (#14245)
+  machine-learning specs) become eligible. The Python adapter prompt now counts
+  an example-dataset loader and every import only it uses as part of the data
+  block the first attempt replaces, as the R prompt does for dataset packages,
+  and the hint tells the adapter to drop every import that only the loader
+  uses. The readiness self-check accepts these files, and the generator prompts
+  no longer tell the sessions to keep a dataset refusal. The eval harness's
+  preflight renders a catalogue file only when it passes the adapted code's
+  security profile, so nothing renders an original that profile refuses.
+  (#14245)

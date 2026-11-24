@@ -124,7 +124,7 @@ def test_an_original_that_loads_a_built_in_dataset_is_eligible_with_the_hint(
     hint = hint_of(result)
     assert len(hint) <= MAX_NOTE_CHARS
     assert [int(line) for line in re.findall(r"\bline (\d+) `", hint)] == lines
-    assert "df = load_user_data()" in hint and "drop the import only the loader used" in hint
+    assert "df = load_user_data()" in hint and "drop every import that only the loader uses" in hint
     # One hint per line: a `sklearn.datasets` call is no `synthetic-data` line as well.
     assert not any(hint.startswith("Synthetic data generation") and "make_moons" in hint for hint in result.hints)
 
