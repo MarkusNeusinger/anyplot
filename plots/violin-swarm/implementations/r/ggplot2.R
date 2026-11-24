@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' violin-swarm: Violin Plot with Overlaid Swarm Points
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: pending | Created: 2026-05-18
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 81/100 | Updated: 2026-11-24
 
 library(ggplot2)
 library(dplyr)
