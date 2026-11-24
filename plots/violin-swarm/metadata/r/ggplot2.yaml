@@ -2,52 +2,49 @@ library: ggplot2
 language: r
 specification_id: violin-swarm
 created: '2026-05-18T05:04:40Z'
-updated: '2026-05-18T05:14:30Z'
-generated_by: claude-haiku
-workflow_run: 26014476416
+updated: '2026-11-24T03:06:24Z'
+generated_by: claude-sonnet
+workflow_run: 45313278943
 issue: 3526
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 81
 review:
   strengths:
-  - Correct plot type with violin + swarm combination working well
-  - Perfect theme-adaptive chrome implementation (backgrounds, text colors)
-  - Excellent text legibility - all sizes explicitly set (24pt title, 20pt labels,
-    16pt ticks)
-  - Clean code structure following ggplot2 idiomatic patterns
-  - Realistic and neutral data (reaction times across experimental conditions)
-  - All spec requirements met accurately
+  - 'A true swarm: each point''s sideways offset is capped by the violin''s own density
+    half-width (same density() bandwidth as geom_violin), so every point stays centred
+    and inside the outline'
+  - Theme tokens threaded through every chrome element; both renders read cleanly
+    and data colors are identical
+  - Text sizes follow the ggplot2 reference (12/10/8 pt) on the canonical 3200x1800
+    canvas
+  - Column constants and .data[[...]] make the data block swappable as the adaptable-code
+    zones require
   weaknesses:
-  - geom_jitter approximates swarm behavior but isn't true swarm algorithm (no ggbeeswarm
-    integration)
-  - Design sophistication is solid but not exceptional - standard ggplot2 defaults
-    with careful theming
+  - 'CQ-01 (code): the swarm layout is wrapped in a swarm_offsets() helper plus a
+    half_width_at() closure redefined inside the per-category loop, against the Imports
+    → Data → Plot → Save flow without functions → inline the placement loop over the
+    sorted values per category, no named helpers. Likely cause: swarm_offsets <- function(...)
+    and half_width_at <- function(v) in the plot block.'
+  - 'Suggestion: a darker or outlined point color (e.g. a thin INK_SOFT stroke via
+    shape 21) would lift the green points off the same-green violin fill, as the Notes''
+    contrasting-color hint invites.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) - exactly as specified.
-      Chrome: Title "violin-swarm · R · ggplot2 · anyplot.ai" in dark text (INK color) at 24pt.
-        X-axis label "Experimental Condition" and Y-axis label "Reaction Time (ms)" in dark text at 20pt.
-        Tick labels (Control, Treatment A/B/C, and numeric values 200-450) in soft gray (INK_SOFT) at 16pt.
-        All text is crisp and fully readable against the light background.
-      Data: Four violin shapes in brand green (#009E73) with alpha=0.4 transparency, allowing individual swarm points to show through.
-        Swarm points overlay the violins in the same green color with alpha=0.7, spread horizontally (width=0.2) to avoid overlap.
-        Y-axis grid lines are subtle and visible.
-      Legibility verdict: PASS - All text elements readable, excellent contrast, no overlaps.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "violin-swarm · r · ggplot2 · anyplot.ai" top-left in dark ink; axis titles "Experimental condition" and "Reaction time (ms)" in dark ink; tick labels (Control, Treatment A-C; 200/300/400) in soft gray; horizontal y-grid only. All readable.
+      Data: four width-scaled violins in #009E73 at alpha 0.35 with a gray outline; 60 #009E73 points per violin laid out as a centred beeswarm, all inside the outlines. Control shows a long lower tail to 200 ms, Treatment A an upper tail to ~440 ms.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) - exactly as specified.
-      Chrome: Title in light text (F0EFE8) at 24pt - fully readable against dark background.
-        Axis labels in light text at 20pt - fully readable.
-        Tick labels in soft light gray (B8B7B0) at 16pt - all readable, no dark-on-dark failures.
-        Grid lines remain subtle and visible.
-      Data: Violin shapes and swarm points are identical green (#009E73) as in light render - data colors unchanged between themes, only chrome adapted.
-        Violins and points are clearly distinguishable from the dark background.
-      Legibility verdict: PASS - All text elements readable, proper contrast, no dark-on-dark failures, data colors identical to light render.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light gray, grid lines light; no dark-on-dark text.
+      Data: identical #009E73 violins and points; the translucent fill reads as dark green, points remain individually visible; outlines light gray.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,45 +55,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt (the style-guide sizes);
+          INK/INK_SOFT read cleanly in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlaps, clean spacing
+        comment: No text collisions; swarm layout keeps the points apart
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violins and points optimally sized and visible
+        comment: 60 points per violin at size 1.6 stay individually visible on the
+          translucent fill in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 is CVD-safe with adequate contrast'
+        comment: Single brand-green series; no color-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions and margin balance
+        comment: 3200x1800 canvas, balanced margins, title well within width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: '''Reaction time (ms)'' and ''Experimental condition'', with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Okabe-Ito, proper theme colors, identical data across themes
+        comment: 'Imprint #009E73 for violins and points; #FAF8F1 / #1A1A17 backgrounds;
+          data colors identical in both renders'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -104,19 +104,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default, professional but not exceptional
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Grid customization and subtle styling, some refinement
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Violin+swarm tells story of distribution and observations
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,25 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot with overlaid swarm
+        comment: Violin with a true centered swarm overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: transparency, swarm spread, proper sizing'
+        comment: 'C1-C5 all met: swarm centred on each violin axis, points inside
+          the outline (offsets capped by the density half-width), alpha 0.35 fill,
+          points individually visible, shared non-zero value axis'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: Every point at its value; only sideways swarm offsets (exempt)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, no legend needed
+        comment: '''violin-swarm · r · ggplot2 · anyplot.ai''; legend N/A for a single
+          series'
     data_quality:
       score: 15
       max: 15
@@ -154,76 +157,86 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: KDE, individual points, variation'
+        comment: Different shapes per group (long lower tail in Control, upper tail
+          in Treatment A), visible density vs. raw-point relation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real scenario (reaction times), neutral and plausible
+        comment: Reaction times across experimental conditions, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions factually correct for domain
+        comment: Means 300-350 ms with SD 45-55 ms, plausible for simple RT tasks;
+          no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear flow, no functions/classes
+        passed: false
+        comment: Helper functions swarm_offsets() and half_width_at() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) ensures deterministic output
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Minor: dplyr imported but not heavily used'
+        comment: ggplot2, dplyr (mutate/across), ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI
+        comment: No installed package computes a beeswarm layout, so the written-out
+          swarm is fine
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png output with current API
+        comment: plot-{THEME}.png via ragg, linewidth API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert ggplot2 patterns: aes, geom_*, theme composition, ragg device'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
+        passed: true
+        comment: Grammar layering, .data[[...]] and the mandated factor ordering;
+          nothing beyond the library prompt
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
         passed: false
-        comment: geom_jitter is practical but generic; solid theme-adaptive chrome
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-195cdba0ef
+  rendered_at: '2026-11-24T03:02:43Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - kde
   styling:
-  - theme-adaptive-chrome
+  - alpha-blending
+  - grid-styling
