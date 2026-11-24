@@ -491,6 +491,18 @@ class TestFoldPulls:
         assert [r.pr for r in rp.resumes(recs, 5)] == [22, 21]  # oldest first
         assert [r.pr for r in rp.resumes(recs, 1)] == [22]
 
+    def test_follow_ups_never_take_an_ordinary_resume_slot(self):
+        """Paused follow-ups come on top: even older ones never push an ordinary resume out of the night's N."""
+        follow_ups = [rp.Resume(30 + i, "review", "f", f"lib{i}", 1, at(10 + i), follow_up=True) for i in range(3)]
+        ordinary = [rp.Resume(21, "review", "a", "plotly", 1, at(2)), rp.Resume(22, "repair", "b", "altair", 2, at(3))]
+        recs = records()
+        recs.paused = [*follow_ups, *ordinary]
+        resumed = rp.resumes(recs, 2)
+        assert {r.pr for r in resumed} == {21, 22, 30, 31, 32}
+        assert rp.counted_resumes(resumed) == 2
+        # With one slot, the older ordinary resume takes it; every follow-up still comes.
+        assert {r.pr for r in rp.resumes(recs, 1)} == {22, 30, 31, 32}
+
     def test_issues(self):
         recs = records()
         rp.fold_issues([{"number": 3, "updatedAt": ts(2)}, {"number": "x", "updatedAt": ts(1)}], recs)

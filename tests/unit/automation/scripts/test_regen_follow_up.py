@@ -607,7 +607,7 @@ class TestDispatch:
         assert _dispatch(monkeypatch, fake) == "dispatch_failed"
         assert fake.kinds().count("workflow run") == 3
         marker, note = fake.comment_bodies()
-        assert "not dispatched" in note and not fu.MARKER_RE.search(note)
+        assert "not dispatched" in note and "no follow-up runs" in note and not fu.MARKER_RE.search(note)
         assert fu.has_marker([{"login": BOT, "body": marker}])  # the marker stands: the follow-up is spent
 
     def test_an_unreadable_run_list_stops_the_dispatch(self, monkeypatch):
@@ -615,6 +615,11 @@ class TestDispatch:
         fake = FakeWrites(dispatches=(False,), runs=fu.ReadError("HTTP 502"))
         assert _dispatch(monkeypatch, fake) == "dispatch_unknown"
         assert fake.kinds() == ["pr comment", "workflow run", "run list", "pr comment"]
+        # The call may have been taken: the note says the state is unknown, never that nothing runs.
+        note = fake.comment_bodies()[-1]
+        assert "dispatch state unknown" in note and "refuses a duplicate" in note
+        assert "no follow-up runs" not in note and "not dispatched" not in note
+        assert not fu.MARKER_RE.search(note)
 
     def test_a_repair_round_carries_no_change_request_and_no_note(self, monkeypatch):
         fake = FakeWrites()

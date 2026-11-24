@@ -26,6 +26,7 @@ import yaml
 
 from automation.scripts import regen_follow_up as fu
 from automation.scripts import regen_gate as gate
+from tests.unit.workflows.pr_guard_support import stage_guard
 from tests.unit.workflows.test_pipeline_retry_gaps import _code_only, _step, _steps
 from tests.unit.workflows.test_render_hash_steps import SHELL_IDS, SHELLS
 
@@ -115,6 +116,31 @@ class TestImplGenerate:
         assert "anyplot-change-request" not in staged["run"]
         prompt = (ROOT / "prompts" / "workflow-prompts" / "impl-generate-claude.md").read_text(encoding="utf-8")
         assert "/tmp/anyplot-follow-up-note.txt" in prompt
+
+    def test_no_note_is_staged_for_a_repair(self):
+        """Only a retry carries a note; a repair round goes after the named defects alone."""
+        staged = _step("impl-generate.yml", "Stage the follow-up note (retry)")
+        assert staged["if"] == "${{ inputs.follow_up_note != '' && steps.inputs.outputs.follow_up_kind == 'retry' }}"
+
+    def test_a_duplicate_follow_up_is_refused_before_anything_is_generated(self):
+        """The receiving side of the double dispatch: a job of its own that "generate" needs."""
+        jobs = _workflow("impl-generate.yml")["jobs"]
+        assert list(jobs) == ["follow_up_check", "generate"]
+        check = jobs["follow_up_check"]
+        assert check["if"] == "github.event_name == 'workflow_dispatch' && inputs.follow_up != ''"
+        assert check["permissions"] == {"pull-requests": "read"}
+        generate = jobs["generate"]
+        assert generate["needs"] == "follow_up_check"
+        condition = " ".join(generate["if"].split())
+        assert condition.startswith("!cancelled() && ")
+        assert (
+            "(needs.follow_up_check.result == 'skipped' || (needs.follow_up_check.result == 'success' "
+            "&& needs.follow_up_check.outputs.duplicate == 'false'))"
+        ) in condition
+        # The label trigger and the dispatch still start it, as before.
+        assert "startsWith(github.event.label.name, 'generate:')" in condition
+        script = check["steps"][0]["run"]
+        assert "--state open" in script and "select(.isCrossRepository == false)" in script
 
     def test_the_crash_retry_forwards_the_mark(self):
         step = _step("impl-generate.yml", "Handle generation failure")
@@ -546,3 +572,86 @@ class TestPrBodyRun:
         body = self._body(tmp_path, shell, CHANGE_REQUEST="a hint")
         assert fu.body_follow_up(body) is None
         assert [m.group("text") for m in CHANGE_REQUEST_LINE.finditer(body)] == ["a hint"]
+
+
+class TestDuplicateCheckRun:
+    """impl-generate's follow_up_check: an open PR of the pair with the same line means a duplicate dispatch."""
+
+    def _check(self, tmp_path: Path, shell: list[str], pulls: Any = None, follow_up: str = "repair:14231"):
+        (tmp_path / "runner").mkdir(exist_ok=True)
+        step = _step("impl-generate.yml", "Refuse a duplicate follow-up")
+        state = {} if pulls is None else {"pulls": pulls}
+        env = {"SPEC_ID_INPUT": "bar-basic", "LIBRARY_INPUT": "altair", "FOLLOW_UP_INPUT": follow_up}
+        return _run(tmp_path, step, state, tmp_path, shell, **env)
+
+    @pytest.mark.parametrize(
+        ("body", "duplicate"),
+        [
+            ("**Model:** sonnet\n**Follow-up of:** #14231 (repair)\n", "true"),
+            ("**Model:** sonnet\r\n**Follow-up of:** #14231 (repair)\r\n", "true"),  # as GitHub may store it
+            ("**Follow-up of:** #14231 (retry)", "false"),  # another kind of the same PR
+            ("**Follow-up of:** #142310 (repair)", "false"),  # another PR
+            ("see **Follow-up of:** #14231 (repair)", "false"),  # not a line of its own
+            ("", "false"),
+        ],
+    )
+    def test_the_same_line_on_an_open_pr_is_a_duplicate(self, tmp_path, shell, body, duplicate):
+        result, calls, outputs = self._check(tmp_path, shell, [{"number": 14300, "body": body}])
+        assert result.returncode == 0, result.stderr
+        assert outputs["duplicate"] == duplicate
+        # The line the check matches is the one the rest of the pipeline reads.
+        assert (fu.body_follow_up(body) == (14231, "repair")) == (duplicate == "true")
+        if duplicate == "true":
+            assert "is already open as PR #14300" in result.stdout
+
+    def test_it_lists_the_pairs_open_prs(self, tmp_path, shell):
+        _, calls, outputs = self._check(tmp_path, shell, [])
+        assert outputs["duplicate"] == "false"
+        (listing,) = [c for c in calls if c[:2] == ["pr", "list"]]
+        assert listing[listing.index("--head") + 1] == "implementation/bar-basic/altair"
+        assert listing[listing.index("--state") + 1] == "open"
+
+    def test_a_listing_that_cannot_be_read_generates_nothing(self, tmp_path, shell):
+        result, calls, outputs = self._check(tmp_path, shell, None)
+        assert result.returncode != 0
+        assert "duplicate" not in outputs
+        assert len([c for c in calls if c[:2] == ["pr", "list"]]) == 3
+
+    @pytest.mark.parametrize("follow_up", ["repair:0", "redo:5", "repair:5; x"])
+    def test_a_malformed_input_generates_nothing(self, tmp_path, shell, follow_up):
+        result, calls, outputs = self._check(tmp_path, shell, [], follow_up=follow_up)
+        assert result.returncode != 0 and calls == [] and outputs == {}
+
+
+class TestExtractInputsRun:
+    """Only a gated regeneration can be a follow-up: a forced run drops the mark."""
+
+    def _extract(self, tmp_path: Path, shell: list[str], regen_gate: str) -> dict[str, str]:
+        runner = tmp_path / "runner"
+        stage_guard(runner)
+        env = {
+            "EVENT_NAME": "workflow_dispatch",
+            "SPEC_ID_INPUT": "bar-basic",
+            "LIBRARY_INPUT": "altair",
+            "ISSUE_INPUT": "",
+            "MODEL_INPUT": "sonnet",  # an explicit model: no routing, no git
+            "REGEN_GATE_INPUT": regen_gate,
+            "REGEN_GATE": regen_gate,
+            "SOURCE_REF_INPUT": "",
+            "SOURCE_MODEL_INPUT": "",
+            "FOLLOW_UP_INPUT": "repair:14231",
+            "LABEL_NAME": "",
+            "ISSUE_TITLE": "",
+            "EVENT_ISSUE_NUMBER": "",
+        }
+        result, _, outputs = _run(tmp_path, _step("impl-generate.yml", "Extract inputs"), {}, tmp_path, shell, **env)
+        assert result.returncode == 0, result.stdout + result.stderr
+        return outputs
+
+    def test_a_gated_run_keeps_the_mark(self, tmp_path, shell):
+        outputs = self._extract(tmp_path, shell, "true")
+        assert (outputs["follow_up_kind"], outputs["follow_up_of"]) == ("repair", "14231")
+
+    def test_a_forced_run_drops_the_mark(self, tmp_path, shell):
+        outputs = self._extract(tmp_path, shell, "false")
+        assert (outputs["follow_up_kind"], outputs["follow_up_of"]) == ("", "")

@@ -93,11 +93,90 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # A follow-up dispatched twice is refused here, on the receiving side.
+  # regen_follow_up.py dispatch can only narrow the double: a call GitHub took
+  # although it reported a failure, and whose run is not in the run list yet
+  # when the dispatcher looks, is sent again. The pair's concurrency group
+  # queues the second run until the first has ended, so by then the first
+  # one's PR is open and carries its "**Follow-up of:** #N (kind)" line. An
+  # open PR of the pair (this repository's own) with the same line means this
+  # run is the duplicate: "generate" does not run, and the run ends green with
+  # a notice. Runs only with the follow_up input, so nothing changes without
+  # it. A listing that cannot be read fails this job, and nothing is generated.
+  follow_up_check:
+    if: github.event_name == 'workflow_dispatch' && inputs.follow_up != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    outputs:
+      duplicate: ${{ steps.check.outputs.duplicate }}
+    steps:
+      - name: Refuse a duplicate follow-up
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          SPEC_ID_INPUT: ${{ inputs.specification_id }}
+          LIBRARY_INPUT: ${{ inputs.library }}
+          FOLLOW_UP_INPUT: ${{ inputs.follow_up }}
+        run: |
+          if ! [[ "$SPEC_ID_INPUT" =~ ^[a-z0-9][a-z0-9-]{0,80}$ ]] || ! [[ "$LIBRARY_INPUT" =~ ^[a-z0-9]+$ ]]; then
+            echo "::error::bad_input: specification_id or library does not have its expected shape; nothing was generated"
+            exit 1
+          fi
+          if ! [[ "$FOLLOW_UP_INPUT" =~ ^(repair|retry):([1-9][0-9]{0,9})$ ]]; then
+            echo "::error::bad_input: follow_up does not have its expected shape; nothing was generated"
+            exit 1
+          fi
+          KIND="${BASH_REMATCH[1]}"
+          OF="${BASH_REMATCH[2]}"
+          OPEN="$RUNNER_TEMP/open-prs.json"
+          READ_OK=0
+          for attempt in 1 2 3; do
+            if gh pr list --repo "$REPOSITORY" --state open --head "implementation/${SPEC_ID_INPUT}/${LIBRARY_INPUT}" \
+                 --limit 20 --json number,body,isCrossRepository \
+                 --jq '[.[] | select(.isCrossRepository == false)]' > "$OPEN" 2> "$RUNNER_TEMP/open-prs.err"; then
+              READ_OK=1
+              break
+            fi
+            echo "::warning::gh pr list failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/open-prs.err" | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+          if [ "$READ_OK" != "1" ]; then
+            echo "::error::the pair's open pull requests could not be listed, so a duplicate cannot be ruled out; nothing was generated"
+            exit 1
+          fi
+          # The line regen_gate.FOLLOW_UP_LINE_RE reads, for this predecessor
+          # and kind (both checked above, so plain in the pattern).
+          DUPLICATE=$(python3 - "$OPEN" "$OF" "$KIND" <<'PY'
+          import json, re, sys
+          path, of, kind = sys.argv[1:4]
+          line = re.compile(r"^\*\*Follow-up of:\*\* #" + of + r" \(" + kind + r"\)[ \t]*$", re.MULTILINE)
+          pulls = json.load(open(path, encoding="utf-8"))
+          found = [p.get("number") for p in pulls if line.search(str(p.get("body") or "").replace("\r", ""))]
+          print(next((str(n) for n in found if isinstance(n, int)), ""))
+          PY
+          )
+          if [ -n "$DUPLICATE" ]; then
+            echo "duplicate=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::the ${KIND} follow-up of #${OF} is already open as PR #${DUPLICATE}: this run is a duplicate dispatch and generates nothing"
+            echo "- Follow-up (${KIND} of #${OF}): already open as #${DUPLICATE}; this duplicate generates nothing" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "duplicate=false" >> "$GITHUB_OUTPUT"
+          fi
+
   generate:
-    # Run on label trigger OR workflow_dispatch
+    needs: follow_up_check
+    # Run on label trigger OR workflow_dispatch. The follow-up check runs only
+    # with the follow_up input: skipped means none was due, and a duplicate
+    # or a check that failed generates nothing.
     if: >
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event_name == 'issues' && startsWith(github.event.label.name, 'generate:'))
+      !cancelled() &&
+      (needs.follow_up_check.result == 'skipped' ||
+       (needs.follow_up_check.result == 'success' && needs.follow_up_check.outputs.duplicate == 'false')) &&
+      ((github.event_name == 'workflow_dispatch') ||
+       (github.event_name == 'issues' && startsWith(github.event.label.name, 'generate:')))
     runs-on: ubuntu-latest
     permissions:
       contents: write

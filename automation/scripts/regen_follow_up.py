@@ -67,9 +67,13 @@ and exit 0; 2 is a usage error. ``marker`` prints the comment body.
 ``parse-body`` prints ``follow_up_of=`` and ``follow_up_kind=`` (empty when
 the body names no predecessor).
 
-``dispatch`` never dispatches twice for one call: before it repeats a failed
-``gh workflow run`` it lists impl-generate's runs since its first attempt, and
-a run for the pair there means the earlier call was accepted.
+``dispatch`` never dispatches twice for one call that it can see: before it
+repeats a failed ``gh workflow run`` it lists impl-generate's runs since its
+first attempt, and a run for the pair there means the earlier call was
+accepted. A call GitHub took whose run is not in that list yet is the one
+double this side cannot rule out, and impl-generate closes it on the
+receiving side: its ``follow_up_check`` job ends a run whose pair already has
+an open PR with the same ``**Follow-up of:**`` line.
 
 Stdlib only. ``regen_gate`` is imported from this file's own directory, so a
 workflow's copy of the two files never reads the checkout's.
@@ -145,8 +149,15 @@ SENTENCES = {
     ),
 }
 NOT_DISPATCHED = {
-    "dispatch_failed": "impl-generate did not take the dispatch",
-    "dispatch_unknown": "a dispatch call failed and whether GitHub took it could not be read",
+    "dispatch_failed": (
+        "not dispatched.** impl-generate did not take the dispatch, so no follow-up runs for this pair."
+    ),
+    # The call may have been taken: the note must not say that nothing runs.
+    "dispatch_unknown": (
+        "dispatch state unknown.** A dispatch call reported a failure, and whether GitHub took it anyway "
+        "could not be read, so no second call was made. If GitHub took it, the follow-up runs; "
+        "impl-generate refuses a duplicate of it."
+    ),
 }
 
 
@@ -176,11 +187,10 @@ def render_marker(kind: str, pr: int, spec_id: str, library: str) -> str:
 
 
 def render_not_dispatched(kind: str, reason: str) -> str:
-    """The note posted after the marker when the dispatch did not go through."""
+    """The note posted after the marker when the dispatch did not go through, or may not have."""
     return (
-        f"**Follow-up regeneration ({'repair round' if kind == regen_gate.FOLLOW_UP_REPAIR else kind}) "
-        f"not dispatched.** {NOT_DISPATCHED[reason].capitalize()}, so no follow-up runs for this pair. "
-        "The marker above still counts as the pair's one follow-up."
+        f"**Follow-up regeneration ({'repair round' if kind == regen_gate.FOLLOW_UP_REPAIR else kind}), "
+        f"{NOT_DISPATCHED[reason]} The marker above still counts as the pair's one follow-up."
     )
 
 
