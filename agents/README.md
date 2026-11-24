@@ -417,7 +417,7 @@ The harness (`evals/matrix.py`) runs eval cases through the real `/v1` flow in p
    - pass `--gcloud-token` (recommended): the harness runs `gcloud auth print-identity-token` before the first case and again whenever the token is within 10 minutes of expiry, so a full run outlasts the token's hour. The token stays in the harness's own environment and is never printed; or
    - export `AGENT_RENDER_TOKEN=$(gcloud auth print-identity-token)` yourself. That token is valid for one hour; the harness prints how long it has left, and a run that outlasts it stops with exit code 4.
 
-Before the first case the harness renders the catalogue file of the first case of each library once (a preflight, no model call). A renderer that is unreachable, refuses your token or lacks a library ends the run with exit code 2 before any token is spent; `--no-preflight` skips the check.
+Before the first case the harness renders the catalogue file of the first case of each library once (a preflight, no model call). A renderer that is unreachable, refuses your token or lacks a library ends the run with exit code 2 before any token is spent; `--no-preflight` skips the check. The preflight renders only a file that passes the SECURITY profile as it stands, the profile every adapted plot meets: a file that loads an example dataset (scikit-learn's built-in data, or `sns.load_dataset`, which downloads) is eligible for the chat but fails that profile, so the library's next selected case or its smoke case stands in, and with neither the run ends with exit code 2 before any render.
 
 ### Run the smoke set or the full matrix
 

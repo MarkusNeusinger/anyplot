@@ -1043,6 +1043,58 @@ async def test_a_selection_of_muix_7_files_alone_passes_the_preflight_through_th
     assert [job.library for job in backend.jobs] == ["muix"] and "ChartContainer" in backend.jobs[0].source
 
 
+DATASET_IMPORT = "from sklearn.datasets import make_regression\n"
+"""A scikit-learn generator's import: eligible in an original since 2026-11-23, refused by the SECURITY profile."""
+
+
+@pytest.fixture
+def dataset_bar_grouped(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`bar-grouped`'s matplotlib file with a built-in dataset's import, as an ML spec's file has one: the eligibility
+    scan accepts it (the chat replaces the data before anything runs), the SECURITY profile refuses it."""
+    from agents.evals import cases as cases_module
+
+    real = cases_module.snapshot_from_repo
+
+    def snapshot(spec_id: str, library: str) -> Any:
+        found = real(spec_id, library)
+        if (spec_id, library) != ("bar-grouped", "matplotlib"):
+            return found
+        code = found.code.replace("import numpy as np\n", f"import numpy as np\n{DATASET_IMPORT}", 1)
+        return found.model_copy(update={"code": code})
+
+    monkeypatch.setattr(cases_module, "snapshot_from_repo", snapshot)
+
+
+@pytest.mark.usefixtures("dataset_bar_grouped")
+async def test_the_preflight_never_renders_a_file_the_security_profile_refuses(
+    services: Services, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A selected case whose catalogue file is eligible but loads a built-in dataset never renders as it stands: the
+    library's smoke case proves the renderer instead, and with none to stand in the run stops before any render. So
+    nothing renders an original the SECURITY profile refuses, the eval harness included."""
+    from agents.anyplot.render.runtimes import runtime_for
+    from agents.evals import cases as cases_module
+    from agents.evals.eligibility import scan_pair
+
+    selected = fixture_cases("bar-grouped-matplotlib-n12")
+    code = selected[0].snapshot().code
+    assert DATASET_IMPORT in code
+    assert scan_pair(code, spec_id="bar-grouped", library="matplotlib")[0] != "blocked"
+    assert runtime_for("matplotlib").security(runtime_for("matplotlib").normalise(code, "matplotlib"))
+
+    await matrix.preflight(selected, services, echo=lambda _: None)
+
+    assert [job.library for job in backend.jobs] == ["matplotlib"]
+    assert backend.jobs[0].source == normalised_code("area-basic", "matplotlib")  # the first matplotlib smoke case
+    assert "sklearn" not in backend.jobs[0].source
+
+    backend.jobs.clear()
+    monkeypatch.setattr(cases_module, "load_cases", lambda: [])
+    with pytest.raises(matrix.SetupError, match="passes the SECURITY profile as it stands"):
+        await matrix.preflight(selected, services, echo=lambda _: None)
+    assert backend.jobs == []
+
+
 def normalised_code(spec_id: str, library: str) -> str:
     from agents.anyplot.render.runtimes import runtime_for
 

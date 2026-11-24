@@ -6,7 +6,9 @@
   (`map-spec`); the library is not enabled (`library-disabled`) or has no normaliser
   yet (`unsupported-library`); the code does not parse (`syntax`); the SECURITY
   validator reports findings or fails (`security: <rule> ...`, quoting the validator's
-  rule ids; it is asked only for a library with a normaliser); there is no module-level `THEME = os.getenv("ANYPLOT_THEME", ...)`
+  rule ids; it is asked only for a library with a normaliser, through its eligibility entry
+  `validate_original`, whose `built-in-dataset` findings are a coupling hint below and never
+  block); there is no module-level `THEME = os.getenv("ANYPLOT_THEME", ...)`
   (`no-theme`); or a save call of the library's rule (`regions.SAVE_RULES`: `savefig`,
   plotnine's `save` and `ggsave`, altair's `save`, pygal's `render_to_png`,
   `render_to_file` and `svg2png`, lets-plot's `ggsave`) writes anywhere but
@@ -56,10 +58,17 @@ The coupling heuristics, all static and deliberately simple:
   entries.
 * `date-locators`: a `matplotlib.dates` locator other than `AutoDateLocator`, or
   `DateFormatter`.
+* `built-in-dataset`: the lines of an example dataset the original loads, its import and its
+  calls (scikit-learn's built-in toy loaders and generators, and `sns.load_dataset`, which
+  downloads its CSV), as the validator's eligibility entry finds them
+  (`validate.validate_original`, owner decision of 2026-11-23). The chat never runs the original;
+  it runs only the adapted code, which the SECURITY profile refuses while it keeps the loader, so
+  the hint tells the adapter to take the data from `df` and drop the import. Each line is quoted
+  as the parser counts lines, without its comment (`_source_lines`).
 * `synthetic-data`: `numpy.random.*` (including `default_rng` and `seed`), methods of a
-  generator made by `default_rng` or `RandomState`, `scipy.stats` `.rvs(...)` draws and
-  `sklearn.datasets` generators. The stdlib `random` module needs no rule: the SECURITY
-  profile bans importing it, so such code is already blocked.
+  generator made by `default_rng` or `RandomState`, and `scipy.stats` `.rvs(...)` draws; the
+  `sklearn.datasets` generators are `built-in-dataset` lines. The stdlib `random` module needs
+  no rule: the SECURITY profile bans importing it, so such code is already blocked.
 
 `reasons` can also carry one `canvas:` entry for any status that is not blocked: the
 normaliser could not put the canvas on 3200x1800 or 2400x2400 (`normalise.measure_canvas`:
@@ -85,7 +94,9 @@ has no egress for. `scatter-pitch-events` (a sports pitch tagged `map`) and
 """
 
 import ast
+import io
 import re
+import tokenize
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Literal
@@ -97,7 +108,7 @@ from core.spec_roles import MAP_SPECS
 from ..schemas import MAX_NOTE_CHARS
 from .normalise import MAX_IMAGE_PIXELS, SUPPORTED_LIBRARIES, Canvas, measure_canvas
 from .regions import HTML_SUFFIX, IMPRINT_NAMES, PNG_SUFFIX, dotted_name, find_regions, save_rule
-from .validate import validate_security
+from .validate import BUILTIN_DATASET_RULE, validate_original
 
 
 ReadinessStatus = Literal["blocked", "coupled", "clean"]
@@ -248,6 +259,8 @@ GENERATOR_FACTORIES = frozenset({"default_rng", "RandomState", "Generator"})
 # A statistic stated in a string: a symbol, a relation, then a number.
 _STATISTIC = re.compile(r"(?<![\w.])(?:r|R|R²|R\^2|ρ|τ|p|n|μ|σ)\s*(?:=|≈|~|<|>|≤|≥)\s*[-−+]?\.?\d")
 _WHITESPACE = re.compile(r"\s+")
+_LINE_BREAK = re.compile(r"\r\n|\r|\n")
+"""The line breaks Python's parser counts, and no other (`_source_lines`)."""
 _IMPRINT_GREEN = IMPRINT[0].upper()
 
 # Category id, hint prefix, hint advice; the order is the order of `hints`.
@@ -277,6 +290,12 @@ _CATEGORIES: tuple[tuple[str, str, str], ...] = (
         "Hard-coded date locators or formatters at",
         "use AutoDateLocator with ConciseDateFormatter or derive the interval from df.",
     ),
+    (
+        "built-in-dataset",
+        "Example dataset loaded at",
+        "take the data from columns of df = load_user_data() instead and drop every import that only the loader "
+        "uses; the adapted code may not load it.",
+    ),
     ("synthetic-data", "Synthetic data generation at", "replace it with columns of df = load_user_data()."),
 )
 
@@ -303,8 +322,10 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
         tree = ast.parse(normalised_code)
     except SyntaxError as exc:
         return Readiness("blocked", [*blocked, f"syntax: line {exc.lineno} does not parse"])
+    datasets: list[int] = []
     if library in SUPPORTED_LIBRARIES:
-        blocked.extend(_security(normalised_code, library))
+        security, datasets = _security(normalised_code, library)
+        blocked.extend(security)
     code_library = library if library in SUPPORTED_LIBRARIES else "matplotlib"  # an unsupported one is blocked above
     rule = save_rule(code_library)
     regions = find_regions(normalised_code, tree, library=code_library)
@@ -343,6 +364,9 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
         return Readiness("blocked", [clip_reason(reason) for reason in blocked])
 
     findings = _coupling(normalised_code, tree, library)
+    if datasets:
+        lines = _source_lines(normalised_code)
+        findings["built-in-dataset"] = [(line, snippet_of(lines[line - 1])) for line in datasets if line <= len(lines)]
     reasons: list[str] = []
     hints: list[str] = []
     for category, prefix, advice in _CATEGORIES:
@@ -369,18 +393,26 @@ def _canvas_reason(canvas: Canvas, library: str) -> str:
     return clip_reason(f"canvas: {canvas.note}; {outcome}")
 
 
-def _security(code: str, library: str) -> list[str]:
-    """SECURITY validator findings as blocking reasons; a validator that fails blocks too.
+def _security(code: str, library: str) -> tuple[list[str], list[int]]:
+    """SECURITY validator findings as blocking reasons, and the lines of an example dataset; a validator that fails
+    blocks too.
 
+    The original is scanned through the validator's eligibility entry (`validate_original`): an
+    example dataset (scikit-learn's built-in data, or seaborn's `load_dataset`, which downloads) is
+    a `BUILTIN_DATASET_RULE` finding there, whose lines (sorted, each once) become the
+    `built-in-dataset` hint and never a blocking reason, because the original never runs; every
+    other finding blocks.
     `scan` calls this only for a library with a normaliser, which is a library the
-    validator profiles too; for any other library `validate_security` raises
+    validator profiles too; for any other library `validate_original` raises
     `ValueError` (a caller bug, not a property of the code), and the scan has already
     blocked it as `unsupported-library`.
     """
     try:
-        findings = validate_security(code, library=library)
+        every = validate_original(code, library=library)
     except Exception as exc:  # fail closed: a crashing validator never passes code
-        return [f"security: the validator failed ({type(exc).__name__})"]
+        return [f"security: the validator failed ({type(exc).__name__})"], []
+    datasets = sorted({finding.line for finding in every if finding.rule == BUILTIN_DATASET_RULE and finding.line})
+    findings = [finding for finding in every if finding.rule != BUILTIN_DATASET_RULE]
     reasons = [
         clip_reason(f"security: {finding.rule} at line {finding.line}: {finding.message}")
         if finding.line is not None
@@ -389,7 +421,27 @@ def _security(code: str, library: str) -> list[str]:
     ]
     if len(findings) > MAX_SECURITY_REASONS:
         reasons.append(f"security: {len(findings) - MAX_SECURITY_REASONS} more findings")
-    return reasons
+    return reasons, datasets
+
+
+def _source_lines(code: str) -> list[str]:
+    """`code`'s lines numbered as the parser numbers them, each without its comment and its trailing blanks.
+
+    The parser breaks a line at `\\n`, `\\r\\n` and a lone `\\r` alone; `str.splitlines` also breaks at a form feed,
+    a vertical tab, U+0085, U+2028 and the file separators, which a string literal may hold, and would then quote
+    another line's text under a line number. A comment is cut where the tokenizer finds it, so a `#` inside a string
+    stays, as the other categories quote the node's own source without it.
+    """
+    text = _LINE_BREAK.sub("\n", code)
+    lines = text.split("\n")
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(text).readline):
+            if token.type == tokenize.COMMENT:
+                row, column = token.start
+                lines[row - 1] = lines[row - 1][:column]
+    except tokenize.TokenError, SyntaxError:
+        pass  # code the parser reads and the tokenizer does not: its lines keep their comments
+    return [line.rstrip() for line in lines]
 
 
 # --- WebGL (plotly) ------------------------------------------------------------------------
@@ -579,7 +631,9 @@ def _generator_names(tree: ast.Module, aliases: dict[str, str]) -> set[str]:
 
 
 def _is_synthetic(node: ast.Call, resolved: str, generators: set[str]) -> bool:
-    if resolved.startswith(("numpy.random.", "sklearn.datasets.")):
+    """numpy's draws and generators and scipy's `.rvs`; a `sklearn.datasets` call is a `built-in-dataset` line, which
+    the validator's eligibility entry reports (`_security`), so it gets one hint, not two."""
+    if resolved.startswith("numpy.random."):
         return True
     if resolved.startswith("scipy.stats.") and resolved.endswith(".rvs"):
         return True

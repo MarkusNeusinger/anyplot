@@ -594,11 +594,22 @@ class RenderToken:
         return True
 
 
-def _bundles_as_it_stands(case: "EvalCase", runtime: "RuntimeAdapter") -> bool:
-    """Whether a case's normalised catalogue file imports nothing the image's MUI X lacks (`unavailable-import`, which
-    only the JavaScript runtime reports), so the preflight can render it unchanged."""
+def _passes_security(case: "EvalCase", runtime: "RuntimeAdapter") -> bool:
+    """Whether a case's normalised catalogue file passes the SECURITY profile as it stands (`RuntimeAdapter.security`,
+    the profile every working form the chat renders meets). The eligibility scan accepts more: an example dataset in
+    the original (scikit-learn's built-in data, or seaborn's `load_dataset`, which downloads), which the chat replaces
+    before anything runs, so an eligible file may still fail here and may need the network."""
+    return not runtime.security(runtime.normalise(case.snapshot().code, case.library))
+
+
+def _renders_as_it_stands(case: "EvalCase", runtime: "RuntimeAdapter") -> bool:
+    """Whether the preflight may render a case's normalised catalogue file unchanged: it passes the SECURITY profile
+    (`_passes_security`), and it imports nothing the image's MUI X lacks (`unavailable-import`, which only the
+    JavaScript runtime reports)."""
     from agents.anyplot.render.runtimes.javascript import UNAVAILABLE_IMPORT_RULE
 
+    if not _passes_security(case, runtime):
+        return False
     normalised = runtime.normalise(case.snapshot().code, case.library)
     findings = runtime.adaptation(normalised, original_palette=[])
     return not any(finding.rule == UNAVAILABLE_IMPORT_RULE for finding in findings)
@@ -617,6 +628,13 @@ async def preflight(cases: list["EvalCase"], services: "Services", echo: Callabl
     `scatter-basic-muix-*` alone, the case that tests the rewrite), the library's smoke case
     from the committed fixtures does (`make_fixtures.LIBRARY_SMOKE`, the `smoke` tag). Only a
     library without such a smoke case renders its first file and fails as before.
+
+    Nothing renders a file the SECURITY profile refuses (`_passes_security`): the chat renders
+    only adapted code that passed it, and an eligible original may not: it may load an example
+    dataset, seaborn's by download, which the eligibility scan accepts because the chat replaces
+    it. Such a file never
+    stands in, and when no case and no smoke case can, the run stops with a `SetupError` before
+    any render.
     """
     from agents.anyplot.render.contract import RendererUnavailable, RenderJob
     from agents.anyplot.render.runtimes import runtime_for
@@ -632,20 +650,26 @@ async def preflight(cases: list["EvalCase"], services: "Services", echo: Callabl
     for library, first in firsts.items():
         runtime = runtime_for(library, cpu_seconds=int(timeout))
         stand_in = next(
-            (each for each in cases if each.library == library and _bundles_as_it_stands(each, runtime)), None
+            (each for each in cases if each.library == library and _renders_as_it_stands(each, runtime)), None
         )
         if stand_in is None:
             # The stand-in lends only its catalogue file, rendered on `PREFLIGHT_DATA`: no model sees any case.
             smoke = smoke if smoke is not None else select_cases(load_cases(), "smoke", routes=NO_MODEL_CALL)
             stand_in = next(
-                (each for each in smoke if each.library == library and _bundles_as_it_stands(each, runtime)), None
+                (each for each in smoke if each.library == library and _renders_as_it_stands(each, runtime)), None
             )
             if stand_in is not None:
                 echo(
-                    f"preflight: every selected {library} case's catalogue file imports what the image lacks; "
-                    f"the smoke case {stand_in.case_id} proves the renderer instead"
+                    f"preflight: no selected {library} case's catalogue file renders as it stands (it imports what "
+                    f"the image lacks or fails the SECURITY profile); the smoke case {stand_in.case_id} proves the "
+                    "renderer instead"
                 )
         case = stand_in or first
+        if stand_in is None and not _passes_security(first, runtime):
+            raise SetupError(
+                f"preflight: no {library} case or smoke case has a catalogue file that passes the SECURITY profile as "
+                f"it stands, so none is rendered unchanged ({first.spec_id})"
+            )
         job = RenderJob(
             job_id=secrets.token_hex(8),
             language=runtime.language,

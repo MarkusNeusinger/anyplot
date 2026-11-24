@@ -1,7 +1,9 @@
 """Two-profile AST validator of the plot pipeline (docs/concepts/agent-network.md, "Adapt and validate").
 
-The SECURITY profile runs on the normalised catalogue original (eligibility) and on every
-adapted working form; the ADAPTATION profile runs on adapted code only. Both functions
+The SECURITY profile runs on the normalised catalogue original (eligibility, `validate_original`)
+and on every adapted working form (`validate_security`); the ADAPTATION profile runs on adapted
+code only. The two SECURITY entries differ in one construct alone, an example dataset the
+original loads from scikit-learn or seaborn ("Example datasets" below). Both profiles
 return an empty list for valid code and never raise on invalid code: a syntax error (also
 one only the compiler reports, such as a module-level `return`), an oversize file or a
 string that is not UTF-8 text is itself a `Finding`. Only `library` makes
@@ -350,6 +352,29 @@ Decisions this module takes where the design leaves room:
   reviewer sees the render.
 * **Placeholder (ADAPTATION).** Exactly one `df = load_user_data()` statement, anywhere;
   any other use of the name `load_user_data` is a separate finding.
+* **Example datasets (eligibility only).** The generator prompts let a catalogue file load its
+  example data from scikit-learn or seaborn. scikit-learn's toy loaders read tables bundled with
+  the package and its generators draw in memory; seaborn's `load_dataset` is no built-in data:
+  it downloads a CSV from GitHub and writes a cache directory. Neither matters in the original,
+  because the chat never runs it: it runs the adapted working form, whose data is
+  `df = load_user_data()`, after `validate_security` passed it. So `validate_original`, the
+  eligibility scan's entry (`readiness.scan`), reports such a loader as a `built-in-dataset`
+  finding (the rule is named for scikit-learn's case and covers seaborn's download too), which
+  the scan turns into a coupling hint, while every adapted form is refused for it exactly as
+  before (owner decision of 2026-11-23, the way R's dataset packages were decided on
+  2026-10-29). An eligible original may therefore still need the network: never run one, and
+  never take eligibility as a sign that a file passes `validate_security`. The exemption is a set of exact nodes
+  (`_Scan._builtin_datasets`), and only a `banned-import` or `banned-call` finding on one of them
+  becomes `built-in-dataset`; every other rule on every node stays as strict as in
+  `validate_security`. The nodes: a module-level `from sklearn.datasets import NAME` (no `as`)
+  with NAME one of `SKLEARN_BUILTIN_DATASETS`, when that import is the name's only binding and
+  every use of the name is the callee of a call, together with those callees; `X.load_dataset`
+  as the callee of a call, where `X` is bound only by a module-level `import seaborn [as X]`;
+  and that import itself in a profile without seaborn, when every use of `X` is such a callee
+  (a plotly file that imports seaborn for its data alone). scikit-learn's path readers
+  (`load_files`, `load_svmlight_file(s)`), its sample images and its `fetch_*` downloads, `from
+  sklearn import datasets` and `import sklearn.datasets` stay refused in the original as well;
+  seaborn's download is the one network loader the original may name.
 
 **The DATA profile** (`validate_data_code`, owner decision of 2026-10-14) checks a snippet
 that generates the data for a plot, which the root translated to Python from what the
@@ -391,7 +416,9 @@ Rule ids: `size`, `encoding`, `syntax`, `banned-import` (with `Finding.module`),
 (SECURITY; DATA without `savefig-target`; a plotnine expression string's finding keeps the id of the rule it broke;
 pygal's config and lets-plot's rules use the ids above, the THEME pin `savefig-target`);
 `placeholder-count`, `placeholder-use`, `rng`, `literal-data`, `palette-prefix`
-(ADAPTATION); `data-frame` (DATA). Findings are sorted by line; messages never echo
+(ADAPTATION); `data-frame` (DATA); `built-in-dataset` (`validate_original` alone: the
+eligibility scan turns it into a hint, and a caller that reads every finding as a refusal
+refuses it like the rest). Findings are sorted by line; messages never echo
 more than about 60 characters of code and never echo string literal contents.
 """
 
@@ -1285,6 +1312,55 @@ UNKNOWN_MODULE = "?"
 # `read_*` (pandas readers), `fetch_*` (sklearn downloaders), `load*` (`np.load`,
 # `np.loadtxt`, `sns.load_dataset`, sklearn's `load_*`).
 _BANNED_IO_PATTERN = re.compile(r"^(?:read_\w+|fetch_\w+|load\w*)$")
+BUILTIN_DATASET_RULE = "built-in-dataset"
+"""The rule of an example dataset the original loads (`validate_original`), which the eligibility scan turns into a
+coupling hint (module docstring, "Example datasets"). It is named for scikit-learn's built-in data and covers
+seaborn's `load_dataset` as well, which downloads: accepted only because the original never runs."""
+SKLEARN_DATASETS = "sklearn.datasets"
+SKLEARN_BUILTIN_DATASETS: frozenset[str] = frozenset(
+    {
+        # The toy loaders, which read the small tables bundled with scikit-learn and take no path.
+        "load_breast_cancer",
+        "load_diabetes",
+        "load_digits",
+        "load_iris",
+        "load_linnerud",
+        "load_wine",
+        # The generators, which draw in memory: every `make_*` of scikit-learn 1.9.1.
+        "make_biclusters",
+        "make_blobs",
+        "make_checkerboard",
+        "make_circles",
+        "make_classification",
+        "make_friedman1",
+        "make_friedman2",
+        "make_friedman3",
+        "make_gaussian_quantiles",
+        "make_hastie_10_2",
+        "make_low_rank_matrix",
+        "make_moons",
+        "make_multilabel_classification",
+        "make_regression",
+        "make_s_curve",
+        "make_sparse_coded_signal",
+        "make_sparse_spd_matrix",
+        "make_sparse_uncorrelated",
+        "make_spd_matrix",
+        "make_swiss_roll",
+    }
+)
+"""The `sklearn.datasets` names a catalogue original may load its example data with (`validate_original`). Not
+`load_files`, `load_svmlight_file` and `load_svmlight_files`, which read a path they are given, not the sample images,
+and no `fetch_*`, which download: those stay refused in the original too (seaborn's download is the one exception,
+`SEABORN_LOADER`)."""
+SEABORN = "seaborn"
+SEABORN_LOADER = "seaborn.load_dataset"
+"""seaborn's example-data loader, which downloads `<name>.csv` from GitHub and caches it: accepted in the original only,
+because the original never runs, and refused in every form that runs like any download."""
+_SEABORN_LOADER_NAMES = frozenset({"load_dataset"})
+_BUILTIN_DATASET_RULES = frozenset({"banned-import", "banned-call"})
+"""The rules whose finding on an example dataset's node (`_Scan.builtin_datasets`) `validate_original` reports as
+`BUILTIN_DATASET_RULE`: the import the allowlist refuses and the loader name the I/O pattern refuses."""
 _UNSAFE_HELPER_PATTERN = re.compile(r"^(?:print_\w+|x13_\w+)$")
 _ANY_RECEIVER_ESCAPES = ESCAPE_ATTRIBUTES | UNSAFE_SUBMODULES
 """Banned as an attribute on any object, as a `from` import and as an import path component below its root."""
@@ -1794,6 +1870,23 @@ def validate_security(code: str, *, library: str) -> list[Finding]:
     Raises `ValueError` for a library id that is not in the catalogue or has no profile
     yet; never raises for the code itself.
     """
+    return _security_findings(code, library, original=False)
+
+
+def validate_original(code: str, *, library: str) -> list[Finding]:
+    """The SECURITY profile on a normalised catalogue original, for its eligibility alone (`readiness.scan`).
+
+    The same rules as `validate_security`, except that an example dataset the original loads
+    (scikit-learn's built-in data, or seaborn's `load_dataset`, which downloads) is a
+    `BUILTIN_DATASET_RULE` finding, one per line of its import and calls, never a refusal of its
+    own (module docstring, "Example datasets"). Never call it on code that may run, and never
+    render a file it accepted: what runs is the adapted working form, which `validate_security`
+    checks.
+    """
+    return _security_findings(code, library, original=True)
+
+
+def _security_findings(code: str, library: str, *, original: bool) -> list[Finding]:
     if library not in SUPPORTED_LIBRARIES:
         raise ValueError(f"unknown library {library!r}")
     library_imports = LIBRARY_IMPORTS.get(library)
@@ -1807,7 +1900,7 @@ def validate_security(code: str, *, library: str) -> list[Finding]:
     if rule.figure is not None:
         tree, figure_findings = _lift_figure_save(tree, rule.figure)
     scan = _Scan(tree)
-    scan.security(library, COMMON_IMPORTS | SHARED_SCIENCE_IMPORTS | library_imports, rule)
+    scan.security(library, COMMON_IMPORTS | SHARED_SCIENCE_IMPORTS | library_imports, rule, original=original)
     scan.findings.extend(figure_findings)
     return scan.result()
 
@@ -2244,12 +2337,17 @@ class _Scan:
         """`LIBRARY_IMPORTS` of the profile's library: the modules whose save calls the save rule accepts."""
         self.import_bindings: dict[str, bool] = {}
         """Name bound by an import the rules permitted (`import scipy.stats` binds `scipy`) → True."""
+        self.builtin_datasets: dict[ast.AST, str] = {}
+        """The nodes of an example dataset the original loads, each with its dataset path (`_builtin_datasets`); empty
+        unless `security` runs for `validate_original`."""
         self.aliases: dict[str, str] = {}
         self._collect_aliases()
 
     # -- shared --------------------------------------------------------------------------
 
     def add(self, rule: str, message: str, node: ast.AST | None, *, module: str | None = None) -> None:
+        if node is not None and rule in _BUILTIN_DATASET_RULES and node in self.builtin_datasets:
+            return  # the original's example dataset: `security` reports each of its nodes as `BUILTIN_DATASET_RULE`
         label = module_label(module) if module is not None else None
         self.findings.append(Finding(rule, message[:MAX_MESSAGE_CHARS], self._line(node), label))
 
@@ -2327,10 +2425,15 @@ class _Scan:
 
     # -- SECURITY ------------------------------------------------------------------------
 
-    def security(self, library: str, allowed_imports: frozenset[str], rule: SaveRule) -> None:
+    def security(
+        self, library: str, allowed_imports: frozenset[str], rule: SaveRule, *, original: bool = False
+    ) -> None:
+        """Every SECURITY rule; for `validate_original` (`original`) with the example datasets as their own rule."""
         self.library = library
         self.library_bans = LIBRARY_BANS.get(library, frozenset())
         self.library_imports = LIBRARY_IMPORTS.get(library, frozenset())
+        if original:
+            self.builtin_datasets = self._builtin_datasets(allowed_imports)
         self._check_imports(library, allowed_imports, rule)
         self._check_os_use()
         self._check_module_values()
@@ -2360,6 +2463,54 @@ class _Scan:
         self._check_theme_bindings()
         if library in EXPRESSION_LIBRARIES:
             self._check_expression_strings()
+        for node, path in self.builtin_datasets.items():
+            kind = "downloads its example data" if path == SEABORN_LOADER else "loads scikit-learn's built-in data"
+            message = f"'{path}' {kind}: the original never runs, the adapted code takes its data from {PLACEHOLDER}"
+            self.findings.append(Finding(BUILTIN_DATASET_RULE, message, self._line(node)))
+
+    def _builtin_datasets(self, allowed: frozenset[str]) -> dict[ast.AST, str]:
+        """The nodes of the example datasets the original loads, each with its dataset path (module docstring,
+        "Example datasets"): the eligibility scan's one exemption, and the lines of its hint.
+
+        Only these shapes, all of them in the catalogue: a module-level `from sklearn.datasets import NAME` with NAME
+        in `SKLEARN_BUILTIN_DATASETS` and no `as`, that import being the name's only binding and every use of the name
+        the callee of a call (the alias and the callees); `X.load_dataset` as the callee of a call, `X` bound only by
+        a module-level `import seaborn [as X]` (the attribute); and, where the profile does not admit seaborn, that
+        import when every use of `X` is such a callee (the alias). Anything else is no example dataset here: `f =
+        load_iris`, an aliased or a nested import, `from sklearn import datasets`, a second binding of the name.
+        """
+        marked: dict[ast.AST, str] = {}
+        top_level = [statement for statement in self.tree.body if isinstance(statement, ast.Import | ast.ImportFrom)]
+        for statement in top_level:
+            if not isinstance(statement, ast.ImportFrom) or statement.level or statement.module != SKLEARN_DATASETS:
+                continue
+            for alias in statement.names:
+                if alias.asname is not None or alias.name not in SKLEARN_BUILTIN_DATASETS:
+                    continue
+                if self._binding_nodes(alias.name) != [alias]:
+                    continue
+                uses = [name for name in self.of(ast.Name) if name.id == alias.name]
+                if all(self._is_callee(name) for name in uses):
+                    marked.update(dict.fromkeys([alias, *uses], f"{SKLEARN_DATASETS}.{alias.name}"))
+        seaborn_admitted = _module_allowed(SEABORN, allowed) and not _module_allowed(SEABORN, DENIED_IMPORTS)
+        for statement in top_level:
+            if not isinstance(statement, ast.Import):
+                continue
+            for alias in statement.names:
+                bound = alias.asname or alias.name
+                if alias.name != SEABORN or self._binding_nodes(bound) != [alias]:
+                    continue
+                uses = [name for name in self.of(ast.Name) if name.id == bound]
+                loaders = [name for name in uses if self._is_call_receiver(name, _SEABORN_LOADER_NAMES)]
+                marked.update(dict.fromkeys((self.parents[name] for name in loaders), SEABORN_LOADER))
+                if not seaborn_admitted and uses and len(loaders) == len(uses):
+                    marked[alias] = SEABORN_LOADER
+        return marked
+
+    def _is_callee(self, node: ast.expr) -> bool:
+        """`node` is the function a call calls (`load_iris` in `load_iris()`)."""
+        call = self.parents.get(node)
+        return isinstance(call, ast.Call) and call.func is node
 
     # -- DATA ----------------------------------------------------------------------------
 
