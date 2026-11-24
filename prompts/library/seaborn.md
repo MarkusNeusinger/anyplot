@@ -36,9 +36,9 @@ fig, ax = plt.subplots(figsize=(6, 6), dpi=400)     # → 2400 × 2400 px
 
 **Do not use `bbox_inches="tight"` on `savefig`.** It silently trims the canvas (~30–50 px per axis → 3200×1800 becomes ~3160×1760) and was the documented cause of every seaborn drift in the May 2026 fan-out. Use `bbox_inches=None` (the explicit default) and let `figsize × dpi` produce the exact target. If you need to control padding, use `fig.subplots_adjust(...)` inside the figure or `sns.despine(...)` for spine layout.
 
-**Call `plt.tight_layout()` right before `savefig`** (a figure-level plot: `g.tight_layout()`). It is the layout call the canvas allows: it moves the axes inside the fixed canvas until the title, labels and legend fit, and leaves the PNG size alone. Without it the axes keep matplotlib's default margins (12.5 % left, 10 % right, 11 % bottom, 12 % top), which leaves an empty frame around the chart. Skip it in two cases: a figure that sets its own margins with `fig.subplots_adjust(...)`, which a later `tight_layout()` overrides, and a `clustermap`, whose own grid `tight_layout()` squeezes.
+**Call `plt.tight_layout()` right before `savefig`** (a figure-level grid: its one `g.tight_layout(...)` call from the recipe below instead, never `plt.tight_layout()`). It is the layout call the canvas allows: it moves the axes inside the fixed canvas until the title, labels and legend fit, and leaves the PNG size alone. Without it the axes keep matplotlib's default margins (12.5 % left, 10 % right, 11 % bottom, 12 % top), which leaves an empty frame around the chart. Skip it in three cases: a figure that sets its own margins with `fig.subplots_adjust(...)`, which a later `tight_layout()` overrides; a `clustermap`, whose own grid `tight_layout()` squeezes; and a `jointplot` / `JointGrid`, which lays itself out: it calls neither `g.tight_layout()` (a `JointGrid` has none) nor `plt.tight_layout()`, and makes room for a title with `g.figure.subplots_adjust(top=...)`.
 
-For figure-level seaborn plots (`relplot`, `catplot`, `displot`), pass the **same** canvas size via `height=` / `aspect=`, then set the figure size once more: a `hue` legend is added outside the axes and widens the figure (`height=4.5, aspect=16/9` with a legend saves at about 3900×1800):
+For figure-level seaborn plots (`relplot`, `catplot`, `displot`), pass the canvas size via `height=` / `aspect=`, then set the figure size once more: a `hue` legend is added outside the axes and widens the figure (`height=4.5, aspect=16/9` with a legend saves at about 3900×1800). With `col=` or `row=`, `height` and `aspect` size each facet, so divide the canvas among them (`height=4.5 / nrows, aspect=16 / 9 * nrows / ncols`). A faceted grid also reserves the legend's measured width in its layout call: seaborn keeps the legend's share of the widened figure, which is too small after the resize and puts the legend on the last panel's data.
 
 ```python
 # Landscape: aspect=16/9 ≈ 1.778, height controls the figure's height in inches; pick height=4.5 → width=8
@@ -52,7 +52,17 @@ g = sns.relplot(..., height=6, aspect=1)
 g.figure.set_dpi(400)
 g.figure.set_size_inches(6, 6)
 g.tight_layout()
+
+# Faceted, one row of three panels: each facet 4.5 high and 8/3 wide → 8 × 4.5 in all
+g = sns.relplot(..., col=YEAR, height=4.5, aspect=16 / 9 / 3)
+g.figure.set_dpi(400)
+g.figure.set_size_inches(8, 4.5)
+g.figure.canvas.draw()  # lays out the legend so its width can be measured
+legend_share = g.legend.get_window_extent().width / g.figure.bbox.width if g.legend else 0
+g.tight_layout(rect=(0, 0, 1 - legend_share - 0.01, 1))  # the grid's one layout call, right before savefig
 ```
+
+A later bare `g.tight_layout()` or `plt.tight_layout()` undoes the reserved width, so the faceted grid calls neither.
 
 ## Plot Methods
 
@@ -80,7 +90,9 @@ A long table needs no reshaping. A `sns.load_dataset(...)` call belongs inside t
 ## Save
 
 ```python
-plt.tight_layout()  # fill the canvas; leave it out after fig.subplots_adjust(...) and for clustermap ("Canvas" above)
+# Fill the canvas; leave it out after fig.subplots_adjust(...), for clustermap and for jointplot.
+# A figure-level grid makes its one g.tight_layout(...) call instead, never plt.tight_layout() ("Canvas" above).
+plt.tight_layout()
 plt.savefig(f'plot-{THEME}.png', dpi=400)  # bbox_inches MUST stay default (None) — see "Canvas" above
 ```
 
@@ -192,7 +204,8 @@ sns.set_theme(
     },
 )
 
-# After plotting
+# After plotting; a figure-level grid makes its one g.tight_layout(...) call instead,
+# never plt.tight_layout(), and the exceptions in "Canvas" above still apply
 plt.tight_layout()
 plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG)  # do NOT add bbox_inches='tight'
 ```

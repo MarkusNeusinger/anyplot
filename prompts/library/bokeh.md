@@ -154,6 +154,7 @@ p.yaxis.major_label_text_font_size = '34pt'
 # 800 px plot: the 20 px key is a speck beside a 34pt label (~45 px) on this canvas.
 if p.legend:
     p.legend.label_text_font_size = '34pt'
+    p.legend.title_text_font_size = '34pt'  # the 13px default title is unreadable beside the labels
     p.legend.glyph_height = 40    # key about as tall as the label
     p.legend.glyph_width = 40
     p.legend.label_standoff = 16  # key to label
@@ -235,6 +236,7 @@ if p.legend:
     p.legend.background_fill_color = ELEVATED_BG
     p.legend.border_line_color     = INK_SOFT
     p.legend.label_text_color      = INK_SOFT
+    p.legend.title_text_color      = INK
 
 # See "Save (HTML + PNG via headless Chrome)" above for output_file + Selenium screenshot.
 ```

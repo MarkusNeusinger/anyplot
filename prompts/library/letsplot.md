@@ -58,8 +58,9 @@ Don't deviate from these pairs (e.g. `ggsize(900, 500)` lands at 3600×2000, wel
 plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))  # square
 plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))  # landscape
 
-# Composite: the page color on the composite, besides each panel's own anyplot_theme
-plot = gggrid([p1, p2], ncol=2) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+# Composite: the page color on the composite, besides each panel's own anyplot_theme;
+# a ggtitle on the composite stays dark grey without its own plot_title color
+plot = gggrid([p1, p2], ncol=2) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG), plot_title=element_text(color=INK))
 ```
 
 `ggbunch([...], [...]) + ggsize(800, 450)` takes the same `theme(...)`.
@@ -212,6 +213,7 @@ anyplot_theme = theme(
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT),
     legend_title=element_text(color=INK),
+    strip_text=element_text(color=INK),  # facet labels; dark grey on the dark page without it
 )
 
 plot = (ggplot(df, aes(x=STUDY_HOURS, y=EXAM_SCORE)) + geom_point(color=IMPRINT_PALETTE[0]) + anyplot_theme)

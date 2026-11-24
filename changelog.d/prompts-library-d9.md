@@ -18,4 +18,11 @@
   `gggrid` and a composite takes the page color, so neither leaves
   transparent or white strips at the canvas edge. In `seaborn.md`
   `plt.tight_layout()` runs before the save, and a figure-level plot resets
-  its size after the legend widened it past the canvas. (#14242)
+  its size after the legend widened it past the canvas. A seaborn
+  `jointplot` lays itself out without the `tight_layout()` its `JointGrid`
+  lacks, a faceted seaborn grid divides the canvas among its facets and
+  keeps its legend off the last panel, an altair layer carries `autosize`,
+  `padding`, `background` and `configure_*` itself instead of on a member,
+  a bokeh legend title takes the labels' 34pt in INK instead of 13px dark
+  grey, and a lets-plot composite title and facet strips take INK on the
+  dark page. (#14242)

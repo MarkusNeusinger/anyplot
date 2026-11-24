@@ -17,7 +17,7 @@ The saved PNG must be **exactly** one of these two sizes (post-render gate in `i
 | Landscape   | width=800, height=450   | 4.0          | 3200 × 1800   |
 | Square      | width=600, height=600   | 4.0          | 2400 × 2400   |
 
-Both with `autosize=alt.AutoSizeParams(type="fit", contains="padding")` and `padding=10` in the same `.properties(...)`.
+Both with `autosize=alt.AutoSizeParams(type="fit", contains="padding")` and `padding=10` in the same `.properties(...)`. On a layered chart, `autosize`, `padding`, `background` and `configure_*` go on `alt.layer(...)` (or the `+` result), never on a member: Altair refuses a member that carries any of them with a `TypeError`.
 
 **Without `autosize`, Altair's `width` / `height` size only the view, the plotting area.** `vl-convert` adds the title, axis titles, tick labels and legend *outside* it, so the saved file is **larger** than `(width * scale_factor, height * scale_factor)`: in the May 2026 fan-out, `width=800, height=450` saved at 3404×2120 or 4036×2052. A view sized smaller to make room (the old `620×320`) lands short of the canvas instead, and padding it up to the target leaves an empty frame around the chart.
 
@@ -178,6 +178,8 @@ INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
 chart = (
     base_chart
     .properties(
+        # A compound base_chart (concat, facet) takes no width/height here: leave them
+        # out and size each view or cell instead ("Compound charts cannot fit" above).
         background=PAGE_BG, width=800, height=450, padding=10,
         autosize=alt.AutoSizeParams(type="fit", contains="padding"),
     )
