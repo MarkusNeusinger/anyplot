@@ -1,7 +1,7 @@
 """ anyplot.ai
 point-and-figure-basic: Point and Figure Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-20
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 76/100 | Updated: 2026-11-24
 """
 
 import os
@@ -42,7 +42,17 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 X_COLOR = "#009E73"  # imprint green - rising columns
 O_COLOR = "#AE3030"  # imprint red - falling columns
 
-# Data
+# Constants
+BOX_SHARE = 0.02  # box size as a share of the price magnitude (power of ten)
+REVERSAL = 3  # boxes of counter-move that start a new column
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+HIGH = "High price ($)"  # role: high
+LOW = "Low price ($)"  # role: low
+CLOSE = "Close price ($)"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 300
 
@@ -51,11 +61,15 @@ returns[50:100] += 0.005
 returns[120:160] -= 0.008
 returns[180:250] += 0.004
 
-price = 100 * np.cumprod(1 + returns)
-close = price
+closes = 100 * np.cumprod(1 + returns)
+df = pd.DataFrame(
+    {DATE: pd.bdate_range("2024-01-02", periods=n_days), HIGH: closes * 1.01, LOW: closes * 0.99, CLOSE: closes}
+)
 
-box_size = 2.0
-reversal = 3
+# Plot: reads only df and the constants above
+close = df[CLOSE].dropna().to_numpy()
+box_size = BOX_SHARE * 10 ** np.floor(np.log10(np.median(close)))
+reversal = REVERSAL
 
 # Build Point and Figure data
 pf_data = []
@@ -105,20 +119,20 @@ for i in range(1, len(close)):
             for b in range(current_low_box + 1, current_box + 1):
                 pf_data.append((current_column, b * box_size, "X"))
 
-df = pd.DataFrame(pf_data, columns=["column", "price", "symbol"])
+pf = pd.DataFrame(pf_data, columns=["column", "price", "symbol"])
 # Use full label text as the color aesthetic value to avoid plotnine legend prefix bug
-df["direction"] = pd.Categorical(
-    df["symbol"].map({"X": "Rising (X)", "O": "Falling (O)"}), categories=["Rising (X)", "Falling (O)"]
+pf["direction"] = pd.Categorical(
+    pf["symbol"].map({"X": "Rising (X)", "O": "Falling (O)"}), categories=["Rising (X)", "Falling (O)"]
 )
 
 # 45-degree support and resistance trend lines (one box per column)
-min_idx = df["price"].idxmin()
-max_idx = df["price"].idxmax()
-max_col = float(df["column"].max())
-support_col = float(df.loc[min_idx, "column"])
-support_price = float(df.loc[min_idx, "price"])
-resist_col = float(df.loc[max_idx, "column"])
-resist_price = float(df.loc[max_idx, "price"])
+min_idx = pf["price"].idxmin()
+max_idx = pf["price"].idxmax()
+max_col = float(pf["column"].max())
+support_col = float(pf.loc[min_idx, "column"])
+support_price = float(pf.loc[min_idx, "price"])
+resist_col = float(pf.loc[max_idx, "column"])
+resist_price = float(pf.loc[max_idx, "price"])
 
 trend_lines = pd.DataFrame(
     {
@@ -131,7 +145,7 @@ trend_lines = pd.DataFrame(
 
 # Plot
 plot = (
-    ggplot(df, aes(x="column", y="price"))
+    ggplot(pf, aes(x="column", y="price"))
     + geom_segment(
         data=trend_lines,
         mapping=aes(x="x", y="y", xend="xend", yend="yend"),
@@ -141,14 +155,14 @@ plot = (
         alpha=0.7,
         inherit_aes=False,
     )
-    + geom_text(mapping=aes(color="direction", label="symbol"), size=8, fontweight="bold", show_legend=False)
+    + geom_text(mapping=aes(color="direction", label="symbol"), size=4.5, fontweight="bold", show_legend=False)
     + geom_point(mapping=aes(color="direction"), size=0.01, alpha=0.01)
     + coord_fixed(ratio=box_size)
     + scale_color_manual(values={"Rising (X)": X_COLOR, "Falling (O)": O_COLOR}, name="Direction")
     + guides(color=guide_legend(override_aes={"size": 3, "alpha": 1}))
     + scale_y_continuous(
         breaks=np.arange(
-            int(df["price"].min() / box_size) * box_size, int(df["price"].max() / box_size + 2) * box_size, box_size * 2
+            int(pf["price"].min() / box_size) * box_size, int(pf["price"].max() / box_size + 2) * box_size, box_size * 2
         )
     )
     + labs(x="Column (Reversals)", y="Price Level ($)", title="point-and-figure-basic · python · plotnine · anyplot.ai")
