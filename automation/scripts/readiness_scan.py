@@ -23,7 +23,10 @@ A *refusal key* names why the validator blocks a file: ``security:<rule>`` for
 every rule of the SECURITY profile the file breaks, read from the validator's
 own findings (the scan's reasons list only the first five), and the reason's
 category otherwise (``no-theme``, ``savefig-target``, ``syntax``, ``webgl``).
-Keys are fixed identifiers of the validator; a record never quotes code.
+Keys are fixed identifiers of the validator; a record never quotes code. The
+findings come from the scan's own entry, ``validate_original``, so a built-in
+example dataset (``sklearn.datasets``, ``sns.load_dataset``) is no key: the
+chat accepts such a file and replaces its data (owner decision of 2026-11-23).
 
 The verdict, first match wins:
 
@@ -199,13 +202,16 @@ def _scan(code: str, *, spec_id: str, library: str) -> _Scan:
     counts: dict[str, int] = {}
     if "security" in categories:
         try:
-            # Every finding, not the scan's first five: the session needs each line, and the key needs each rule.
-            findings = validate.validate_security(normalised, library=library)
+            # Every finding, not the scan's first five: the session needs each line, and the key needs each rule. The
+            # scan's own entry, so a built-in example dataset is the hint it is there, never a key.
+            findings = validate.validate_original(normalised, library=library)
         except Exception as exc:  # the scan fails closed on a crashing validator, and so does the key
             findings = []
             reason = f"security: validator-failed: the chat's validator fails on this file ({_error(exc)})"
             reasons.append(f"{reason}, so the chat refuses it → {_CRASH_ADVICE}")
         for finding in findings:
+            if finding.rule == validate.BUILTIN_DATASET_RULE:
+                continue
             rule = _token(finding.rule)
             counts[rule] = counts.get(rule, 0) + 1
             where = "" if finding.line is None else f" at line {lines.get(finding.line, finding.line)}"
