@@ -13,4 +13,4 @@
   these files, and the generator prompts no longer tell the sessions to keep a
   dataset refusal. The eval harness's preflight renders a catalogue file only
   when it passes the adapted code's security profile, so nothing renders an
-  original that profile refuses.
+  original that profile refuses. (#14245)
