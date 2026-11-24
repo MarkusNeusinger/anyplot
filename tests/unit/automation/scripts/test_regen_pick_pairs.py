@@ -491,6 +491,18 @@ class TestFoldPulls:
         assert [r.pr for r in rp.resumes(recs, 5)] == [22, 21]  # oldest first
         assert [r.pr for r in rp.resumes(recs, 1)] == [22]
 
+    def test_follow_ups_never_take_an_ordinary_resume_slot(self):
+        """Paused follow-ups come on top: even older ones never push an ordinary resume out of the night's N."""
+        follow_ups = [rp.Resume(30 + i, "review", "f", f"lib{i}", 1, at(10 + i), follow_up=True) for i in range(3)]
+        ordinary = [rp.Resume(21, "review", "a", "plotly", 1, at(2)), rp.Resume(22, "repair", "b", "altair", 2, at(3))]
+        recs = records()
+        recs.paused = [*follow_ups, *ordinary]
+        resumed = rp.resumes(recs, 2)
+        assert {r.pr for r in resumed} == {21, 22, 30, 31, 32}
+        assert rp.counted_resumes(resumed) == 2
+        # With one slot, the older ordinary resume takes it; every follow-up still comes.
+        assert {r.pr for r in rp.resumes(recs, 1)} == {22, 30, 31, 32}
+
     def test_issues(self):
         recs = records()
         rp.fold_issues([{"number": 3, "updatedAt": ts(2)}, {"number": "x", "updatedAt": ts(1)}], recs)
@@ -696,6 +708,31 @@ class TestMain:
         _, outputs, _ = run_main(tmp_path, self._paused(), 1)
         assert json.loads(outputs["resume_json"])[0]["pr"] == 22
         assert outputs["resume_count"] == "1" and outputs["count"] == "0" and outputs["pairs_json"] == "[]"
+
+    def test_a_paused_follow_up_is_resumed_on_top_of_the_night(self, tmp_path):
+        """A follow-up regeneration (its body line) never counts against REGEN_PAIRS_PER_DAY, resumed or not."""
+        self._plots(tmp_path)
+        data = self._paused()
+        prs = json.loads(data["prs.json"])
+        prs[1]["body"] = "**Model:** sonnet\n**Follow-up of:** #21000 (repair)\n"  # PR 22 follows #21000
+        data["prs.json"] = json.dumps(prs)
+        result, outputs, summary = run_main(tmp_path, data, 2)
+        assert result.returncode == 0, result.stdout + result.stderr
+        # Both are resumed; only the review of #21 counts, so one of the two pairs is new.
+        assert {r["pr"] for r in json.loads(outputs["resume_json"])} == {21, 22}
+        assert outputs["resume_count"] == "2" and outputs["count"] == "1"
+        assert "2 resumed (1 follow-up(s), not counted), 1 new pair(s) of 2" in summary
+        assert "| repair (follow-up) | #22 |" in summary
+
+    def test_a_paused_follow_up_alone_leaves_the_whole_night(self, tmp_path):
+        self._plots(tmp_path)
+        data = self._paused()
+        prs = json.loads(data["prs.json"])
+        for pr in prs:
+            pr["body"] = "**Follow-up of:** #21000 (retry)"
+        data["prs.json"] = json.dumps(prs)
+        _, outputs, _ = run_main(tmp_path, data, 1)
+        assert outputs["resume_count"] == "2" and outputs["count"] == "1"
 
     def test_a_failed_implementation_pr_listing_stops_the_pick(self, tmp_path):
         """The loop guard: without it a kept, closed or paused pair would be picked again."""
@@ -907,9 +944,9 @@ class TestReadRecords:
         )
         prs_call, kept_call, gates_call, issues_call = fake.calls
         guard = "number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName"
-        assert prs_call[prs_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels"
+        assert prs_call[prs_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels,body"
         assert prs_call[prs_call.index("--state") + 1] == "all" and "--repo" in prs_call and "o/r" in prs_call
-        assert kept_call[kept_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels"
+        assert kept_call[kept_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels,body"
         assert kept_call[kept_call.index("--state") + 1] == "closed"
         assert gates_call[gates_call.index("--json") + 1] == f"{guard},state,comments"
         assert gates_call[gates_call.index("--state") + 1] == "closed"
