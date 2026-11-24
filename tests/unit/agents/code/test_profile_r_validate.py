@@ -508,11 +508,13 @@ KNOWN_FINDINGS: dict[str, frozenset[str]] = {
     "map-projections": frozenset({"banned-import"}),
     "maze-circular": frozenset({"banned-statement"}),
     "qrcode-basic": frozenset({"banned-import", "url-literal"}),
+    "violin-swarm": frozenset({"banned-call"}),
 }
 """The ggplot2 files the SECURITY profile flags, each for a real reason (6 files on 2026-10-29, after the owner's
 narrowing of the denied-name rule): four map specs install or load geodata packages (`maps`, `requireNamespace`,
 `install.packages`, a download URL), qrcode-basic loads the qrcode package and encodes a URL, and maze-circular
-assigns with `<<-`. A regeneration may take a file off the list (flowmap-origin-destination's of 2026-11-09, #12862,
+assigns with `<<-`. violin-swarm (#14253, 2026-11-24) calls the function it is handed (`swarm_offsets` calls its
+parameter `half_width_at`), the higher-order call the profile refuses whatever the function does. A regeneration may take a file off the list (flowmap-origin-destination's of 2026-11-09, #12862,
 dropped `maps`); a file on it for another rule, or one not on it, is a false refusal until shown otherwise. The 7
 flow files that name a column `source` and the 2 dataset-package files pass SECURITY."""
 COMMENT = re.compile(r"(?:^|(?<=\s))#.*$", re.MULTILINE)
