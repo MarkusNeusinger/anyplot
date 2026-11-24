@@ -38,31 +38,23 @@ fig, ax = plt.subplots(figsize=(6, 6), dpi=400)     # → 2400 × 2400 px
 
 **Call `plt.tight_layout()` right before `savefig`** (a figure-level grid: its one `g.tight_layout(...)` call from the recipe below instead, never `plt.tight_layout()`). It is the layout call the canvas allows: it moves the axes inside the fixed canvas until the title, labels and legend fit, and leaves the PNG size alone. Without it the axes keep matplotlib's default margins (12.5 % left, 10 % right, 11 % bottom, 12 % top), which leaves an empty frame around the chart. Skip it in three cases: a figure that sets its own margins with `fig.subplots_adjust(...)`, which a later `tight_layout()` overrides; a `clustermap`, whose own grid `tight_layout()` squeezes; and a `jointplot` / `JointGrid`, which lays itself out: it calls neither `g.tight_layout()` (a `JointGrid` has none) nor `plt.tight_layout()`, and makes room for a title with `g.figure.subplots_adjust(top=...)`.
 
-For figure-level seaborn plots (`relplot`, `catplot`, `displot`), pass the canvas size via `height=` / `aspect=`, then set the figure size once more: a `hue` legend is added outside the axes and widens the figure (`height=4.5, aspect=16/9` with a legend saves at about 3900×1800). With `col=` or `row=`, `height` and `aspect` size each facet, so divide the canvas among them (`height=4.5 / nrows, aspect=16 / 9 * nrows / ncols`). A faceted grid also reserves the legend's measured width in its layout call: seaborn keeps the legend's share of the widened figure, which is too small after the resize and puts the legend on the last panel's data.
+For figure-level seaborn plots (`relplot`, `catplot`, `displot`), pass the canvas size via `height=` / `aspect=`, then set the figure size once more: a `hue` legend is added outside the axes and widens the figure (`height=4.5, aspect=16/9` with a legend saves at about 3900×1800). With `col=` or `row=`, `height` and `aspect` size each facet, so divide the canvas among them (`height=4.5 / nrows, aspect=16 / 9 * nrows / ncols`). Every figure-level grid then reserves the legend's measured width in its one layout call: seaborn keeps the legend's share of the widened figure, which is too small after the resize, so a plain `g.tight_layout()` puts a wide legend on the data. Without a legend the same lines change nothing.
 
 ```python
-# Landscape: aspect=16/9 ≈ 1.778, height controls the figure's height in inches; pick height=4.5 → width=8
-g = sns.relplot(..., height=4.5, aspect=16/9)
-g.figure.set_dpi(400)
-g.figure.set_size_inches(8, 4.5)  # back to the canvas after the legend widened it
-g.tight_layout()                  # right before savefig: fits axes and legend inside the canvas
+# Create the grid on the canvas (height in inches, aspect = width / height):
+g = sns.relplot(..., height=4.5, aspect=16 / 9)                # landscape → 8 × 4.5 in
+g = sns.relplot(..., height=6, aspect=1)                       # square → 6 × 6 in
+g = sns.relplot(..., col=YEAR, height=4.5, aspect=16 / 9 / 3)  # three facets in a row, each 8/3 in wide
 
-# Square: aspect=1, height=6 → 2400×2400
-g = sns.relplot(..., height=6, aspect=1)
+# Then the same lines for every figure-level grid, right before savefig:
 g.figure.set_dpi(400)
-g.figure.set_size_inches(6, 6)
-g.tight_layout()
-
-# Faceted, one row of three panels: each facet 4.5 high and 8/3 wide → 8 × 4.5 in all
-g = sns.relplot(..., col=YEAR, height=4.5, aspect=16 / 9 / 3)
-g.figure.set_dpi(400)
-g.figure.set_size_inches(8, 4.5)
+g.figure.set_size_inches(8, 4.5)  # square: (6, 6); back to the canvas after the legend widened it
 g.figure.canvas.draw()  # lays out the legend so its width can be measured
-legend_share = g.legend.get_window_extent().width / g.figure.bbox.width if g.legend else 0
-g.tight_layout(rect=(0, 0, 1 - legend_share - 0.01, 1))  # the grid's one layout call, right before savefig
+legend_share = g.legend.get_window_extent().width / g.figure.bbox.width + 0.01 if g.legend else 0
+g.tight_layout(rect=(0, 0, 1 - legend_share, 1))  # the grid's one layout call
 ```
 
-A later bare `g.tight_layout()` or `plt.tight_layout()` undoes the reserved width, so the faceted grid calls neither.
+A later bare `g.tight_layout()` or `plt.tight_layout()` undoes the reserved width, so the grid calls neither.
 
 ## Plot Methods
 
