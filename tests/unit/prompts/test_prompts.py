@@ -1444,9 +1444,10 @@ class TestAdaptableCode:
             "When the spec needs the construct, leave the refusal and say so in the commit body: a 3D trace in "
             "plotly draws with WebGL, which the chat's renderer lacks, and a 3D spec still needs it.",
             "**A map spec is excluded** (`readiness: excluded`)",
-            "**The check accepts these files when the rest of the file passes:** a built-in example dataset "
-            "(`sns.load_dataset`, a `sklearn.datasets` toy loader such as `load_iris()` or a generator such as "
-            "`make_moons()`) is no refusal, because the chat replaces the data before anything runs.",
+            "**The check accepts these files when the rest of the file passes:** an example dataset (a "
+            "`sklearn.datasets` toy loader such as `load_iris()` or a generator such as `make_moons()`, or "
+            "`sns.load_dataset`, which downloads its CSV) is no refusal, because the chat never runs your file and "
+            "replaces the data before anything runs.",
             "Never swap the data scenario or write the dataset out inline because of the check.",
             "A refusal the check prints is removed as above, also one about a dataset (a `fetch_*` download, a "
             "loader that reads a path).",
@@ -1496,10 +1497,10 @@ class TestAdaptableCode:
             "Such a fix is a named code-quality item, like a line of the self-check: keep the render the same.",
             "Never remove an element the spec asks for to get rid of a refusal: when the spec needs the construct",
             "leave the refusal and say so in the commit body.",
-            "A built-in example dataset (`sns.load_dataset`, a `sklearn.datasets` toy loader or generator) is no "
-            "refusal: the check accepts these files when the rest of the file passes, because the chat replaces the "
-            "data before anything runs, so never swap the data scenario or write the dataset out inline because of "
-            "the check.",
+            "An example dataset (a `sklearn.datasets` toy loader or generator, or `sns.load_dataset`, which downloads "
+            "its CSV) is no refusal: the check accepts these files when the rest of the file passes, because the chat "
+            "never runs your file and replaces the data before anything runs, so never swap the data scenario or "
+            "write the dataset out inline because of the check.",
             "Its output is the whole rule.",
             "A map spec is excluded (`readiness: excluded`): there is nothing to fix.",
             "Never trade a defect in the render for a clean check.",

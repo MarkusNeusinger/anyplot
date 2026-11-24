@@ -1,11 +1,11 @@
-"""Built-in example datasets: a hint at eligibility, refused in every form that runs (owner decision of 2026-11-23).
+"""Example datasets: a hint at eligibility, refused in every form that runs (owner decision of 2026-11-23).
 
 The chat never runs a catalogue original: it runs the adapted working form, after `validate_security` passed it,
 with its data from `df = load_user_data()`. So the eligibility scan (`readiness.scan`, through the validator's
-`validate_original`) reports a built-in dataset the original loads (`sklearn.datasets` toy loaders and generators,
-`sns.load_dataset`) as a `built-in-dataset` coupling hint, while the adapted and the run form are refused for it
-exactly as before. The pipeline's side, that nothing renders the original, is `tests/unit/agents/runtime/
-test_builtin_datasets_flow.py`.
+`validate_original`) reports an example dataset the original loads (scikit-learn's built-in toy loaders and
+generators, and `sns.load_dataset`, which downloads its CSV) as a `built-in-dataset` coupling hint, while the adapted
+and the run form are refused for it exactly as before. The pipeline's side, that nothing renders the original, is
+`tests/unit/agents/runtime/test_builtin_datasets_flow.py`.
 """
 
 import re
@@ -55,7 +55,7 @@ PLOTLY_ORIGINAL = source("""
 """parallel-categories-basic's plotly file in miniature: it imports seaborn for `sns.load_dataset` alone, and seaborn
 is no import of plotly's profile."""
 
-# (case id, library, original, the lines of the built-in dataset, the SECURITY rules the strict entry finds there)
+# (case id, library, original, the lines of the example dataset, the SECURITY rules the strict entry finds there)
 ORIGINALS: list[tuple[str, str, str, list[int], set[str]]] = [
     (
         "make_moons",
@@ -106,7 +106,7 @@ def rules_by_line(findings: list[Finding]) -> dict[int | None, set[str]]:
 
 
 def hint_of(result: Readiness) -> str:
-    (hint,) = [hint for hint in result.hints if hint.startswith("Built-in example dataset at")]
+    (hint,) = [hint for hint in result.hints if hint.startswith("Example dataset loaded at")]
     return hint
 
 
@@ -127,6 +127,25 @@ def test_an_original_that_loads_a_built_in_dataset_is_eligible_with_the_hint(
     assert "df = load_user_data()" in hint and "drop the import only the loader used" in hint
     # One hint per line: a `sklearn.datasets` call is no `synthetic-data` line as well.
     assert not any(hint.startswith("Synthetic data generation") and "make_moons" in hint for hint in result.hints)
+
+
+def test_the_hint_quotes_each_line_as_the_parser_counts_it_without_its_comment() -> None:
+    """A string may hold a form feed or U+2028, which `str.splitlines` breaks at and the parser does not: the hint
+    still quotes the line its number names, and like every other category it leaves the line's comment out."""
+    original = matplotlib_file(
+        "from sklearn.datasets import make_moons  # example data",
+        'title = "moons and\x0cmore # not a comment"\n'
+        "X, labels = make_moons(n_samples=200, random_state=42)  # the moons\n"
+        "x, y = X[:, 0], X[:, 1]",
+    )
+
+    result = scan(original, spec_id="scatter-basic", library="matplotlib", enabled_libraries=["matplotlib"])
+
+    hint = hint_of(result)
+    assert re.findall(r"\bline (\d+) `([^`]*)`", hint) == [
+        ("5", "from sklearn.datasets import make_moons"),
+        ("9", "X, labels = make_moons(n_samples=200, random_st…"),
+    ]
 
 
 @pytest.mark.parametrize(("case", "library", "original", "lines", "strict"), ORIGINALS, ids=ORIGINAL_IDS)
@@ -196,8 +215,8 @@ def test_the_plotly_file_that_imports_seaborn_for_its_data_alone() -> None:
     ],
 )
 def test_a_download_or_a_path_reader_stays_refused_in_the_original(imports_and_data: tuple[str, str]) -> None:
-    """`fetch_*` downloads, and `load_files`, `load_svmlight_file(s)` and the sample images read a path or a picture:
-    none is a built-in example dataset, so the original is refused for it as before."""
+    """scikit-learn's `fetch_*` downloads, and `load_files`, `load_svmlight_file(s)` and the sample images, which read
+    a path or a picture: none is an example dataset the exemption names, so the original is refused for it as before."""
     imports, data = imports_and_data
     original = matplotlib_file(imports, data + "\nx = y = np.arange(3)")
 
@@ -269,11 +288,54 @@ def test_a_mixed_import_exempts_only_its_built_in_name() -> None:
             'd = sns.load_dataset("iris")\nx, y = d["a"], d["b"]\nsns = None',
             id="seaborn-rebound",
         ),
+        # Shadows that are no `Name`: every use stays a callee, so only the one-binding rule refuses them.
+        pytest.param(
+            "matplotlib",
+            "from sklearn.datasets import load_iris",
+            "def first(load_iris):\n    return load_iris()\n\n\nx = y = load_iris().data[:, 0]",
+            id="loader-parameter-shadow",
+        ),
+        pytest.param(
+            "matplotlib",
+            "from sklearn.datasets import load_iris",
+            "x = y = load_iris().data[:, 0]\n\n\ndef load_iris():\n    return None",
+            id="loader-def-shadow",
+        ),
+        pytest.param(
+            "matplotlib",
+            "from sklearn.datasets import load_iris\nfrom numpy import ones as load_iris",
+            "x = y = load_iris(3)",
+            id="loader-import-shadow",
+        ),
+        pytest.param(
+            "seaborn",
+            "import seaborn as sns",
+            'def frame(sns):\n    return sns.load_dataset("iris")\n\n\nd = sns.load_dataset("iris")\nx, y = d["a"], d["b"]',
+            id="seaborn-parameter-shadow",
+        ),
+        # The module must be seaborn, and the loader seaborn's `load_dataset`: any other `load*` stays a refused read.
+        pytest.param(
+            "matplotlib",
+            "import numpy as sns",
+            'd = sns.load_dataset("iris")\nx, y = d["a"], d["b"]',
+            id="another-module-named-sns",
+        ),
+        pytest.param(
+            "seaborn", "import seaborn as sns", 'd = sns.load("iris")\nx, y = d["a"], d["b"]', id="seaborn-load"
+        ),
+        pytest.param(
+            "seaborn",
+            "import seaborn as sns",
+            'd = sns.load_example("iris")\nx, y = d["a"], d["b"]',
+            id="seaborn-other-load-attribute",
+        ),
     ],
 )
 def test_no_other_shape_is_exempt(library: str, imports: str, data: str) -> None:
-    """Only the exact shapes are a built-in dataset: an alias, `from sklearn import datasets`, a dotted import, a loader
-    reached through a value, a second binding or a nested import leaves the eligibility entry as strict as the other."""
+    """Only the exact shapes are an example dataset: an alias, `from sklearn import datasets`, a dotted import, a loader
+    reached through a value, a second binding of any kind (a store, a parameter, a `def`, another import), a nested
+    import, another module under the alias's name or another loader name leaves the eligibility entry as strict as the
+    other."""
     original = matplotlib_file(imports, data)
 
     found = validate_original(original, library=library)
@@ -354,7 +416,7 @@ def test_over_the_catalogue_the_entries_differ_only_on_built_in_dataset_lines() 
             dropped,
         )
         exempt_files += bool(lines)
-    # 68 of the 69 files of 2026-11-23 that load a built-in dataset (the 69th marks its loader but stays refused for
+    # 68 of the 69 files of 2026-11-23 that load an example dataset (the 69th marks its loader but stays refused for
     # `contourpy`); a catalogue change moves the number, so only its order of magnitude is pinned.
     assert exempt_files >= 20
 

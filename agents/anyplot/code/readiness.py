@@ -58,11 +58,13 @@ The coupling heuristics, all static and deliberately simple:
   entries.
 * `date-locators`: a `matplotlib.dates` locator other than `AutoDateLocator`, or
   `DateFormatter`.
-* `built-in-dataset`: the lines of a built-in example dataset the original loads, its import
-  and its calls (`sklearn.datasets` toy loaders and generators, `sns.load_dataset`), as the
-  validator's eligibility entry finds them (`validate.validate_original`, owner decision of
-  2026-11-23). The chat runs only the adapted code, which the SECURITY profile refuses while it
-  keeps the loader, so the hint tells the adapter to take the data from `df` and drop the import.
+* `built-in-dataset`: the lines of an example dataset the original loads, its import and its
+  calls (scikit-learn's built-in toy loaders and generators, and `sns.load_dataset`, which
+  downloads its CSV), as the validator's eligibility entry finds them
+  (`validate.validate_original`, owner decision of 2026-11-23). The chat never runs the original;
+  it runs only the adapted code, which the SECURITY profile refuses while it keeps the loader, so
+  the hint tells the adapter to take the data from `df` and drop the import. Each line is quoted
+  as the parser counts lines, without its comment (`_source_lines`).
 * `synthetic-data`: `numpy.random.*` (including `default_rng` and `seed`), methods of a
   generator made by `default_rng` or `RandomState`, and `scipy.stats` `.rvs(...)` draws; the
   `sklearn.datasets` generators are `built-in-dataset` lines. The stdlib `random` module needs
@@ -92,7 +94,9 @@ has no egress for. `scatter-pitch-events` (a sports pitch tagged `map`) and
 """
 
 import ast
+import io
 import re
+import tokenize
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Literal
@@ -255,6 +259,8 @@ GENERATOR_FACTORIES = frozenset({"default_rng", "RandomState", "Generator"})
 # A statistic stated in a string: a symbol, a relation, then a number.
 _STATISTIC = re.compile(r"(?<![\w.])(?:r|R|R²|R\^2|ρ|τ|p|n|μ|σ)\s*(?:=|≈|~|<|>|≤|≥)\s*[-−+]?\.?\d")
 _WHITESPACE = re.compile(r"\s+")
+_LINE_BREAK = re.compile(r"\r\n|\r|\n")
+"""The line breaks Python's parser counts, and no other (`_source_lines`)."""
 _IMPRINT_GREEN = IMPRINT[0].upper()
 
 # Category id, hint prefix, hint advice; the order is the order of `hints`.
@@ -286,7 +292,7 @@ _CATEGORIES: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "built-in-dataset",
-        "Built-in example dataset at",
+        "Example dataset loaded at",
         "take the data from columns of df = load_user_data() instead and drop the import only the loader used; "
         "the adapted code may not load it.",
     ),
@@ -359,8 +365,8 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
 
     findings = _coupling(normalised_code, tree, library)
     if datasets:
-        lines = normalised_code.splitlines()
-        findings["built-in-dataset"] = [(line, snippet_of(lines[line - 1])) for line in datasets]
+        lines = _source_lines(normalised_code)
+        findings["built-in-dataset"] = [(line, snippet_of(lines[line - 1])) for line in datasets if line <= len(lines)]
     reasons: list[str] = []
     hints: list[str] = []
     for category, prefix, advice in _CATEGORIES:
@@ -388,12 +394,14 @@ def _canvas_reason(canvas: Canvas, library: str) -> str:
 
 
 def _security(code: str, library: str) -> tuple[list[str], list[int]]:
-    """SECURITY validator findings as blocking reasons, and the lines of a built-in example dataset; a validator that
-    fails blocks too.
+    """SECURITY validator findings as blocking reasons, and the lines of an example dataset; a validator that fails
+    blocks too.
 
-    The original is scanned through the validator's eligibility entry (`validate_original`): a
-    built-in example dataset is a `BUILTIN_DATASET_RULE` finding there, whose lines (sorted, each
-    once) become the `built-in-dataset` hint and never a blocking reason; every other finding blocks.
+    The original is scanned through the validator's eligibility entry (`validate_original`): an
+    example dataset (scikit-learn's built-in data, or seaborn's `load_dataset`, which downloads) is
+    a `BUILTIN_DATASET_RULE` finding there, whose lines (sorted, each once) become the
+    `built-in-dataset` hint and never a blocking reason, because the original never runs; every
+    other finding blocks.
     `scan` calls this only for a library with a normaliser, which is a library the
     validator profiles too; for any other library `validate_original` raises
     `ValueError` (a caller bug, not a property of the code), and the scan has already
@@ -414,6 +422,26 @@ def _security(code: str, library: str) -> tuple[list[str], list[int]]:
     if len(findings) > MAX_SECURITY_REASONS:
         reasons.append(f"security: {len(findings) - MAX_SECURITY_REASONS} more findings")
     return reasons, datasets
+
+
+def _source_lines(code: str) -> list[str]:
+    """`code`'s lines numbered as the parser numbers them, each without its comment and its trailing blanks.
+
+    The parser breaks a line at `\\n`, `\\r\\n` and a lone `\\r` alone; `str.splitlines` also breaks at a form feed,
+    a vertical tab, U+0085, U+2028 and the file separators, which a string literal may hold, and would then quote
+    another line's text under a line number. A comment is cut where the tokenizer finds it, so a `#` inside a string
+    stays, as the other categories quote the node's own source without it.
+    """
+    text = _LINE_BREAK.sub("\n", code)
+    lines = text.split("\n")
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(text).readline):
+            if token.type == tokenize.COMMENT:
+                row, column = token.start
+                lines[row - 1] = lines[row - 1][:column]
+    except tokenize.TokenError, SyntaxError:
+        pass  # code the parser reads and the tokenizer does not: its lines keep their comments
+    return [line.rstrip() for line in lines]
 
 
 # --- WebGL (plotly) ------------------------------------------------------------------------

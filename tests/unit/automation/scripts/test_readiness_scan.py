@@ -505,7 +505,7 @@ def test_check_accepts_a_file_the_chat_accepts():
     assert check(CLEAN, spec_id=SPEC, library=LIB) == (0, ["readiness: accepted"])
 
 
-# A built-in example dataset (owner decision of 2026-11-23): the chat accepts the original and replaces its data.
+# An example dataset (owner decision of 2026-11-23): the chat accepts the original and replaces its data.
 BUILT_IN = CLEAN.replace("import pandas as pd", "import pandas as pd\nfrom sklearn.datasets import load_iris").replace(
     "# Data\n", "# Data\nfeatures = load_iris().data\n"
 )

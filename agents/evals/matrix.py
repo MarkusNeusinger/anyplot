@@ -596,8 +596,9 @@ class RenderToken:
 
 def _passes_security(case: "EvalCase", runtime: "RuntimeAdapter") -> bool:
     """Whether a case's normalised catalogue file passes the SECURITY profile as it stands (`RuntimeAdapter.security`,
-    the profile every working form the chat renders meets). The eligibility scan accepts more: a built-in example
-    dataset in the original, which the chat replaces before anything runs, so an eligible file may still fail here."""
+    the profile every working form the chat renders meets). The eligibility scan accepts more: an example dataset in
+    the original (scikit-learn's built-in data, or seaborn's `load_dataset`, which downloads), which the chat replaces
+    before anything runs, so an eligible file may still fail here and may need the network."""
     return not runtime.security(runtime.normalise(case.snapshot().code, case.library))
 
 
@@ -629,8 +630,9 @@ async def preflight(cases: list["EvalCase"], services: "Services", echo: Callabl
     library without such a smoke case renders its first file and fails as before.
 
     Nothing renders a file the SECURITY profile refuses (`_passes_security`): the chat renders
-    only adapted code that passed it, and an eligible original may not (a built-in example
-    dataset, which the eligibility scan accepts because the chat replaces it). Such a file never
+    only adapted code that passed it, and an eligible original may not: it may load an example
+    dataset, seaborn's by download, which the eligibility scan accepts because the chat replaces
+    it. Such a file never
     stands in, and when no case and no smoke case can, the run stops with a `SetupError` before
     any render.
     """

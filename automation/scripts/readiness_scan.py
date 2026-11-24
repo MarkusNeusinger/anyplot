@@ -24,9 +24,11 @@ every rule of the SECURITY profile the file breaks, read from the validator's
 own findings (the scan's reasons list only the first five), and the reason's
 category otherwise (``no-theme``, ``savefig-target``, ``syntax``, ``webgl``).
 Keys are fixed identifiers of the validator; a record never quotes code. The
-findings come from the scan's own entry, ``validate_original``, so a built-in
-example dataset (``sklearn.datasets``, ``sns.load_dataset``) is no key: the
-chat accepts such a file and replaces its data (owner decision of 2026-11-23).
+findings come from the scan's own entry, ``validate_original``, so an example
+dataset (scikit-learn's built-in ``sklearn.datasets`` loaders and generators,
+and ``sns.load_dataset``, which downloads its CSV) is no key: the chat never
+runs the original, accepts such a file and replaces its data (owner decision
+of 2026-11-23).
 
 The verdict, first match wins:
 
@@ -203,7 +205,7 @@ def _scan(code: str, *, spec_id: str, library: str) -> _Scan:
     if "security" in categories:
         try:
             # Every finding, not the scan's first five: the session needs each line, and the key needs each rule. The
-            # scan's own entry, so a built-in example dataset is the hint it is there, never a key.
+            # scan's own entry, so an example dataset is the hint it is there, never a key.
             findings = validate.validate_original(normalised, library=library)
         except Exception as exc:  # the scan fails closed on a crashing validator, and so does the key
             findings = []

@@ -1,13 +1,16 @@
-"""Nothing in the chat renders a catalogue original (owner decision of 2026-11-23, built-in datasets).
+"""Nothing in the chat renders a catalogue original (owner decision of 2026-11-23, example datasets).
 
-The eligibility scan accepts an original that loads a built-in example dataset, because the chat never runs the
-original: a session's opening only normalises and scans it (`opening.assess`), and the pipeline renders a run form
-only after `_check` passed the adapted working form under the strict SECURITY profile (`pipeline.py`, the render
-call). These tests pin that order on the real service with a fake renderer: a plan that keeps the loader never
-reaches the renderer, and the render job of a plan that drops it holds no loader.
+The eligibility scan accepts an original that loads an example dataset (scikit-learn's built-in data, or seaborn's
+`load_dataset`, which downloads), because the chat never runs the original: a session's opening only normalises and
+scans it (`opening.assess`), and the pipeline renders a run form only after `_check` passed the adapted working form
+under the strict SECURITY profile (`pipeline.py`, the render call). These tests pin that order on the real service
+with a fake renderer: a plan that keeps the loader never reaches the renderer, and the render job of a plan that drops
+it holds no loader. A list of every place that builds a render or page job keeps a new one from going unread.
 """
 
+import ast
 import logging
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -85,7 +88,7 @@ async def test_a_plan_that_keeps_the_loader_never_reaches_the_renderer(
 
     assert backend.jobs == []
     assert plot["status"] != "ok"
-    assert "Built-in example dataset at" in adapter_inputs(fake)[0]  # the hint reached the adapter
+    assert "Example dataset loaded at" in adapter_inputs(fake)[0]  # the hint reached the adapter
     checks = attribution_lines(caplog, "pipeline_check")
     assert [line["outcome"] for line in checks] == ["rejected", "rejected"]
     assert all("banned-import" in line["validator"] for line in checks)
@@ -96,7 +99,7 @@ async def test_the_render_job_of_a_plan_that_drops_the_loader_holds_none(
     client: httpx.AsyncClient, swap_models, backend: FakeBackend
 ) -> None:
     """The repair that removes the import and the call passes the check, and only then does a job reach the renderer:
-    its source is the run form of the adapted code, which loads nothing built in."""
+    its source is the run form of the adapted code, which loads no example dataset."""
     swap_models("gemini", default_script(plans=[SCATTER_PLAN, DROPS_THE_LOADER]))
     sid = await open_session(client)
 
@@ -106,3 +109,54 @@ async def test_the_render_job_of_a_plan_that_drops_the_loader_holds_none(
     assert len(backend.jobs) == 1
     (job,) = backend.jobs
     assert "sklearn" not in job.source and "make_regression" not in job.source
+
+
+AGENTS_DIR = Path(__file__).resolve().parents[4] / "agents"
+JOB_TYPES = frozenset({"RenderJob", "PageJob"})
+JOB_SITES: dict[tuple[str, str, str], str] = {
+    ("anyplot/pipeline.py", "_attempts", "RenderJob"): "the run form, built after `_check` passed the working form",
+    ("anyplot/theme_render.py", "render_theme", "RenderJob"): "a shipped version's run form (`CodeVersion.run_form`)",
+    ("anyplot/page_export.py", "page_download", "PageJob"): "a shipped version's run form (`CodeVersion.run_form`)",
+    ("evals/ladder_lab.py", "adapt_and_render", "RenderJob"): "the run form after `_check`, as in the pipeline",
+    ("evals/stress.py", "_standin", "RenderJob"): "the stand-in's run form after `_check`",
+    ("evals/matrix.py", "preflight", "RenderJob"): "an original only when `_passes_security` (`runtime.security`)",
+}
+"""Every place under `agents/` that builds a render or a page job, and why the code it sends passed the SECURITY
+profile of the adapted forms (`validate_security`). The eligibility scan accepts originals that profile refuses (an
+example dataset, seaborn's a download), so a job built from an eligible original without that profile would run
+code no check passed."""
+
+
+class _JobSites(ast.NodeVisitor):
+    """The `RenderJob(...)` and `PageJob(...)` calls of one module, each with its innermost enclosing function."""
+
+    def __init__(self) -> None:
+        self.functions: list[str] = []
+        self.found: list[tuple[str, str]] = []
+
+    def visit_FunctionDef(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        self.functions.append(node.name)
+        self.generic_visit(node)
+        self.functions.pop()
+
+    visit_AsyncFunctionDef = visit_FunctionDef
+
+    def visit_Call(self, node: ast.Call) -> None:
+        func = node.func
+        name = func.id if isinstance(func, ast.Name) else func.attr if isinstance(func, ast.Attribute) else ""
+        if name in JOB_TYPES:
+            self.found.append((self.functions[-1] if self.functions else "<module>", name))
+        self.generic_visit(node)
+
+
+def test_every_render_and_page_job_is_built_at_a_reviewed_site() -> None:
+    """A new place that builds a job fails here until someone reads it: does it render only code that passed
+    `validate_security`, never an original because it is eligible? Add it to `JOB_SITES` with the answer."""
+    found: list[tuple[str, str, str]] = []
+    for path in sorted(AGENTS_DIR.rglob("*.py")):
+        sites = _JobSites()
+        sites.visit(ast.parse(path.read_text(encoding="utf-8")))
+        relative = path.relative_to(AGENTS_DIR).as_posix()
+        found.extend((relative, function, job) for function, job in sites.found)
+
+    assert sorted(found) == sorted(JOB_SITES)

@@ -2,8 +2,8 @@
 
 The SECURITY profile runs on the normalised catalogue original (eligibility, `validate_original`)
 and on every adapted working form (`validate_security`); the ADAPTATION profile runs on adapted
-code only. The two SECURITY entries differ in one construct alone, a built-in example dataset
-the original loads ("Built-in example datasets" below). Both profiles
+code only. The two SECURITY entries differ in one construct alone, an example dataset the
+original loads from scikit-learn or seaborn ("Example datasets" below). Both profiles
 return an empty list for valid code and never raise on invalid code: a syntax error (also
 one only the compiler reports, such as a module-level `return`), an oversize file or a
 string that is not UTF-8 text is itself a `Finding`. Only `library` makes
@@ -352,13 +352,18 @@ Decisions this module takes where the design leaves room:
   reviewer sees the render.
 * **Placeholder (ADAPTATION).** Exactly one `df = load_user_data()` statement, anywhere;
   any other use of the name `load_user_data` is a separate finding.
-* **Built-in example datasets (eligibility only).** The generator prompts let a catalogue file
-  load its example data from scikit-learn or seaborn, and the chat never runs the original: it
-  runs the adapted working form, whose data is `df = load_user_data()`, after `validate_security`
-  passed it. So `validate_original`, the eligibility scan's entry (`readiness.scan`), reports such
-  a loader as a `built-in-dataset` finding, which the scan turns into a coupling hint, while every
-  adapted form is refused for it exactly as before (owner decision of 2026-11-23, the way R's
-  dataset packages were decided on 2026-10-29). The exemption is a set of exact nodes
+* **Example datasets (eligibility only).** The generator prompts let a catalogue file load its
+  example data from scikit-learn or seaborn. scikit-learn's toy loaders read tables bundled with
+  the package and its generators draw in memory; seaborn's `load_dataset` is no built-in data:
+  it downloads a CSV from GitHub and writes a cache directory. Neither matters in the original,
+  because the chat never runs it: it runs the adapted working form, whose data is
+  `df = load_user_data()`, after `validate_security` passed it. So `validate_original`, the
+  eligibility scan's entry (`readiness.scan`), reports such a loader as a `built-in-dataset`
+  finding (the rule is named for scikit-learn's case and covers seaborn's download too), which
+  the scan turns into a coupling hint, while every adapted form is refused for it exactly as
+  before (owner decision of 2026-11-23, the way R's dataset packages were decided on
+  2026-10-29). An eligible original may therefore still need the network: never run one, and
+  never take eligibility as a sign that a file passes `validate_security`. The exemption is a set of exact nodes
   (`_Scan._builtin_datasets`), and only a `banned-import` or `banned-call` finding on one of them
   becomes `built-in-dataset`; every other rule on every node stays as strict as in
   `validate_security`. The nodes: a module-level `from sklearn.datasets import NAME` (no `as`)
@@ -366,9 +371,10 @@ Decisions this module takes where the design leaves room:
   every use of the name is the callee of a call, together with those callees; `X.load_dataset`
   as the callee of a call, where `X` is bound only by a module-level `import seaborn [as X]`;
   and that import itself in a profile without seaborn, when every use of `X` is such a callee
-  (a plotly file that imports seaborn for its data alone). Path readers (`load_files`,
-  `load_svmlight_file(s)`), the sample images, every `fetch_*` download, `from sklearn import
-  datasets` and `import sklearn.datasets` stay refused in the original as well.
+  (a plotly file that imports seaborn for its data alone). scikit-learn's path readers
+  (`load_files`, `load_svmlight_file(s)`), its sample images and its `fetch_*` downloads, `from
+  sklearn import datasets` and `import sklearn.datasets` stay refused in the original as well;
+  seaborn's download is the one network loader the original may name.
 
 **The DATA profile** (`validate_data_code`, owner decision of 2026-10-14) checks a snippet
 that generates the data for a plot, which the root translated to Python from what the
@@ -1307,8 +1313,9 @@ UNKNOWN_MODULE = "?"
 # `np.loadtxt`, `sns.load_dataset`, sklearn's `load_*`).
 _BANNED_IO_PATTERN = re.compile(r"^(?:read_\w+|fetch_\w+|load\w*)$")
 BUILTIN_DATASET_RULE = "built-in-dataset"
-"""The rule of a built-in example dataset in the original (`validate_original`), which the eligibility scan turns into
-a coupling hint (module docstring, "Built-in example datasets")."""
+"""The rule of an example dataset the original loads (`validate_original`), which the eligibility scan turns into a
+coupling hint (module docstring, "Example datasets"). It is named for scikit-learn's built-in data and covers
+seaborn's `load_dataset` as well, which downloads: accepted only because the original never runs."""
 SKLEARN_DATASETS = "sklearn.datasets"
 SKLEARN_BUILTIN_DATASETS: frozenset[str] = frozenset(
     {
@@ -1344,12 +1351,15 @@ SKLEARN_BUILTIN_DATASETS: frozenset[str] = frozenset(
 )
 """The `sklearn.datasets` names a catalogue original may load its example data with (`validate_original`). Not
 `load_files`, `load_svmlight_file` and `load_svmlight_files`, which read a path they are given, not the sample images,
-and no `fetch_*`, which download: those stay refused in the original too."""
+and no `fetch_*`, which download: those stay refused in the original too (seaborn's download is the one exception,
+`SEABORN_LOADER`)."""
 SEABORN = "seaborn"
 SEABORN_LOADER = "seaborn.load_dataset"
+"""seaborn's example-data loader, which downloads `<name>.csv` from GitHub and caches it: accepted in the original only,
+because the original never runs, and refused in every form that runs like any download."""
 _SEABORN_LOADER_NAMES = frozenset({"load_dataset"})
 _BUILTIN_DATASET_RULES = frozenset({"banned-import", "banned-call"})
-"""The rules whose finding on a built-in dataset's node (`_Scan.builtin_datasets`) `validate_original` reports as
+"""The rules whose finding on an example dataset's node (`_Scan.builtin_datasets`) `validate_original` reports as
 `BUILTIN_DATASET_RULE`: the import the allowlist refuses and the loader name the I/O pattern refuses."""
 _UNSAFE_HELPER_PATTERN = re.compile(r"^(?:print_\w+|x13_\w+)$")
 _ANY_RECEIVER_ESCAPES = ESCAPE_ATTRIBUTES | UNSAFE_SUBMODULES
@@ -1866,10 +1876,12 @@ def validate_security(code: str, *, library: str) -> list[Finding]:
 def validate_original(code: str, *, library: str) -> list[Finding]:
     """The SECURITY profile on a normalised catalogue original, for its eligibility alone (`readiness.scan`).
 
-    The same rules as `validate_security`, except that a built-in example dataset the original
-    loads is a `BUILTIN_DATASET_RULE` finding, one per line of its import and calls, never a
-    refusal of its own (module docstring, "Built-in example datasets"). Never call it on code
-    that may run: what runs is the adapted working form, which `validate_security` checks.
+    The same rules as `validate_security`, except that an example dataset the original loads
+    (scikit-learn's built-in data, or seaborn's `load_dataset`, which downloads) is a
+    `BUILTIN_DATASET_RULE` finding, one per line of its import and calls, never a refusal of its
+    own (module docstring, "Example datasets"). Never call it on code that may run, and never
+    render a file it accepted: what runs is the adapted working form, which `validate_security`
+    checks.
     """
     return _security_findings(code, library, original=True)
 
@@ -2326,8 +2338,8 @@ class _Scan:
         self.import_bindings: dict[str, bool] = {}
         """Name bound by an import the rules permitted (`import scipy.stats` binds `scipy`) → True."""
         self.builtin_datasets: dict[ast.AST, str] = {}
-        """The nodes of a built-in example dataset, each with its dataset path (`_builtin_datasets`); empty unless
-        `security` runs for `validate_original`."""
+        """The nodes of an example dataset the original loads, each with its dataset path (`_builtin_datasets`); empty
+        unless `security` runs for `validate_original`."""
         self.aliases: dict[str, str] = {}
         self._collect_aliases()
 
@@ -2335,7 +2347,7 @@ class _Scan:
 
     def add(self, rule: str, message: str, node: ast.AST | None, *, module: str | None = None) -> None:
         if node is not None and rule in _BUILTIN_DATASET_RULES and node in self.builtin_datasets:
-            return  # the original's built-in dataset: `security` reports each of its nodes as `BUILTIN_DATASET_RULE`
+            return  # the original's example dataset: `security` reports each of its nodes as `BUILTIN_DATASET_RULE`
         label = module_label(module) if module is not None else None
         self.findings.append(Finding(rule, message[:MAX_MESSAGE_CHARS], self._line(node), label))
 
@@ -2416,7 +2428,7 @@ class _Scan:
     def security(
         self, library: str, allowed_imports: frozenset[str], rule: SaveRule, *, original: bool = False
     ) -> None:
-        """Every SECURITY rule; for `validate_original` (`original`) with the built-in datasets as their own rule."""
+        """Every SECURITY rule; for `validate_original` (`original`) with the example datasets as their own rule."""
         self.library = library
         self.library_bans = LIBRARY_BANS.get(library, frozenset())
         self.library_imports = LIBRARY_IMPORTS.get(library, frozenset())
@@ -2452,18 +2464,19 @@ class _Scan:
         if library in EXPRESSION_LIBRARIES:
             self._check_expression_strings()
         for node, path in self.builtin_datasets.items():
-            message = f"'{path}' is a built-in example dataset: the adapted code takes its data from {PLACEHOLDER}"
+            kind = "downloads its example data" if path == SEABORN_LOADER else "loads scikit-learn's built-in data"
+            message = f"'{path}' {kind}: the original never runs, the adapted code takes its data from {PLACEHOLDER}"
             self.findings.append(Finding(BUILTIN_DATASET_RULE, message, self._line(node)))
 
     def _builtin_datasets(self, allowed: frozenset[str]) -> dict[ast.AST, str]:
-        """The nodes of the built-in example datasets the original loads, each with its dataset path (module
-        docstring, "Built-in example datasets"): the eligibility scan's one exemption, and the lines of its hint.
+        """The nodes of the example datasets the original loads, each with its dataset path (module docstring,
+        "Example datasets"): the eligibility scan's one exemption, and the lines of its hint.
 
         Only these shapes, all of them in the catalogue: a module-level `from sklearn.datasets import NAME` with NAME
         in `SKLEARN_BUILTIN_DATASETS` and no `as`, that import being the name's only binding and every use of the name
         the callee of a call (the alias and the callees); `X.load_dataset` as the callee of a call, `X` bound only by
         a module-level `import seaborn [as X]` (the attribute); and, where the profile does not admit seaborn, that
-        import when every use of `X` is such a callee (the alias). Anything else is no built-in dataset here: `f =
+        import when every use of `X` is such a callee (the alias). Anything else is no example dataset here: `f =
         load_iris`, an aliased or a nested import, `from sklearn import datasets`, a second binding of the name.
         """
         marked: dict[ast.AST, str] = {}
