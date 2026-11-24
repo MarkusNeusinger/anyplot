@@ -230,14 +230,37 @@ class TestDecideCli:
         assert "follow_up_of" not in record
         assert record["follow_up_trigger"] == "repair"
 
-    def test_a_weaknesses_file_the_parser_cannot_take_never_crashes_the_gate(self, tmp_path, monkeypatch, capsys):
-        """Nested past the recursion limit: the gate still decides, and counts no defect line."""
+    def test_a_deeply_nested_weaknesses_file_never_crashes_the_gate(self, tmp_path, monkeypatch):
+        """Nested 100,000 deep: the gate still decides and triggers nothing.
+
+        Whether the parser gives up on it depends on the interpreter's stack, so
+        the count is either absent (it gave up) or 0 (it parsed a list of lists).
+        """
         self._args(tmp_path, None)
         (tmp_path / "review_weaknesses.json").write_text("[" * 100_000 + "]" * 100_000, encoding="utf-8")
-        record, outputs = self._run(tmp_path, monkeypatch, None)
+        record, _ = self._run(tmp_path, monkeypatch, None)
+        assert record["verdict"] == "merge"
+        assert record.get("defect_lines", 0) == 0 and record["follow_up_trigger"] == "none"
+
+    def test_a_parser_that_raises_never_crashes_the_gate(self, tmp_path, monkeypatch, capsys):
+        """The guard itself, on every interpreter: whatever the count raises stays out of the decision."""
+
+        def explode(_path):
+            raise RecursionError("maximum recursion depth exceeded")
+
+        monkeypatch.setattr(gate, "load_defect_lines", explode)
+        record, _ = self._run(tmp_path, monkeypatch, ["VQ-01 (dark): x"])
         assert record["verdict"] == "merge"
         assert "defect_lines" not in record and record["follow_up_trigger"] == "none"
         assert "review_weaknesses.json not counted" in capsys.readouterr().out
+
+    @pytest.mark.parametrize("text", ["[", '{"VQ-01 (dark): x": 1}', '"VQ-01 (dark): x"', "null"])
+    def test_an_unreadable_or_non_list_weaknesses_file_counts_nothing(self, tmp_path, monkeypatch, text):
+        self._args(tmp_path, None)
+        (tmp_path / "review_weaknesses.json").write_text(text, encoding="utf-8")
+        record, _ = self._run(tmp_path, monkeypatch, None)
+        assert record["verdict"] == "merge"
+        assert "defect_lines" not in record and record["follow_up_trigger"] == "none"
 
     def test_a_merge_without_a_review_counts_no_defect_line(self, tmp_path, monkeypatch):
         """--review-skipped: whatever file lies beside review_regen.json, no review named a defect."""
@@ -506,6 +529,29 @@ class TestPlanCli:
         fake.pulls.append({"number": 14010, "state": "OPEN", "updatedAt": _now_ago(minutes=5), "body": ""})
         assert _plan_cli(monkeypatch, tmp_path, fake)["reason"] == "open_pr"
         assert not any(c[0] == "api" and "/14010/" in c[2] for c in fake.calls)
+
+    @pytest.mark.parametrize(
+        "fork",
+        [
+            {"state": "OPEN", "body": ""},  # would refuse as open_pr
+            {"state": "CLOSED", "body": "**Follow-up of:** #13990 (repair)"},  # would refuse as recent_follow_up
+        ],
+    )
+    def test_a_forks_pr_with_the_pairs_branch_name_never_suppresses_a_follow_up(self, monkeypatch, tmp_path, fork):
+        """Only this repository's PRs are the pair's: a fork's is dropped before the guards, its comments unread."""
+        fake = _fake()
+        fake.pulls.append({"number": 14020, "updatedAt": _now_ago(minutes=5), "isCrossRepository": True, **fork})
+        assert _plan_cli(monkeypatch, tmp_path, fake) == {"dispatch": "true", "reason": "dispatch"}
+        assert not any(c[0] == "api" and "/14020/" in c[2] for c in fake.calls)
+        listing = next(c for c in fake.calls if c[:2] == ["pr", "list"])
+        assert "isCrossRepository" in listing[listing.index("--json") + 1].split(",")
+
+    def test_the_same_pr_of_this_repository_still_refuses(self, monkeypatch, tmp_path):
+        """The fork filter drops nothing else: the same entry, this repository's, refuses (a missing field too)."""
+        for own in ({"isCrossRepository": False}, {}):
+            fake = _fake()
+            fake.pulls.append({"number": 14020, "state": "OPEN", "updatedAt": _now_ago(minutes=5), "body": "", **own})
+            assert _plan_cli(monkeypatch, tmp_path, fake)["reason"] == "open_pr"
 
     def test_bad_input_is_a_usage_error(self, monkeypatch):
         monkeypatch.setattr(fu, "_gh", _fake())

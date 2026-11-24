@@ -736,14 +736,16 @@ jobs:
       # as the live version has it. Its own file, never the change request:
       # the regen gate lets a change request swap the scenario or add
       # encodings on a -basic spec, and a note must permit neither. The note
-      # comes capped and cleaned (regen_gate.retry_note); here it is only kept
-      # on one line.
+      # comes capped and cleaned (regen_gate.retry_note). Here it goes on one
+      # line inside one ```text fence, which the prompt's "Regression note"
+      # section names as data from a review; with no backtick and no line
+      # break left in it, nothing in the note can close the fence early.
       - name: Stage the follow-up note (retry)
         if: ${{ inputs.follow_up_note != '' && steps.inputs.outputs.follow_up_kind == 'retry' }}
         env:
           NOTE: ${{ inputs.follow_up_note }}
         run: |
-          printf '%s\n' "$(printf '%s' "$NOTE" | tr '\r\n' '  ')" > /tmp/anyplot-follow-up-note.txt
+          printf '```text\n%s\n```\n' "$(printf '%s' "$NOTE" | tr '\r\n`' '   ')" > /tmp/anyplot-follow-up-note.txt
           echo "::notice::Follow-up note staged ($(wc -c < /tmp/anyplot-follow-up-note.txt) bytes)"
 
       # When triggered from a non-main branch via workflow_dispatch (typical for

@@ -340,7 +340,7 @@ def read_inputs(
                     "--limit",
                     "50",
                     "--json",
-                    "number,body,state,createdAt,updatedAt",
+                    "number,body,state,createdAt,updatedAt,isCrossRepository",
                 ]
             )
             or "[]"
@@ -356,6 +356,12 @@ def read_inputs(
     for pull in pulls:
         number = pull.get("number")
         if not isinstance(number, int) or number == pr:
+            continue
+        # A fork's PR with the pair's branch name is not the pipeline's, so it
+        # neither holds the pair open nor marks a follow-up. Only a PR that
+        # says it is cross-repository is dropped: these guards only refuse, so
+        # a missing field counts as this repository's PR.
+        if pull.get("isCrossRepository") is True:
             continue
         entry = {
             "number": number,
