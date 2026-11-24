@@ -267,7 +267,7 @@ It prints one line per refusal in the validator's own words, with the line of yo
 - **A map spec is excluded** (`readiness: excluded`): the chat refuses those whatever the code holds, so there is nothing to fix.
 - **A refusal line that names `sns.load_dataset` or a `sklearn.datasets` name stays as it is:** the prompts allow those built-in example datasets. Name it in the `Readiness self-check:` line, and never "fix" it by swapping the data scenario or writing the dataset out inline. This covers only those lines; every other refusal, also one with the same hint (a file read, another import), is removed as above.
 - **At most three attempts in total,** the first run included. One attempt runs both commands, and you fix what both report before you re-render. Adaptability never blocks the implementation, and neither does readiness: if a check still fails after the third attempt, keep the best version that renders correctly in both themes and passes Step 3b, and go on to Step 4. Never trade a defect in the render for a clean check.
-- **Each run of the self-check appends one line to `/tmp/anyplot-selfcheck.jsonl`,** which the workflow stages; never delete or edit it. The readiness check writes nothing. If a command cannot run (exit 2, or a runner error you cannot fix in your file), say so in the commit body and don't run it again. One check that cannot run doesn't end the other: keep fixing what the other reports within the three attempts, then go on to Step 4.
+- **Each run of the self-check in this step appends one line to `/tmp/anyplot-selfcheck.jsonl`,** which the workflow stages; never delete or edit it. The readiness check writes nothing. If a command cannot run (exit 2, or a runner error you cannot fix in your file), say so in the commit body and don't run it again. One check that cannot run doesn't end the other: keep fixing what the other reports within the three attempts, then go on to Step 4.
 
 Regeneration only, optional: to see whether your file still renders the same picture as the previous version, render both in one environment and compare them:
 
@@ -282,30 +282,31 @@ It exits 0 when both themes stay within 0.5 % of differing pixels at the same ca
 
 ## Step 4: Visual self-check (BOTH renders)
 
-Open `plots/{SPEC_ID}/implementations/{LANGUAGE}/plot-light.png` AND `plot-dark.png` next to it at full size and answer every question below for both renders. These are the questions the review scores (`prompts/workflow-prompts/ai-quality-review.md`, steps 5c and 5d, and `prompts/quality-criteria.md`), so each "no" here is a deduction there. None of them names a value: judge by eye, as the review does.
+Use the Read tool to open `plots/{SPEC_ID}/implementations/{LANGUAGE}/plot-light.png` AND `plot-dark.png` before you answer, and answer every question below for both renders. These are the questions the review scores (`prompts/workflow-prompts/ai-quality-review.md`, steps 5c and 5d, and `prompts/quality-criteria.md`), so each "no" here is a deduction there, and a "yes" means that part is clean. None of them names a value: judge by eye, as the review does.
 
 **Spec and theme**
 - **The spec's own points:** read each `A good version shows:` bullet of the spec's `## What a good version looks like` section, and each feature its Notes require, and find it in the picture. Is every required one there? (SC-01, SC-02) Keep the spec's qualifiers, as the review does: a bullet with a condition ("if drawn", "where marks overlap") asks something only when the plot meets the condition, a feature the Notes only allow or prefer is optional, and `Expected, not a defect:` bullets are permissions. On a `-basic` spec, never add an element to answer yes.
 - Is the visualization clear on the light surface (`#FAF8F1`) AND the dark surface (`#1A1A17`), with title, axis labels and tick labels readable on each?
 - Are the data colors **identical** between light and dark (only chrome flipped)?
-- Is the first categorical series `#009E73`, do further series follow the Imprint order, and does a continuous scale use the Imprint ramps of Step 2? (VQ-07)
-- Does any meaning rest on red against green alone, or on colors a reader with a color-vision deficiency can't tell apart? (VQ-04)
+- Is the first categorical series `#009E73`, do further series follow the Imprint order, and does a continuous scale use the Imprint ramps of Step 2? (VQ-07) Ordered categories (Likert levels, grades, sizes) run through the steps of one Imprint ramp in their natural order instead of the categorical order, with a red or green pole on the matching side (`prompts/default-style-guide.md`, "Ordered Categories"), and a semantic reassignment of Step 2 counts as yes.
+- Does every meaning hold without resting on red against green alone, in colors a reader with a color-vision deficiency can tell apart? (VQ-04)
 
 **What the review deducts for**
-- **Canvas:** does the plot use the canvas, with balanced margins and the legend near the plot, or does it sit small in one part of a mostly empty canvas? (VQ-05)
-- **Cut off:** is anything cut off at the canvas edge or pushed past its axes: marks, labels, the legend, the title? (AR-09, VQ-05)
-- **Overlap:** does any text collide with other text, with marks or with the legend? Do marks hide each other where a reader has to tell them apart? (VQ-02)
+- **Text size:** does each kind of text (title, axis labels, tick labels, legend, text on marks) read at a size that fits what it carries, with the axis labels of x and y, and their tick labels, balanced against each other? (VQ-01, VQ-05)
+- **Canvas:** does the plot use the canvas, with balanced margins and the legend near the plot, rather than sit small in one part of a mostly empty canvas? (VQ-05)
+- **Cut off:** is every element whole, with nothing cut off at the canvas edge or pushed past its axes: marks, labels, the legend, the title? (AR-09, VQ-05)
+- **Overlap:** does all text stay clear of other text, of marks and of the legend, and do marks stay distinguishable where a reader has to tell them apart? (VQ-02)
 - **Text on marks:** do value labels and other text drawn on or beside marks stay readable against what they sit on, at this number of marks, without burying them? (VQ-03)
-- **Legend:** does every legend glyph match the marks it explains (fill, outline, alpha, shape) and show in both themes? (VQ-03, SC-04)
-- **The dark page:** does every series, line and marker stand out from the dark page, not only the brand green? (VQ-03, step 5c)
+- **Legend:** does every legend glyph match the marks it explains (fill, outline, alpha, shape) and show in both themes, and are the legend's title and entries text for a reader, not column identifiers? (VQ-03, SC-04)
+- **The dark page:** does every series, line and marker stand out from the dark page, not only the brand green, and do markers and lines suit the number of marks? (VQ-03, step 5c)
 - **Axes:** do the axis titles say what they show, with units where the data has them? (VQ-06)
 - **On a regeneration:** is every `(defect)` weakness you acted on now gone from both renders, and does every strength of `/tmp/anyplot-prev-review.md` you kept still hold? The gate keeps the previous file when anything it did right got worse.
 
 **When an answer is no**
 - Fix the cause in the code, render both themes again (Step 3), re-run Step 3b, and answer the questions again.
 - Never answer a "no" by deleting the element: move a colliding label or change the layout, make room for a cut-off one, and keep every element the spec asks for. Data marks stay at their data values, as the regeneration rules above say.
-- This step has up to two fix rounds of its own, apart from the three attempts of Step 3. If a question still fails after the second round, keep the better version, as long as it renders in both themes and passes Step 3b, and name what remains in the commit body.
-- For Python (`LANGUAGE=python`), run Step 3c once more after the last round that changed the file, so its two commit lines describe the committed file. This run checks the final file and is not a new attempt: its `Adaptability self-check:` line keeps the attempt number Step 3c reached. Fix what it reports when the fix is small and leaves the render as it is; otherwise record it in those lines as usual.
+- This step has one fix round of its own, apart from the three attempts of Step 3. If a question still fails after that round, keep the better version, as long as it renders in both themes and passes Step 3b, and name what remains in the commit body.
+- For Python (`LANGUAGE=python`), run Step 3c once more when the round changed the file, so its two commit lines describe the committed file. This run only records: it is not a new attempt, and nothing in the file changes after it, advisory lines included, apart from the formatting of Step 5. Give the self-check its own log, so that `/tmp/anyplot-selfcheck.jsonl` keeps counting the attempts of Step 3c only: `python -m core.smoke_run selfcheck plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --log /tmp/anyplot-selfcheck-final.jsonl`. What it and the readiness check report goes into the `Adaptability self-check:` and `Readiness self-check:` lines, and the `Adaptability self-check:` line keeps the attempt number Step 3c reached, not the one this run prints. A command that could not run in Step 3c is not run here either.
 - On a regeneration, a fix made here repairs something visible, so it is never "code for changes that don't show".
 
 ## Step 5: Format the code
@@ -354,10 +355,10 @@ git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 
 Commit only the implementation file, and use only the packages the runner already has: never run `Pkg.add`, `uv add`, `pip install` or `npm install`. The workflow fails the run when your commit changes `Manifest.toml`, `Project.toml`, `uv.lock`, `pyproject.toml`, `package.json`, `package-lock.json` or `.python-version`, because a re-resolved lock file moves the library version for every implementation of the language.
 
-In every language, first generations included, the commit body carries the result of Step 4 in one `Visual self-check:` line. It says `pass` when every answer was yes at the first look; `fixed` with the questions a round fixed, by their short names (spec, theme, palette, color vision, canvas, cut off, overlap, text on marks, legend, dark page, axes, regeneration), and the last round; or `open` with the questions that still fail after the second round. For R, Julia and JavaScript it is the only line:
+In every language, first generations included, the commit body carries the result of Step 4 in one `Visual self-check:` line. It says `pass` when every answer was yes at the first look; `fixed` with the questions the fix round fixed, by their short names (spec, theme, palette, color vision, text size, canvas, cut off, overlap, text on marks, legend, dark page, axes, regeneration); or `open` with the questions that still fail after the fix round. For R, Julia and JavaScript it is the only line:
 
 ```bash
-git commit -m "feat({LIBRARY}): implement {SPEC_ID}" -m "Visual self-check: fixed (canvas, legend), round 1"
+git commit -m "feat({LIBRARY}): implement {SPEC_ID}" -m "Visual self-check: fixed (canvas, legend)"
 ```
 
 For Python (`LANGUAGE=python`), the commit body also carries the result of the last Step 3c run in two more lines. The `Adaptability self-check:` line says `pass`, or `fail` with the rule classes of the remaining non-advisory lines and the names of the remaining failed perturbations, and the attempt number. The `Readiness self-check:` line right below it gives the verdict of the last readiness check: `accepted`, `excluded`, `refused` with the keys of its verdict line and, for each key you left, why it stays, or `not run` with the reason. Pass the three lines in one `-m`:
@@ -368,10 +369,10 @@ Adaptability self-check: pass, attempt 1
 Readiness self-check: accepted"
 ```
 
-Other forms of the lines, such as after two rounds or three attempts:
+Other forms of the lines, such as a question still open after the fix round or three attempts:
 
 ```
-Visual self-check: open (cut off), round 2
+Visual self-check: open (cut off)
 Adaptability self-check: fail (palette, more_categories), attempt 3
 Readiness self-check: refused (webgl), kept: the spec's 3D surface needs a WebGL trace
 Readiness self-check: excluded
@@ -394,7 +395,7 @@ Declined:
 - W5 — asks for something the spec does not require: "add a trend line"
 - W6 — names a call the runtime does not provide: "StatsBase.autocor"
 
-Visual self-check: fixed (text on marks), round 1
+Visual self-check: fixed (text on marks)
 Adaptability self-check: pass, attempt 2
 Readiness self-check: accepted
 ```
@@ -413,6 +414,6 @@ Before finishing, confirm:
 7. ✅ If regenerating: same data scenario and variant as before (unless a weakness or change request asked otherwise), no new encodings on a `-basic` spec, and no added code whose effect does not show in the render. For Python (`LANGUAGE=python`), converting the file to the Data block convention is the exception: it may add code while the render stays identical
 8. ✅ If regenerating: the title ends in `{spec-id} · {language} · {library} · anyplot.ai` with the real language (`python`, `r`, `julia`, `javascript`), whatever the previous title said, after the optional `{Descriptive Title} · ` prefix of `prompts/plot-generator.md`
 9. ✅ For Python (`LANGUAGE=python`): Step 3c ran (at most three attempts, both commands in each) and the commit body carries its `Adaptability self-check:` and `Readiness self-check:` lines; for every language, the file follows the zones of `prompts/adaptable-code.md`
-10. ✅ Step 4 asked every question of both renders, fixed what failed in at most two rounds without deleting an element, and the commit body carries its `Visual self-check:` line
+10. ✅ Step 4 asked every question of both renders, fixed what failed in its one fix round without deleting an element, and the commit body carries its `Visual self-check:` line
 
 If any of these failed, DO NOT report success.

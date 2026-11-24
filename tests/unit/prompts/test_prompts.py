@@ -1474,14 +1474,23 @@ class TestAdaptableCode:
         content = GENERATE_PROMPT.read_text()
         step = content[content.index("## Step 4:") : content.index("## Step 5:")]
         assert "`A good version shows:`" in step
-        for criterion in ("SC-02", "VQ-07", "VQ-04", "VQ-05", "AR-09", "VQ-02", "VQ-03", "SC-04", "VQ-06"):
+        for criterion in ("SC-02", "VQ-07", "VQ-04", "VQ-01", "VQ-05", "AR-09", "VQ-02", "VQ-03", "SC-04", "VQ-06"):
             assert f"{criterion}" in step, criterion
+        assert "Use the Read tool to open" in step
+        assert 'and a "yes" means that part is clean.' in step
         assert "None of them names a value: judge by eye, as the review does." in step
         # The spec question keeps the review's qualifiers and never invites variant creep on a -basic spec.
         assert "Keep the spec's qualifiers, as the review does" in step
         assert "On a `-basic` spec, never add an element to answer yes." in step
+        # The palette question keeps the review's exceptions, so a fix never recolors a correct ramp.
+        assert "Ordered categories (Likert levels, grades, sizes) run through the steps of one Imprint ramp" in step
+        assert "a semantic reassignment of Step 2 counts as yes." in step
         assert 'Never answer a "no" by deleting the element' in step
-        assert "This step has up to two fix rounds of its own, apart from the three attempts of Step 3." in step
+        assert "This step has one fix round of its own, apart from the three attempts of Step 3." in step
+        # The trailing Step 3c run only records, in a log of its own that the attempt count never reads.
+        assert "This run only records: it is not a new attempt, and nothing in the file changes after it" in step
+        assert "--log /tmp/anyplot-selfcheck-final.jsonl" in step
+        assert "keeps the attempt number Step 3c reached, not the one this run prints." in step
         # No percentage or pixel threshold leaks into the questions (soft, proportional rules).
         assert "%" not in step
         assert " px" not in step
