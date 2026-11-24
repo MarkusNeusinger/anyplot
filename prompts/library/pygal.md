@@ -139,6 +139,7 @@ custom_style = Style(..., colors=IMPRINT_PALETTE)
 # (style guide, "Continuous Data"). FIELDS: colored cells that fill the plot
 # (treemap tiles, map regions). MARKS: colored points, lines or bars on the page,
 # most pygal charts. Keep only the ramps the plot uses.
+import math
 from itertools import pairwise
 SEQ_FIELDS = (
     [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
@@ -151,12 +152,14 @@ SEQ_MARKS = (
     else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
 )
 # Diverging (around a meaningful midpoint): the midpoint is the page for fields
-# and the muted anchor for marks
+# and a grey that keeps 3:1 for marks
 DIV_FIELDS = [(0.0, "#AE3030"), (0.5, "#FAF8F1" if THEME == "light" else "#1A1A17"), (1.0, "#4467A3")]
-DIV_MARKS = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#A8A79F"), (1.0, "#4467A3")]
+DIV_MARKS = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#686762"), (1.0, "#4467A3")]
 
 def ramp_color(stops, t):
     """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    if not math.isfinite(t):
+        return "none"  # a missing value draws nothing, never the low end
     t = min(max(t, 0.0), 1.0)
     (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
     share = (t - p0) / (p1 - p0)

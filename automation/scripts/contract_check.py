@@ -79,7 +79,7 @@ PALETTE_HEXES = frozenset(
     {
         "#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314",  # Imprint
         "#DDCC77",  # amber
-        "#66E2B2", "#002850", "#00573D", "#CDD9FF", "#007755",  # ramp stops (core.palette.RAMP_STOPS)
+        "#66E2B2", "#002850", "#00573D", "#CDD9FF", "#007755", "#686762",  # ramp stops (core.palette.RAMP_STOPS)
         "#1A1A17", "#F0EFE8",  # ink (and the dark page)
         "#6B6A63", "#A8A79F",  # muted
         "#FAF8F1", "#FFFDF6", "#242420",  # light page, elevated light, elevated dark

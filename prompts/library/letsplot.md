@@ -121,6 +121,7 @@ geom_density()     # Density
 # with their own stops per theme (style guide, "Continuous Data"). FIELDS: colored cells that
 # fill the plot (geom_tile, geom_raster, filled contours, map polygons). MARKS: colored points,
 # lines, outlines or bars on the page. Keep only the ramps the plot uses.
+import math
 from itertools import pairwise
 SEQ_FIELDS = (
     [(0.0, '#66E2B2'), (0.368, '#009E73'), (0.582, '#4467A3'), (1.0, '#002850')]
@@ -135,6 +136,8 @@ SEQ_MARKS = (
 
 def ramp_color(stops, t):
     """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    if not math.isfinite(t):
+        return 'none'  # a missing value draws nothing, never the low end
     t = min(max(t, 0.0), 1.0)
     (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
     share = (t - p0) / (p1 - p0)
@@ -146,9 +149,9 @@ def ramp_color(stops, t):
 # so sample the stops at 256 even steps
 + scale_fill_gradientn(colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)])
 + scale_color_gradientn(colors=[ramp_color(SEQ_MARKS, k / 255) for k in range(256)])
-# Diverging: mid is the page for fields and the muted anchor for marks
+# Diverging: mid is the page for fields and a grey that keeps 3:1 for marks
 DIV_MID_FIELDS = '#FAF8F1' if THEME == 'light' else '#1A1A17'
-DIV_MID_MARKS = '#6B6A63' if THEME == 'light' else '#A8A79F'
+DIV_MID_MARKS = '#6B6A63' if THEME == 'light' else '#686762'
 + scale_fill_gradient2(low='#AE3030', mid=DIV_MID_FIELDS, high='#4467A3', midpoint=0)
 + scale_color_gradient2(low='#AE3030', mid=DIV_MID_MARKS, high='#4467A3', midpoint=0)
 # Forbidden: scale_color_viridis / scale_fill_viridis or any non-anyplot stops.

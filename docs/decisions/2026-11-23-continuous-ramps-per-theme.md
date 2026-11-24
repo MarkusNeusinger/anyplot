@@ -14,5 +14,8 @@
   the stops from the renders. For marks, `imprint_div` takes the `muted` anchor as its midpoint, the
   rule ordered categories already follow. The categorical hues stay as they are, and the contrast
   sentence now carries numbers measured on the two plot surfaces, which say that matte red and rose
-  stay below 3:1 on the dark page.
+  stay below 3:1 on the dark page. On 2026-11-24, after a second opinion showed the `muted` midpoint
+  outshining the poles on the dark page, he chose `#686762` as the dark page's midpoint for marks, a
+  colour outside the palette, so the extremes lead; the light page keeps the `muted` anchor. The
+  same day, from renders, he kept hexbins, which the build had added to the fields, with the fields.
 - Where: #14243

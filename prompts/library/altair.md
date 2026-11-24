@@ -184,9 +184,9 @@ alt.Color(DENSITY.translate(ESCAPE), type="quantitative", scale=alt.Scale(
     interpolate="rgb",
 ))
 # Diverging: three-stop range with domainMid at 0; the midpoint is the page for fields
-# and the muted anchor for marks
+# and a grey that keeps 3:1 for marks
 DIV_FIELDS_RANGE = ['#AE3030', '#FAF8F1' if THEME == 'light' else '#1A1A17', '#4467A3']
-DIV_MARKS_RANGE = ['#AE3030', '#6B6A63' if THEME == 'light' else '#A8A79F', '#4467A3']
+DIV_MARKS_RANGE = ['#AE3030', '#6B6A63' if THEME == 'light' else '#686762', '#4467A3']
 alt.Color(CHANGE.translate(ESCAPE), type="quantitative", scale=alt.Scale(
     range=DIV_FIELDS_RANGE,
     domainMid=0,

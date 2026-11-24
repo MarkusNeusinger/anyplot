@@ -164,7 +164,7 @@ option.colors = t.palette;                 // categorical cycle, first = brand g
 // the theme's stops already chosen; colorAxis.stops takes them as they are:
 option.colorAxis = { stops: t.seqFields };  // colored cells that fill the plot (heatmap, treemap, map)
 option.colorAxis = { stops: t.seqMarks };   // colored points, lines, outlines and bars on the page
-// diverging (meaningful midpoint, set min: -m, max: m): page midpoint for fields, muted for marks
+// diverging (meaningful midpoint, set min: -m, max: m): page midpoint for fields, grey for marks
 option.colorAxis = { min: -m, max: m, stops: t.divFields };
 ```
 

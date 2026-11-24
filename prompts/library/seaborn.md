@@ -164,9 +164,9 @@ SEQ_MARKS = (
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_FIELDS)  # SEQ_MARKS on marks
 
 # Diverging (signed deviations, residuals, correlations): the midpoint is the page
-# for fields and the muted anchor for marks
+# for fields and a grey that keeps 3:1 for marks
 DIV_FIELDS = [(0.0, "#AE3030"), (0.5, "#FAF8F1" if THEME == "light" else "#1A1A17"), (1.0, "#4467A3")]
-DIV_MARKS = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#A8A79F"), (1.0, "#4467A3")]
+DIV_MARKS = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#686762"), (1.0, "#4467A3")]
 imprint_div = LinearSegmentedColormap.from_list("imprint_div", DIV_FIELDS)  # DIV_MARKS on marks
 
 # Use via cmap=imprint_seq / cmap=imprint_div on heatmap, kdeplot, etc.

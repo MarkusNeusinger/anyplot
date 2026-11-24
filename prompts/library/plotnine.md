@@ -152,9 +152,9 @@ SEQ_MARKS = (
 + scale_fill_gradientn(colors=[c for _, c in SEQ_FIELDS], values=[p for p, _ in SEQ_FIELDS])
 + scale_color_gradientn(colors=[c for _, c in SEQ_MARKS], values=[p for p, _ in SEQ_MARKS])
 # Diverging (around a meaningful midpoint, often 0): mid is the page for fields
-# and the muted anchor for marks
+# and a grey that keeps 3:1 for marks
 DIV_MID_FIELDS = '#FAF8F1' if THEME == 'light' else '#1A1A17'
-DIV_MID_MARKS = '#6B6A63' if THEME == 'light' else '#A8A79F'
+DIV_MID_MARKS = '#6B6A63' if THEME == 'light' else '#686762'
 + scale_fill_gradient2(low='#AE3030', mid=DIV_MID_FIELDS, high='#4467A3', midpoint=0)
 + scale_color_gradient2(low='#AE3030', mid=DIV_MID_MARKS, high='#4467A3', midpoint=0)
 # Forbidden: scale_color_cmap / scale_fill_cmap with viridis/cividis/BrBG/Reds/Blues/Greens — only anyplot stops.

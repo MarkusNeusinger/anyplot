@@ -61,7 +61,7 @@ describe('PalettePage snippet()', () => {
       'julia',
       'values = [0.0, 0.368, 0.582, 1.0]',
       'dark = (colors = [colorant"#007755", colorant"#009E73", colorant"#CDD9FF"], values = [0.0, 0.32, 1.0])',
-      'colorant"#A8A79F"',
+      'dark = (colors = [colorant"#AE3030", colorant"#686762", colorant"#4467A3"], values = [0.0, 0.5, 1.0])',
     ],
     [
       'js',

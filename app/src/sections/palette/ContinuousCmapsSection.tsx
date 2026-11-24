@@ -108,8 +108,9 @@ export function ContinuousCmapsSection({ isDark }: ContinuousCmapsSectionProps) 
           in both themes high values stand out from the page and low values recede into it: the
           sequential ramp runs light → dark on cream and dark → bright on warm-near-black. fields
           span the wider lightness range; every colour of the sequential marks ramp keeps 3:1
-          against its page. the diverging midpoint is the page for fields and the muted ink for
-          marks, so a point at zero does not vanish.
+          against its page. the diverging midpoint is the page for fields; for marks it is a grey
+          that keeps at least 3:1 against the page, level with the poles, so a point at zero stays
+          visible and the extremes lead.
         </Box>
       </Box>
     </Box>

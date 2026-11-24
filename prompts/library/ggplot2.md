@@ -198,9 +198,9 @@ SEQ_MARKS <- if (THEME == "light") {
 scale_fill_gradientn(colours = SEQ_FIELDS$colours, values = SEQ_FIELDS$values)
 scale_color_gradientn(colours = SEQ_MARKS$colours, values = SEQ_MARKS$values)
 # Diverging (around a meaningful midpoint, often 0): mid is the page for fields
-# and the muted anchor for marks
+# and a grey that keeps 3:1 for marks
 DIV_MID_FIELDS <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-DIV_MID_MARKS  <- if (THEME == "light") "#6B6A63" else "#A8A79F"
+DIV_MID_MARKS  <- if (THEME == "light") "#6B6A63" else "#686762"
 scale_fill_gradient2(low = "#AE3030", mid = DIV_MID_FIELDS, high = "#4467A3", midpoint = 0)
 scale_color_gradient2(low = "#AE3030", mid = DIV_MID_MARKS, high = "#4467A3", midpoint = 0)
 ```

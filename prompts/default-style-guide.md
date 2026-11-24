@@ -104,7 +104,7 @@ The fields ramps span the wider lightness range, and their low end sits close to
 **`imprint_div` (diverging):** matte red ↔ midpoint ↔ blue, `(0, "#AE3030")`, `(0.5, midpoint)`, `(1, "#4467A3")`, for data with a meaningful midpoint (correlations, residuals, signed deviations, diverging heatmaps); the midpoint sits at the data's meaningful value, often 0.
 
 - **Fields:** the midpoint is the page color, `#FAF8F1` on light and `#1A1A17` on dark, so a cell at the midpoint reads as part of the page.
-- **Marks:** the midpoint is the `muted` anchor, `#6B6A63` on light and `#A8A79F` on dark (a SHAP beeswarm, scatter points colored by a signed value). A page-colored midpoint would make the marks near the midpoint vanish against the page; ordered categories follow the same rule.
+- **Marks:** the midpoint is a grey that keeps at least 3:1 against the page, level with the poles: the `muted` anchor `#6B6A63` on light and `#686762` on dark (a SHAP beeswarm, scatter points colored by a signed value). A page-colored midpoint would make the marks near the midpoint vanish against the page; on dark, the brighter `muted` ink `#A8A79F` would outshine the poles, so the marks near zero would lead instead of the extremes. `#686762` is a stop of this ramp only, not a palette color. Ordered categories follow the same rule.
 
 Which name holds which ramp, per use; each name already holds the stops of the render's theme:
 
@@ -119,12 +119,14 @@ Build in matplotlib with `LinearSegmentedColormap.from_list("imprint_seq", SEQ_F
 
 Pick `imprint_seq` vs `imprint_div` from the data's polarity, and fields vs marks from what carries the color. Never substitute a matplotlib/library-native cmap "because it looks nicer" — Imprint identity is part of the brand.
 
+A label on a colored fill (a bar segment, a heatmap cell) takes the light or dark ink that reads on that fill, or a halo carries it.
+
 ### Ordered Categories
 
 Categories with a natural order — Likert levels ("strongly disagree" … "strongly agree"), grades, small / medium / large, age bands — are not unrelated groups: the categorical palette would present them as such and hide their order. Color them with discrete steps of one Imprint ramp in their natural order, and keep that order in the legend:
 
 - **One direction** (low → high, small → large): steps of the marks ramp of `imprint_seq`.
-- **A neutral midpoint** (disagree ↔ agree, worse ↔ better): steps of the marks ramp of `imprint_div`, whose middle level is the `muted` anchor, because the page-colored midpoint of the fields ramp would vanish against the background. When the poles mean bad and good, the semantic exception may anchor them in red and green: matte red `#AE3030` on the bad side (disagree, poor), brand green `#009E73` on the good side (agree, good) — never the other way round.
+- **A neutral midpoint** (disagree ↔ agree, worse ↔ better): steps of the marks ramp of `imprint_div`, whose middle level is its grey midpoint (`#6B6A63` on light, `#686762` on dark), because the page-colored midpoint of the fields ramp would vanish against the background. When the poles mean bad and good, the semantic exception may anchor them in red and green: matte red `#AE3030` on the bad side (disagree, poor), brand green `#009E73` on the good side (agree, good) — never the other way round.
 
 The steps take the stops of the theme they render in. Every step stays distinguishable from its neighbours and from the background in both themes.
 
@@ -242,7 +244,7 @@ else:
     SEQ_FIELDS = [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
     SEQ_MARKS  = [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
 DIV_FIELDS = [(0.0, "#AE3030"), (0.5, PAGE_BG), (1.0, "#4467A3")]    # midpoint: the page
-DIV_MARKS  = [(0.0, "#AE3030"), (0.5, INK_MUTED), (1.0, "#4467A3")]  # midpoint: the muted anchor
+DIV_MARKS  = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#686762"), (1.0, "#4467A3")]  # midpoint: a grey that keeps 3:1
 ```
 
 Output file names: `plot-light.png` / `plot-dark.png` (static libraries) plus `plot-light.html` / `plot-dark.html` (interactive libraries).
@@ -348,6 +350,8 @@ Marker and line sizes should adapt to how dense the data is — no fixed values:
 Some elements are drawn once per bar or point: value labels, dots on bar ends, shadows, a text next to each point. Unlike a title, a legend or a single callout, their count grows with the data, so a choice that suits 8 bars can bury 50. Keep them only while each label fits the space of its mark (a bar label no wider than its bar's slot) and the plot stays legible, which rarely holds past about 25 marks. With more marks, drop them, or label only the extremes (the largest and the smallest value) when the plot needs numbers. Text that is the encoding itself (heatmap cell values, a word cloud, a table) follows its spec instead.
 
 A label that tells the reader nothing is clutter at any mark count: a value that is the same by construction on every mark (each bar of a 100 % stacked chart labelled "100 %") or a text that repeats exactly what an axis already states. Leave it out.
+
+A label on a colored fill (a bar segment, a heatmap cell) takes the light or dark ink that reads on that fill, or a halo carries it.
 
 ### General Rules
 - Marks and lines should be **~2-3× larger** than the library's standard defaults. Text follows "Text Sizes" above, not this rule.

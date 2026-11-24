@@ -197,9 +197,9 @@ const ANYPLOT_SEQ_FIELDS = THEME == "light" ?
 const ANYPLOT_SEQ_MARKS = THEME == "light" ?
     cgrad([colorant"#009E73", colorant"#4467A3", colorant"#002850"], [0.0, 0.338, 1.0]) :
     cgrad([colorant"#007755", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.32, 1.0])
-# Diverging: the midpoint is the page for fields and the muted anchor for marks
+# Diverging: the midpoint is the page for fields and a grey that keeps 3:1 for marks
 const ANYPLOT_DIV_FIELDS = cgrad([colorant"#AE3030", THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17", colorant"#4467A3"])
-const ANYPLOT_DIV_MARKS = cgrad([colorant"#AE3030", THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F", colorant"#4467A3"])
+const ANYPLOT_DIV_MARKS = cgrad([colorant"#AE3030", THEME == "light" ? colorant"#6B6A63" : colorant"#686762", colorant"#4467A3"])
 # Sequential heatmap:  heatmap!(ax, z; colormap = ANYPLOT_SEQ_FIELDS)
 # Colored scatter:     scatter!(ax, x, y; color = v, colormap = ANYPLOT_SEQ_MARKS)
 # Diverging heatmap:   heatmap!(ax, z; colormap = ANYPLOT_DIV_FIELDS, colorrange = (-m, m))

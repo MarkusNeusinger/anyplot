@@ -258,7 +258,8 @@ function themeTokens(theme) {
       ? [[0, "#009E73"], [0.338, "#4467A3"], [1, "#002850"]]
       : [[0, "#007755"], [0.32, "#009E73"], [1, "#CDD9FF"]],
     divFields: [[0, "#AE3030"], [0.5, pageBg], [1, "#4467A3"]], // midpoint: the page
-    divMarks: [[0, "#AE3030"], [0.5, light ? "#6B6A63" : "#A8A79F"], [1, "#4467A3"]], // midpoint: muted
+    // midpoint: a grey that keeps 3:1, the muted ink on light; on dark the muted ink would outshine the poles
+    divMarks: [[0, "#AE3030"], [0.5, light ? "#6B6A63" : "#686762"], [1, "#4467A3"]],
   };
 }
 

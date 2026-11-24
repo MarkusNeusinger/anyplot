@@ -154,7 +154,7 @@ with the theme's stops already chosen (style guide, "Continuous Data"):
 `t.seqFields` / `t.divFields` for colored cells that fill the plot (a matrix or
 heatmap), `t.seqMarks` / `t.divMarks` for points, lines, outlines and bars on the
 page — most Chart.js charts. The diverging midpoint is the page for fields and
-the muted anchor for marks. `t.seq` (the first release's two-stop ramp) and
+a grey that keeps 3:1 for marks. `t.seq` (the first release's two-stop ramp) and
 `t.div` (the diverging colors without positions) stay only so old files render
 as before; never use them in new code.
 Chart.js has no color scale, so color each element yourself:
@@ -162,6 +162,8 @@ Chart.js has no color scale, so color each element yourself:
 ```js
 // the color at v (0..1) along [position, hex] stops, blended linearly in sRGB
 const rampAt = (stops, v) => {
+  // a missing value draws nothing, never the low end; "transparent", because a canvas ignores "none" and keeps the last fill
+  if (!Number.isFinite(v)) return "transparent";
   const x = Math.min(1, Math.max(0, v));
   const i = Math.max(1, stops.findIndex(([p]) => p >= x));
   const [[p0, c0], [p1, c1]] = [stops[i - 1], stops[i]];

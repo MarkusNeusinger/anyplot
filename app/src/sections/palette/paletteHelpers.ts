@@ -190,10 +190,12 @@ export const SEQ_STOPS: Record<RampUse, Record<RampTheme, RampStops>> = {
   },
 };
 
-// The diverging midpoint: the page for fields, the muted ink for marks.
+// The diverging midpoint: the page for fields; for marks a grey that keeps at least
+// 3:1 against the page, the muted ink on light and a darker grey on dark, where the
+// muted ink would outshine the poles.
 const DIV_MIDPOINT: Record<RampUse, Record<RampTheme, string>> = {
   fields: { light: '#FAF8F1', dark: '#1A1A17' },
-  marks: { light: '#6B6A63', dark: '#A8A79F' },
+  marks: { light: '#6B6A63', dark: '#686762' },
 };
 
 export function divStops(use: RampUse, theme: RampTheme): RampStops {

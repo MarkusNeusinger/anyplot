@@ -153,6 +153,8 @@ option.color = t.palette;                 // categorical cycle, first = brand gr
 // (heatmap, map), t.seqMarks / t.divMarks for points, lines, outlines and bars on the page.
 // visualMap takes evenly spaced colors only, so sample the stops at 256 even steps:
 const rampAt = (stops, v) => {
+  // a missing value draws nothing, never the low end; "transparent", because a canvas ignores "none" and keeps the last fill
+  if (!Number.isFinite(v)) return "transparent";
   const x = Math.min(1, Math.max(0, v));
   const i = Math.max(1, stops.findIndex(([p]) => p >= x));
   const [[p0, c0], [p1, c1]] = [stops[i - 1], stops[i]];

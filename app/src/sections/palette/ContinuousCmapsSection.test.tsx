@@ -18,7 +18,7 @@ describe('ContinuousCmapsSection', () => {
     // pale mint and navy end the fields ramp; navy ends the marks ramp too
     expect(screen.getByText('#66E2B2')).toBeInTheDocument();
     expect(screen.getAllByText('#002850')).toHaveLength(2);
-    // the diverging midpoint: the page for fields, the muted ink for marks
+    // the diverging midpoint: the page for fields, the muted ink for marks on light
     expect(screen.getByText('#FAF8F1')).toBeInTheDocument();
     expect(screen.getByText('#6B6A63')).toBeInTheDocument();
     expect(screen.queryByText('#00573D')).not.toBeInTheDocument();
@@ -32,7 +32,9 @@ describe('ContinuousCmapsSection', () => {
     expect(screen.getByText('#007755')).toBeInTheDocument();
     expect(screen.getAllByText('#CDD9FF')).toHaveLength(2);
     expect(screen.getByText('#1A1A17')).toBeInTheDocument();
-    expect(screen.getByText('#A8A79F')).toBeInTheDocument();
+    // on dark the marks midpoint is the darker grey, not the muted ink, which would outshine the poles
+    expect(screen.getByText('#686762')).toBeInTheDocument();
+    expect(screen.queryByText('#A8A79F')).not.toBeInTheDocument();
     expect(screen.queryByText('#66E2B2')).not.toBeInTheDocument();
   });
 });
@@ -43,7 +45,7 @@ describe('ramp helpers', () => {
       'linear-gradient(to right, #66E2B2 0%, #009E73 36.8%, #4467A3 58.2%, #002850 100%)'
     );
     expect(rampGradient(divStops('marks', 'dark'))).toBe(
-      'linear-gradient(to right, #AE3030 0%, #A8A79F 50%, #4467A3 100%)'
+      'linear-gradient(to right, #AE3030 0%, #686762 50%, #4467A3 100%)'
     );
   });
 

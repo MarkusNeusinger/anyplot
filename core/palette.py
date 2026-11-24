@@ -35,6 +35,7 @@ Layout
 
 from __future__ import annotations
 
+import math
 from itertools import pairwise
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Literal
@@ -184,9 +185,17 @@ _SEQUENTIAL: dict[tuple[str, str], Stops] = {
     ("marks", "dark"): ((0.0, "#007755"), (0.32, GREEN), (1.0, "#CDD9FF")),
 }
 
+# The midpoint of ``imprint_div`` for marks on the dark page. The ``muted`` ink
+# (#A8A79F, 7.2:1 on #1A1A17) would outshine the poles (matte red 2.7:1, blue
+# 3.1:1), so the marks near zero would lead the plot. This darker grey keeps a
+# mark at zero visible at about 3:1 (3.08:1), level with the poles, so the
+# extremes lead. It is deliberately not a palette colour. The light page keeps
+# the ``muted`` ink, which already sits level with its poles there.
+_DIV_MARKS_MID_DARK: str = "#686762"
+
 #: Every hex of the continuous ramps that is not already a palette colour or a
 #: theme token. ``automation/scripts/contract_check.py`` allows these too.
-RAMP_STOPS: tuple[str, ...] = ("#66E2B2", "#002850", "#00573D", "#CDD9FF", "#007755")
+RAMP_STOPS: tuple[str, ...] = ("#66E2B2", "#002850", "#00573D", "#CDD9FF", "#007755", _DIV_MARKS_MID_DARK)
 
 
 def _key(theme: str, use: str) -> tuple[str, str]:
@@ -215,20 +224,28 @@ def diverging_stops(theme: Theme = "light", use: Use = "fields") -> Stops:
     """``imprint_div`` stops: matte red ↔ midpoint ↔ blue.
 
     The midpoint is the page colour for fields, so a cell at the midpoint
-    reads as part of the page; for marks it is the ``muted`` anchor, because a
-    page-coloured mark would vanish against the page (the rule ordered
-    categories follow too).
+    reads as part of the page. For marks it is a grey that keeps at least 3:1
+    against the page, because a page-coloured mark would vanish against it:
+    the ``muted`` ink #6B6A63 on light and #686762 on dark, where the
+    ``muted`` ink would outshine the poles (the rule ordered categories follow
+    too).
     """
     use_, theme_ = _key(theme, use)
     if use_ == "fields":
         midpoint = _PAGE_LIGHT if theme_ == "light" else _PAGE_DARK
     else:
-        midpoint = muted_for(theme_)
+        midpoint = muted_for("light") if theme_ == "light" else _DIV_MARKS_MID_DARK
     return ((0.0, RED), (0.5, midpoint), (1.0, BLUE))
 
 
 def ramp_color(stops: Stops, value: float) -> str:
-    """The hex at ``value`` (0.0 to 1.0, clamped) of a ramp, blended linearly in sRGB between its stops."""
+    """The hex at ``value`` (0.0 to 1.0, clamped) of a ramp, blended linearly in sRGB between its stops.
+
+    A missing value (NaN or infinite) returns ``"none"``, which matplotlib and
+    SVG read as no colour, so it draws nothing rather than the low end.
+    """
+    if not math.isfinite(value):
+        return "none"
     value = min(1.0, max(0.0, value))
     for (p0, c0), (p1, c1) in pairwise(stops):
         if value <= p1:
@@ -262,7 +279,8 @@ def diverging(theme: Theme = "light", use: Use = "fields") -> LinearSegmentedCol
         For fields the midpoint is the page: warm cream #FAF8F1 on light,
         warm near-black #1A1A17 on dark.
     use : "fields" | "marks", default "fields"
-        For marks the midpoint is the ``muted`` anchor (#6B6A63 / #A8A79F).
+        For marks the midpoint is #6B6A63 on light (the ``muted`` anchor) and
+        #686762 on dark.
     """
     from matplotlib.colors import LinearSegmentedColormap
 

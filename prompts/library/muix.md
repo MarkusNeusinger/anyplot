@@ -157,6 +157,8 @@ const t = window.ANYPLOT_TOKENS;
 // (heatmap), t.seqMarks / t.divMarks for points, lines, outlines and bars on the page.
 // A continuous colorMap takes a function of the value's share (0..1) of its min..max:
 const rampAt = (stops: [number, string][], v: number) => {
+  // a missing value draws nothing, never the low end; "transparent", because a canvas ignores "none" and keeps the last fill
+  if (!Number.isFinite(v)) return "transparent";
   const x = Math.min(1, Math.max(0, v));
   const i = Math.max(1, stops.findIndex(([p]) => p >= x));
   const [[p0, c0], [p1, c1]] = [stops[i - 1], stops[i]];
