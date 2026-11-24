@@ -13,5 +13,8 @@
   he picked. The details were settled in the session that built it: the gate keeps its tolerance of
   a point, every merge whose review named a defect line gets the round, an adapt-route merge
   included (one without a review has no defect lines), and a kept follow-up stores no second
-  re-score.
+  re-score. On 2026-11-24 he picked the rollout: both switches, the repair round's
+  (`REGEN_REPAIR_ROUND`) and the retry's (`REGEN_RETRY`), stay off during the targeted
+  regeneration and the first week after generation restarts, and he switches them on only with
+  the gate records of that week.
 - Where: #14244

@@ -2099,6 +2099,11 @@ jobs:
           # still a follow-up (regen_follow_up.py).
           FOLLOW_UP: ${{ inputs.follow_up }}
           FOLLOW_UP_NOTE: ${{ inputs.follow_up_note }}
+          # The PR this run opened, when it got that far: a follow-up's PR is
+          # closed before its retry is dispatched (close_follow_up_pr below).
+          PR_EXISTS: ${{ steps.pr.outputs.pr_exists }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
           # How far back a failure marker still counts toward the 3-attempt cap.
           # Covers a whole campaign (a generate→review→repair→merge cycle runs
           # well under an hour) with room for a stalled tail, without letting
@@ -2380,7 +2385,49 @@ jobs:
           # open a PR without the line that makes it final, and its outcome
           # could be followed up (regen_follow_up.py also refuses that from
           # the predecessor's marker).
+          #
+          # A follow-up that failed after its PR was opened leaves that PR open
+          # with its "**Follow-up of:**" line, and the retry's follow_up_check
+          # job would refuse the retry as a duplicate of it. So the PR is
+          # closed first, as an ordinary retry closes its predecessor's PR by
+          # deleting the branch. --repo keeps gh away from the runner's
+          # checkout, which is on that branch. A close that fails three times
+          # means no retry: the PR stays open, and watchdog Case 5 takes it
+          # up. Any other run closes nothing. Called only on the two paths that
+          # retry, before their issue comment, which says what happened. It
+          # always returns 0 (the handler runs under `bash -e`): the outcome is
+          # FOLLOW_UP_PR_CLOSED, and dispatch_retry refuses a follow-up whose
+          # open PR was not closed, whichever path calls it.
+          RETRY_LINE="Automatically retrying..."
+          FOLLOW_UP_PR_CLOSED=""
+          follow_up_pr_open() {
+            [ -n "${FOLLOW_UP}" ] && [ "${PR_EXISTS}" = "true" ]
+          }
+          close_follow_up_pr() {
+            follow_up_pr_open || return 0
+            local attempt
+            for attempt in 1 2 3; do
+              if gh pr close "${PR_NUMBER}" --repo "${REPOSITORY}" --delete-branch 2> /tmp/follow-up-close.err; then
+                FOLLOW_UP_PR_CLOSED=true
+                echo "::notice::Closed follow-up PR #${PR_NUMBER} before its retry, which would otherwise be refused as its duplicate"
+                gh pr comment "${PR_NUMBER}" --repo "${REPOSITORY}" \
+                  --body "Closed: this follow-up's generation failed after the pull request was opened, and its retry opens a new one ([impl-generate](${RUN_URL}))." \
+                  > /dev/null 2>&1 || true
+                RETRY_LINE="Closed follow-up PR #${PR_NUMBER} first. Automatically retrying..."
+                return 0
+              fi
+              echo "::warning::closing follow-up PR #${PR_NUMBER} failed (attempt ${attempt}/3): $(head -c 300 /tmp/follow-up-close.err | tr '\n' ' ')"
+              [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+            done
+            RETRY_LINE="Not retried: follow-up PR #${PR_NUMBER} could not be closed, and a retry would be refused as its duplicate while it is open."
+            return 0
+          }
+
           dispatch_retry() {
+            if follow_up_pr_open && [ "${FOLLOW_UP_PR_CLOSED}" != "true" ]; then
+              echo "::notice::No automatic retry for ${LIBRARY}/${SPEC_ID} ($1): follow-up PR #${PR_NUMBER} could not be closed, and the retry's duplicate check would refuse the retry while it is open; the PR is left to the watchdog"
+              return 0
+            fi
             gh workflow run impl-generate.yml --ref "${TRIGGER_REF:-main}" \
               -f specification_id="${SPEC_ID}" \
               -f library="${LIBRARY}" \
@@ -2434,13 +2481,14 @@ jobs:
                 close_issue_if_complete
               fi
             else
+              close_follow_up_pr
               gh issue comment "$ISSUE" --body "${MARKER}
           ${INFRA_TAG}
           ## :cloud: ${LIBRARY} Infrastructure Failure (${INFRA_ATTEMPT}/${INFRA_WINDOW_CAP} in window)
 
           **Cause:** ${INFRA_CAUSE}
 
-          Not counted toward the 3-attempt cap. Automatically retrying...
+          Not counted toward the 3-attempt cap. ${RETRY_LINE}
 
           ---
           :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
@@ -2526,10 +2574,11 @@ jobs:
 
           else
             # Attempt 1 or 2 failed → post comment with marker and auto-retry
+            close_follow_up_pr
             gh issue comment "$ISSUE" --body "${MARKER}
           ## :warning: ${LIBRARY} Generation Failed (Attempt ${ATTEMPT}/3)
 
-          Attempt ${ATTEMPT} failed. Automatically retrying...
+          Attempt ${ATTEMPT} failed. ${RETRY_LINE}
 
           ---
           :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"

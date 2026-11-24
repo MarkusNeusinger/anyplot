@@ -476,8 +476,6 @@ jobs:
         if: steps.regen.outputs.is_regen == 'true'
         continue-on-error: true
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
@@ -491,6 +489,39 @@ jobs:
           # First, so a later failure in this step cannot leave them unset.
           echo "prev_meta_blob=$(git rev-parse -q --verify "origin/main:${META_FILE}" || echo n/a)" >> "$GITHUB_OUTPUT"
           echo "prev_impl_blob=$(git rev-parse -q --verify "origin/main:${IMPL_FILE}" || echo n/a)" >> "$GITHUB_OUTPUT"
+
+          # The PR body, as "Extract PR info" read it with retries before the
+          # guard passed the PR. Also first, for the same reason: a kept
+          # follow-up whose line a later failure left unread would write back
+          # a second re-score. The body stays under $RUNNER_TEMP: the reviewer
+          # reads only what is staged for it under /tmp.
+          PR_BODY="$RUNNER_TEMP/anyplot-pr-body.txt"
+          jq -r '.body // ""' "$RUNNER_TEMP/pr.json" > "$PR_BODY" 2>/dev/null || : > "$PR_BODY"
+          # A follow-up regeneration names the PR it follows
+          # ("**Follow-up of:** #N (kind)"): the gate record carries it, no
+          # follow-up is followed up, and a follow-up writes back nothing on
+          # a keep.
+          # Writes follow_up_of= and follow_up_kind= (empty for any other PR).
+          # Never fails the step, which would keep the live implementation
+          # (--context-failed): an unread line only leaves the record without
+          # the predecessor, and the dispatchers read the body again.
+          python3 "$RUNNER_TEMP/regen-tools/regen_follow_up.py" parse-body < "$PR_BODY" \
+            || echo "::warning::the PR body's follow-up line could not be read; the record names no predecessor"
+
+          # Change request, as impl-generate.yml recorded it in the PR body.
+          rm -f /tmp/anyplot-change-request.txt
+          CR=$(grep -oP '^\*\*Change request:\*\* \K.*' "$PR_BODY" | head -1 || true)
+          if [ -n "$CR" ]; then
+            printf '%s\n' "$CR" > /tmp/anyplot-change-request.txt
+            echo "change_request_present=true" >> $GITHUB_OUTPUT
+            # The retry follow-up forwards this copy, read from the PR body
+            # before the review session runs: the session can write every
+            # file on the runner, the /tmp copy above included, but not a
+            # step output.
+            echo "change_request=$(printf '%s' "$CR" | tr -d '\r')" >> $GITHUB_OUTPUT
+          else
+            echo "change_request_present=false" >> $GITHUB_OUTPUT
+          fi
 
           pip install --quiet pyyaml
 
@@ -528,35 +559,6 @@ jobs:
           rm -f "$RAW"
           echo "prev_lines=$(wc -l < "/tmp/anyplot-prev-impl${EXT}" | tr -d ' ')" >> $GITHUB_OUTPUT
           echo "new_lines=$(wc -l < "$IMPL_FILE" | tr -d ' ')" >> $GITHUB_OUTPUT
-
-          # Change request, as impl-generate.yml recorded it in the PR body.
-          # The body stays under $RUNNER_TEMP: the reviewer reads only what is
-          # staged for it under /tmp.
-          rm -f /tmp/anyplot-change-request.txt
-          PR_BODY="$RUNNER_TEMP/anyplot-pr-body.txt"
-          gh pr view "$PR_NUMBER" --json body -q '.body' > "$PR_BODY" 2>/dev/null || : > "$PR_BODY"
-          CR=$(grep -oP '^\*\*Change request:\*\* \K.*' "$PR_BODY" | head -1 || true)
-          if [ -n "$CR" ]; then
-            printf '%s\n' "$CR" > /tmp/anyplot-change-request.txt
-            echo "change_request_present=true" >> $GITHUB_OUTPUT
-            # The retry follow-up forwards this copy, read from the PR body
-            # before the review session runs: the session can write every
-            # file on the runner, the /tmp copy above included, but not a
-            # step output.
-            echo "change_request=$(printf '%s' "$CR" | tr -d '\r')" >> $GITHUB_OUTPUT
-          else
-            echo "change_request_present=false" >> $GITHUB_OUTPUT
-          fi
-          # A follow-up regeneration names the PR it follows
-          # ("**Follow-up of:** #N (kind)"): the gate record carries it, no
-          # follow-up is followed up, and a follow-up writes back nothing on
-          # a keep.
-          # Writes follow_up_of= and follow_up_kind= (empty for any other PR).
-          # Never fails the step, which would keep the live implementation
-          # (--context-failed): an unread line only leaves the record without
-          # the predecessor, and the dispatchers read the body again.
-          python3 "$RUNNER_TEMP/regen-tools/regen_follow_up.py" parse-body < "$PR_BODY" \
-            || echo "::warning::the PR body's follow-up line could not be read; the record names no predecessor"
 
       - name: Check attempt count
         id: attempts

@@ -27,6 +27,7 @@ import yaml
 from automation.scripts import regen_follow_up as fu
 from automation.scripts import regen_gate as gate
 from tests.unit.workflows.pr_guard_support import stage_guard
+from tests.unit.workflows.test_impl_generate_adopt import Handler, _executable
 from tests.unit.workflows.test_pipeline_retry_gaps import _code_only, _step, _steps
 from tests.unit.workflows.test_render_hash_steps import SHELL_IDS, SHELLS
 
@@ -170,6 +171,30 @@ class TestImplGenerate:
         assert '-f follow_up="${FOLLOW_UP}"' in retry
         assert '-f follow_up_note="${FOLLOW_UP_NOTE}"' in retry
 
+    def test_a_crashed_follow_up_closes_its_pr_before_the_retry(self):
+        """Its open PR carries the same body line, and the retry's follow_up_check would refuse it as a duplicate."""
+        step = _step("impl-generate.yml", "Handle generation failure")
+        assert step["env"]["PR_EXISTS"] == "${{ steps.pr.outputs.pr_exists }}"
+        assert step["env"]["PR_NUMBER"] == "${{ steps.pr.outputs.pr_number }}"
+        assert step["env"]["REPOSITORY"] == "${{ github.repository }}"
+        code = _code_only(step["run"])
+        # --repo: gh leaves the runner's checkout, which is on the PR's branch, alone.
+        assert 'gh pr close "${PR_NUMBER}" --repo "${REPOSITORY}" --delete-branch' in code
+        # dispatch_retry itself refuses a follow-up whose open PR was not closed, whichever path calls it.
+        retry = code[code.index("dispatch_retry() {") :]
+        retry = retry[: retry.index("\n}")]
+        guard = 'if follow_up_pr_open && [ "${FOLLOW_UP_PR_CLOSED}" != "true" ]; then'
+        assert retry.index(guard) < retry.index("gh workflow run impl-generate.yml")
+        # The two paths that retry close first; the paths that park or give up close nothing.
+        lines = [line.strip() for line in code.splitlines()]
+        calls = [line for line in lines if line == "close_follow_up_pr" or line.startswith('dispatch_retry "')]
+        assert calls == [
+            "close_follow_up_pr",
+            'dispatch_retry "infrastructure retry ${INFRA_ATTEMPT}/${INFRA_WINDOW_CAP}"',
+            "close_follow_up_pr",
+            'dispatch_retry "attempt $((ATTEMPT + 1))"',
+        ]
+
 
 # --- impl-review -----------------------------------------------------------------
 
@@ -183,6 +208,27 @@ class TestImplReviewWiring:
         assert 'regen_follow_up.py" parse-body < "$PR_BODY" \\\n' in script
         assert "|| echo \"::warning::the PR body's follow-up line could not be read" in script
         assert 'PR_BODY="$RUNNER_TEMP/' in script  # never under /tmp, where the reviewer reads
+
+    def test_regen_context_reads_the_fetched_body_first(self):
+        """The body "Extract PR info" fetched with retries, read before anything in this step can fail.
+
+        The step is continue-on-error: a follow-up line left unread by a later
+        failure would let a kept follow-up write back a second re-score.
+        """
+        info = _step("impl-review.yml", "Extract PR info")["run"]
+        fetch = info[info.index('gh pr view "$PR_NUMBER" --repo "$REPOSITORY"') :]
+        fields = re.search(r"--json (\S+)", fetch)
+        assert fields is not None and "body" in fields.group(1).split(",")
+        assert fetch.index("--json") < fetch.index('> "$RUNNER_TEMP/pr.json"')
+        step = _step("impl-review.yml", "Regen context")
+        assert "GH_TOKEN" not in step["env"]  # the step calls no gh
+        code = _code_only(step["run"])
+        assert re.search(r"(^|[\s;|&(])gh\s", code) is None
+        read = code.index('jq -r \'.body // ""\' "$RUNNER_TEMP/pr.json" > "$PR_BODY" 2>/dev/null || : > "$PR_BODY"')
+        parse = code.index('regen_follow_up.py" parse-body < "$PR_BODY"')
+        change_request = code.index("CR=$(grep -oP")
+        assert read < parse < change_request < code.index("pip install")
+        assert code.index("pip install") < code.index('regen_gate.py" context') < code.index("sanitize-source")
 
     def test_the_gate_records_the_predecessor(self):
         step = _step("impl-review.yml", "Regen gate")
@@ -674,3 +720,134 @@ class TestExtractInputsRun:
     def test_a_forced_run_drops_the_mark(self, tmp_path, shell):
         outputs = self._extract(tmp_path, shell, "false")
         assert (outputs["follow_up_kind"], outputs["follow_up_of"]) == ("", "")
+
+
+# The failure handler's `gh`: logs every call, answers the failure count from
+# GH_API_COUNTS ("<genuine> <infra>"), and fails `pr close` while
+# GH_FAIL_PR_CLOSE is 1.
+HANDLER_GH = """#!/bin/sh
+"$TEST_PYTHON" -c 'import json, sys; print(json.dumps(sys.argv[1:]))' "$@" >> "$GH_LOG"
+case "$1 $2" in
+  "api "*) echo "${GH_API_COUNTS:-0 0}" ;;
+  "pr close") [ "${GH_FAIL_PR_CLOSE:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; } ;;
+esac
+exit 0
+"""
+# The two paths that retry: a genuine failure below the cap, and an
+# infrastructure failure below its own cap.
+RETRY_PATHS = {"genuine": {"GH_API_COUNTS": "0 0"}, "infrastructure": {"RENDER_HASH_OUTCOME": "failure"}}
+
+
+class TestCrashRetryRun:
+    """impl-generate's "Handle generation failure" for a follow-up whose PR was already open."""
+
+    def _go(self, tmp_path: Path, shell: list[str], path: str, **env: str) -> tuple[Handler, Any]:
+        handler = Handler(tmp_path)
+        _executable(handler.bin / "gh", HANDLER_GH)
+        values = {
+            "FOLLOW_UP": "retry:14231",
+            "FOLLOW_UP_NOTE": "lost the ramp",
+            "PR_EXISTS": "true",
+            "PR_NUMBER": "14300",
+            "REPOSITORY": "owner/repo",
+            **RETRY_PATHS[path],
+            **env,
+        }
+        result = handler.run(source_ref="", adopt_cause="", regen_label="regen", shell=tuple(shell), **values)
+        assert result.returncode == 0, result.stdout + result.stderr
+        return handler, result
+
+    @staticmethod
+    def _closes(handler: Handler) -> list[int]:
+        """Where in the call log each `pr close` sits."""
+        return [i for i, call in enumerate(handler.calls()) if call[:2] == ["pr", "close"]]
+
+    @pytest.mark.parametrize("path", sorted(RETRY_PATHS))
+    def test_the_pr_is_closed_before_the_retry(self, tmp_path, shell, path):
+        handler, result = self._go(tmp_path, shell, path)
+        calls = handler.calls()
+        (close,) = self._closes(handler)
+        assert calls[close] == ["pr", "close", "14300", "--repo", "owner/repo", "--delete-branch"]
+        (dispatch,) = handler.dispatches()
+        assert close < calls.index(dispatch)
+        (said,) = [i for i, call in enumerate(calls) if call[:3] == ["pr", "comment", "14300"]]
+        assert close < said  # the PR says why it closed, after it did
+        assert _fields(dispatch)["follow_up"] == "retry:14231"
+        assert _fields(dispatch)["follow_up_note"] == "lost the ramp"
+        (comment,) = handler.comments()
+        assert "Closed follow-up PR #14300 first. Automatically retrying..." in comment
+        assert "::notice::Closed follow-up PR #14300 before its retry" in result.stdout
+
+    @pytest.mark.parametrize("path", sorted(RETRY_PATHS))
+    def test_a_close_that_fails_means_no_retry(self, tmp_path, shell, path):
+        """The retry would be refused as a duplicate anyway; the open PR is left to the watchdog."""
+        handler, result = self._go(tmp_path, shell, path, GH_FAIL_PR_CLOSE="1")
+        assert len(self._closes(handler)) == 3
+        assert handler.dispatches() == []
+        assert "::notice::No automatic retry for muix/spec-a" in result.stdout
+        assert "could not be closed" in result.stdout
+        (comment,) = handler.comments()
+        assert "Not retried: follow-up PR #14300 could not be closed" in comment
+        assert "Automatically retrying" not in comment
+
+    @pytest.mark.parametrize("path", sorted(RETRY_PATHS))
+    def test_a_follow_up_without_a_pr_closes_nothing(self, tmp_path, shell, path):
+        """It failed before the PR was opened: nothing on its branch can block the retry."""
+        handler, _ = self._go(tmp_path, shell, path, PR_EXISTS="", PR_NUMBER="")
+        assert self._closes(handler) == []
+        assert len(handler.dispatches()) == 1
+        assert "Automatically retrying..." in handler.comments()[0]
+
+    @pytest.mark.parametrize("path", sorted(RETRY_PATHS))
+    def test_an_ordinary_run_behaves_as_before(self, tmp_path, shell, path):
+        """No follow-up input: its retry deletes the branch, and with it the PR, as it always did."""
+        handler, _ = self._go(tmp_path, shell, path, FOLLOW_UP="", FOLLOW_UP_NOTE="")
+        assert self._closes(handler) == []
+        assert not [call for call in handler.calls() if call[:2] == ["pr", "comment"]]
+        (dispatch,) = handler.dispatches()
+        assert _fields(dispatch)["follow_up"] == ""
+        (comment,) = handler.comments()
+        assert comment.count("Automatically retrying...") == 1 and "Closed follow-up" not in comment
+
+    def test_a_pair_given_up_closes_nothing(self, tmp_path, shell):
+        """Only a retry needs the PR gone; at the cap, the PR stays for the watchdog as before."""
+        handler, _ = self._go(tmp_path, shell, "genuine", GH_API_COUNTS="2 0")
+        assert self._closes(handler) == []
+        assert handler.dispatches() == []
+
+
+@pytest.mark.skipif(shutil.which("jq") is None, reason="needs jq")
+class TestRegenContextRun:
+    """impl-review's "Regen context": the PR body's lines are read before anything in the step can fail."""
+
+    BODY = "**Model:** sonnet\n**Change request:** a hint\n**Follow-up of:** #14231 (repair)\n"
+
+    def _go(self, tmp_path: Path, shell: list[str], pr_json: str) -> tuple[Any, list[list[str]], dict[str, str]]:
+        runner = tmp_path / "runner"
+        tools = runner / "regen-tools"
+        tools.mkdir(parents=True)
+        for name in ("regen_gate.py", "regen_follow_up.py"):
+            shutil.copy(SCRIPTS / name, tools / name)
+        (runner / "pr.json").write_text(pr_json, encoding="utf-8")
+        # A later failure in the step: pip cannot install.
+        _executable(tmp_path / "bin" / "pip", "#!/bin/sh\necho 'pip: network unreachable' >&2\nexit 1\n")
+        ws = tmp_path / "ws"
+        ws.mkdir()
+        script = _step("impl-review.yml", "Regen context")["run"]
+        assert "${{" not in script
+        env = {"LANGUAGE": "python", "EXT": ".py", "SPEC_ID": "bar-basic", "LIBRARY": "altair"}
+        return _run(tmp_path, {"run": script}, {}, ws, shell, **env)
+
+    def test_a_later_failure_leaves_the_follow_up_line_read(self, tmp_path, shell):
+        result, calls, outputs = self._go(tmp_path, shell, json.dumps({"number": 14300, "body": self.BODY}))
+        assert result.returncode != 0  # pip failed, and the step is continue-on-error
+        assert calls == []  # no gh: the body is the one "Extract PR info" fetched
+        assert (outputs["follow_up_of"], outputs["follow_up_kind"]) == ("14231", "repair")
+        assert (outputs["change_request_present"], outputs["change_request"]) == ("true", "a hint")
+        assert outputs["prev_meta_blob"] == "n/a" and outputs["prev_impl_blob"] == "n/a"
+
+    def test_a_pr_without_a_body_names_no_predecessor(self, tmp_path, shell):
+        result, _, outputs = self._go(tmp_path, shell, json.dumps({"number": 14300, "body": None}))
+        assert result.returncode != 0
+        assert (outputs["follow_up_of"], outputs["follow_up_kind"]) == ("", "")
+        assert outputs["change_request_present"] == "false"
