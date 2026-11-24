@@ -2931,17 +2931,19 @@ RECORD_KEYS = frozenset(
 # (impl-review.yml "Write back the re-score (regen keep)"). ``opened`` means the
 # write-back PR exists and its merge was dispatched, not that it merged. The
 # verdict step adds the key to keep records only; a missing step status reads
-# as ``failed``. ``follow_up``: the kept PR was a repair-round follow-up, which
-# never writes back, so the winner's own review stays (a retry writes back).
+# as ``failed``. ``follow_up``: the kept PR was a follow-up regeneration, which
+# never writes back, so a file is never re-stored with a second re-score of the
+# same day; a lost write-back heals at the pair's next ordinary regeneration.
 WRITEBACK_CODES = ("opened", "unchanged", "no_rescore", "invalid", "stale", "failed", "follow_up")
 
 # Follow-up regenerations. After a gated regeneration, one more regeneration
 # of the same pair may follow, judged by this same gate against the then-live
 # file:
 #
-# - ``repair`` -- the gate merged (code ``merge``) and the new review still
-#   names at least one defect line; impl-merge dispatches it once the winner
-#   is live, so the follow-up reads the winner's review the normal way.
+# - ``repair`` -- the gate merged (code ``merge`` or ``adapt_identity``) and
+#   the review that ran still names at least one defect line; impl-merge
+#   dispatches it once the winner is live, so the follow-up reads the winner's
+#   review the normal way. A merge without a review has no defect lines.
 # - ``retry`` -- the gate kept the live file for a regression (code
 #   ``regression``); impl-review dispatches it with the regression as a note
 #   (``retry_note``), never as a change request.
@@ -2955,10 +2957,25 @@ FOLLOW_UP_RETRY = "retry"
 FOLLOW_UP_KINDS = (FOLLOW_UP_REPAIR, FOLLOW_UP_RETRY)
 FOLLOW_UP_NONE = "none"
 FOLLOW_UP_TRIGGERS = (*FOLLOW_UP_KINDS, FOLLOW_UP_NONE)
+# The merges a repair round may follow.
+REPAIR_CODES = frozenset({"merge", ADAPT_IDENTITY})
 # The regression note's limits: at most this many regressions, each cut to
-# NOTE_ITEM_LIMIT characters.
+# NOTE_ITEM_LIMIT characters, the whole note to NOTE_LIMIT.
 NOTE_ITEMS = 3
 NOTE_ITEM_LIMIT = 200
+NOTE_LIMIT = 900
+# The line impl-generate writes into a follow-up's PR body; it is what makes a
+# follow-up final. One grammar for every reader: impl-review's "Regen
+# context", regen_follow_up.py and regen_pick_pairs.py.
+FOLLOW_UP_LINE_RE = re.compile(
+    r"^\*\*Follow-up of:\*\* #(?P<pr>[1-9]\d{0,9}) \((?P<kind>repair|retry)\)[ \t]*$", re.MULTILINE
+)
+
+
+def body_follow_up(body: Any) -> tuple[int, str] | None:
+    """``(predecessor PR, kind)`` from a PR body's ``**Follow-up of:**`` line, else ``None``."""
+    match = FOLLOW_UP_LINE_RE.search(str(body or "").replace("\r", ""))
+    return (int(match.group("pr")), match.group("kind")) if match else None
 
 
 def count_defect_lines(weaknesses: Any) -> int | None:
@@ -2980,14 +2997,16 @@ def load_defect_lines(path: Path) -> int | None:
 def follow_up_trigger(verdict: Any, code: Any, defect_lines: Any, follow_up_of: Any) -> str:
     """The follow-up a gate decision triggers: ``repair``, ``retry`` or ``none``.
 
-    A follow-up never triggers another. ``repair`` needs a plain merge (code
-    ``merge``, so an adapt-route merge never triggers one) with at least one
-    defect line; ``retry`` needs a keep for a regression (code ``regression``).
-    Anything missing or malformed triggers nothing.
+    A follow-up never triggers another. ``repair`` needs a merge
+    (``REPAIR_CODES``: the adapt route's ``adapt_identity`` included) whose
+    review named at least one defect line, so a merge without a review, which
+    has no defect lines, never triggers one; ``retry`` needs a keep for a
+    regression (code ``regression``). Anything missing or malformed triggers
+    nothing.
     """
     if follow_up_of is not None:
         return FOLLOW_UP_NONE
-    if verdict == MERGE and code == "merge" and _is_int(defect_lines) and defect_lines >= 1:
+    if verdict == MERGE and code in REPAIR_CODES and _is_int(defect_lines) and defect_lines >= 1:
         return FOLLOW_UP_REPAIR
     if verdict == KEEP and code == "regression":
         return FOLLOW_UP_RETRY
@@ -2995,8 +3014,13 @@ def follow_up_trigger(verdict: Any, code: Any, defect_lines: Any, follow_up_of: 
 
 
 def _note_text(text: str) -> str:
-    """One line of plain text: no HTML comment delimiters, no control characters, no backticks."""
-    text = re.sub(r"[\x00-\x1f\x7f`]", " ", text).replace("<!--", " ").replace("-->", " ")
+    """Plain text on one line: no HTML comment delimiters, control characters, backticks or asterisks.
+
+    No asterisk, so a note can never hold a bold ``**Label:**`` that a reader
+    of the PR body (``**Parent Issue:**``, ``**Change request:**``) would take
+    for one of its lines.
+    """
+    text = re.sub(r"[\x00-\x1f\x7f`*]", " ", text).replace("<!--", " ").replace("-->", " ")
     return re.sub(r"\s+", " ", text).strip()
 
 
@@ -3005,8 +3029,10 @@ def retry_note(regressions: Sequence[Mapping[str, str]], pr: int | None) -> str:
 
     Built from the regressions the gate kept on (``review_regressions``): at
     most ``NOTE_ITEMS``, each "what (where)" cut to ``NOTE_ITEM_LIMIT``
-    characters, on one line. The text comes from the review, so it is reduced
-    to plain text before it reaches a PR body or a prompt.
+    characters, on one line, the whole cut to ``NOTE_LIMIT`` characters. The
+    text comes from the review, so it is reduced to plain text and made safe
+    for a GitHub body (``_safe``: no @-mention) before it reaches a PR body or
+    a prompt.
     """
     items = []
     for item in regressions[:NOTE_ITEMS]:
@@ -3019,10 +3045,11 @@ def retry_note(regressions: Sequence[Mapping[str, str]], pr: int | None) -> str:
     of = f"#{pr}" if pr else "The previous attempt"
     more = len(regressions) - len(items)
     tail = f"; and {more} more" if more > 0 else ""
-    return (
+    note = (
         f"{of} was kept because the review found it worse than the live version here: "
         f"{'; '.join(items)}{tail}. Keep these as the live version has them."
     )
+    return _safe(note)[:NOTE_LIMIT].rstrip()
 
 
 def record_token(value: Any, limit: int = 100) -> str:
@@ -3526,7 +3553,16 @@ def cmd_decide(args: argparse.Namespace) -> int:
     follow_up_kind = args.follow_up_kind if args.follow_up_kind in FOLLOW_UP_KINDS else None
     if follow_up_of is None or follow_up_kind is None:
         follow_up_of = follow_up_kind = None
-    defect_lines = load_defect_lines(Path(args.regen_json).parent / "review_weaknesses.json")
+    # Monitoring and routing input only: a review file the parser cannot take
+    # (one nested past the recursion limit) must never reach the workflow's
+    # crash fallback, which would keep a legitimate merge as script_crashed.
+    # A merge without a review (--review-skipped) has no defect lines.
+    defect_lines: int | None = None
+    if not args.review_skipped:
+        try:
+            defect_lines = load_defect_lines(Path(args.regen_json).parent / "review_weaknesses.json")
+        except Exception as exc:
+            print(f"::warning::review_weaknesses.json not counted: {_one_line(str(exc))[:200]}")
     trigger = follow_up_trigger(result.verdict, result.code, defect_lines, follow_up_of)
     # The stable prefix (spec … verdict) is what readers match on; the new
     # fields sit before `reason=`, which stays last and runs to the line end.

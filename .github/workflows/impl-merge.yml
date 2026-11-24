@@ -970,32 +970,38 @@ jobs:
 
       # Repair round (docs/workflows/overview.md, "Follow-up regenerations"):
       # a gated regeneration that merged while its review still names defect
-      # lines gets one follow-up regeneration of the same pair. The winner merged exactly as it would
-      # have, and is live once the promotion is done. The follow-up reads its
+      # lines gets one follow-up regeneration of the same pair. The winner
+      # merged exactly as it would have, and is live once the promotion is
+      # done. The follow-up reads its
       # review the normal way (the defect lines reach the generator as W
       # lines), and the same gate judges the follow-up against it. Off unless
       # REGEN_REPAIR_ROUND is exactly `true`. Runs after a successful promotion
       # whatever the issue bookkeeping did, also on a re-dispatch for a PR
       # that is already merged (the marker then refuses a second follow-up).
       # The tools come from the workflow's own commit, like the guard; the
-      # regen tools need the repository's Python (PEP 758 syntax).
+      # regen tools need the repository's Python (PEP 758 syntax). A setup
+      # that fails never turns the finished merge red: the dispatch step then
+      # ends as plan_failed on the runner's own interpreter. A cancelled run
+      # dispatches nothing.
       - name: Set up Python (follow-up)
-        if: always() && vars.REGEN_REPAIR_ROUND == 'true' && steps.check.outputs.should_run == 'true' && steps.promote.outcome == 'success'
+        if: "!cancelled() && vars.REGEN_REPAIR_ROUND == 'true' && steps.check.outputs.should_run == 'true' && steps.promote.outcome == 'success'"
+        continue-on-error: true
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version-file: '.python-version'
 
       # regen_follow_up.py decides from durable state only: the gate record
-      # by the workflow on this PR (a plain merge, code `merge`, with at least
-      # one defect line, the PR not a follow-up itself), the marker comments
-      # and the pair's recent PRs. Anything it cannot read means no follow-up.
-      # The marker goes on this PR before the dispatch, and a marker that
-      # cannot be posted means no follow-up. No change request: the winner
-      # applied its own, and the follow-up only goes after the named defects.
-      # Never fails the run: the merge stands either way.
+      # by the workflow on this PR (a merge whose review named at least one
+      # defect line, the PR not a follow-up itself), the marker comments and
+      # the pair's PRs. Anything it cannot read means no follow-up. Its
+      # "dispatch" posts the marker on this PR first (a marker that cannot be
+      # posted means no follow-up), dispatches once, and notes a dispatch that
+      # failed. No change request: the winner applied its own, and the
+      # follow-up only goes after the named defects. Never fails the run: the
+      # merge stands either way.
       - name: Dispatch a follow-up regeneration (repair round)
         id: follow_up
-        if: always() && vars.REGEN_REPAIR_ROUND == 'true' && steps.check.outputs.should_run == 'true' && steps.promote.outcome == 'success'
+        if: "!cancelled() && vars.REGEN_REPAIR_ROUND == 'true' && steps.check.outputs.should_run == 'true' && steps.promote.outcome == 'success'"
         continue-on-error: true
         timeout-minutes: 10
         env:
@@ -1027,36 +1033,16 @@ jobs:
                    --spec-id "$SPEC_ID" --library "$LIBRARY" --repo "$REPOSITORY") || skip plan_failed
           [ "$(sed -n 's/^dispatch=//p' <<< "$PLAN")" = "true" ] || skip "$(sed -n 's/^reason=//p' <<< "$PLAN")"
 
-          python3 "$TOOLS/regen_follow_up.py" marker --kind repair --pr "$PR_NUM" \
-            --spec-id "$SPEC_ID" --library "$LIBRARY" > "$RUNNER_TEMP/follow-up-marker.md" || skip marker_failed
-          POSTED=0
-          for attempt in 1 2 3; do
-            if gh pr comment "$PR_NUM" --repo "$REPOSITORY" --body-file "$RUNNER_TEMP/follow-up-marker.md"; then
-              POSTED=1
-              break
-            fi
-            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
-          done
-          [ "$POSTED" = "1" ] || skip marker_not_posted
-
-          DISPATCHED=0
-          for attempt in 1 2 3; do
-            if gh workflow run impl-generate.yml --repo "$REPOSITORY" --ref "$WORKFLOW_REF" \
-                 -f specification_id="$SPEC_ID" -f library="$LIBRARY" -f issue_number="$ISSUE" \
-                 -f model="${MODEL:-auto}" -f change_request= -f regen_gate=true \
-                 -f source_ref= -f source_model= \
-                 -f follow_up="repair:${PR_NUM}" -f follow_up_note=; then
-              DISPATCHED=1
-              break
-            fi
-            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
-          done
-          if [ "$DISPATCHED" != "1" ]; then
-            echo "::warning::repair follow-up of PR #${PR_NUM}: the marker is posted, but impl-generate could not be dispatched; the pair gets no follow-up"
-            echo "reason=dispatch_failed" >> "$GITHUB_OUTPUT"
+          SENT=$(env -u GITHUB_OUTPUT python3 "$TOOLS/regen_follow_up.py" dispatch --kind repair --pr "$PR_NUM" \
+                   --spec-id "$SPEC_ID" --library "$LIBRARY" --repo "$REPOSITORY" --ref "$WORKFLOW_REF" \
+                   --model "${MODEL:-auto}" --issue "$ISSUE") || skip dispatch_crashed
+          REASON=$(sed -n 's/^reason=//p' <<< "$SENT")
+          echo "reason=${REASON}" >> "$GITHUB_OUTPUT"
+          if [ "$REASON" != "dispatch" ]; then
+            echo "::warning::repair follow-up of PR #${PR_NUM} not dispatched: ${REASON}; the pair gets no follow-up"
+            echo "- Follow-up (repair round): not dispatched, \`${REASON}\`" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          echo "reason=dispatch" >> "$GITHUB_OUTPUT"
           echo "::notice::repair follow-up of PR #${PR_NUM} dispatched for ${SPEC_ID}/${LIBRARY}"
           echo "- Follow-up (repair round): dispatched for ${SPEC_ID}/${LIBRARY}" >> "$GITHUB_STEP_SUMMARY"
 

@@ -421,6 +421,7 @@ def test_the_report_follows_the_promotion_and_the_bookkeeping_waits_for_success(
     # only after a promotion that succeeded.
     for step in _steps()[promote + 2 :]:
         condition = step.get("if", "")
-        if "always()" in condition:
+        # Both run after a failed step too, so both need the promotion's success.
+        if "always()" in condition or "cancelled()" in condition:
             assert "steps.promote.outcome == 'success'" in condition, step["name"]
         assert "failure()" not in condition, step["name"]

@@ -9,7 +9,9 @@ libraries. Pair mode spends the night's N on two kinds of work:
    ``ai-review-paused`` or ``ai-repair-paused``; the oldest of them are
    re-dispatched before anything new. A refused request costs nothing, so a
    stop that is still active only pauses them again, and they resume on
-   their own once it lifts.
+   their own once it lifts. A paused follow-up regeneration (its body's
+   ``**Follow-up of:**`` line, ``regen_gate.body_follow_up``) is resumed on
+   top of the night's N and never counts against it.
 2. Then the oldest implementations, one (spec, library) pair each, across the
    catalogue:
 
@@ -177,6 +179,9 @@ class Resume:
     library: str
     attempt: int
     updated: datetime
+    # A follow-up regeneration (its body's "**Follow-up of:**" line): resumed
+    # on top of the night's count, which follow-ups never use.
+    follow_up: bool = False
 
 
 @dataclass
@@ -311,7 +316,10 @@ def fold_pulls(pulls: Iterable[dict[str, Any]], records: Records, returning: Map
             if kind and isinstance(number, int) and all(r.pr != number for r in records.paused):
                 attempts = [int(m["n"]) for name in labels if (m := ATTEMPT_RE.match(name))]
                 updated = parse_ts(str(pull.get("updatedAt") or "")) or ANCIENT
-                records.paused.append(Resume(number, kind, pair[0], pair[1], max(attempts, default=1), updated))
+                follow_up = regen_gate.body_follow_up(pull.get("body")) is not None
+                records.paused.append(
+                    Resume(number, kind, pair[0], pair[1], max(attempts, default=1), updated, follow_up)
+                )
             continue
         if state not in ("MERGED", "CLOSED"):
             continue
@@ -385,8 +393,19 @@ def _pick_basis(basis: str, hold: tuple[datetime, str] | None) -> str:
 
 
 def resumes(records: Records, count: int) -> list[Resume]:
-    """The oldest paused reviews and repairs, at most ``count``."""
-    return sorted(records.paused, key=lambda r: (r.updated, r.pr))[:count]
+    """The oldest paused reviews and repairs, at most ``count``, plus every paused follow-up.
+
+    A follow-up regeneration never counts against the night's pairs, so a
+    paused one is resumed on top of them (``counted_resumes``).
+    """
+    ordered = sorted(records.paused, key=lambda r: (r.updated, r.pr))
+    counted = [r for r in ordered if not r.follow_up][:count]
+    return [r for r in ordered if r.follow_up or r in counted]
+
+
+def counted_resumes(resumed: Iterable[Resume]) -> int:
+    """How many of the resumes count against the night's pairs: every one but a follow-up."""
+    return sum(1 for r in resumed if not r.follow_up)
 
 
 def pick(
@@ -493,7 +512,8 @@ def read_records(repo: str, libraries: Iterable[str]) -> Records:
     records = Records(attempts={}, open_pairs=set(), issue_activity={})
     libraries = frozenset(libraries)
     guard_fields = ",".join(pr_guard.REQUIRED_FIELDS)
-    fields = f"{guard_fields},state,updatedAt,closedAt,labels"
+    # The body tells a paused follow-up regeneration from any other (resumes).
+    fields = f"{guard_fields},state,updatedAt,closedAt,labels,body"
     pr_list = ["pr", "list", "--repo", repo, "--limit", LIMIT, "--json", fields]
     pulls = own_pulls(
         _gh_json(
@@ -567,10 +587,18 @@ def issue_failures(repo: str, spec_issues: dict[str, int]) -> Callable[[str], di
 
 
 def summary_table(resumed: list[Resume], picks: list[Pick], eligible: int, count: int) -> str:
-    lines = [f"### Pair mode: {len(resumed)} resumed, {len(picks)} new pair(s) of {count} ({eligible} eligible)", ""]
+    follow_ups = len(resumed) - counted_resumes(resumed)
+    extra = f" ({follow_ups} follow-up(s), not counted)" if follow_ups else ""
+    lines = [
+        f"### Pair mode: {len(resumed)} resumed{extra}, {len(picks)} new pair(s) of {count} ({eligible} eligible)",
+        "",
+    ]
     if resumed:
         lines += ["| Resume | PR | Spec | Library |", "|--------|----|------|---------|"]
-        lines += [f"| {r.kind} | #{r.pr} | `{r.spec}` | `{r.library}` |" for r in resumed]
+        lines += [
+            f"| {r.kind}{' (follow-up)' if r.follow_up else ''} | #{r.pr} | `{r.spec}` | `{r.library}` |"
+            for r in resumed
+        ]
         lines.append("")
     lines += ["| # | Spec | Library | Age from | From |", "|---|------|---------|----------|------|"]
     for i, p in enumerate(picks, 1):
@@ -609,7 +637,7 @@ def main(argv: list[str] | None = None) -> int:
         datetime.now(timezone.utc),
         timedelta(hours=args.min_age_hours),
         timedelta(days=args.attempt_window_days),
-        args.count - len(resumed),
+        args.count - counted_resumes(resumed),
         failures=issue_failures(args.repo, spec_issues),
         max_reads=args.max_issue_reads,
     )

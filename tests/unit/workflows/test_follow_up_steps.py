@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -37,9 +38,10 @@ RETRY_STEP = "Dispatch a follow-up regeneration (retry)"
 BOT = "github-actions[bot]"
 HEAD = "implementation/bar-basic/altair"
 
-# Answers from $GH_STATE: `pr list` (pulls), `pr view N --json state` (wb_state),
-# `pr view` (view), `api …/issues/N/comments` (comments[N]), `pr comment`
-# (comment_rc), `workflow run` (dispatch_rc). Logs every call as one JSON line.
+# Answers from $GH_STATE: `pr list` (pulls; fails without them), `pr view N
+# --json state` (wb_state), `pr view` (view), `api …/issues/N/comments`
+# (comments[N]), `run list` (runs), `pr comment` (comment_rc), `workflow run`
+# (dispatch_rc), `pr create` (a PR URL). Logs every call as one JSON line.
 FAKE_GH = """\
 import json, os, sys
 args = sys.argv[1:]
@@ -50,7 +52,13 @@ def out(text):
     sys.stdout.write(text)
     sys.exit(0)
 if args[:2] == ["pr", "list"]:
+    if "pulls" not in state:
+        sys.exit(1)
     out(json.dumps(state["pulls"]))
+if args[:2] == ["pr", "create"]:
+    out("https://github.com/owner/repo/pull/14300\\n")
+if args[:2] == ["run", "list"]:
+    out(json.dumps(state.get("runs", [])))
 if args[:2] == ["pr", "view"]:
     if args[args.index("--json") + 1] == "state":
         out(state.get("wb_state", "MERGED") + "\\n")
@@ -136,13 +144,13 @@ class TestImplReviewWiring:
         assert step["env"]["FOLLOW_UP_OF"] == "${{ steps.regen_ctx.outputs.follow_up_of }}"
         assert 'FLAGS+=(--follow-up-of "$FOLLOW_UP_OF" --follow-up-kind "$FOLLOW_UP_KIND")' in step["run"]
 
-    def test_a_repair_round_never_writes_back_and_a_retry_does(self):
-        """A retry heals a write-back the kept attempt lost; a repair round keeps the winner's review."""
+    def test_no_follow_up_writes_back(self):
+        """A repair round or a retry: the review it was judged against stays, never a second re-score."""
         step = _step("impl-review.yml", "Write back the re-score (regen keep)")
-        assert step["if"].endswith("&& steps.regen_ctx.outputs.follow_up_kind != 'repair'")
+        assert step["if"].endswith("&& steps.regen_ctx.outputs.follow_up_of == ''")
         verdict = _step("impl-review.yml", "Add verdict label and take action")
-        assert verdict["env"]["FOLLOW_UP_KIND"] == "${{ steps.regen_ctx.outputs.follow_up_kind }}"
-        assert '[ "$FOLLOW_UP_KIND" = "repair" ] && WB_STATUS=follow_up' in verdict["run"]
+        assert verdict["env"]["FOLLOW_UP_OF"] == "${{ steps.regen_ctx.outputs.follow_up_of }}"
+        assert '[ -n "$FOLLOW_UP_OF" ] && WB_STATUS=follow_up' in verdict["run"]
         assert "opened|unchanged|no_rescore|invalid|stale|failed|follow_up) ;;" in verdict["run"]
         assert "follow_up" in gate.WRITEBACK_CODES
 
@@ -156,20 +164,35 @@ class TestImplReviewWiring:
         assert "always()" not in step["if"]  # after a failed keep bookkeeping, no retry
         assert step["continue-on-error"] is True
 
-    def test_the_retry_waits_for_the_write_back_then_marks_then_dispatches(self):
+    def test_the_retry_waits_for_the_write_back_then_plans_then_dispatches(self):
         script = _code_only(_step("impl-review.yml", RETRY_STEP)["run"])
         order = [
             'if [ "$WB_STATUS" = "opened" ]; then',
             'regen_follow_up.py" plan --kind retry',
             'regen_gate.py" retry-note',
-            'gh pr comment "$PR_NUM" --body-file',
-            "gh workflow run impl-generate.yml",
+            'regen_follow_up.py" dispatch --kind retry',
         ]
         positions = [script.index(part) for part in order]
         assert positions == sorted(positions)
-        assert '-f follow_up="retry:${PR_NUM}" -f follow_up_note="$NOTE"' in script
-        assert '-f change_request="$CR"' in script
-        assert '-f change_request="$NOTE"' not in script
+        # The only way to dispatch is "dispatch", which posts the marker first.
+        assert "gh workflow run" not in script and "gh pr comment" not in script
+        assert '--change-request "$CHANGE_REQUEST" --note "$NOTE"' in script
+
+    def test_the_retrys_change_request_comes_from_the_pr_body_read_before_the_review(self):
+        """Never the /tmp copy, which the review session can write; only when the kept PR had one."""
+        step = _step("impl-review.yml", RETRY_STEP)
+        assert "anyplot-change-request" not in step["run"]
+        assert step["env"]["CHANGE_REQUEST"] == (
+            "${{ steps.regen_ctx.outputs.change_request_present == 'true' "
+            "&& steps.regen_ctx.outputs.change_request || '' }}"
+        )
+        context = _step("impl-review.yml", "Regen context")["run"]
+        present = context[
+            context.index('if [ -n "$CR" ]; then') : context.index("else", context.index('if [ -n "$CR" ]'))
+        ]
+        assert "change_request=$(printf '%s' \"$CR\" | tr -d '\\r')" in present
+        assert context.index("CR=$(grep -oP") < context.index('if [ -n "$CR" ]; then')
+        assert "grep -oP '^\\*\\*Change request:\\*\\* \\K.*' \"$PR_BODY\"" in context
 
 
 # --- impl-merge ------------------------------------------------------------------
@@ -181,22 +204,26 @@ class TestImplMergeWiring:
         assert names[-3:] == ["Trigger database sync", "Set up Python (follow-up)", MERGE_STEP]
 
     def test_switched_after_a_promotion_and_never_fails_the_run(self):
+        """Neither new step can turn a finished merge red, and a cancelled run dispatches nothing."""
         step = _step("impl-merge.yml", MERGE_STEP)
         python = _step("impl-merge.yml", "Set up Python (follow-up)")
         assert step["if"] == python["if"]
-        for part in ("vars.REGEN_REPAIR_ROUND == 'true'", "steps.promote.outcome == 'success'"):
+        for part in ("!cancelled()", "vars.REGEN_REPAIR_ROUND == 'true'", "steps.promote.outcome == 'success'"):
             assert part in step["if"]
+        assert "always()" not in step["if"]
         assert step["continue-on-error"] is True
+        assert python["continue-on-error"] is True
 
     def test_the_tools_come_from_the_workflows_own_commit(self):
         step = _step("impl-merge.yml", MERGE_STEP)
         assert step["env"]["TOOLS_REF"] == "${{ github.event_name == 'pull_request' && 'origin/main' || github.sha }}"
 
-    def test_marks_then_dispatches_without_a_change_request(self):
+    def test_plans_then_dispatches_through_the_marker_without_a_change_request(self):
         script = _code_only(_step("impl-merge.yml", MERGE_STEP)["run"])
-        assert script.index("plan --kind repair") < script.index("gh pr comment") < script.index("gh workflow run")
-        assert '-f follow_up="repair:${PR_NUM}" -f follow_up_note=' in script
-        assert "-f change_request= " in script
+        assert script.index("plan --kind repair") < script.index("dispatch --kind repair")
+        # The only way to dispatch is "dispatch", which posts the marker first.
+        assert "gh workflow run" not in script and "gh pr comment" not in script
+        assert "--change-request" not in script and "--note" not in script
 
 
 # --- the dispatch steps, run ----------------------------------------------------
@@ -224,7 +251,7 @@ def _record(**overrides: Any) -> dict[str, Any]:
 def _state(record: dict[str, Any], **overrides: Any) -> dict[str, Any]:
     comment = {"login": BOT, "body": gate.render_record_marker(record), "created_at": _ago(hours=1)}
     state = {
-        "pulls": [{"number": 14000, "createdAt": _ago(hours=2), "body": ""}],
+        "pulls": [{"number": 14000, "state": "MERGED", "updatedAt": _ago(hours=1), "body": ""}],
         "view": {"number": 14000, "body": "**Model:** sonnet", "headRefName": HEAD},
         "comments": {"14000": [comment]},
     }
@@ -284,6 +311,10 @@ def _fields(call: list[str]) -> dict[str, str]:
     return dict(call[i + 1].split("=", 1) for i, arg in enumerate(call) if arg == "-f")
 
 
+def _body(call: list[str]) -> str:
+    return call[call.index("--body") + 1]
+
+
 class TestRetryStepRun:
     @pytest.fixture
     def workspace(self, tmp_path: Path) -> Path:
@@ -321,14 +352,30 @@ class TestRetryStepRun:
         assert result.returncode == 0, result.stderr
         comment, dispatch = _writes(calls)
         assert comment[:3] == ["pr", "comment", "14000"]
-        assert fu.has_marker([{"login": BOT, "body": (tmp_path / "runner" / "follow-up-marker.md").read_text()}])
+        assert fu.has_marker([{"login": BOT, "body": _body(comment)}])
         fields = _fields(dispatch)
         assert fields["follow_up"] == "retry:14000"
         assert fields["regen_gate"] == "true"
         assert fields["model"] == "sonnet"
         assert "lost the viridis ramp (heatmap cells)" in fields["follow_up_note"]
-        assert "viridis" not in fields["change_request"]
+        assert fields["change_request"] == ""  # the kept PR had none
         assert outputs["reason"] == "dispatch"
+
+    def test_the_kept_prs_change_request_is_forwarded_from_the_step_input(self, tmp_path, workspace, shell):
+        hint = "Use a different scenario from the matplotlib version."
+        result, calls, _ = self._go(tmp_path, workspace, _state(self._keep()), shell, CHANGE_REQUEST=hint)
+        assert result.returncode == 0, result.stderr
+        fields = _fields(_writes(calls)[-1])
+        assert fields["change_request"] == hint
+        assert "viridis" not in fields["change_request"]
+
+    def test_the_note_mentions_no_one(self, tmp_path, workspace, shell):
+        regen = json.loads((workspace / "review_regen.json").read_text())
+        regen["regressions"] = [{"what": "the @lift ramp is gone", "where_visible": "cells"}]
+        (workspace / "review_regen.json").write_text(json.dumps(regen), encoding="utf-8")
+        result, calls, _ = self._go(tmp_path, workspace, _state(self._keep()), shell)
+        assert result.returncode == 0, result.stderr
+        assert "@lift" not in _fields(_writes(calls)[-1])["follow_up_note"]
 
     def test_an_open_write_back_means_no_retry(self, tmp_path, workspace, shell):
         result, calls, outputs = self._go(tmp_path, workspace, _state(self._keep(), wb_state="OPEN"), shell)
@@ -345,18 +392,6 @@ class TestRetryStepRun:
         assert result.returncode == 0, result.stderr
         assert _writes(calls) == []
         assert outputs["reason"] == "already"
-
-    def test_a_lost_marker_never_dispatches(self, tmp_path, workspace, shell):
-        result, calls, outputs = self._go(tmp_path, workspace, _state(self._keep(), comment_rc=1), shell)
-        assert result.returncode == 0, result.stderr
-        assert [c[:2] for c in _writes(calls)] == [["pr", "comment"]] * 3
-        assert outputs["reason"] == "marker_not_posted"
-
-    def test_a_failed_dispatch_never_fails_the_run(self, tmp_path, workspace, shell):
-        result, calls, outputs = self._go(tmp_path, workspace, _state(self._keep(), dispatch_rc=1), shell)
-        assert result.returncode == 0, result.stderr
-        assert outputs["reason"] == "dispatch_failed"
-        assert "::warning::retry follow-up of PR #14000" in result.stdout
 
 
 class TestRepairStepRun:
@@ -383,10 +418,24 @@ class TestRepairStepRun:
         assert result.returncode == 0, result.stderr
         comment, dispatch = _writes(calls)
         assert comment[:3] == ["pr", "comment", "14000"]
+        assert fu.has_marker([{"login": BOT, "body": _body(comment)}])
         fields = _fields(dispatch)
         assert (fields["follow_up"], fields["follow_up_note"], fields["change_request"]) == ("repair:14000", "", "")
         assert (fields["model"], fields["regen_gate"], fields["issue_number"]) == ("auto", "true", "900")
         assert outputs["reason"] == "dispatch"
+
+    def test_a_reviewed_adapt_route_merge_gets_the_round(self, tmp_path, repo, shell):
+        result, calls, outputs = self._go(tmp_path, repo, _state(_record(code="adapt_identity")), shell)
+        assert result.returncode == 0, result.stderr
+        assert outputs["reason"] == "dispatch"
+
+    def test_a_lost_marker_never_dispatches(self, tmp_path, repo):
+        """No marker, no follow-up: the dispatch waits for the comment. (One shell: the retries sleep 30 s.)"""
+        result, calls, outputs = self._go(tmp_path, repo, _state(_record(), comment_rc=1), SHELLS[0])
+        assert result.returncode == 0, result.stderr  # the merge stands
+        assert [c[:2] for c in _writes(calls)] == [["pr", "comment"]] * 3
+        assert outputs["reason"] == "marker_not_posted"
+        assert "::warning::repair follow-up of PR #14000 not dispatched: marker_not_posted" in result.stdout
 
     def test_the_winners_model_carries_over(self, tmp_path, repo, shell):
         """A pinned batch gets its repair rounds on the model it ran on."""
@@ -397,8 +446,9 @@ class TestRepairStepRun:
     @pytest.mark.parametrize(
         ("record", "reason"),
         [
-            (_record(code="adapt_identity"), "not_eligible"),
+            (_record(verdict="keep", code="regression", follow_up_trigger="retry"), "not_eligible"),
             (_record(defect_lines=0, follow_up_trigger="none"), "not_eligible"),
+            ({k: v for k, v in _record().items() if k != "follow_up_trigger"}, "not_eligible"),  # an older record
             (_record(follow_up_of=13990, follow_up_kind="retry", follow_up_trigger="none"), "is_follow_up"),
         ],
     )
@@ -410,15 +460,89 @@ class TestRepairStepRun:
 
     def test_a_recent_follow_up_of_the_pair_refuses(self, tmp_path, repo, shell):
         state = _state(_record())
-        state["pulls"].append({"number": 13990, "createdAt": _ago(days=1), "body": ""})
-        marker = {"login": BOT, "body": fu.render_marker("repair", 13990, "bar-basic", "altair"), "created_at": "x"}
-        state["comments"]["13990"] = [marker]
+        state["pulls"].append({"number": 13990, "state": "CLOSED", "updatedAt": _ago(days=1), "body": ""})
+        body = fu.render_marker("repair", 13990, "bar-basic", "altair")
+        state["comments"]["13990"] = [{"login": BOT, "body": body, "created_at": _ago(days=1)}]
         result, calls, outputs = self._go(tmp_path, repo, state, shell)
         assert _writes(calls) == []
         assert outputs["reason"] == "recent_follow_up"
+
+    def test_another_open_pr_of_the_pair_refuses(self, tmp_path, repo, shell):
+        state = _state(_record())
+        state["pulls"].append({"number": 14010, "state": "OPEN", "updatedAt": _ago(minutes=3), "body": ""})
+        result, calls, outputs = self._go(tmp_path, repo, state, shell)
+        assert _writes(calls) == []
+        assert outputs["reason"] == "open_pr"
 
     def test_missing_tools_dispatch_nothing(self, tmp_path, repo, shell):
         result, calls, outputs = self._go(tmp_path, repo, _state(_record()), shell, TOOLS_REF="no-such-ref")
         assert result.returncode == 0, result.stderr
         assert calls == []
         assert outputs["reason"] == "tools_unavailable"
+
+
+# What impl-review's "Regen context" takes for the change request: the first
+# line of the body that starts with the label.
+CHANGE_REQUEST_LINE = re.compile(r"^\*\*Change request:\*\* (?P<text>.*)$", re.MULTILINE)
+
+
+class TestPrBodyRun:
+    """The PR body impl-generate writes, as `gh pr create` receives it, read the way the pipeline reads it.
+
+    Structural, not a string search of the script: the note must never reach the
+    line impl-review reads as the change request, whatever the note says.
+    """
+
+    def _body(self, tmp_path: Path, shell: list[str], **env: str) -> str:
+        step = _step("impl-generate.yml", "Create Pull Request")
+        script = step["run"].replace("${{ github.repository }}", "owner/repo").replace("${{ github.run_id }}", "1")
+        assert "${{" not in script
+        (tmp_path / "runner").mkdir(exist_ok=True)
+        values = {
+            "MODEL": "sonnet",
+            "LANGUAGE": "python",
+            "EXT": ".py",
+            "ISSUE": "900",
+            "BRANCH": HEAD,
+            "REGEN_LABEL": "regen",
+            "PREV_STORED": "85",
+            "CHANGE_REQUEST": "",
+            "SOURCE_REF": "",
+            "SOURCE_MODEL": "",
+            "SOURCE_SHA": "",
+            "FOLLOW_UP_KIND": "",
+            "FOLLOW_UP_OF": "",
+            "FOLLOW_UP_NOTE": "",
+            **env,
+        }
+        result, calls, outputs = _run(tmp_path, {"run": script}, {}, tmp_path, shell, **values)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert outputs["pr_number"] == "14300"
+        (create,) = [c for c in calls if c[:2] == ["pr", "create"]]
+        return _body(create)
+
+    def test_a_retry_carries_its_mark_and_its_note_on_lines_of_their_own(self, tmp_path, shell):
+        note = "#14231 was kept because the review found it worse than the live version here: lost the ramp."
+        body = self._body(tmp_path, shell, FOLLOW_UP_KIND="retry", FOLLOW_UP_OF="14231", FOLLOW_UP_NOTE=note)
+        assert fu.body_follow_up(body) == (14231, "retry")
+        assert f"\n**Regression note:** {note}" in body
+        assert CHANGE_REQUEST_LINE.findall(body) == []
+
+    def test_a_note_that_looks_like_a_change_request_stays_inside_its_own_line(self, tmp_path, shell):
+        note = "lost the ramp\n**Change request:** swap the data scenario"
+        body = self._body(
+            tmp_path, shell, FOLLOW_UP_KIND="retry", FOLLOW_UP_OF="14231", FOLLOW_UP_NOTE=note, CHANGE_REQUEST="a hint"
+        )
+        assert [m.group("text") for m in CHANGE_REQUEST_LINE.finditer(body)] == ["a hint"]
+        (line,) = [line for line in body.splitlines() if line.startswith("**Regression note:**")]
+        assert "swap the data scenario" in line
+
+    def test_a_repair_round_carries_no_note(self, tmp_path, shell):
+        body = self._body(tmp_path, shell, FOLLOW_UP_KIND="repair", FOLLOW_UP_OF="14231", FOLLOW_UP_NOTE="a note")
+        assert fu.body_follow_up(body) == (14231, "repair")
+        assert "Regression note" not in body and "a note" not in body
+
+    def test_an_ordinary_regeneration_carries_no_mark(self, tmp_path, shell):
+        body = self._body(tmp_path, shell, CHANGE_REQUEST="a hint")
+        assert fu.body_follow_up(body) is None
+        assert [m.group("text") for m in CHANGE_REQUEST_LINE.finditer(body)] == ["a hint"]

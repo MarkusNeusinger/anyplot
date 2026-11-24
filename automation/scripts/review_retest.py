@@ -1710,7 +1710,12 @@ def render_gate_report(result: dict[str, Any]) -> str:
     lines = [
         "# Regen gate report",
         "",
-        f"- Decisions: {result['n']}; merge rate {_pct(result['merge_rate'])}",
+        f"- Decisions: {result['n']}; merge rate {_pct(result['merge_rate'])}"
+        + (
+            f" (without the {result['follow_up_n']} follow-ups, which stay out of merge rate, drift and margin)"
+            if result.get("follow_up_n")
+            else ""
+        ),
         f"- Reason codes: {', '.join(f'{k} {v}' for k, v in result['codes'].items()) or 'none'}",
         f"- Counted visible improvements (never a permission or an obsolete weakness): mean "
         f"{_fmt(imp['visible_mean'])} per decision, at least one in {_pct(imp['with_visible'])} (n={imp['n']})",

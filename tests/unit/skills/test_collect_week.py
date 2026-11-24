@@ -248,6 +248,41 @@ class TestFollowUps:
         assert "| Repair rounds: triggered / marked / decided / merged | – | 1 / 1 / 1 / 0 |" in text
         assert "keep (no_defect_improvement), repair of #300" in text
 
+    def test_follow_ups_stay_out_of_merge_rate_and_drift(self, cw):
+        """A follow-up re-scores a file reviewed hours before: a test-retest, not the gate's population."""
+        rows = self._rows(cw)
+        summary = cw.summarize(rows, {}, None)
+        # Two primaries: the winner (merge) and the kept bokeh (keep); the follow-up is apart.
+        assert (summary["decisions"], summary["follow_up_decisions"]) == (3, 1)
+        assert (summary["merges"], summary["keeps"], summary["merge_rate"]) == (1, 1, 0.5)
+        follow_up = cw.build_row(
+            _pull(303, "d3", ("regen", "regen:kept"), "CLOSED"),
+            _comments(
+                _record(
+                    pr=303,
+                    lib="d3",
+                    prev_stored=80,
+                    prev_rescored=80,
+                    verdict="keep",
+                    code="regression",
+                    writeback="follow_up",
+                    follow_up_of=299,
+                    follow_up_kind="retry",
+                    follow_up_trigger="none",
+                ),
+                None,
+            ),
+            None,
+            PAIR,
+        )
+        assert cw.summarize([*rows, follow_up], {}, None)["rescore_drift_mean"] == summary["rescore_drift_mean"]
+
+    def test_only_the_workflows_marker_counts_as_marked(self, cw):
+        pasted = {**self._marker("repair", 300), "login": "someone"}
+        winner = _record(pr=300, lib="altair", defect_lines=2, follow_up_trigger="repair")
+        row = cw.build_row(_pull(300, "altair"), [*_comments(winner, None), pasted], None, PAIR)
+        assert row["follow_up_marked"] is False
+
 
 class TestAggregate:
     def _rows(self, cw):

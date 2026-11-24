@@ -44,8 +44,20 @@ def _gate_comment(record: dict[str, Any], login: str = BOT, at: str | None = Non
     }
 
 
-def _marker_comment(kind: str = "repair", pr: int = 14000, login: str = BOT) -> dict[str, Any]:
-    return {"login": login, "body": fu.render_marker(kind, pr, "bar-basic", "altair"), "created_at": _ago(minutes=5)}
+def _marker_comment(kind: str = "repair", pr: int = 14000, login: str = BOT, at: str | None = None) -> dict[str, Any]:
+    body = fu.render_marker(kind, pr, "bar-basic", "altair")
+    return {"login": login, "body": body, "created_at": at or _ago(minutes=5)}
+
+
+def _other(number: int, *, state: str = "MERGED", updated: str | None = None, body: str = "", comments=()):
+    """Another PR of the pair, as ``read_inputs`` hands it to the plan."""
+    return {
+        "number": number,
+        "state": state,
+        "updated_at": updated or _ago(days=1),
+        "body": body,
+        "comments": list(comments),
+    }
 
 
 def _plan(kind: str = "repair", body: str = "", comments=None, history=(), window_days: int = fu.WINDOW_DAYS):
@@ -64,7 +76,8 @@ class TestTrigger:
             ("merge", "merge", 3, None, "repair"),
             ("merge", "merge", 0, None, "none"),  # nothing named to fix
             ("merge", "merge", None, None, "none"),  # an unreadable review triggers nothing
-            ("merge", "adapt_identity", 2, None, "none"),  # an adapt-route merge keeps its identity
+            ("merge", "adapt_identity", 2, None, "repair"),  # a reviewed adapt-route merge, like any merge
+            ("merge", "adapt_identity", None, None, "none"),  # no review ran: no defect lines
             ("keep", "regression", 0, None, "retry"),
             ("keep", "regression", None, None, "retry"),
             ("keep", "below_tolerance", 2, None, "none"),
@@ -112,10 +125,18 @@ class TestRecordKeys:
     def test_malformed_keys_fail(self, overrides, error):
         assert error in gate.validate_record(_record(**overrides))
 
-    def test_a_record_without_the_keys_still_validates_and_triggers_nothing(self):
-        old = _record(defect_lines=None, follow_up_trigger=None)
+    @pytest.mark.parametrize(
+        ("kind", "old"),
+        [
+            ("repair", _record(defect_lines=None, follow_up_trigger=None)),
+            # A keep for a regression from before the keys: its decision alone would trigger a retry.
+            ("retry", _record(verdict="keep", code="regression", defect_lines=None, follow_up_trigger=None)),
+            ("repair", _record(follow_up_trigger=None)),  # defect lines, but no trigger key
+        ],
+    )
+    def test_a_record_without_the_trigger_key_still_validates_and_never_triggers(self, kind, old):
         assert gate.validate_record(old) == []
-        assert fu.plan_follow_up("repair", 14000, "", [_gate_comment(old)], [], NOW).reason == "not_eligible"
+        assert fu.plan_follow_up(kind, 14000, "", [_gate_comment(old)], [], NOW).reason == "not_eligible"
 
     def test_build_record_adds_the_keys_only_when_given(self):
         result = gate.decide(gate.GateInput(spec_id="bar-basic", score=None, regen=None))
@@ -209,6 +230,21 @@ class TestDecideCli:
         assert "follow_up_of" not in record
         assert record["follow_up_trigger"] == "repair"
 
+    def test_a_weaknesses_file_the_parser_cannot_take_never_crashes_the_gate(self, tmp_path, monkeypatch, capsys):
+        """Nested past the recursion limit: the gate still decides, and counts no defect line."""
+        self._args(tmp_path, None)
+        (tmp_path / "review_weaknesses.json").write_text("[" * 100_000 + "]" * 100_000, encoding="utf-8")
+        record, outputs = self._run(tmp_path, monkeypatch, None)
+        assert record["verdict"] == "merge"
+        assert "defect_lines" not in record and record["follow_up_trigger"] == "none"
+        assert "review_weaknesses.json not counted" in capsys.readouterr().out
+
+    def test_a_merge_without_a_review_counts_no_defect_line(self, tmp_path, monkeypatch):
+        """--review-skipped: whatever file lies beside review_regen.json, no review named a defect."""
+        record, _ = self._run(tmp_path, monkeypatch, ["VQ-01 (dark): x"], "--review-skipped")
+        assert "defect_lines" not in record
+        assert record["follow_up_trigger"] == "none"
+
 
 # --- the retry note ------------------------------------------------------------
 
@@ -226,12 +262,27 @@ class TestRetryNote:
         assert "\n" not in note and "`" not in note and "<!--" not in note and "-->" not in note
         assert "legend loc moved x" in note
 
+    def test_no_mention_and_no_body_label(self):
+        """No @-mention pings anyone, and no bold label reads as a line of the PR body."""
+        what = "the @lift team's ramp; **Parent Issue:** #5 and **Change request:** swap the data"
+        note = gate.retry_note([{"what": what, "where_visible": "cells"}], 1)
+        assert "@lift" not in note and "@​lift" in note
+        assert "*" not in note
+        assert "Parent Issue: #5" in note  # the words stay, the bold label does not
+
     def test_caps_items_and_length(self):
         items = [{"what": f"item {i} " + "x" * 400, "where_visible": "w"} for i in range(5)]
         note = gate.retry_note(items, 7)
         assert note.count("item ") == gate.NOTE_ITEMS
         assert "; and 2 more." in note
         assert len(note) < gate.NOTE_ITEMS * gate.NOTE_ITEM_LIMIT + 200
+
+    def test_the_whole_note_is_capped_by_characters(self, monkeypatch):
+        """The cap counts characters, never bytes: a note of multi-byte text is cut between characters."""
+        monkeypatch.setattr(gate, "NOTE_LIMIT", 120)
+        note = gate.retry_note([{"what": "ü" * 199, "where_visible": "é" * 199}], 7)
+        assert len(note) == 120
+        assert note.endswith("ü") and "�" not in note
 
     def test_nothing_to_name_is_empty(self):
         assert gate.retry_note([], 7) == ""
@@ -305,9 +356,13 @@ class TestPlan:
         assert _plan("repair", comments=[_gate_comment(keep)]).reason == "not_eligible"
 
     def test_eligibility_is_recomputed_not_read(self):
-        """A record whose stored trigger disagrees with its decision triggers by the decision."""
-        lying = _record(code="adapt_identity", follow_up_trigger="repair")
+        """A record whose stored trigger disagrees with its decision does not trigger."""
+        lying = _record(verdict="keep", code="no_defect_improvement", follow_up_trigger="repair")
         assert _plan(comments=[_gate_comment(lying)]).reason == "not_eligible"
+
+    def test_a_reviewed_adapt_route_merge_gets_a_repair_round(self):
+        adapt = _record(code="adapt_identity", follow_up_trigger="repair")
+        assert _plan(comments=[_gate_comment(adapt)]).dispatch
 
     @pytest.mark.parametrize("defects", [0, None])
     def test_no_defect_line_no_repair(self, defects):
@@ -333,23 +388,35 @@ class TestPlan:
         assert _plan(comments=[_gate_comment(_record()), _marker_comment(login="someone")]).dispatch
 
     def test_a_recent_follow_up_of_the_pair_refuses(self):
-        marked = {"number": 13990, "created_at": _ago(days=2), "body": "", "comments": [_marker_comment(pr=13990)]}
+        marked = _other(13990, updated=_ago(days=2), comments=[_marker_comment(pr=13990, at=_ago(days=2))])
         assert _plan(history=[marked]).reason == "recent_follow_up"
         # A follow-up whose body line survived counts the same, even when its predecessor's marker did not.
-        follow_up = {"number": 13995, "created_at": _ago(days=1), "body": "**Follow-up of:** #13990 (repair)"}
+        follow_up = _other(13995, body="**Follow-up of:** #13990 (repair)")
         assert _plan(history=[follow_up]).reason == "recent_follow_up"
 
+    def test_the_window_counts_from_the_marker_not_from_the_pr(self):
+        """A PR opened long ago whose marker was posted yesterday still holds the pair."""
+        late = _other(13000, updated=_ago(days=1), comments=[_marker_comment(pr=13000, at=_ago(days=1))])
+        assert _plan(history=[late]).reason == "recent_follow_up"
+        # A marker posted before the window counts no more, even on a PR updated since.
+        stale = _other(13000, updated=_ago(days=1), comments=[_marker_comment(pr=13000, at=_ago(days=8))])
+        assert _plan(history=[stale]).dispatch
+
     def test_the_window_ends(self):
-        old = {"number": 13000, "created_at": _ago(days=8), "body": "", "comments": [_marker_comment(pr=13000)]}
+        old = _other(13000, updated=_ago(days=8), comments=[_marker_comment(pr=13000, at=_ago(days=8))])
         assert _plan(history=[old]).dispatch
         assert _plan(history=[old], window_days=9).reason == "recent_follow_up"
 
-    def test_an_unreadable_creation_time_counts_as_recent(self):
-        odd = {"number": 13000, "created_at": "yesterday", "body": "", "comments": [_marker_comment(pr=13000)]}
+    def test_an_unreadable_time_counts_as_recent(self):
+        odd = _other(13000, updated="yesterday", comments=[_marker_comment(pr=13000, at="yesterday")])
         assert _plan(history=[odd]).reason == "recent_follow_up"
 
+    def test_another_open_pr_of_the_pair_refuses(self):
+        """impl-generate deletes the pair's branch, which would close that PR mid-review."""
+        assert _plan(history=[_other(14010, state="OPEN", updated=_ago(days=30))]).reason == "open_pr"
+
     def test_the_pr_itself_in_the_history_is_not_a_recent_follow_up(self):
-        itself = {"number": 14000, "created_at": _ago(hours=2), "body": "**Follow-up of:** #1 (repair)"}
+        itself = _other(14000, state="OPEN", body="**Follow-up of:** #1 (repair)")
         assert _plan(history=[itself]).dispatch
 
     def test_an_unknown_kind_is_a_bug(self):
@@ -380,12 +447,17 @@ class FakeGh:
         return "".join(json.dumps(c) + "\n" for c in self.comments.get(number, []))
 
 
+def _now_ago(**delta: float) -> str:
+    """A time relative to the real clock, which the CLI's window reads."""
+    return (datetime.now(timezone.utc) - timedelta(**delta)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _fake(**overrides: Any) -> FakeGh:
     fields: dict[str, Any] = {
         "pulls": [
-            {"number": 14000, "createdAt": _ago(hours=3), "body": ""},
-            {"number": 13990, "createdAt": _ago(days=2), "body": ""},
-            {"number": 12000, "createdAt": _ago(days=40), "body": ""},
+            {"number": 14000, "state": "MERGED", "updatedAt": _now_ago(hours=1), "body": ""},
+            {"number": 13990, "state": "CLOSED", "updatedAt": _now_ago(days=2), "body": ""},
+            {"number": 12000, "state": "MERGED", "updatedAt": _now_ago(days=40), "body": ""},
         ],
         "view": {"number": 14000, "body": "**Model:** sonnet", "headRefName": "implementation/bar-basic/altair"},
         "comments": {14000: [_gate_comment(_record())], 13990: []},
@@ -425,8 +497,15 @@ class TestPlanCli:
         assert _plan_cli(monkeypatch, tmp_path, _fake(view=view))["reason"] == "unreadable"
 
     def test_a_marker_on_a_recent_pr_refuses(self, monkeypatch, tmp_path):
-        comments = {14000: [_gate_comment(_record())], 13990: [_marker_comment(pr=13990)]}
+        marker = _marker_comment(pr=13990, at=_now_ago(days=2))
+        comments = {14000: [_gate_comment(_record())], 13990: [marker]}
         assert _plan_cli(monkeypatch, tmp_path, _fake(comments=comments))["reason"] == "recent_follow_up"
+
+    def test_an_open_pr_of_the_pair_refuses_without_reading_its_comments(self, monkeypatch, tmp_path):
+        fake = _fake()
+        fake.pulls.append({"number": 14010, "state": "OPEN", "updatedAt": _now_ago(minutes=5), "body": ""})
+        assert _plan_cli(monkeypatch, tmp_path, fake)["reason"] == "open_pr"
+        assert not any(c[0] == "api" and "/14010/" in c[2] for c in fake.calls)
 
     def test_bad_input_is_a_usage_error(self, monkeypatch):
         monkeypatch.setattr(fu, "_gh", _fake())
@@ -447,6 +526,122 @@ class TestPlanCli:
         with pytest.raises(fu.ReadError, match="HTTP 502 more"):
             fu._gh(["pr", "list"])
         assert len(calls) == 3
+
+
+class FakeWrites:
+    """``_gh_ok`` for comments and dispatches, ``_gh`` for the run list; each answer is popped per call."""
+
+    def __init__(self, *, comments=(True,), dispatches=(True,), runs=None):
+        self.comment_answers, self.dispatch_answers = list(comments), list(dispatches)
+        # ``runs``: a list of run lists, one per read (the last repeats), or an exception to raise.
+        self.runs = runs if runs is not None else [[]]
+        self.calls: list[list[str]] = []
+
+    def ok(self, args: list[str]) -> bool:
+        self.calls.append(args)
+        answers = self.comment_answers if args[:2] == ["pr", "comment"] else self.dispatch_answers
+        return answers.pop(0) if len(answers) > 1 else answers[0]
+
+    def read(self, args: list[str]) -> str:
+        assert args[:2] == ["run", "list"], args
+        self.calls.append(args)
+        if isinstance(self.runs, Exception):
+            raise self.runs
+        answer = self.runs.pop(0) if len(self.runs) > 1 else self.runs[0]
+        return json.dumps(answer)
+
+    def kinds(self) -> list[str]:
+        return [" ".join(c[:2]) for c in self.calls]
+
+    def comment_bodies(self) -> list[str]:
+        return [c[c.index("--body") + 1] for c in self.calls if c[:2] == ["pr", "comment"]]
+
+
+def _dispatch(monkeypatch, fake: FakeWrites, kind: str = "repair", **extra: str) -> str:
+    monkeypatch.setattr(fu, "_gh_ok", fake.ok)
+    monkeypatch.setattr(fu, "_gh", fake.read)
+    monkeypatch.setattr(fu.time, "sleep", lambda _s: None)
+    return fu.dispatch_follow_up(kind, 14000, "bar-basic", "altair", "owner/repo", "main", "sonnet", "900", **extra)
+
+
+def _fields_of(call: list[str]) -> dict[str, str]:
+    return dict(call[i + 1].split("=", 1) for i, arg in enumerate(call) if arg == "-f")
+
+
+class TestDispatch:
+    def test_marks_then_dispatches_once(self, monkeypatch):
+        fake = FakeWrites()
+        assert _dispatch(monkeypatch, fake) == "dispatch"
+        assert fake.kinds() == ["pr comment", "workflow run"]
+        assert fu.has_marker([{"login": BOT, "body": fake.comment_bodies()[0]}])
+        assert "is being dispatched" in fake.comment_bodies()[0]
+        fields = _fields_of(fake.calls[1])
+        assert (fields["follow_up"], fields["regen_gate"], fields["model"], fields["issue_number"]) == (
+            "repair:14000",
+            "true",
+            "sonnet",
+            "900",
+        )
+
+    def test_a_marker_that_cannot_be_posted_means_no_dispatch(self, monkeypatch):
+        fake = FakeWrites(comments=(False,))
+        assert _dispatch(monkeypatch, fake) == "marker_not_posted"
+        assert fake.kinds() == ["pr comment"] * 3
+
+    def test_an_accepted_call_is_never_sent_twice(self, monkeypatch):
+        """The first call reports a failure, GitHub took it anyway: the run list shows it, no second call."""
+        run = {"displayTitle": "Generate: altair for bar-basic", "createdAt": _now_ago(seconds=10)}
+        fake = FakeWrites(dispatches=(False,), runs=[[run]])
+        assert _dispatch(monkeypatch, fake) == "dispatch"
+        assert fake.kinds() == ["pr comment", "workflow run", "run list"]
+
+    def test_another_pairs_or_an_older_run_is_not_this_dispatch(self, monkeypatch):
+        other = {"displayTitle": "Generate: plotly for bar-basic", "createdAt": _now_ago(seconds=10)}
+        older = {"displayTitle": "Generate: altair for bar-basic", "createdAt": _now_ago(hours=1)}
+        fake = FakeWrites(dispatches=(False, True), runs=[[other, older]])
+        assert _dispatch(monkeypatch, fake) == "dispatch"
+        assert fake.kinds() == ["pr comment", "workflow run", "run list", "workflow run"]
+
+    def test_a_dispatch_that_never_goes_through_is_noted(self, monkeypatch):
+        fake = FakeWrites(dispatches=(False,))
+        assert _dispatch(monkeypatch, fake) == "dispatch_failed"
+        assert fake.kinds().count("workflow run") == 3
+        marker, note = fake.comment_bodies()
+        assert "not dispatched" in note and not fu.MARKER_RE.search(note)
+        assert fu.has_marker([{"login": BOT, "body": marker}])  # the marker stands: the follow-up is spent
+
+    def test_an_unreadable_run_list_stops_the_dispatch(self, monkeypatch):
+        """Whether the first call landed is unknown: no second call, which could be a double."""
+        fake = FakeWrites(dispatches=(False,), runs=fu.ReadError("HTTP 502"))
+        assert _dispatch(monkeypatch, fake) == "dispatch_unknown"
+        assert fake.kinds() == ["pr comment", "workflow run", "run list", "pr comment"]
+
+    def test_a_repair_round_carries_no_change_request_and_no_note(self, monkeypatch):
+        fake = FakeWrites()
+        _dispatch(monkeypatch, fake, change_request="swap the data", note="a note")
+        fields = _fields_of(fake.calls[1])
+        assert (fields["change_request"], fields["follow_up_note"]) == ("", "")
+
+    def test_a_retry_forwards_its_change_request_and_note(self, monkeypatch):
+        fake = FakeWrites()
+        _dispatch(monkeypatch, fake, kind="retry", change_request="a hint", note="the note")
+        fields = _fields_of(fake.calls[1])
+        assert (fields["follow_up"], fields["change_request"], fields["follow_up_note"]) == (
+            "retry:14000",
+            "a hint",
+            "the note",
+        )
+
+    @pytest.mark.parametrize(
+        "bad", [("--ref", "main; rm"), ("--model", "gpt"), ("--issue", "12a"), ("--spec-id", "Bad Spec")]
+    )
+    def test_bad_input_is_a_usage_error(self, monkeypatch, bad):
+        fake = FakeWrites()
+        monkeypatch.setattr(fu, "_gh_ok", fake.ok)
+        args = {"--kind": "repair", "--pr": "14000", "--spec-id": "bar-basic", "--library": "altair"}
+        args.update({"--repo": "owner/repo", "--ref": "main", "--model": "auto", "--issue": "", bad[0]: bad[1]})
+        assert fu.main(["dispatch", *[part for pair in args.items() for part in pair]]) == 2
+        assert fake.calls == []
 
 
 class TestOtherClis:

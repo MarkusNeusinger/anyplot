@@ -1585,6 +1585,45 @@ class TestGateReport:
         del result["follow_ups"]
         assert "Follow-up" not in rt.render_gate_report(result)
 
+    def test_follow_ups_stay_out_of_merge_rate_drift_and_margin(self):
+        """A follow-up re-scores a file reviewed hours before; it is counted in its own rows instead."""
+        base = {"v": 1, "spec": "s", "lib": "altair", "model": "m", "prev_model": "m"}
+        primary = [
+            {**base, "pr": 1, "verdict": "merge", "code": "merge", "prev_stored": 88, "prev_rescored": 84, "new": 85},
+            {
+                **base,
+                "pr": 2,
+                "verdict": "keep",
+                "code": "regression",
+                "prev_stored": 90,
+                "prev_rescored": 86,
+                "new": 80,
+            },
+        ]
+        follow_ups = [
+            {
+                **base,
+                "pr": 3,
+                "verdict": "merge",
+                "code": "merge",
+                "prev_stored": 85,
+                "prev_rescored": 85,
+                "new": 90,
+                "follow_up_of": 1,
+                "follow_up_kind": "repair",
+                "follow_up_trigger": "none",
+            }
+        ]
+        alone = rt.metrics.gate_monitor(primary, rt.comparable_record)
+        both = rt.metrics.gate_monitor(primary + follow_ups, rt.comparable_record)
+        assert (both["n"], both["follow_up_n"]) == (3, 1)
+        for key in ("merge_rate", "drift_all", "margin", "margin_within_tolerance", "drift_by_library"):
+            assert both[key] == alone[key], key
+        assert both["follow_ups"]["repair"]["n"] == 1
+        assert "(without the 1 follow-ups, which stay out of merge rate, drift and margin)" in rt.render_gate_report(
+            both
+        )
+
     def test_a_report_without_the_writeback_block_still_renders(self):
         result = rt.metrics.gate_monitor([], rt.comparable_record)
         del result["writeback"]

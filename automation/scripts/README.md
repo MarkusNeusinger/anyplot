@@ -163,12 +163,18 @@ regression (dispatched by `impl-review.yml`); see
 [Follow-up regenerations](../../docs/workflows/overview.md#follow-up-regenerations).
 
 - `plan` — whether a follow-up of a kind may be dispatched for a PR: its gate
-  record by the workflow must trigger that kind (`regen_gate.follow_up_trigger`),
-  the PR must not be a follow-up itself, and neither it nor any PR of the pair
-  from the last 7 days may carry a follow-up marker or body line. Prints
-  `dispatch=` and `reason=`; any failed read means no dispatch.
+  record by the workflow must carry `follow_up_trigger` with that kind, and
+  `regen_gate.follow_up_trigger` must say the same; the PR must not be a
+  follow-up itself or carry a marker; no other PR of the pair may be open; and
+  no PR of the pair updated in the last 7 days may carry the body line or a
+  marker posted in them. Prints `dispatch=` and `reason=`; any failed read
+  means no dispatch.
+- `dispatch` — posts the marker comment, then dispatches `impl-generate.yml`
+  once (before a repeated call it checks the run list for the pair's run, so
+  an accepted call is never sent twice) and comments when the dispatch didn't
+  go through. Prints `dispatched=` and `reason=`.
 - `marker` — the comment, with the `<!-- regen-follow-up:v1 {...} -->` marker,
-  that the dispatcher posts before every dispatch.
+  that `dispatch` posts first.
 - `parse-body` — the predecessor a PR body's `**Follow-up of:**` line names.
 
 ### `regen_writeback.py`
@@ -356,7 +362,8 @@ Closes a spec issue once every supported library is `impl:<lib>:done` or
 The pick of `daily-regen.yml`'s pair mode (`REGEN_PAIRS_PER_DAY`, or the
 `pairs` input). First the resumes: open implementation PRs whose review or
 repair Claude stopped (`ai-review-paused`, `ai-repair-paused`), oldest first,
-counted against N. Then the oldest (spec, library) pairs across the catalogue,
+counted against N; a paused follow-up regeneration (its body's
+`**Follow-up of:**` line) is resumed on top of N. Then the oldest (spec, library) pairs across the catalogue,
 aged by the newer of their metadata `updated` and their last real attempt (a
 merged or closed implementation PR, `regen:kept` included, or a failed
 generation's `impl-fail` comment; infrastructure failures and generations

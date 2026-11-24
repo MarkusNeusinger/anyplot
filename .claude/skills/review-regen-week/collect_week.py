@@ -338,12 +338,16 @@ def summarize(
     rows: Sequence[dict[str, Any]], runs: dict[str, Counter], cost: float | None, api_cost: float | None = None
 ) -> dict[str, Any]:
     decided = [r for r in rows if r["verdict"]]
-    merges = [r for r in decided if r["verdict"] == "merge"]
-    keeps = [r for r in decided if r["verdict"] == "keep"]
+    # Follow-ups stay out of the merge rate and the drift: a follow-up
+    # re-scores a file reviewed hours before (a test-retest), and its merges
+    # are a population of their own, counted in the follow-up rows.
+    primary = [r for r in decided if not r.get("follow_up_of")]
+    merges = [r for r in primary if r["verdict"] == "merge"]
+    keeps = [r for r in primary if r["verdict"] == "keep"]
     scores = [r["new"] for r in decided if isinstance(r["new"], int)]
     drift = [
         r["prev_rescored"] - r["prev_stored"]
-        for r in decided
+        for r in primary
         if isinstance(r["prev_rescored"], int) and isinstance(r["prev_stored"], int)
     ]
     flag_counts = Counter(f for r in rows for f in r["flags"])
@@ -351,9 +355,10 @@ def summarize(
         "regen_prs": len(rows),
         "specs": len({r["spec"] for r in rows}),
         "decisions": len(decided),
+        "follow_up_decisions": len(decided) - len(primary),
         "merges": len(merges),
         "keeps": len(keeps),
-        "merge_rate": round(len(merges) / len(decided), 3) if decided else None,
+        "merge_rate": round(len(merges) / len(primary), 3) if primary else None,
         "codes": dict(Counter(str(r["code"]) for r in decided).most_common()),
         "score_mean": round(statistics.fmean(scores), 1) if scores else None,
         "score_sd": round(statistics.stdev(scores), 1) if len(scores) > 1 else None,
@@ -369,7 +374,7 @@ def summarize(
                 "triggered": sum(1 for r in decided if r.get("follow_up_trigger") == kind),
                 "marked": sum(1 for r in rows if r.get("follow_up_marked") and r.get("follow_up_trigger") == kind),
                 "decided": sum(1 for r in decided if r.get("follow_up_kind") == kind),
-                "merged": sum(1 for r in merges if r.get("follow_up_kind") == kind),
+                "merged": sum(1 for r in decided if r["verdict"] == "merge" and r.get("follow_up_kind") == kind),
             }
             for kind in FOLLOW_UP_KINDS
         },

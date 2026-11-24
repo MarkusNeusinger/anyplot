@@ -11,7 +11,7 @@
   worse. A follow-up is never followed up: the PR body line `**Follow-up
   of:**`, a marker comment on the predecessor and a seven-day check of the
   pair's pull requests bound it, with no label involved, and anything
-  unreadable means no dispatch. A kept repair round writes no re-score back. The
+  unreadable means no dispatch. A kept follow-up writes no re-score back. The
   gate record gains `defect_lines`, `follow_up_trigger`, `follow_up_of` and
   `follow_up_kind`, and the weekly collector and `gate-report` pair each
   follow-up with its predecessor. Both switches are off until the owner sets

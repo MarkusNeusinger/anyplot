@@ -539,13 +539,18 @@ jobs:
           if [ -n "$CR" ]; then
             printf '%s\n' "$CR" > /tmp/anyplot-change-request.txt
             echo "change_request_present=true" >> $GITHUB_OUTPUT
+            # The retry follow-up forwards this copy, read from the PR body
+            # before the review session runs: the session can write every
+            # file on the runner, the /tmp copy above included, but not a
+            # step output.
+            echo "change_request=$(printf '%s' "$CR" | tr -d '\r')" >> $GITHUB_OUTPUT
           else
             echo "change_request_present=false" >> $GITHUB_OUTPUT
           fi
           # A follow-up regeneration names the PR it follows
           # ("**Follow-up of:** #N (kind)"): the gate record carries it, no
-          # follow-up is followed up, and a repair round writes back nothing
-          # on a keep.
+          # follow-up is followed up, and a follow-up writes back nothing on
+          # a keep.
           # Writes follow_up_of= and follow_up_kind= (empty for any other PR).
           # Never fails the step, which would keep the live implementation
           # (--context-failed): an unread line only leaves the record without
@@ -2929,16 +2934,17 @@ jobs:
       # out in the workspace, from which the verdict step imports core.constants.
       # Git hooks are off for every git call here (GIT_CONFIG_*): the
       # workspace's .git, hooks included, is shared with that session.
-      # Never for a repair-round follow-up (its PR body says "(repair)"): the
-      # stored review is then the winner's own, hours old, from the same rules,
-      # and the one the follow-up was judged against. A second re-score of the
-      # unchanged file would only move its stored score by the reviewer's
-      # noise. The verdict step records `writeback: follow_up`. A retry does
-      # write back: when the kept attempt's write-back did not land, the retry
-      # is the next gated regeneration that heals it.
+      # Never for a follow-up regeneration (its PR body names the PR it
+      # follows): the stored review is then hours old, from the same rules, and
+      # the one the follow-up was judged against (the winner's own after a
+      # repair round, the kept attempt's write-back before a retry). A second
+      # re-score of the unchanged file would only move its stored score by the
+      # reviewer's noise. The verdict step records `writeback: follow_up`. A
+      # write-back the kept attempt lost heals at the pair's next ordinary
+      # regeneration.
       - name: Write back the re-score (regen keep)
         id: writeback
-        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true' && steps.gate.outputs.verdict != 'merge' && steps.regen_ctx.outputs.follow_up_kind != 'repair'
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true' && steps.gate.outputs.verdict != 'merge' && steps.regen_ctx.outputs.follow_up_of == ''
         continue-on-error: true
         timeout-minutes: 5
         env:
@@ -3179,9 +3185,8 @@ jobs:
           RENDER_STOP_CODE: ${{ steps.render_stop.outputs.code }}
           ADAPT_COUNTED: ${{ steps.gate.outputs.adapt_counted }}
           ADAPT_OVERRULED: ${{ steps.gate.outputs.adapt_overruled }}
-          # A follow-up regeneration's predecessor and kind ("Regen context").
+          # A follow-up regeneration's predecessor ("Regen context").
           FOLLOW_UP_OF: ${{ steps.regen_ctx.outputs.follow_up_of }}
-          FOLLOW_UP_KIND: ${{ steps.regen_ctx.outputs.follow_up_kind }}
         run: |
           # Cascading thresholds:
           # Attempt 0 (Review 1): >= 90
@@ -3252,8 +3257,8 @@ jobs:
             if [ "$GATE_VERDICT" != "merge" ]; then
               [ "$REVIEW_SKIPPED" = "true" ] && WB_STATUS=no_rescore
               [ "$RENDER_STOPPED" = "true" ] && WB_STATUS=no_rescore
-              # A repair-round follow-up never writes back (the write-back step's `if`).
-              [ "$FOLLOW_UP_KIND" = "repair" ] && WB_STATUS=follow_up
+              # A follow-up never writes back (the write-back step's `if`).
+              [ -n "$FOLLOW_UP_OF" ] && WB_STATUS=follow_up
               case "$WB_STATUS" in
                 opened|unchanged|no_rescore|invalid|stale|failed|follow_up) ;;
                 *) WB_STATUS=failed ;;
@@ -3328,7 +3333,7 @@ jobs:
               no_rescore) STORED="**Stored review:** unchanged (the gate has no re-score of the live implementation: ${GATE_CODE:-no code})." ;;
               invalid) STORED="**Stored review:** unchanged (\`review_prev.json\` failed its check; see the run log)." ;;
               stale) STORED="**Stored review:** unchanged (main changed the implementation or its metadata during the review)." ;;
-              follow_up) STORED="**Stored review:** unchanged (this PR is a repair round after #${FOLLOW_UP_OF}: it never writes back, so the winner's own review stays)." ;;
+              follow_up) STORED="**Stored review:** unchanged (this PR is a follow-up of #${FOLLOW_UP_OF}: a follow-up never writes back, so the review it was judged against stays)." ;;
               *) STORED="**Stored review:** unchanged (the write-back failed; see the run log)." ;;
             esac
 
@@ -3641,12 +3646,15 @@ jobs:
       # Anything it cannot read means no retry. The kept attempt's write-back
       # goes first: a retry branch cut from main before it merges conflicts
       # with it at update-branch, so a write-back still open after 15 minutes
-      # means no retry. The marker goes on the kept PR before the dispatch,
-      # and a marker that cannot be posted means no retry. The note travels as
-      # follow_up_note, never as the change request: the gate lets a change
-      # request swap the scenario or add encodings on a -basic spec. The kept
-      # attempt's own change request is forwarded as it was. Never fails the
-      # run: the keep stands either way.
+      # means no retry. "dispatch" posts the marker on the kept PR first (a
+      # marker that cannot be posted means no retry), dispatches once, and
+      # notes a dispatch that failed. The note travels as follow_up_note,
+      # never as the change request: the gate lets a change request swap the
+      # scenario or add encodings on a -basic spec. The kept attempt's own
+      # change request is forwarded as "Regen context" read it from the PR
+      # body before the review (a step output, which the review session
+      # cannot write; never the /tmp copy), and only when it had one. Never
+      # fails the run: the keep stands either way.
       - name: Dispatch a follow-up regeneration (retry)
         id: follow_up
         if: vars.REGEN_RETRY == 'true' && steps.regen.outputs.is_regen == 'true' && steps.gate.outputs.verdict == 'keep' && steps.gate.outputs.follow_up_trigger == 'retry'
@@ -3663,6 +3671,7 @@ jobs:
           WB_STATUS: ${{ steps.writeback.outputs.status }}
           WB_PR: ${{ steps.writeback.outputs.pr }}
           CHANGE_REQUEST_PRESENT: ${{ steps.regen_ctx.outputs.change_request_present || 'false' }}
+          CHANGE_REQUEST: ${{ steps.regen_ctx.outputs.change_request_present == 'true' && steps.regen_ctx.outputs.change_request || '' }}
           WORKFLOW_REF: ${{ github.ref_name }}
           WAIT_ROUNDS: '45'
           WAIT_SECONDS: '20'
@@ -3696,37 +3705,16 @@ jobs:
           NOTE=$(python3 "$TOOLS/regen_gate.py" retry-note --regen-json review_regen.json \
                    --spec-id "$SPEC_ID" --pr "$PR_NUM" "${NOTE_FLAGS[@]}") || skip no_note
 
-          python3 "$TOOLS/regen_follow_up.py" marker --kind retry --pr "$PR_NUM" \
-            --spec-id "$SPEC_ID" --library "$LIBRARY" > "$RUNNER_TEMP/follow-up-marker.md" || skip marker_failed
-          POSTED=0
-          for attempt in 1 2 3; do
-            if gh pr comment "$PR_NUM" --body-file "$RUNNER_TEMP/follow-up-marker.md"; then
-              POSTED=1
-              break
-            fi
-            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
-          done
-          [ "$POSTED" = "1" ] || skip marker_not_posted
-
-          CR=""
-          [ -s /tmp/anyplot-change-request.txt ] && CR=$(head -n 1 /tmp/anyplot-change-request.txt)
-          DISPATCHED=0
-          for attempt in 1 2 3; do
-            if gh workflow run impl-generate.yml --ref "${WORKFLOW_REF:-main}" \
-                 -f specification_id="$SPEC_ID" -f library="$LIBRARY" -f issue_number="$ISSUE_NUMBER" \
-                 -f model="$MODEL" -f change_request="$CR" -f regen_gate=true \
-                 -f source_ref= -f source_model= \
-                 -f follow_up="retry:${PR_NUM}" -f follow_up_note="$NOTE"; then
-              DISPATCHED=1
-              break
-            fi
-            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
-          done
-          if [ "$DISPATCHED" != "1" ]; then
-            echo "::warning::retry follow-up of PR #${PR_NUM}: the marker is posted, but impl-generate could not be dispatched; the pair gets no retry"
-            echo "reason=dispatch_failed" >> "$GITHUB_OUTPUT"
+          SENT=$(env -u GITHUB_OUTPUT python3 "$TOOLS/regen_follow_up.py" dispatch --kind retry --pr "$PR_NUM" \
+                   --spec-id "$SPEC_ID" --library "$LIBRARY" --repo "$REPOSITORY" --ref "${WORKFLOW_REF:-main}" \
+                   --model "${MODEL:-auto}" --issue "$ISSUE_NUMBER" \
+                   --change-request "$CHANGE_REQUEST" --note "$NOTE") || skip dispatch_crashed
+          REASON=$(sed -n 's/^reason=//p' <<< "$SENT")
+          echo "reason=${REASON}" >> "$GITHUB_OUTPUT"
+          if [ "$REASON" != "dispatch" ]; then
+            echo "::warning::retry follow-up of PR #${PR_NUM} not dispatched: ${REASON}; the pair gets no retry"
+            echo "- Follow-up (retry): not dispatched, \`${REASON}\`" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          echo "reason=dispatch" >> "$GITHUB_OUTPUT"
-          echo "::notice::retry follow-up of PR #${PR_NUM} dispatched for ${SPEC_ID}/${LIBRARY} (model ${MODEL})"
+          echo "::notice::retry follow-up of PR #${PR_NUM} dispatched for ${SPEC_ID}/${LIBRARY} (model ${MODEL:-auto})"
           echo "- Follow-up (retry): dispatched for ${SPEC_ID}/${LIBRARY}" >> "$GITHUB_STEP_SUMMARY"

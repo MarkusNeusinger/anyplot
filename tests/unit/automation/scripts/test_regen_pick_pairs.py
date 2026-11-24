@@ -697,6 +697,31 @@ class TestMain:
         assert json.loads(outputs["resume_json"])[0]["pr"] == 22
         assert outputs["resume_count"] == "1" and outputs["count"] == "0" and outputs["pairs_json"] == "[]"
 
+    def test_a_paused_follow_up_is_resumed_on_top_of_the_night(self, tmp_path):
+        """A follow-up regeneration (its body line) never counts against REGEN_PAIRS_PER_DAY, resumed or not."""
+        self._plots(tmp_path)
+        data = self._paused()
+        prs = json.loads(data["prs.json"])
+        prs[1]["body"] = "**Model:** sonnet\n**Follow-up of:** #21000 (repair)\n"  # PR 22 follows #21000
+        data["prs.json"] = json.dumps(prs)
+        result, outputs, summary = run_main(tmp_path, data, 2)
+        assert result.returncode == 0, result.stdout + result.stderr
+        # Both are resumed; only the review of #21 counts, so one of the two pairs is new.
+        assert {r["pr"] for r in json.loads(outputs["resume_json"])} == {21, 22}
+        assert outputs["resume_count"] == "2" and outputs["count"] == "1"
+        assert "2 resumed (1 follow-up(s), not counted), 1 new pair(s) of 2" in summary
+        assert "| repair (follow-up) | #22 |" in summary
+
+    def test_a_paused_follow_up_alone_leaves_the_whole_night(self, tmp_path):
+        self._plots(tmp_path)
+        data = self._paused()
+        prs = json.loads(data["prs.json"])
+        for pr in prs:
+            pr["body"] = "**Follow-up of:** #21000 (retry)"
+        data["prs.json"] = json.dumps(prs)
+        _, outputs, _ = run_main(tmp_path, data, 1)
+        assert outputs["resume_count"] == "2" and outputs["count"] == "1"
+
     def test_a_failed_implementation_pr_listing_stops_the_pick(self, tmp_path):
         """The loop guard: without it a kept, closed or paused pair would be picked again."""
         self._plots(tmp_path)
@@ -907,9 +932,9 @@ class TestReadRecords:
         )
         prs_call, kept_call, gates_call, issues_call = fake.calls
         guard = "number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName"
-        assert prs_call[prs_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels"
+        assert prs_call[prs_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels,body"
         assert prs_call[prs_call.index("--state") + 1] == "all" and "--repo" in prs_call and "o/r" in prs_call
-        assert kept_call[kept_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels"
+        assert kept_call[kept_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels,body"
         assert kept_call[kept_call.index("--state") + 1] == "closed"
         assert gates_call[gates_call.index("--json") + 1] == f"{guard},state,comments"
         assert gates_call[gates_call.index("--state") + 1] == "closed"

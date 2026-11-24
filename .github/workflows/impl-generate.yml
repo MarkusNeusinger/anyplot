@@ -656,14 +656,15 @@ jobs:
       # the review found worse in the kept attempt, for the generator to keep
       # as the live version has it. Its own file, never the change request:
       # the regen gate lets a change request swap the scenario or add
-      # encodings on a -basic spec, and a note must permit neither.
+      # encodings on a -basic spec, and a note must permit neither. The note
+      # comes capped and cleaned (regen_gate.retry_note); here it is only kept
+      # on one line.
       - name: Stage the follow-up note (retry)
         if: ${{ inputs.follow_up_note != '' && steps.inputs.outputs.follow_up_kind == 'retry' }}
         env:
           NOTE: ${{ inputs.follow_up_note }}
         run: |
-          # One line, cut to 900 characters (cut ends it with a newline).
-          printf '%s' "$NOTE" | tr '\r\n' '  ' | cut -c1-900 > /tmp/anyplot-follow-up-note.txt
+          printf '%s\n' "$(printf '%s' "$NOTE" | tr '\r\n' '  ')" > /tmp/anyplot-follow-up-note.txt
           echo "::notice::Follow-up note staged ($(wc -c < /tmp/anyplot-follow-up-note.txt) bytes)"
 
       # When triggered from a non-main branch via workflow_dispatch (typical for
@@ -1730,7 +1731,7 @@ jobs:
               BODY="${BODY}
           **Follow-up of:** #${FOLLOW_UP_OF} (${FOLLOW_UP_KIND})"
               if [ "$FOLLOW_UP_KIND" = "retry" ] && [ -n "$FOLLOW_UP_NOTE" ]; then
-                NOTE_LINE=$(printf '%s' "$FOLLOW_UP_NOTE" | tr '\r\n' '  ' | cut -c1-900)
+                NOTE_LINE=$(printf '%s' "$FOLLOW_UP_NOTE" | tr '\r\n' '  ')
                 BODY="${BODY}
           **Regression note:** ${NOTE_LINE}"
               fi
