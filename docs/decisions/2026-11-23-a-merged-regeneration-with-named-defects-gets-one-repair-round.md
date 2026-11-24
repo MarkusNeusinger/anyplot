@@ -14,4 +14,4 @@
   a point, every merge whose review named a defect line gets the round, an adapt-route merge
   included (one without a review has no defect lines), and a kept follow-up stores no second
   re-score.
-- Where: `automation/scripts/regen_follow_up.py`
+- Where: #14244

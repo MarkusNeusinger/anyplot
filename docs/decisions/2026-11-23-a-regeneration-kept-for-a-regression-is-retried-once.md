@@ -10,4 +10,4 @@
   the regression travels as a note of its own, never as a change request, so the gate's allowance
   for a change request on a `-basic` spec stays shut; only keeps with the code `regression` retry;
   a kept retry stores no second re-score and ages the pair like any other attempt.
-- Where: `automation/scripts/regen_follow_up.py`
+- Where: #14244

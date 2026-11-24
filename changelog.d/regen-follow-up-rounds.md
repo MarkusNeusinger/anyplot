@@ -15,4 +15,4 @@
   gate record gains `defect_lines`, `follow_up_trigger`, `follow_up_of` and
   `follow_up_kind`, and the weekly collector and `gate-report` pair each
   follow-up with its predecessor. Both switches are off until the owner sets
-  them.
+  them. (#14244)
