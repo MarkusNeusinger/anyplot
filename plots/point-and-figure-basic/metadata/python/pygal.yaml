@@ -2,125 +2,128 @@ library: pygal
 language: python
 specification_id: point-and-figure-basic
 created: '2026-01-15T21:41:11Z'
-updated: '2026-05-20T03:56:32Z'
+updated: '2026-11-24T02:46:40Z'
 generated_by: claude-sonnet
-workflow_run: 26139508579
+workflow_run: 45313767705
 issue: 3755
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 82
 review:
   strengths:
-  - Full Okabe-Ito palette compliance with correct first-series brand green for X
-    (Rising) — visually matches the bullish/green convention in finance
-  - SVG post-processing elegantly converts circle markers to authentic X/O glyphs
-    while preserving interactive hover layer for the HTML output
-  - 'Complete spec coverage: X/O columns, 3-box reversal algorithm, support and resistance
-    45° trend lines, price scale with grid intervals'
-  - Perfect theme adaptation across both light and dark renders — no dark-on-dark
-    or light-on-light failures
-  - Realistic stock price simulation with proper random seed
+  - 'X and O columns drawn as real bold text glyphs in Imprint brand green #009E73
+    and the semantic matte red #AE3030, identical in both themes, so rising and falling
+    columns read apart by shape and colour'
+  - Glyph size is derived from the box height (about 59 px for 19 rows), so every
+    symbol fills its own grid box without touching its neighbours
+  - Y-axis labels and horizontal guides sit at every box-size interval ($2), giving
+    the regular price grid the spec describes; x guides are off, so the columns stay
+    uncluttered
+  - 'Clean P&F construction from a tidy date/high/low/close DataFrame: 3-box reversal,
+    17 alternating columns, box size derived from the median close'
+  - SVG post-processing keeps pygal's invisible circle markers in the DOM, so the
+    HTML output retains native hover tooltips on every box
+  - 'Theme chrome is fully token-driven: #FAF8F1 / #1A1A17 surfaces, ink text and
+    muted guides readable in both renders'
   weaknesses:
-  - X/O text markers in SVG post-processing use font-size=36 which is somewhat small
-    at 3200x1800 canvas — bumping to 48–52 would improve mobile readability
-  - 'CQ-01 KISS violation (helper function): acceptable here but worth noting'
-  - DE-01 could be pushed higher by adding subtle annotations at column starts/ends
-    or annotating the most recent price level
+  - 'VQ-03 (both): the dashed 45-degree support and resistance lines are drawn at
+    stroke width 4 on the 3200 px canvas and read faint beside the 59 px glyphs →
+    about 6–8 px (+2 to +4 px). Likely cause: stroke_style={"width": 4, ...} on both
+    trend-line series.'
+  - 'CQ-01 (code): add_pnf_text_markers() is a helper function, against the Imports
+    → Data → Plot → Save structure without functions → inline the ElementTree pass
+    at module level. Likely cause: the SVG post-processing wrapped in def.'
+  - 'Suggestion: start the support line one box below the first O column''s low, the
+    traditional placement, so it does not run through the glyph centres.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "point-and-figure-basic · python · pygal · anyplot.ai" is clearly readable in dark ink; axis labels "Column (Reversal)" and "Price ($)" are readable; tick labels (80–112 price range, 0–7 column range) are readable; legend at bottom with 4 items is readable
-      Data: X symbols in brand green #009E73 (rising columns), O symbols in vermillion #D55E00 (falling columns); dashed support line in #0072B2 (sky blue), dashed resistance line in #CC79A7 (reddish-purple); first series correctly uses #009E73
-      Legibility verdict: PASS — all text and data elements are readable against the light background
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: title "point-and-figure-basic · python · pygal · anyplot.ai" in dark ink, y-axis title "Close ($)", x-axis title "Column (Reversal)", y ticks 94–130 every $2, x ticks 0–16, legend at bottom (X (Rising), O (Falling), Support (45°), Resistance (45°)); all readable
+      Data: 17 alternating columns of bold X glyphs in brand green #009E73 and O glyphs in matte red #AE3030, one glyph per $2 box; dashed blue (#4467A3) support line rising from col 1 at 100 to col 7 at 112, dashed ochre (#BD8233) resistance line falling from col 0 at 110 to col 6 at 98; first series is #009E73
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, tick labels, and legend text all appear in light cream/off-white tones — fully readable against the dark surface; no dark-on-dark failures detected
-      Data: Colors are identical to light render — X symbols remain #009E73, O symbols remain #D55E00; support and resistance trend lines unchanged in color; only chrome elements (background, text) have flipped
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark or light-on-light failures
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title, axis titles, tick labels and legend text in light ink; guides muted grey and visible; no dark-on-dark text
+      Data: identical green X / red O glyphs and identical blue / ochre trend lines; only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, labels=56, major_labels=44,
-          legend=44, value=36). Readable in both themes. SVG X/O text markers use
-          font-size=36, slightly small at canvas resolution.
+        comment: Title 66, labels/ticks/legend 44; uniform tick sizes; readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Columns are well-spaced.
+        comment: No text collisions; trend lines cross a few glyphs but every glyph
+          stays readable
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
-        passed: true
-        comment: X/O character markers are visible and distinct. Slightly small for
-          the canvas size but legible.
+        passed: false
+        comment: Glyphs sized to the box height; trend lines at width 4 read faint
+          (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; green X and vermillion O are distinguishable
-          by hue and shape.
+        comment: Green/red backed by X/O shape, so not colour-only
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good margin usage and canvas utilization. Legend placement at bottom
-          works well.
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Column (Reversal) and Price ($) are descriptive with contextual units.
+        comment: Close ($) and Column (Reversal)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, Okabe-Ito order followed for all 4 series.
-          Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct. Both renders theme-correct.'
+        comment: 'X #009E73, O #AE3030 (finance semantic exception), trend lines #4467A3/#BD8233;
+          correct backgrounds'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Clearly above library defaults: correct palette, full theme adaptation,
-          creative SVG post-processing for authentic X/O glyphs. Not yet FiveThirtyEight-level
-          polish.'
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Y-axis guides enabled, X-axis guides disabled, custom margins, theme-correct
-          backgrounds. Pygal's limited spine control constrains further refinement.
+        passed: false
+        comment: Box grid and x guides off are what the Notes allow; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Support and resistance trend lines create meaningful visual context
-          showing price action bounded between ascending support and descending resistance.
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,29 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Point and Figure chart using X/O symbols in columns.
+        comment: Point and figure chart, no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X for rising, O for falling; homogeneous columns; X-axis = columns
-          not time; 45-degree support and resistance lines; Y-axis price scale with
-          grid.
+        comment: X/O, green/red, single-symbol alternating columns, 3-box reversal,
+          column x-axis, 45-degree support/resistance, box-interval grid (C1–C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly represents columns (reversals), Y-axis shows price
-          range with full data visible.
+        comment: Every box at its price level, columns one step apart
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is point-and-figure-basic · python · pygal · anyplot.ai. Legend
-          labels X (Rising), O (Falling), Support (45°), Resistance (45°) are accurate.
+        comment: Mandated title; legend entries match marks
     data_quality:
       score: 15
       max: 15
@@ -162,22 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both bullish and bearish columns, multiple reversals, and both
-          support and resistance trend lines.
+        comment: Rally then consolidation gives long and short columns, many reversals,
+          both trend lines
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic stock price data using random walk with drift — standard
-          and neutral for financial charting.
+        comment: Neutral synthetic daily stock series with date/high/low/close
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $100 starting price, box size $2, 3-box reversal — all standard P&F
-          parameters. Price range $80-$112 is realistic.
+        comment: 'Checked: 260 observations (spec 200–500), box $2 on a ~$115 median,
+          reversal 3; no check values in the spec'
     code_quality:
       score: 9
       max: 10
@@ -186,64 +185,66 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Helper function add_pnf_text_markers breaks strict KISS but is genuinely
-          necessary for SVG post-processing given pygal's lack of native text-marker
-          support.
+        passed: false
+        comment: Helper function add_pnf_text_markers (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: default_rng(2024)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, xml.etree.ElementTree, cairosvg, numpy,
-          pygal, pygal.style.Style.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: SVG post-processing well-structured. Per-series stroke flags and
-          stroke_style are clean pygal idioms. No fake UI elements.
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct current API.
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses pygal.XY with per-series stroke/dots_size overrides, stroke_style
-          dasharray, and legend_at_bottom — all idiomatic pygal patterns.
+        passed: false
+        comment: pygal.XY with per-series stroke, dots_size and stroke_style overrides,
+          Style tokens, y_labels at box intervals
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Leverages pygal's native SVG rendering to post-process output and
-          replace circle dots with authentic X/O text glyphs while preserving hover
-          interaction layer — distinctly pygal capability.
+        passed: false
+        comment: Post-processes pygal's native SVG while keeping its hover layer for
+          the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-2a7b04a927
+  rendered_at: '2026-11-24T02:42:45Z'
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
+  - svg-post-processing
+  - custom-markers
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+  - explicit-figure
+  dataprep:
+  - time-series
+  styling:
+  - publication-ready
+  - theme-adaptive
