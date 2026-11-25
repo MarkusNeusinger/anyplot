@@ -140,6 +140,9 @@ DATASET_LOADERS: tuple[tuple[str, re.Pattern[str]], ...] = (
         ),
     ),
 )
+# Loaders whose pattern is R's own syntax: a ``data(rows)`` helper in Python,
+# JavaScript or Julia is no dataset, so these count in R implementations only.
+R_ONLY_LOADERS = frozenset({"R data()", "R dataset package"})
 # A diff line whose code starts like this is a comment: a loader named there loads nothing.
 COMMENT_STARTS = ("#", "//", "/*", "*")
 
@@ -190,15 +193,17 @@ def last_review(comments: Sequence[dict[str, Any]]) -> dict[str, Any] | None:
     return reviews[-1] if reviews else None
 
 
-def added_loaders(patch: str | None) -> list[str] | None:
+def added_loaders(patch: str | None, language: str | None) -> list[str] | None:
     """The example-dataset loaders an implementation diff adds (``DATASET_LOADERS`` order).
 
     A loader counts when an added line uses it and neither a removed line nor
-    a context line did: those show the predecessor already had it. None when
-    there is no diff to read (GitHub omits it for a very large file).
+    a context line did: those show the predecessor already had it. The R-only
+    loaders count only when ``language`` is ``r``. None when there is no diff
+    to read (GitHub omits it for a very large file).
     """
     if patch is None:
         return None
+    loaders = [(name, pattern) for name, pattern in DATASET_LOADERS if language == "r" or name not in R_ONLY_LOADERS]
     added: set[str] = set()
     before: set[str] = set()
     # GitHub's ``patch`` field starts at the first hunk and has no file headers,
@@ -210,8 +215,8 @@ def added_loaders(patch: str | None) -> list[str] | None:
         code = line[1:].lstrip()
         if side is None or code.startswith(COMMENT_STARTS):
             continue
-        side.update(name for name, pattern in DATASET_LOADERS if pattern.search(code))
-    return [name for name, _ in DATASET_LOADERS if name in added and name not in before]
+        side.update(name for name, pattern in loaders if pattern.search(code))
+    return [name for name, _ in loaders if name in added and name not in before]
 
 
 def category_vector(checklist: dict[str, dict[str, int]]) -> str:
@@ -277,7 +282,7 @@ def build_row(
         "checklist": (review or {}).get("checklist"),
         "categories": category_vector(review["checklist"]) if review else None,
         "silent": metrics.silent_deductions(review["checklist"], review["weaknesses"])[0] if review else [],
-        "data_source_added": added_loaders(patch),
+        "data_source_added": added_loaders(patch, LIBRARY_LANGUAGES.get(lib)),
     }
     row["flags"] = row_flags(row, now or datetime.now(timezone.utc))
     return row

@@ -321,7 +321,15 @@ class TestDataSource:
         ],
     )
     def test_each_loader_is_recognised_when_added(self, cw, line, loader):
-        assert cw.added_loaders(f"@@ -1 +1 @@\n-x = 1\n+{line}") == [loader]
+        language = "r" if loader in cw.R_ONLY_LOADERS else "python"
+        assert cw.added_loaders(f"@@ -1 +1 @@\n-x = 1\n+{line}", language) == [loader]
+
+    @pytest.mark.parametrize("language", ["python", "javascript", "julia", None])
+    def test_r_syntax_counts_in_r_only(self, cw, language):
+        """A ``data(rows)`` helper or a ``library(gapminder)`` line outside R loads no R dataset."""
+        patch = "@@ -1 +1,2 @@\n-x = 1\n+values = data(rows)\n+library(gapminder)"
+        assert cw.added_loaders(patch, language) == []
+        assert cw.added_loaders(patch, "r") == ["R data()", "R dataset package"]
 
     @pytest.mark.parametrize(
         "line",
@@ -341,17 +349,20 @@ class TestDataSource:
         ],
     )
     def test_invented_data_and_lookalikes_are_no_loader(self, cw, line):
-        assert cw.added_loaders(f"@@ -1 +1 @@\n-x = 1\n+{line}") == []
+        assert cw.added_loaders(f"@@ -1 +1 @@\n-x = 1\n+{line}", "python") == []
+        # A legend label is no R data() in R either.
+        if "Training data" in line:
+            assert cw.added_loaders(f"@@ -1 +1 @@\n-x = 1\n+{line}", "r") == []
 
     def test_a_loader_the_predecessor_had_is_no_change(self, cw):
         reworded = '@@ -1 +1 @@\n-tips = sns.load_dataset("tips")\n+data = sns.load_dataset("tips")'
-        assert cw.added_loaders(reworded) == []
+        assert cw.added_loaders(reworded, "python") == []
         in_context = '@@ -1,2 +1,3 @@\n tips = sns.load_dataset("tips")\n+penguins = sns.load_dataset("penguins")'
-        assert cw.added_loaders(in_context) == []
+        assert cw.added_loaders(in_context, "python") == []
 
     def test_a_removed_line_starting_with_two_dashes_is_read(self, cw):
         # GitHub's patch has no file headers: `---` is a removed R or SQL comment line's diff.
-        assert cw.added_loaders("@@ -1,2 +1,1 @@\n--- data(mtcars) --\n+data(mtcars)") == []
+        assert cw.added_loaders("@@ -1,2 +1,1 @@\n--- data(mtcars) --\n+data(mtcars)", "r") == []
 
     def test_the_patch_is_the_new_implementation_file(self, cw, monkeypatch, capsys):
         files = [
@@ -374,7 +385,7 @@ class TestDataSource:
         assert "#100: the changed files could not be read" in capsys.readouterr().err
 
     def test_no_patch_is_unknown_not_zero(self, cw):
-        assert cw.added_loaders(None) is None
+        assert cw.added_loaders(None, "python") is None
         row = cw.build_row(_pull(), _comments(_record(), _review_body(87)), None, PAIR)
         assert row["data_source_added"] is None and "data_source_added" not in row["flags"]
 
