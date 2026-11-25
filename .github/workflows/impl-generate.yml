@@ -2353,7 +2353,7 @@ jobs:
           # first generation as failed. Only the workflow's own comments count.
           COUNTS=""
           for attempt in 1 2 3; do
-            if PAGES=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${ISSUE}/comments?per_page=100" \
+            if PAGES=$(gh api --paginate "repos/${REPOSITORY}/issues/${ISSUE}/comments?per_page=100" \
                  --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | \"\(map(select(.body | contains(\"$INFRA_TAG\") | not)) | length) \(map(select(.body | contains(\"$INFRA_TAG\"))) | length)\"") \
                && COUNTS=$(printf '%s\n' "$PAGES" | awk '{ g += $1; i += $2 } END { print (g + 0) " " (i + 0) }') \
                && [[ "$COUNTS" =~ ^[0-9]+\ [0-9]+$ ]]; then
