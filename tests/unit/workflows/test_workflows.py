@@ -114,6 +114,33 @@ class TestYamlValidity:
         lines_with_tabs = [i + 1 for i, line in enumerate(content.split("\n")) if "\t" in line]
         assert not lines_with_tabs, f"Tabs found in {filepath.name} at lines: {lines_with_tabs}"
 
+    @pytest.mark.parametrize("filepath", get_all_workflow_files(), ids=lambda p: p.name)
+    def test_expression_values_stay_under_the_length_limit(self, filepath: Path) -> None:
+        """A value that holds `${{ }}` stays well below GitHub's 21,000-character expression limit.
+
+        GitHub turns a whole value with an expression in it, such as a long
+        `run:` script, into one expression and refuses the workflow file when
+        that exceeds 21,000 characters ("Exceeded max expression length").
+        A refused file cannot be dispatched, and no pull request check shows
+        it. The margin covers the quoting the conversion adds. A long script
+        reads `${{ }}` values through `env:` instead, so it holds no
+        expression and has no such limit.
+        """
+
+        def expression_values(node: Any, path: str) -> list[tuple[str, int]]:
+            if isinstance(node, dict):
+                return [hit for key, value in node.items() for hit in expression_values(value, f"{path}/{key}")]
+            if isinstance(node, list):
+                return [hit for i, value in enumerate(node) for hit in expression_values(value, f"{path}/{i}")]
+            if isinstance(node, str) and "${{" in node:
+                return [(path, len(node))]
+            return []
+
+        too_long = [
+            (path, length) for path, length in expression_values(load_workflow(filepath.name), "") if length > 20_000
+        ]
+        assert not too_long, f"{filepath.name}: values with an expression over 20,000 characters: {too_long}"
+
 
 class TestWorkflowStructure:
     """Test required workflow structure."""
