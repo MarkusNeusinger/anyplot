@@ -66,7 +66,7 @@ plot = (
 )
 ```
 
-Continuous limits come from the data (`scale_y_continuous(limits=(0, df[SALES].max() * 1.15))`) or stay automatic, never typed numbers.
+Continuous limits come from the data (`scale_y_continuous(limits=(0, df[SALES].max() * 1.15))`) or stay automatic, never typed numbers. The `0` there is the baseline of a bar or area chart, where the length of the mark is the value; a line or point axis takes both limits from the data, a little outside its smallest and largest value, or stays automatic.
 
 ## Canvas — hard rule, no deviation
 

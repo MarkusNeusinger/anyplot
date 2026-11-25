@@ -40,7 +40,7 @@ for i, (line, rows) in enumerate(df.groupby(PRODUCT_LINE, sort=False)):
 fig.update_layout(xaxis_title=QUARTER, yaxis_title=SALES, legend_title_text=PRODUCT_LINE)
 ```
 
-Axis ranges come from the data (`yaxis_range=[0, df[SALES].max() * 1.15]`) or stay automatic, never typed numbers.
+Axis ranges come from the data (`yaxis_range=[0, df[SALES].max() * 1.15]`) or stay automatic, never typed numbers. The `0` there is the baseline of a bar or area chart, where the length of the mark is the value; a line or point axis takes both limits from the data, a little outside its smallest and largest value, or stays automatic.
 
 ## Canvas — hard rule, no deviation
 

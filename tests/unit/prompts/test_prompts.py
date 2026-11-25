@@ -173,6 +173,45 @@ class TestPromptStructure:
         assert "## Anti-Inflation" in quality_criteria_content
         assert "72-78" in quality_criteria_content
 
+    def test_vq05_judges_canvas_use_without_percentages(self, quality_criteria_content: str) -> None:
+        """VQ-05 rates canvas use by eye: review rules hold no hard thresholds."""
+        section = quality_criteria_content.split("### VQ-05:", 1)[1].split("### VQ-06:", 1)[0]
+        assert "%" not in section
+        assert "Judge by eye in the full-size render, without a percentage" in section
+
+    def test_the_rules_the_judges_applied_are_stated(self, quality_criteria_content: str) -> None:
+        """Axis fit, readable ticks, a key for every encoding and labels readable on fills are rules, not taste."""
+        sc03 = quality_criteria_content.split("### SC-03:", 1)[1].split("### SC-04:", 1)[0]
+        sc04 = quality_criteria_content.split("### SC-04:", 1)[1].split("## Data Quality", 1)[0]
+        vq01 = quality_criteria_content.split("### VQ-01:", 1)[1].split("### VQ-02:", 1)[0]
+        assert "**Axes fitted to the data.**" in sc03
+        assert "**Ticks a reader can use.**" in sc03
+        assert "**Every encoding has a key.**" in sc04
+        assert "A label printed on a colored fill stays readable on that fill in both themes" in vq01
+        assert "Deduct VQ-01 in proportion to the labels that are hard to read." in vq01
+        # The generator prompts' zero-start limit example says it is the bar baseline, not the rule.
+        sentence = (
+            "a line or point axis takes both limits from the data, a little outside its smallest and largest value"
+        )
+        # Every library prompt that carries the example, so a prompt the edit missed fails here.
+        with_example = [path for path in sorted((PROMPTS_DIR / "library").glob("*.md")) if "* 1.15" in path.read_text()]
+        assert with_example, "no library prompt carries the `* 1.15` axis-limit example"
+        for path in with_example:
+            assert sentence in path.read_text(), path.name
+        assert sentence in (PROMPTS_DIR / "adaptable-code.md").read_text()
+        # ECharts keeps zero on a value axis by default, so its prompt says how a line or point axis leaves it.
+        assert "`scale: true`" in (PROMPTS_DIR / "library" / "echarts.md").read_text()
+        # Both review prompts point their checklist rows at the new rules, and the routing table names them.
+        for prompt in (WORKFLOW_PROMPTS_DIR / "ai-quality-review.md", PROMPTS_DIR / "quality-evaluator.md"):
+            text = prompt.read_text()
+            assert "(`quality-criteria.md` → VQ-01)?" in text, prompt.name
+            assert "(`quality-criteria.md` → SC-03)?" in text, prompt.name
+            assert "(`quality-criteria.md` → SC-04)?" in text, prompt.name
+        routing = quality_criteria_content.split("### Which criterion a gap belongs to", 1)[1].split(
+            "## Score Caps", 1
+        )[0]
+        assert "| SC-03 defect (axis, ticks) or SC-04 defect (key) |" in routing
+
     def test_quality_criteria_points_sum_to_100(self, quality_criteria_content: str) -> None:
         """Quality criteria point distribution should sum to 100."""
         # Check that the point distribution table contains 30+20+15+15+10+10=100
@@ -1164,13 +1203,14 @@ class TestFirstReviewScoring:
         criteria = CRITERIA_PROMPT.read_text()
         table = self._section(criteria, "### Which criterion a gap belongs to", "## Score Caps")
         rows = [line for line in table.splitlines() if line.startswith("| ") and not line.startswith("| Gap")]
-        assert len(rows) == 7
+        assert len(rows) == 8
         for gap, verdict in (
             ("A Notes bullet or an `A good version shows:` property that the render misses or breaks", "SC-02 defect"),
             ("A range, size or example of the Data section that the implementation departs from", "Nothing, unless"),
             ("A conditional requirement", "Nothing: not SC-02, not DQ-01"),
             ("names unconditionally", "DQ-01 defect"),
             ("an aspect nothing in the spec names", "At most a `Suggestion:`"),
+            ("An axis that runs far past its data", "SC-03 defect (axis, ticks) or SC-04 defect (key)"),
             ("or a check value missed", "DQ-03 defect"),
             ("A comment or label that contradicts the code or the data it describes", "else CQ-04 defect"),
         ):
