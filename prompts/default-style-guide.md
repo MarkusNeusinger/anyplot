@@ -52,7 +52,7 @@ anyplot uses the **Imprint palette** — a bespoke, colorblind-safe categorical 
 **Hard rules:**
 - **First series is ALWAYS `#009E73`** — across every library, every plot type. A "Gentoo penguin" is the same green in matplotlib as it is in plotly. Ordered categories are the one exception: their ramp sets the colors, so a Likert chart may start on its red pole.
 - Use positions 1→N in order by default. Don't cherry-pick for aesthetic reasons. Ordered categories take a ramp instead (see "Ordered Categories" below).
-- All 8 categorical positions stay identical across light and dark themes so a category keeps its identity.
+- The 8 categorical colors stay identical across light and dark themes so a category keeps its identity. The continuous ramps are not categorical colors: each has its own stops per theme (see "Continuous Data" below).
 - Never introduce custom hex values when the Imprint palette already covers the need.
 
 **Semantic exception:**
@@ -85,21 +85,50 @@ Practical: in matplotlib `plt.plot(x, y, color="#DDCC77")` for a "warning" annot
 
 ### Continuous Data — the categorical palette is NOT used
 
-Categorical palettes on continuous data produce misleading banding. anyplot ships exactly two Imprint-derived continuous colormaps; **no other cmap is allowed** — not viridis, not cividis, not BrBG, not Blues/Greens/Reds, and never jet/hsv/rainbow. Both Imprint cmaps are perceptually-uniform in CAM02-UCS:
+Categorical palettes on continuous data produce misleading banding. anyplot ships exactly two Imprint-derived continuous colormaps, `imprint_seq` and `imprint_div`; **no other cmap is allowed** — not viridis, not cividis, not BrBG, not Blues/Greens/Reds, and never jet/hsv/rainbow.
 
-- **`imprint_seq` (sequential):** brand green → blue. Use for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps). Build with `LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])` (matplotlib) or the library's equivalent two-stop gradient API.
-- **`imprint_div` (diverging):** matte-red ↔ near-neutral ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations, diverging heatmaps). The midpoint is theme-adaptive — use `#FAF8F1` on light bg, `#1A1A17` on dark bg. Build with `LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])`.
+Each ramp is a list of `(position, hex)` stops from the lowest value (position 0) to the highest (position 1). Colors between two stops blend linearly in sRGB, as `LinearSegmentedColormap.from_list` does; a library that blends in another space by default (Vega-Lite in HCL, ggplot2 in CIELAB) moves the colors between the stops a little, never the stops. The ramps are not perceptually uniform; the sequential stops sit at positions proportional to CIELAB lightness, so lightness changes about evenly along the ramp. Each ramp has its own stops per theme and per use:
 
-Pick `imprint_seq` vs `imprint_div` from the data's polarity. Never substitute a matplotlib/library-native cmap "because it looks nicer" — Imprint identity is part of the brand.
+- **Fields:** colored areas whose cells touch and fill the plot — heatmaps, spectrograms, filled contours, maps, tiles, hexbins.
+- **Marks:** colored marks that sit on the page themselves — points, lines, outlines, and bars colored by a value.
+
+**`imprint_seq` (sequential):** for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps). The ramp passes through brand green `#009E73`. In both themes the high values stand out from the page and the low values recede into it, so the ramp runs light → dark on the light page and dark → bright on the dark page. A spec that asks for "light to dark" means low to high: in the dark render the ramp runs dark to bright, and that fulfils the spec.
+
+| Use | Light theme, low → high | Dark theme, low → high |
+|-----|-------------------------|------------------------|
+| Fields | `(0, "#66E2B2")`, `(0.368, "#009E73")`, `(0.582, "#4467A3")`, `(1, "#002850")`: pale mint → brand green → blue → navy | `(0, "#00573D")`, `(0.467, "#009E73")`, `(1, "#CDD9FF")`: deep green → brand green → pale blue |
+| Marks | `(0, "#009E73")`, `(0.338, "#4467A3")`, `(1, "#002850")`: brand green → blue → navy | `(0, "#007755")`, `(0.32, "#009E73")`, `(1, "#CDD9FF")`: dark green → brand green → pale blue |
+
+The fields ramps span the wider lightness range, and their low end sits close to the page: right for a field, whose cells are read against each other, wrong for a mark, which is read against the page. Every color of the sequential marks ramps keeps WCAG 3:1 against its page (WCAG 2.1 SC 1.4.11), so no mark fades into the page.
+
+**`imprint_div` (diverging):** matte red ↔ midpoint ↔ blue, `(0, "#AE3030")`, `(0.5, midpoint)`, `(1, "#4467A3")`, for data with a meaningful midpoint (correlations, residuals, signed deviations, diverging heatmaps); the midpoint sits at the data's meaningful value, often 0.
+
+- **Fields:** the midpoint is the page color, `#FAF8F1` on light and `#1A1A17` on dark, so a cell at the midpoint reads as part of the page.
+- **Marks:** the midpoint is a grey that keeps at least 3:1 against the page, level with the poles: the `muted` anchor `#6B6A63` on light and `#686762` on dark (a SHAP beeswarm, scatter points colored by a signed value). A page-colored midpoint would make the marks near the midpoint vanish against the page; on dark, the brighter `muted` ink `#A8A79F` would outshine the poles, so the marks near zero would lead instead of the extremes. `#686762` is a stop of this ramp only, not a palette color. Ordered categories follow the same rule.
+
+Which name holds which ramp, per use; each name already holds the stops of the render's theme:
+
+| Language | Fields | Marks | Theme |
+|----------|--------|-------|-------|
+| Python | `SEQ_FIELDS`, `DIV_FIELDS` | `SEQ_MARKS`, `DIV_MARKS` | picked from `THEME` where the lists are defined (Reference Python snippet below, library prompts); altair names its diverging pair `DIV_FIELDS_RANGE` / `DIV_MARKS_RANGE`, and plotnine and lets-plot, whose scales take a midpoint, `DIV_MID_FIELDS` / `DIV_MID_MARKS` |
+| R (ggplot2) | `SEQ_FIELDS`, `DIV_MID_FIELDS` | `SEQ_MARKS`, `DIV_MID_MARKS` | picked from `THEME` (`prompts/library/ggplot2.md`) |
+| Julia (Makie) | `ANYPLOT_SEQ_FIELDS`, `ANYPLOT_DIV_FIELDS` | `ANYPLOT_SEQ_MARKS`, `ANYPLOT_DIV_MARKS` | picked from `THEME` (`prompts/library/makie.md`) |
+| JavaScript | `t.seqFields`, `t.divFields` | `t.seqMarks`, `t.divMarks` | the render harness fills the tokens for the theme it renders |
+
+Build in matplotlib with `LinearSegmentedColormap.from_list("imprint_seq", SEQ_FIELDS)` and `LinearSegmentedColormap.from_list("imprint_div", DIV_FIELDS)` for fields, and with `SEQ_MARKS` and `DIV_MARKS` for marks, or with the library's equivalent gradient API that takes stop positions. A library whose gradient API takes evenly spaced colors only (bokeh's `LinearColorMapper`, pygal, lets-plot's `scale_*_gradientn`, ECharts' `visualMap`, Chart.js) samples the stops at 256 even steps with the one helper its library prompt gives, `ramp_color` in Python and `rampAt` in JavaScript. The tokens `t.seq` (the first release's two-stop ramp, the same in both themes) and `t.div` (the diverging colors without positions or a marks midpoint) stay only so existing files render as before; new code never uses them.
+
+Pick `imprint_seq` vs `imprint_div` from the data's polarity, and fields vs marks from what carries the color. Never substitute a matplotlib/library-native cmap "because it looks nicer" — Imprint identity is part of the brand.
+
+A label on a colored fill (a bar segment, a heatmap cell) takes the light or dark ink that reads on that fill, or a halo carries it.
 
 ### Ordered Categories
 
 Categories with a natural order — Likert levels ("strongly disagree" … "strongly agree"), grades, small / medium / large, age bands — are not unrelated groups: the categorical palette would present them as such and hide their order. Color them with discrete steps of one Imprint ramp in their natural order, and keep that order in the legend:
 
-- **One direction** (low → high, small → large): steps of `imprint_seq`.
-- **A neutral midpoint** (disagree ↔ agree, worse ↔ better): steps of `imprint_div`, with a middle level in the `muted` anchor, because the ramp's page-colored midpoint would vanish against the background. When the poles mean bad and good, the semantic exception may anchor them in red and green: matte red `#AE3030` on the bad side (disagree, poor), brand green `#009E73` on the good side (agree, good) — never the other way round.
+- **One direction** (low → high, small → large): steps of the marks ramp of `imprint_seq`.
+- **A neutral midpoint** (disagree ↔ agree, worse ↔ better): steps of the marks ramp of `imprint_div`, whose middle level is its grey midpoint (`#6B6A63` on light, `#686762` on dark), because the page-colored midpoint of the fields ramp would vanish against the background. When the poles mean bad and good, the semantic exception may anchor them in red and green: matte red `#AE3030` on the bad side (disagree, poor), brand green `#009E73` on the good side (agree, good) — never the other way round.
 
-Every step stays distinguishable from its neighbours and from the background in both themes.
+The steps take the stops of the theme they render in. Every step stays distinguishable from its neighbours and from the background in both themes.
 
 ### Color Restraint & series-count guidance
 
@@ -120,7 +149,7 @@ Categorical-color distinguishability falls with n. The hybrid-v3 sort holds ΔE 
 
 ### Optional outline pattern (AI judgment)
 
-5 of the 8 categorical hues + amber fall below WCAG 2.1 SC 1.4.11's 3:1 contrast on the cream bg (lavender, ochre, cyan, lime, and amber). On dark bg, only matte-red is marginally below. This is the known muted-palette / WCAG tension Okabe-Ito, Paul Tol "muted", and ColorBrewer Set2 all share.
+Measured on the two plot surfaces by WCAG relative luminance, three of the 8 categorical hues and amber fall below WCAG 2.1 SC 1.4.11's 3:1 contrast on the light page `#FAF8F1`: lavender (2.70), cyan (2.15), lime (2.24), and amber (1.52), with ochre just above the line (3.09). On the dark page `#1A1A17`, matte red (2.71) and rose (2.80) stay below 3:1, with blue just above the line (3.09). This is the known muted-palette / WCAG tension Okabe-Ito, Paul Tol "muted", and ColorBrewer Set2 all share.
 
 The industry-standard fix is a thin ink-color stroke. **This is a renderer judgment call, not a hard rule.** Add a stroke when:
 
@@ -138,7 +167,7 @@ Recommended stroke: 1px solid in the chart's ink color (`palette.neutral(theme)`
 
 ### Colorblind Safety
 
-The Imprint palette is selected via max-min ΔE optimisation across normal, deuteranopia, protanopia, and tritanopia simulations. Slot 5 (matte red `#AE3030`) is the deferred semantic-anchor — reached intentionally for bad/loss/error roles, not by ordinal position in every chart. This keeps red as a free semantic resource rather than spending it as a default categorical color. Never override the palette with custom categorical hexes unless you have a documented reason.
+The Imprint palette is selected via max-min ΔE optimisation across normal, deuteranopia, protanopia, and tritanopia simulations. Slot 5 (matte red `#AE3030`) is the deferred semantic-anchor — reached intentionally for bad/loss/error roles, not by ordinal position in every chart. This keeps red as a free semantic resource rather than spending it as a default categorical color. Never override the palette with custom categorical hexes unless you have a documented reason. The sequential ramps carry their order in lightness, so their low and high ends stay apart under all three simulated deficiencies.
 
 ---
 
@@ -173,7 +202,7 @@ anyplot plots live inside page surfaces that are warm off-white / near-black, **
 
 ### Theme-adaptive Chrome
 
-In addition to the background, every non-data element (title, axis labels, tick labels, spines, grid, legend text, annotations, callout-box fills, footnotes) must use theme-adaptive tokens. Only the Imprint palette data colors (positions 1–8) stay constant. The `neutral` and `muted` semantic anchors are theme-adaptive by design.
+In addition to the background, every non-data element (title, axis labels, tick labels, spines, grid, legend text, annotations, callout-box fills, footnotes) must use theme-adaptive tokens. Only the 8 categorical Imprint colors stay constant. The `neutral` and `muted` semantic anchors are theme-adaptive by design, and the continuous ramps take the stops of the theme.
 
 | Role | Light theme | Dark theme |
 |------|-------------|------------|
@@ -206,6 +235,16 @@ BRAND = IMPRINT_PALETTE[0]  # "#009E73" — ALWAYS first series
 ANYPLOT_AMBER   = "#DDCC77"     # warning / caution
 ANYPLOT_NEUTRAL = INK           # totals / baseline / outline (theme-adaptive)
 ANYPLOT_MUTED   = INK_MUTED     # other / rest / disabled    (theme-adaptive)
+
+# continuous ramps — (position, hex) stops, low → high, per theme (see "Continuous Data")
+if THEME == "light":
+    SEQ_FIELDS = [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    SEQ_MARKS  = [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+else:
+    SEQ_FIELDS = [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    SEQ_MARKS  = [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+DIV_FIELDS = [(0.0, "#AE3030"), (0.5, PAGE_BG), (1.0, "#4467A3")]    # midpoint: the page
+DIV_MARKS  = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#686762"), (1.0, "#4467A3")]  # midpoint: a grey that keeps 3:1
 ```
 
 Output file names: `plot-light.png` / `plot-dark.png` (static libraries) plus `plot-light.html` / `plot-dark.html` (interactive libraries).
@@ -312,6 +351,8 @@ Some elements are drawn once per bar or point: value labels, dots on bar ends, s
 
 A label that tells the reader nothing is clutter at any mark count: a value that is the same by construction on every mark (each bar of a 100 % stacked chart labelled "100 %") or a text that repeats exactly what an axis already states. Leave it out.
 
+A label on a colored fill (a bar segment, a heatmap cell) takes the light or dark ink that reads on that fill, or a halo carries it.
+
 ### General Rules
 - Marks and lines should be **~2-3× larger** than the library's standard defaults. Text follows "Text Sizes" above, not this rule.
 - When in doubt about a mark or a line, make it bigger.
@@ -340,7 +381,7 @@ The AI makes the following design decisions for each visualization:
 
 **Color & Palette:**
 - Use Imprint palette positions 1→N in order for categorical data (see Color Philosophy). No custom hexes. May reassign positions when categories carry strong semantic color cues (grass→green, wood→ochre, blood→red, sky→blue, water→blue) — see Semantic Exception in Color Philosophy. Use the 3 semantic anchors (amber, neutral, muted) only when their role is the right fit, not as overflow slots.
-- Colormap choice for continuous data: **`imprint_seq`** (single-polarity) or **`imprint_div`** (diverging-polarity). No other colormaps — see Continuous Data.
+- Colormap choice for continuous data: **`imprint_seq`** (single-polarity) or **`imprint_div`** (diverging-polarity), each with the theme's stops for fields or for marks. No other colormaps — see Continuous Data.
 - Alpha/opacity values based on data density
 
 **Layout & Structure:**

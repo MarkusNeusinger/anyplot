@@ -154,13 +154,37 @@ alt.Chart(df).mark_circle().encode(
                     scale=alt.Scale(range=IMPRINT_PALETTE)),
 )
 
-# Continuous — only the two Imprint palette-derived cmaps are allowed:
-# Sequential: two-stop range
-alt.Color(DENSITY.translate(ESCAPE), type="quantitative", scale=alt.Scale(range=['#009E73', '#4467A3']))
-# Diverging: three-stop range with domainMid at 0
+# Continuous — only the two Imprint ramps are allowed, as (position, hex) stops, low → high,
+# with their own stops per theme (style guide, "Continuous Data"). FIELDS: colored cells that
+# fill the plot (rect heatmaps, maps, tiles). MARKS: colored points, lines, outlines or bars on
+# the page. Keep only the ramps the plot uses.
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+# Sequential: a piecewise scale, one domain value per stop, placed by its position in the data's range.
+# Vega-Lite blends a color range in HCL unless told otherwise; interpolate="rgb" blends in sRGB
+# like the other libraries, so the colors between the stops are the style guide's.
+lo, hi = df[DENSITY].min(), df[DENSITY].max()
+alt.Color(DENSITY.translate(ESCAPE), type="quantitative", scale=alt.Scale(
+    domain=[lo + p * (hi - lo) for p, _ in SEQ_FIELDS],  # SEQ_MARKS on marks
+    range=[c for _, c in SEQ_FIELDS],
+    interpolate="rgb",
+))
+# Diverging: three-stop range with domainMid at 0; the midpoint is the page for fields
+# and a grey that keeps 3:1 for marks
+DIV_FIELDS_RANGE = ['#AE3030', '#FAF8F1' if THEME == 'light' else '#1A1A17', '#4467A3']
+DIV_MARKS_RANGE = ['#AE3030', '#6B6A63' if THEME == 'light' else '#686762', '#4467A3']
 alt.Color(CHANGE.translate(ESCAPE), type="quantitative", scale=alt.Scale(
-    range=['#AE3030', '#FAF8F1', '#4467A3'],
+    range=DIV_FIELDS_RANGE,
     domainMid=0,
+    interpolate="rgb",
 ))
 # Forbidden: scheme='viridis'/'cividis'/'brownbluegreen' and any other named scheme for continuous data.
 ```

@@ -62,6 +62,7 @@ Adjust the canvas-controlling knobs of the relevant library family:
 - Legacy `#306998` still in code → replace with `#009E73` (Imprint palette position 1).
 - First series not brand green → rewrite so the primary category renders in `#009E73`.
 - Any non-Imprint cmap (jet/hsv/rainbow/viridis/cividis/BrBG/Reds/Blues/Greens) → switch to `imprint_seq` (single-polarity) or `imprint_div` (diverging) — see `prompts/default-style-guide.md` "Continuous Data".
+- An Imprint ramp with the wrong stops (the other theme's, the fields stops on marks or the marks stops on a field) → take the render's theme's stops for the use from `prompts/default-style-guide.md` "Continuous Data".
 - Pure `#FFFFFF` / `#000000` background → use `#FAF8F1` / `#1A1A17` via the `ANYPLOT_THEME` token block.
 - Chrome wrong-theme (dark text on dark bg) → wire up all title/axis/tick/grid/legend colors to the `INK`/`INK_SOFT` tokens.
 
@@ -157,7 +158,7 @@ It prints one line per refusal in the validator's own words, with the line of yo
 
 ## Step 6: Visual self-check
 
-View `plot-light.png` AND `plot-dark.png`. Verify the failed criteria are now fixed in both renders — and confirm the data colors are identical across themes (only chrome should flip).
+View `plot-light.png` AND `plot-dark.png`. Verify the failed criteria are now fixed in both renders — and confirm the categorical data colors are identical across themes (only chrome should flip, and a continuous ramp takes its theme's stops).
 
 ## Step 7: Format the code
 

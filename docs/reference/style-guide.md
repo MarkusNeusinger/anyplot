@@ -1157,14 +1157,16 @@ Each color's name sits in the same column as the color, so it moves with it. Whi
 
 - **First series = brand color (`#009E73`)**. Always. This is the single most important consistency rule.
 - **Neutral (semantic anchor)** is reserved for aggregates, totals, reference lines. Don't use it for a normal category — it sits outside the categorical pool by design.
-- **Light-bg WCAG caveat:** lavender, ochre, cyan, lime, and amber all fall below WCAG 2.1 SC 1.4.11's 3:1 minimum against cream `#FAF8F1`. Add a 1px ink-color stroke on affected series when the chart is small or accessibility-strict — see the outline pattern in [palette-variants/v3/decision-rationale.md](palette-variants/v3/decision-rationale.md#contrast-caveats--the-outline-pattern).
+- **WCAG caveat:** on the light plot surface `#FAF8F1`, lavender (2.70), cyan (2.15), lime (2.24), and amber (1.52) fall below WCAG 2.1 SC 1.4.11's 3:1 minimum, with ochre just above it (3.09). On the dark plot surface `#1A1A17`, matte red (2.71) and rose (2.80) fall below it, with blue just above (3.09). Add a 1px ink-color stroke on affected series when the chart is small or accessibility-strict — see the outline pattern in [palette-variants/v3/decision-rationale.md](palette-variants/v3/decision-rationale.md#contrast-caveats--the-outline-pattern), whose table was computed on other surfaces.
 
 ### 9.2 Non-categorical Data
 
-imprint is a **categorical** palette — it's for distinct categories, not ordered or continuous data. For other data types, anyplot ships two palette-derived cmaps:
+imprint is a **categorical** palette — it's for distinct categories, not ordered or continuous data. For other data types, anyplot ships two palette-derived cmaps. Unlike the categorical hues, each has its own stops per theme and per use: **fields** for colored cells that fill the plot (heatmaps, spectrograms, filled contours, maps, tiles), and **marks** for colored points, lines, outlines, and bars that sit on the page. The stops are listed in [`prompts/default-style-guide.md`](../../prompts/default-style-guide.md) ("Continuous Data") and in `core/palette.py`.
 
-- **`imprint_seq` (sequential)**: brand green → blue. Use for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps).
-- **`imprint_div` (diverging)**: matte red ↔ near-neutral ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations). The midpoint flips per theme — `#FAF8F1` on cream bg, `#1A1A17` on dark bg.
+- **`imprint_seq` (sequential)**: through brand green and blue. Use for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps). In both themes high values stand out from the page and low values recede into it, so the ramp runs light → dark on the light page and dark → bright on the dark page. The fields ramps span the wider lightness range; every color of the sequential marks ramps keeps 3:1 against its page.
+- **`imprint_div` (diverging)**: matte red ↔ midpoint ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations). For fields the midpoint is the page — `#FAF8F1` on cream bg, `#1A1A17` on dark bg; for marks it is a grey that keeps at least 3:1 against the page, level with the poles — the `muted` anchor `#6B6A63` on cream bg, `#686762` on dark bg — so marks near the midpoint don't vanish against the page and the extremes lead. On dark bg the `muted` ink `#A8A79F` would outshine the poles; `#686762` is a stop of this ramp only, not a palette color.
+
+A label on a colored fill (a bar segment, a heatmap cell) takes the light or dark ink that reads on that fill, or a halo carries it.
 
 Don't reach for the categorical palette on continuous data — a categorical palette on continuous data produces misleading banding artifacts. And don't substitute viridis/cividis/BrBG/jet/hsv/rainbow either; palette identity is part of the brand.
 
@@ -1218,9 +1220,13 @@ palette.semantic.bad            # → red
 palette.semantic.warning        # → amber
 palette.semantic.info           # → cyan
 
-# matplotlib + cmap registration
-from core.palette import imprint_seq, register_with_matplotlib
-register_with_matplotlib()      # registers imprint_seq + imprint_div_light/dark
+# continuous ramps — (position, hex) stops, low → high, per theme and per use
+from core.palette import diverging, diverging_stops, register_with_matplotlib, sequential, sequential_stops
+sequential_stops("dark", "marks")   # ((0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF"))
+diverging_stops("light", "marks")   # ((0.0, "#AE3030"), (0.5, "#6B6A63"), (1.0, "#4467A3"))
+sequential("light")                 # matplotlib cmap "imprint_seq_light" (fields)
+diverging("dark", "marks")          # matplotlib cmap "imprint_div_marks_dark"
+register_with_matplotlib()          # registers all eight by name, plus "imprint_seq" (light fields)
 ```
 
 For CSS:

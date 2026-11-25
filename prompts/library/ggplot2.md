@@ -179,23 +179,41 @@ geom_point(color = IMPRINT_PALETTE[1])
 scale_color_manual(values = IMPRINT_PALETTE)
 scale_fill_manual(values  = IMPRINT_PALETTE)
 
-# Continuous — only the two Imprint palette-derived cmaps are allowed:
-# Sequential (single-polarity)
-scale_color_gradient(low = "#009E73", high = "#4467A3")
-scale_fill_gradient(low  = "#009E73", high = "#4467A3")
-# Diverging (around a meaningful midpoint, often 0)
-scale_color_gradient2(low = "#AE3030", mid = "#FAF8F1", high = "#4467A3", midpoint = 0)
-scale_fill_gradient2(low  = "#AE3030", mid = "#FAF8F1", high = "#4467A3", midpoint = 0)
+# Continuous — only the two Imprint ramps are allowed, as stops (colours and their
+# positions), low → high, with their own stops per theme (style guide, "Continuous
+# Data"). FIELDS: coloured cells that fill the plot (geom_tile, geom_raster, filled
+# contours, map polygons). MARKS: coloured points, lines, outlines or bars on the
+# page. Keep only the ramps the plot uses.
+SEQ_FIELDS <- if (THEME == "light") {
+  list(colours = c("#66E2B2", "#009E73", "#4467A3", "#002850"), values = c(0, 0.368, 0.582, 1))
+} else {
+  list(colours = c("#00573D", "#009E73", "#CDD9FF"), values = c(0, 0.467, 1))
+}
+SEQ_MARKS <- if (THEME == "light") {
+  list(colours = c("#009E73", "#4467A3", "#002850"), values = c(0, 0.338, 1))
+} else {
+  list(colours = c("#007755", "#009E73", "#CDD9FF"), values = c(0, 0.32, 1))
+}
+# Sequential (single-polarity): gradientn takes the stop positions as `values`
+scale_fill_gradientn(colours = SEQ_FIELDS$colours, values = SEQ_FIELDS$values)
+scale_color_gradientn(colours = SEQ_MARKS$colours, values = SEQ_MARKS$values)
+# Diverging (around a meaningful midpoint, often 0): mid is the page for fields
+# and a grey that keeps 3:1 for marks
+DIV_MID_FIELDS <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+DIV_MID_MARKS  <- if (THEME == "light") "#6B6A63" else "#686762"
+scale_fill_gradient2(low = "#AE3030", mid = DIV_MID_FIELDS, high = "#4467A3", midpoint = 0)
+scale_color_gradient2(low = "#AE3030", mid = DIV_MID_MARKS, high = "#4467A3", midpoint = 0)
 ```
 
 Never use `viridis::scale_*_viridis_*()`, `scale_*_distiller()`/`scale_*_brewer()`,
 `rainbow()`, `heat.colors()`, `terrain.colors()`, `topo.colors()` or `hsv()` —
-only the two anyplot stops above.
+only the two Imprint ramps above.
 
 ## Theme-adaptive Chrome (ggplot2 mapping)
 
-Read `ANYPLOT_THEME` from the environment and flip chrome tokens. Data colors
-stay identical between themes — only the surrounding chrome changes.
+Read `ANYPLOT_THEME` from the environment and flip chrome tokens. Categorical
+colors stay identical between themes — only the surrounding chrome changes, and
+the continuous ramps take their theme's stops.
 
 ```r
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")

@@ -40,7 +40,7 @@ Look for groups of 2+ libraries where the descriptions reveal the same:
 
 ### What does NOT count as copying — these are project-mandated
 
-- **Imprint palette positions 1–7.** The data colors are fixed by the style guide; identical colors there are required, not copied.
+- **Imprint palette positions 1–8 and the stops of the continuous ramps.** The data colors are fixed by the style guide; identical colors there are required, not copied.
 - **Plot size and aspect ratio.** Fixed by `prompts/default-style-guide.md` and the per-library prompts. Identical aspect ratios across all 15 libs are correct, expected behavior — never propose "different aspect ratios" as divergence advice.
 - **Theme chrome.** Page background `#FAF8F1` (light) / `#1A1A17` (dark), text inks, etc. flip identically across libs by design.
 
