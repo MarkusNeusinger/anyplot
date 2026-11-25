@@ -32,14 +32,14 @@ Evaluate if the **${LIBRARY}** implementation matches the specification for `${S
 You MUST use the Read tool to open **both** `plot_images/plot-light.png` AND `plot_images/plot-dark.png` and visually analyze each image.
 
 - Compare both renders with the spec requirements.
-- The Imprint palette data colors (positions 1–7) must be **identical** between light and dark — only chrome (background, text, grid, legend frames) flips.
+- The Imprint categorical colors (positions 1–8) must be **identical** between light and dark — only chrome (background, text, grid, legend frames) flips, and the continuous ramps and the steps of ordered categories, which have their own stops per theme.
 - A review without seeing both images is **invalid**.
 - If one or both images cannot be read, STOP and report the error (pipeline failure — flag in `weaknesses`).
 - Your review MUST include an "Image Description" section that describes **both** renders, proving you looked at them.
 
 ### 5b. Consult the Style Guide for Palette + Theme Rules
 
-Read `prompts/default-style-guide.md` — the "Categorical Palette" (Imprint palette), "Continuous Data" (`imprint_seq` / `imprint_div` only), "Ordered Categories", and "Theme-adaptive Chrome" sections are the authoritative reference for VQ-07 scoring. Always refer to the palette as **Imprint** (capitalised) in review notes — never "anyplot palette".
+Read `prompts/default-style-guide.md` — the "Categorical Palette" (Imprint palette), "Continuous Data" (`imprint_seq` / `imprint_div` only, with the theme's stops for fields or for marks), "Ordered Categories", and "Theme-adaptive Chrome" sections are the authoritative reference for VQ-07 scoring. Always refer to the palette as **Imprint** (capitalised) in review notes — never "anyplot palette".
 
 ### 5c. MANDATORY: Theme-Readability Check (both renders)
 
@@ -176,7 +176,7 @@ Score so that the reviews of the other libraries of this spec, written without s
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette)? No red-green as sole signal? |
 | VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? Title 50–70% width, balanced axis labels, no overflow — see 5d. |
 | VQ-06 | Axis Labels & Title | 2 | Descriptive with units? Text for a reader, not a raw column identifier (`Reaktionszeit_ms` → "Reaktionszeit (ms)")? |
-| VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73` (ordered categories excepted)? Multi-series uses Imprint palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Ordered categories (Likert levels, grades, sizes) in ordered steps of one Imprint ramp, in their natural order, with a red or green pole on the matching side? Continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other colormaps allowed? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
+| VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73` (ordered categories excepted)? Multi-series uses Imprint palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Ordered categories (Likert levels, grades, sizes) in ordered steps of one Imprint ramp, in their natural order, with a red or green pole on the matching side? Continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging), with the render's theme's stops for fields or for marks — no other colormaps allowed? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
 
 #### Design Excellence (20 pts)
 | ID | Criterion | Max | Check |
@@ -354,7 +354,8 @@ Use this EXACT format:
 > Explicitly state whether all text is readable against the light background.
 >
 > **Dark render (`plot-dark.png`):** Describe the same elements on the `#1A1A17` surface.
-> Confirm the data colors are identical to the light render (only chrome should flip).
+> Confirm the categorical data colors are identical to the light render (only chrome, continuous ramps
+> and ordered-category steps should flip).
 > Explicitly state whether all text is readable against the dark background — call out
 > any "dark-on-dark" failures (e.g. black tick labels on near-black background).
 >
@@ -464,7 +465,7 @@ Light render (plot-light.png):
 Dark render (plot-dark.png):
   Background: [describe — must be warm near-black around #1A1A17]
   Chrome: [title, axis labels, ticks — confirm all readable; FLAG any dark-on-dark]
-  Data: [confirm colors are identical to light render]
+  Data: [confirm categorical colors are identical to light render; a continuous ramp uses the dark stops]
   Legibility verdict: PASS | FAIL (explain if FAIL)
 EOF
 

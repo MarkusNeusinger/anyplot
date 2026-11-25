@@ -27,7 +27,8 @@ rule says what the code contains, not what the render shows:
   (``prompts/default-style-guide.md``, "Continuous Data": only the two
   Imprint colormaps are allowed).
 - ``palette``: the code holds a six-digit hex that is neither an Imprint
-  colour, nor an anchor, nor a theme token of the style guide. The owner's
+  colour, nor an anchor, nor a stop of the continuous ramps, nor a theme
+  token of the style guide. The owner's
   rule (2026-11-11): use the Imprint colours unless there is a very good
   reason, so this rule records a deviation; whether the reason is good is
   for a reader to judge, never for this script.
@@ -70,13 +71,15 @@ LEGACY_HEXES = ("306998", "FFD43B", "9418DB", "B71D27", "16B8F3", "D359A7", "BA8
 LEGACY_RE = re.compile(r"#(?:" + "|".join(LEGACY_HEXES) + r")(?:[0-9A-Fa-f]{2})?\b", re.IGNORECASE)
 
 # prompts/default-style-guide.md: the eight Imprint hues, the amber anchor, the
-# ink and muted pairs, and the page, elevated and soft-ink tokens of both
-# themes. tests/unit/automation/scripts/test_contract_check.py keeps this set
-# equal to core/palette.py and inside the style guide.
+# stops of the continuous ramps, the ink and muted pairs, and the page,
+# elevated and soft-ink tokens of both themes.
+# tests/unit/automation/scripts/test_contract_check.py keeps this set equal to
+# core/palette.py and inside the style guide.
 PALETTE_HEXES = frozenset(
     {
         "#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314",  # Imprint
         "#DDCC77",  # amber
+        "#66E2B2", "#002850", "#00573D", "#CDD9FF", "#007755", "#686762",  # ramp stops (core.palette.RAMP_STOPS)
         "#1A1A17", "#F0EFE8",  # ink (and the dark page)
         "#6B6A63", "#A8A79F",  # muted
         "#FAF8F1", "#FFFDF6", "#242420",  # light page, elevated light, elevated dark

@@ -44,7 +44,7 @@ from .palette import ROSE as ANYPLOT_ROSE
 from .palette import palette  # noqa: F401  (re-exported named API)
 
 
-# Note: imprint_seq / imprint_div_{light,dark} are NOT auto-registered with
+# Note: the continuous ramps (imprint_seq_*, imprint_div_*) are NOT auto-registered with
 # matplotlib when this module is imported — core/images.py is PIL-only and
 # importing it should not pull matplotlib in as a side effect. Callers that
 # render with matplotlib should call

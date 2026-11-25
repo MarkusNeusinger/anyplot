@@ -185,21 +185,42 @@ for i, (school, rows) in enumerate(df.groupby(SCHOOL, sort=False)):
     p.scatter(x=STUDY_HOURS, y=EXAM_SCORE, source=ColumnDataSource(rows),
               color=IMPRINT_PALETTE[i], legend_label=str(school))
 
-# Continuous — only the two Imprint palette-derived cmaps are allowed.
-# Build a 256-stop ramp by interpolating between the endpoints:
-import numpy as np
-def _lerp_hex(c0, c1, t):
-    r0, g0, b0 = (int(c0[i:i+2], 16) for i in (1, 3, 5))
-    r1, g1, b1 = (int(c1[i:i+2], 16) for i in (1, 3, 5))
-    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
-    return f"#{r:02X}{g:02X}{b:02X}"
-ANYPLOT_SEQ256 = [_lerp_hex("#009E73", "#4467A3", t/255.0) for t in range(256)]
-_midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"  # theme-adaptive
-ANYPLOT_DIV256 = (
-    [_lerp_hex("#AE3030", _midpoint, t/127.0) for t in range(128)] +
-    [_lerp_hex(_midpoint, "#4467A3", t/127.0) for t in range(128)]
+# Continuous — only the two Imprint ramps are allowed, as (position, hex) stops, low → high,
+# with their own stops per theme (style guide, "Continuous Data"). FIELDS: colored cells that
+# fill the plot (image, rect or hex grids, patches of a map). MARKS: colored points, lines,
+# outlines or bars on the page. Keep only the ramps the plot uses.
+import math
+from itertools import pairwise
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
 )
-# Pass to bokeh.models.LinearColorMapper(palette=ANYPLOT_SEQ256, low=…, high=…)
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+# Diverging: the midpoint is the page for fields and a grey that keeps 3:1 for marks
+DIV_FIELDS = [(0.0, "#AE3030"), (0.5, "#FAF8F1" if THEME == "light" else "#1A1A17"), (1.0, "#4467A3")]
+DIV_MARKS = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#686762"), (1.0, "#4467A3")]
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    if not math.isfinite(t):
+        return "none"  # a missing value draws nothing, never the low end
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i:i + 2], 16) * (1 - share) + int(c1[i:i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+# LinearColorMapper takes evenly spaced colors, so sample the stops at 256 even steps
+ANYPLOT_SEQ256 = [ramp_color(SEQ_FIELDS, k / 255) for k in range(256)]  # SEQ_MARKS on marks
+ANYPLOT_DIV256 = [ramp_color(DIV_FIELDS, k / 255) for k in range(256)]  # DIV_MARKS on marks
+# Pass to bokeh.models.LinearColorMapper(palette=ANYPLOT_SEQ256, low=…, high=…);
+# for the diverging ramp put the midpoint on the middle: low=-m, high=m
 # Forbidden: bokeh's Viridis/Cividis/BrBG and any other named palette for continuous data.
 ```
 

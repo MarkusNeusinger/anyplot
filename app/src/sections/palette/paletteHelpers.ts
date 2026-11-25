@@ -163,3 +163,62 @@ export const tooltipSlotProps = {
 
 export const sectionSx = { py: { xs: 2, md: 3 } };
 export const proseColumnSx = { maxWidth: 880, mx: 'auto' };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Continuous ramps
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type RampTheme = 'light' | 'dark';
+export type RampUse = 'fields' | 'marks';
+
+/** Stops of one ramp, low → high: their positions (0 to 1) and their colours. */
+export interface RampStops {
+  at: number[];
+  hex: string[];
+}
+
+// The same stops as core/palette.py, the style guide and the JS render harness
+// (tests/unit/core/test_palette.py holds the copies equal).
+export const SEQ_STOPS: Record<RampUse, Record<RampTheme, RampStops>> = {
+  fields: {
+    light: { at: [0, 0.368, 0.582, 1], hex: ['#66E2B2', '#009E73', '#4467A3', '#002850'] },
+    dark: { at: [0, 0.467, 1], hex: ['#00573D', '#009E73', '#CDD9FF'] },
+  },
+  marks: {
+    light: { at: [0, 0.338, 1], hex: ['#009E73', '#4467A3', '#002850'] },
+    dark: { at: [0, 0.32, 1], hex: ['#007755', '#009E73', '#CDD9FF'] },
+  },
+};
+
+// The diverging midpoint: the page for fields; for marks a grey that keeps at least
+// 3:1 against the page, the muted ink on light and a darker grey on dark, where the
+// muted ink would outshine the poles.
+const DIV_MIDPOINT: Record<RampUse, Record<RampTheme, string>> = {
+  fields: { light: '#FAF8F1', dark: '#1A1A17' },
+  marks: { light: '#6B6A63', dark: '#686762' },
+};
+
+export function divStops(use: RampUse, theme: RampTheme): RampStops {
+  return { at: [0, 0.5, 1], hex: ['#AE3030', DIV_MIDPOINT[use][theme], '#4467A3'] };
+}
+
+/** A stop's position as a CSS percentage, to one decimal. */
+export function stopPercent(at: number): string {
+  return `${Math.round(at * 1000) / 10}%`;
+}
+
+/** A CSS gradient that places each stop at its position. */
+export function rampGradient({ at, hex }: RampStops): string {
+  const stops = hex.map((colour, i) => `${colour} ${stopPercent(at[i])}`);
+  return `linear-gradient(to right, ${stops.join(', ')})`;
+}
+
+/**
+ * Inline style that puts a stop's label under its stop: the end labels align with the
+ * bar's edges so they stay inside it, and an inner label is centred on its colour. Centring
+ * leaves the most room between two close inner stops, which a phone-wide bar needs.
+ */
+export function stopLabelStyle(at: number): { left: string; transform: string } {
+  const shift = at === 0 ? '0%' : at === 1 ? '-100%' : '-50%';
+  return { left: stopPercent(at), transform: `translateX(${shift})` };
+}

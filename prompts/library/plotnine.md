@@ -34,7 +34,7 @@ from plotnine import (
     labs, theme, theme_minimal,
     element_text, element_rect, element_line,
     scale_color_manual, scale_fill_manual,
-    scale_color_gradient, scale_fill_gradient,
+    scale_color_gradientn, scale_fill_gradientn,
     scale_color_gradient2, scale_fill_gradient2,
 )
 ```
@@ -133,14 +133,30 @@ ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 + scale_color_manual(values=IMPRINT_PALETTE, limits=df[GROUP].unique().tolist())
 + scale_fill_manual(values=IMPRINT_PALETTE, limits=df[GROUP].unique().tolist())
 
-# Continuous — only the two Imprint palette-derived cmaps are allowed:
-from plotnine import scale_color_gradient, scale_color_gradient2, scale_fill_gradient, scale_fill_gradient2
-# Sequential (single-polarity)
-+ scale_color_gradient(low='#009E73', high='#4467A3')
-+ scale_fill_gradient(low='#009E73',  high='#4467A3')
-# Diverging (around a meaningful midpoint, often 0)
-+ scale_color_gradient2(low='#AE3030', mid='#FAF8F1', high='#4467A3', midpoint=0)
-+ scale_fill_gradient2(low='#AE3030',  mid='#FAF8F1', high='#4467A3', midpoint=0)
+# Continuous — only the two Imprint ramps are allowed, as (position, hex) stops, low → high,
+# with their own stops per theme (style guide, "Continuous Data"). FIELDS: colored cells that
+# fill the plot (geom_tile, geom_raster, filled contours, map polygons). MARKS: colored points,
+# lines, outlines or bars on the page. Keep only the ramps the plot uses.
+from plotnine import scale_color_gradient2, scale_color_gradientn, scale_fill_gradient2, scale_fill_gradientn
+SEQ_FIELDS = (
+    [(0.0, '#66E2B2'), (0.368, '#009E73'), (0.582, '#4467A3'), (1.0, '#002850')]
+    if THEME == 'light'
+    else [(0.0, '#00573D'), (0.467, '#009E73'), (1.0, '#CDD9FF')]
+)
+SEQ_MARKS = (
+    [(0.0, '#009E73'), (0.338, '#4467A3'), (1.0, '#002850')]
+    if THEME == 'light'
+    else [(0.0, '#007755'), (0.32, '#009E73'), (1.0, '#CDD9FF')]
+)
+# Sequential (single-polarity): gradientn takes the stop positions as `values`
++ scale_fill_gradientn(colors=[c for _, c in SEQ_FIELDS], values=[p for p, _ in SEQ_FIELDS])
++ scale_color_gradientn(colors=[c for _, c in SEQ_MARKS], values=[p for p, _ in SEQ_MARKS])
+# Diverging (around a meaningful midpoint, often 0): mid is the page for fields
+# and a grey that keeps 3:1 for marks
+DIV_MID_FIELDS = '#FAF8F1' if THEME == 'light' else '#1A1A17'
+DIV_MID_MARKS = '#6B6A63' if THEME == 'light' else '#686762'
++ scale_fill_gradient2(low='#AE3030', mid=DIV_MID_FIELDS, high='#4467A3', midpoint=0)
++ scale_color_gradient2(low='#AE3030', mid=DIV_MID_MARKS, high='#4467A3', midpoint=0)
 # Forbidden: scale_color_cmap / scale_fill_cmap with viridis/cividis/BrBG/Reds/Blues/Greens — only anyplot stops.
 ```
 

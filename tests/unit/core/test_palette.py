@@ -5,7 +5,15 @@ Covers the categorical pool, semantic anchors, theme-adaptive helpers,
 the named ``palette`` namespace, and the lazily constructed cmaps.
 """
 
+import json
+import math
 import re
+import shutil
+import subprocess
+from collections.abc import Callable
+from itertools import pairwise
+from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -19,13 +27,19 @@ from core.palette import (
     LIME,
     NAME,
     OCHRE,
+    RAMP_STOPS,
     RED,
     ROSE,
+    Theme,
+    Use,
+    diverging_stops,
     muted_for,
     neutral_for,
     palette,
+    ramp_color,
+    sequential_stops,
 )
-from tests.libraries import import_library
+from tests.libraries import import_library, skip_or_fail_js_runtime
 
 
 HEX_RE = re.compile(r"^#[0-9A-F]{6}$")
@@ -162,3 +176,319 @@ class TestCmaps:
         register_with_matplotlib()
         register_with_matplotlib()  # second call must not raise
         assert "imprint_seq" in matplotlib.colormaps
+
+    def test_register_with_matplotlib_names_every_ramp(self) -> None:
+        matplotlib = import_library("matplotlib")
+        from core.palette import register_with_matplotlib
+
+        register_with_matplotlib()
+        for theme in ("light", "dark"):
+            for name in ("imprint_seq", "imprint_seq_marks", "imprint_div", "imprint_div_marks"):
+                assert f"{name}_{theme}" in matplotlib.colormaps
+
+    def test_cmaps_follow_the_stops(self) -> None:
+        """Each cmap returns its stops at their positions and blends like ``ramp_color`` in between."""
+        import_library("matplotlib")
+        import core.palette as pal
+
+        for theme, use in RAMPS:
+            for factory, stops in (
+                (pal.sequential, sequential_stops(theme, use)),
+                (pal.diverging, diverging_stops(theme, use)),
+            ):
+                cmap = factory(theme, use)
+                for value in (*(position for position, _ in stops), 0.1, 0.45, 0.8):
+                    assert _channels(_hex_of(cmap(value))) == pytest.approx(
+                        _channels(ramp_color(stops, value)), abs=2
+                    ), (cmap.name, value)
+
+    def test_cmap_names(self) -> None:
+        import_library("matplotlib")
+        import core.palette as pal
+
+        assert pal.sequential("dark").name == "imprint_seq_dark"
+        assert pal.sequential("light", "marks").name == "imprint_seq_marks_light"
+        assert pal.diverging("dark").name == "imprint_div_dark"
+        assert pal.diverging("light", "marks").name == "imprint_div_marks_light"
+
+    def test_old_names_are_the_fields_ramps(self) -> None:
+        """``imprint_seq`` keeps its name as the light fields ramp; ``imprint_div_{theme}`` are the fields ramps."""
+        import_library("matplotlib")
+        import core.palette as pal
+
+        for value in (0.0, 0.3, 0.7, 1.0):
+            assert pal.imprint_seq(value) == pal.sequential("light")(value)
+            assert pal.imprint_div_light(value) == pal.diverging("light")(value)
+            assert pal.imprint_div_dark(value) == pal.diverging("dark")(value)
+
+
+# --- continuous ramps --------------------------------------------------------------------------------
+
+ROOT = Path(__file__).resolve().parents[3]
+THEMES: list[Theme] = ["light", "dark"]
+RAMPS: list[tuple[Theme, Use]] = [("light", "fields"), ("dark", "fields"), ("light", "marks"), ("dark", "marks")]
+PAGE = {"light": "#FAF8F1", "dark": "#1A1A17"}
+MARKS_MIDPOINT = {"light": "#6B6A63", "dark": "#686762"}
+SAMPLES = [i / 255 for i in range(256)]
+
+
+def _channels(hex_color: str) -> tuple[int, int, int]:
+    return int(hex_color[1:3], 16), int(hex_color[3:5], 16), int(hex_color[5:7], 16)
+
+
+def _hex_of(rgba: tuple[float, ...]) -> str:
+    return "#" + "".join(f"{round(channel * 255):02X}" for channel in rgba[:3])
+
+
+def _luminance(color: str | tuple[float, float, float]) -> float:
+    """WCAG 2.x relative luminance of a hex or of sRGB channels in 0..255."""
+    channels = _channels(color) if isinstance(color, str) else color
+    linear = [c / 255 / 12.92 if c / 255 <= 0.03928 else ((c / 255 + 0.055) / 1.055) ** 2.4 for c in channels]
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+def _unrounded(stops: tuple[tuple[float, str], ...], value: float) -> tuple[float, float, float]:
+    """The ramp at ``value`` before rounding to 8 bits, so a test of its shape does not read rounding noise."""
+    for (p0, c0), (p1, c1) in pairwise(stops):
+        if value <= p1:
+            share = (value - p0) / (p1 - p0)
+            a, b = _channels(c0), _channels(c1)
+            return a[0] + (b[0] - a[0]) * share, a[1] + (b[1] - a[1]) * share, a[2] + (b[2] - a[2]) * share
+    raise AssertionError(value)
+
+
+def _contrast(a: str, b: str) -> float:
+    high, low = sorted((_luminance(a), _luminance(b)), reverse=True)
+    return (high + 0.05) / (low + 0.05)
+
+
+def _ramp_at(library: str) -> str:
+    """The ``rampAt`` helper as a JavaScript library prompt writes it out, from ``const`` to its closing brace."""
+    text = (ROOT / f"prompts/library/{library}.md").read_text(encoding="utf-8")
+    source = re.search(r"^const rampAt = \(.*?^\};", text, re.MULTILINE | re.DOTALL)
+    assert source, library
+    return source.group(0)
+
+
+class TestContinuousRamps:
+    """imprint_seq and imprint_div per theme and per use (owner's decision of 2026-11-23)."""
+
+    def test_sequential_stops_are_the_chosen_ones(self) -> None:
+        """The owner picked these stops and positions from renders; any change is a new decision."""
+        assert sequential_stops("light", "fields") == (
+            (0.0, "#66E2B2"),
+            (0.368, "#009E73"),
+            (0.582, "#4467A3"),
+            (1.0, "#002850"),
+        )
+        assert sequential_stops("dark", "fields") == ((0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF"))
+        assert sequential_stops("light", "marks") == ((0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850"))
+        assert sequential_stops("dark", "marks") == ((0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF"))
+
+    def test_defaults_are_light_fields(self) -> None:
+        assert sequential_stops() == sequential_stops("light", "fields")
+        assert diverging_stops() == diverging_stops("light", "fields")
+
+    @pytest.mark.parametrize(("theme", "use"), RAMPS)
+    def test_stops_run_from_zero_to_one(self, theme: Theme, use: Use) -> None:
+        for stops in (sequential_stops(theme, use), diverging_stops(theme, use)):
+            positions = [position for position, _ in stops]
+            assert positions[0] == 0.0 and positions[-1] == 1.0
+            assert positions == sorted(set(positions))
+            assert all(HEX_RE.match(color) for _, color in stops)
+
+    @pytest.mark.parametrize(("theme", "use"), RAMPS)
+    def test_every_sequential_ramp_passes_through_brand_green(self, theme: Theme, use: Use) -> None:
+        assert GREEN in [color for _, color in sequential_stops(theme, use)]
+
+    @pytest.mark.parametrize(("theme", "use"), RAMPS)
+    def test_high_values_stand_out_and_low_values_recede(self, theme: Theme, use: Use) -> None:
+        """Contrast against the page rises along the whole ramp: light → dark on light, dark → bright on dark."""
+        stops = sequential_stops(theme, use)
+        page = PAGE[theme]
+        luminance = [_luminance(_unrounded(stops, value)) for value in SAMPLES]
+        if theme == "light":
+            assert all(value < _luminance(page) for value in luminance)
+            assert all(b < a for a, b in pairwise(luminance))
+        else:
+            assert all(value > _luminance(page) for value in luminance)
+            assert all(b > a for a, b in pairwise(luminance))
+        assert _contrast(stops[-1][1], page) > 12
+
+    @pytest.mark.parametrize("theme", THEMES)
+    def test_marks_ramp_keeps_three_to_one_on_its_page(self, theme: Theme) -> None:
+        """WCAG 2.1 SC 1.4.11: every colour of the marks ramp, not only its stops, reaches 3:1 on its own page."""
+        stops = sequential_stops(theme, "marks")
+        assert min(_contrast(ramp_color(stops, value), PAGE[theme]) for value in SAMPLES) >= 3.0
+
+    @pytest.mark.parametrize("theme", THEMES)
+    def test_fields_ramp_starts_closer_to_the_page_than_the_marks_ramp(self, theme: Theme) -> None:
+        """The fields ramp buys its range with a low end near the page, which is why marks get their own ramp."""
+        fields, marks = sequential_stops(theme, "fields"), sequential_stops(theme, "marks")
+        assert _contrast(fields[0][1], PAGE[theme]) < 3.0 <= _contrast(marks[0][1], PAGE[theme])
+
+    @pytest.mark.parametrize("theme", THEMES)
+    def test_diverging_midpoint_is_the_page_for_fields_and_a_grey_for_marks(self, theme: Theme) -> None:
+        """These midpoints are a decision (docs/decisions/2026-11-23-continuous-ramps-per-theme.md); a change is a new one."""
+        assert diverging_stops(theme, "fields") == ((0.0, RED), (0.5, PAGE[theme]), (1.0, BLUE))
+        assert diverging_stops(theme, "marks") == ((0.0, RED), (0.5, MARKS_MIDPOINT[theme]), (1.0, BLUE))
+
+    def test_marks_midpoint_is_the_muted_anchor_on_light_only(self) -> None:
+        """On dark the muted ink would outshine the poles, so the dark marks midpoint is a darker grey."""
+        assert MARKS_MIDPOINT["light"] == muted_for("light")
+        assert MARKS_MIDPOINT["dark"] != muted_for("dark")
+
+    @pytest.mark.parametrize("theme", THEMES)
+    def test_marks_midpoint_stays_visible_and_lets_the_extremes_lead(self, theme: Theme) -> None:
+        """A mark at zero keeps 3:1 against its page, and stands out no more than the stronger pole."""
+        page, midpoint = PAGE[theme], diverging_stops(theme, "marks")[1][1]
+        assert _contrast(midpoint, page) >= 3.0
+        assert _contrast(midpoint, page) <= max(_contrast(RED, page), _contrast(BLUE, page))
+
+    def test_ramp_color(self) -> None:
+        stops = sequential_stops("light", "marks")
+        assert ramp_color(stops, 0.0) == "#009E73"
+        assert ramp_color(stops, 0.338) == "#4467A3"
+        assert ramp_color(stops, 1.0) == "#002850"
+        assert ramp_color(stops, -1.0) == "#009E73"  # clamped
+        assert ramp_color(stops, 2.0) == "#002850"
+        assert ramp_color(((0.0, "#000000"), (1.0, "#FFFFFF")), 0.5) == "#808080"
+
+    @pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+    def test_a_missing_value_draws_nothing(self, value: float) -> None:
+        """A missing value is not the low end of the ramp: it gets no colour at all."""
+        for theme, use in RAMPS:
+            for stops in (sequential_stops(theme, use), diverging_stops(theme, use)):
+                assert ramp_color(stops, value) == "none"
+
+    def test_matplotlib_reads_the_missing_colour_as_none(self) -> None:
+        colors = import_library("matplotlib.colors")
+        assert colors.to_rgba(ramp_color(sequential_stops(), math.nan)) == (0.0, 0.0, 0.0, 0.0)
+
+    @pytest.mark.parametrize("library", ["bokeh", "pygal", "letsplot"])
+    def test_every_prompt_copy_of_ramp_color_blends_like_this_one(self, library: str) -> None:
+        """Generated code cannot import this module, so library prompts write the helper out; each copy must agree."""
+        text = (ROOT / f"prompts/library/{library}.md").read_text(encoding="utf-8")
+        source = re.search(r"^def ramp_color\(stops, t\):\n(?:    .*\n)+", text, re.MULTILINE)
+        assert source, library
+        namespace: dict[str, object] = {"math": math, "pairwise": pairwise}
+        exec(source.group(0), namespace)
+        copy = cast(Callable[[tuple[tuple[float, str], ...], float], str], namespace["ramp_color"])
+        for theme, use in RAMPS:
+            for stops in (sequential_stops(theme, use), diverging_stops(theme, use)):
+                for value in (*SAMPLES, -0.5, 1.5):
+                    expected = _channels(ramp_color(stops, value))
+                    assert _channels(copy(stops, value)) == pytest.approx(expected, abs=1), (library, stops, value)
+                assert copy(stops, math.nan) == "none", library
+
+    def test_every_prompt_copy_of_ramp_at_is_the_same_helper(self) -> None:
+        """The chartjs, echarts and muix prompts write ``rampAt`` out; muix only adds TypeScript types to it."""
+        copies = {library: _ramp_at(library) for library in ("chartjs", "echarts", "muix")}
+        untyped = re.sub(r": (?:\[number, string\]\[\]|(?:number|string)\b)", "", copies["muix"])
+        assert copies["chartjs"] == copies["echarts"] == untyped
+        assert 'if (!Number.isFinite(v)) return "transparent";' in copies["chartjs"]
+
+    def test_ramp_at_blends_like_ramp_color_and_draws_nothing_for_a_missing_value(self) -> None:
+        """A missing value gets "transparent": a canvas (Chart.js) ignores "none" and keeps the last fill."""
+        node = shutil.which("node")
+        if node is None:
+            skip_or_fail_js_runtime("needs node on PATH")
+        ramps = [
+            list(map(list, stops))
+            for theme, use in RAMPS
+            for stops in (sequential_stops(theme, use), diverging_stops(theme, use))
+        ]
+        values = [*SAMPLES, -0.5, 1.5]
+        script = (
+            _ramp_at("chartjs")
+            + f"\nconst ramps = {json.dumps(ramps)}, values = {json.dumps(values)};"
+            + "\nconsole.log(JSON.stringify({"
+            + "blends: ramps.map((s) => values.map((v) => rampAt(s, v))),"
+            + " missing: [NaN, Infinity, -Infinity, undefined, 0 / 0].map((v) => rampAt(ramps[0], v)),"
+            + "}));"
+        )
+        run = subprocess.run([node, "-"], input=script, capture_output=True, text=True, timeout=60, check=False)
+        assert run.returncode == 0, run.stderr
+        result = json.loads(run.stdout)
+        assert result["missing"] == ["transparent"] * 5
+        for stops, colors in zip(ramps, result["blends"], strict=True):
+            ramp = cast(tuple[tuple[float, str], ...], tuple(map(tuple, stops)))
+            for value, color in zip(values, colors, strict=True):
+                expected = _channels(ramp_color(ramp, value))
+                assert _channels(color) == pytest.approx(expected, abs=1), (stops, value, color)
+
+    @pytest.mark.parametrize(("theme", "use"), [("Light", "fields"), ("dark", "lines"), ("", "")])
+    def test_unknown_theme_or_use_raises(self, theme: str, use: str) -> None:
+        for factory in (sequential_stops, diverging_stops):
+            with pytest.raises(ValueError):
+                factory(*cast(tuple[Theme, Use], (theme, use)))
+
+    @pytest.mark.parametrize(("theme", "use"), RAMPS)
+    def test_every_written_copy_of_the_sequential_stops_is_these(self, theme: Theme, use: Use) -> None:
+        """The stops are written out where code cannot import this module; each copy must carry them, positions too."""
+        stops = sequential_stops(theme, use)
+        hexes, positions = [c for _, c in stops], [p for p, _ in stops]
+        python = "[" + ", ".join(f'({p:.1f}, "{c}")' if p in (0, 1) else f'({p}, "{c}")' for p, c in stops) + "]"
+        plotly = python.replace("(", "[").replace(")", "]")
+        javascript = "[" + ", ".join(f'[{p:g}, "{c}"]' for p, c in stops) + "]"
+        r = f"colours = c({', '.join(map(repr, hexes))}), values = c({', '.join(f'{p:g}' for p in positions)})"
+        julia = (
+            "cgrad(["
+            + ", ".join(f'colorant"{c}"' for c in hexes)
+            + f"], [{', '.join(f'{p:.1f}' if p in (0, 1) else str(p) for p in positions)}])"
+        )
+        app = f"{{ at: [{', '.join(f'{p:g}' for p in positions)}], hex: [{', '.join(map(repr, hexes))}] }}"
+        copies = {
+            "automation/js-render/render.mjs": [javascript],
+            "prompts/default-style-guide.md": [python],
+            "app/src/sections/palette/paletteHelpers.ts": [app],
+            "prompts/library/ggplot2.md": [r.replace("'", '"')],
+            "prompts/library/makie.md": [julia],
+            "prompts/library/plotly.md": [plotly],
+            **{
+                f"prompts/library/{library}.md": [python, python.replace('"', "'")]
+                for library in ("matplotlib", "seaborn", "bokeh", "pygal", "altair", "plotnine", "letsplot")
+            },
+        }
+        for path, forms in copies.items():
+            text = (ROOT / path).read_text(encoding="utf-8")
+            assert any(form in text for form in forms), (path, forms[0])
+
+    def test_every_written_copy_of_the_diverging_midpoint_matches_its_use(self) -> None:
+        """Each copy pairs the page midpoint with fields and the grey marks midpoint with marks, both themes."""
+        page = {t: diverging_stops(t, "fields")[1][1] for t in THEMES}
+        grey = {t: diverging_stops(t, "marks")[1][1] for t in THEMES}
+        names = {
+            "prompts/default-style-guide.md": ("DIV_FIELDS =", "DIV_MARKS  ="),
+            "automation/js-render/render.mjs": ("divFields:", "divMarks:"),
+            "app/src/sections/palette/paletteHelpers.ts": ("fields: { light:", "marks: { light:"),
+            "prompts/library/altair.md": ("DIV_FIELDS_RANGE =", "DIV_MARKS_RANGE ="),
+            "prompts/library/ggplot2.md": ("DIV_MID_FIELDS <-", "DIV_MID_MARKS  <-"),
+            "prompts/library/letsplot.md": ("DIV_MID_FIELDS =", "DIV_MID_MARKS ="),
+            "prompts/library/plotnine.md": ("DIV_MID_FIELDS =", "DIV_MID_MARKS ="),
+            "prompts/library/makie.md": ("const ANYPLOT_DIV_FIELDS =", "const ANYPLOT_DIV_MARKS ="),
+            **{
+                f"prompts/library/{library}.md": ("DIV_FIELDS =", "DIV_MARKS =")
+                for library in ("matplotlib", "seaborn", "bokeh", "pygal", "plotly")
+            },
+        }
+        # A fields copy may name the page token instead of writing the two hexes out. A marks copy writes both
+        # hexes: no theme token holds the dark marks midpoint, and the muted ink token is a brighter grey there.
+        page_tokens = ("PAGE_BG", "pageBg")
+        for path, (fields_name, marks_name) in names.items():
+            lines = [line.strip() for line in (ROOT / path).read_text(encoding="utf-8").splitlines()]
+            fields = next(line for line in lines if line.startswith(fields_name))
+            marks = next(line for line in lines if line.startswith(marks_name))
+            assert any(t in fields for t in page_tokens) or all(page[t] in fields for t in THEMES), (path, fields)
+            assert all(grey[t] in marks for t in THEMES), (path, marks)
+            assert muted_for("dark") not in marks and "INK_MUTED" not in marks, (path, marks)
+            assert not any(grey[t] in fields for t in THEMES), (path, fields)
+            assert not any(page[t] in marks for t in THEMES), (path, marks)
+
+    def test_ramp_stops_lists_every_new_hex(self) -> None:
+        """RAMP_STOPS is what a hex allow-list adds to the palette and the theme tokens."""
+        known = {*IMPRINT, AMBER, *PAGE.values(), *(muted_for(t) for t in THEMES), *(neutral_for(t) for t in THEMES)}
+        ramp_hexes = {
+            color for theme, use in RAMPS for _, color in (*sequential_stops(theme, use), *diverging_stops(theme, use))
+        }
+        assert set(RAMP_STOPS) == ramp_hexes - known

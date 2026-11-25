@@ -93,7 +93,7 @@ available if you want the raw values):
 
 ```js
 window.ANYPLOT_THEME    // "light" | "dark"
-window.ANYPLOT_TOKENS   // { pageBg, elevatedBg, ink, inkSoft, grid, palette[8], amber, seq[2], div[3] }
+window.ANYPLOT_TOKENS   // { pageBg, elevatedBg, ink, inkSoft, grid, palette[8], amber, seqFields, seqMarks, divFields, divMarks }
 window.ANYPLOT_SIZE     // { width, height } — the CSS mount size (size the chart to this)
 ```
 
@@ -152,13 +152,28 @@ the cream page, light ink on the dark page. You only supply the **data colours**
 const t = window.ANYPLOT_TOKENS;
 // Categorical: first series is ALWAYS brand green (t.palette[0]).
 <BarChart colors={t.palette} … />
-// Continuous (e.g. heatmap / colour scale): build from the Imprint stops —
-//   sequential: [t.seq[0], t.seq[1]]
-//   diverging : [t.div[0], t.div[1], t.div[2]]
+// Continuous: the Imprint ramps as [position, hex] stops, low → high, with the theme's
+// stops already chosen — t.seqFields / t.divFields for coloured cells that fill the plot
+// (heatmap), t.seqMarks / t.divMarks for points, lines, outlines and bars on the page.
+// A continuous colorMap takes a function of the value's share (0..1) of its min..max:
+const rampAt = (stops: [number, string][], v: number) => {
+  // a missing value draws nothing, never the low end; "transparent", because a canvas ignores "none" and keeps the last fill
+  if (!Number.isFinite(v)) return "transparent";
+  const x = Math.min(1, Math.max(0, v));
+  const i = Math.max(1, stops.findIndex(([p]) => p >= x));
+  const [[p0, c0], [p1, c1]] = [stops[i - 1], stops[i]];
+  const f = (x - p0) / (p1 - p0);
+  const ch = (c: string, k: number) => parseInt(c.slice(1 + 2 * k, 3 + 2 * k), 16);
+  return "#" + [0, 1, 2].map((k) => Math.round(ch(c0, k) + (ch(c1, k) - ch(c0, k)) * f).toString(16).padStart(2, "0")).join("");
+};
+// colorMap: { type: "continuous", min, max, color: (v: number) => rampAt(t.seqMarks, v) }
+// t.seq (the first release's two-stop ramp) and t.div (the diverging colours without
+// positions) stay only so old files render as before; never use them in new code.
 ```
 
-Data colours are **identical** between light and dark — only the chrome flips
-(handled by the theme). Never use MUI X's default category palette or a named
+Categorical colours are **identical** between light and dark — only the chrome
+flips (handled by the theme), and the continuous ramps, whose tokens hold the
+theme's stops. Never use MUI X's default category palette or a named
 gradient (viridis / rainbow). The `#container` background is already `t.pageBg`;
 MUI X charts are transparent, so the page shows through — do **not** paint a white
 background.

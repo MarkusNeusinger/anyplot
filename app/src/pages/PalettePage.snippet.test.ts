@@ -42,6 +42,43 @@ describe('PalettePage snippet()', () => {
     expect(snippet('js', false, PALETTE)).toContain('IMPRINT.div');
   });
 
+  // The ramps have their own stops per theme and per use, with positions; a
+  // snippet that drops the positions or one theme hands out a different ramp.
+  it.each([
+    [
+      'python',
+      'light=[(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]',
+      'dark=[(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]',
+      'light=[(0.0, "#AE3030"), (0.5, "#6B6A63"), (1.0, "#4467A3")]',
+    ],
+    [
+      'r',
+      'light = list(colours = c("#66E2B2", "#009E73", "#4467A3", "#002850"), values = c(0, 0.368, 0.582, 1))',
+      'dark  = list(colours = c("#007755", "#009E73", "#CDD9FF"), values = c(0, 0.32, 1))',
+      'light = list(colours = c("#AE3030", "#6B6A63", "#4467A3"), values = c(0, 0.5, 1))',
+    ],
+    [
+      'julia',
+      'values = [0.0, 0.368, 0.582, 1.0]',
+      'dark = (colors = [colorant"#007755", colorant"#009E73", colorant"#CDD9FF"], values = [0.0, 0.32, 1.0])',
+      'dark = (colors = [colorant"#AE3030", colorant"#686762", colorant"#4467A3"], values = [0.0, 0.5, 1.0])',
+    ],
+    [
+      'js',
+      'light: [[0, "#66E2B2"], [0.368, "#009E73"], [0.582, "#4467A3"], [1, "#002850"]]',
+      'dark: [[0, "#007755"], [0.32, "#009E73"], [1, "#CDD9FF"]]',
+      'dark: [[0, "#AE3030"], [0.5, "#1A1A17"], [1, "#4467A3"]]',
+    ],
+  ] as [Lang, string, string, string][])(
+    'carries the positioned ramps per theme and per use for %s',
+    (lang, ...parts) => {
+      const code = snippet(lang, false, PALETTE);
+      for (const part of parts) expect(code).toContain(part);
+      expect(code).toContain('fields');
+      expect(code).toContain('marks');
+    }
+  );
+
   // Regression: CSS oklch() literals are only valid in JS/CSS. matplotlib /
   // ggplot2 / Makie can't parse them, so in OKLCH mode those snippets must keep
   // runnable hex values and surface the coordinate as a comment instead — only
