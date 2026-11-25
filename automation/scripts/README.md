@@ -73,7 +73,10 @@ or without a valid kind (`no_kind`), becomes a suggestion. An `addition` or
 it is never counted as `unverified`. `decide` merges
 only with a carrier (reason code `no_defect_improvement` otherwise) and reads
 the new review's `review_checklist.json` from the directory of
-`--regen-json`. The record stays `v1`; its `improvements` carry `carriers`,
+`--regen-json`. A merge also needs every one of the 24 items of that checklist
+at or above its `prev_checklist` value (`criterion_floor`, reason code
+`criterion_below` otherwise), so a carrier's gain never pays for a loss on
+another criterion; only a change request the review confirms applied lifts it. The record stays `v1`; its `improvements` carry `carriers`,
 `suggestion`, `obsolete`, `unverified`, `de_lm`, `addition`, `polish`,
 `no_kind`, `carriers_pn` (carriers with a `P` or `new` ref), and the `by_kind`
 histogram, with `visible == carriers + suggestion`
@@ -130,8 +133,9 @@ record's `why`:
   scenario is unchanged, no encoding was added, and no VQ, SC, DQ, or CQ item
   of `prev_checklist` scores lower in the new checklist.
 
-`decide` turns the keeps `no_visible_improvement`, `no_defect_improvement` and
-`below_tolerance` into a merge with code `adapt_identity` when the route counts.
+`decide` turns the keeps `no_visible_improvement`, `no_defect_improvement`,
+`below_tolerance` and `criterion_below` into a merge with code `adapt_identity`
+when the route counts.
 With `--review-skipped` and no score, it merges on the route before the score
 checks. A merge whose predecessor passes and whose new source fails becomes keep
 with `adapt_regression`, and so does one whose predecessor passes the static

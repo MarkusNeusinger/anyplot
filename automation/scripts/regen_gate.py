@@ -43,7 +43,14 @@ Merge requires ALL of:
    fixed with the named call or removal in a shorter source, with the data
    scenario and encodings unchanged (``decide --prev-impl/--new-impl``);
 7. no regressions -- on a ``*-basic`` spec a changed data scenario or added
-   encodings count as regressions unless a change request asked for them.
+   encodings count as regressions unless a change request asked for them;
+8. no criterion below its re-score (``criterion_floor``): each of the 24
+   items of ``review_checklist.json`` scores at least its ``prev_checklist``
+   value, DE and LM included, because the tolerance of rule 4 nets the criteria
+   against each other and a carrier's gain must not pay for a loss elsewhere.
+   An incomplete ``prev_checklist`` or new checklist keeps
+   (``criterion_below``); a change request the review confirms applied lifts
+   the floor.
 
 The *adapt route* (``docs/concepts/adaptable-code.md``, "The adapt route";
 ``adapt_assess``) merges a conversion to the adaptable-code convention on
@@ -54,8 +61,9 @@ their pixels per theme at equal size, the new source has at most
 ``max(1.25 × prev, prev + 15)`` lines and the canvas gate passed; when a
 review ran, it also needs a score above 0, no regression, an unchanged data
 scenario, no added encoding and no technical item below its re-score. It
-replaces the keeps ``no_visible_improvement``, ``no_defect_improvement`` and
-``below_tolerance`` (the tolerance never applies to it), and with
+replaces the keeps ``no_visible_improvement``, ``no_defect_improvement``,
+``below_tolerance`` (the tolerance never applies to it) and
+``criterion_below`` (its own floor is the technical items), and with
 ``--review-skipped`` it merges before the score checks; both merges carry the
 code ``adapt_identity``. The *adapt regression* -- a predecessor that passes
 and a new source that fails -- turns any merge into keep
@@ -208,6 +216,7 @@ REASON_CODES = (
     "no_visible_improvement",
     "no_defect_improvement",
     "below_tolerance",
+    "criterion_below",
     "adapt_regression",
     "readiness_regression",
     "merge",
@@ -2194,13 +2203,42 @@ def classify_code_improvements(payload: Any, inp: GateInput) -> list[dict[str, A
 
 
 def _adapt_instead(result: GateResult, adapt: AdaptAssessment | None) -> GateResult:
-    """A no-carrier or below-tolerance keep becomes a merge when the adapt route counts."""
+    """A no-carrier, below-tolerance or criterion-below keep becomes a merge when the adapt route counts."""
     if adapt is None or not adapt.counted:
         return result
     floor = "no technical item below its re-score"
     result.reason = f"adapt route: {adapt_route_text(adapt)}; {floor} (without the route: {result.code})"
     result.verdict, result.code = MERGE, ADAPT_IDENTITY
     return result
+
+
+def criterion_floor(inp: GateInput, payload: Mapping[str, Any]) -> str | None:
+    """Why a merge would trade one criterion for another, or None when none falls.
+
+    Every criterion of the new review must score at least its re-score
+    (``prev_checklist``), DE and LM included: a regeneration only improves a
+    pair, so a loss on one criterion is never paid for by a gain on another.
+    A ``prev_checklist`` that lacks a criterion fails closed (the floor cannot
+    be checked), and so does a criterion missing from the new checklist. A
+    change request the review confirms applied lifts the floor: the change was
+    asked for, and a criterion it lowers is no trade the generator chose.
+    """
+    if inp.change_request_present and payload.get("change_request_applied") is True:
+        return None
+    prev = flat_scores(payload.get("prev_checklist"))
+    missing = [cid for cid in CRITERIA if cid not in prev]
+    if missing:
+        return f"criterion floor: prev_checklist lacks {', '.join(missing)}, so the floor cannot be checked"
+    below = []
+    for cid in CRITERIA:
+        new = inp.new_checklist.get(cid)
+        if not _score_in_range(cid, new):
+            below.append(f"{cid} missing < {prev[cid]}")
+        elif new < prev[cid]:
+            below.append(f"{cid} {new} < {prev[cid]}")
+    if not below:
+        return None
+    return f"criterion below its re-score: {', '.join(below)} (new score {inp.score}, re-scored {payload['prev_rescored']})"
 
 
 def _judge(inp: GateInput, regen: Any, adapt: AdaptAssessment | None = None) -> GateResult:
@@ -2293,6 +2331,15 @@ def _judge(inp: GateInput, regen: Any, adapt: AdaptAssessment | None = None) -> 
     if score < prev_rescored - 1:
         result.code = "below_tolerance"
         result.reason = f"new score {inp.score} < re-scored predecessor {prev_rescored} - 1{note}"
+        return _adapt_instead(result, adapt)
+
+    # The tolerance nets the criteria against each other, so a carrier's gain
+    # could pay for a loss elsewhere; the floor keeps such a trade. The adapt
+    # route has its own floor (the technical items), so it takes this keep over.
+    below = criterion_floor(inp, payload)
+    if below:
+        result.code = "criterion_below"
+        result.reason = f"{below}{note}"
         return _adapt_instead(result, adapt)
 
     result.verdict = MERGE

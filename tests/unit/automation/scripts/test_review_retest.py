@@ -1012,10 +1012,13 @@ class TestCollect:
         tmp = rt.TmpPaths(tmp_path / "tmp")
         cell = _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward")
         out = rt.materialize(bundles["out"] / cell["item"], workspace, cell, GATE_SCRIPT, tmp=tmp)
+        from automation.scripts.regen_gate import CRITERIA
+
         regen = {
             "prev_rescored": 87,
-            # The workspace checklist scores VQ-03 4 of 6, so a re-score of 2 verifies.
-            "prev_checklist": {"VQ-03": 2},
+            # The new checklist below scores VQ-03 4 of 6, so a re-score of 2 verifies;
+            # every other item sits at its maximum in both, so the criterion floor holds.
+            "prev_checklist": {**CRITERIA, "VQ-03": 2},
             "prev_weaknesses": [{"ref": "W1", "class": "defect", "rule": "VQ-03"}],
             "improvements": [{"ref": "W1", "kind": "fix", "what": "legend larger", "where_visible": "legend"}],
             "regressions": [],
@@ -1024,6 +1027,8 @@ class TestCollect:
             "change_request_applied": None,
         }
         _write_review(workspace, score=88, regen=regen)
+        items = [{"id": cid, "score": 4 if cid == "VQ-03" else top, "max": top} for cid, top in CRITERIA.items()]
+        (workspace / "review_checklist.json").write_text(json.dumps({"all": {"items": items}}), encoding="utf-8")
         record = rt.collect(
             workspace,
             cell,
@@ -1633,6 +1638,7 @@ class TestGateReport:
         """Records as regen_gate.py writes them since #11948: `visible` counts only
         what the gate counted, `permission` the cited "Expected, not a defect" bullets."""
         from automation.scripts.regen_gate import (
+            CRITERIA,
             GateInput,
             build_record,
             decide,
@@ -1643,7 +1649,7 @@ class TestGateReport:
         def record(improvements: list[dict[str, str]], permissions: frozenset[str]) -> dict[str, Any]:
             regen = {
                 "prev_rescored": 90,
-                "prev_checklist": {"VQ-03": 4},
+                "prev_checklist": {**CRITERIA, "VQ-03": 4},
                 "prev_weaknesses": [{"ref": "W1", "class": "defect", "rule": "VQ-03"}],
                 "improvements": improvements,
                 "regressions": [],
@@ -1659,7 +1665,7 @@ class TestGateReport:
                     known_weakness_ids=frozenset({"W1"}),
                     characteristic_count=3,
                     permission_refs=permissions,
-                    new_checklist={"VQ-03": 6},
+                    new_checklist=dict(CRITERIA),
                 )
             )
             built = build_record(result, spec_id="bubble-basic", library="altair", score=91, prev_stored=92)
