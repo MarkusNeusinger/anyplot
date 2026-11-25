@@ -7,7 +7,7 @@ import pytest
 from agents.anyplot.code import readiness
 from agents.anyplot.code.normalise import normalise
 from agents.anyplot.code.readiness import Readiness, scan
-from agents.anyplot.code.validate import Finding, validate_security
+from agents.anyplot.code.validate import Finding, validate_original
 from agents.anyplot.schemas import MAX_NOTE_CHARS
 from core.spec_roles import MAP_SPECS
 
@@ -33,14 +33,14 @@ SAVE = 'plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)\n'
 
 @pytest.fixture
 def validator_calls(monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    """Wrap the real `validate_security` and record the library of every call."""
+    """Wrap the real `validate_original`, the scan's entry into the validator, and record the library of every call."""
     calls: list[str] = []
 
     def spy(code: str, *, library: str) -> list[Finding]:
         calls.append(library)
-        return validate_security(code, library=library)
+        return validate_original(code, library=library)
 
-    monkeypatch.setattr(readiness, "validate_security", spy)
+    monkeypatch.setattr(readiness, "validate_original", spy)
     return calls
 
 
@@ -528,7 +528,7 @@ def test_security_reasons_are_capped(monkeypatch: pytest.MonkeyPatch) -> None:
         Finding("size", "code is 70,000 characters; the limit is 65,536", None),
         *(Finding("dunder", f"dunder {i}", i) for i in range(5)),
     ]
-    monkeypatch.setattr(readiness, "validate_security", lambda code, *, library: findings)
+    monkeypatch.setattr(readiness, "validate_original", lambda code, *, library: findings)
     result = check("")
 
     assert result.status == "blocked"
@@ -549,7 +549,7 @@ def test_crashing_validator_fails_closed(monkeypatch: pytest.MonkeyPatch) -> Non
     def explode(code: str, *, library: str) -> list[Finding]:
         raise RuntimeError("boom")
 
-    monkeypatch.setattr(readiness, "validate_security", explode)
+    monkeypatch.setattr(readiness, "validate_original", explode)
     assert check("").reasons == ["security: the validator failed (RuntimeError)"]
 
 

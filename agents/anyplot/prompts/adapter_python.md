@@ -29,7 +29,7 @@ df = load_user_data()
 It returns a pandas DataFrame with exactly the loader columns, typed: `integer` as `Int64`, `number` as `float64`, `boolean` as `boolean`, `text` as `string`, and `datetime` columns already parsed to `datetime64`. Missing values are `<NA>` or `NaT`. The server replaces the statement with a `pd.read_csv("data.csv", ...)` call when it runs the code, so never write that call yourself.
 
 <!-- slot: data_columns -->
-- When the working form has no `df = load_user_data()` line yet (the first attempt), replace the block that creates the example data (the seed, random draws, literal lists of values, the formulas behind the invented data, and the construction of the example DataFrame or arrays) with that single line, and rewrite the plot code to read from `df`.
+- When the working form has no `df = load_user_data()` line yet (the first attempt), replace the block that creates the example data (the seed, random draws, literal lists of values, the formulas behind the invented data, an example-dataset loader such as `load_iris()`, `make_moons()` or `sns.load_dataset(...)` together with every import only it uses, and the construction of the example DataFrame or arrays) with that single line, and rewrite the plot code to read from `df`.
 - Address columns only by subscript with the exact bound name: `df["Revenue (EUR)"]`, never `df.Revenue`.
 - In pandas, never `df[[Y, SIZE]]` when both name one column: it makes two columns of one name.
 

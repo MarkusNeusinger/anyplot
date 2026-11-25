@@ -43,11 +43,13 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 metrics = importlib.import_module("automation.scripts.review_retest_metrics")
 parse_record_markers = importlib.import_module("automation.scripts.regen_gate").parse_record_markers
+follow_up = importlib.import_module("automation.scripts.regen_follow_up")
 LIBRARY_LANGUAGES: dict[str, str] = importlib.import_module("core.constants").LIBRARY_LANGUAGES
 
 
 GATE_AUTHOR = "github-actions[bot]"
 REVIEW_AUTHOR = "claude[bot]"
+FOLLOW_UP_KINDS = follow_up.KINDS
 BRANCH_RE = re.compile(r"^implementation/(?P<spec>[a-z0-9][a-z0-9-]*)/(?P<lib>[a-z0-9]+)$")
 WRITEBACK_BRANCH_RE = re.compile(r"^review-writeback/(?P<spec>[^/]+)/(?P<lib>[^/]+)/(?P<kept>\d+)$")
 RUN_URL_RE = re.compile(r"/actions/runs/(\d+)")
@@ -187,6 +189,14 @@ def build_row(
         "unverified": improvements.get("unverified"),
         "by_kind": improvements.get("by_kind"),
         "regressions": (record or {}).get("regressions"),
+        # The follow-up regenerations: what this decision triggers, whether
+        # the workflow marked a dispatch on this PR, and, on a follow-up, the
+        # predecessor it pairs with. Older records lack the keys.
+        "defect_lines": (record or {}).get("defect_lines"),
+        "follow_up_trigger": (record or {}).get("follow_up_trigger"),
+        "follow_up_marked": follow_up.has_marker(comments),
+        "follow_up_of": (record or {}).get("follow_up_of"),
+        "follow_up_kind": (record or {}).get("follow_up_kind"),
         "writeback": (record or {}).get("writeback"),
         "writeback_pr": writeback,
         "model": (record or {}).get("model"),
@@ -251,8 +261,9 @@ def row_flags(row: dict[str, Any], now: datetime) -> list[str]:
         flags.append("silent")
     if row["verdict"] == "keep":
         wb = row["writeback_pr"]
-        # no_rescore follows from a gate failure the reason code already shows.
-        if row["writeback"] not in (None, "opened", "unchanged", "no_rescore"):
+        # no_rescore follows from a gate failure the reason code already shows;
+        # a follow-up never writes back.
+        if row["writeback"] not in (None, "opened", "unchanged", "no_rescore", "follow_up"):
             flags.append(f"writeback_{row['writeback']}")
         elif row["writeback"] == "opened" and not (wb and wb.get("merged")):
             flags.append("writeback_stranded")
@@ -327,12 +338,16 @@ def summarize(
     rows: Sequence[dict[str, Any]], runs: dict[str, Counter], cost: float | None, api_cost: float | None = None
 ) -> dict[str, Any]:
     decided = [r for r in rows if r["verdict"]]
-    merges = [r for r in decided if r["verdict"] == "merge"]
-    keeps = [r for r in decided if r["verdict"] == "keep"]
+    # Follow-ups stay out of the merge rate and the drift: a follow-up
+    # re-scores a file reviewed hours before (a test-retest), and its merges
+    # are a population of their own, counted in the follow-up rows.
+    primary = [r for r in decided if not r.get("follow_up_of")]
+    merges = [r for r in primary if r["verdict"] == "merge"]
+    keeps = [r for r in primary if r["verdict"] == "keep"]
     scores = [r["new"] for r in decided if isinstance(r["new"], int)]
     drift = [
         r["prev_rescored"] - r["prev_stored"]
-        for r in decided
+        for r in primary
         if isinstance(r["prev_rescored"], int) and isinstance(r["prev_stored"], int)
     ]
     flag_counts = Counter(f for r in rows for f in r["flags"])
@@ -340,9 +355,10 @@ def summarize(
         "regen_prs": len(rows),
         "specs": len({r["spec"] for r in rows}),
         "decisions": len(decided),
+        "follow_up_decisions": len(decided) - len(primary),
         "merges": len(merges),
         "keeps": len(keeps),
-        "merge_rate": round(len(merges) / len(decided), 3) if decided else None,
+        "merge_rate": round(len(merges) / len(primary), 3) if primary else None,
         "codes": dict(Counter(str(r["code"]) for r in decided).most_common()),
         "score_mean": round(statistics.fmean(scores), 1) if scores else None,
         "score_sd": round(statistics.stdev(scores), 1) if len(scores) > 1 else None,
@@ -351,6 +367,17 @@ def summarize(
         "rescore_drift_mean": round(statistics.fmean(drift), 1) if drift else None,
         "flags": dict(sorted(flag_counts.items())),
         "identical_vectors": identical_vectors(rows),
+        # Per kind: decisions that trigger it, PRs the workflow marked for a
+        # dispatch, and the follow-ups decided and merged in the window.
+        "follow_ups": {
+            kind: {
+                "triggered": sum(1 for r in decided if r.get("follow_up_trigger") == kind),
+                "marked": sum(1 for r in rows if r.get("follow_up_marked") and r.get("follow_up_trigger") == kind),
+                "decided": sum(1 for r in decided if r.get("follow_up_kind") == kind),
+                "merged": sum(1 for r in decided if r["verdict"] == "merge" and r.get("follow_up_kind") == kind),
+            }
+            for kind in FOLLOW_UP_KINDS
+        },
         "runs": {wf: dict(counter) for wf, counter in runs.items()},
         "cost_usd": round(cost, 2) if cost is not None else None,
         "cost_usd_api": round(api_cost, 2) if api_cost is not None else None,
@@ -376,6 +403,8 @@ METRIC_ROWS: tuple[tuple[str, str, Callable[[dict[str, Any]], Any]], ...] = (
     ("Scores ≥ 90", "rare", lambda s: s["at_or_above_90"]),
     ("Re-score − stored, mean", "≈ −9 (Opus offset)", lambda s: _cell(s["rescore_drift_mean"])),
     ("Identical review vectors in a spec", "0", lambda s: len(s["identical_vectors"])),
+    ("Repair rounds: triggered / marked / decided / merged", "", lambda s: _follow_ups(s, "repair")),
+    ("Retries: triggered / marked / decided / merged", "", lambda s: _follow_ups(s, "retry")),
     ("Stuck or failed review PRs", "0", lambda s: s["flags"].get("stuck", 0) + s["flags"].get("review_failed", 0)),
     ("Reviews still running", "–", lambda s: s["flags"].get("pending", 0)),
     ("Missing pair artifact", "0", lambda s: s["flags"].get("no_pair_artifact", 0)),
@@ -391,6 +420,12 @@ def _cost(summary: dict[str, Any]) -> str:
         return "not collected"
     api = summary.get("cost_usd_api")
     return f"${summary['cost_usd']:.0f}" + (f" (API ${api:.0f})" if api else "")
+
+
+def _follow_ups(summary: dict[str, Any], kind: str) -> str:
+    """``triggered / marked / decided / merged`` of one follow-up kind (a KeyError for an older summary)."""
+    block = summary["follow_ups"][kind]
+    return " / ".join(str(block[key]) for key in ("triggered", "marked", "decided", "merged"))
 
 
 def _cell(value: Any) -> str:
@@ -439,6 +474,8 @@ def render_markdown(
     ]
     for r in sorted(rows, key=lambda r: (r["spec"], r["lib"])):
         verdict = f"{r['verdict']} ({r['code']})" if r["verdict"] else ("forced" if r["forced"] else "–")
+        if r.get("follow_up_of"):
+            verdict += f", {r.get('follow_up_kind')} of #{r['follow_up_of']}"
         scores = " → ".join(_cell(r[k]) for k in ("prev_stored", "prev_rescored", "new"))
         carriers = (
             f"{_cell(r['carriers'])} ({_cell(r['carriers_pn'])}, {_cell(r['code_fixes'])})" if r["verdict"] else "–"

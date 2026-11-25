@@ -67,8 +67,8 @@ MAX_BLANK_RATIO = 0.95
 # from impl-review.yml.
 LIKELY_CAUSES: dict[str, str] = {
     "matplotlib": "Most likely cause: `bbox_inches='tight'` on `savefig` — remove it (default `bbox_inches=None`).",
-    "seaborn": "Most likely cause: `bbox_inches='tight'` on `savefig` — remove it (default `bbox_inches=None`).",
-    "altair": "Most likely cause: vl-convert padding title/legend outside `width`/`height`. Add `configure_view(continuousWidth=…, continuousHeight=…)` + zero `padding` and normalize the saved PNG with the PIL crop/pad snippet in `prompts/library/altair.md`.",
+    "seaborn": "Most likely cause: `bbox_inches='tight'` on `savefig` — remove it (default `bbox_inches=None`); or a figure-level plot whose legend widened the figure: `g.figure.set_size_inches(...)` after creation (`prompts/library/seaborn.md`).",
+    "altair": "Most likely cause: no `autosize=alt.AutoSizeParams(type='fit', contains='padding')` in `.properties(...)`, so vl-convert adds title, axes and legend outside `width`/`height`, or a compound chart (concat, facet) whose views add up past the target. Set the fit autosize and run the fit-to-canvas block after the save, both in `prompts/library/altair.md`.",
     "plotly": "Most likely cause: `autosize=True` or implicit margin growth. Set `autosize=False` and pin `margin=dict(...)` explicitly.",
     "bokeh": "Most likely cause: bokeh toolbar adding ~30-50 px above the figure. Set `toolbar_location=None`.",
     "highcharts": "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Call `Highcharts.chart('container', {...})` and let it auto-size to `#container` — do NOT set `chart.width`/`chart.height`. Use `//# anyplot-orientation: square` only for square specs.",

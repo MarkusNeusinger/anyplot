@@ -903,6 +903,60 @@ def _week(at: Any) -> str:
     return f"{year}-W{week:02d}"
 
 
+FOLLOW_UP_KINDS = ("repair", "retry")
+
+
+def follow_up_summary(records: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """The follow-up regenerations (repair rounds and retries) among production gate records.
+
+    ``triggers`` counts ``follow_up_trigger`` over the records that carry it
+    (``trigger_n``; older records lack the key), with the switches on or off.
+    Per kind, ``triggered`` is that count, ``n`` the follow-ups decided
+    (records with ``follow_up_kind``) and ``merges`` those the gate merged.
+    ``pairs`` lists every follow-up beside its predecessor's record, when the
+    predecessor is among ``records``: the follow-up's ``pr``, ``verdict``,
+    ``code`` and ``new``, and the predecessor's ``verdict``, ``code`` and
+    ``new`` (``None`` when it is not).
+    """
+    by_pr = {r["pr"]: r for r in records if isinstance(r.get("pr"), int)}
+    triggers = Counter(str(r["follow_up_trigger"]) for r in records if isinstance(r.get("follow_up_trigger"), str))
+    kinds: dict[str, Any] = {}
+    for kind in FOLLOW_UP_KINDS:
+        decided = [r for r in records if r.get("follow_up_kind") == kind]
+        merged = sum(1 for r in decided if r.get("verdict") == "merge")
+        kinds[kind] = {
+            "triggered": triggers.get(kind, 0),
+            "n": len(decided),
+            "merges": merged,
+            "merge_rate": merged / len(decided) if decided else None,
+        }
+    pairs = []
+    for record in records:
+        of = record.get("follow_up_of")
+        if not isinstance(of, int):
+            continue
+        before = by_pr.get(of) or {}
+        pairs.append(
+            {
+                "pr": record.get("pr"),
+                "kind": record.get("follow_up_kind"),
+                "verdict": record.get("verdict"),
+                "code": record.get("code"),
+                "new": record.get("new"),
+                "follow_up_of": of,
+                "of_verdict": before.get("verdict"),
+                "of_code": before.get("code"),
+                "of_new": before.get("new"),
+            }
+        )
+    return {
+        "trigger_n": sum(triggers.values()),
+        "triggers": dict(triggers.most_common()),
+        **kinds,
+        "pairs": sorted(pairs, key=lambda p: (p["follow_up_of"], p["pr"] or 0)),
+    }
+
+
 def gate_monitor(
     records: Sequence[dict[str, Any]], comparable: Callable[[dict[str, Any]], bool], *, seed: int = 20260927
 ) -> dict[str, Any]:
@@ -944,9 +998,22 @@ def gate_monitor(
     held). ``code_path_merges`` counts the merges with ``carriers == 0`` and
     ``code >= 1`` — the code path — over the ``code_path_n`` records with both
     keys; suggestions may ride along, so ``visible`` is not tested.
+
+    From the follow-up regenerations on, a record carries ``defect_lines``
+    and ``follow_up_trigger``, and a follow-up's record ``follow_up_of`` and
+    ``follow_up_kind``; ``follow_ups`` is ``follow_up_summary``. A follow-up
+    never writes back (``writeback: follow_up``), and follow-up records stay
+    out of ``merge_rate``, the drift summaries and ``margin``
+    (``follow_up_n`` counts them).
     """
     n = len(records)
-    merges = sum(1 for r in records if r.get("verdict") == "merge")
+    # Follow-up records stay out of the merge rate, the drift and the margin:
+    # a follow-up re-scores a file reviewed hours before, so its drift is a
+    # test-retest and its merge rate is a different population. They are
+    # counted in their own rows (``follow_ups``).
+    primary = [r for r in records if not isinstance(r.get("follow_up_of"), int)]
+    primary_n = len(primary)
+    merges = sum(1 for r in primary if r.get("verdict") == "merge")
     codes = Counter(str(r.get("code") or "unknown") for r in records)
 
     def drift_of(rs: Iterable[dict[str, Any]]) -> list[float]:
@@ -956,16 +1023,16 @@ def gate_monitor(
             if isinstance(r.get("prev_rescored"), int) and isinstance(r.get("prev_stored"), int)
         ]
 
-    comparable_records = [r for r in records if comparable(r)]
+    comparable_records = [r for r in primary if comparable(r)]
     margins = [
         float(r["new"] - r["prev_rescored"])
-        for r in records
+        for r in primary
         if isinstance(r.get("new"), int) and isinstance(r.get("prev_rescored"), int)
     ]
     by_model: dict[str, list[dict[str, Any]]] = defaultdict(list)
     by_lib: dict[str, list[dict[str, Any]]] = defaultdict(list)
     by_week: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for record in records:
+    for record in primary:
         by_model[str(record.get("model") or "n/a")].append(record)
         by_lib[str(record.get("lib") or "n/a")].append(record)
         by_week[_week(record.get("at"))].append(record)
@@ -1060,9 +1127,10 @@ def gate_monitor(
     drift_comparable = _summary(drift_of(comparable_records), seed)
     report: dict[str, Any] = {
         "n": n,
-        "merge_rate": merges / n if n else None,
+        "follow_up_n": n - primary_n,
+        "merge_rate": merges / primary_n if primary_n else None,
         "codes": dict(codes.most_common()),
-        "drift_all": _summary(drift_of(records), seed),
+        "drift_all": _summary(drift_of(primary), seed),
         "drift_comparable": drift_comparable,
         "drift_by_model": {k: _summary(drift_of(v), seed) for k, v in sorted(by_model.items())},
         "drift_by_library": {k: _summary(drift_of(v), seed) for k, v in sorted(by_lib.items())},
@@ -1070,6 +1138,7 @@ def gate_monitor(
         "margin_within_tolerance": share(-1 <= m <= 0 for m in margins),
         "improvements": improvements,
         "writeback": {"n": writeback_n, "counts": dict(writeback.most_common())},
+        "follow_ups": follow_up_summary(records),
         "weekly": {
             week: {
                 "n": len(rs),
@@ -1089,8 +1158,8 @@ def gate_monitor(
     invalid = codes.get("regen_json_invalid", 0)
     if n >= 10 and invalid / n > 0.10:
         alarms.append(f"regen_json_invalid in {invalid}/{n} decisions — a contract or prompt problem")
-    if n >= 30 and report["merge_rate"] is not None and not 0.05 <= report["merge_rate"] <= 0.50:
-        alarms.append(f"merge rate {report['merge_rate']:.0%} over {n} decisions — look at the reason codes")
+    if primary_n >= 30 and report["merge_rate"] is not None and not 0.05 <= report["merge_rate"] <= 0.50:
+        alarms.append(f"merge rate {report['merge_rate']:.0%} over {primary_n} decisions — look at the reason codes")
     if improvements["permission_n"] >= 10 and (improvements["permission_or_obsolete_share"] or 0) > 0.10:
         alarms.append(
             f"reviews cite an 'Expected, not a defect' bullet or an obsolete weakness as an improvement in "

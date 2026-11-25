@@ -404,6 +404,7 @@ jobs:
              automation/scripts/adaptability_check.py automation/scripts/adapt_record.py \
              automation/scripts/impl_header.py automation/scripts/render_hash.py \
              automation/scripts/contract_check.py automation/scripts/readiness_record.py \
+             automation/scripts/regen_follow_up.py \
              "$RUNNER_TEMP/regen-tools/"
           # The reviewer's step-10 self-check (`check-feedback`) runs this
           # same workflow-ref copy of the gate.
@@ -475,8 +476,6 @@ jobs:
         if: steps.regen.outputs.is_regen == 'true'
         continue-on-error: true
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
@@ -490,6 +489,39 @@ jobs:
           # First, so a later failure in this step cannot leave them unset.
           echo "prev_meta_blob=$(git rev-parse -q --verify "origin/main:${META_FILE}" || echo n/a)" >> "$GITHUB_OUTPUT"
           echo "prev_impl_blob=$(git rev-parse -q --verify "origin/main:${IMPL_FILE}" || echo n/a)" >> "$GITHUB_OUTPUT"
+
+          # The PR body, as "Extract PR info" read it with retries before the
+          # guard passed the PR. Also first, for the same reason: a kept
+          # follow-up whose line a later failure left unread would write back
+          # a second re-score. The body stays under $RUNNER_TEMP: the reviewer
+          # reads only what is staged for it under /tmp.
+          PR_BODY="$RUNNER_TEMP/anyplot-pr-body.txt"
+          jq -r '.body // ""' "$RUNNER_TEMP/pr.json" > "$PR_BODY" 2>/dev/null || : > "$PR_BODY"
+          # A follow-up regeneration names the PR it follows
+          # ("**Follow-up of:** #N (kind)"): the gate record carries it, no
+          # follow-up is followed up, and a follow-up writes back nothing on
+          # a keep.
+          # Writes follow_up_of= and follow_up_kind= (empty for any other PR).
+          # Never fails the step, which would keep the live implementation
+          # (--context-failed): an unread line only leaves the record without
+          # the predecessor, and the dispatchers read the body again.
+          python3 "$RUNNER_TEMP/regen-tools/regen_follow_up.py" parse-body < "$PR_BODY" \
+            || echo "::warning::the PR body's follow-up line could not be read; the record names no predecessor"
+
+          # Change request, as impl-generate.yml recorded it in the PR body.
+          rm -f /tmp/anyplot-change-request.txt
+          CR=$(grep -oP '^\*\*Change request:\*\* \K.*' "$PR_BODY" | head -1 || true)
+          if [ -n "$CR" ]; then
+            printf '%s\n' "$CR" > /tmp/anyplot-change-request.txt
+            echo "change_request_present=true" >> $GITHUB_OUTPUT
+            # The retry follow-up forwards this copy, read from the PR body
+            # before the review session runs: the session can write every
+            # file on the runner, the /tmp copy above included, but not a
+            # step output.
+            echo "change_request=$(printf '%s' "$CR" | tr -d '\r')" >> $GITHUB_OUTPUT
+          else
+            echo "change_request_present=false" >> $GITHUB_OUTPUT
+          fi
 
           pip install --quiet pyyaml
 
@@ -527,16 +559,6 @@ jobs:
           rm -f "$RAW"
           echo "prev_lines=$(wc -l < "/tmp/anyplot-prev-impl${EXT}" | tr -d ' ')" >> $GITHUB_OUTPUT
           echo "new_lines=$(wc -l < "$IMPL_FILE" | tr -d ' ')" >> $GITHUB_OUTPUT
-
-          # Change request, as impl-generate.yml recorded it in the PR body.
-          rm -f /tmp/anyplot-change-request.txt
-          CR=$(gh pr view "$PR_NUMBER" --json body -q '.body' | grep -oP '^\*\*Change request:\*\* \K.*' | head -1 || true)
-          if [ -n "$CR" ]; then
-            printf '%s\n' "$CR" > /tmp/anyplot-change-request.txt
-            echo "change_request_present=true" >> $GITHUB_OUTPUT
-          else
-            echo "change_request_present=false" >> $GITHUB_OUTPUT
-          fi
 
       - name: Check attempt count
         id: attempts
@@ -1024,8 +1046,8 @@ jobs:
           # Library-specific likely cause (concrete repair hints, not generic).
           causes = {
               "matplotlib": "Most likely cause: `bbox_inches='tight'` on `savefig` — remove it (default `bbox_inches=None`).",
-              "seaborn":    "Most likely cause: `bbox_inches='tight'` on `savefig` — remove it (default `bbox_inches=None`).",
-              "altair":     "Most likely cause: vl-convert padding title/legend outside `width`/`height`. Add `configure_view(continuousWidth=…, continuousHeight=…)` + zero `padding` and normalize the saved PNG with the PIL crop/pad snippet in `prompts/library/altair.md`.",
+              "seaborn":    "Most likely cause: `bbox_inches='tight'` on `savefig` — remove it (default `bbox_inches=None`); or a figure-level plot whose legend widened the figure: `g.figure.set_size_inches(...)` after creation (`prompts/library/seaborn.md`).",
+              "altair":     "Most likely cause: no `autosize=alt.AutoSizeParams(type='fit', contains='padding')` in `.properties(...)`, so vl-convert adds title, axes and legend outside `width`/`height`, or a compound chart (concat, facet) whose views add up past the target. Set the fit autosize and run the fit-to-canvas block after the save, both in `prompts/library/altair.md`.",
               "plotly":     "Most likely cause: `autosize=True` or implicit margin growth. Set `autosize=False` and pin `margin=dict(...)` explicitly.",
               "bokeh":      "Most likely cause: bokeh toolbar adding ~30-50 px above the figure. Set `toolbar_location=None`.",
               "highcharts": "The harness owns exact pixels (Playwright deviceScaleFactor 2 over a fixed mount). Call `Highcharts.chart('container', {...})` and let it auto-size to `#container` — do NOT set `chart.width`/`chart.height`. Use `//# anyplot-orientation: square` only for square specs.",
@@ -1990,6 +2012,9 @@ jobs:
           # "Stop on the render hash" stopped the review, with the gate's code.
           RENDER_KEEP: ${{ steps.render_stop.outputs.keep }}
           RENDER_STOP_CODE: ${{ steps.render_stop.outputs.code }}
+          # A follow-up regeneration's predecessor, for the gate record.
+          FOLLOW_UP_OF: ${{ steps.regen_ctx.outputs.follow_up_of }}
+          FOLLOW_UP_KIND: ${{ steps.regen_ctx.outputs.follow_up_kind }}
         run: |
           # Record and summary live in $RUNNER_TEMP, not /tmp: the reviewer has
           # already run and never reads them, and the workflow tests run this
@@ -2018,6 +2043,11 @@ jobs:
           # The verdict of "Readiness check": a regression there turns a merge
           # into keep (readiness_regression). No file, no check.
           [ -s "$RUNNER_TEMP/readiness-verdict.json" ] && ADAPT+=(--readiness "$RUNNER_TEMP/readiness-verdict.json")
+          # A follow-up's record names its predecessor, and its decision
+          # triggers no further follow-up (follow_up_trigger).
+          if [ -n "$FOLLOW_UP_OF" ] && [ -n "$FOLLOW_UP_KIND" ]; then
+            FLAGS+=(--follow-up-of "$FOLLOW_UP_OF" --follow-up-kind "$FOLLOW_UP_KIND")
+          fi
           if ! python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" decide \
                --spec-id "$SPEC_ID" --library "$LIBRARY" \
                --score "$SCORE" --prev-stored "$PREV_STORED" \
@@ -2906,9 +2936,17 @@ jobs:
       # out in the workspace, from which the verdict step imports core.constants.
       # Git hooks are off for every git call here (GIT_CONFIG_*): the
       # workspace's .git, hooks included, is shared with that session.
+      # Never for a follow-up regeneration (its PR body names the PR it
+      # follows): the stored review is then hours old, from the same rules, and
+      # the one the follow-up was judged against (the winner's own after a
+      # repair round, the kept attempt's write-back before a retry). A second
+      # re-score of the unchanged file would only move its stored score by the
+      # reviewer's noise. The verdict step records `writeback: follow_up`. A
+      # write-back the kept attempt lost heals at the pair's next ordinary
+      # regeneration.
       - name: Write back the re-score (regen keep)
         id: writeback
-        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true' && steps.gate.outputs.verdict != 'merge'
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true' && steps.gate.outputs.verdict != 'merge' && steps.regen_ctx.outputs.follow_up_of == ''
         continue-on-error: true
         timeout-minutes: 5
         env:
@@ -3149,6 +3187,8 @@ jobs:
           RENDER_STOP_CODE: ${{ steps.render_stop.outputs.code }}
           ADAPT_COUNTED: ${{ steps.gate.outputs.adapt_counted }}
           ADAPT_OVERRULED: ${{ steps.gate.outputs.adapt_overruled }}
+          # A follow-up regeneration's predecessor ("Regen context").
+          FOLLOW_UP_OF: ${{ steps.regen_ctx.outputs.follow_up_of }}
         run: |
           # Cascading thresholds:
           # Attempt 0 (Review 1): >= 90
@@ -3219,8 +3259,10 @@ jobs:
             if [ "$GATE_VERDICT" != "merge" ]; then
               [ "$REVIEW_SKIPPED" = "true" ] && WB_STATUS=no_rescore
               [ "$RENDER_STOPPED" = "true" ] && WB_STATUS=no_rescore
+              # A follow-up never writes back (the write-back step's `if`).
+              [ -n "$FOLLOW_UP_OF" ] && WB_STATUS=follow_up
               case "$WB_STATUS" in
-                opened|unchanged|no_rescore|invalid|stale|failed) ;;
+                opened|unchanged|no_rescore|invalid|stale|failed|follow_up) ;;
                 *) WB_STATUS=failed ;;
               esac
               if [ -s "$RUNNER_TEMP/anyplot-regen-record.json" ]; then
@@ -3293,6 +3335,7 @@ jobs:
               no_rescore) STORED="**Stored review:** unchanged (the gate has no re-score of the live implementation: ${GATE_CODE:-no code})." ;;
               invalid) STORED="**Stored review:** unchanged (\`review_prev.json\` failed its check; see the run log)." ;;
               stale) STORED="**Stored review:** unchanged (main changed the implementation or its metadata during the review)." ;;
+              follow_up) STORED="**Stored review:** unchanged (this PR is a follow-up of #${FOLLOW_UP_OF}: a follow-up never writes back, so the review it was judged against stays)." ;;
               *) STORED="**Stored review:** unchanged (the write-back failed; see the run log)." ;;
             esac
 
@@ -3593,3 +3636,87 @@ jobs:
           # ending the step green with the PR quietly parked.
           echo "::error::PR #${PR_NUM} has neither ai-approved nor ai-rejected after review (score $SCORE, threshold $THRESHOLD) — no downstream workflow was triggered"
           exit 1
+
+      # Retry (docs/workflows/overview.md, "Follow-up regenerations"): a
+      # regeneration the gate kept for a regression is regenerated once more,
+      # with that regression as a note, and the same gate judges the retry
+      # against the live file. Off unless
+      # REGEN_RETRY is exactly `true`. It runs after the keep bookkeeping, which
+      # posted the gate record that "plan" reads back. regen_follow_up.py
+      # decides from durable state only: the record by the workflow, the PR
+      # body's follow-up line, the marker comments and the pair's recent PRs.
+      # Anything it cannot read means no retry. The kept attempt's write-back
+      # goes first: a retry branch cut from main before it merges conflicts
+      # with it at update-branch, so a write-back still open after 15 minutes
+      # means no retry. "dispatch" posts the marker on the kept PR first (a
+      # marker that cannot be posted means no retry), dispatches once, and
+      # notes a dispatch that failed. The note travels as follow_up_note,
+      # never as the change request: the gate lets a change request swap the
+      # scenario or add encodings on a -basic spec. The kept attempt's own
+      # change request is forwarded as "Regen context" read it from the PR
+      # body before the review (a step output, which the review session
+      # cannot write; never the /tmp copy), and only when it had one. Never
+      # fails the run: the keep stands either way.
+      - name: Dispatch a follow-up regeneration (retry)
+        id: follow_up
+        if: vars.REGEN_RETRY == 'true' && steps.regen.outputs.is_regen == 'true' && steps.gate.outputs.verdict == 'keep' && steps.gate.outputs.follow_up_trigger == 'retry'
+        continue-on-error: true
+        timeout-minutes: 20
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          ISSUE_NUMBER: ${{ steps.pr.outputs.issue_number }}
+          MODEL: ${{ steps.pr.outputs.model }}
+          WB_STATUS: ${{ steps.writeback.outputs.status }}
+          WB_PR: ${{ steps.writeback.outputs.pr }}
+          CHANGE_REQUEST_PRESENT: ${{ steps.regen_ctx.outputs.change_request_present || 'false' }}
+          CHANGE_REQUEST: ${{ steps.regen_ctx.outputs.change_request_present == 'true' && steps.regen_ctx.outputs.change_request || '' }}
+          WORKFLOW_REF: ${{ github.ref_name }}
+          WAIT_ROUNDS: '45'
+          WAIT_SECONDS: '20'
+        run: |
+          TOOLS="$RUNNER_TEMP/regen-tools"
+          skip() {
+            echo "::notice::no retry follow-up for PR #${PR_NUM}: ${1}"
+            echo "- Follow-up (retry): not dispatched, \`${1}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "reason=${1}" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          if [ "$WB_STATUS" = "opened" ]; then
+            [[ "$WB_PR" =~ ^[1-9][0-9]{0,9}$ ]] || skip writeback_unknown
+            STATE=""
+            for _ in $(seq 1 "$WAIT_ROUNDS"); do
+              STATE=$(gh pr view "$WB_PR" --json state -q .state 2>/dev/null || true)
+              case "$STATE" in MERGED|CLOSED) break ;; esac
+              sleep "$WAIT_SECONDS"
+            done
+            case "$STATE" in MERGED|CLOSED) ;; *) skip writeback_pending ;; esac
+          fi
+
+          # Its key=value lines come back on stdout; this step writes its own outputs.
+          PLAN=$(env -u GITHUB_OUTPUT python3 "$TOOLS/regen_follow_up.py" plan --kind retry --pr "$PR_NUM" \
+                   --spec-id "$SPEC_ID" --library "$LIBRARY" --repo "$REPOSITORY") || skip plan_failed
+          [ "$(sed -n 's/^dispatch=//p' <<< "$PLAN")" = "true" ] || skip "$(sed -n 's/^reason=//p' <<< "$PLAN")"
+
+          NOTE_FLAGS=()
+          [ "$CHANGE_REQUEST_PRESENT" = "true" ] && NOTE_FLAGS+=(--change-request-present)
+          NOTE=$(python3 "$TOOLS/regen_gate.py" retry-note --regen-json review_regen.json \
+                   --spec-id "$SPEC_ID" --pr "$PR_NUM" "${NOTE_FLAGS[@]}") || skip no_note
+
+          SENT=$(env -u GITHUB_OUTPUT python3 "$TOOLS/regen_follow_up.py" dispatch --kind retry --pr "$PR_NUM" \
+                   --spec-id "$SPEC_ID" --library "$LIBRARY" --repo "$REPOSITORY" --ref "${WORKFLOW_REF:-main}" \
+                   --model "${MODEL:-auto}" --issue "$ISSUE_NUMBER" \
+                   --change-request "$CHANGE_REQUEST" --note "$NOTE") || skip dispatch_crashed
+          REASON=$(sed -n 's/^reason=//p' <<< "$SENT")
+          echo "reason=${REASON}" >> "$GITHUB_OUTPUT"
+          if [ "$REASON" != "dispatch" ]; then
+            echo "::warning::retry follow-up of PR #${PR_NUM} not dispatched: ${REASON}; the pair gets no retry"
+            echo "- Follow-up (retry): not dispatched, \`${REASON}\`" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "::notice::retry follow-up of PR #${PR_NUM} dispatched for ${SPEC_ID}/${LIBRARY} (model ${MODEL:-auto})"
+          echo "- Follow-up (retry): dispatched for ${SPEC_ID}/${LIBRARY}" >> "$GITHUB_STEP_SUMMARY"

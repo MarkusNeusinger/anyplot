@@ -1444,13 +1444,14 @@ class TestAdaptableCode:
             "When the spec needs the construct, leave the refusal and say so in the commit body: a 3D trace in "
             "plotly draws with WebGL, which the chat's renderer lacks, and a 3D spec still needs it.",
             "**A map spec is excluded** (`readiness: excluded`)",
-            "**A refusal line that names `sns.load_dataset` or a `sklearn.datasets` name stays as it is:**",
-            'Name it in the `Readiness self-check:` line, and never "fix" it by swapping the data scenario or '
-            "writing the dataset out inline.",
-            "This covers only those lines; every other refusal, also one with the same hint (a file read, another "
-            "import), is removed as above.",
-            "this prompt names no refused construct of its own and makes one exception below (the built-in "
-            "datasets), so don't guess at others.",
+            "**The check accepts these files when the rest of the file passes:** an example dataset (a "
+            "`sklearn.datasets` toy loader such as `load_iris()` or a generator such as `make_moons()`, or "
+            "`sns.load_dataset`, which downloads its CSV) is no refusal, because the chat never runs your file and "
+            "replaces the data before anything runs.",
+            "Never swap the data scenario or write the dataset out inline because of the check.",
+            "A refusal the check prints is removed as above, also one about a dataset (a `fetch_*` download, a "
+            "loader that reads a path).",
+            "this prompt names no refused construct of its own, so don't guess at any.",
             "Never trade a defect in the render for a clean check.",
             "2 when the check itself cannot run (its copy is missing or broken, or the path names no file).",
             "When the chat's own tools fail on your file, or cannot read it, that is a refusal of the file like any "
@@ -1468,6 +1469,36 @@ class TestAdaptableCode:
             line for line in content.splitlines() if "**Don't add code for changes that don't show.**" in line
         )
         assert "a refusal of its readiness check, also one the previous file already had" in mindset
+
+    def test_step_4_asks_the_reviews_questions_without_values(self) -> None:
+        """The visual self-check asks what the review deducts for, and fixes without deleting elements."""
+        content = GENERATE_PROMPT.read_text()
+        step = content[content.index("## Step 4:") : content.index("## Step 5:")]
+        assert "`A good version shows:`" in step
+        for criterion in ("SC-02", "VQ-07", "VQ-04", "VQ-01", "VQ-05", "AR-09", "VQ-02", "VQ-03", "SC-04", "VQ-06"):
+            assert f"{criterion}" in step, criterion
+        assert "Use the Read tool to open" in step
+        assert 'and a "yes" means that part is clean.' in step
+        assert "None of them names a value: judge by eye, as the review does." in step
+        # The spec question keeps the review's qualifiers and never invites variant creep on a -basic spec.
+        assert "Keep the spec's qualifiers, as the review does" in step
+        assert "On a `-basic` spec, never add an element to answer yes." in step
+        # The palette question keeps the review's exceptions, so a fix never recolors a correct ramp.
+        assert "Ordered categories (Likert levels, grades, sizes) run through the steps of one Imprint ramp" in step
+        assert "a semantic reassignment of Step 2 counts as yes." in step
+        assert 'Never answer a "no" by deleting the element' in step
+        assert "This step has one fix round of its own, apart from the three attempts of Step 3." in step
+        # The trailing Step 3c run only records, in a log of its own that the attempt count never reads.
+        assert "This run only records: it is not a new attempt, and nothing in the file changes after it" in step
+        assert "--log /tmp/anyplot-selfcheck-final.jsonl" in step
+        assert "keeps the attempt number Step 3c reached, not the one this run prints." in step
+        # No percentage or pixel threshold leaks into the questions (soft, proportional rules).
+        assert "%" not in step
+        assert " px" not in step
+        # The result is recorded for every language, and the final check asks for it.
+        assert 'git commit -m "feat({LIBRARY}): implement {SPEC_ID}" -m "Visual self-check: fixed' in content
+        assert "Visual self-check: pass\nAdaptability self-check: pass, attempt 1" in content
+        assert "the commit body carries its `Visual self-check:` line" in content
 
     def test_regeneration_keeps_its_data_source(self) -> None:
         """A regeneration brings in no built-in dataset its previous file did not load (#13305 was kept for it)."""
@@ -1496,12 +1527,11 @@ class TestAdaptableCode:
             "Such a fix is a named code-quality item, like a line of the self-check: keep the render the same.",
             "Never remove an element the spec asks for to get rid of a refusal: when the spec needs the construct",
             "leave the refusal and say so in the commit body.",
-            "A refusal line that names `sns.load_dataset` or a `sklearn.datasets` name stays as well",
-            'name it in the commit body, and never "fix" it by swapping the data scenario or writing the dataset '
-            "out inline.",
-            "This covers only those lines; every other refusal, also one with the same hint (a file read, another "
-            "import), is removed as above.",
-            "Its output is the whole rule, with one exception below (the built-in datasets).",
+            "An example dataset (a `sklearn.datasets` toy loader or generator, or `sns.load_dataset`, which downloads "
+            "its CSV) is no refusal: the check accepts these files when the rest of the file passes, because the chat "
+            "never runs your file and replaces the data before anything runs, so never swap the data scenario or "
+            "write the dataset out inline because of the check.",
+            "Its output is the whole rule.",
             "A map spec is excluded (`readiness: excluded`): there is nothing to fix.",
             "Never trade a defect in the render for a clean check.",
             "2 when the check itself cannot run (its copy is missing or broken, or the path names no file).",

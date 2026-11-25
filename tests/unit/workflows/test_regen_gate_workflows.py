@@ -461,7 +461,9 @@ class TestReviewWriteback:
         assert "**Stored review:** this session's re-score of the live implementation" in keep
         # `opened` means dispatched, not merged.
         assert "is stored once impl-merge merges #${WB_PR}." in keep
-        assert keep.count('STORED="**Stored review:** unchanged (') == 5
+        assert keep.count('STORED="**Stored review:** unchanged (') == 6
+        # A follow-up never writes back, and says so.
+        assert "follow_up) STORED=" in keep
 
     def test_impl_merge_admin_token_only_in_the_two_merge_steps(self):
         steps = [

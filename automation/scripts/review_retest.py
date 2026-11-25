@@ -1670,6 +1670,33 @@ def gh_gate_records(limit: int) -> list[dict[str, Any]]:
     return records
 
 
+def _follow_up_lines(follow_ups: Any) -> list[str]:
+    """The follow-up regenerations of a gate report; none for a report built before them."""
+    if not isinstance(follow_ups, dict):
+        return []
+    lines = [
+        f"- Follow-up triggers (n={follow_ups.get('trigger_n', 0)} records with the key): "
+        + (", ".join(f"{k} {v}" for k, v in (follow_ups.get("triggers") or {}).items()) or "none")
+    ]
+    for kind, label in (("repair", "Repair rounds"), ("retry", "Retries")):
+        block = follow_ups.get(kind) or {}
+        lines.append(
+            f"- {label}: triggered {block.get('triggered', 0)}, decided {block.get('n', 0)}, "
+            f"merged {block.get('merges', 0)} ({_pct(block.get('merge_rate'))})"
+        )
+    pairs = follow_ups.get("pairs") or []
+    if pairs:
+        lines.append(
+            "- Follow-up pairs (predecessor → follow-up): "
+            + "; ".join(
+                f"#{p['follow_up_of']} {p.get('of_verdict') or '?'} {_fmt(p.get('of_new'))} → "
+                f"#{p.get('pr')} {p.get('kind')} {p.get('verdict')} {_fmt(p.get('new'))}"
+                for p in pairs
+            )
+        )
+    return lines
+
+
 def render_gate_report(result: dict[str, Any]) -> str:
     def drift(summary: dict[str, Any]) -> str:
         return (
@@ -1683,7 +1710,12 @@ def render_gate_report(result: dict[str, Any]) -> str:
     lines = [
         "# Regen gate report",
         "",
-        f"- Decisions: {result['n']}; merge rate {_pct(result['merge_rate'])}",
+        f"- Decisions: {result['n']}; merge rate {_pct(result['merge_rate'])}"
+        + (
+            f" (without the {result['follow_up_n']} follow-ups, which stay out of merge rate, drift and margin)"
+            if result.get("follow_up_n")
+            else ""
+        ),
         f"- Reason codes: {', '.join(f'{k} {v}' for k, v in result['codes'].items()) or 'none'}",
         f"- Counted visible improvements (never a permission or an obsolete weakness): mean "
         f"{_fmt(imp['visible_mean'])} per decision, at least one in {_pct(imp['with_visible'])} (n={imp['n']})",
@@ -1706,6 +1738,7 @@ def render_gate_report(result: dict[str, Any]) -> str:
         f"(n={imp.get('code_path_n', 0)} decisions)",
         f"- Stored review on a keep (writeback, n={writeback['n']} keeps): "
         + ", ".join(f"{code} {writeback['counts'].get(code, 0)}" for code in WRITEBACK_CODES),
+        *_follow_up_lines(result.get("follow_ups")),
         f"- prev_rescored − prev_stored, comparable: {drift(result['drift_comparable'])}",
         f"- prev_rescored − prev_stored, all: {drift(result['drift_all'])}",
         f"- new − prev_rescored: {drift(result['margin'])}; inside [−1, 0]: {_pct(result['margin_within_tolerance'])}",

@@ -51,7 +51,11 @@ first 15 lines, never a line that merely mentions a score. `impl-review.yml`
 runs a copy taken from its own ref. `parse_characteristics` reads the spec's
 characteristic bullets as `C1..Cn` (wrapped lines joined),
 `characteristic_kind` reads each bullet's kind, and an improvement that cites
-an `Expected, not a defect:` bullet is not counted.
+an `Expected, not a defect:` bullet is not counted. `decide` also counts the
+new review's defect lines (`review_weaknesses.json` beside `review_regen.json`)
+and records `defect_lines` and `follow_up_trigger`, plus `follow_up_of` and
+`follow_up_kind` with `--follow-up-of`/`--follow-up-kind`; `retry-note` prints
+a retry follow-up's regression note (see `regen_follow_up.py`).
 
 `weakness_class` reads a stored weakness as a `defect` line
 (`<ID>[, <ID>] (<light|dark|both|code>): …`), a `suggestion`
@@ -149,6 +153,29 @@ passes that result back to `decide` as `--adapt-route-held`. The record gains
 review's floor turned it off, which impl-review labels `regen:adapt-overruled`),
 and with an adapt flag the notice line gains them too, before `reason=`. Without the adapt flags, the route and the
 regression are off, so older argument sets decide as before.
+
+### `regen_follow_up.py`
+Follow-up regenerations (stdlib; imports `regen_gate` from its own directory
+when it runs as a script). After a gated regeneration one more regeneration of
+the pair may follow: a repair round after a merge whose review still names a
+defect line (dispatched by `impl-merge.yml`), or a retry after a keep for a
+regression (dispatched by `impl-review.yml`); see
+[Follow-up regenerations](../../docs/workflows/overview.md#follow-up-regenerations).
+
+- `plan` — whether a follow-up of a kind may be dispatched for a PR: its gate
+  record by the workflow must carry `follow_up_trigger` with that kind, and
+  `regen_gate.follow_up_trigger` must say the same; the PR must not be a
+  follow-up itself or carry a marker; no other PR of the pair may be open; and
+  no PR of the pair updated in the last 7 days may carry the body line or a
+  marker posted in them. Prints `dispatch=` and `reason=`; any failed read
+  means no dispatch.
+- `dispatch` — posts the marker comment, then dispatches `impl-generate.yml`
+  once (before a repeated call it checks the run list for the pair's run, so
+  an accepted call is never sent twice) and comments when the dispatch didn't
+  go through. Prints `dispatched=` and `reason=`.
+- `marker` — the comment, with the `<!-- regen-follow-up:v1 {...} -->` marker,
+  that `dispatch` posts first.
+- `parse-body` — the predecessor a PR body's `**Follow-up of:**` line names.
 
 ### `regen_writeback.py`
 Review write-back on a kept regeneration (stdlib and PyYAML; imports
@@ -335,7 +362,8 @@ Closes a spec issue once every supported library is `impl:<lib>:done` or
 The pick of `daily-regen.yml`'s pair mode (`REGEN_PAIRS_PER_DAY`, or the
 `pairs` input). First the resumes: open implementation PRs whose review or
 repair Claude stopped (`ai-review-paused`, `ai-repair-paused`), oldest first,
-counted against N. Then the oldest (spec, library) pairs across the catalogue,
+counted against N; a paused follow-up regeneration (its body's
+`**Follow-up of:**` line) is resumed on top of N. Then the oldest (spec, library) pairs across the catalogue,
 aged by the newer of their metadata `updated` and their last real attempt (a
 merged or closed implementation PR, `regen:kept` included, or a failed
 generation's `impl-fail` comment; infrastructure failures and generations

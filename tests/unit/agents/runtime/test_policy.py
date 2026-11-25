@@ -107,7 +107,7 @@ class TestAdapterInstruction:
 class TestAdapterPromptPerLanguage:
     """`adapter.md` holds the shared rules, each language's runtime prompt fills its slots (2026-10-29)."""
 
-    PYTHON_SHA256 = "ab9bf603cab1f33f85bc26ae295b60928eb89081bc32947e25e66686da19fad3"
+    PYTHON_SHA256 = "b4d6911f4e615bd80c368edf52f4597c0c06ad0ac9d5eeff6e7b2ee2c852e567"
     """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters),
     since 2026-11-01 with the `changes` notes in plain words and in the reply language (19,615 characters), since
     2026-11-02 with a date column on a label role written as labels (20,006 characters), with the plot memory's
@@ -120,7 +120,8 @@ class TestAdapterPromptPerLanguage:
     with a figure drawn over a view's rows (a reference line only at such a figure) naming that selection, no
     title or label naming one once every row is drawn again except words the user wrote, a title of the code's own
     kept unless that rule asks for a selection to be named or dropped in it, and a value per mark naming none
-    (26,163 characters)."""
+    (26,163 characters), and since 2026-11-24 with an example-dataset loader and every import only it uses as part
+    of the data block the first attempt replaces, as R's dataset packages are (26,295 characters)."""
 
     def test_the_python_adapter_prompt_matches_its_pinned_hash(self) -> None:
         """Golden: the Python libraries' adapters read exactly the pinned prompt. It was the one they read before R
@@ -131,7 +132,7 @@ class TestAdapterPromptPerLanguage:
         assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (
             "the Python adapter prompt changed; if that is intended, pin its new SHA-256 here"
         )
-        assert len(prompt) == 26_163 and "{{" not in prompt
+        assert len(prompt) == 26_295 and "{{" not in prompt
 
     HIGHLIGHTS_SHA256 = "b810744bed4b986e2a76d4480f72ee986c69b12d12f964f0d988d815141d3567"
     """SHA-256 of `adapter_highlights.md` as `own_prompt` read it before its slot (51ceaac6c, 1,058 characters)."""

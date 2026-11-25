@@ -449,7 +449,7 @@ def test_a_validator_that_crashes_is_a_key_of_its_own(monkeypatch):
     def boom(code: str, *, library: str) -> list:
         raise RuntimeError("validator down")
 
-    monkeypatch.setattr(validate, "validate_security", boom)
+    monkeypatch.setattr(validate, "validate_original", boom)
     side = _side(BANNED_IMPORT)  # the scan keeps its own reference, so it still reports the finding
     assert side["status"] == "blocked"
     assert side["refusals"] == ["security:validator-failed"] and side["findings"] == {}
@@ -503,6 +503,43 @@ def _line_of(code: str, text: str) -> int:
 
 def test_check_accepts_a_file_the_chat_accepts():
     assert check(CLEAN, spec_id=SPEC, library=LIB) == (0, ["readiness: accepted"])
+
+
+# An example dataset (owner decision of 2026-11-23): the chat accepts the original and replaces its data.
+BUILT_IN = CLEAN.replace("import pandas as pd", "import pandas as pd\nfrom sklearn.datasets import load_iris").replace(
+    "# Data\n", "# Data\nfeatures = load_iris().data\n"
+)
+
+
+def test_a_built_in_dataset_is_accepted_and_is_no_refusal_key():
+    """The check and the scan read the validator's eligibility entry: the dataset is a coupling category, never a key."""
+    side = _side(BUILT_IN)
+    assert side["status"] == "coupled" and side["refusals"] == [] and side["findings"] == {}
+    assert "built-in-dataset" in side["coupled"]
+    assert check(BUILT_IN, spec_id=SPEC, library=LIB) == (0, ["readiness: accepted"])
+
+
+def test_a_built_in_dataset_beside_another_refusal_adds_no_key_and_no_line():
+    """The file is refused for its other import alone: the keys, the counts and the printed lines leave the dataset
+    out, so a session fixes what blocks the file and nothing the chat accepts."""
+    both = BUILT_IN.replace("import pandas as pd", "import json\nimport pandas as pd")
+    side = _side(both)
+    assert side["refusals"] == ["security:banned-import"] and side["findings"] == {"banned-import": 1}
+    status, lines = check(both, spec_id=SPEC, library=LIB)
+    assert status == 1 and lines[-1] == "readiness: refused (security:banned-import)"
+    assert any("'json'" in line for line in lines) and not any("sklearn" in line for line in lines)
+
+
+def test_a_download_stays_a_refusal():
+    fetched = BUILT_IN.replace("load_iris", "fetch_openml").replace("fetch_openml().data", 'fetch_openml("iris").data')
+    assert _side(fetched)["refusals"] == ["security:banned-call", "security:banned-import"]
+
+
+def test_a_regeneration_that_adds_a_built_in_dataset_is_no_regression():
+    """The gate's `readiness_regression` kept a regeneration the chat would refuse; the chat accepts this one, so the
+    record names no added key (the prompt rule of `impl-generate-claude.md` keeps the data scenario on its own)."""
+    record = _record(BUILT_IN, CLEAN)
+    assert record["verdict"] == "none" and record["added"] == []
 
 
 def test_check_names_each_refusal_with_the_line_of_the_file_and_the_validators_hint():
@@ -591,9 +628,9 @@ def test_a_range_whose_ends_meet_in_the_file_is_one_line():
 
 def test_check_prints_every_finding_not_only_the_scans_first_five():
     from agents.anyplot.code import normalise as normalise_module
-    from agents.anyplot.code.validate import validate_security
+    from agents.anyplot.code.validate import validate_original
 
-    findings = validate_security(normalise_module.normalise(MANY, library=LIB), library=LIB)
+    findings = validate_original(normalise_module.normalise(MANY, library=LIB), library=LIB)
     assert len(findings) > 5
     status, lines = check(MANY, spec_id=SPEC, library=LIB)
     assert status == 1
@@ -696,7 +733,7 @@ def test_a_validator_that_fails_on_the_file_is_a_refusal_of_the_file(monkeypatch
     def boom(code: str, *, library: str) -> list:
         raise RuntimeError("validator down")
 
-    monkeypatch.setattr(validate, "validate_security", boom)
+    monkeypatch.setattr(validate, "validate_original", boom)
     assert check(BANNED_IMPORT, spec_id=SPEC, library=LIB) == (
         1,
         [
