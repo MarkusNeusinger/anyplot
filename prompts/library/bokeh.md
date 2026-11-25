@@ -77,7 +77,7 @@ for i, line in enumerate(lines):
 p.legend.title = PRODUCT_LINE
 ```
 
-In a tooltip, wrap a column name with spaces in braces: `tooltips=[(SALES, f"@{{{SALES}}}")]`. Ranges come from the data (`Range1d(0, df[SALES].max() * 1.15)`) or stay automatic, never typed numbers.
+In a tooltip, wrap a column name with spaces in braces: `tooltips=[(SALES, f"@{{{SALES}}}")]`. Ranges come from the data (`Range1d(0, df[SALES].max() * 1.15)`) or stay automatic, never typed numbers. The `0` there is the baseline of a bar or area chart, where the length of the mark is the value; a line or point axis takes both limits from the data, a little outside its smallest and largest value, or stays automatic.
 
 ## ColumnDataSource
 

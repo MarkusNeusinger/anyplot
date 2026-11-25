@@ -102,7 +102,7 @@ Legend(fig[1, 2], [PolyElement(color = IMPRINT_PALETTE[i]) for i in eachindex(li
 
 - `QUARTER => ...` names a column by the constant's value, so the column name is typed once; `df[!, QUARTER]` reads it back, spaces and units included.
 - Categories, groups and their order come from `unique(...)` over the data, never from a typed list, and each group takes its palette position. Set the axis labels from the constants.
-- Limits come from the data (`ylims!(ax, 0, maximum(skipmissing(df[!, SALES])) * 1.15)`) or stay automatic, never typed numbers. `skipmissing` keeps a missing value from a user's CSV out of the reduction instead of turning it into an error.
+- Limits come from the data (`ylims!(ax, 0, maximum(skipmissing(df[!, SALES])) * 1.15)`) or stay automatic, never typed numbers. The `0` there is the baseline of a bar or area chart, where the length of the mark is the value; a line or point axis takes both limits from the data, a little outside its smallest and largest value, or stays automatic. `skipmissing` keeps a missing value from a user's CSV out of the reduction instead of turning it into an error.
 
 ## Canvas — hard rule, no deviation
 

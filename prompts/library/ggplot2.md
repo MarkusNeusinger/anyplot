@@ -90,7 +90,7 @@ p <- ggplot(df, aes(x = .data[[QUARTER]], y = .data[[SALES]], fill = .data[[PROD
 - `.data[[QUARTER]]` reads a column whose name has spaces or a unit, which a bare name in `aes()` cannot.
 - Set every axis and legend title with `labs()` from the constants: `aes()` with `.data[[...]]` does not reliably title the axes with the column name.
 - A character column sorts alphabetically, on the axis and in the color mapping. The `factor(v, levels = unique(v))` line keeps the data's order, so the first group in the data gets `#009E73`.
-- `scale_fill_manual()` gets all eight hues and uses the first n. Limits come from the data (`ylim(0, max(df[[SALES]], na.rm = TRUE) * 1.15)`) or stay automatic, never typed numbers.
+- `scale_fill_manual()` gets all eight hues and uses the first n. Limits come from the data (`ylim(0, max(df[[SALES]], na.rm = TRUE) * 1.15)`) or stay automatic, never typed numbers. The `0` there is the baseline of a bar or area chart, where the length of the mark is the value; a line or point axis takes both limits from the data, a little outside its smallest and largest value, or stays automatic.
 
 ## Create Plot
 

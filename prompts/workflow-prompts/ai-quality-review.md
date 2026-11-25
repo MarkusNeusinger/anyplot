@@ -148,7 +148,7 @@ Trigger AR-09 if you see ANY of:
 - **Legend entries hidden behind / merged into the canvas edge** with letters chopped off.
 - **Any annotation, label, or category text whose bounding box is partially outside the saved PNG** so part of the text is gone.
 
-If found: **Score = 0, note the AR-09 violation** and identify which element(s) were clipped and on which edge (e.g. "title clipped at top edge of light render — top ~10 px of letters missing"), so the next generation can shrink the inner-chart dims and vl-convert / matplotlib / etc. don't push content off the canvas.
+If found: **Score = 0, note the AR-09 violation** and identify which element(s) were clipped and on which edge (e.g. "title clipped at top edge of light render — top ~10 px of letters missing"), so the next generation can fit the chart to the canvas (the library prompt names how) and nothing is pushed off it.
 
 **False-positive guard — do NOT trigger AR-09 for:**
 - Text that extends past the plot/axis bounds but stays *within* the canvas (VQ-05 deduction at most).
@@ -170,11 +170,11 @@ Score so that the reviews of the other libraries of this spec, written without s
 #### Visual Quality (30 pts)
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
-| VQ-01 | Text Legibility | 8 | Font sizes explicitly set? Readable in the full-size render in BOTH themes? No text below its style-guide reference that reads small (a reduced view is never the test)? Apply Proportional Sizing Check (5d). |
+| VQ-01 | Text Legibility | 8 | Font sizes explicitly set? Readable in the full-size render in BOTH themes? No text below its style-guide reference that reads small (a reduced view is never the test)? A label on a colored fill readable on that fill (`quality-criteria.md` → VQ-01)? Apply Proportional Sizing Check (5d). |
 | VQ-02 | No Overlap | 6 | All text readable? No collisions with other text or with data? Data-mark overlap only counts when it hides information — expected overlap handled with alpha/outline is not a deduction. See 5d. |
 | VQ-03 | Element Visibility | 6 | Markers/lines adapted to density? Legend glyphs (size circles, swatches, line samples) visible in BOTH themes and matching the marks? See 5d. |
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette)? No red-green as sole signal? |
-| VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? Title 50–70% width, balanced axis labels, no overflow — see 5d. |
+| VQ-05 | Layout & Canvas | 4 | Does the drawing use the canvas, judged by eye without a percentage (would it, enlarged, still fit with its title, labels and legend)? Nothing cut off? Title proportion, balanced axis labels and no overflow are the separate checks of 5d. |
 | VQ-06 | Axis Labels & Title | 2 | Descriptive with units? Text for a reader, not a raw column identifier (`Reaktionszeit_ms` → "Reaktionszeit (ms)")? |
 | VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73` (ordered categories excepted)? Multi-series uses Imprint palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Ordered categories (Likert levels, grades, sizes) in ordered steps of one Imprint ramp, in their natural order, with a red or green pole on the matching side? Continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging), with the render's theme's stops for fields or for marks — no other colormaps allowed? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
 
@@ -194,8 +194,8 @@ Score so that the reviews of the other libraries of this spec, written without s
 |----|-----------|-----|-------|
 | SC-01 | Plot Type | 5 | Correct chart type? On a `-basic` id: no encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not)? Unasked additions (derived color channel, per-group fits, reference lines, highlights, callouts, annotation layers; one is enough, listed in the variant bullet or not) are the wrong variant (partial SC-01) and earn no DE-03/LM-02 credit. A related but different form (a donut for a pie) is partial SC-01 on any spec. |
 | SC-02 | Required Features | 4 | All features from spec? Check each Notes bullet and each `A good version shows:` bullet against the render, and name any missed one in the comment. (Its `Expected, not a defect:` bullets are permissions, not features.) |
-| SC-03 | Data Mapping | 3 | X/Y correct? Axes show all data? Marks sit at their data values — no force/collision layout, nudge or declutter pass moving data marks (exempt: categorical jitter, layout-positioned types, and any jitter, dodge or offset the spec's Data or Notes ask for)? A smoothed curve that swings past the values it connects (spline overshoot) shows values the data does not have — deduct in proportion. |
-| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels match? Legend title and entries text for a reader: no raw identifiers, and after a reshape the level that tells the series apart ("Q1"), not each full header repeating what they share? |
+| SC-03 | Data Mapping | 3 | X/Y correct? Axes show all data? Marks sit at their data values — no force/collision layout, nudge or declutter pass moving data marks (exempt: categorical jitter, layout-positioned types, and any jitter, dodge or offset the spec's Data or Notes ask for)? A smoothed curve that swings past the values it connects (spline overshoot) shows values the data does not have — deduct in proportion. Axes fitted to the data, with zero where the mark's length is the value (bars, areas) or a needed reference, and ticks a reader can read a value off, color bars included (`quality-criteria.md` → SC-03)? |
+| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels match? Legend title and entries text for a reader: no raw identifiers, and after a reshape the level that tells the series apart ("Q1"), not each full header repeating what they share? Every color, line style, marker or shading a reader must tell apart has a key or a direct label (`quality-criteria.md` → SC-04)? |
 
 #### Data Quality (15 pts)
 | ID | Criterion | Max | Check |
