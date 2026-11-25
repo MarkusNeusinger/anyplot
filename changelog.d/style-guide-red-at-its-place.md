@@ -8,4 +8,4 @@
   2026-11-25). The style guide now says what the palette was built for: red
   comes after the four hue families, a fifth series without meaning takes it at
   its place, and a category that means bad, loss or error takes it at any
-  position.
+  position. (#14257)
