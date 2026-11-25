@@ -9,4 +9,4 @@
   that VQ-07 now rewards, could pay for a two-point loss elsewhere. An
   incomplete re-score keeps the same way; only a change request the review
   confirms applied lifts the floor. The adapt route keeps its own floor, the
-  technical items, because its renders are held identical.
+  technical items, because its renders are held identical. (#14255)
