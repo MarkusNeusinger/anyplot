@@ -76,7 +76,9 @@ the new review's `review_checklist.json` from the directory of
 `--regen-json`. A merge also needs every one of the 24 items of that checklist
 at or above its `prev_checklist` value (`criterion_floor`, reason code
 `criterion_below` otherwise), so a carrier's gain never pays for a loss on
-another criterion; only a change request the review confirms applied lifts it. The record stays `v1`; its `improvements` carry `carriers`,
+another criterion. A missing or malformed item on either side keeps too; a
+change request the review confirms applied lifts the floor for a criterion
+that fell, never for a missing score. The record stays `v1`; its `improvements` carry `carriers`,
 `suggestion`, `obsolete`, `unverified`, `de_lm`, `addition`, `polish`,
 `no_kind`, `carriers_pn` (carriers with a `P` or `new` ref), and the `by_kind`
 histogram, with `visible == carriers + suggestion`
@@ -130,8 +132,9 @@ record's `why`:
 - The new source keeps `within_line_bound`: max(1.25 × prev, prev + 15) lines.
 - The canvas gate passed.
 - When a review ran, its score is above 0, it names no regression, the
-  scenario is unchanged, no encoding was added, and no VQ, SC, DQ, or CQ item
-  of `prev_checklist` scores lower in the new checklist.
+  scenario is unchanged, no encoding was added, `prev_checklist` scores every
+  VQ, SC, DQ, and CQ item (`no_prev_checklist` otherwise), and none of them
+  scores lower, or is missing or malformed, in the new checklist.
 
 `decide` turns the keeps `no_visible_improvement`, `no_defect_improvement`,
 `below_tolerance` and `criterion_below` into a merge with code `adapt_identity`

@@ -50,7 +50,7 @@ Merge requires ALL of:
    against each other and a carrier's gain must not pay for a loss elsewhere.
    An incomplete ``prev_checklist`` or new checklist keeps
    (``criterion_below``); a change request the review confirms applied lifts
-   the floor.
+   the floor for a criterion that fell, never for a missing score.
 
 The *adapt route* (``docs/concepts/adaptable-code.md``, "The adapt route";
 ``adapt_assess``) merges a conversion to the adaptable-code convention on
@@ -1278,11 +1278,13 @@ def _adapt_review_why(inp: GateInput, review: Mapping[str, Any]) -> str | None:
     if _encodings(review):
         return "encodings_added"
     prev_checklist = flat_scores(review.get("prev_checklist"))
-    if not prev_checklist:
+    technical = [cid for cid in CRITERIA if cid[:2] in TECHNICAL_PREFIXES]
+    # A technical item the re-score left out is a floor nobody checked, not a pass.
+    if not prev_checklist or any(cid not in prev_checklist for cid in technical):
         return "no_prev_checklist"
-    for cid, prev in prev_checklist.items():
+    for cid in technical:
         new = inp.new_checklist.get(cid)
-        if cid[:2] in TECHNICAL_PREFIXES and (new is None or new < prev):
+        if not _score_in_range(cid, new) or new < prev_checklist[cid]:
             return "technical_below"
     return None
 
@@ -1438,7 +1440,7 @@ ADAPT_WHY_TEXT = {
     "review_regression": "the review names a regression",
     "scenario_changed": "the review says the data scenario changed",
     "encodings_added": "the review lists added encodings",
-    "no_prev_checklist": "the review wrote no re-score checklist",
+    "no_prev_checklist": "the review wrote no re-score checklist, or one without every technical item",
     "technical_below": "a VQ, SC, DQ or CQ item scores below its re-score",
 }
 
@@ -2220,22 +2222,21 @@ def criterion_floor(inp: GateInput, payload: Mapping[str, Any]) -> str | None:
     pair, so a loss on one criterion is never paid for by a gain on another.
     A ``prev_checklist`` that lacks a criterion fails closed (the floor cannot
     be checked), and so does a criterion missing from the new checklist. A
-    change request the review confirms applied lifts the floor: the change was
-    asked for, and a criterion it lowers is no trade the generator chose.
+    change request the review confirms applied lifts the floor for a criterion
+    that fell (the change was asked for, so the loss is no trade the generator
+    chose), never for missing scores: the floor's evidence must be complete
+    either way.
     """
-    if inp.change_request_present and payload.get("change_request_applied") is True:
-        return None
     prev = flat_scores(payload.get("prev_checklist"))
     missing = [cid for cid in CRITERIA if cid not in prev]
     if missing:
         return f"criterion floor: prev_checklist lacks {', '.join(missing)}, so the floor cannot be checked"
-    below = []
-    for cid in CRITERIA:
-        new = inp.new_checklist.get(cid)
-        if not _score_in_range(cid, new):
-            below.append(f"{cid} missing < {prev[cid]}")
-        elif new < prev[cid]:
-            below.append(f"{cid} {new} < {prev[cid]}")
+    absent = [cid for cid in CRITERIA if not _score_in_range(cid, inp.new_checklist.get(cid))]
+    if absent:
+        return f"criterion floor: the new checklist lacks {', '.join(absent)}, so the floor cannot be checked"
+    if inp.change_request_present and payload.get("change_request_applied") is True:
+        return None
+    below = [f"{cid} {inp.new_checklist[cid]} < {prev[cid]}" for cid in CRITERIA if inp.new_checklist[cid] < prev[cid]]
     if not below:
         return None
     return f"criterion below its re-score: {', '.join(below)} (new score {inp.score}, re-scored {payload['prev_rescored']})"

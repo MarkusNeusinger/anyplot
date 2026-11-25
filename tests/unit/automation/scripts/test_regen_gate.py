@@ -1882,13 +1882,25 @@ class TestCriterionFloor:
             checklist["DE-02"] = value
         result = decide(_inp(new_checklist=checklist))
         assert (result.verdict, result.code) == (KEEP, "criterion_below")
-        assert f"DE-02 missing < {CRITERIA['DE-02']}" in result.reason
+        assert "the new checklist lacks DE-02, so the floor cannot be checked" in result.reason
 
     def test_an_incomplete_prev_checklist_keeps(self):
         prev = {cid: top for cid, top in PREV_CHECKLIST.items() if cid not in ("CQ-01", "LM-02")}
         result = decide(_inp(regen=_regen(prev_checklist=prev)))
         assert (result.verdict, result.code) == (KEEP, "criterion_below")
         assert "prev_checklist lacks CQ-01, LM-02, so the floor cannot be checked" in result.reason
+
+    def test_an_applied_change_request_never_lifts_missing_evidence(self):
+        """The exemption covers a criterion that fell, not a score nobody wrote."""
+        applied = {"change_request_present": True}
+        prev = {cid: top for cid, top in PREV_CHECKLIST.items() if cid != "LM-01"}
+        result = decide(_inp(regen=_regen(change_request_applied=True, prev_checklist=prev), **applied))
+        assert (result.verdict, result.code) == (KEEP, "criterion_below")
+        assert "prev_checklist lacks LM-01" in result.reason
+        new = {cid: top for cid, top in NEW_CHECKLIST.items() if cid != "SC-02"}
+        result = decide(_inp(regen=_regen(change_request_applied=True), new_checklist=new, **applied))
+        assert (result.verdict, result.code) == (KEEP, "criterion_below")
+        assert "the new checklist lacks SC-02, so the floor cannot be checked" in result.reason
 
     def test_an_applied_change_request_lifts_the_floor(self):
         checklist = {**NEW_CHECKLIST, "DE-01": CRITERIA["DE-01"] - 1}
@@ -3707,6 +3719,20 @@ class TestAdaptDecision:
         result = decide(_adapt_inp(score=80, regen=carrier))
         assert (result.verdict, result.code) == (MERGE, "adapt_identity")
         assert result.reason.endswith("(without the route: below_tolerance)")
+
+    @pytest.mark.parametrize("cid", ["VQ-05", "CQ-02"])
+    def test_an_incomplete_re_score_never_turns_into_a_route_merge(self, cid):
+        """A technical item the re-score left out turns the route off, so the floor's
+        fail-closed keep stands; a design item left out keeps on the floor alone."""
+        prev = {k: v for k, v in PREV_CHECKLIST.items() if k != cid}
+        result = decide(_adapt_inp(regen=_regen(prev_checklist=prev)))
+        assert (result.verdict, result.code) == (KEEP, "criterion_below")
+        assert result.adapt is not None and not result.adapt.counted and result.adapt.why == "no_prev_checklist"
+
+    def test_a_malformed_new_technical_item_turns_the_route_off(self):
+        result = decide(_adapt_inp(regen=_regen(), new_checklist={**NEW_CHECKLIST, "VQ-02": "6"}))
+        assert (result.verdict, result.code) == (KEEP, "criterion_below")
+        assert result.adapt is not None and result.adapt.why == "technical_below"
 
     def test_the_route_keeps_its_own_floor_for_a_design_drop(self):
         """The route's floor is the technical items: a DE item below its re-score, on
