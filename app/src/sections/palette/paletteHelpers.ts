@@ -202,8 +202,23 @@ export function divStops(use: RampUse, theme: RampTheme): RampStops {
   return { at: [0, 0.5, 1], hex: ['#AE3030', DIV_MIDPOINT[use][theme], '#4467A3'] };
 }
 
+/** A stop's position as a CSS percentage, to one decimal. */
+export function stopPercent(at: number): string {
+  return `${Math.round(at * 1000) / 10}%`;
+}
+
 /** A CSS gradient that places each stop at its position. */
 export function rampGradient({ at, hex }: RampStops): string {
-  const stops = hex.map((colour, i) => `${colour} ${Math.round(at[i] * 1000) / 10}%`);
+  const stops = hex.map((colour, i) => `${colour} ${stopPercent(at[i])}`);
   return `linear-gradient(to right, ${stops.join(', ')})`;
+}
+
+/**
+ * Inline style that puts a stop's label under its stop: the end labels align with the
+ * bar's edges so they stay inside it, and an inner label is centred on its colour. Centring
+ * leaves the most room between two close inner stops, which a phone-wide bar needs.
+ */
+export function stopLabelStyle(at: number): { left: string; transform: string } {
+  const shift = at === 0 ? '0%' : at === 1 ? '-100%' : '-50%';
+  return { left: stopPercent(at), transform: `translateX(${shift})` };
 }

@@ -10,6 +10,7 @@ import {
   type RampUse,
   sectionSx,
   SEQ_STOPS,
+  stopLabelStyle,
 } from 'src/sections/palette/paletteHelpers';
 import { textStyle, typography } from 'src/theme';
 
@@ -47,16 +48,25 @@ function RampRow({ name, use, stops }: { name: string; use: RampUse; stops: Ramp
         }}
       />
       <Box
+        data-testid={`${name}-${use}-labels`}
         sx={{
           ...monoSx,
-          display: 'flex',
-          justifyContent: 'space-between',
+          position: 'relative',
+          height: '1.5em',
+          lineHeight: 1.5,
           mt: 0.5,
           color: 'var(--ink-muted)',
         }}
       >
-        {stops.hex.map(colour => (
-          <span key={colour}>{colour}</span>
+        {stops.hex.map((colour, i) => (
+          <Box
+            component="span"
+            key={colour}
+            sx={{ position: 'absolute', top: 0, whiteSpace: 'nowrap' }}
+            style={stopLabelStyle(stops.at[i])}
+          >
+            {colour}
+          </Box>
         ))}
       </Box>
     </Box>

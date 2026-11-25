@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { ContinuousCmapsSection } from 'src/sections/palette/ContinuousCmapsSection';
-import { divStops, rampGradient, SEQ_STOPS } from 'src/sections/palette/paletteHelpers';
+import {
+  divStops,
+  rampGradient,
+  SEQ_STOPS,
+  stopLabelStyle,
+} from 'src/sections/palette/paletteHelpers';
 import { render, screen } from 'src/test-utils';
 
 describe('ContinuousCmapsSection', () => {
@@ -37,6 +42,24 @@ describe('ContinuousCmapsSection', () => {
     expect(screen.queryByText('#A8A79F')).not.toBeInTheDocument();
     expect(screen.queryByText('#66E2B2')).not.toBeInTheDocument();
   });
+
+  it('puts each colour label under its stop', () => {
+    render(<ContinuousCmapsSection isDark={false} />);
+
+    const labels = [...screen.getByTestId('imprint_seq-fields-labels').children] as HTMLElement[];
+    expect(labels.map(label => label.textContent)).toEqual([
+      '#66E2B2',
+      '#009E73',
+      '#4467A3',
+      '#002850',
+    ]);
+    expect(labels.map(label => [label.style.left, label.style.transform])).toEqual([
+      ['0%', 'translateX(0%)'],
+      ['36.8%', 'translateX(-50%)'],
+      ['58.2%', 'translateX(-50%)'],
+      ['100%', 'translateX(-100%)'],
+    ]);
+  });
 });
 
 describe('ramp helpers', () => {
@@ -47,6 +70,12 @@ describe('ramp helpers', () => {
     expect(rampGradient(divStops('marks', 'dark'))).toBe(
       'linear-gradient(to right, #AE3030 0%, #686762 50%, #4467A3 100%)'
     );
+  });
+
+  it('aligns the end labels with the bar and centres the inner ones on their stop', () => {
+    expect(stopLabelStyle(0)).toEqual({ left: '0%', transform: 'translateX(0%)' });
+    expect(stopLabelStyle(0.32)).toEqual({ left: '32%', transform: 'translateX(-50%)' });
+    expect(stopLabelStyle(1)).toEqual({ left: '100%', transform: 'translateX(-100%)' });
   });
 
   it('keeps one position per colour, from 0 to 1, in every ramp', () => {
