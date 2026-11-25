@@ -36,7 +36,7 @@ anyplot uses the **Imprint palette** — a bespoke, colorblind-safe categorical 
 
 ### Categorical Palette (Imprint, canonical order)
 
-8 hues in hybrid-v3 sort order. First 4 slots span 4 distinct perceptual hue families (green / purple / blue / yellow), then greedy max-min CVD distance for the tail. Slot 5 is matte red `#AE3030`, placed after the four hue families so a chart with up to four series never spends red. A fifth series without meaning takes it at its place, like any other slot; a category that means bad, loss or error takes it at any position (Semantic exception below).
+8 hues in hybrid-v3 sort order. First 4 slots span 4 distinct perceptual hue families (green / purple / blue / yellow), then greedy max-min CVD distance for the tail. Slot 5 is matte red `#AE3030`, placed after the four hue families so that up to four series without meaning leave red unused by default. A fifth series without meaning takes it at its place, like any other slot; a category that means bad, loss or error takes it at any position, also in a chart with fewer series (Semantic exception below).
 
 | # | Hex | Name | Hue family | Role |
 |---|-----|------|------------|------|
