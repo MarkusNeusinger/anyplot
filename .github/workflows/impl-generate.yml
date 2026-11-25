@@ -2228,7 +2228,7 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-generate](${RUN_URL})*"
             if [ "$IS_LIVE" = "true" ]; then
               close_issue_if_complete
             fi
@@ -2270,7 +2270,7 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-generate](${RUN_URL})*"
             if [ "$IS_LIVE" = "true" ]; then
               close_issue_if_complete
             fi
@@ -2353,7 +2353,7 @@ jobs:
           # first generation as failed. Only the workflow's own comments count.
           COUNTS=""
           for attempt in 1 2 3; do
-            if PAGES=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
+            if PAGES=$(gh api --paginate "repos/${REPOSITORY}/issues/${ISSUE}/comments?per_page=100" \
                  --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | \"\(map(select(.body | contains(\"$INFRA_TAG\") | not)) | length) \(map(select(.body | contains(\"$INFRA_TAG\"))) | length)\"") \
                && COUNTS=$(printf '%s\n' "$PAGES" | awk '{ g += $1; i += $2 } END { print (g + 0) " " (i + 0) }') \
                && [[ "$COUNTS" =~ ^[0-9]+\ [0-9]+$ ]]; then
@@ -2476,7 +2476,7 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-generate](${RUN_URL})*"
               if [ "$IS_LIVE" = "true" ]; then
                 close_issue_if_complete
               fi
@@ -2491,7 +2491,7 @@ jobs:
           Not counted toward the 3-attempt cap. ${RETRY_LINE}
 
           ---
-          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-generate](${RUN_URL})*"
               gh issue edit "$ISSUE" --remove-label "generate:${LIBRARY}" 2>/dev/null || true
               dispatch_retry "infrastructure retry ${INFRA_ATTEMPT}/${INFRA_WINDOW_CAP}"
             fi
@@ -2532,7 +2532,7 @@ jobs:
           The regeneration of **${LIBRARY}** for \`${SPEC_ID}\` produced no implementation after ${CAP_REASON}. The implementation on main is unchanged and stays live; the pair is **not** marked failed.
 
           ---
-          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-generate](${RUN_URL})*"
               close_issue_if_complete
               exit 0
             fi
@@ -2570,7 +2570,7 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-generate](${RUN_URL})*"
 
           else
             # Attempt 1 or 2 failed → post comment with marker and auto-retry
@@ -2581,7 +2581,7 @@ jobs:
           Attempt ${ATTEMPT} failed. ${RETRY_LINE}
 
           ---
-          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-generate](${RUN_URL})*"
 
             # Clean up generate label before retry
             gh issue edit "$ISSUE" --remove-label "generate:${LIBRARY}" 2>/dev/null || true
