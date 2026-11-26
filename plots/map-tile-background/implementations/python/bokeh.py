@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-tile-background: Map with Tile Background
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-26
+Quality: 86/100 | Updated: 2026-11-26
 """
 
 import os
@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColorBar, ColumnDataSource, HoverTool, LinearColorMapper, Range1d, WMTSTileSource
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Label, LinearColorMapper, Range1d, WMTSTileSource
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -132,7 +132,7 @@ color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=df[VALUE].min(), hi
 ESRI_CANVAS = "World_Light_Gray_Base" if THEME == "light" else "World_Dark_Gray_Base"
 tile_provider = WMTSTileSource(
     url=f"https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/{ESRI_CANVAS}/MapServer/tile/{{Z}}/{{Y}}/{{X}}",
-    attribution="Tiles © Esri — Esri, DeLorme, NAVTEQ",
+    attribution="",
     max_zoom=16,
 )
 
@@ -147,8 +147,8 @@ n = len(title)
 title_pt = max(34, round(50 * 67 / n)) if n > 67 else 50
 
 p = figure(
-    width=3200,
-    height=1800,
+    width=2400,
+    height=2400,
     x_range=x_range,
     y_range=y_range,
     x_axis_type="mercator",
@@ -179,14 +179,28 @@ p.scatter(
 color_bar = ColorBar(
     color_mapper=color_mapper,
     title=VALUE,
-    title_text_font_size="28pt",
+    title_text_font_size="34pt",
     title_text_color=INK,
-    major_label_text_font_size="24pt",
+    major_label_text_font_size="34pt",
     major_label_text_color=INK_SOFT,
     background_fill_color=ELEVATED_BG,
     width=80,
 )
 p.add_layout(color_bar, "right")
+
+# Readable provider credit in the bottom-right corner of the map
+credit = Label(
+    x=x_range.end,
+    y=y_range.start,
+    text_align="right",
+    text="Tiles © Esri — Esri, DeLorme, NAVTEQ",
+    text_font_size="22pt",
+    text_color=INK,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.85,
+    text_baseline="bottom",
+)
+p.add_layout(credit, "center")
 
 hover = HoverTool(
     tooltips=[
@@ -222,7 +236,7 @@ p.outline_line_color = INK_SOFT
 output_file(f"plot-{THEME}.html")
 save(p)
 
-W, H = 3200, 1800
+W, H = 2400, 2400
 opts = Options()
 for arg in (
     "--headless=new",
