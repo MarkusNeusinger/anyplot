@@ -95,12 +95,17 @@ for xv in xv_values:
         x_val = sign * xv
         cy = 1 / x_val
         rad = abs(1 / x_val)
-        theta = np.linspace(0, 2 * np.pi, 120)
+        # Arc runs from (1, 0) to its exact intersection with the unit circle
+        x_hit = (xv**2 - 1) / (xv**2 + 1)
+        y_hit = sign * xv * (1 - x_hit)
+        start = -sign * np.pi / 2
+        end = np.arctan2(y_hit - cy, x_hit - 1)
+        end = start + (end - start + np.pi) % (2 * np.pi) - np.pi
+        theta = np.linspace(start, end, 300)
         x = 1 + rad * np.cos(theta)
         y = cy + rad * np.sin(theta)
-        mask = (x**2 + y**2) <= 1.001
-        for i in np.where(mask)[0]:
-            grid_data.append({"x": x[i], "y": y[i], "type": "reactance", "group": f"x_{x_val}"})
+        for xi, yi in zip(x, y, strict=True):
+            grid_data.append({"x": xi, "y": yi, "type": "reactance", "group": f"x_{x_val}"})
 
 df_grid = pd.DataFrame(grid_data)
 
