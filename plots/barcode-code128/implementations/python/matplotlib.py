@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-21
@@ -303,14 +303,17 @@ ax.set_yticks([])
 # Structural zone annotations above the barcode
 y_tick_top = 0  # tick mark at barcode top edge
 y_bracket = -9  # horizontal bracket line
-y_label = -20  # zone label center
+y_labels = (-20, -34)  # two label rows; neighbouring zones alternate so narrow labels never collide
 
-for x0, x1, label in zones:
+for k, (x0, x1, label) in enumerate(zones):
     cx = (x0 + x1) / 2
+    y_label = y_labels[k % 2]
     ax.plot([x0, x1], [y_bracket, y_bracket], color=INK_MUTED, lw=0.6, solid_capstyle="butt")
     ax.plot([x0, x0], [y_tick_top, y_bracket], color=INK_MUTED, lw=0.6)
     ax.plot([x1, x1], [y_tick_top, y_bracket], color=INK_MUTED, lw=0.6)
-    ax.text(cx, y_label, label, fontsize=6, ha="center", va="center", color=INK_MUTED, fontfamily="monospace")
+    if k % 2:
+        ax.plot([cx, cx], [y_bracket, y_label + 5], color=INK_MUTED, lw=0.6)
+    ax.text(cx, y_label, label, fontsize=8, ha="center", va="center", color=INK_MUTED, fontfamily="monospace")
 
 # Human-readable text below barcode
 ax.text(
@@ -326,7 +329,7 @@ ax.text(
 )
 
 ax.set_xlim(-10, barcode_width + 10)
-ax.set_ylim(barcode_height + 75, -38)
+ax.set_ylim(barcode_height + 52, -46)
 
 for spine in ax.spines.values():
     spine.set_visible(False)
