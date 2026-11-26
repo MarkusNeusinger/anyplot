@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-21
@@ -7,8 +7,8 @@ Quality: 84/100 | Updated: 2026-05-21
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 
 # Theme tokens
@@ -18,258 +18,183 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Sparkline fill alpha: brighter in dark mode to compensate for blending
-FILL_ALPHA = 0.15 if THEME == "light" else 0.28
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+AMBER = "#DDCC77"  # Imprint semantic anchor for warning
 
-# Data - 6 metric tiles for a 3x2 dashboard layout
-np.random.seed(42)
+# Constants: semantic status maps, color plus a shape cue so status never rests on color alone
+STATUS_COLORS = {"good": IMPRINT_PALETTE[0], "warning": AMBER, "critical": IMPRINT_PALETTE[4]}
+STATUS_SYMBOLS = {"good": "✓", "warning": "⚠", "critical": "✕"}
+STATUS_BORDER_WIDTHS = {"good": 1, "warning": 2, "critical": 3}
+FAVORABLE = IMPRINT_PALETTE[0]
+UNFAVORABLE = IMPRINT_PALETTE[4]
 
-metrics = [
-    {
-        "name": "CPU Usage",
-        "value": 45,
-        "unit": "%",
-        "history": 30 + np.cumsum(np.random.randn(30) * 2),
-        "change": -5.2,
-        "status": "good",
-        "higher_is_bad": True,
-    },
-    {
-        "name": "Memory",
-        "value": 72,
-        "unit": "%",
-        "history": 60 + np.cumsum(np.random.randn(30) * 1.5),
-        "change": 8.3,
-        "status": "warning",
-        "higher_is_bad": True,
-    },
-    {
-        "name": "Response Time",
-        "value": 120,
-        "unit": "ms",
-        "history": 100 + np.cumsum(np.random.randn(30) * 5),
-        "change": -15.4,
-        "status": "good",
-        "higher_is_bad": True,
-    },
-    {
-        "name": "Requests/sec",
-        "value": 1250,
-        "unit": "",
-        "history": 1000 + np.cumsum(np.random.randn(30) * 50),
-        "change": 12.7,
-        "status": "good",
-        "higher_is_bad": False,
-    },
-    {
-        "name": "Error Rate",
-        "value": 2.3,
-        "unit": "%",
-        "history": 1 + np.abs(np.cumsum(np.random.randn(30) * 0.3)),
-        "change": 45.0,
-        "status": "critical",
-        "higher_is_bad": True,
-    },
-    {
-        "name": "Disk I/O",
-        "value": 85,
-        "unit": "MB/s",
-        "history": 70 + np.cumsum(np.random.randn(30) * 3),
-        "change": -2.1,
-        "status": "good",
-        "higher_is_bad": False,
-    },
-]
+# Columns: set these to your table's column names
+METRIC = "Metric"  # role: metric_name
+CURRENT = "Current value"  # role: current_value
+HISTORY = "History value"  # role: history
+CHANGE = "Change (%)"  # role: change_percent
+STATUS = "Status"  # role: status
+PERIOD = "Day"  # role: extra
+UNIT = "Unit"  # role: extra
+LOWER_IS_BETTER = "Lower is better"  # role: extra
 
-# Normalize history for sparklines
-for m in metrics:
-    hist = np.array(m["history"])
-    m["history_norm"] = (hist - hist.min()) / (hist.max() - hist.min() + 1e-6)
-
-# Status config: color + shape symbol (CVD-safe: shape encodes status independently of color)
-status_colors = {"good": "#22c55e", "warning": "#f59e0b", "critical": "#ef4444"}
-# Shape symbols provide non-color differentiation for CVD viewers
-status_symbols = {"good": "✓", "warning": "⚠", "critical": "✕"}
-# Border thickness further reinforces status via shape/size cue
-status_border_widths = {"good": 1, "warning": 2, "critical": 3}
-
-# Grid layout: 3 columns x 2 rows
-n_cols, n_rows = 3, 2
-
-# Create subplots - indicator type for metric tiles
-fig = make_subplots(
-    rows=n_rows,
-    cols=n_cols,
-    horizontal_spacing=0.08,
-    vertical_spacing=0.12,
-    specs=[[{"type": "indicator"} for _ in range(n_cols)] for _ in range(n_rows)],
+# Data: replace this block with your own table, for example df = pd.read_csv("metrics.csv")
+# One row per history point; the tile-level columns repeat on every row of a metric.
+rng = np.random.default_rng(42)
+n_points = 30
+df = pd.concat(
+    [
+        pd.DataFrame(
+            {
+                METRIC: name,
+                PERIOD: np.arange(n_points),
+                HISTORY: history,
+                CURRENT: current,
+                UNIT: unit,
+                CHANGE: change,
+                STATUS: status,
+                LOWER_IS_BETTER: lower_is_better,
+            }
+        )
+        for name, current, unit, change, status, lower_is_better, history in [
+            ("CPU Usage", 45, "%", -5.2, "good", True, 30 + np.cumsum(rng.normal(0, 2, n_points))),
+            ("Memory", 72, "%", 8.3, "warning", True, 60 + np.cumsum(rng.normal(0, 1.5, n_points))),
+            ("Response Time", 120, "ms", -15.4, "good", True, 100 + np.cumsum(rng.normal(0, 5, n_points))),
+            ("Requests/sec", 1250, "", 12.7, "good", False, 1000 + np.cumsum(rng.normal(0, 50, n_points))),
+            ("Error Rate", 2.3, "%", 45.0, "critical", True, 1 + np.abs(np.cumsum(rng.normal(0, 0.3, n_points)))),
+            ("Disk I/O", 85, "MB/s", -2.1, "good", False, 70 + np.cumsum(rng.normal(0, 3, n_points))),
+        ]
+    ],
+    ignore_index=True,
 )
 
-# Add indicator tiles
-for idx, metric in enumerate(metrics):
-    row = idx // n_cols + 1
-    col = idx % n_cols + 1
+# Plot: reads only df and the constants above
+tiles = list(df.groupby(METRIC, sort=False))
+n_tiles = len(tiles)
+n_cols = 2 if n_tiles <= 4 else 3 if n_tiles <= 9 else 4
+n_rows = int(np.ceil(n_tiles / n_cols))
+gap_x, gap_y = 0.035, 0.07
+tile_w = (1 - gap_x * (n_cols - 1)) / n_cols
+tile_h = (1 - gap_y * (n_rows - 1)) / n_rows
 
-    # Delta colors respect direction semantics (decrease is good for CPU, bad for throughput)
-    if metric["higher_is_bad"]:
-        delta_increasing_color = "#ef4444"
-        delta_decreasing_color = "#22c55e"
-    else:
-        delta_increasing_color = "#22c55e"
-        delta_decreasing_color = "#ef4444"
+fig = go.Figure()
+shapes = []
+layout_axes = {}
 
-    # Include status symbol in label — provides shape cue independent of color for CVD viewers
-    label_with_symbol = f"{status_symbols[metric['status']]}  {metric['name']}"
+for idx, (name, rows) in enumerate(tiles):
+    first = rows.iloc[0]
+    status = first[STATUS]
+    status_color = STATUS_COLORS.get(status, IMPRINT_PALETTE[2])
+    symbol = STATUS_SYMBOLS.get(status, "•")
+    border = STATUS_BORDER_WIDTHS.get(status, 1)
 
-    fig.add_trace(
-        go.Indicator(
-            mode="number+delta",
-            value=metric["value"],
-            number=dict(font=dict(size=48, color=status_colors[metric["status"]]), suffix=metric["unit"]),
-            delta=dict(
-                reference=metric["value"] / (1 + metric["change"] / 100),
-                relative=True,
-                valueformat=".1%",
-                font=dict(size=20),
-                increasing=dict(color=delta_increasing_color, symbol="▲"),
-                decreasing=dict(color=delta_decreasing_color, symbol="▼"),
-            ),
-            title=dict(text=label_with_symbol, font=dict(size=22, color=INK)),
-        ),
-        row=row,
-        col=col,
+    col, row = idx % n_cols, idx // n_cols
+    x0 = col * (tile_w + gap_x)
+    x1 = x0 + tile_w
+    y1 = 1 - row * (tile_h + gap_y)
+    y0 = y1 - tile_h
+
+    # Tile card with a status-colored frame and a status accent bar along its top edge
+    shapes.append(
+        {
+            "type": "rect",
+            "xref": "paper",
+            "yref": "paper",
+            "x0": x0,
+            "x1": x1,
+            "y0": y0,
+            "y1": y1,
+            "fillcolor": ELEVATED_BG,
+            "line": {"color": status_color, "width": border},
+            "layer": "below",
+        }
     )
-
-# Add sparklines as scatter traces with custom axes
-for idx, metric in enumerate(metrics):
-    row = idx // n_cols + 1
-    col = idx % n_cols + 1
-
-    if row == 1:
-        y_domain = [0.55, 0.95]
-    else:
-        y_domain = [0.05, 0.45]
-
-    if col == 1:
-        x_domain = [0.0, 0.28]
-    elif col == 2:
-        x_domain = [0.36, 0.64]
-    else:
-        x_domain = [0.72, 1.0]
-
-    axis_num = idx + 2
-    x_axis = f"x{axis_num}"
-    y_axis = f"y{axis_num}"
-
-    x_spark = list(range(len(metric["history_norm"])))
-    y_spark = metric["history_norm"].tolist()
-
-    hex_color = status_colors[metric["status"]]
-    r, g, b = int(hex_color[1:3], 16), int(hex_color[3:5], 16), int(hex_color[5:7], 16)
-
-    fig.add_trace(
-        go.Scatter(
-            x=x_spark,
-            y=y_spark,
-            mode="lines",
-            line=dict(color=hex_color, width=3),
-            fill="tozeroy",
-            fillcolor=f"rgba({r}, {g}, {b}, {FILL_ALPHA})",
-            showlegend=False,
-            hoverinfo="skip",
-            xaxis=x_axis,
-            yaxis=y_axis,
-        )
-    )
-
-    sparkline_height = 0.12
-    fig.update_layout(
-        **{
-            f"xaxis{axis_num}": dict(
-                domain=[x_domain[0] + 0.02, x_domain[1] - 0.02],
-                range=[0, len(x_spark) - 1],
-                showticklabels=False,
-                showgrid=False,
-                zeroline=False,
-                showline=False,
-                anchor=y_axis,
-            ),
-            f"yaxis{axis_num}": dict(
-                domain=[y_domain[0] - 0.02, y_domain[0] + sparkline_height],
-                range=[-0.1, 1.1],
-                showticklabels=False,
-                showgrid=False,
-                zeroline=False,
-                showline=False,
-                anchor=x_axis,
-            ),
+    shapes.append(
+        {
+            "type": "rect",
+            "xref": "paper",
+            "yref": "paper",
+            "x0": x0,
+            "x1": x1,
+            "y0": y1 - 0.06 * tile_h,
+            "y1": y1,
+            "fillcolor": status_color,
+            "line": {"width": 0},
+            "layer": "below",
         }
     )
 
-# Add tile backgrounds with status-aware borders (thickness = additional shape cue for CVD)
-for idx, metric in enumerate(metrics):
-    row = idx // n_cols + 1
-    col = idx % n_cols + 1
-
-    if row == 1:
-        y_domain = [0.52, 1.0]
-    else:
-        y_domain = [0.0, 0.48]
-
-    if col == 1:
-        x_domain = [0.0, 0.30]
-    elif col == 2:
-        x_domain = [0.35, 0.65]
-    else:
-        x_domain = [0.70, 1.0]
-
-    border_width = status_border_widths[metric["status"]]
-    status_color = status_colors[metric["status"]]
-
-    # Tile fill
-    fig.add_shape(
-        type="rect",
-        xref="paper",
-        yref="paper",
-        x0=x_domain[0],
-        y0=y_domain[0],
-        x1=x_domain[1],
-        y1=y_domain[1],
-        fillcolor=ELEVATED_BG,
-        line=dict(color=status_color, width=border_width),
-        layer="below",
+    # Value, label and change indicator: a go.Indicator in the upper part of the tile
+    change = first[CHANGE]
+    rising_is_good = not first[LOWER_IS_BETTER]
+    up_color = FAVORABLE if rising_is_good else UNFAVORABLE
+    down_color = UNFAVORABLE if rising_is_good else FAVORABLE
+    fig.add_trace(
+        go.Indicator(
+            mode="number+delta",
+            value=first[CURRENT],
+            number={"font": {"size": 48, "color": INK}, "suffix": first[UNIT]},
+            delta={
+                "reference": first[CURRENT] / (1 + change / 100),
+                "relative": True,
+                "valueformat": ".1%",
+                "font": {"size": 22},
+                "increasing": {"color": up_color, "symbol": "▲"},
+                "decreasing": {"color": down_color, "symbol": "▼"},
+            },
+            title={"text": f"{symbol}  {name}", "font": {"size": 24, "color": INK}},
+            domain={"x": [x0, x1], "y": [y0 + 0.34 * tile_h, y1 - 0.27 * tile_h]},
+        )
     )
 
-    # Status accent bar along the top edge of each tile (position cue + color cue)
-    bar_height = 0.012
-    fig.add_shape(
-        type="rect",
-        xref="paper",
-        yref="paper",
-        x0=x_domain[0],
-        y0=y_domain[1] - bar_height,
-        x1=x_domain[1],
-        y1=y_domain[1],
-        fillcolor=status_color,
-        line=dict(width=0),
-        layer="above",
+    # Sparkline: its own pair of axes, scaled to the metric's own range
+    history = rows[HISTORY].to_numpy(dtype=float)
+    span = np.nanmax(history) - np.nanmin(history)
+    scaled = (history - np.nanmin(history)) / (span if span > 0 else 1.0)
+    axis_id = idx + 1
+    fig.add_trace(
+        go.Scatter(
+            x=rows[PERIOD],
+            y=scaled,
+            mode="lines",
+            line={"color": INK_SOFT, "width": 4},
+            fill="tozeroy",
+            fillcolor="rgba(74,74,68,0.16)" if THEME == "light" else "rgba(184,183,176,0.22)",
+            showlegend=False,
+            hoverinfo="skip",
+            xaxis=f"x{axis_id}",
+            yaxis=f"y{axis_id}",
+        )
+    )
+    hidden = {"showticklabels": False, "showgrid": False, "zeroline": False, "showline": False}
+    layout_axes[f"xaxis{axis_id}"] = dict(
+        domain=[x0 + 0.08 * tile_w, x1 - 0.08 * tile_w],
+        range=[rows[PERIOD].min(), rows[PERIOD].max()],
+        anchor=f"y{axis_id}",
+        **hidden,
+    )
+    layout_axes[f"yaxis{axis_id}"] = dict(
+        domain=[y0 + 0.07 * tile_h, y0 + 0.33 * tile_h], range=[-0.1, 1.1], anchor=f"x{axis_id}", **hidden
     )
 
-# Title annotation
-fig.add_annotation(
-    text="dashboard-metrics-tiles · python · plotly · anyplot.ai",
-    x=0.5,
-    y=1.06,
-    xref="paper",
-    yref="paper",
-    showarrow=False,
-    font=dict(size=18, color=INK, family="Arial"),
-    xanchor="center",
-    yanchor="top",
+# Style
+fig.update_layout(
+    shapes=shapes,
+    **layout_axes,
+    title={
+        "text": "dashboard-metrics-tiles · python · plotly · anyplot.ai",
+        "x": 0.5,
+        "xanchor": "center",
+        "font": {"size": 24, "color": INK},
+    },
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    margin={"l": 30, "r": 30, "t": 60, "b": 25},
+    showlegend=False,
 )
-
-# Layout
-fig.update_layout(autosize=False, paper_bgcolor=PAGE_BG, margin=dict(l=40, r=40, t=80, b=40), showlegend=False)
 
 # Save
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
