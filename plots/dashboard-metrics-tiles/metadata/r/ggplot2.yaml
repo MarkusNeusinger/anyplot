@@ -12,45 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 85
 review:
   strengths:
-  - Innovative use of ggplot2 facet_wrap to create a dashboard tile grid — idiomatic
-    and visually clean
-  - 'Proper semantic color coding using Okabe-Ito: #009E73 (good), #E69F00 (warning),
-    #D55E00 (critical/unfavorable change)'
-  - 'Complete tile content: large KPI value, directional change indicator with arrow,
-    compact sparkline with area fill and terminal dot, metric name'
-  - Theme-adaptive chrome fully implemented — backgrounds, INK, INK_SOFT all flip
-    correctly between light and dark renders
-  - Panel ELEVATED_BG creates a professional card-like tile appearance distinguishable
-    from the PAGE_BG outer surface
-  - All grid, axis, and strip elements correctly suppressed for a clean dashboard
-    look
-  - Clean, reproducible R code using set.seed(42), dplyr pipe, and proper modern ggplot2
-    API (linewidth= not size=)
+  - facet_wrap used as the tile grid with panel.background as elevated card surfaces
+    — an idiomatic ggplot2 route to a dashboard layout
+  - 'Every tile carries the required parts in the same arrangement: large bold value,
+    arrow + percentage change, sparkline with terminal dot, metric label'
+  - 'Change colors follow favorability, not direction: Memory and Disk I/O rises are
+    red, Throughput rise and the falls of lower-is-better metrics are green'
+  - 'Semantic anchors used for their roles (#009E73 good, #DDCC77 warning, #AE3030
+    unfavorable) and theme tokens thread through all chrome in both renders'
+  - scale_color_identity/scale_fill_identity with precomputed colors and a grouped
+    rescale keep each sparkline scaled to its own range
   weaknesses:
-  - No 'critical' status tile in the example data — spec mentions critical as a status
-    option; add at least one critical tile (e.g. set Error Rate status to 'critical')
-    so all three status colors are demonstrated
-  - Change indicator text (size=3.2) is slightly small at canvas scale — increase
-    to ~3.8-4.0 to ensure readability when image is scaled to mobile width (~400 px)
-  - 'Memory tile area fill in dark render appears brownish/muddy — the alpha=0.15
-    of #E69F00 on the dark #242420 panel background creates a desaturated khaki fill;
-    consider increasing alpha slightly to ~0.25 or using a lighter tint approach to
-    keep the fill recognizable as warning-orange in dark mode'
+  - 'VQ-04 (light): the warning tile''s amber #DDCC77 value ''72.1%'' and sparkline
+    sit at about 1.5:1 on the #FFFDF6 tile and read faint, below the 3:1 the style
+    guide names for marks on the light surface → keep amber for the status but give
+    the amber elements a thin INK outline/stroke or carry the status on a larger element
+    (e.g. a status bar or tinted card) while drawing the value in INK. Likely cause:
+    geom_text/geom_line color = status_color with COL_WARNING on the light ELEVATED_BG.'
+  - 'DQ-03 (both): the last history point is overwritten with the current value, so
+    several sparklines end in a jump that contradicts their change indicator — Error
+    Rate ▼22.5 % ends on a sharp rise, Disk I/O ▲3.4 % ends on a sharp drop, Memory
+    ▲8.1 % falls for most of its history → generate the history so it trends toward
+    the current value by the stated change and ends there by construction (drift-corrected
+    walk, smaller noise). Likely cause: vals[n_pts] <- base after a random walk with
+    sd = base*0.035 per step.'
+  - 'Suggestion: set one metric to the critical status (for example Error Rate) so
+    the red status color appears alongside good and warning.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct per style guide. Panel interiors use elevated background (#FFFDF6).
-      Chrome: Title "Server Health · dashboard-metrics-tiles · r · ggplot2 · anyplot.ai" in dark ink, well-centered. Metric name labels at bottom of each tile in INK_SOFT (#4A4A44) — all readable. No axis text or grid.
-      Data: 6 tiles in 3×2 grid. CPU Usage (45.2%), Response Time (118ms), Disk I/O (38.6%), Throughput (1247 req/s), Error Rate (0.82%) all display in brand green (#009E73). Memory (72.1%) in warning orange (#E69F00). Change indicators use green for favorable changes and vermillion (#D55E00) for unfavorable. Sparklines with shaded area fill and terminal dot clearly visible.
-      Legibility verdict: PASS — all text readable, status colors well-distinguished against warm off-white.
+      Background: warm off-white #FAF8F1 page; six cards on the elevated #FFFDF6 surface with thin INK_SOFT borders.
+      Chrome: centered title 'Server Health · dashboard-metrics-tiles · r · ggplot2 · anyplot.ai' in dark ink; bold metric labels in INK_SOFT at the bottom of each card; no axes or grid.
+      Data: 3x2 grid — CPU Usage 45.2% ▼5.2%, Memory 72.1% ▲8.1%, Response Time 118 ms ▼14.7%, Disk I/O 38.6% ▲3.4%, Throughput 1,247 req/s ▲12.3%, Error Rate 0.82% ▼22.5%. Values and sparklines in #009E73 except Memory in amber #DDCC77; change lines regular weight, smaller (~9 pt), green when favorable, red #AE3030 when unfavorable (Memory, Disk I/O). Sparklines with light area tint and a terminal dot. The amber Memory value reads faint on the light card.
+      Legibility verdict: PASS (amber value low-contrast but legible)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct. Panel interiors use dark elevated (#242420).
-      Chrome: Title and metric name labels display in light ink — fully readable against dark background. No dark-on-dark text issues observed.
-      Data: Data colors are identical to light render — green (#009E73) for good metrics, orange (#E69F00) for Memory warning. Change indicator colors unchanged. Minor observation: Memory tile area fill (alpha=0.15 of #E69F00 on dark panel) appears as a slightly muddy brownish-gold fill compared to the cleaner golden tint in the light render, but the sparkline itself remains clearly orange and readable.
-      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures.
+      Background: warm near-black #1A1A17 page with #242420 cards and light-grey borders.
+      Chrome: title in light ink, metric labels in light soft ink — all readable, no dark-on-dark text.
+      Data: identical categorical colors to the light render (green, amber, red); area tints darker on the dark card; amber reads strongly here.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,84 +60,84 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=11, value=7, change=3.2, name=3.5).
-          All readable in both themes. Minor: change indicator at size=3.2 is slightly
-          small for mobile scaling.'
+        comment: 'All sizes set explicitly: title 11 pt, KPI values geom_text 7 (~20
+          pt bold), change indicators geom_text 3.2 regular (~9 pt), metric names
+          3.5 (~10 pt bold). Every text element reads in the full-size render in both
+          themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap — KPI value, change indicator, sparkline, and metric name
-          all clearly separated within each tile.
+        comment: Value, change indicator, sparkline and metric name occupy separate
+          bands of each tile; nothing collides.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparklines (linewidth=0.9), terminal dots (size=2.0), shaded area
-          (alpha=0.15), and KPI values are all optimally visible.
+        comment: Sparklines at linewidth 0.9 with a 15 % area tint and a terminal
+          dot; clearly visible for 24 points per tile in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Okabe-Ito palette applied semantically; green/orange/vermillion are
-          CVD-safe. Adequate contrast in both themes.
+        passed: false
+        comment: 'The warning tile''s amber #DDCC77 value text and sparkline sit at
+          about 1.5:1 on the light tile surface and read faint (defect line). Green/red
+          change arrows are also told apart by direction, so color is not the sole
+          signal.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas correctly 3200x1800 (8in x 4.5in @ 400dpi). 3x2 grid fills
-          canvas well with generous margins. No canvas gate failure.
+        comment: 3200x1800 canvas; the 3x2 card grid fills it with balanced margins
+          and only the title above.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title has descriptive prefix 'Server Health'. Tile labels serve as
-          metric identifiers. No axis labels needed for this chart type.
+        comment: No axes by design (C6); descriptive title prefix 'Server Health'
+          and readable metric labels with units in the values.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First/primary series color is #009E73. Warning uses #E69F00 (Okabe-Ito
-          pos 5). Critical/#D55E00 (pos 2) used for unfavorable change indicators.
-          Backgrounds #FAF8F1/#1A1A17 are correct.'
+        comment: 'Good = #009E73, warning = amber anchor #DDCC77, unfavorable = matte
+          red #AE3030 (semantic anchors used for their roles); page #FAF8F1 / #1A1A17
+          and elevated cards #FFFDF6 / #242420; data colors identical across themes.'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Strong design: semantic status coloring, elevated card backgrounds,
-          intentional hierarchy with large values and subtle secondary elements. Clearly
-          above configured defaults.'
+        passed: false
+        comment: 'Beyond baseline: deliberate three-level type hierarchy inside each
+          card (large bold value, bold change line, bold soft-ink label) on elevated
+          card surfaces.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: 'Thorough refinement: grid removed, strip text removed, axis elements
-          removed, custom panel borders, generous panel spacing (1.5 lines). Minor:
-          dark mode area fill for warning tile appears muddy.'
+        passed: false
+        comment: Card borders in INK_SOFT, generous 1.5-line panel spacing, tinted
+          area under each sparkline and a terminal dot marking the current reading.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Good visual hierarchy: Memory''s warning color immediately draws
-          the eye to the problem metric. Change arrows + colors communicate trend
-          direction effectively. Combination of value+trend+change creates comprehensive
-          metric context.'
+        passed: false
+        comment: The terminal dot anchors each trend to the current value; status
+          color on value and sparkline makes the warning tile the focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -145,57 +147,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dashboard tile layout with 6 tiles in 3x2 grid (spec-compliant
-          for 6 tiles).
+        comment: Correct dashboard tile grid of KPI cards.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required tile elements present: prominent value, metric label,
-          mini sparkline, change indicator with directional arrow. Status color coding
-          implemented.'
+        comment: 'C1–C5 all met: prominent value, label, sparkline below value, arrow
+          + percentage change, favorable/unfavorable coloring (Memory up = red, Throughput
+          up = green), status color on the same parts of every tile; 3x2 grid for
+          6 tiles.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: KPI values, sparklines, change percentages, and status colors all
-          correctly mapped.
+        comment: Each sparkline is rescaled to its own range and joins the history
+          in order; no displaced marks.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Server Health · dashboard-metrics-tiles · r · ggplot2 ·
-          anyplot.ai'' — correct format with descriptive prefix.'
+        comment: Title 'Server Health · dashboard-metrics-tiles · r · ggplot2 · anyplot.ai'
+          in the correct format; no legend needed (C6).
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows varied metrics with different units (%, ms, req/s), favorable
-          and unfavorable changes, and good/warning statuses. Missing: no ''critical''
-          status tile to demonstrate all three status types.'
+        comment: Six metrics with mixed units, favorable and unfavorable changes,
+          up and down arrows, good and warning statuses. The data has no critical
+          tile, so the red status color is not required (conditional).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real server health monitoring scenario with plausible values: CPU
-          45%, Memory 72%, Response Time 118ms, Throughput 1247 req/s, Error Rate
-          0.82%.'
+        comment: Plausible server-health snapshot (CPU 45.2 %, Memory 72.1 %, 118
+          ms, 1,247 req/s, 0.82 % errors); neutral content.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: All values are factually plausible for a web server health dashboard.
-          Memory at 72% correctly triggers warning. Values and units are coherent.
+        passed: false
+        comment: 'Checked: values and units plausible; change direction vs. history.
+          The last history point is overwritten with the current value (defect line),
+          producing end jumps that contradict the indicator (Error Rate ▼22.5 % ends
+          on a sharp rise, Disk I/O ▲3.4 % ends on a sharp drop).'
     code_quality:
       score: 10
       max: 10
@@ -205,55 +208,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: Imports → Theme tokens → Data → Sparklines
-          → Annotations → Plot → Save. No functions or classes.'
+        comment: 'Linear script: tokens → data → plot → save; only an inline lapply
+          closure for the sparkline histories.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at the top.
+        comment: set.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (ggplot2, dplyr, scales, ragg) are actually used.
+        comment: ggplot2, dplyr (group_by/mutate), scales (rescale), ragg (device)
+          all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic R. No over-engineering, no fake interactivity. lapply+do.call
-          pattern appropriate for sparkline generation.
+        comment: Appropriate complexity; no fake UI; no hand-rolled algorithm an available
+          call replaces.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ragg::agg_png. Uses modern linewidth=
-          not deprecated size= for lines.
+        comment: Saves plot-{THEME}.png with ragg::agg_png at 8x4.5 in, 400 dpi; current
+          linewidth API.
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of ggplot2 grammar: geom layers composited within facets,
-          scale_color_identity/scale_fill_identity for pre-computed colors, theme()
-          layering on theme_minimal(). R pipe (|>) used idiomatically.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Creative use of facet_wrap as a dashboard tile grid — a clever and
-          distinctive ggplot2 pattern. Panel-level theming (panel.background with
-          ELEVATED_BG, panel border styling) to create card-like tiles is ggplot2-specific.
+        passed: false
+        comment: 'Grammar-driven: layered geoms over facet_wrap, scale_color_identity/scale_fill_identity
+          for precomputed colors, grouped rescale with dplyr.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: facet_wrap repurposed as the tile grid with panel.background as card
+          surfaces — a ggplot2-specific approach.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-9715f26d62
 impl_tags:
   dependencies:
   - scales
