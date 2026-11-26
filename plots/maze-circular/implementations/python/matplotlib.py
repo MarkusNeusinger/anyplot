@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-20
@@ -18,8 +18,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-GOAL_COLOR = "#009E73"  # Okabe-Ito position 1
-ENTRY_COLOR = "#C475FD"  # Okabe-Ito position 2
+GOAL_COLOR = "#009E73"  # Imprint position 1
+ENTRY_COLOR = "#C475FD"  # Imprint position 2
 
 # Data — Fibonacci sector progression for naturally varied corridor widths
 np.random.seed(13)
@@ -78,7 +78,7 @@ entry_sector = np.random.randint(sectors_per_ring[-1])
 
 # Plot — square canvas, ideal for circular maze
 outer_r = inner_radius + rings * ring_width
-margin = outer_r * 1.38
+margin = outer_r * 1.22
 
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
@@ -193,12 +193,12 @@ ax.text(0, 0, "GOAL", ha="center", va="center", fontsize=8, fontweight="bold", c
 # Entry marker
 entry_mid_angle = np.radians((entry_sector + 0.5) * 360 / sectors_per_ring[-1])
 ax.text(
-    (outer_r + 0.22) * np.cos(entry_mid_angle),
-    (outer_r + 0.22) * np.sin(entry_mid_angle),
+    (outer_r + 0.28) * np.cos(entry_mid_angle),
+    (outer_r + 0.28) * np.sin(entry_mid_angle),
     "START",
     ha="center",
     va="center",
-    fontsize=7,
+    fontsize=8,
     fontweight="bold",
     color=ENTRY_COLOR,
     zorder=7,
@@ -208,4 +208,4 @@ ax.text(
 ax.set_title("maze-circular · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=15)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
