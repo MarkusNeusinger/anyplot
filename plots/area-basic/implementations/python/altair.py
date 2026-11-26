@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-basic: Basic Area Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-28
@@ -19,15 +19,20 @@ import pandas as pd
 from PIL import Image
 
 
-# Theme
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: a single series uses position 1
 BRAND = "#009E73"
 
-# Data - daily website visitors over January 2024
+# Columns: set these to your table's column names
+DATE = "Date"  # role: x
+VISITORS = "Daily visitors (count)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("visitors.csv")
 np.random.seed(42)
 dates = pd.date_range(start="2024-01-01", periods=30, freq="D")
 base = 5000
@@ -37,20 +42,12 @@ noise = np.random.randn(30) * 300
 visitors = (base + trend) * weekly_pattern + noise
 visitors[14] *= 1.4
 visitors = np.maximum(visitors, 1000).astype(int)
-df = pd.DataFrame({"date": dates, "visitors": visitors})
+df = pd.DataFrame({DATE: dates, VISITORS: visitors})
 
-# Peak annotation data
-peak_idx = df["visitors"].idxmax()
-peak_row = df.loc[peak_idx]
-peak_df = pd.DataFrame(
-    {"date": [peak_row["date"]], "visitors": [peak_row["visitors"]], "label": [f"Peak: {int(peak_row['visitors']):,}"]}
-)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
 
-# Chart title
-title = "area-basic · python · altair · anyplot.ai"
-
-# Area layer
-area = (
+chart = (
     alt.Chart(df)
     .mark_area(
         line={"color": BRAND, "strokeWidth": 2.5},
@@ -67,33 +64,27 @@ area = (
         ),
     )
     .encode(
-        x=alt.X("date:T", title="Date", axis=alt.Axis(format="%b %d", labelAngle=-30)),
+        x=alt.X(DATE.translate(ESCAPE), type="temporal", title=DATE, axis=alt.Axis(format="%b %d", labelAngle=-30)),
         y=alt.Y(
-            "visitors:Q", title="Daily Visitors (count)", scale=alt.Scale(domain=[0, int(df["visitors"].max() * 1.15)])
+            VISITORS.translate(ESCAPE),
+            type="quantitative",
+            title=VISITORS,
+            scale=alt.Scale(domain=[0, float(df[VISITORS].max() * 1.15)]),
         ),
         tooltip=[
-            alt.Tooltip("date:T", title="Date", format="%b %d, %Y"),
-            alt.Tooltip("visitors:Q", title="Visitors", format=","),
+            alt.Tooltip(DATE.translate(ESCAPE), type="temporal", title=DATE, format="%b %d, %Y"),
+            alt.Tooltip(VISITORS.translate(ESCAPE), type="quantitative", title=VISITORS, format=","),
         ],
     )
-)
-
-# Vertical rule at peak
-peak_rule = (
-    alt.Chart(peak_df).mark_rule(color=BRAND, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.5).encode(x=alt.X("date:T"))
-)
-
-# Text label at peak
-peak_text = (
-    alt.Chart(peak_df)
-    .mark_text(align="left", dx=8, dy=-10, color=INK, fontSize=9, fontWeight="bold")
-    .encode(x=alt.X("date:T"), y=alt.Y("visitors:Q"), text="label:N")
-)
-
-chart = (
-    alt.layer(area, peak_rule, peak_text)
-    .properties(width=620, height=320, background=PAGE_BG, title=alt.Title(title, fontSize=16))
-    .configure_view(continuousWidth=620, continuousHeight=320, fill=PAGE_BG, strokeWidth=0)
+    .properties(
+        width=800,
+        height=450,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding=10,
+        background=PAGE_BG,
+        title=alt.Title("area-basic · python · altair · anyplot.ai", fontSize=16),
+    )
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -106,24 +97,19 @@ chart = (
     )
     .configure_axisX(grid=False)
     .configure_title(color=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save PNG
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 
-# Pad to exact 3200×1800
+# Fit to the exact 3200×1800 canvas (centre on the page colour, never crop)
 TW, TH = 3200, 1800
 _img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
     _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
     _canvas.save(f"plot-{THEME}.png")
 
 # Save HTML
