@@ -2,128 +2,131 @@ library: letsplot
 language: python
 specification_id: gauge-activity-rings
 created: '2026-06-14T20:48:41Z'
-updated: '2026-06-14T21:07:51Z'
+updated: '2026-11-26T09:11:30Z'
 generated_by: claude-sonnet
-workflow_run: 27511219886
+workflow_run: 45788428302
 issue: 8648
-language_version: 3.13.13
-library_version: 4.10.1
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-activity-rings/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - 'Perfect spec compliance: all required features implemented correctly (rounded
-    caps, background tracks, 12-o''clock start, clockwise sweep, concentric layout,
-    center annotation, per-ring labels)'
-  - 'Imprint palette in canonical order with correct first-series #009E73; theme-adaptive
-    chrome throughout'
-  - letsplot's layer_tooltips() used to add genuine interactive hover data for each
-    ring — a distinctive library feature
-  - Clean, flat code structure with no unnecessary abstractions
-  - Square canvas correctly chosen for symmetric radial chart
+  - Arcs start at 12 o'clock and sweep clockwise by value/goal, with faint same-color
+    full-circle tracks visible in both themes (alpha raised to 0.25 on dark)
+  - Imprint positions 1-3 in canonical order with the page color painted across the
+    whole canvas through the gggrid wrapper
+  - 'Ring labels colored to match their ring, with muted value/goal sub-labels below:
+    a readable two-level hierarchy'
+  - layer_tooltips() adds per-ring hover detail in the interactive HTML
   weaknesses:
-  - 'Background tracks (alpha=0.15) are nearly invisible in the dark render against
-    #1A1A17 — consider raising alpha to 0.20-0.25 specifically for dark theme'
-  - Sub-labels ('420 / 600 kcal' etc.) at size=3.0mm are at the minimum legibility
-    threshold; nudge to 3.5mm for safer mobile rendering
-  - No example of a completed ring (>=100%) to demonstrate goal-overcompletion handling,
-    which the spec explicitly mentions
+  - 'SC-02 (both): the progress arcs end in square cuts at 12 o''clock and at their
+    sweep end, not the rounded caps the Notes and C1 ask for → round end caps visible
+    at both ends of every arc. Likely cause: geom_path lineend=''round'' has no visible
+    effect in the lets-plot PNG export; draw a filled circle of the stroke''s diameter
+    (geom_point, same color) at each arc end, or build the arc as a polygon with semicircular
+    ends.'
+  - 'VQ-05 (both): the rings span only ~59% of the canvas width, with ~250 px empty
+    between title and rings and ~350 px empty below the value/goal row → rings and
+    labels filling ~75-80% of the canvas. Likely cause: scale_y_continuous limits
+    [-outer*1.72, outer*1.32] and x limits ±outer*1.4 pad far beyond the drawn content.'
+  - 'Suggestion: the center ''Daily / Activity'' text could carry a headline figure
+    such as the average completion, which the Notes allow.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "gauge-activity-rings · python · letsplot · anyplot.ai" in dark ink, ring labels ("Move 70%", "Exercise 83%", "Stand 75%") in respective Imprint colors, sub-labels in muted ink — all readable
-      Data: Outer ring Move in #009E73 (brand green), middle ring Exercise in #C475FD (lavender), inner ring Stand in #4467A3 (blue); progress arcs with rounded caps; faint alpha=0.15 background tracks
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+      Background: warm off-white #FAF8F1 across the full 2400x2400 canvas, no edge strips
+      Chrome: title 'gauge-activity-rings · python · letsplot · anyplot.ai' in dark ink at top center; center text 'Daily' / 'Activity' in INK_SOFT; ring labels 'Move 70%', 'Exercise 83%', 'Stand 75%' in their ring colors; '420 / 600 kcal', '25 / 30 min', '9 / 12 hr' in muted grey below; all readable
+      Data: three concentric thick arcs - outer Move #009E73 (70%), middle Exercise #C475FD (83%), inner Stand #4467A3 (75%) - starting at 12 o'clock, sweeping clockwise, over pale same-color full-circle tracks; arc ends are square cuts, not rounded; rings occupy ~59% of the width with wide empty bands above and below
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark surface
-      Chrome: Title in light INK (#F0EFE8), ring labels in respective ring colors (green/lavender/blue), sub-labels in muted #A8A79F — all readable; no dark-on-dark failures
-      Data: Colors identical to light render — green, lavender, blue — only chrome flips between themes; background tracks very faint at alpha=0.15 on dark surface (barely perceptible but not invisible)
-      Legibility verdict: PASS — all text readable against dark background
+      Background: warm near-black #1A1A17 across the full canvas, no edge strips
+      Chrome: title in light ink, center text in light grey, ring labels in ring colors, sub-labels in light muted grey; no dark-on-dark text
+      Data: same green / lavender / blue as light (identical categorical colors); tracks at alpha 0.25 clearly visible as dark tinted rings; same square arc ends
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set via scaling formula and mm values; all
-          text readable in both themes; sub-labels at size=3.0mm are marginally small
+        comment: Title, colored ring labels, muted value/goal sub-labels (3.5 mm)
+          and center text all explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels at x=-2.4/0/2.4 provide clean horizontal separation; no overlaps
-          in either render
+        comment: Three label columns well separated; center text clear of the inner
+          ring; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Progress arcs prominent; background tracks (alpha=0.15) nearly invisible
-          in dark render against #1A1A17'
+        comment: Thick size-8 arcs; tracks visible in both themes (alpha 0.15 light
+          / 0.25 dark)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1-3 are CVD-safe and mutually distinguishable
+        comment: Imprint positions 1-3 (green, lavender, blue) are CVD-distinguishable
+          and labels name each ring
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Square 2400x2400 canvas, rings centered, labels well-positioned below,
-          balanced margins
+        passed: false
+        comment: Square 2400x2400 canvas, but the rings span only ~59% of the width
+          and a wide empty band sits below the sub-labels (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for radial chart; title correct; ring
-          labels include metric names, percentages, and values with units
+        comment: No axes needed; labels carry metric names, percentages and units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First ring #009E73, second #C475FD, third #4467A3 — canonical Imprint
-          order; light bg #FAF8F1, dark bg #1A1A17; chrome theme-adaptive throughout'
+        comment: '#009E73, #C475FD, #4467A3 in canonical Imprint order; #FAF8F1 /
+          #1A1A17 painted across the whole canvas via the gggrid wrapper'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Above default: theme_void, lineend=round for iconic caps, color-coordinated
-          labels, center annotation — stops short of publication-ready'
+        passed: false
+        comment: 'Ring labels colored to match their ring with muted sub-labels below:
+          a clear two-level label hierarchy beyond the baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Clean void theme, no grid/spines, faint alpha tracks add depth, generous
-          whitespace
+        passed: false
+        comment: Labels set as an evenly spaced three-column row under the rings;
+          theme_void with no chrome
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Concentric layout with color-matched labels and percentage readout
-          communicates progress at a glance; Daily/Activity center text frames the
-          narrative
+        passed: false
+        comment: 'Default: data displayed with labels; the ''Daily Activity'' center
+          text frames but sets no focal point'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,54 +134,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct activity rings chart with concentric radial arcs starting
-          at pi/2 sweeping clockwise
+        comment: 'Correct activity-rings chart: concentric arcs from 12 o''clock sweeping
+          clockwise'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Rounded end caps, background tracks, distinct color per ring, center
-          label, per-ring labels, outer-to-inner ordering — all present
+        passed: false
+        comment: Tracks, 12-o'clock start, clockwise sweep, ordering, equal widths,
+          per-ring labels present; the arc ends render square, not rounded (defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Fraction=value/goal with min() clamping; Move 70%, Exercise 83%,
-          Stand 75% confirmed in labels
+        comment: Fraction = value/goal clamped at 1; 70% / 83% / 75% sweeps match
+          the labels
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; inline colored labels serve legend
-          role appropriately
+        comment: Title in the mandated format; colored per-ring labels map colors
+          to metrics
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three rings with varied completion (70%/83%/75%); missing a ring
-          at/above 100% to demonstrate overcompletion handling mentioned in spec
+        comment: Three rings at different completion; no metric reaches its goal,
+          so the conditional overcompletion bullet (C5) does not apply
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily fitness tracker Move/Exercise/Stand is canonical Apple Watch-style
-          scenario; neutral topic
+        comment: Canonical fitness-tracker Move/Exercise/Stand scenario, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Move 420/600 kcal, Exercise 25/30 min, Stand 9/12 hr — factually
-          accurate for fitness tracker goals
+        comment: 'Checked: 420/600 kcal = 70%, 25/30 min = 83%, 9/12 hr = 75% in labels
+          and sweeps; plausible goals'
     code_quality:
       score: 10
       max: 10
@@ -188,65 +191,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> geometry -> plot -> save; no
-          functions or classes'
+        comment: 'Flat script with a column-constant header and a single # Data block
+          before # Plot'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data, fully deterministic output
+        comment: Hardcoded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot — all used, nothing extraneous
+        comment: os, numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic structure; zip(strict=False) idiomatic for Python
-          3.13; arc generation concise
+        comment: Vectorised arc construction per ring; no hand-rolled replacement
+          for an available call
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4 -> 2400x2400) and plot-{THEME}.html
-          correctly
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Full ggplot grammar with aes(), geom_path(), geom_text(), scale_color_manual(),
-          coord_fixed(), labs(), ggsize(), theme composition
+        passed: false
+        comment: Full ggplot grammar (geom_path, geom_text, scale_color_manual, coord_fixed,
+          theme_void) plus the gggrid canvas-paint idiom
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: layer_tooltips().line() is distinctive letsplot API with rich hover
-          data; HTML output with interactive tooltips; core arc construction is generic
-          manual coordinates
+        passed: false
+        comment: layer_tooltips() hover data per ring and label in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T09:08:05Z'
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
-  - html-export
+  - polar-projection
   - annotations
-  - layer-composition
+  - html-export
+  - hover-tooltips
   patterns:
-  - iteration-over-groups
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
