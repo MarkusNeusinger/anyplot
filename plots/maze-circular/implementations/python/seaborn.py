@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-20
@@ -20,9 +20,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito pos 1 — entry
-GOAL_COLOR = "#AE3030"  # Okabe-Ito pos 5 — goal star
-PATH_COLOR = "#2ABCCD"  # Okabe-Ito pos 6 — solution path
+BRAND = "#009E73"  # Imprint pos 1 — entry
+GOAL_COLOR = "#AE3030"  # Imprint pos 5 — goal star
+PATH_COLOR = "#2ABCCD"  # Imprint pos 6 — solution path
 
 sns.set_theme(
     style="white",
@@ -35,132 +35,143 @@ sns.set_theme(
     },
 )
 
-# Maze parameters
-np.random.seed(42)
-RINGS = 7
-SECTORS = 12
-SECTOR_ANGLE = 2 * np.pi / SECTORS
-TOTAL_CELLS = 1 + RINGS * SECTORS  # center (0) + ring cells
-
-
-def cell_id(r, s):
-    """Ring r (1..RINGS) sector s → cell index. Center = 0."""
-    return 1 + (r - 1) * SECTORS + s
-
-
-# Geometric constants
-INNER_R = 0.12
-RING_W = (0.82 - INNER_R) / RINGS
-OUTER_R = INNER_R + RINGS * RING_W
-FRAME_R = OUTER_R + 0.04
+# Constants
 WALL_LW = 2.2
+ENTRY_SECTOR = 0
+RADIAL = "radial"  # wall between ring r and ring r+1
+CIRCULAR = "circular"  # wall between sector s and s+1 of ring r
 
-# Union-Find with path compression
-parent = list(range(TOTAL_CELLS))
-uf_rank = [0] * TOTAL_CELLS
+# Columns: set these to your table's column names
+WALL_KIND = "Wall type"  # role: extra
+RING = "Ring"  # role: rings
+SECTOR = "Sector"  # role: extra
+OPEN = "Open"  # role: extra
+
+# Data: replace this block with your own table of maze walls, one row per wall
+# (RADIAL and CIRCULAR rows mark the two kinds of wall, see Constants)
+rng = np.random.default_rng(42)
+n_rings, n_sectors = 7, 12
+walls = [(RADIAL, r, s) for r in range(n_rings) for s in range(n_sectors)]
+walls += [(CIRCULAR, r, s) for r in range(1, n_rings + 1) for s in range(n_sectors)]
 
 
-def find(x):
-    while parent[x] != x:
-        parent[x] = parent[parent[x]]
-        x = parent[x]
+def _cell(r, s):
+    return 0 if r == 0 else 1 + (r - 1) * n_sectors + s
+
+
+def _ends(kind, r, s):
+    if kind == RADIAL:
+        return _cell(r, s), _cell(r + 1, s)
+    return _cell(r, s), _cell(r, (s + 1) % n_sectors)
+
+
+# Kruskal's spanning tree over shuffled walls: exactly one route between any two cells
+uf = list(range(1 + n_rings * n_sectors))
+
+
+def _find(x):
+    while uf[x] != x:
+        uf[x] = uf[uf[x]]
+        x = uf[x]
     return x
 
 
-def union(a, b):
-    ra, rb = find(a), find(b)
-    if ra == rb:
-        return False
-    if uf_rank[ra] < uf_rank[rb]:
-        ra, rb = rb, ra
-    parent[rb] = ra
-    if uf_rank[ra] == uf_rank[rb]:
-        uf_rank[ra] += 1
-    return True
+is_open = {}
+for i in rng.permutation(len(walls)):
+    c1, c2 = (_find(c) for c in _ends(*walls[i]))
+    is_open[walls[i]] = c1 != c2
+    if c1 != c2:
+        uf[c1] = c2
+
+df = pd.DataFrame(
+    {
+        WALL_KIND: [w[0] for w in walls],
+        RING: [w[1] for w in walls],
+        SECTOR: [w[2] for w in walls],
+        OPEN: [is_open[w] for w in walls],
+    }
+)
+
+# Plot: reads only df and the constants above
+RINGS = int(df[RING].max())
+SECTORS = int(df[SECTOR].max()) + 1
+SECTOR_ANGLE = 2 * np.pi / SECTORS
+INNER_R = 0.12
+RING_W = (0.82 - INNER_R) / RINGS
+FRAME_R = INNER_R + RINGS * RING_W
 
 
-# Build walls: radial (ring-to-ring) and circular (sector-to-sector within ring)
-walls = []
-for r in range(RINGS):
-    for s in range(SECTORS):
-        c1 = 0 if r == 0 else cell_id(r, s)
-        c2 = cell_id(r + 1, s)
-        walls.append(("radial", r, s, c1, c2))
+def cell_id(r, s):
+    """Ring r (0 = center cell, 1..RINGS) and sector s to a cell index."""
+    return 0 if r == 0 else 1 + (r - 1) * SECTORS + s
 
-for r in range(1, RINGS + 1):
-    for s in range(SECTORS):
-        c1 = cell_id(r, s)
-        c2 = cell_id(r, (s + 1) % SECTORS)
-        walls.append(("circular", r, s, c1, c2))
 
-np.random.shuffle(walls)
+def cell_polar(cell):
+    """(radius, angle) of a cell center."""
+    if cell == 0:
+        return 0.0, 0.0
+    r, s = divmod(cell - 1, SECTORS)
+    return INNER_R + (r + 0.5) * RING_W, (s + 0.5) * SECTOR_ANGLE
 
-# Kruskal's spanning tree — guarantees exactly one solution
-passages = set()
+
+# Closed walls get drawn, open ones become adjacency
+closed = set(df.loc[~df[OPEN], [WALL_KIND, RING, SECTOR]].itertuples(index=False, name=None))
 adjacency = collections.defaultdict(set)
-for wall in walls:
-    wtype, r, s, c1, c2 = wall
-    if union(c1, c2):
-        passages.add((wtype, r, s))
-        adjacency[c1].add(c2)
-        adjacency[c2].add(c1)
+for kind, r, s in df.loc[df[OPEN], [WALL_KIND, RING, SECTOR]].itertuples(index=False):
+    c1 = cell_id(r, s)
+    c2 = cell_id(r + 1, s) if kind == RADIAL else cell_id(r, (s + 1) % SECTORS)
+    adjacency[c1].add(c2)
+    adjacency[c2].add(c1)
 
-# BFS from entry cell to center for solution path
-ENTRY_SECTOR = 0
+# BFS from the entry cell to the center
 entry_cell = cell_id(RINGS, ENTRY_SECTOR)
-goal_cell = 0
-
-bfs_q = collections.deque([entry_cell])
 prev = {entry_cell: None}
+bfs_q = collections.deque([entry_cell])
 while bfs_q:
     curr = bfs_q.popleft()
-    if curr == goal_cell:
-        break
     for nxt in sorted(adjacency[curr]):
         if nxt not in prev:
             prev[nxt] = curr
             bfs_q.append(nxt)
-
 solution_path = []
-node = goal_cell
+node = 0
 while node is not None:
     solution_path.append(node)
     node = prev.get(node)
 solution_path.reverse()
 
+# Solution polyline follows the corridors: radial steps straight, ring steps along the arc
+path_pts = []
+for a, b in zip(solution_path[:-1], solution_path[1:], strict=True):
+    (ra, ta), (rb, tb) = cell_polar(a), cell_polar(b)
+    if b == 0:
+        tb = ta
+    dt = (tb - ta + np.pi) % (2 * np.pi) - np.pi
+    for f in np.linspace(0, 1, 24, endpoint=False):
+        rad, ang = ra + (rb - ra) * f, ta + dt * f
+        path_pts.append((rad * np.cos(ang), rad * np.sin(ang)))
+path_pts.append((0.0, 0.0))
+path_df = pd.DataFrame(path_pts, columns=["x", "y"])
 
-def cell_center(cell):
-    """(x, y) of cell center in normalized coordinates."""
-    if cell == 0:
-        return 0.0, 0.0
-    idx = cell - 1
-    r = idx // SECTORS + 1
-    s = idx % SECTORS
-    radius = INNER_R + (r - 0.5) * RING_W
-    angle = (s + 0.5) * SECTOR_ANGLE
-    return radius * np.cos(angle), radius * np.sin(angle)
-
-
-# ---- Drawing ----
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 ax.set_aspect("equal")
 
 # Center zone
-center_circle = mpatches.Circle((0, 0), INNER_R, facecolor=ELEVATED_BG, edgecolor=INK, linewidth=WALL_LW, zorder=2)
-ax.add_patch(center_circle)
+ax.add_patch(mpatches.Circle((0, 0), INNER_R, facecolor=ELEVATED_BG, edgecolor="none", zorder=2))
 
-# Circular arc walls at each ring boundary r=1..RINGS (smooth vector arcs)
-for r in range(1, RINGS + 1):
+# Walls between ring r and ring r+1 are arcs (r = 0 is the center circle)
+for r in range(RINGS):
     radius = INNER_R + r * RING_W
     for s in range(SECTORS):
-        if ("circular", r, s) not in passages:
+        if (RADIAL, r, s) in closed:
             t1 = np.degrees(s * SECTOR_ANGLE)
             t2 = np.degrees((s + 1) * SECTOR_ANGLE)
-            arc = mpatches.Arc(
-                (0, 0), 2 * radius, 2 * radius, theta1=t1, theta2=t2, color=INK, linewidth=WALL_LW, zorder=3
+            ax.add_patch(
+                mpatches.Arc(
+                    (0, 0), 2 * radius, 2 * radius, theta1=t1, theta2=t2, color=INK, linewidth=WALL_LW, zorder=3
+                )
             )
-            ax.add_patch(arc)
 
 # Outer boundary frame with entry gap
 entry_angle_mid = (ENTRY_SECTOR + 0.5) * SECTOR_ANGLE
@@ -179,21 +190,18 @@ frame_arc = mpatches.Arc(
 )
 ax.add_patch(frame_arc)
 
-# Radial walls (smooth vector line segments)
-for r in range(RINGS):
-    r_inner = INNER_R + r * RING_W
-    r_outer = INNER_R + (r + 1) * RING_W
+# Walls between sector s and s+1 inside ring r are straight line segments
+for r in range(1, RINGS + 1):
+    r_inner = INNER_R + (r - 1) * RING_W
+    r_outer = INNER_R + r * RING_W
     for s in range(SECTORS):
-        if ("radial", r, s) not in passages:
-            angle = s * SECTOR_ANGLE
+        if (CIRCULAR, r, s) in closed:
+            angle = (s + 1) * SECTOR_ANGLE
             x1, y1 = r_inner * np.cos(angle), r_inner * np.sin(angle)
             x2, y2 = r_outer * np.cos(angle), r_outer * np.sin(angle)
             ax.plot([x1, x2], [y1, y2], color=INK, linewidth=WALL_LW, zorder=3, solid_capstyle="round")
 
 # Solution path — seaborn lineplot traces BFS solution through cell centers
-px = [cell_center(c)[0] for c in solution_path]
-py = [cell_center(c)[1] for c in solution_path]
-path_df = pd.DataFrame({"x": px, "y": py})
 sns.lineplot(
     data=path_df,
     x="x",
@@ -265,4 +273,4 @@ for spine in ax.spines.values():
 ax.set_title("maze-circular · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
