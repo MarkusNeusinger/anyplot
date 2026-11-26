@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-26
@@ -18,7 +18,6 @@ from plotnine import (
     geom_line,
     geom_point,
     geom_segment,
-    geom_smooth,
     ggplot,
     guides,
     labs,
@@ -99,15 +98,6 @@ flags[FLAG_Y] = flags[CLOSE] + side * price_range * (0.15 + (steps % 3) * 0.08)
 plot = (
     ggplot()
     + geom_line(data=df, mapping=aes(x=DATE, y=CLOSE), color=INK_SOFT, size=1.0, alpha=0.9)
-    + geom_smooth(
-        data=df,
-        mapping=aes(x=DATE, y=CLOSE),
-        method="lowess",
-        color=IMPRINT_PALETTE[0],
-        fill=IMPRINT_PALETTE[0],
-        size=0.7,
-        alpha=0.1,
-    )
     + geom_segment(
         data=flags,
         mapping=aes(x=EVENT_DATE, xend=EVENT_DATE, y=CLOSE, yend=FLAG_Y, color=EVENT_TYPE),
