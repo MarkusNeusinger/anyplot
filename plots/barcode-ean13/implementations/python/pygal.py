@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-26
@@ -54,9 +54,11 @@ bits += "101"  # end guard
 QUIET = 9  # quiet-zone modules on each side (spec minimum)
 GUARD_MODULES = set(range(0, 3)) | set(range(45, 50)) | set(range(92, 95))
 modules = [0] * QUIET + [int(b) for b in bits] + [0] * QUIET
-body = [{"value": 6 if m else 0, "color": BAR_COLOR} for m in modules]
+BODY_TOP, GUARD_DROP = 6, 2.0  # bar height above the baseline; guard tail depth below it
+body = [{"value": BODY_TOP if m else 0, "color": BAR_COLOR} for m in modules]
 guard = [
-    {"value": -0.9 if m and (i - QUIET) in GUARD_MODULES else 0, "color": BAR_COLOR} for i, m in enumerate(modules)
+    {"value": -GUARD_DROP if m and (i - QUIET) in GUARD_MODULES else 0, "color": BAR_COLOR}
+    for i, m in enumerate(modules)
 ]
 
 # Human-readable digits: the first one in the left quiet zone, the rest centered under their 7-module group
@@ -102,13 +104,19 @@ chart = pygal.StackedBar(
     x_labels=digit_labels,
     x_label_rotation=0,
     show_minor_x_labels=True,
-    range=(-1.0, 6.0),
+    range=(-GUARD_DROP - 0.1, BODY_TOP),
     show_y_labels=False,
     show_x_guides=False,
     show_y_guides=False,
     margin=80,
+    # a thin same-color outline closes the anti-aliasing seams between adjacent modules
+    css=["file://style.css", "file://graph.css", f"inline:.rect{{stroke:{BAR_COLOR};stroke-width:2}}"],
     print_values=False,
 )
+
+# No gap between neighbouring columns, so runs of dark modules merge into one solid bar
+chart._series_margin = 0
+chart._serie_margin = 0
 
 chart.add("bars", body)
 chart.add("guards", guard)
