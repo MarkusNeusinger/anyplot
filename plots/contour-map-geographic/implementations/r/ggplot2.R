@@ -16,6 +16,13 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 OCEAN_COL   <- if (THEME == "light") "#C8DFF0" else "#1E2E3B"
 
+# Imprint sequential ramp for filled fields, sampled once per pressure band
+SEQ_FIELDS <- if (THEME == "light") {
+  list(colours = c("#66E2B2", "#009E73", "#4467A3", "#002850"), values = c(0, 0.368, 0.582, 1))
+} else {
+  list(colours = c("#00573D", "#009E73", "#CDD9FF"), values = c(0, 0.467, 1))
+}
+
 # Synthetic atmospheric pressure field (North Atlantic / Europe)
 # Classic pattern: Azores High (SW), Icelandic Low (NW), European ridge (E)
 lon_seq <- seq(-30, 45, length.out = 60)
@@ -31,7 +38,7 @@ grid$pressure <- with(grid,
 )
 
 # 4 hPa isobar intervals — standard for synoptic weather maps
-isobar_breaks <- seq(994, 1032, by = 4)
+isobar_breaks <- seq(994, 1026, by = 4)
 
 # Compute isobar label positions — midpoint of the longest segment per level
 pressure_matrix <- matrix(grid$pressure, nrow = length(lon_seq), ncol = length(lat_seq))
@@ -42,6 +49,10 @@ label_df <- do.call(rbind, lapply(isobar_breaks, function(level) {
   mid  <- ceiling(length(main$x) / 2)
   data.frame(lon = main$x[mid], lat = main$y[mid], label = as.character(level))
 }))
+
+band_fill <- scales::gradient_n_pal(SEQ_FIELDS$colours, SEQ_FIELDS$values)(
+  seq(0, 1, length.out = length(isobar_breaks) - 1)
+)
 
 # World coastlines and political borders
 world <- map_data("world")
@@ -73,13 +84,13 @@ p <- ggplot() +
     aes(x = lon, y = lat, label = label),
     color         = INK,
     fill          = PAGE_BG,
-    size          = 2.2,
+    size          = 3,
     label.size    = 0.15,
     label.padding = unit(0.1, "lines"),
     fontface      = "bold"
   ) +
   coord_fixed(xlim = c(-30, 45), ylim = c(35, 72), expand = FALSE) +
-  scale_fill_viridis_d(option = "viridis", name = "Pressure\n(hPa)") +
+  scale_fill_manual(values = band_fill, drop = FALSE, name = "Pressure\n(hPa)") +
   labs(
     title = "N. Atlantic Isobars · contour-map-geographic · r · ggplot2 · anyplot.ai",
     x     = "Longitude",
