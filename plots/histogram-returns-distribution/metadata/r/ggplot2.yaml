@@ -12,115 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 78
 review:
   strengths:
-  - 'Full spec compliance: histogram, normal overlay, tail coloring, and stats annotation
-    box all present'
-  - Per-bin tail coloring using ggplot2 grammar-of-graphics aes(fill=tail) approach
-    is idiomatic and elegant
-  - Excellent theme-adaptive chrome — both light and dark renders pass all legibility
-    checks
-  - Realistic financial data (2 years daily portfolio returns, 18% annual vol, fat-tail
-    simulation)
-  - Ultra-subtle grid (linewidth=0.15) and removed axis ticks give a very clean appearance
-  - Stats annotation box properly uses ELEVATED_BG token for both themes
+  - Per-bin tail coloring through aes(fill = tail) with scale_fill_manual relabelling
+    the logical levels as 'Within ±2σ' / 'Beyond ±2σ'
+  - Every chrome element threaded through theme tokens; both renders read cleanly,
+    stats box on the ELEVATED_BG surface
+  - Realistic two-year daily equity return series with injected fat tails; statistics
+    formatted with explicit signs and units
+  - Normal curve fitted to the sample mean and sd on the density scale, directly comparable
+    with the bars
   weaknesses:
-  - Annotation label text (size=3.9 geom units) is slightly small for a prominent
-    callout box — bump to size=4.5 for better mobile readability
-  - DE-01 not at publication level — standard layout without typographic weight variation
-    or subtitle to contextualize the fat-tail insight
-  - 'LM-02: stat_function() could replace the pre-computed df_norm data frame for
-    the normal curve overlay (more idiomatic ggplot2)'
+  - 'SC-02 (both): bars drawn at 90 % of the bin width with page-colored outlines
+    leave visible gaps, so the histogram is not contiguous bars over equal-width bins
+    (C1) → full bin width with no gap. Likely cause: geom_col(width = bin_w * 0.90,
+    color = PAGE_BG).'
+  - 'DE-02 (both): the grid is drawn in INK_SOFT at full opacity on both axes, so
+    dark vertical lines cross every bar and the grid competes with the data → y-axis
+    grid only, at the style guide''s 15 % ink opacity. Likely cause: panel.grid.major
+    = element_line(color = INK_SOFT) without alpha and no panel.grid.major.x = element_blank().'
+  - 'CQ-04 (code): lines 37–47 precompute the histogram with hist(), build a bin data
+    frame and hand-sample dnorm into df_norm (about 11 lines) → geom_histogram(aes(y
+    = after_stat(density), fill = after_stat(abs(x - mean_ret) > 2 * sd_ret)), breaks
+    = h$breaks) plus geom_function(fun = dnorm, args = list(mean = mean_ret, sd =
+    sd_ret)) (ggplot2). Likely cause: the per-bin tail fill was computed outside the
+    stat.'
+  - 'CQ-05 (code): annotate("label", label.size = 0.3) uses an argument deprecated
+    in ggplot2 4 → linewidth = 0.3. Likely cause: the 3.x label border API.'
+  - 'Suggestion: a subtitle carrying the fat-tail reading (e.g. excess kurtosis vs
+    the normal) would give the chart a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "histogram-returns-distribution · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Daily Return (%)" and "Density" in dark ink, tick labels in muted dark (#4A4A44), all readable. Stats annotation box text in dark ink on elevated background (#FFFDF6), readable. Legend text in muted dark, readable.
-      Data: First series (Within ±2σ bars) in #009E73, second series (Beyond ±2σ tail bars) in #D55E00, normal curve in #0072B2. All data elements clearly visible.
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'histogram-returns-distribution · r · ggplot2 · anyplot.ai' top-left in dark ink; 'Daily Return (%)' and 'Density' axis titles, -4%..6% and 0.0..0.4 ticks in INK_SOFT, all readable; grid in full-opacity gray on both axes, fairly prominent; legend at the bottom on an elevated box.
+      Data: ~40 density bars, body in #009E73, tails beyond ±2σ in #C475FD, small gaps between bars; blue #4467A3 normal curve; purple dashed lines at ±2σ (~-2.3% and +2.4%); stats box top-right (Mean +0.022%, Std Dev 1.172%, Skewness +0.26, Ex. Kurt +1.33) at text size in proportion with the title, clear of bars and curve.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light ink (#F0EFE8), clearly readable. Axis labels in light ink, tick labels in muted light (#B8B7B0), all readable against dark background. Stats annotation box text in light ink on elevated dark background (#242420), readable. No dark-on-dark failures detected. Legend text in muted light gray, readable.
-      Data: Colors identical to light render — same #009E73 green bars, same #D55E00 orange tail bars, same #0072B2 normal curve. No color drift between themes.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, axis titles in light ink, ticks in light gray, all readable; no dark-on-dark; stats box on #242420 with light text and light border; legend on elevated dark box.
+      Data: same #009E73 body, #C475FD tails, #4467A3 curve as the light render; identical layout.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, legend=8).
-          Annotation text size=3.9 slightly small for callout.
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, all explicit;
+          every text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements.
+        comment: No text collides with text or data; the normal curve over the bars
+          is intended
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, curve, and dashed lines all clearly visible in both themes.
+        comment: Central bars, small tail bars, curve, dashed boundaries and legend
+          swatches all visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green/orange CVD-safe; distinguishable by luminance.
+        comment: Green body vs purple tails vs blue curve differ in hue and luminance;
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, balanced margins, good proportions.
+        comment: Canvas well used; stats box at size 3.9 sits in proportion with the
+          title, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Daily Return (%) with unit; Y: Density appropriate for normalized
-          histogram.'
+        comment: '''Daily Return (%)'' with unit and ''Density'' for the normalized
+          histogram'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, curve #0072B2. Light bg #FAF8F1,
-          dark bg #1A1A17. Both themes correct.'
+        comment: 'Body #009E73, tails #C475FD, curve #4467A3 (canonical Imprint order);
+          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful semantic coloring with stats annotation box. Above defaults
-          but not publication-ready.
+        comment: 'Style-guide baseline: tokenized chrome, elevated stats box; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 1
         max: 6
-        passed: true
-        comment: Ultra-subtle grid (linewidth=0.15), ticks removed, L-shaped axis
-          frame, generous margins.
+        passed: false
+        comment: 'Short of the baseline: full-opacity INK_SOFT grid on both axes crosses
+          the bars (defect line)'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good visual hierarchy: tail coloring focal point, normal curve comparison,
-          dashed boundaries, stats quantification.'
+        passed: false
+        comment: Tail coloring and stats box are what the Notes prescribe; no hierarchy
+          chosen beyond them
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,26 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram with density normalization.
+        comment: Density histogram with normal overlay, the requested chart type
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features present: histogram, normal overlay, tail coloring,
-          stats box, 504 observations.'
+        comment: Normal overlay, ±2σ tail coloring, stats box all present; bars are
+          not contiguous as C1 asks (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Daily Return (%), Y: Density. All data visible.'
+        comment: Returns on x, density on y; full data range shown; marks at their
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend labels Within/Beyond ±2σ are informative.
+        comment: Mandated title format; legend 'Within ±2σ' / 'Beyond ±2σ' readable
     data_quality:
       score: 15
       max: 15
@@ -157,22 +172,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all histogram features: distribution body, fat tails, normal
-          comparison, statistics.'
+        comment: Body, fat tails, a skewed outlier at +5.8%, normal comparison and
+          all four statistics shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Equity portfolio daily returns, realistic and neutral.
+        comment: 'Two years of daily returns of a diversified equity portfolio: plausible,
+          neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1.17% daily std dev ≈ 18.5% annualized; realistic equity parameters.
+        comment: '504 obs, daily sd 1.17% (~18.6% annualized), mean +0.022%, ex. kurtosis
+          +1.33: realistic; no Check values in the spec'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -180,51 +197,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: library → seed → tokens → data → stats → precompute → plot
-          → save.'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42).
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported, both used.
+        comment: ggplot2 and ragg, both used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake functionality.
+        comment: hist() + geom_col + a hand dnorm frame where geom_histogram(after_stat)
+          and geom_function compute it (defect line)
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png using ragg::agg_png.
+        passed: false
+        comment: Saves plot-{THEME}.png, but annotate('label', label.size=) is deprecated
+          in ggplot2 4 (defect line)
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert: pre-computes histogram data frame for per-bin fill via aes(fill=tail),
-          scale_fill_manual with boolean mapping, inherit.aes=FALSE for overlay.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-bin coloring via boolean column and aesthetic mapping is distinctly
-          ggplot2. stat_function() would be more idiomatic for the normal curve.
+        comment: Grammar-of-graphics layering with aes(fill=), scale_fill_manual labels,
+          inherit.aes=FALSE; default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-9715f26d62
 impl_tags:
   dependencies: []
   techniques:

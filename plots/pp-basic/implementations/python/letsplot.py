@@ -1,7 +1,7 @@
 """ anyplot.ai
 pp-basic: Probability-Probability (P-P) Plot
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-06-16
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
@@ -21,120 +21,80 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-# Subtle gridline (~15% INK over PAGE_BG, per style guide rgba(...,0.15))
 GRID = "#D8D7D0" if THEME == "light" else "#3A3A36"
 
-# Imprint diverging cmap: matte-red <-> near-neutral (page bg) <-> blue
-IMPRINT_DIV_LOW = "#AE3030"
-IMPRINT_DIV_MID = PAGE_BG
-IMPRINT_DIV_HIGH = "#4467A3"
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: pharmaceutical tablet weight measurements (mg) from a filling machine
-# Real-world QC scenario - checking if weights follow a normal distribution
+# Constants
+KS_FACTOR = 1.36  # 95% Kolmogorov-Smirnov critical value factor for the confidence envelope
+
+# Columns: set these to your table's column names
+OBSERVED = "Tablet weight (mg)"  # role: observed
+DISTRIBUTION = "Reference distribution"  # role: theoretical_distribution
+
+# Data: replace this block with your own table, for example df = pd.read_csv("weights.csv")
+# Pharmaceutical tablet weights (target 500 mg, occasional overfills) checked against a normal reference
 np.random.seed(42)
-n_samples = 200
-
-# Tablet weights: target 500mg, slight right skew from occasional overfills
 normal_fill = np.random.normal(500, 8, 160)
 overfill_events = np.random.exponential(5, 40) + 498
-observed = np.concatenate([normal_fill, overfill_events])
-observed = observed[:n_samples]
+df = pd.DataFrame({OBSERVED: np.concatenate([normal_fill, overfill_events]), DISTRIBUTION: "Normal"})
 
-# Sort observed data
-observed_sorted = np.sort(observed)
+# Plot: reads only df and the constants above
+EMPIRICAL = "Empirical CDF"
+THEORETICAL = f"Theoretical CDF ({df[DISTRIBUTION].iloc[0]})"
+pp = pd.DataFrame({OBSERVED: np.sort(df[OBSERVED].dropna().to_numpy())})
+n = len(pp)
 
-# Compute empirical CDF using plotting position formula i/(n+1)
-empirical_cdf = np.arange(1, n_samples + 1) / (n_samples + 1)
+# Empirical CDF with plotting position i/(n+1)
+pp[EMPIRICAL] = np.arange(1, n + 1) / (n + 1)
 
-# Fit normal distribution (MLE: mean and std of data)
-mu = np.mean(observed_sorted)
-sigma = np.std(observed_sorted, ddof=0)
+# Theoretical normal CDF with fitted mean and standard deviation
+mu = pp[OBSERVED].mean()
+sigma = pp[OBSERVED].std(ddof=0)
+z = (pp[OBSERVED].to_numpy() - mu) / (sigma * sqrt(2))
+pp[THEORETICAL] = 0.5 * (1 + np.vectorize(erf)(z))
 
-# Compute theoretical CDF values (normal CDF inline)
-z_scores = (observed_sorted - mu) / (sigma * sqrt(2))
-theoretical_cdf = 0.5 * (1 + np.vectorize(erf)(z_scores))
-
-# Signed deviation from perfect fit drives the diverging color mapping
-deviation = empirical_cdf - theoretical_cdf
-
-# Classify deviation region for tooltips
-region = np.where(np.abs(deviation) < 0.02, "Near fit", np.where(deviation > 0, "Above diagonal", "Below diagonal"))
-
-# Create dataframe for P-P plot points
-df_pp = pd.DataFrame(
-    {
-        "theoretical": theoretical_cdf,
-        "empirical": empirical_cdf,
-        "deviation": deviation,
-        "abs_deviation": np.abs(deviation),
-        "weight": observed_sorted,
-        "region": region,
-    }
+# Pointwise 95% Kolmogorov envelope around the diagonal
+ks_band = KS_FACTOR / sqrt(n)
+band_x = np.linspace(0, 1, 100)
+band = pd.DataFrame(
+    {"x": band_x, "y_lower": np.maximum(band_x - ks_band, 0.0), "y_upper": np.minimum(band_x + ks_band, 1.0)}
 )
 
-# Confidence envelope around diagonal (approximate 95% Kolmogorov band)
-ks_band = 1.36 / sqrt(n_samples)
-envelope_x = np.linspace(0, 1, 100)
-df_envelope = pd.DataFrame(
-    {
-        "x": envelope_x,
-        "y_upper": np.minimum(envelope_x + ks_band, 1.0),
-        "y_lower": np.maximum(envelope_x - ks_band, 0.0),
-    }
-)
+# Reference line of perfect fit, corner to corner
+ref = pd.DataFrame({"x": [0, 1], "y": [0, 1]})
 
-# Reference line (perfect fit diagonal)
-df_ref = pd.DataFrame({"x": [0, 1], "y": [0, 1]})
-
-# Annotation for max deviation - placed in the empty lower-right triangle to avoid overlap
-max_dev_idx = np.argmax(np.abs(deviation))
-df_annotation = pd.DataFrame({"x": [0.58], "y": [0.12], "label": [f"Max deviation: {deviation[max_dev_idx]:+.3f}"]})
-
-# Plot with lets-plot distinctive features: tooltips, theme-adaptive chrome, text annotation
 plot = (
     ggplot()
     + geom_ribbon(
         aes(x="x", ymin="y_lower", ymax="y_upper"),
-        data=df_envelope,
+        data=band,
         fill=INK_MUTED,
         alpha=0.18,
         size=0,
         tooltips=layer_tooltips().line("95% Kolmogorov band"),
     )
-    + geom_line(aes(x="x", y="y"), data=df_ref, color=INK, size=1.0, linetype="dashed", tooltips="none")
+    + geom_line(aes(x="x", y="y"), data=ref, color=INK, size=1.0, linetype="dashed", tooltips="none")
     + geom_point(
-        aes(x="theoretical", y="empirical", fill="deviation", size="abs_deviation"),
-        data=df_pp,
+        aes(x=THEORETICAL, y=EMPIRICAL),
+        data=pp,
         shape=21,
+        size=3.5,
+        fill=IMPRINT_PALETTE[0],
         color=INK_SOFT,
-        stroke=0.7,
-        alpha=0.65,
-        tooltips=layer_tooltips()
-        .format("weight", ".1f")
-        .format("deviation", "+.4f")
-        .line("@|@weight mg")
-        .line("Deviation|@deviation")
-        .line("@region"),
-    )
-    + geom_text(
-        aes(x="x", y="y", label="label"), data=df_annotation, size=6, color=INK_SOFT, hjust=0, fontface="italic"
-    )
-    + scale_fill_gradient2(
-        low=IMPRINT_DIV_LOW,
-        mid=IMPRINT_DIV_MID,
-        high=IMPRINT_DIV_HIGH,
-        midpoint=0,
-        name="Deviation\n(Empirical − Theoretical)",
-    )
-    + scale_size(range=[2, 5], guide="none")
-    + labs(
-        x="Theoretical CDF (Normal)",
-        y="Empirical CDF",
-        title="pp-basic · python · letsplot · anyplot.ai",
-        subtitle="QC Check: Tablet Weight Distribution vs. Normal Reference (n=200)",
+        stroke=0.6,
+        alpha=0.75,
+        tooltips=layer_tooltips().line(f"@|@{{{OBSERVED}}}").line(f"@{{{EMPIRICAL}}}"),
     )
     + scale_x_continuous(limits=[0, 1], breaks=[0, 0.2, 0.4, 0.6, 0.8, 1.0])
     + scale_y_continuous(limits=[0, 1], breaks=[0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    + labs(
+        x=THEORETICAL,
+        y=EMPIRICAL,
+        title="pp-basic · python · letsplot · anyplot.ai",
+        subtitle=f"Tablet weights vs. fitted normal reference (n={n})",
+    )
     + coord_fixed(ratio=1)
     + theme_minimal()
     + theme(
@@ -147,14 +107,11 @@ plot = (
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.4),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=11, color=INK),
-        legend_text=element_text(size=10, color=INK_SOFT),
-        legend_position="right",
     )
-    + ggsize(600, 600)
 )
 
-# Save (square 2400 x 2400: ggsize 600 x scale 4)
+# The fixed aspect leaves canvas strips transparent: a one-panel grid paints the whole square canvas
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")

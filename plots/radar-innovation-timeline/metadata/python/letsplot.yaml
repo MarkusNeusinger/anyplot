@@ -12,119 +12,132 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-inn
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 78
 review:
   strengths:
-  - Semantic ring fill color gradient (green→yellow→orange→faint red) communicates
-    adoption readiness without extra annotation
-  - 270-degree arc with ring labels in the gap avoids cluttering the chart area —
-    smart structural layout
-  - Full theme-adaptive chrome using INK/INK_SOFT/ELEVATED_BG tokens; both renders
-    pass legibility checks
-  - Label repulsion algorithm substantially reduces worst-case label collisions
-  - letsplot-specific layer_tooltips() and dual HTML+PNG export make the implementation
-    distinctive
-  - 'Complete spec coverage: all 4 rings, 4 sectors, 24 technology items with connectors
-    and ring/sector labels'
+  - 270-degree arc leaves the top gap for boxed ring-name labels (Adopt/Trial/Assess/Hold),
+    nearest horizon innermost as the spec asks
+  - 'Sector colors follow Imprint positions 1-4 (AI & ML = #009E73) and stay identical
+    across both themes'
+  - Most item names sit right beside their markers with short leaders
+  - layer_tooltips() gives each item its name, ring and sector in the interactive
+    HTML
   weaknesses:
-  - Biodegradable PCBs and Fusion Energy labels overlap at the bottom arc — increase
-    MIN_Y_SEP from 0.75 to 0.90 and add more repulsion iterations for outer-ring Hold
-    items
-  - Innovation item labels at size=4.5mm may be borderline small on mobile (~400px
-    viewport) — increase to 5.0–5.5mm
-  - Lower-arc label density in Sustainability/Infrastructure boundary zone is crowded
-    — increase label-radius offset for Assess/Hold outer labels
+  - 'VQ-07 (both): pure-black strips about 95 px high at the top and bottom of both
+    renders - the canvas outside the coord_fixed plot box is left unpainted → page
+    color #FAF8F1 / #1A1A17 across the whole 2400x2400 canvas. Likely cause: coord_fixed
+    without the one-panel gggrid([plot]) + ggsize(600, 600) + plot_background wrapper
+    the library prompt prescribes.'
+  - 'VQ-02, SC-02 (both): ''Green Cloud'', ''Synthetic Biology'', ''Circular Design''
+    and ''Ocean Cleanup AI'' are drawn over or against their own markers, ''Biodegradable
+    PCBs'' and ''Fusion Energy'' run together into one line, and ''Nanomedicine''
+    touches the ''Biotech'' header → every label clear of markers, other labels and
+    headers. Likely cause: the vertical-only repulsion (MIN_Y_SEP=0.75) ignores markers
+    and headers.'
+  - 'VQ-07 (both): ring background fills are custom hexes (#DCEDC8, #FFF9C4, #FFE0B2,
+    #FFCDD2 in light; #DDCC77 in dark) outside the Imprint palette for an ordered
+    category → ordered steps of one Imprint ramp (or a single neutral tint) in ring
+    order. Likely cause: ring_fills dict.'
+  - 'CQ-04 (code): the 35-iteration label repulsion loop (prev lines ~139-151) writes
+    out what lets-plot''s geom_text_repel computes → replace the loop and the connector
+    geom_segment with geom_text_repel. Likely cause: hand-rolled declutter.'
+  - 'Suggestion: in the dark render the ring boundaries draw as thick near-white strokes
+    that compete with the data; a thinner INK_SOFT outline on the ring polygons would
+    match the light render.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface
-      Chrome: Title "radar-innovation-timeline · python · letsplot · anyplot.ai" in bold dark text (INK=#1A1A17), readable. Sector headers "AI & ML", "Biotech", "Sustainability", "Infrastructure" in bold dark text, clearly visible. Ring labels (Hold/Assess/Trial/Adopt) in boxed callouts with elevated-background fill (#FFFDF6), readable. Legend "Sector" label and category entries at bottom, readable.
-      Data: Four sector colors — green (#009E73, AI & ML), lavender (#C475FD, Biotech), blue (#4467A3, Sustainability), ochre (#BD8233, Infrastructure). Ring fills: green tint (Adopt), pale yellow (Trial), light orange (Assess), faint red (Hold) at alpha=0.55. Data points size=4, colored by sector. Connector lines at alpha=0.25 (INK_MUTED).
-      Legibility verdict: PASS — all text elements readable; minor label crowding in lower arc but nothing unreadable
+      Background: warm off-white #FAF8F1 inside the plot, but pure-black strips about 95 px high at the top and bottom of the canvas.
+      Chrome: bold dark title at top left; bold black sector headers outside the arc; boxed ring labels Adopt/Trial/Assess/Hold in the top gap; legend 'Sector' at the bottom. All readable.
+      Data: 270-degree radar, 4 pastel ring fills (green/yellow/peach/pink), 4 sectors; 24 markers colored #009E73, #C475FD, #4467A3, #BD8233 by sector with names mostly beside their markers on short leaders. 'Green Cloud', 'Synthetic Biology', 'Circular Design', 'Ocean Cleanup AI' sit on their markers; 'Biodegradable PCBs' and 'Fusion Energy' run together; 'Nanomedicine' touches 'Biotech'.
+      Legibility verdict: PASS (text readable; pure-black canvas strips scored under VQ-07)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface
-      Chrome: Title rendered in light INK token (#F0EFE8), readable against dark background. Sector headers visible in light text. Ring label boxes use ELEVATED_BG (#242420) with INK_SOFT (#B8B7B0) text — readable. Legend entries readable. Ring boundary lines render in lighter tone with good contrast. No dark-on-dark failures detected.
-      Data: Data colors identical to light render — green, lavender, blue, ochre unchanged (theme-invariant Imprint palette). Ring fills at alpha=0.14 are very subtle, providing structural hint without competing with data points.
-      Legibility verdict: PASS — all chrome elements correctly flip to light-on-dark; data colors consistent with light render
+      Background: warm near-black #1A1A17 inside the plot, pure-black strips at top and bottom.
+      Chrome: light title, headers, ring labels and legend text; thick near-white ring boundaries. No dark-on-dark text.
+      Data: identical sector colors to the light render; low-alpha ring tints. Same label collisions as light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Readable in both themes. Innovation
-          labels at 4.5mm may be borderline at mobile scale given 24 items.
+        comment: Title 16 pt bold, item labels 5 mm, sector headers 5 mm bold, legend
+          10/12 pt; all readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Repulsion algorithm helps but residual overlaps remain: Biodegradable
-          PCBs and Fusion Energy are very close/overlapping in both renders.'
+        passed: false
+        comment: '''Green Cloud'', ''Synthetic Biology'', ''Circular Design'' and
+          ''Ocean Cleanup AI'' are drawn over or against their markers; ''Biodegradable
+          PCBs'' and ''Fusion Energy'' abut; ''Nanomedicine'' touches the ''Biotech''
+          header (defect line).'
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Data points at size=4 clearly visible and color-differentiated. Ring
-          fills at appropriate alpha provide structural depth.
+        comment: 24 markers at size 4 clearly visible in both themes; legend glyphs
+          match the marks.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, colorblind-safe, no red-green as sole signal.
+        comment: Imprint hues are CVD-separable; color is backed by sector position.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas correct for radar. 270-degree arc with ring
-          labels in gap is smart layout. Some crowding in lower arc.
+        comment: Plot drawing uses the square canvas well; nothing clipped. Unpainted
+          strips are scored in VQ-07.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for polar layout. Title format correct.
+        comment: N/A for axes (theme_void polar layout); title in the mandated format.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'AI & ML maps to #009E73 (first). Imprint canonical order followed.
-          Backgrounds #FAF8F1/#1A1A17. Theme-adaptive chrome applied throughout.'
+        passed: false
+        comment: Pure-black strips (~95 px) at the top and bottom of both renders
+          - the canvas outside the coord_fixed plot box is not painted in the page
+          color; ring fills are custom non-Imprint hexes (defect lines).
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Semantic ring fill gradient communicates adoption readiness. Arc
-          gap for ring labels. Connector lines and repulsion show typographic care.
+        comment: Ring names set as boxed labels in the open gap of the 270-degree
+          arc, bold sector headers vs. regular item text - a deliberate type hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: theme_void() stripped and rebuilt from scratch. Subtle ring boundaries
-          (0.3/alpha=0.5). Ring-label callout boxes with ELEVATED_BG fill.
+        passed: false
+        comment: Style-guide baseline; leader lines are many and long and cross each
+          other, so no refinement credit beyond default.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Concentric ring structure encodes time-horizon narrative. Semantic
-          color gradient guides readiness interpretation. Sector grouping aids comparison.
+        comment: Ring fill ramp from calm inner to warm outer ring makes the near-to-far
+          horizon read at a glance.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -132,27 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radial chart with concentric rings and angular sector divisions.
+        comment: 'Correct innovation radar: concentric time rings, angular sectors,
+          labeled items, 270-degree layout.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All required features: ring boundaries, ring labels, sector spokes,
-          sector headers, labeled points, color coding by sector, legend.'
+        passed: false
+        comment: 'C5 partly missed: names mostly beside their markers, but ''Nanomedicine''
+          touches the Biotech header and ''Biodegradable PCBs''/''Fusion Energy''
+          run together (defect line).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Ring and sector assignments correct. 24 items within spec range (15-40).
+        comment: Every item inside its own ring/sector cell; ring order Adopt innermost
+          to Hold outermost.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labeled Sector with all four category
-          colors.
+        comment: Title correct; legend 'Sector' with all four categories.
     data_quality:
       score: 15
       max: 15
@@ -162,24 +177,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 rings and 4 sectors populated, multiple items per ring demonstrate
-          grouping.
+        comment: All 4 rings x 4 sectors populated with varying counts.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world technology items (LLM Agents, mRNA Platforms, Edge Computing)
-          in plausible adoption rings. Neutral subject matter.
+        comment: Plausible, neutral technology-radar items (LLM Agents, mRNA Platforms,
+          Edge Computing).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Technology readiness placements coherent with real-world adoption
-          timelines.
+        comment: Ring placements coherent with real adoption timelines; no Check values
+          in the spec.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -187,52 +201,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: constants → data → geometry computation → plot construction
-          → save.'
+        comment: Linear script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before stochastic operations.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity. No fake UI. Label repulsion loop justified.
+        passed: false
+        comment: Hand-written 35-iteration label repulsion loop where lets-plot's
+          geom_text_repel computes it (defect line).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4 → 2400x2400) and plot-{THEME}.html.
-          Current API.
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html; current API.
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct ggplot grammar with coord_fixed(), multi-geom layering, scale_color_manual,
-          theme_void() + custom theme, layer_tooltips().
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() for tooltip definitions and dual PNG+HTML export
-          are letsplot-specific features.
+        comment: ggplot grammar with layered geoms, theme_void + theme rebuild; default.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: layer_tooltips() with name/ring/sector lines for the HTML output.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
 impl_tags:
   dependencies: []
   techniques:
