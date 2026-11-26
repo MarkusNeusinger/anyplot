@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -22,7 +22,6 @@ from plotnine import (
     geom_hline,
     geom_line,
     geom_point,
-    geom_ribbon,
     geom_text,
     ggplot,
     labs,
@@ -54,12 +53,15 @@ PRICE = "Price (USD)"  # role: price
 np.random.seed(42)
 n_days = 252
 dates = pd.date_range("2024-01-02", periods=n_days, freq="B")
-params = {"AAPL": (0.0005, 0.013), "GOOGL": (0.0003, 0.015), "MSFT": (0.0006, 0.012), "SPY": (0.0004, 0.008)}
+# Every stock follows the market (SPY) through its own beta, plus a stock-specific drift and noise
+market_returns = np.random.normal(0.0006, 0.007, n_days)
+params = {"AAPL": (1.1, 0.0001, 0.009), "GOOGL": (1.0, 0.0000, 0.010), "MSFT": (1.2, -0.0003, 0.008)}
 
 frames = []
-for symbol, (drift, vol) in params.items():
-    daily_returns = np.random.normal(drift, vol, n_days)
+for symbol, (beta, drift, vol) in params.items():
+    daily_returns = beta * market_returns + np.random.normal(drift, vol, n_days)
     frames.append(pd.DataFrame({DATE: dates, SYMBOL: symbol, PRICE: 100 * np.exp(np.cumsum(daily_returns))}))
+frames.append(pd.DataFrame({DATE: dates, SYMBOL: BENCHMARK, PRICE: 100 * np.exp(np.cumsum(market_returns))}))
 df = pd.concat(frames, ignore_index=True)
 
 # Plot: reads only df and the constants above
@@ -77,19 +79,10 @@ last_df = df.groupby(SYMBOL, sort=False).tail(1).copy()
 last_df[LABEL] = last_df[SYMBOL] + " " + last_df[REBASED].map(lambda v: f"{v:.0f}")
 last_df[LABEL_DATE] = last_df[DATE] + pd.Timedelta(days=7)
 
-# Benchmark outperformance ribbon: shades the region where the benchmark stands above the base
-YMIN, YMAX = "ymin", "ymax"
-ribbon_df = bench_df.loc[bench_df[REBASED] > BASE, [DATE, REBASED]].rename(columns={REBASED: YMAX})
-ribbon_df[YMIN] = float(BASE)
-bench_color = IMPRINT_PALETTE[groups.index(BENCHMARK)] if BENCHMARK in groups else INK_SOFT
-
 x_max = df[DATE].max() + pd.Timedelta(days=45)
 
 plot = (
     ggplot(df, aes(x=DATE, y=REBASED, color=SYMBOL))
-    + geom_ribbon(
-        data=ribbon_df, mapping=aes(x=DATE, ymin=YMIN, ymax=YMAX), fill=bench_color, alpha=0.10, inherit_aes=False
-    )
     + geom_hline(yintercept=BASE, linetype="dashed", color=INK_SOFT, size=0.6)
     + geom_line(data=others_df, size=1.1)
     + geom_line(data=bench_df, size=1.7)
