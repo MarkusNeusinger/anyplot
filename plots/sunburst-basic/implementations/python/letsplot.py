@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -75,26 +75,6 @@ branch_rank = {name: i for i, name in enumerate(df[LEVEL_1].unique())}
 df = df.sort_values(LEVEL_1, key=lambda s: s.map(branch_rank), kind="stable").reset_index(drop=True)
 
 
-def mix_with_white(hex_color, share):
-    """The hex color with `share` of white blended in."""
-    channels = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
-    return "#" + "".join(f"{round(c + (255 - c) * share):02X}" for c in channels)
-
-
-def luminance(hex_color):
-    """Relative luminance of a hex color."""
-    r, g, b = (int(hex_color[i : i + 2], 16) / 255 for i in (1, 3, 5))
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
-
-
-def wedge(inner_r, outer_r, start, end):
-    """Polygon vertices of an annular sector between two angles."""
-    angles = [start + (end - start) * i / ARC_POINTS for i in range(ARC_POINTS + 1)]
-    outer = [(outer_r * math.cos(a), outer_r * math.sin(a)) for a in angles]
-    inner = [(inner_r * math.cos(a), inner_r * math.sin(a)) for a in reversed(angles)]
-    return outer + inner
-
-
 polygon_rows, label_rows = [], []
 for ring, (inner_r, outer_r) in enumerate(RING_BOUNDS):
     segments = df.groupby(LEVELS[: ring + 1], sort=False)[VALUE].sum().reset_index()
@@ -102,16 +82,22 @@ for ring, (inner_r, outer_r) in enumerate(RING_BOUNDS):
     starts = math.pi / 2 - sweeps.cumsum() + sweeps  # clockwise from twelve o'clock
     for seg_id, (row, start, sweep) in enumerate(zip(segments.itertuples(index=False), starts, sweeps, strict=True)):
         branch_color = IMPRINT_PALETTE[branch_rank[row[0]] % len(IMPRINT_PALETTE)]
-        fill = mix_with_white(branch_color, TINTS[ring])
+        base_rgb = [int(branch_color[i : i + 2], 16) / 255 for i in (1, 3, 5)]
+        fill_rgb = [c + (1 - c) * TINTS[ring] for c in base_rgb]  # blend toward white
+        fill = "#" + "".join(f"{round(c * 255):02X}" for c in fill_rgb)
         name = row[ring]
         seg_key = ring * 1000 + seg_id
-        for px, py in wedge(inner_r, outer_r, start, start - sweep):
+        angles = [start - sweep * i / ARC_POINTS for i in range(ARC_POINTS + 1)]
+        outline = [(outer_r * math.cos(a), outer_r * math.sin(a)) for a in angles]
+        outline += [(inner_r * math.cos(a), inner_r * math.sin(a)) for a in reversed(angles)]
+        for px, py in outline:
             polygon_rows.append(
                 {X: px, Y: py, GROUP: seg_key, SEGMENT: name, FILL: fill, VALUE: row[len(LEVELS[: ring + 1])]}
             )
         mid = start - sweep / 2
         mid_r = (inner_r + outer_r) / 2 if ring else outer_r * 0.55
-        on_dark_fill = ring == 0 and luminance(fill) < LUMINANCE_SPLIT
+        r, g, b = fill_rgb
+        on_dark_fill = ring == 0 and 0.2126 * r + 0.7152 * g + 0.0722 * b < LUMINANCE_SPLIT
         label_rows.append(
             {
                 X: mid_r * math.cos(mid),
