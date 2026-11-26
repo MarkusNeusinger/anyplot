@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sunburst-basic: Basic Sunburst Chart
-Library: letsplot 4.11.0 | Python 3.13.14
-Quality: pending | Updated: 2026-07-26
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import math
