@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-21
@@ -29,7 +29,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# EAN-13 encoding patterns
+# Constants: the EAN-13 encoding tables hold for any code
 L_CODES = {
     "0": [0, 0, 0, 1, 1, 0, 1],
     "1": [0, 0, 1, 1, 0, 0, 1],
@@ -86,9 +86,10 @@ START_GUARD = [1, 0, 1]
 CENTER_GUARD = [0, 1, 0, 1, 0]
 END_GUARD = [1, 0, 1]
 
-# 12-digit German product code — check digit auto-calculated
-code = "400638133393"
+# Data: replace with your own 12-digit code, the check digit is added below
+code = "400638133393"  # German product code
 
+# Plot: everything below is derived from the code
 total = 0
 for pos, digit in enumerate(code):
     if pos % 2 == 0:
