@@ -1,7 +1,7 @@
 """ anyplot.ai
 maze-circular: Circular Maze Puzzle
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-20
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-26
 """
 
 import os
@@ -22,18 +22,19 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Maze parameters — difficulty controls ring count
-np.random.seed(42)
-difficulty = "medium"  # easy=5 rings, medium=7 rings, hard=9 rings
-rings_map = {"easy": 5, "medium": 7, "hard": 9}
-rings = rings_map[difficulty]
-base_sectors = [8, 12, 16, 20, 24, 28, 32, 36, 40]
-sectors_per_ring = base_sectors[:rings]
-
+# Imprint palette: entry takes position 1, the goal position 5
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+entry_color = IMPRINT_PALETTE[0]
+goal_color = IMPRINT_PALETTE[4]
 wall_color = INK
 wall_width = 5
-entry_color = "#009E73"  # Okabe-Ito position 1 (brand green)
-goal_color = "#AE3030"  # Okabe-Ito position 5 (orange)
+
+# Data: replace these parameters to generate another maze
+SEED = 42
+DIFFICULTY = "medium"  # easy=5 rings, medium=7 rings, hard=9 rings
+np.random.seed(SEED)
+rings = {"easy": 5, "medium": 7, "hard": 9}[DIFFICULTY]
+sectors_per_ring = [8 + 4 * r for r in range(rings)]
 
 # Build maze cells: (ring, sector) -> {visited, walls}
 cells = {}
@@ -76,6 +77,11 @@ while stack:
 entry_sector = 0
 cells[(rings - 1, entry_sector)]["walls"]["outer"] = False
 
+# Wall flags the drawing reads: arc on the outer side, radial wall on the clockwise side
+arc_wall = {key: cell["walls"]["outer"] for key, cell in cells.items()}
+radial_wall = {key: cell["walls"]["cw"] for key, cell in cells.items()}
+
+# Plot
 # Figure — 2400×2400 square canvas for circular maze
 p = figure(
     width=2400,
@@ -118,7 +124,7 @@ for r in range(rings):
         start_angle = s * sector_angle
         end_angle = (s + 1) * sector_angle
 
-        if cells[(r, s)]["walls"]["outer"]:
+        if arc_wall[(r, s)]:
             arc_pts = np.linspace(start_angle, end_angle, 50)
             p.line(
                 outer_radius * np.cos(arc_pts),
@@ -127,7 +133,7 @@ for r in range(rings):
                 line_color=wall_color,
             )
 
-        if cells[(r, s)]["walls"]["cw"]:
+        if radial_wall[(r, s)]:
             p.line(
                 [inner_radius * np.cos(end_angle), outer_radius * np.cos(end_angle)],
                 [inner_radius * np.sin(end_angle), outer_radius * np.sin(end_angle)],
@@ -209,9 +215,9 @@ p.add_layout(
 p.add_layout(
     Label(
         x=0,
-        y=-1.12,
-        text=f"{rings} rings · {difficulty}",
-        text_font_size="24pt",
+        y=-1.10,
+        text=f"{rings} rings · {DIFFICULTY}",
+        text_font_size="28pt",
         text_align="center",
         text_baseline="middle",
         text_color=INK_SOFT,
@@ -239,6 +245,9 @@ driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
 # Force page background to match PAGE_BG — prevents thin lighter border in dark theme screenshots
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.execute_script(
     f"document.documentElement.style.background='{PAGE_BG}';document.body.style.background='{PAGE_BG}';"
 )
