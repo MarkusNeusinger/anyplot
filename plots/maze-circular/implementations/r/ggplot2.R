@@ -200,7 +200,7 @@ p <- ggplot() +
             margin = ggplot2::margin(t = 8, b = 6)
         ),
         plot.caption = element_text(
-            color = INK_SOFT, size = 7, hjust = 0.5,
+            color = INK_SOFT, size = 8, hjust = 0.5,
             margin = ggplot2::margin(t = 6, b = 6)
         ),
         plot.margin = ggplot2::margin(8, 8, 8, 8)
