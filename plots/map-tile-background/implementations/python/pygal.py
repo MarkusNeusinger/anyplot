@@ -1,12 +1,15 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-27
 """
 
 import importlib
+import math
 import os
 import sys
+
+import pandas as pd
 
 
 # Remove cwd from path to avoid importing this file instead of the pygal library
@@ -22,53 +25,71 @@ Style = _style_mod.Style
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
-
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-# Map-inspired plot background simulates geographic tile context
-# Light: warm land beige; Dark: near-black land surface
-LAND_BG = "#eae6df" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Semantic color exception: temperature carries strong cold→blue / hot→red expectation
-# (Imprint palette positions 3, 1, 5 in semantic role order)
-COLOR_COOL = "#4467A3"  # blue  — cool stations (annual mean < 12 °C)
-COLOR_MILD = "#009E73"  # green — mild stations (12–22 °C)
-COLOR_WARM = "#AE3030"  # red   — warm stations (> 22 °C)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: US weather monitoring network — mean annual surface temperatures
-stations = [
-    {"label": "Seattle", "lat": 47.6, "lon": -122.3, "temp_c": 11.0},
-    {"label": "Portland", "lat": 45.5, "lon": -122.7, "temp_c": 12.0},
-    {"label": "San Francisco", "lat": 37.8, "lon": -122.4, "temp_c": 13.5},
-    {"label": "Los Angeles", "lat": 34.1, "lon": -118.2, "temp_c": 19.0},
-    {"label": "Phoenix", "lat": 33.4, "lon": -112.1, "temp_c": 28.5},
-    {"label": "Denver", "lat": 39.7, "lon": -104.9, "temp_c": 10.5},
-    {"label": "Dallas", "lat": 32.8, "lon": -96.8, "temp_c": 19.5},
-    {"label": "Houston", "lat": 29.8, "lon": -95.4, "temp_c": 24.5},
-    {"label": "Minneapolis", "lat": 44.9, "lon": -93.2, "temp_c": 7.5},
-    {"label": "Chicago", "lat": 41.9, "lon": -87.6, "temp_c": 9.5},
-    {"label": "Detroit", "lat": 42.3, "lon": -83.0, "temp_c": 8.5},
-    {"label": "Atlanta", "lat": 33.7, "lon": -84.4, "temp_c": 17.5},
-    {"label": "Miami", "lat": 25.8, "lon": -80.2, "temp_c": 27.0},
-    {"label": "Washington DC", "lat": 38.9, "lon": -77.0, "temp_c": 13.5},
-    {"label": "New York", "lat": 40.7, "lon": -74.0, "temp_c": 12.5},
-    {"label": "Boston", "lat": 42.4, "lon": -71.1, "temp_c": 10.0},
-    {"label": "Nashville", "lat": 36.2, "lon": -86.8, "temp_c": 15.5},
-    {"label": "New Orleans", "lat": 30.0, "lon": -90.1, "temp_c": 23.0},
-    {"label": "Kansas City", "lat": 39.1, "lon": -94.6, "temp_c": 12.5},
-    {"label": "Salt Lake City", "lat": 40.8, "lon": -111.9, "temp_c": 11.5},
-    {"label": "Las Vegas", "lat": 36.2, "lon": -115.2, "temp_c": 20.0},
-    {"label": "Albuquerque", "lat": 35.1, "lon": -106.7, "temp_c": 14.5},
-    {"label": "Memphis", "lat": 35.1, "lon": -90.0, "temp_c": 18.0},
-    {"label": "Charlotte", "lat": 35.2, "lon": -80.8, "temp_c": 16.0},
-    {"label": "Tampa", "lat": 28.0, "lon": -82.5, "temp_c": 25.0},
-]
+# Constants
+# Semantic exception: temperature carries a strong cold -> blue, mild -> green, hot -> red expectation
+BAND_COLORS = [IMPRINT_PALETTE[2], IMPRINT_PALETTE[0], IMPRINT_PALETTE[4]]  # cool, mild, warm
+BAND_LIMITS = [12, 22]  # annual mean in deg C that separates cool | mild | warm
+BAND_NAMES = ["Cool (< 12 °C)", "Mild (12–22 °C)", "Warm (> 22 °C)"]
+DOT_SIZES = [16, 20, 24]  # redundant size encoding per band, aids color-vision accessibility
 
-# Continental US bounds; chart xrange padded to give tick labels breathing room
-lat_min, lat_max = 24, 51
-lon_min, lon_max = -128, -62
-chart_xrange = (-132, -58)
+# Columns: set these to your table's column names
+LAT = "Latitude (°)"  # role: lat
+LON = "Longitude (°)"  # role: lon
+TEMP = "Annual mean temperature (°C)"  # role: value
+STATION = "Station"  # role: label
+
+# Data: replace this block with your own table, for example df = pd.read_csv("stations.csv")
+# US weather monitoring network, mean annual surface temperatures
+df = pd.DataFrame(
+    {
+        STATION: [
+            "Seattle",
+            "Portland",
+            "San Francisco",
+            "Los Angeles",
+            "Phoenix",
+            "Denver",
+            "Dallas",
+            "Houston",
+            "Minneapolis",
+            "Chicago",
+            "Detroit",
+            "Atlanta",
+            "Miami",
+            "Washington DC",
+            "New York",
+            "Boston",
+            "Nashville",
+            "New Orleans",
+            "Kansas City",
+            "Salt Lake City",
+            "Las Vegas",
+            "Albuquerque",
+            "Memphis",
+            "Charlotte",
+            "Tampa",
+        ],
+        LAT: [47.6, 45.5, 37.8, 34.1, 33.4, 39.7, 32.8, 29.8, 44.9, 41.9, 42.3, 33.7, 25.8]
+        + [38.9, 40.7, 42.4, 36.2, 30.0, 39.1, 40.8, 36.2, 35.1, 35.1, 35.2, 28.0],
+        LON: [-122.3, -122.7, -122.4, -118.2, -112.1, -104.9, -96.8, -95.4, -93.2, -87.6, -83.0, -84.4, -80.2]
+        + [-77.0, -74.0, -71.1, -86.8, -90.1, -94.6, -111.9, -115.2, -106.7, -90.0, -80.8, -82.5],
+        TEMP: [11.0, 12.0, 13.5, 19.0, 28.5, 10.5, 19.5, 24.5, 7.5, 9.5, 8.5, 17.5, 27.0]
+        + [13.5, 12.5, 10.0, 15.5, 23.0, 12.5, 11.5, 20.0, 14.5, 18.0, 16.0, 25.0],
+    }
+)
+
+# Plot: reads only df and the constants above
+# View fitted to the data bounds: ticks every 10° longitude and 5° latitude, padded frame
+lat_min, lat_max = 5 * math.floor(df[LAT].min() / 5), 5 * math.ceil(df[LAT].max() / 5)
+lon_min, lon_max = 10 * math.floor(df[LON].min() / 10), 10 * math.ceil(df[LON].max() / 10)
+x_pad = 0.06 * (lon_max - lon_min)
 
 title = "map-tile-background · python · pygal · anyplot.ai"
 n = len(title)
@@ -77,13 +98,15 @@ title_font_size = max(44, round(66 * ratio))
 
 custom_style = Style(
     background=PAGE_BG,
-    plot_background=LAND_BG,
+    plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(COLOR_COOL, COLOR_MILD, COLOR_WARM),
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
+    colors=tuple(BAND_COLORS),
     title_font_size=title_font_size,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -97,8 +120,8 @@ chart = _pygal.XY(
     height=1800,
     style=custom_style,
     title=title,
-    x_title="Longitude (°)",
-    y_title="Latitude (°)",
+    x_title=LON,
+    y_title=LAT,
     show_legend=True,
     legend_at_bottom=True,
     legend_box_size=36,
@@ -111,34 +134,27 @@ chart = _pygal.XY(
     margin_bottom=240,
     margin_left=200,
     margin_right=80,
-    range=(lat_min, lat_max),
-    xrange=chart_xrange,
+    range=(lat_min - 1, lat_max + 1),
+    xrange=(lon_min - x_pad, lon_max + x_pad),
     print_values=False,
     truncate_legend=-1,
     truncate_label=-1,
     explicit_size=True,
 )
 
-# Group stations by annual mean temperature
-cool_pts = []
-mild_pts = []
-warm_pts = []
+# Group stations into temperature bands (cool | mild | warm)
+band = pd.cut(df[TEMP], [-math.inf, *BAND_LIMITS, math.inf], right=False, labels=False)
+for i, name in enumerate(BAND_NAMES):
+    rows = df[band == i]
+    points = [
+        {"value": (lon, lat), "label": f"{station}: {temp} °C"}
+        for station, lat, lon, temp in zip(rows[STATION], rows[LAT], rows[LON], rows[TEMP], strict=True)
+    ]
+    chart.add(name, points, dots_size=DOT_SIZES[i])
 
-for s in stations:
-    pt = {"value": (s["lon"], s["lat"]), "label": f"{s['label']}: {s['temp_c']} °C"}
-    if s["temp_c"] < 12:
-        cool_pts.append(pt)
-    elif s["temp_c"] < 22:
-        mild_pts.append(pt)
-    else:
-        warm_pts.append(pt)
-
-chart.add("Cool (< 12 °C)", cool_pts, dots_size=16)
-chart.add("Mild (12–22 °C)", mild_pts, dots_size=20)
-chart.add("Warm (> 22 °C)", warm_pts, dots_size=24)
-
-chart.x_labels = [f"{lon}°" for lon in range(lon_min, lon_max + 1, 10)]
-chart.y_labels = [f"{lat}°" for lat in range(lat_min, lat_max + 1, 5)]
+# Labels with explicit values, so each tick sits at its coordinate
+chart.x_labels = [{"label": f"{lon}°", "value": lon} for lon in range(lon_min, lon_max + 1, 10)]
+chart.y_labels = [{"label": f"{lat}°", "value": lat} for lat in range(lat_min, lat_max + 1, 5)]
 
 # Save PNG and interactive HTML
 chart.render_to_png(f"plot-{THEME}.png")
