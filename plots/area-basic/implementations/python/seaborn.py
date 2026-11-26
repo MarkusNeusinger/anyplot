@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-basic: Basic Area Chart
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-26
@@ -60,11 +60,8 @@ sns.set_theme(
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Layered gradient fill from seaborn's light_palette: three tints fading toward the baseline
-palette_colors = sns.light_palette(BRAND, n_colors=5)
-for i in range(3):
-    frac = (i + 1) / 3
-    ax.fill_between(df[DATE], 0, df[VISITORS] * frac, color=palette_colors[i + 2], alpha=0.28, linewidth=0)
+# Semi-transparent fill down to the baseline, so the gridlines stay visible through it
+ax.fill_between(df[DATE], 0, df[VISITORS], color=BRAND, alpha=0.4, linewidth=0)
 
 # Solid top edge
 sns.lineplot(data=df, x=DATE, y=VISITORS, ax=ax, color=BRAND, linewidth=2.5)
