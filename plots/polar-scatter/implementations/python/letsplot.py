@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-scatter: Polar Scatter Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-20
@@ -20,6 +20,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+GRID_MINOR = "rgba(26,26,23,0.05)" if THEME == "light" else "rgba(240,239,232,0.05)"
 
 # Imprint palette
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -45,7 +47,7 @@ directions = (direction_centers[chosen_sectors] + np.random.uniform(-20, 20, n_p
 
 # Weibull-like speeds, stronger from the SW-W side
 base_speed = np.random.weibull(2.0, n_points) * 6 + 2
-speeds = np.clip(base_speed * (1 + 0.4 * np.sin(np.radians(directions - 240))), 1, 22)
+speeds = np.clip(base_speed * (1 + 0.4 * np.sin(np.radians(directions - 150))), 1, 22)
 
 hour = np.random.choice(np.arange(6, 22), size=n_points)
 time_of_day = np.where(hour < 12, "Morning", np.where(hour < 18, "Afternoon", "Evening"))
@@ -66,8 +68,8 @@ plot = (
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
-        panel_grid_minor=element_line(color=INK_SOFT, size=0.2),
+        panel_grid_major=element_line(color=GRID, size=0.3),
+        panel_grid_minor=element_line(color=GRID_MINOR, size=0.2),
         plot_title=element_text(size=16, hjust=0.5, color=INK),
         axis_text=element_text(size=11, color=INK_SOFT),
         axis_title_y=element_text(size=13, color=INK),
@@ -78,8 +80,10 @@ plot = (
         legend_position=[1.0, 1.0],
         legend_justification=[1, 1],
     )
-    + ggsize(600, 600)
 )
+
+# The one-panel grid paints the full square canvas; coord_polar alone leaves transparent strips
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
