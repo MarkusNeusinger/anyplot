@@ -15,4 +15,4 @@
   and records written before the key existed still pass. Until now a later
   attempt learned only what the live file lacks, never why the last attempt
   failed; the owner chose this note instead of switching on the immediate
-  retry, which stays off.
+  retry, which stays off. (#14598)

@@ -11,4 +11,4 @@
   review should have a clear effect on the next attempt." The note's content per reason code, the
   generator-only rule, and the framing as data rather than a change request were settled in the
   session that built it.
-- Where: `docs/workflows/overview.md`
+- Where: #14598
