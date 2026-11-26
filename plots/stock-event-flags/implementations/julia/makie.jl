@@ -123,7 +123,7 @@ band!(ax, 1:n_days, fill(y_bot, n_days), prices;
 
 # Stock price line (thinner so event flags dominate the visual hierarchy)
 lines!(ax, 1:n_days, prices;
-       color = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.9), linewidth = 1.2)
+       color = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.9), linewidth = 1.8)
 
 # Event flags: dashed connector + price dot + flag marker + label
 for (i, (day, etype, label)) in enumerate(events)
@@ -145,11 +145,11 @@ for (i, (day, etype, label)) in enumerate(events)
     if etype == "earnings"
         pct     = reactions[day]
         pct_str = (pct >= 0 ? "+" : "") * string(round(pct * 100; digits = 1)) * "%"
-        ann_y   = max(price - 0.08 * p_range, y_bot + 0.02 * p_range)
+        ann_y   = flag_y + 0.10 * p_range
         text!(ax, pct_str;
               position = (Float64(day), ann_y),
-              align    = (:center, :top),
-              fontsize = 9,
+              align    = (:center, :bottom),
+              fontsize = 11,
               color    = pct >= 0 ? COLOR_EARNINGS : COLOR_LOSS)
     end
 end
