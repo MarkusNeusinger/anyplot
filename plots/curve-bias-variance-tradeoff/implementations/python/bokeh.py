@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.abspath(os.path.dirname(__file__) or ".")]
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import BoxAnnotation, ColumnDataSource, Label, Span
 from bokeh.plotting import figure
@@ -29,45 +30,61 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint palette — semantic assignments for this spec
-COLOR_TOTAL = "#009E73"  # brand green — first/most prominent (U-shaped key curve)
-COLOR_BIAS = "#4467A3"  # blue — semantic fit with underfitting zone
-COLOR_VARIANCE = "#C475FD"  # purple — second categorical
+# Imprint palette, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+COLOR_TOTAL = IMPRINT_PALETTE[0]  # brand green — first/most prominent (U-shaped key curve)
+COLOR_BIAS = IMPRINT_PALETTE[2]  # blue — semantic fit with underfitting zone
+COLOR_VARIANCE = IMPRINT_PALETTE[1]  # purple — overfitting zone
 
-# Data — theoretical bias-variance tradeoff curves
-np.random.seed(42)
+# Constants
+IRREDUCIBLE_LEVEL = 0.5  # noise floor of the theoretical model
+
+# Column constants
+COMPLEXITY = "Model Complexity"  # role: model_complexity
+BIAS = "Bias²"  # role: bias_squared
+VARIANCE = "Variance"  # role: variance
+IRREDUCIBLE = "Irreducible Error"  # role: irreducible_error
+TOTAL = "Total Error"  # role: total_error
+Y_LABEL = "Prediction Error"
+
+# Data: theoretical bias-variance curves; replace with your own table, for example df = pd.read_csv("errors.csv")
 complexity = np.linspace(0.1, 10, 100)
-
 bias_squared = 4.0 / (1 + complexity) ** 1.2
 variance = 0.15 * complexity**1.3
-irreducible_error = np.full_like(complexity, 0.5)
-total_error = bias_squared + variance + irreducible_error
-
-optimal_idx = np.argmin(total_error)
-optimal_complexity = complexity[optimal_idx]
-optimal_error = total_error[optimal_idx]
-
-source = ColumnDataSource(
-    data={
-        "complexity": complexity,
-        "bias_squared": bias_squared,
-        "variance": variance,
-        "irreducible_error": irreducible_error,
-        "total_error": total_error,
+df = pd.DataFrame(
+    {
+        COMPLEXITY: complexity,
+        BIAS: bias_squared,
+        VARIANCE: variance,
+        IRREDUCIBLE: np.full_like(complexity, IRREDUCIBLE_LEVEL),
+        TOTAL: bias_squared + variance + IRREDUCIBLE_LEVEL,
     }
 )
 
 # Plot
 title_str = "curve-bias-variance-tradeoff · python · bokeh · anyplot.ai"
 
+best = df[TOTAL].idxmin()
+optimal_complexity = df.loc[best, COMPLEXITY]
+optimal_error = df.loc[best, TOTAL]
+x_max = df[COMPLEXITY].max() * 1.05
+y_max = df[TOTAL].max() * 1.35
+source = ColumnDataSource(df)
+
+
+def curve_at(column, x):
+    """Value of a curve at complexity x, for placing labels next to it."""
+    return float(np.interp(x, df[COMPLEXITY], df[column]))
+
+
 p = figure(
     width=3200,
     height=1800,
     title=title_str,
-    x_axis_label="Model Complexity",
-    y_axis_label="Prediction Error",
-    x_range=(0, 10.5),
-    y_range=(0, 5.5),
+    x_axis_label=COMPLEXITY,
+    y_axis_label=Y_LABEL,
+    x_range=(0, x_max),
+    y_range=(0, y_max),
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=180,
@@ -76,51 +93,86 @@ p = figure(
 )
 
 # Shaded underfitting / overfitting zones
-underfitting_zone = BoxAnnotation(left=0, right=optimal_complexity, fill_alpha=0.07, fill_color=COLOR_BIAS)
-overfitting_zone = BoxAnnotation(left=optimal_complexity, right=11, fill_alpha=0.07, fill_color=COLOR_VARIANCE)
-p.add_layout(underfitting_zone)
-p.add_layout(overfitting_zone)
+p.add_layout(BoxAnnotation(left=0, right=optimal_complexity, fill_alpha=0.07, fill_color=COLOR_BIAS))
+p.add_layout(BoxAnnotation(left=optimal_complexity, right=x_max, fill_alpha=0.07, fill_color=COLOR_VARIANCE))
 
-# Curves — drawn in order: background lines first, Total Error on top
+# Curves — background lines first, Total Error on top
 p.line(
-    "complexity",
-    "irreducible_error",
+    COMPLEXITY,
+    IRREDUCIBLE,
     source=source,
     line_width=4,
     line_color=INK_SOFT,
     line_dash="dashed",
-    legend_label="Irreducible Error",
+    legend_label=IRREDUCIBLE,
 )
-p.line("complexity", "bias_squared", source=source, line_width=5, line_color=COLOR_BIAS, legend_label="Bias²")
-p.line("complexity", "variance", source=source, line_width=5, line_color=COLOR_VARIANCE, legend_label="Variance")
-p.line("complexity", "total_error", source=source, line_width=7, line_color=COLOR_TOTAL, legend_label="Total Error")
+p.line(COMPLEXITY, BIAS, source=source, line_width=5, line_color=COLOR_BIAS, legend_label=BIAS)
+p.line(COMPLEXITY, VARIANCE, source=source, line_width=5, line_color=COLOR_VARIANCE, legend_label=VARIANCE)
+p.line(COMPLEXITY, TOTAL, source=source, line_width=7, line_color=COLOR_TOTAL, legend_label=TOTAL)
 
-# Optimal complexity — vertical dotted guide + marker
-optimal_line = Span(location=optimal_complexity, dimension="height", line_color=INK, line_width=2, line_dash="dotted")
-p.add_layout(optimal_line)
+# Optimal complexity — vertical dotted guide + marker at the minimum of the total error
+p.add_layout(Span(location=optimal_complexity, dimension="height", line_color=INK, line_width=2, line_dash="dotted"))
 p.scatter([optimal_complexity], [optimal_error], size=20, color=COLOR_TOTAL, line_color=PAGE_BG, line_width=3)
 
-# Direct curve labels
-p.add_layout(Label(x=0.7, y=2.85, text="Bias²", text_font_size="28pt", text_color=COLOR_BIAS, text_font_style="bold"))
+# Direct curve labels, each placed relative to its own curve
+x_bias, x_var, x_irr, x_tot = 0.14 * x_max, 0.76 * x_max, 0.60 * x_max, 0.55 * x_max
 p.add_layout(
-    Label(x=8.0, y=2.6, text="Variance", text_font_size="28pt", text_color=COLOR_VARIANCE, text_font_style="bold")
+    Label(
+        x=x_bias,
+        y=curve_at(BIAS, x_bias) + 0.1,
+        text=BIAS,
+        text_font_size="28pt",
+        text_color=COLOR_BIAS,
+        text_font_style="bold",
+    )
 )
 p.add_layout(
-    Label(x=6.3, y=0.68, text="Irreducible Error", text_font_size="22pt", text_color=INK_SOFT, text_font_style="italic")
+    Label(
+        x=x_var,
+        y=curve_at(VARIANCE, x_var) - 0.55,
+        text=VARIANCE,
+        text_font_size="28pt",
+        text_color=COLOR_VARIANCE,
+        text_font_style="bold",
+    )
 )
 p.add_layout(
-    Label(x=5.8, y=3.85, text="Total Error", text_font_size="28pt", text_color=COLOR_TOTAL, text_font_style="bold")
+    Label(
+        x=x_irr,
+        y=IRREDUCIBLE_LEVEL + 0.18,
+        text=IRREDUCIBLE,
+        text_font_size="22pt",
+        text_color=INK_SOFT,
+        text_font_style="italic",
+    )
 )
 p.add_layout(
-    Label(x=optimal_complexity + 0.25, y=optimal_error + 0.28, text="Optimal", text_font_size="26pt", text_color=INK)
+    Label(
+        x=x_tot,
+        y=curve_at(TOTAL, x_tot) + 0.25,
+        text=TOTAL,
+        text_font_size="28pt",
+        text_color=COLOR_TOTAL,
+        text_font_style="bold",
+    )
+)
+p.add_layout(
+    Label(
+        x=optimal_complexity + 0.02 * x_max,
+        y=optimal_error + 0.3,
+        text="Optimal complexity",
+        text_font_size="28pt",
+        text_color=INK,
+        text_font_style="bold",
+    )
 )
 
 # Formula annotation
 p.add_layout(
     Label(
-        x=0.3,
-        y=4.88,
-        text="Total Error = Bias² + Variance + Irreducible Error",
+        x=0.012 * x_max,
+        y=0.93 * y_max,
+        text=f"{TOTAL} = {BIAS} + {VARIANCE} + {IRREDUCIBLE}",
         text_font_size="24pt",
         text_color=INK_SOFT,
         text_font_style="italic",
@@ -128,10 +180,14 @@ p.add_layout(
 )
 
 # Zone labels (top corners of each region)
-p.add_layout(Label(x=0.4, y=4.55, text="Underfitting", text_font_size="24pt", text_color=COLOR_BIAS))
-p.add_layout(Label(x=0.4, y=4.17, text="(High Bias)", text_font_size="20pt", text_color=COLOR_BIAS))
-p.add_layout(Label(x=7.6, y=4.55, text="Overfitting", text_font_size="24pt", text_color=COLOR_VARIANCE))
-p.add_layout(Label(x=7.6, y=4.17, text="(High Variance)", text_font_size="20pt", text_color=COLOR_VARIANCE))
+p.add_layout(Label(x=0.04 * x_max, y=0.84 * y_max, text="Underfitting", text_font_size="24pt", text_color=COLOR_BIAS))
+p.add_layout(Label(x=0.04 * x_max, y=0.75 * y_max, text="(High Bias)", text_font_size="24pt", text_color=COLOR_BIAS))
+p.add_layout(
+    Label(x=0.72 * x_max, y=0.84 * y_max, text="Overfitting", text_font_size="24pt", text_color=COLOR_VARIANCE)
+)
+p.add_layout(
+    Label(x=0.72 * x_max, y=0.75 * y_max, text="(High Variance)", text_font_size="24pt", text_color=COLOR_VARIANCE)
+)
 
 # Text sizing
 p.title.text_font_size = "50pt"
