@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-21
@@ -15,9 +15,10 @@ from lets_plot import (
     element_rect,
     element_text,
     facet_wrap,
-    geom_area,
+    geom_blank,
     geom_line,
     geom_point,
+    geom_ribbon,
     geom_text,
     ggplot,
     ggsize,
@@ -40,100 +41,120 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Status colors: good uses brand green (Okabe-Ito #1), warning amber, critical red
-STATUS_COLORS = {"good": "#009E73", "warning": "#F59E0B", "critical": "#EF4444", "bad": "#EF4444"}
+# Imprint palette: good = brand green, critical/unfavorable = matte red, warning = amber anchor
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ANYPLOT_AMBER = "#DDCC77"
 
+# Constants
+STATE_COLORS = {
+    "good": IMPRINT_PALETTE[0],
+    "warning": ANYPLOT_AMBER,
+    "critical": IMPRINT_PALETTE[4],
+    "bad": IMPRINT_PALETTE[4],
+}
+WARNING_BADGE = "⚠  "
+BADGE_STATES = ("warning", "critical")
+FAVORABLE, UNFAVORABLE = "good", "bad"
+
+METRIC = "Metric"  # role: metric_name
+CURRENT = "Current value"  # role: current_value
+HISTORY = "History"  # role: history
+CHANGE = "Change (%)"  # role: change_percent
+STATUS = "Status"  # role: status
+STEP = "Step"  # role: extra
+UNIT = "Unit"  # role: extra
+LOWER_BETTER = "Lower is better"  # role: extra
+TILE = "Tile"  # role: extra
+EFFECT = "Effect"  # role: extra
+VALUE_TEXT = "Value text"  # role: extra
+CHANGE_TEXT = "Change text"  # role: extra
+VALUE_Y = "Value y"  # role: extra
+CHANGE_Y = "Change y"  # role: extra
+FLOOR = "Floor"  # role: extra
+TOP = "Top"  # role: extra
+
+# Data: replace this block with your own table, one row per metric and step
 np.random.seed(42)
-
-# Data
 metrics = [
-    {"name": "CPU Usage", "value": 45, "unit": "%", "change": -5.2, "status": "good"},
-    {"name": "Memory", "value": 72, "unit": "%", "change": 8.3, "status": "warning"},
-    {"name": "Response Time", "value": 120, "unit": "ms", "change": -15.1, "status": "good"},
-    {"name": "Active Users", "value": 1284, "unit": "", "change": 12.5, "status": "good"},
-    {"name": "Error Rate", "value": 0.8, "unit": "%", "change": -22.0, "status": "good"},
-    {"name": "Throughput", "value": 847, "unit": "req/s", "change": 3.7, "status": "good"},
+    ("CPU Usage", 45, "%", -5.2, "good", True),
+    ("Memory", 72, "%", 8.3, "warning", True),
+    ("Response Time", 120, "ms", -15.1, "good", True),
+    ("Active Users", 1284, "", 12.5, "good", False),
+    ("Error Rate", 0.8, "%", -22.0, "good", True),
+    ("Throughput", 847, "req/s", 3.7, "good", False),
 ]
-
-all_data = []
-for m in metrics:
-    base = m["value"]
-    trend = np.cumsum(np.random.randn(20) * (base * 0.08)) + base * 0.85
-    trend = trend - trend[-1] + base
-
-    value_str = f"{m['value']:,}" if m["value"] >= 1000 else str(m["value"])
-    value_display = f"{value_str}{m['unit']}"
-
-    change = m["change"]
-    if change >= 0:
-        arrow = "▲"
-        change_color = "bad" if m["name"] in ["CPU Usage", "Memory", "Error Rate", "Response Time"] else "good"
-    else:
-        arrow = "▼"
-        change_color = "good" if m["name"] in ["CPU Usage", "Memory", "Error Rate", "Response Time"] else "bad"
-
-    change_str = f"{arrow} {abs(change):.1f}%"
-
-    # Prepend warning badge to facet strip label for prominent visual distinction
-    facet_label = f"⚠  {m['name']}" if m["status"] == "warning" else m["name"]
-
-    for i, val in enumerate(trend):
-        all_data.append(
-            {
-                "metric": facet_label,
-                "x": i,
-                "y": val,
-                "status": m["status"],
-                "value_label": value_display if i == 10 else "",
-                "change_label": change_str if i == 10 else "",
-                "change_color": change_color,
-                "is_last": i == len(trend) - 1,
-            }
-        )
-
-df = pd.DataFrame(all_data)
-last_points = df[df["is_last"]].copy()
-label_data = df[df["value_label"] != ""].copy()
-
-y_stats = df.groupby("metric").agg({"y": ["min", "max"]}).reset_index()
-y_stats.columns = ["metric", "y_min", "y_max"]
-
-label_data = label_data.merge(y_stats, on="metric")
-label_data["y_value"] = label_data["y_max"] + (label_data["y_max"] - label_data["y_min"]) * 0.55
-label_data["y_change"] = label_data["y_min"] - (label_data["y_max"] - label_data["y_min"]) * 0.40
+rows = []
+for name, value, unit, change, status, lower_is_better in metrics:
+    walk = np.cumsum(np.random.randn(20) * (value * 0.08)) + value * 0.85
+    walk = walk - walk[-1] + value
+    for step, level in enumerate(walk):
+        rows.append((name, value, unit, change, status, lower_is_better, step, level))
+df = pd.DataFrame(rows, columns=[METRIC, CURRENT, UNIT, CHANGE, STATUS, LOWER_BETTER, STEP, HISTORY])
 
 # Plot
+tiles = df.groupby(METRIC, sort=False).agg(
+    {CURRENT: "first", UNIT: "first", CHANGE: "first", STATUS: "first", LOWER_BETTER: "first"}
+)
+low = df.groupby(METRIC, sort=False)[HISTORY].min()
+high = df.groupby(METRIC, sort=False)[HISTORY].max()
+span = high - low
+
+labels = tiles.reset_index()
+labels[STEP] = df[STEP].median()
+labels[VALUE_TEXT] = [
+    (f"{v:,.0f}" if v >= 1000 else f"{v:g}") + unit for v, unit in zip(labels[CURRENT], labels[UNIT], strict=True)
+]
+labels[CHANGE_TEXT] = [("▲ " if c >= 0 else "▼ ") + f"{abs(c):.1f}%" for c in labels[CHANGE]]
+# favorable when the change goes the way the metric wants: down where lower is better, else up
+labels[EFFECT] = [
+    FAVORABLE if (c < 0) == lower else UNFAVORABLE
+    for c, lower in zip(labels[CHANGE], labels[LOWER_BETTER], strict=True)
+]
+labels[VALUE_Y] = (high + span * 0.55).to_numpy()
+labels[CHANGE_Y] = (low - span * 0.40).to_numpy()
+labels[TOP] = (high + span * 0.95).to_numpy()
+
+# Warning tiles carry a badge in the strip, a second cue beyond color
+badge = {m: WARNING_BADGE + m if s in BADGE_STATES else m for m, s in zip(tiles.index, tiles[STATUS], strict=True)}
+df[TILE] = df[METRIC].map(badge)
+labels[TILE] = labels[METRIC].map(badge)
+df[FLOOR] = df[METRIC].map(low - span * 0.7)
+last_points = df[df[STEP] == df[STEP].max()]
+
 plot = (
-    ggplot(df, aes("x", "y"))
-    + geom_area(aes(fill="status"), alpha=0.25, show_legend=False, tooltips="none")
+    ggplot(df, aes(STEP, HISTORY))
+    + geom_ribbon(aes(ymin=FLOOR, ymax=HISTORY, fill=STATUS), alpha=0.25, size=0, show_legend=False, tooltips="none")
     + geom_line(
-        aes(color="status"), size=2, show_legend=False, tooltips=layer_tooltips().line("@metric").line("value|@y{.1f}")
+        aes(color=STATUS),
+        size=2,
+        show_legend=False,
+        tooltips=layer_tooltips().line(f"@{{{METRIC}}}").line(f"value|@{{{HISTORY}}}{{.1f}}"),
     )
     + geom_point(
         data=last_points,
-        mapping=aes(color="status"),
+        mapping=aes(color=STATUS),
         size=5,
         show_legend=False,
-        tooltips=layer_tooltips().line("@metric").line("current|@y{.1f}"),
+        tooltips=layer_tooltips().line(f"@{{{METRIC}}}").line(f"current|@{{{HISTORY}}}{{.1f}}"),
     )
+    + geom_text(data=labels, mapping=aes(x=STEP, y=VALUE_Y, label=VALUE_TEXT), size=20, fontface="bold", color=INK)
     + geom_text(
-        data=label_data, mapping=aes(x="x", y="y_value", label="value_label"), size=22, fontface="bold", color=INK
-    )
-    + geom_text(
-        data=label_data,
-        mapping=aes(x="x", y="y_change", label="change_label", color="change_color"),
-        size=14,
+        data=labels,
+        mapping=aes(x=STEP, y=CHANGE_Y, label=CHANGE_TEXT, color=EFFECT),
+        size=17,
+        fontface="bold",
         show_legend=False,
     )
-    + scale_fill_manual(values=STATUS_COLORS)
-    + scale_color_manual(values=STATUS_COLORS)
+    + geom_blank(data=labels, mapping=aes(x=STEP, y=TOP))
+    + scale_fill_manual(values=STATE_COLORS)
+    + scale_color_manual(values=STATE_COLORS)
     + scale_x_continuous(expand=[0.05, 0.05])
-    + scale_y_continuous(expand=[0.55, 0.55])
-    + facet_wrap("metric", ncol=3, scales="free_y")
+    + scale_y_continuous(expand=[0.03, 0.03])
+    + facet_wrap(TILE, ncol=3, scales="free_y")
     + labs(title="dashboard-metrics-tiles · python · letsplot · anyplot.ai")
     + theme(
         plot_title=element_text(size=16, face="bold", color=INK, hjust=0.5),
-        strip_text=element_text(size=14, face="bold", color=INK_SOFT),
+        strip_text=element_text(size=17, face="bold", color=INK_SOFT),
         strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
