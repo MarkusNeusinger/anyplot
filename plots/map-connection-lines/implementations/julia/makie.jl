@@ -1,7 +1,7 @@
 # anyplot.ai
 # map-connection-lines: Connection Lines Map (Origin-Destination)
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-05-28
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 81/100 | Updated: 2026-11-26
 
 using CairoMakie
 using Colors
@@ -29,10 +29,10 @@ const GRAT_COLOR  = THEME == "light" ?
     RGBAf(26f0/255f0, 26f0/255f0, 23f0/255f0, GRAT_ALPHA) :
     RGBAf(240f0/255f0, 239f0/255f0, 232f0/255f0, GRAT_ALPHA)
 
-# Sequential colormap: anyplot brand green → blue (single-polarity continuous)
-const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
-const SEQ_R1, SEQ_G1, SEQ_B1 = 0f0/255f0,  158f0/255f0, 115f0/255f0   # #009E73
-const SEQ_R2, SEQ_G2, SEQ_B2 = 68f0/255f0, 103f0/255f0, 163f0/255f0   # #4467A3
+# Imprint sequential ramp, marks stops (colored lines on the page), per theme
+const IMPRINT_SEQ_MARKS = THEME == "light" ?
+    cgrad([colorant"#009E73", colorant"#4467A3", colorant"#002850"], [0.0, 0.338, 1.0]) :
+    cgrad([colorant"#007755", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.32, 1.0])
 
 # Airport data: (name, lat, lon)
 const airport_names = [
@@ -109,7 +109,7 @@ const title_sz  = round(Int, 20 * min(1.0, 67 / length(title_str)))
 
 fig = Figure(
     size            = (1600, 900),
-    fontsize        = 12,
+    fontsize        = 14,
     backgroundcolor = PAGE_BG,
 )
 
@@ -120,12 +120,12 @@ ax = Axis(
     titlecolor          = INK,
     xlabel              = "Longitude",
     ylabel              = "Latitude",
-    xlabelsize          = 13,
-    ylabelsize          = 13,
+    xlabelsize          = 14,
+    ylabelsize          = 14,
     xlabelcolor         = INK,
     ylabelcolor         = INK,
-    xticklabelsize      = 10,
-    yticklabelsize      = 10,
+    xticklabelsize      = 14,
+    yticklabelsize      = 14,
     xticklabelcolor     = INK_SOFT,
     yticklabelcolor     = INK_SOFT,
     xtickcolor          = INK_SOFT,
@@ -184,12 +184,8 @@ for (oi, di, volume) in connections
     end
 
     nv = Float32((volume - vmin) / (vmax - vmin))
-    arc_color = RGBAf(
-        SEQ_R1 + (SEQ_R2 - SEQ_R1) * nv,
-        SEQ_G1 + (SEQ_G2 - SEQ_G1) * nv,
-        SEQ_B1 + (SEQ_B2 - SEQ_B1) * nv,
-        0.50f0,   # within spec's recommended 0.3–0.6
-    )
+    base_c = get(IMPRINT_SEQ_MARKS, nv)
+    arc_color = RGBAf(red(base_c), green(base_c), blue(base_c), 0.60f0)  # spec: 0.3-0.6
     lines!(ax, arc_lons, arc_lats;
         color     = arc_color,
         linewidth = 1.0 + 3.5 * nv,
@@ -222,7 +218,7 @@ for (i, name) in enumerate(airport_names)
     dx, dy = label_offsets[i]
     text!(ax, airport_lons[i] + dx, airport_lats[i] + dy;
         text     = name,
-        fontsize = 12,
+        fontsize = 13,
         color    = INK_SOFT,
         align    = (:center, :center),
     )
@@ -230,12 +226,12 @@ end
 
 # Colorbar: maps passenger volume (M/year) to the sequential palette
 Colorbar(fig[1, 2];
-    colormap       = ANYPLOT_SEQ,
+    colormap       = IMPRINT_SEQ_MARKS,
     limits         = (vmin, vmax),
     label          = "Passengers (M / year)",
-    labelsize      = 12,
+    labelsize      = 14,
     labelcolor     = INK,
-    ticklabelsize  = 10,
+    ticklabelsize  = 12,
     ticklabelcolor = INK_SOFT,
     tickcolor      = INK_SOFT,
     width          = 18,
