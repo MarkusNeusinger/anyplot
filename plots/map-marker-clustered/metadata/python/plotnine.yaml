@@ -12,38 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 76
 review:
   strengths:
-  - 'Elegant multi-layer ggplot composition: convex hull polygons + state boundaries
-    + cluster circles + count labels + city labels in a single pipeline'
-  - Per-city category weighting ensures each geographic cluster has a visually distinct
-    dominant color
-  - coord_fixed with correct geographic aspect ratio and full Imprint palette compliance
-  - Both light and dark renders fully theme-adaptive with no dark-on-dark failures
-  - 'Perfect spec compliance: all feasible static features implemented, interactive
-    ones correctly omitted'
+  - Cluster markers carry legible white bold counts in both themes, sized by count
+    with a matching size legend
+  - Theme tokens threaded through all chrome; no dark-on-dark text
+  - guide_legend(override_aes=...) gives visible legend glyphs in both themes
+  - coord_fixed keeps a geographic aspect for the state outlines
   weaknesses:
-  - Los Angeles and San Diego city labels are visually crowded in the lower right;
-    increasing the north offset from 0.65 to ~1.0-1.2 degrees for these two cities
-    would reduce overlap with cluster markers
-  - Minor canvas under-utilization at the top (latitude 50 to canvas top edge); adjusting
-    ylim to (31.5, 49.5) would use vertical space more efficiently
+  - 'VQ-01, VQ-02 (both): city labels placed 0.65° above each city collide with the
+    cluster markers — ''San Diego'', ''San Francisco'' and ''Portland'' are partly
+    covered and ''Seattle'' touches its marker → labels clear of the markers. Likely
+    cause: city_label_df lat + 0.65 with va=''bottom'' for markers about 1° tall.'
+  - 'VQ-05 (both): the tall West Coast map with coord_fixed fills only the middle
+    third of a 3200x1800 landscape canvas, leaving wide empty margins → a square 2400x2400
+    canvas. Likely cause: figure_size=(8, 4.5).'
+  - 'VQ-07 (both): Service is drawn in #AE3030, the red anchor for bad or loss, with
+    only four meaningless categories while slot 4 (#BD8233 ochre) is skipped → Service
+    in #BD8233. Likely cause: CATEGORY_COLORS.'
+  - 'CQ-04 (code): the convex-hull block (ConvexHull, try/except, hull_df, geom_polygon
+    alpha 0.13) draws polygons hidden under the markers and invisible in both renders
+    → delete it. Likely cause: point spread sd=0.04°.'
+  - 'Suggestion: a few isolated store locations would show single markers next to
+    clusters.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "map-marker-clustered · python · plotnine · anyplot.ai" in dark ink, readable. Axis labels "Longitude (°)" and "Latitude (°N)" in dark ink, readable. Tick labels in secondary ink (#4A4A44), readable. City labels (Seattle, Portland, San Francisco, Los Angeles, San Diego) in muted ink, readable.
-      Data: 5 cluster circles — green (Seattle/67, San Diego/57), purple (Portland/66), red (San Francisco/68), sky blue (Los Angeles/42). White bold count labels inside circles. Transparent convex hull polygons at alpha=0.13. State boundary paths in soft ink. First series (Retail) correctly #009E73.
-      Legibility verdict: PASS — all text readable, minor crowding of LA/San Diego labels in lower right but not unreadable.
+      Background: warm off-white #FAF8F1, landscape 3200x1800 canvas.
+      Chrome: title, axis titles and ticks in dark ink, readable; framed legend with Category and Points in cluster.
+      Data: five cluster circles with white counts (Seattle 67 green, Portland 66 lavender, San Francisco 68 red, Los Angeles 42 blue, San Diego 57 green) over simplified WA/OR/CA outlines; city labels above each cluster, partly covered by the markers ('Seattle', 'Portland', 'San Francisco', 'San Diego'). The map fills only the middle third of the canvas.
+      Legibility verdict: PASS (labels partly covered)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title in light ink (#F0EFE8), readable. Axis labels light-colored, readable. Tick labels in secondary dark ink (#B8B7B0), readable. City labels in tertiary dark ink, readable. Legend box uses elevated dark background (#242420). No dark-on-dark text failures detected.
-      Data: Identical data colors to light render — same green, purple, red, sky blue cluster markers. White count labels still readable against colored circles in dark mode.
-      Legibility verdict: PASS — full theme adaptation, all text readable on dark surface.
+      Background: warm near-black #1A1A17.
+      Chrome: light ink text throughout, no dark-on-dark; legend on #242420 with light frame.
+      Data: identical categorical colors; same label collisions with markers.
+      Legibility verdict: PASS (labels partly covered)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -51,73 +58,65 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; minor deduction
-          for crowded city labels near LA/San Diego
+        comment: Labels partly hidden behind markers (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Los Angeles and San Diego city labels crowd each other and nearby
-          cluster markers in lower right
+        comment: City labels collide with cluster markers (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All cluster circles prominent and well-sized; count labels readable;
-          convex hulls visible
+        comment: Markers sized for 5 clusters; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette; white text on colored circles provides
-          good contrast
+        comment: Distinct hues, counts in white on saturated fills
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: Good layout; minor wasted space above latitude 50
+        comment: Tall map squeezed into a landscape canvas (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) and Latitude (°N) with units; correct title format
+        comment: Longitude (°), Latitude (°N)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Canonical Imprint palette positions 1-4 assigned in order; both renders
-          theme-correct
+        comment: Service on red slot 5, ochre skipped (defect line)
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Strong design: convex hull polygons, sized markers, city labels,
-          state boundaries — clearly above defaults'
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: panel_border blank, axis ticks removed, subtle grid, clean legend
-          integration
+        passed: false
+        comment: Style-guide baseline; framed legend
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Size + color encoding creates clear hierarchy; geographic business-type
-          story immediately readable
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct clustered marker map; interactive features correctly omitted
-          per static-library rules
+        comment: Clustered marker map
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Count labels, category colors, convex hulls, basemap all present
+        comment: Counts on markers, center placement, size grows with count, dominant-category
+          colors with legend, quiet basemap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude/Latitude correctly mapped; size=count, color=category
+        comment: Clusters at member centroids
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; category and size legends present with correct
-          labels
+        comment: Correct title; category and size legends
     data_quality:
       score: 15
       max: 15
@@ -157,24 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All clustering aspects shown: varied sizes, 4 categories, extent
-          polygons, reference labels'
+        comment: Clusters with counts, sizes and dominant categories shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US West Coast business locations in real cities; neutral business
-          geography
+        comment: West Coast store locations by business type
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Accurate geographic coordinates; cluster counts (42-68) sum correctly
-          to 300 points
+        comment: City coordinates correct; counts sum to 300
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -182,13 +177,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure, no functions or classes
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -197,18 +192,18 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering or fake UI
+        comment: Invisible hull block (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dimensions
+        comment: plot-{THEME}.png
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -216,16 +211,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics approach; multiple geom layers, coord_fixed,
-          guides with override_aes
+        comment: Layered grammar, guides(override_aes)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses coord_fixed for geographic maps, scale_fill_identity, guide_legend
-          override_aes — ggplot2/plotnine-specific features
+        passed: false
+        comment: guide_legend override_aes, scale_size_continuous
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-4bf8b8efdf
 impl_tags:
   dependencies:
   - scipy

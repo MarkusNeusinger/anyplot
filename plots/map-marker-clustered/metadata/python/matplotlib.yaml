@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:50:50Z'
-updated: '2026-11-26T14:35:21Z'
+updated: '2026-11-26T14:43:56Z'
 generated_by: claude-sonnet
-workflow_run: 45839384435
+workflow_run: 45840716877
 issue: 3766
 language_version: 3.14.10
 library_version: 3.11.2
@@ -12,102 +12,78 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 87
 review:
   strengths:
-  - 'Static adaptation of zoom-level clustering: grid-based clusters at their members''
-    mean position with log-scaled markers and bold counts, plus an ax.inset_axes panel
+  - 'Static adaptation of zoom-level clustering: grid cells collapsed to count badges
+    at their members'' mean position with log-scaled size, plus an ax.inset_axes panel
     that shows the London area expanded into individual markers'
-  - The inset now sits in the empty Bay of Biscay / western Mediterranean area (set_zorder(10)),
-    so no cluster marker or count is hidden behind it in either render
-  - Theme-adaptive basemap tokens (ocean, land, borders) and chrome tokens flip cleanly;
-    cluster halos use PAGE_BG so markers separate from the map in both themes
-  - Dominant-category coloring of cluster markers with a titled 'Store Type' legend,
-    and a faint alpha=0.20 backdrop of all 280 stores that keeps the underlying distribution
-    visible
-  - 'Clean linear code: seeded, strict zips, Axes API only, savefig without bbox_inches=''tight'''
+  - Single-store cells drawn as plain category-colored markers at their own coordinates,
+    so clusters and isolated stores read differently
+  - Coastline basemap that places every city group on land, in theme-adaptive ocean
+    and land tokens that stay quieter than the markers in both renders
+  - Imprint positions 1-3 for Retail, Grocery and Electronics with a titled Store
+    Type legend; page-colored halos separate the badges from the map in both themes
+  - 'Clean linear code: seeded, strict zips, Axes API only, savefig without bbox_inches'
   weaknesses:
-  - 'SC-02 (both): the hand-drawn land polygon leaves Madrid (-3.7°, 40.4°) and Rome
-    (12.5°, 41.9°) in the sea and drops Iberia''s interior and the Italian peninsula,
-    so the basemap (C5) gives wrong geographic context → a coastline in which those
-    cities lie on land, e.g. a coarse but correct outline of Iberia and Italy. Likely
-    cause: the europe_coast_lon/lat vertex lists.'
-  - 'SC-02 (both): seven isolated stores are drawn as count-''1'' cluster badges of
-    full cluster size instead of individual markers at their own coordinates (C2)
-    → draw single-member cells as plain category-colored points. Likely cause: the
-    cluster loop treats size==1 like any cluster.'
-  - 'VQ-01 (both): inset tick labels at 5.5 pt, district labels at 5 pt and the callout
-    at 6 pt read small beside the 8 pt main ticks → at least 7 pt (+1.5 to +2 pt).
-    Likely cause: ax_inset.tick_params labelsize=5.5, the district text fontsize=5,
-    the annotate fontsize=6.'
-  - 'VQ-02 (both): in the inset ''Central'' and ''East End'' run into each other and
-    a red marker sits on ''North''; on the main map the ''9'' and ''8'' and the ''7''
-    and ''16'' cluster discs overlap by about a third → drop or enlarge-space the
-    district labels; for the clusters, a coarser grid that merges the Rome cells.
-    Likely cause: district label positions; grid_size_lat/lon splitting cities across
-    cells.'
-  - 'VQ-07 (both): Electronics, the third category, is drawn in #AE3030 (position
-    5, the red bad/loss anchor) although nothing about electronics means red → the
-    third Imprint position #4467A3. Likely cause: the cat_colors dict.'
-  - 'DQ-03 (both): the callout reads ''London hub · 19 stores'' while the generated
-    London group has 50 stores split across the 19, 31 and 6 clusters, and the code
-    comment calls it the highest-count city although the 40 cluster is larger → state
-    the cluster honestly (e.g. ''London west cluster · 19 stores'') or count all London-cell
-    stores. Likely cause: the annotate text and the largest_idx comment.'
-  - 'Suggestion: connect the dashed London box to the inset with ax.indicate_inset_zoom(ax_inset)
-    so the zoom relation reads without the title.'
+  - 'Suggestion: give the inset all four spines (or ax.indicate_inset_zoom) so its
+    land fill no longer runs into the main map''s France at its top edge.'
+  - 'Suggestion: add coarse national borders to the coastline basemap so each cluster
+    reads against its country.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 figure; plot area light blue ocean with warm beige land polygons (crude Europe, Great Britain, Ireland).
-      Chrome: title "map-marker-clustered · python · matplotlib · anyplot.ai" dark and readable; "Longitude (°)" / "Latitude (°)" dark; tick labels dark grey; "Store Type" legend (Retail, Grocery, Electronics) on elevated frame; "London hub · 19 stores" callout box left of Britain with arrow to the 19 cluster; italic "Atlantic Ocean", "Mediterranean Sea"; north arrow at lower right; "Total: 280 locations · 27 clusters" box bottom right; inset "London → expanded" at bottom centre over empty sea with ~50 individual points and small district labels.
-      Data: 27 cluster markers sized by log count with white bold counts (1–40), colored by dominant category: Retail #009E73, Grocery #C475FD, Electronics #AE3030; faint alpha 0.2 backdrop points. Rome clusters 9/8 and 7/16 overlap partially; inset 'Central'/'East End' labels touch.
-      Legibility verdict: PASS (inset ticks and district labels small at 5–5.5 pt but readable)
+      Background: warm off-white #FAF8F1 figure; plot area light blue ocean with warm beige land (continental Europe coastline incl. Iberia and Italy, Great Britain, Ireland) outlined in soft grey.
+      Chrome: title 'map-marker-clustered · python · matplotlib · anyplot.ai' dark and readable; 'Longitude (°)' / 'Latitude (°)' dark; tick labels dark grey; 'Store Type' legend on elevated frame; 'London cluster · 50 stores' callout with arrow to the 50 badge and a dashed London box; italic 'Atlantic Ocean' and 'Mediterranean Sea'; north arrow at lower right; 'Total: 280 locations · 12 clusters · 2 single stores' box bottom right; inset 'London → expanded' at the bottom centre with ~50 individual markers and 7 pt ticks.
+      Data: 12 cluster badges sized by log count with white bold counts (2-53) colored by dominant category: Retail #009E73, Grocery #C475FD, Electronics #4467A3; 2 single stores as plain markers; faint alpha 0.2 backdrop points. Madrid (27) and Rome (37) sit on land.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 figure; dark navy ocean, dark warm-brown land.
-      Chrome: title, axis labels, ticks, legend text, callout and summary box all light on dark; no dark-on-dark text; cluster halos switch to the page colour.
-      Data: categorical colors identical to the light render (#009E73, #C475FD, #AE3030); backdrop points are very faint by design; inset points readable with light outlines.
+      Background: warm near-black #1A1A17 figure; dark navy ocean and dark warm-brown land.
+      Chrome: title, axis labels, ticks, legend text, callout, inset title and summary box all light on dark; no dark-on-dark text; badge halos switch to the page color.
+      Data: categorical colors identical to the light render (#009E73, #C475FD, #4467A3); backdrop points very faint by design; inset markers readable with light outlines.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Main text at style-guide sizes in both themes; inset ticks 5.5 pt,
-          district labels 5 pt and callout 6 pt read small (defect line)
+        comment: Title 12 pt, axis labels 10 pt, ticks 8 pt, legend 7-8 pt, inset
+          ticks 7 pt, callout and counts 7 pt bold; all readable in both themes, including
+          white counts on the three category fills
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Inset district labels collide and a marker covers 'North'; Rome cluster
-          discs overlap partly (defect line)
+        comment: No text collisions; counts sit centred on their discs, the callout,
+          ocean labels, north arrow and summary box sit clear of the cluster markers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cluster markers prominent with halos; backdrop points intentionally
-          faint; legend glyphs visible in both themes
+        comment: Cluster discs prominent with page-colored halos; the two single stores
+          drawn as smaller plain markers; faint alpha 0.2 backdrop by design; legend
+          glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three well-separated Imprint hues with lightness differences; counts
-          in white bold
+        comment: Green, lavender and blue differ in hue and lightness; no red-green
+          pair
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; map fills the plot area; inset placed in empty
-          sea
+        comment: Canvas gate passed (3200x1800); map fills the plot area with balanced
+          margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -116,11 +92,11 @@ review:
         comment: Longitude (°) and Latitude (°) with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds and chrome theme-correct, first series #009E73; Electronics
-          takes #AE3030 (position 5) instead of position 3 (defect line)'
+        comment: 'Retail #009E73, Grocery #C475FD, Electronics #4467A3 (Imprint positions
+          1-3) identical in both renders; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
       score: 11
       max: 20
@@ -130,24 +106,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Theme-adaptive basemap tokens, italic geographic labels, halo-outlined
-          cluster badges with bold counts — beyond the baseline
+        comment: Theme-adaptive ocean/land tokens, italic geographic labels and halo-outlined
+          count badges give a cartographic hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Layered z-order (basemap, faint backdrop, clusters, inset) and an
-          inset placed in empty sea
+        passed: false
+        comment: Style-guide spine and grid baseline; the inset keeps only two spines,
+          so its land fill runs into the main map's France at its top edge — nothing
+          beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: The overview-plus-inset pairing shows collapsed versus expanded state;
-          the London callout mislabels the hub, so limited credit
+        comment: Overview-plus-expanded-inset pairing with the dashed London box and
+          callout shows the collapsed versus expanded state of one cluster
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -155,29 +132,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Clustered marker map with counts — correct type
+        comment: Clustered marker map with count badges — correct type
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Counts on clusters (C1), log size (C3), dominant category + legend
-          (C4) present; basemap puts Madrid and Rome in the sea (C5) and singletons
-          are badges, not individual markers (C2) (defect lines)
+        comment: C1 counts on every cluster, C2 clusters at their members' mean and
+          two single stores as plain markers, C3 log-scaled size, C4 dominant-category
+          color with a Store Type legend, C5 coastline basemap quieter than the markers
+          with Madrid and Rome on land
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lon on x, lat on y; clusters at their members' mean; axes fitted
+        comment: Longitude on x, latitude on y; clusters at their members' mean; axes
+          fitted to the region
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title; Store Type legend names all categories
+        comment: Exact mandated title; legend 'Store Type' names all three categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -185,21 +164,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clusters from 1 to 40, mixed categories, singletons, expanded view
+        comment: Cluster counts from 2 to 53, single stores, mixed dominant categories
+          and an expanded inset of individual markers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Store chain across eight real European capitals with neutral store
-          types
+        comment: A neutral store chain across eight real European capitals with Retail
+          / Grocery / Electronics types
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: City coordinates correct and 280 points in range; the callout's 'London
-          hub · 19 stores' understates London's 50 stores (defect line)
+        comment: Checked city centres (Paris, London, Berlin, Rome, Madrid, Vienna,
+          Prague, Amsterdam) against their real coordinates, 280 points inside the
+          spec's 100-5000, and the callout's '50 stores' against the count on the
+          marker it points to; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -221,7 +203,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used (FancyArrowPatch, Rectangle, MaxNLocator)
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -233,7 +215,8 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png, current Axes API, no bbox_inches='tight'
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches; current Axes
+          API
     library_mastery:
       score: 6
       max: 10
@@ -243,33 +226,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ax.inset_axes, annotate with arrowprops, add_patch, subplots_adjust
-          — idiomatic Axes API
+        comment: ax.inset_axes, annotate with arrowprops and bbox, add_patch, MaxNLocator
+          on the inset — idiomatic Axes API
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: ax.inset_axes for the expanded view and FancyArrowPatch north arrow
+        comment: ax.inset_axes zoom panel is a matplotlib strength used for the expanded
+          state
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d239d965a9
-  rendered_at: '2026-11-26T14:31:06Z'
+  rendered_at: '2026-11-26T14:39:25Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - inset-axes
   - custom-legend
-  - patches
-  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep:
   - binning
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
