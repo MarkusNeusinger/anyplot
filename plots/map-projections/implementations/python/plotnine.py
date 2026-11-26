@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-23
@@ -1030,7 +1030,7 @@ PROJ_NOTES = {
 }
 annot_records = []
 for proj in proj_order:
-    x_a, y_a = PROJ_FNS[proj](np.array([0.0]), np.array([-50.0]))
+    x_a, y_a = PROJ_FNS[proj](np.array([90.0]), np.array([-52.0]))
     annot_records.append({"projection": proj, "x": float(x_a[0]), "y": float(y_a[0]), "label": PROJ_NOTES[proj]})
 df_annot = pd.DataFrame(annot_records)
 df_annot["projection"] = pd.Categorical(df_annot["projection"], categories=proj_order, ordered=True)
@@ -1048,7 +1048,7 @@ plot = (
         alpha=0.85,
     )
     + geom_path(aes(x="x", y="y", group="proj_border"), data=df_all_bord, color=INK, size=0.35, alpha=0.65)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_annot, color=INK_SOFT, size=7, ha="center")
+    + geom_text(aes(x="x", y="y", label="label"), data=df_annot, color=INK_SOFT, size=8, ha="center")
     + facet_wrap("~projection", ncol=2, scales="free")
     + coord_fixed(ratio=1.0)
     + labs(
