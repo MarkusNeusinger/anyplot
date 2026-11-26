@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chord-basic: Basic Chord Diagram
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 91/100 | Updated: 2026-06-17
@@ -18,6 +18,7 @@ from lets_plot import (
     geom_polygon,
     geom_segment,
     geom_text,
+    gggrid,
     ggplot,
     ggsize,
     labs,
@@ -29,7 +30,6 @@ from lets_plot import (
     theme_void,
 )
 from lets_plot.export import ggsave
-from PIL import Image
 
 
 LetsPlot.setup_html()
@@ -41,13 +41,17 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-PAGE_BG_RGB = (250, 248, 241) if THEME == "light" else (26, 26, 23)
 
 # Imprint palette — 8 hues, theme-independent, hybrid-v3 sort. First series ALWAYS #009E73.
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Migration flow data between continents (bidirectional flows)
-flows = [
+# Columns: set these to your table's column names
+SOURCE = "Origin"  # role: source
+TARGET = "Destination"  # role: target
+VALUE = "Migrants (thousand)"  # role: value
+
+# Data: replace this block with your own edge list, for example df = pd.read_csv("flows.csv")
+rows = [
     ("Asia", "Europe", 45),
     ("Asia", "North America", 38),
     ("Asia", "Africa", 12),
@@ -67,10 +71,14 @@ flows = [
     ("Oceania", "Asia", 14),
     ("Oceania", "Europe", 8),
 ]
+df = pd.DataFrame(rows, columns=[SOURCE, TARGET, VALUE])
 
-# Entities; first entity (Asia) gets Imprint brand green #009E73
-entities = list(dict.fromkeys([f[0] for f in flows] + [f[1] for f in flows]))
-colors = IMPRINT_PALETTE[: len(entities)]
+# Plot: reads only df and the constants above
+flows = list(zip(df[SOURCE], df[TARGET], df[VALUE], strict=True))
+
+# Entities in order of first appearance; the first (Asia) gets Imprint brand green #009E73
+entities = list(dict.fromkeys(list(df[SOURCE]) + list(df[TARGET])))
+colors = [IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i in range(len(entities))]
 
 # Calculate total flow for each entity (in + out)
 entity_totals = dict.fromkeys(entities, 0)
@@ -208,8 +216,17 @@ for entity in entities:
     arc = entity_arcs[entity]
     mid_angle = arc["mid"]
     arc_size = arc["end"] - arc["start"]
-    label_radius = 1.16 + max(0, 0.12 * (1.0 - arc_size / 0.7))
-    label_data.append({"x": label_radius * np.cos(mid_angle), "y": label_radius * np.sin(mid_angle), "label": entity})
+    label_radius = 1.12 + max(0, 0.12 * (1.0 - arc_size / 0.7))
+    cos_a, sin_a = np.cos(mid_angle), np.sin(mid_angle)
+    label_data.append(
+        {
+            "x": label_radius * cos_a,
+            "y": label_radius * sin_a,
+            "label": entity.replace(" ", "\n"),
+            "hjust": 0.0 if cos_a > 0.3 else (1.0 if cos_a < -0.3 else 0.5),
+            "vjust": 0.0 if sin_a > 0.3 else (1.0 if sin_a < -0.3 else 0.5),
+        }
+    )
 
 label_df = pd.DataFrame(label_data)
 
@@ -228,12 +245,6 @@ for entity in entities:
     )
 
 tick_df = pd.DataFrame(tick_data)
-
-# Annotation for dominant flow — data storytelling (positioned at center)
-top_flow = max(flows, key=lambda f: f[2])
-annotation_df = pd.DataFrame(
-    [{"x": 0.0, "y": -0.02, "label": f"Strongest: {top_flow[0]}→{top_flow[1]} ({top_flow[2]})"}]
-)
 
 # Build the plot
 plot = (
@@ -270,14 +281,18 @@ plot = (
     # Tick marks from arcs to labels
     + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=tick_df, color=INK_SOFT, size=0.6)
     # Entity labels
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=9, color=INK, fontface="bold")
-    # Dominant flow annotation for storytelling
-    + geom_text(aes(x="x", y="y", label="label"), data=annotation_df, size=6, color=INK_SOFT, fontface="bold")
+    + geom_text(
+        aes(x="x", y="y", label="label", hjust="hjust", vjust="vjust"),
+        data=label_df,
+        size=8,
+        color=INK,
+        fontface="bold",
+    )
     # Scales and coordinates
     + scale_fill_manual(values=colors, name="Continent")
     + coord_fixed(ratio=1)
-    + scale_x_continuous(limits=(-1.6, 1.6))
-    + scale_y_continuous(limits=(-1.6, 1.6))
+    + scale_x_continuous(limits=(-1.7, 1.7))
+    + scale_y_continuous(limits=(-1.7, 1.7))
     + labs(
         title="chord-basic · python · letsplot · anyplot.ai",
         caption="Width proportional to migration flow magnitude  ·  Opacity indicates relative strength",
@@ -288,7 +303,7 @@ plot = (
         plot_title=element_text(size=16, face="bold", color=INK),
         plot_caption=element_text(size=8, color=INK_MUTED, face="italic"),
         legend_text=element_text(size=10, color=INK_SOFT),
-        legend_title=element_text(size=11, face="bold", color=INK),
+        legend_title=element_text(size=10, face="bold", color=INK),
         legend_position=[0.5, 0.03],
         legend_justification=[0.5, 0.0],
         legend_direction="horizontal",
@@ -299,13 +314,11 @@ plot = (
     )
 )
 
+# Fixed aspect leaves transparent strips: a one-panel grid paints the whole canvas with the page color
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+
 # Save PNG (square: ggsize 600 × scale 4 = 2400×2400 px)
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
-
-# Flatten any residual transparency onto the theme page background
-img = Image.open(f"plot-{THEME}.png").convert("RGBA")
-bg = Image.new("RGBA", img.size, (*PAGE_BG_RGB, 255))
-Image.alpha_composite(bg, img).convert("RGB").save(f"plot-{THEME}.png")
 
 # Save interactive HTML export
 ggsave(plot, f"plot-{THEME}.html", path=".")
