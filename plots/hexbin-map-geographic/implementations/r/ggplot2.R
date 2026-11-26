@@ -20,6 +20,14 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 MAP_WATER   <- if (THEME == "light") "#C8DCE8" else "#1A2530"
 MAP_LAND    <- if (THEME == "light") "#E6E0D4" else "#2C2A22"
 MAP_BORDER  <- if (THEME == "light") "#9A9890" else "#58584E"
+GRID        <- alpha(INK, 0.15)
+
+# Imprint palette continuous ramp (imprint_seq, fields: hexagon cells fill the map)
+SEQ_FIELDS <- if (THEME == "light") {
+  list(colours = c("#66E2B2", "#009E73", "#4467A3", "#002850"), values = c(0, 0.368, 0.582, 1))
+} else {
+  list(colours = c("#00573D", "#009E73", "#CDD9FF"), values = c(0, 0.467, 1))
+}
 
 # NYC metro area taxi pickups — simulated density clusters
 # Centres: Midtown, Greenwich Village, UWS, Chelsea, S.Brooklyn,
@@ -125,13 +133,13 @@ p <- ggplot() +
     x = -73.968, y = 40.776,
     label    = "Midtown hotspot",
     color    = INK,
-    size     = 2.7,
+    size     = 3.6,
     fontface = "italic",
     hjust    = 0
   ) +
-  scale_fill_gradient(
-    low    = "#009E73",
-    high   = "#4467A3",
+  scale_fill_gradientn(
+    colours = SEQ_FIELDS$colours,
+    values  = SEQ_FIELDS$values,
     name   = "Pickup\nCount",
     labels = scales::comma,
     guide  = guide_colorbar(barwidth = 0.8, barheight = 8)
@@ -158,12 +166,12 @@ p <- ggplot() +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = MAP_WATER, color = NA),
-    panel.grid.major  = element_line(color = INK_SOFT, linewidth = 0.10),
+    panel.grid.major  = element_line(color = GRID, linewidth = 0.25),
     panel.grid.minor  = element_blank(),
     axis.title        = element_text(color = INK,      size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     plot.title        = element_text(color = INK,      size = title_size, face = "bold"),
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
+    legend.background = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.title      = element_text(color = INK,      size = 9),
     legend.position   = "right",
