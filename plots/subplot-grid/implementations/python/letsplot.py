@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-grid: Subplot Grid Layout
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -53,6 +53,13 @@ df = pd.DataFrame(
 
 # Plot
 df["Moving average"] = df[PRICE].rolling(window=MA_WINDOW, min_periods=1).mean()
+SERIES = "Series"
+price_long = pd.concat(
+    [
+        pd.DataFrame({DAY: df[DAY], PRICE: df[PRICE], SERIES: "Price"}),
+        pd.DataFrame({DAY: df[DAY], PRICE: df["Moving average"], SERIES: f"{MA_WINDOW}-day average"}),
+    ]
+)
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -71,10 +78,12 @@ anyplot_theme = theme(
 
 # Top left: price line with moving average
 price_plot = (
-    ggplot(df, aes(x=DAY, y=PRICE))
-    + geom_line(color=IMPRINT_PALETTE[0], size=0.75)
-    + geom_line(aes(y="Moving average"), color=IMPRINT_PALETTE[1], size=0.6, linetype="dashed")
-    + labs(y=PRICE, title="Stock Price with 10-Day Moving Average")
+    ggplot(price_long, aes(x=DAY, y=PRICE, color=SERIES, linetype=SERIES))
+    + geom_line(size=0.75)
+    + scale_color_manual(values=IMPRINT_PALETTE[:2])
+    + scale_linetype_manual(values=["solid", "dashed"])
+    + labs(title="Stock Price with 10-Day Moving Average", color="", linetype="")
+    + theme(legend_position="bottom")
     + theme_minimal()
     + anyplot_theme
 )
@@ -82,7 +91,7 @@ price_plot = (
 # Top right: volume bars
 volume_plot = (
     ggplot(df, aes(x=DAY, y=VOLUME))
-    + geom_bar(stat="identity", fill=IMPRINT_PALETTE[2], alpha=0.8, width=0.8)
+    + geom_bar(stat="identity", fill=IMPRINT_PALETTE[2], alpha=0.8, width=0.8, color=PAGE_BG, size=0.2)
     + labs(title="Daily Trading Volume")
     + theme_minimal()
     + anyplot_theme
