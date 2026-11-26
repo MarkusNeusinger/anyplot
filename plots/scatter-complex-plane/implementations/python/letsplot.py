@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-02
@@ -30,52 +30,37 @@ RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 # Unit circle subtle tint using Imprint brand green
 CIRCLE_ALPHA = 0.08 if THEME == "light" else 0.12
 
-# Data — 5th roots of unity + arbitrary points + complex sum
-np.random.seed(42)
+# Columns: set these to your table's column names
+REAL = "Real Part"  # role: real
+IMAG = "Imaginary Part"  # role: imaginary
+LABEL = "Label"  # role: label
+CATEGORY = "Category"  # role: extra
 
-n_roots = 5
-roots_angles = np.array([2 * np.pi * k / n_roots for k in range(n_roots)])
+# Data: replace this block with your own table, for example df = pd.read_csv("complex_numbers.csv")
+roots_angles = 2 * np.pi * np.arange(5) / 5
 roots_real = np.cos(roots_angles)
 roots_imag = np.sin(roots_angles)
-roots_labels = [f"ω{k}" for k in range(n_roots)]
-
 arbitrary_real = np.array([1.8, -2.0, 0.5, -0.4, 2.3, -1.6])
 arbitrary_imag = np.array([1.3, -1.4, 2.1, -1.9, -0.5, 0.7])
-arbitrary_labels = [f"z{i + 1}" for i in range(len(arbitrary_real))]
-
-sum_real = np.array([roots_real[1] + roots_real[2]])
-sum_imag = np.array([roots_imag[1] + roots_imag[2]])
-sum_labels = ["ω1+ω2"]
-
-all_real = np.concatenate([roots_real, arbitrary_real, sum_real])
-all_imag = np.concatenate([roots_imag, arbitrary_imag, sum_imag])
-all_labels = roots_labels + arbitrary_labels + sum_labels
-all_category = ["5th Root of Unity"] * n_roots + ["Arbitrary"] * len(arbitrary_real) + ["Sum"]
-
-all_mag = np.sqrt(all_real**2 + all_imag**2)
-all_angle_deg = np.degrees(np.arctan2(all_imag, all_real))
-
-rect_labels = []
-for r, i in zip(all_real, all_imag, strict=True):
-    sign = "+" if i >= 0 else "−"
-    rect_labels.append(f"{r:.2f}{sign}{abs(i):.2f}i")
-
-polar_labels = []
-for mag, ang in zip(all_mag, all_angle_deg, strict=True):
-    polar_labels.append(f"r={mag:.2f}, θ={ang:.0f}°")
-
 df = pd.DataFrame(
     {
-        "real": all_real,
-        "imaginary": all_imag,
-        "label": all_labels,
-        "category": all_category,
-        "rect_form": rect_labels,
-        "polar_form": polar_labels,
-        "magnitude": all_mag,
-        "angle_deg": all_angle_deg,
+        REAL: np.concatenate([roots_real, arbitrary_real, [roots_real[1] + roots_real[2]]]),
+        IMAG: np.concatenate([roots_imag, arbitrary_imag, [roots_imag[1] + roots_imag[2]]]),
+        LABEL: [f"ω{k}" for k in range(5)] + [f"z{i + 1}" for i in range(6)] + ["ω1+ω2"],
+        CATEGORY: ["5th Root of Unity"] * 5 + ["Arbitrary"] * 6 + ["Sum"],
     }
 )
+
+# Plot: reads only df and the constants above
+all_real = df[REAL].to_numpy()
+all_imag = df[IMAG].to_numpy()
+all_mag = np.hypot(all_real, all_imag)
+all_angle_deg = np.degrees(np.arctan2(all_imag, all_real))
+
+df["rect_form"] = [f"{r:.2f}{'+' if i >= 0 else '−'}{abs(i):.2f}i" for r, i in zip(all_real, all_imag, strict=True)]
+df["polar_form"] = [f"r={m:.2f}, θ={a:.0f}°" for m, a in zip(all_mag, all_angle_deg, strict=True)]
+df["magnitude"] = all_mag
+df["angle_deg"] = all_angle_deg
 
 # Radial label placement with iterative repulsion to reduce overlap
 angles = np.arctan2(all_imag, all_real)
@@ -103,11 +88,11 @@ df["label_y"] = label_y
 # Vectors from origin to each point
 arrows_df = pd.DataFrame(
     {
-        "x_start": np.zeros(len(all_real)),
-        "y_start": np.zeros(len(all_real)),
+        "x_start": np.zeros(len(df)),
+        "y_start": np.zeros(len(df)),
         "x_end": all_real,
         "y_end": all_imag,
-        "category": all_category,
+        CATEGORY: df[CATEGORY],
     }
 )
 
@@ -115,14 +100,15 @@ arrows_df = pd.DataFrame(
 theta = np.linspace(0, 2 * np.pi, 200)
 circle_df = pd.DataFrame({"x": np.cos(theta), "y": np.sin(theta)})
 
-# 3 categories use Imprint positions 1–3
-colors = IMPRINT_PALETTE[:3]
+# Axis ticks: whole numbers out to the largest coordinate
+tick_max = int(np.ceil(np.nanmax(np.abs(np.concatenate([all_real, all_imag])))))
+ticks = list(range(-tick_max, tick_max + 1))
 
 # Tooltips for HTML interactivity — lets-plot distinctive feature
 point_tooltips = (
     layer_tooltips()  # noqa: F405
-    .title("@label")
-    .line("Category|@category")
+    .title(f"@{{{LABEL}}}")
+    .line(f"Category|@{{{CATEGORY}}}")
     .line("Rectangular|@rect_form")
     .line("Polar|@polar_form")
     .format("magnitude", ".3f")
@@ -171,7 +157,7 @@ plot = (
     + geom_segment(  # noqa: F405
         data=arrows_df,
         mapping=aes(  # noqa: F405
-            x="x_start", y="y_start", xend="x_end", yend="y_end", color="category"
+            x="x_start", y="y_start", xend="x_end", yend="y_end", color=CATEGORY
         ),
         size=1.0,
         alpha=0.6,
@@ -180,7 +166,7 @@ plot = (
     # Points with interactive tooltips
     + geom_point(  # noqa: F405
         data=df,
-        mapping=aes(x="real", y="imaginary", color="category"),  # noqa: F405
+        mapping=aes(x=REAL, y=IMAG, color=CATEGORY),  # noqa: F405
         size=5,
         alpha=0.95,
         shape=21,
@@ -191,7 +177,7 @@ plot = (
     # Bold name labels positioned radially outward
     + geom_text(  # noqa: F405
         data=df,
-        mapping=aes(x="label_x", y="label_y", label="label", color="category"),  # noqa: F405
+        mapping=aes(x="label_x", y="label_y", label=LABEL, color=CATEGORY),  # noqa: F405
         size=4,
         fontface="bold",
     )
@@ -203,17 +189,17 @@ plot = (
         color=INK_SOFT,
         nudge_y=-0.26,
     )
-    + scale_color_manual(values=colors)  # noqa: F405
+    + scale_color_manual(values=IMPRINT_PALETTE)  # noqa: F405
     + coord_fixed()  # noqa: F405
     + labs(  # noqa: F405
-        x="Real Part",
-        y="Imaginary Part",
+        x=REAL,
+        y=IMAG,
         title="scatter-complex-plane · python · letsplot · anyplot.ai",
         subtitle="5th roots of unity, arbitrary points, and complex addition on the Argand diagram",
-        color="Category",
+        color=CATEGORY,
     )
-    + scale_x_continuous(breaks=[-3, -2, -1, 0, 1, 2, 3], expand=[0.12, 0.12])  # noqa: F405
-    + scale_y_continuous(breaks=[-3, -2, -1, 0, 1, 2, 3], expand=[0.12, 0.12])  # noqa: F405
+    + scale_x_continuous(breaks=ticks, expand=[0.12, 0.12])  # noqa: F405
+    + scale_y_continuous(breaks=ticks, expand=[0.12, 0.12])  # noqa: F405
     # Square canvas: 600×600 × scale=4 → 2400×2400 px (equal-aspect complex plane)
     + ggsize(600, 600)  # noqa: F405
     + anyplot_theme
