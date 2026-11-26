@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -103,20 +103,14 @@ MAP_W, MAP_H = WIDTH - 40, HEIGHT - 70
 PAD = 1.2
 
 
-def mercator_y(lat):
-    return np.degrees(np.log(np.tan(np.pi / 4 + np.radians(lat) / 2)))
-
-
 lon_span = df[LON].max() - df[LON].min()
-merc_span = mercator_y(df[LAT].max()) - mercator_y(df[LAT].min())
+merc = np.degrees(np.log(np.tan(np.pi / 4 + np.radians(df[LAT]) / 2)))
+merc_span = merc.max() - merc.min()
 zoom = min(np.log2(360 * MAP_W / (512 * lon_span * PAD)), np.log2(360 * MAP_H / (512 * merc_span * PAD)))
 center = {"lat": float(df[LAT].mean()), "lon": float((df[LON].max() + df[LON].min()) / 2)}
 
 # Marker diameters (12-28 px) scale with the visitor count
 size = 12 + (df[HIKERS] - df[HIKERS].min()) / (df[HIKERS].max() - df[HIKERS].min()) * 16
-
-# Labels alternate above and below along the west-east order so neighbors do not collide
-rank = df[LON].rank(method="first").astype(int)
 
 fig = go.Figure()
 
@@ -132,40 +126,61 @@ fig.add_trace(
     )
 )
 
-# Scattermap takes one textposition per trace, so each label side is its own trace
-side = np.where(rank % 2 == 0, "top center", "bottom center")
-for i, position in enumerate(["top center", "bottom center"]):
-    rows = df[side == position]
+fig.add_trace(
+    go.Scattermap(
+        lat=df[LAT],
+        lon=df[LON],
+        mode="markers",
+        marker={
+            "size": size,
+            "color": df[HIKERS],
+            "colorscale": SEQ_MARKS,
+            "cmin": df[HIKERS].min(),
+            "cmax": df[HIKERS].max(),
+            "opacity": 0.92,
+            "showscale": True,
+            "colorbar": {
+                "title": {"text": HIKERS, "side": "right", "font": {"size": 12, "color": INK}},
+                "tickfont": {"size": 11, "color": INK_SOFT},
+                "bgcolor": ELEVATED_BG,
+                "bordercolor": INK_SOFT,
+                "borderwidth": 1,
+                "thickness": 18,
+                "len": 0.6,
+                "x": 0.995,
+                "xanchor": "right",
+                "y": 0.62,
+            },
+        },
+        text=df[TRAILHEAD],
+        hovertemplate="<b>%{text}</b><br>" + HIKERS + ": %{marker.color:,.0f}<extra></extra>",
+        showlegend=False,
+    )
+)
+
+# Labels sit on their own anchors, shifted clear of the marker radius; above by default,
+# below when another point lies just north or the point is the northernmost (frame edge)
+deg_per_px = 360 / (512 * 2**zoom)
+below = np.array(
+    [
+        (((df[LON] - lon).abs() < 2) & (df[LAT] - lat > 0) & (df[LAT] - lat < 3) & (df[TRAILHEAD] != name)).any()
+        or lat == df[LAT].max()
+        for name, lat, lon in zip(df[TRAILHEAD], df[LAT], df[LON], strict=True)
+    ]
+)
+shift = (size / 2 + 5) * deg_per_px * np.cos(np.radians(df[LAT])) * np.where(below, -1, 1)
+for position, is_below in [("top center", False), ("bottom center", True)]:
+    pick = below == is_below
     fig.add_trace(
         go.Scattermap(
-            lat=rows[LAT],
-            lon=rows[LON],
+            lat=(df[LAT] + shift)[pick],
+            lon=df[LON][pick],
             mode="markers+text",
-            marker={
-                "size": size[rows.index],
-                "color": rows[HIKERS],
-                "colorscale": SEQ_MARKS,
-                "cmin": df[HIKERS].min(),
-                "cmax": df[HIKERS].max(),
-                "opacity": 0.92,
-                "showscale": i == 0,
-                "colorbar": {
-                    "title": {"text": HIKERS, "side": "right", "font": {"size": 12, "color": INK}},
-                    "tickfont": {"size": 11, "color": INK_SOFT},
-                    "bgcolor": ELEVATED_BG,
-                    "bordercolor": INK_SOFT,
-                    "borderwidth": 1,
-                    "thickness": 18,
-                    "len": 0.6,
-                    "x": 0.995,
-                    "xanchor": "right",
-                    "y": 0.62,
-                },
-            },
-            text=rows[TRAILHEAD],
+            marker={"size": 1, "opacity": 0},
+            text=df[TRAILHEAD][pick],
             textposition=position,
             textfont={"size": 12, "color": INK},
-            hovertemplate="<b>%{text}</b><br>" + HIKERS + ": %{marker.color:,.0f}<extra></extra>",
+            hoverinfo="skip",
             showlegend=False,
         )
     )
