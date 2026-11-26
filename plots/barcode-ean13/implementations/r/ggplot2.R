@@ -131,7 +131,7 @@ p <- ggplot() +
     annotate("text",
              x = (left_x1 + left_x2) / 2, y = lbl_y,
              label = "Country · Manufacturer",
-             color = INK_SOFT, size = 3.0, hjust = 0.5, family = "sans") +
+             color = INK_SOFT, size = 3.8, hjust = 0.5, family = "sans") +
     # Right group bracket: horizontal bar + end ticks
     annotate("segment",
              x = right_x1, xend = right_x2, y = brk_y, yend = brk_y,
@@ -145,7 +145,7 @@ p <- ggplot() +
     annotate("text",
              x = (right_x1 + right_x2) / 2, y = lbl_y,
              label = "Product · Check digit",
-             color = INK_SOFT, size = 3.0, hjust = 0.5, family = "sans") +
+             color = INK_SOFT, size = 3.8, hjust = 0.5, family = "sans") +
     scale_x_continuous(limits = c(0, total_w), expand = expansion(add = c(1, 1))) +
     scale_y_continuous(limits = c(-guard_ext - 13, bar_h + 20), expand = c(0, 0)) +
     labs(
