@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-26
@@ -62,8 +62,9 @@ df = pd.DataFrame(
 
 # Plot: first category at the top of the y axis
 cat_order = list(df[CONDITION].unique())[::-1]
-x_low = np.floor(df[REACTION_TIME].min() / 50) * 50 - 50
-x_high = np.ceil(df[REACTION_TIME].max() / 50) * 50 + 50
+pad = 0.25 * (df[REACTION_TIME].max() - df[REACTION_TIME].min())  # room for the untrimmed KDE tails
+x_low = np.floor((df[REACTION_TIME].min() - pad) / 50) * 50
+x_high = np.ceil((df[REACTION_TIME].max() + pad) / 50) * 50
 
 plot = (
     ggplot(df, aes(x=REACTION_TIME, y=CONDITION, fill=CONDITION, color=CONDITION))
