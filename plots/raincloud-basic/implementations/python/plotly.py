@@ -1,12 +1,13 @@
 """ anyplot.ai
 raincloud-basic: Basic Raincloud Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-26
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-26
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -18,32 +19,36 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# anyplot categorical palette — first series is always brand green
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette — first series is always brand green
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — reaction times (ms) across experimental conditions
+# Column constants
+CONDITION = "Experimental Condition"  # role: category
+REACTION_TIME = "Reaction Time (ms)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("reaction_times.csv")
 np.random.seed(42)
-conditions = ["Control", "Treatment A", "Treatment B", "Treatment C"]
-n_per_group = 80
-
-data = {
-    "Control": np.random.normal(450, 60, n_per_group),
-    "Treatment A": np.random.normal(380, 45, n_per_group),
-    "Treatment B": np.concatenate(
-        [np.random.normal(350, 30, n_per_group // 2), np.random.normal(480, 35, n_per_group // 2)]
-    ),
-    "Treatment C": np.random.normal(400, 80, n_per_group),
+samples = {
+    "Control": np.random.normal(450, 60, 80),
+    "Treatment A": np.random.normal(380, 45, 80),
+    "Treatment B": np.concatenate([np.random.normal(350, 30, 40), np.random.normal(480, 35, 40)]),
+    "Treatment C": np.random.normal(400, 80, 80),
 }
-data["Control"] = np.append(data["Control"], [620, 650, 280])
-data["Treatment C"] = np.append(data["Treatment C"], [600, 620, 250])
+samples["Control"] = np.append(samples["Control"], [620, 650, 280])
+samples["Treatment C"] = np.append(samples["Treatment C"], [600, 620, 250])
+df = pd.DataFrame(
+    {
+        CONDITION: np.repeat(list(samples), [len(v) for v in samples.values()]),
+        REACTION_TIME: np.concatenate(list(samples.values())),
+    }
+)
 
-# X-axis range from data with padding
-all_values = np.concatenate(list(data.values()))
-x_min, x_max = all_values.min(), all_values.max()
+# Plot
+conditions = list(df[CONDITION].unique())
+x_min, x_max = df[REACTION_TIME].min(), df[REACTION_TIME].max()
 x_padding = (x_max - x_min) * 0.05
 x_range = [x_min - x_padding, x_max + x_padding]
 
-# Plot
 fig = go.Figure()
 
 cloud_width = 0.7
@@ -51,8 +56,9 @@ box_width = 0.10
 rain_offset = -0.22
 rain_jitter_amp = 0.08
 
-for i, (condition, values) in enumerate(data.items()):
-    color = IMPRINT_PALETTE[i]
+for i, condition in enumerate(conditions):
+    values = df.loc[df[CONDITION] == condition, REACTION_TIME].to_numpy()
+    color = IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)]
     y_base = np.full(len(values), i)
 
     # Cloud — half-violin extending upward above the category baseline
@@ -134,7 +140,7 @@ fig.update_layout(
     },
     font={"color": INK},
     yaxis={
-        "title": {"text": "Experimental Condition", "font": {"size": 12, "color": INK}},
+        "title": {"text": CONDITION, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 11, "color": INK_SOFT},
         "tickmode": "array",
         "tickvals": list(range(len(conditions))),
@@ -146,7 +152,7 @@ fig.update_layout(
         "ticks": "",
     },
     xaxis={
-        "title": {"text": "Reaction Time (ms)", "font": {"size": 12, "color": INK}},
+        "title": {"text": REACTION_TIME, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 11, "color": INK_SOFT},
         "gridcolor": GRID,
         "gridwidth": 1,
