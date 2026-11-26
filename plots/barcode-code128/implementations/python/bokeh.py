@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-26
+Quality: 87/100 | Updated: 2026-11-26
 """
 
 import os
@@ -32,341 +32,53 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 ACCENT = "#009E73"  # Okabe-Ito green for structural zone annotations
 
-# Data: replace CONTENT to encode your own text (Code 128 Subset B, printable ASCII)
-# Code 128 B subset encoding (bar widths per character, 6 elements each)
-CODE128_B = {
-    " ": [2, 1, 2, 2, 2, 2],
-    "!": [2, 2, 2, 1, 2, 2],
-    '"': [2, 2, 2, 2, 2, 1],
-    "#": [1, 2, 1, 2, 2, 3],
-    "$": [1, 2, 1, 3, 2, 2],
-    "%": [1, 3, 1, 2, 2, 2],
-    "&": [1, 2, 2, 2, 1, 3],
-    "'": [1, 2, 2, 3, 1, 2],
-    "(": [1, 3, 2, 2, 1, 2],
-    ")": [2, 2, 1, 2, 1, 3],
-    "*": [2, 2, 1, 3, 1, 2],
-    "+": [2, 3, 1, 2, 1, 2],
-    ",": [1, 1, 2, 2, 3, 2],
-    "-": [1, 2, 2, 1, 3, 2],
-    ".": [1, 2, 2, 2, 3, 1],
-    "/": [1, 1, 3, 2, 2, 2],
-    "0": [1, 2, 3, 1, 2, 2],
-    "1": [1, 2, 3, 2, 2, 1],
-    "2": [2, 2, 3, 2, 1, 1],
-    "3": [2, 2, 1, 1, 3, 2],
-    "4": [2, 2, 1, 2, 3, 1],
-    "5": [2, 1, 3, 2, 1, 2],
-    "6": [2, 2, 3, 1, 1, 2],
-    "7": [3, 1, 2, 1, 3, 1],
-    "8": [3, 1, 1, 2, 2, 2],
-    "9": [3, 2, 1, 1, 2, 2],
-    ":": [3, 2, 1, 2, 2, 1],
-    ";": [3, 1, 2, 2, 1, 2],
-    "<": [3, 2, 2, 1, 1, 2],
-    "=": [3, 2, 2, 2, 1, 1],
-    ">": [2, 1, 2, 1, 2, 3],
-    "?": [2, 1, 2, 3, 2, 1],
-    "@": [2, 3, 2, 1, 2, 1],
-    "A": [1, 1, 1, 3, 2, 3],
-    "B": [1, 3, 1, 1, 2, 3],
-    "C": [1, 3, 1, 3, 2, 1],
-    "D": [1, 1, 2, 3, 1, 3],
-    "E": [1, 3, 2, 1, 1, 3],
-    "F": [1, 3, 2, 3, 1, 1],
-    "G": [2, 1, 1, 3, 1, 3],
-    "H": [2, 3, 1, 1, 1, 3],
-    "I": [2, 3, 1, 3, 1, 1],
-    "J": [1, 1, 2, 1, 3, 3],
-    "K": [1, 1, 2, 3, 3, 1],
-    "L": [1, 3, 2, 1, 3, 1],
-    "M": [1, 1, 3, 1, 2, 3],
-    "N": [1, 1, 3, 3, 2, 1],
-    "O": [1, 3, 3, 1, 2, 1],
-    "P": [3, 1, 3, 1, 2, 1],
-    "Q": [2, 1, 1, 3, 3, 1],
-    "R": [2, 3, 1, 1, 3, 1],
-    "S": [2, 1, 3, 1, 1, 3],
-    "T": [2, 1, 3, 3, 1, 1],
-    "U": [2, 1, 3, 1, 3, 1],
-    "V": [3, 1, 1, 1, 2, 3],
-    "W": [3, 1, 1, 3, 2, 1],
-    "X": [3, 3, 1, 1, 2, 1],
-    "Y": [3, 1, 2, 1, 1, 3],
-    "Z": [3, 1, 2, 3, 1, 1],
-    "[": [3, 3, 2, 1, 1, 1],
-    "\\": [3, 1, 4, 1, 1, 1],
-    "]": [2, 2, 1, 4, 1, 1],
-    "^": [4, 3, 1, 1, 1, 1],
-    "_": [1, 1, 1, 2, 2, 4],
-    "`": [1, 1, 1, 4, 2, 2],
-    "a": [1, 2, 1, 1, 2, 4],
-    "b": [1, 2, 1, 4, 2, 1],
-    "c": [1, 4, 1, 1, 2, 2],
-    "d": [1, 4, 1, 2, 2, 1],
-    "e": [1, 1, 2, 2, 1, 4],
-    "f": [1, 1, 2, 4, 1, 2],
-    "g": [1, 2, 2, 1, 1, 4],
-    "h": [1, 2, 2, 4, 1, 1],
-    "i": [1, 4, 2, 1, 1, 2],
-    "j": [1, 4, 2, 2, 1, 1],
-    "k": [2, 4, 1, 2, 1, 1],
-    "l": [2, 2, 1, 1, 1, 4],
-    "m": [4, 1, 3, 1, 1, 1],
-    "n": [2, 4, 1, 1, 1, 2],
-    "o": [1, 3, 4, 1, 1, 1],
-    "p": [1, 1, 1, 2, 4, 2],
-    "q": [1, 2, 1, 1, 4, 2],
-    "r": [1, 2, 1, 2, 4, 1],
-    "s": [1, 1, 4, 2, 1, 2],
-    "t": [1, 2, 4, 1, 1, 2],
-    "u": [1, 2, 4, 2, 1, 1],
-    "v": [4, 1, 1, 2, 1, 2],
-    "w": [4, 2, 1, 1, 1, 2],
-    "x": [4, 2, 1, 2, 1, 1],
-    "y": [2, 1, 2, 1, 4, 1],
-    "z": [2, 1, 4, 1, 2, 1],
-    "{": [4, 1, 2, 1, 2, 1],
-    "|": [1, 1, 1, 1, 4, 3],
-    "}": [1, 1, 1, 3, 4, 1],
-    "~": [1, 3, 1, 1, 4, 1],
-}
-
-# Code 128 value lookup for checksum calculation
-CODE128_VALUES = {
-    " ": 0,
-    "!": 1,
-    '"': 2,
-    "#": 3,
-    "$": 4,
-    "%": 5,
-    "&": 6,
-    "'": 7,
-    "(": 8,
-    ")": 9,
-    "*": 10,
-    "+": 11,
-    ",": 12,
-    "-": 13,
-    ".": 14,
-    "/": 15,
-    "0": 16,
-    "1": 17,
-    "2": 18,
-    "3": 19,
-    "4": 20,
-    "5": 21,
-    "6": 22,
-    "7": 23,
-    "8": 24,
-    "9": 25,
-    ":": 26,
-    ";": 27,
-    "<": 28,
-    "=": 29,
-    ">": 30,
-    "?": 31,
-    "@": 32,
-    "A": 33,
-    "B": 34,
-    "C": 35,
-    "D": 36,
-    "E": 37,
-    "F": 38,
-    "G": 39,
-    "H": 40,
-    "I": 41,
-    "J": 42,
-    "K": 43,
-    "L": 44,
-    "M": 45,
-    "N": 46,
-    "O": 47,
-    "P": 48,
-    "Q": 49,
-    "R": 50,
-    "S": 51,
-    "T": 52,
-    "U": 53,
-    "V": 54,
-    "W": 55,
-    "X": 56,
-    "Y": 57,
-    "Z": 58,
-    "[": 59,
-    "\\": 60,
-    "]": 61,
-    "^": 62,
-    "_": 63,
-    "`": 64,
-    "a": 65,
-    "b": 66,
-    "c": 67,
-    "d": 68,
-    "e": 69,
-    "f": 70,
-    "g": 71,
-    "h": 72,
-    "i": 73,
-    "j": 74,
-    "k": 75,
-    "l": 76,
-    "m": 77,
-    "n": 78,
-    "o": 79,
-    "p": 80,
-    "q": 81,
-    "r": 82,
-    "s": 83,
-    "t": 84,
-    "u": 85,
-    "v": 86,
-    "w": 87,
-    "x": 88,
-    "y": 89,
-    "z": 90,
-    "{": 91,
-    "|": 92,
-    "}": 93,
-    "~": 94,
-}
-
-# Special patterns
-START_B = [2, 1, 1, 2, 1, 4]  # Start Code B (value 104)
-STOP = [2, 3, 3, 1, 1, 1, 2]  # Stop pattern
-
-# Checksum character patterns (values 0–102)
-CHECKSUM_PATTERNS = [
-    [2, 1, 2, 2, 2, 2],
-    [2, 2, 2, 1, 2, 2],
-    [2, 2, 2, 2, 2, 1],
-    [1, 2, 1, 2, 2, 3],
-    [1, 2, 1, 3, 2, 2],
-    [1, 3, 1, 2, 2, 2],
-    [1, 2, 2, 2, 1, 3],
-    [1, 2, 2, 3, 1, 2],
-    [1, 3, 2, 2, 1, 2],
-    [2, 2, 1, 2, 1, 3],
-    [2, 2, 1, 3, 1, 2],
-    [2, 3, 1, 2, 1, 2],
-    [1, 1, 2, 2, 3, 2],
-    [1, 2, 2, 1, 3, 2],
-    [1, 2, 2, 2, 3, 1],
-    [1, 1, 3, 2, 2, 2],
-    [1, 2, 3, 1, 2, 2],
-    [1, 2, 3, 2, 2, 1],
-    [2, 2, 3, 2, 1, 1],
-    [2, 2, 1, 1, 3, 2],
-    [2, 2, 1, 2, 3, 1],
-    [2, 1, 3, 2, 1, 2],
-    [2, 2, 3, 1, 1, 2],
-    [3, 1, 2, 1, 3, 1],
-    [3, 1, 1, 2, 2, 2],
-    [3, 2, 1, 1, 2, 2],
-    [3, 2, 1, 2, 2, 1],
-    [3, 1, 2, 2, 1, 2],
-    [3, 2, 2, 1, 1, 2],
-    [3, 2, 2, 2, 1, 1],
-    [2, 1, 2, 1, 2, 3],
-    [2, 1, 2, 3, 2, 1],
-    [2, 3, 2, 1, 2, 1],
-    [1, 1, 1, 3, 2, 3],
-    [1, 3, 1, 1, 2, 3],
-    [1, 3, 1, 3, 2, 1],
-    [1, 1, 2, 3, 1, 3],
-    [1, 3, 2, 1, 1, 3],
-    [1, 3, 2, 3, 1, 1],
-    [2, 1, 1, 3, 1, 3],
-    [2, 3, 1, 1, 1, 3],
-    [2, 3, 1, 3, 1, 1],
-    [1, 1, 2, 1, 3, 3],
-    [1, 1, 2, 3, 3, 1],
-    [1, 3, 2, 1, 3, 1],
-    [1, 1, 3, 1, 2, 3],
-    [1, 1, 3, 3, 2, 1],
-    [1, 3, 3, 1, 2, 1],
-    [3, 1, 3, 1, 2, 1],
-    [2, 1, 1, 3, 3, 1],
-    [2, 3, 1, 1, 3, 1],
-    [2, 1, 3, 1, 1, 3],
-    [2, 1, 3, 3, 1, 1],
-    [2, 1, 3, 1, 3, 1],
-    [3, 1, 1, 1, 2, 3],
-    [3, 1, 1, 3, 2, 1],
-    [3, 3, 1, 1, 2, 1],
-    [3, 1, 2, 1, 1, 3],
-    [3, 1, 2, 3, 1, 1],
-    [3, 3, 2, 1, 1, 1],
-    [3, 1, 4, 1, 1, 1],
-    [2, 2, 1, 4, 1, 1],
-    [4, 3, 1, 1, 1, 1],
-    [1, 1, 1, 2, 2, 4],
-    [1, 1, 1, 4, 2, 2],
-    [1, 2, 1, 1, 2, 4],
-    [1, 2, 1, 4, 2, 1],
-    [1, 4, 1, 1, 2, 2],
-    [1, 4, 1, 2, 2, 1],
-    [1, 1, 2, 2, 1, 4],
-    [1, 1, 2, 4, 1, 2],
-    [1, 2, 2, 1, 1, 4],
-    [1, 2, 2, 4, 1, 1],
-    [1, 4, 2, 1, 1, 2],
-    [1, 4, 2, 2, 1, 1],
-    [2, 4, 1, 2, 1, 1],
-    [2, 2, 1, 1, 1, 4],
-    [4, 1, 3, 1, 1, 1],
-    [2, 4, 1, 1, 1, 2],
-    [1, 3, 4, 1, 1, 1],
-    [1, 1, 1, 2, 4, 2],
-    [1, 2, 1, 1, 4, 2],
-    [1, 2, 1, 2, 4, 1],
-    [1, 1, 4, 2, 1, 2],
-    [1, 2, 4, 1, 1, 2],
-    [1, 2, 4, 2, 1, 1],
-    [4, 1, 1, 2, 1, 2],
-    [4, 2, 1, 1, 1, 2],
-    [4, 2, 1, 2, 1, 1],
-    [2, 1, 2, 1, 4, 1],
-    [2, 1, 4, 1, 2, 1],
-    [4, 1, 2, 1, 2, 1],
-    [1, 1, 1, 1, 4, 3],
-    [1, 1, 1, 3, 4, 1],
-    [1, 3, 1, 1, 4, 1],
-    [1, 1, 4, 1, 1, 3],
-    [1, 1, 4, 3, 1, 1],
-    [4, 1, 1, 1, 1, 3],
-    [4, 1, 1, 3, 1, 1],
-    [1, 1, 3, 1, 4, 1],
-    [1, 1, 4, 1, 3, 1],
-    [3, 1, 1, 1, 4, 1],
-    [4, 1, 1, 1, 3, 1],
-    [2, 1, 1, 4, 1, 2],
-    [2, 1, 1, 2, 1, 4],
-    [2, 1, 1, 2, 3, 2],
+# Constants: the Code 128 symbol table. Entry v holds the six alternating bar/space widths
+# of symbol value v (0-102 are the Subset B characters, ord(c) - 32; 104 is Start B).
+PATTERNS = [
+    *"212222 222122 222221 121223 121322 131222 122213 122312".split(),
+    *"132212 221213 221312 231212 112232 122132 122231 113222".split(),
+    *"123122 123221 223211 221132 221231 213212 223112 312131".split(),
+    *"311222 321122 321221 312212 322112 322211 212123 212321".split(),
+    *"232121 111323 131123 131321 112313 132113 132311 211313".split(),
+    *"231113 231311 112133 112331 132131 113123 113321 133121".split(),
+    *"313121 211331 231131 213113 213311 213131 311123 311321".split(),
+    *"331121 312113 312311 332111 314111 221411 431111 111224".split(),
+    *"111422 121124 121421 141122 141221 112214 112412 122114".split(),
+    *"122411 142112 142211 241211 221114 413111 241112 134111".split(),
+    *"111242 121142 121241 114212 124112 124211 411212 421112".split(),
+    *"421211 212141 214121 412121 111143 111341 131141 114113".split(),
+    *"114311 411113 411311 113141 114131 311141 411131 211412".split(),
+    *"211214 211232".split(),
 ]
+START_B_VALUE = 104
+STOP = "2331112"  # stop pattern, seven elements
+QUIET_ZONE = 10  # standard 10-module quiet zone on each side
 
-# Barcode content: shipping label example
-content = "SHIP-2024-ABC123"
-quiet_zone = 10  # standard 10-module quiet zones on each side
+# Data: replace CONTENT to encode your own text (Code 128 Subset B, printable ASCII)
+CONTENT = "SHIP-2024-ABC123"  # shipping label example
 
-# Check character: weighted sum of symbol values, modulo 103
-checksum = (104 + sum(CODE128_VALUES[char] * (i + 1) for i, char in enumerate(content))) % 103
+# Plot: reads only CONTENT and the constants above
+
+# Symbol values: Start B, one per character; the check character is their weighted sum mod 103
+values = [START_B_VALUE, *[ord(char) - 32 for char in CONTENT]]
+checksum = sum(v * max(i, 1) for i, v in enumerate(values)) % 103
 
 # Symbol parts in reading order: (zone label, hover description, width pattern)
 parts = [
-    ("Start B", "Start Code B", START_B),
-    *[("Data Payload", f"'{char}'  (position {i + 1})", CODE128_B[char]) for i, char in enumerate(content)],
-    ("Check Digit", f"Check Digit  (value {checksum})", CHECKSUM_PATTERNS[checksum]),
+    ("Start B", "Start Code B", PATTERNS[START_B_VALUE]),
+    *[("Data Payload", f"'{char}'  (position {i + 1})", PATTERNS[ord(char) - 32]) for i, char in enumerate(CONTENT)],
+    ("Check", f"Check Digit  (value {checksum})", PATTERNS[checksum]),
     ("Stop", "Stop Pattern", STOP),
 ]
 
 # Walk the patterns: elements alternate bar, space, bar, ... starting with a bar
-x_pos = quiet_zone
+x_pos = QUIET_ZONE
 bar_lefts, bar_rights, bar_descs = [], [], []
 zones = []  # (label, x_start, x_end) for the zone bracket annotations
 for zone_label, desc, widths in parts:
     zone_start = x_pos
-    for k, w in enumerate(widths):
+    for k, digit in enumerate(widths):
+        w = int(digit)
         if k % 2 == 0:
             bar_lefts.append(x_pos)
             bar_rights.append(x_pos + w)
@@ -377,9 +89,7 @@ for zone_label, desc, widths in parts:
     else:
         zones.append((zone_label, zone_start, x_pos))
 
-total_modules = x_pos + quiet_zone
-
-# Plot: reads only the bar lists, zones and the constants above
+total_modules = x_pos + QUIET_ZONE
 
 # Layout y-coordinates — expanded canvas to accommodate zone annotations above bars
 BAR_TOP = 570
@@ -465,7 +175,7 @@ for zone_label, zx_start, zx_end in zones:
             text=zone_label,
             text_align="center",
             text_baseline="bottom",
-            text_font_size="22pt",
+            text_font_size="34pt",
             text_color=ACCENT,
         )
     )
@@ -475,10 +185,10 @@ p.add_layout(
     Label(
         x=total_modules / 2,
         y=SUBTITLE_Y,
-        text=f"Code 128 Subset B  ·  {len(content)} characters  ·  checksum: mod 103  ·  quiet zones: {quiet_zone} modules",
+        text=f"Code 128 Subset B  ·  {len(CONTENT)} characters  ·  checksum: mod 103  ·  quiet zones: {QUIET_ZONE} modules",
         text_align="center",
         text_baseline="bottom",
-        text_font_size="22pt",
+        text_font_size="34pt",
         text_color="#4A4A44",  # sits on the white label tile in both themes
     )
 )
@@ -488,7 +198,7 @@ p.add_layout(
     Label(
         x=total_modules / 2,
         y=48,
-        text=content,
+        text=CONTENT,
         text_font_size="34pt",
         text_align="center",
         text_baseline="middle",
