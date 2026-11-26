@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-26
@@ -177,6 +177,9 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=("#000000",),
+    opacity=1,
+    opacity_hover=1,
+    stroke_width=0,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
