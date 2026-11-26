@@ -2,104 +2,110 @@ library: plotly
 language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:23:03Z'
-updated: '2026-05-23T18:47:40Z'
+updated: '2026-11-26T13:52:04Z'
 generated_by: claude-sonnet
-workflow_run: 26329534503
+workflow_run: 45832113505
 issue: 3748
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - Rebasing normalization correctly applied; all 4 series start at exactly 100
-  - End-point percentage annotations (+73%, +27%, +19%, -12%) provide an immediate
-    performance summary without requiring the reader to interpret the y-axis
-  - Range selector (1M/3M/6M/1Y) and range slider are idiomatic financial chart features
-    that make excellent use of Plotly's interactivity
-  - Unified hover mode (hovermode=x unified) enables side-by-side comparison of all
-    stocks at any date
-  - 'Full theme adaptation: all chrome tokens correctly flip between light and dark
-    with no legibility failures in either render'
-  - Imprint palette used in canonical order; brand green (#009E73) correctly assigned
-    to AAPL as the first series
+  - Rebasing computed from the tidy df with groupby().transform('first'); every series
+    starts at exactly 100
+  - Imprint positions 1-4 in canonical order, identical across both renders, with
+    full theme-token chrome
+  - Plotly-native range selector (1M/3M/6M/1Y), range slider and unified x hover suit
+    a financial comparison
+  - Dashed reference line at 100 in the muted ink stays subordinate to the series
+    in both themes
+  - 'Six-zone adaptable structure: column constants with roles, Data block ending
+    in df, BASE named in Constants'
   weaknesses:
-  - Top and right plot borders remain visible in both renders (default Plotly frame);
-    style guide preference is L-shaped frame — add mirror=False to xaxis/yaxis settings
-  - Both paper_bgcolor and plot_bgcolor are set to PAGE_BG; using ELEVATED_BG for
-    plot_bgcolor would create a subtle inner-panel distinction
-  - End-point annotations for GOOGL (+27%) and AAPL (+19%) are vertically close (~8
-    units apart on y-axis); add a small yshift to prevent visual crowding
-  - Right margin (r=80) is tight given end-point annotations extend rightward with
-    xanchor=left; increase to r=100 or r=120
+  - 'DQ-02 (both): real tickers AAPL, GOOGL, MSFT and SPY on real 2024 dates carry
+    invented random-walk prices (SPY ends at +73 % for 2024) → keep the real names
+    only with plausible values, or rename the series to clearly fictional tickers.
+    Likely cause: the synthetic np.random.normal returns labelled with real symbols
+    and 2024 dates.'
+  - 'DQ-03 (both): the SPY broad-market index ends at 173 (+73 %) and outperforms
+    every single stock by 46 points or more, an implausible year for a diversified
+    index with 1.2 % daily volatility → an index that ends near the middle of the
+    stocks, roughly 105–130 (about −45 to −70 points). Likely cause: the seed-42 draw
+    for SPY''s returns; the drift 0.0004 alone would give about +11 %.'
+  - 'Suggestion: name the y axis as an index (''Index (start = 100)'') rather than
+    a price, closer to the spec''s characteristic wording.'
+  - 'Suggestion: plotly express px.line(df, x=DATE, y=REBASED, color=SYMBOL) would
+    replace the trace loop, as the library prompt shows.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "line-stock-comparison · python · plotly · anyplot.ai" centered, dark ink, clearly readable. Y-axis label "Rebased Price (Starting = 100)" and X-axis label "Date" both visible in dark ink. Tick labels dark and legible. Horizontal legend at top with AAPL/GOOGL/MSFT/SPY labels readable. Range selector buttons (1M/3M/6M/1Y) with dark borders visible at top-left. "Starting Point (100)" dashed-line annotation readable at right. End-point annotations (+73%, +27%, +19%, -12%) in matching series colors, readable.
-      Data: AAPL (#009E73 green), GOOGL (#9418DB purple), MSFT (#B71D27 red), SPY (#16B8F3 sky blue). All 4 lines clearly distinguishable. SPY dominates at top (~173), MSFT underperforms at bottom (~88). Reference dashed line at y=100.
+      Background: warm off-white #FAF8F1 for paper and plot area
+      Chrome: title 'line-stock-comparison · python · plotly · anyplot.ai' centered in dark ink; y axis 'Rebased price (start = 100)', x axis 'Date' below the range slider; ticks 80-180 and Jan 2024-Jan 2025 in soft ink; range-selector buttons 1M/3M/6M/1Y top left (1Y active); boxed horizontal legend top center; muted 'Starting Point (100)' label above the dashed line at the right; end labels +73 %, +27 %, +19 %, -12 % in series colors. All readable.
+      Data: AAPL #009E73 green, GOOGL #C475FD lavender, MSFT #4467A3 blue, SPY #BD8233 ochre; 252 daily points each, all starting at 100; SPY tops at ~178, MSFT ends ~88. Range slider shows a mini copy of all four lines.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, tick labels, legend text all rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures observed. Range selector buttons correctly styled with dark elevated background. "Starting Point (100)" annotation and end-point percentage labels all legible.
-      Data: Colors identical to light render — AAPL green (#009E73), GOOGL purple (#9418DB), MSFT red (#B71D27), SPY sky blue (#16B8F3). Palette positions 1-4 unchanged between themes as required.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles, ticks, legend text, selector buttons and reference label all in light ink; legend box and slider on the elevated dark surface. No dark-on-dark text.
+      Data: identical series colors to the light render (green, lavender, blue, ochre); lines clearly visible on the dark page.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, axes=12, ticks=10); readable
-          in both themes. Range selector text at size=9 is compact but legible.
+        comment: Title 16, axis titles 12, ticks and legend 10 px per the plotly sizes;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: GOOGL (+27%) and AAPL (+19%) end-point annotations are slightly close
-          in y-position (~127 vs ~119) but individually readable
+        comment: 'No text collisions: the ''Starting Point (100)'' label sits above
+          the dashed line clear of every series; end labels +27 % / +19 % separated'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 252 points per series, line width=2.5 well-matched to medium density;
-          all 4 lines clearly distinguishable
+        comment: 252 points per series drawn as 2.5 px lines, right for the density;
+          legend line samples match the traces in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used (colorblind-safe); no red-green sole signal
+        comment: Four distinct Imprint hue families (green, lavender, blue, ochre);
+          no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas correct 3200x1800; right margin r=80 slightly tight for end-point
-          annotations extending rightward with xanchor=left
+        comment: 3200x1800 canvas; plot area, range slider and legend fill the canvas;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; Y-axis descriptive with domain context;
-          X-axis appropriate
+        comment: Title in mandated format; y axis 'Rebased price (start = 100)', x
+          axis 'Date'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; canonical palette order; backgrounds
-          #FAF8F1/#1A1A17 correct'
+        comment: 'Imprint positions 1-4 in canonical order (#009E73, #C475FD, #4467A3,
+          #BD8233); backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
       score: 12
       max: 20
@@ -108,24 +114,24 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Above default: end-point annotations and range selector/slider well-suited
-          to financial data. Both paper_bgcolor and plot_bgcolor use PAGE_BG, losing
-          elevated inner-panel distinction.'
+        passed: false
+        comment: 'Above baseline: end-of-line return labels set in each series'' color
+          as a direct-label layer; restrained muted reference label'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: X-axis grid disabled; Y-axis grid subtle with GRID token; legend
-          styled. All four plot borders visible (top and right spines not removed).
+        passed: false
+        comment: x grid switched off for a date axis, only a faint y grid; return
+          labels aligned in one column right of the lines
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: 'Strong: end-point % annotations, reference line at 100, unified
-          hover mode. Clear visual hierarchy. Range selector supports exploration.'
+        passed: false
+        comment: End-point percentage labels the implementation chose itself turn
+          the chart into a ranked performance summary (SPY +73 % down to MSFT -12
+          %)
     spec_compliance:
       score: 15
       max: 15
@@ -135,29 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-line time series, exactly as specified
+        comment: Multi-line rebased stock comparison, as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Rebasing to 100, distinct colors with legend, Y-axis rebased values,
-          horizontal reference line at 100 — all present
+        comment: Rebased to 100, distinct colors with legend, y in rebased values,
+          reference line at 100 (C4 subordinate, visible in both themes), y grid;
+          C1-C4 all shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: trading dates 252 days; Y: rebased price (starting=100); 4 series
-          within spec range'
+        comment: Dates on x, rebased values on y; axis 80-180 fitted to the data,
+          not forced to zero; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels match symbols
+        comment: Title correct; legend entries are the ticker symbols
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -165,22 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multi-series normalization, time-series progression, relative performance,
-          reference baseline, interactive exploration
+        comment: Shows common base, divergence, crossings, a series below 100 and
+          a widening spread
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Real tickers (AAPL/GOOGL/MSFT/SPY) for 2024, geometric Brownian motion
-          with realistic parameters, neutral data
+        passed: false
+        comment: Real tickers on real 2024 dates with invented prices (defect line)
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 252 trading days; final values ~80-175 (realistic 1-year returns);
-          seed=42 for reproducibility
+        passed: false
+        comment: 'SPY index ending +73 % is implausible for a broad index (defect
+          line); checked: all series start at exactly 100, 252 business days'
     code_quality:
       score: 10
       max: 10
@@ -190,50 +196,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear script with clear sections
+        comment: 'Six-zone layout: column constants, Data block ending in tidy df,
+          everything below derived from df'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, numpy, pandas, plotly.graph_objects) are used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop over stocks dict, appropriate complexity
+        comment: Rebasing via groupby().transform('first'); no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct canvas kwargs
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: go.Scatter with hovertemplate; add_hline() for reference line; add_annotation()
-          for labels; update_layout() for theme tokens
+        passed: false
+        comment: go.Scatter traces, add_hline with annotation, update_layout; the
+          library prompt's px.line path on the tidy df not used
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Range selector (1M/3M/6M/1Y), range slider, hovermode=x unified,
-          HTML export. Could add vrect/shapes for event highlights.
+        passed: false
+        comment: Range selector buttons (1M/3M/6M/1Y), range slider and hovermode='x
+          unified' — plotly-native financial interactivity beyond what the prompt
+          mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-3ee145f960
+  rendered_at: '2026-11-26T13:48:19Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -245,6 +256,7 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - normalization
-  - time-series
   - cumulative-sum
-  styling: []
+  - time-series
+  styling:
+  - grid-styling

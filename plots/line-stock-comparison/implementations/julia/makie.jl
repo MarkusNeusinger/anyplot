@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-stock-comparison: Stock Price Comparison Chart
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-05-23
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 81/100 | Updated: 2026-11-26
 
 using CairoMakie
 using Colors
@@ -113,7 +113,7 @@ for j in 1:4
     text!(ax, N_DAYS + 3, final_val;
         text     = string(round(Int, final_val)),
         color    = IMPRINT[j],
-        fontsize = 11,
+        fontsize = 13,
         align    = (:left, :center),
     )
 end

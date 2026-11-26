@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:21:24Z'
-updated: '2026-11-26T13:38:59Z'
+updated: '2026-11-26T13:45:44Z'
 generated_by: claude-sonnet
-workflow_run: 45830139696
+workflow_run: 45831375808
 issue: 3748
 language_version: 3.14.10
 library_version: 0.15.9
@@ -12,44 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stoc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - 'Rebasing done in the data: price / groupby().transform(''first'') * 100, so all
-    four lines start exactly at 100 on the first date'
-  - 'Canonical Imprint order taken from the data order via scale_color_manual(limits=groups),
-    first series #009E73, identical in both themes'
-  - 'Benchmark hierarchy: SPY drawn at 1.7 against 1.1 for the stocks, so the comparison
-    reads against the index'
-  - Dashed reference line at 100 in INK_SOFT stays subordinate to the series and visible
-    in both themes
-  - Theme tokens threaded through every chrome element; no dark-on-dark text in the
-    dark render
-  - 'Idiomatic plotnine layering: per-geom data=, scale_x_date with date_breaks and
-    date_labels'
+  - Rebasing is computed idiomatically with df.groupby(SYMBOL)[PRICE].transform('first');
+    all four lines start together at 100 on 2 Jan 2024 and fan out by relative performance
+  - Data model ties every stock to the SPY market factor through its own beta, so
+    the index ends at 115, plausibly between its constituents (GOOGL 95, AAPL 124,
+    MSFT 148)
+  - Benchmark SPY drawn heavier (size 1.7 vs 1.1), giving the comparison a clear reference
+    series the Notes do not prescribe
+  - Per-layer data= on geom_line/geom_point/geom_text and scale_x_date(date_breaks,
+    date_labels, limits) used as plotnine intends; x range padded so the end markers
+    have room
+  - 'Theme tokens threaded through every chrome element: both renders fully legible,
+    dashed 100 reference in INK_SOFT is visible yet thinner than the series'
   weaknesses:
-  - 'SC-04 (both): the ochre shading between the SPY line and the 100 reference has
-    no legend key or label, so a reader must guess what it encodes → remove the unrequested
-    ribbon (or give it a key). Likely cause: geom_ribbon(data=ribbon_df, fill=bench_color)
-    outside any mapped scale.'
-  - 'DQ-03 (code): SPY, an index of these large caps, ends at 149 (+49 %) while AAPL,
-    GOOGL and MSFT end at 111, 115 and 93 → an index return between its constituents,
-    roughly +10 to +25 % (about −25 to −40 points). Likely cause: the four series
-    are drawn from independent random walks with no common market factor, so SPY is
-    not tied to the stocks it contains.'
-  - 'Suggestion: the legend duplicates the colored end labels; a smaller legend or
-    one placed inside the empty lower right would give the lines more width.'
+  - 'Suggestion: the right-side legend repeats the colored end-of-line labels; dropping
+    it (legend_position=''none'') would give the lines more width.'
+  - 'Suggestion: an optional vertical span behind the lines (e.g. an earnings season)
+    would give the reader a time anchor, as the Notes allow.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, not pure white
-      Chrome: bold title 'line-stock-comparison · python · plotnine · anyplot.ai' in dark ink; y axis 'Rebased price (start = 100)', x axis 'Date' in INK; ticks 86-150 (140/120/100) and Feb '24 to Feb '25 rotated 45° in INK_SOFT; legend 'Symbol' with AAPL/GOOGL/MSFT/SPY on an elevated panel; all readable
-      Data: four lines start together at 100 on 2 Jan 2024: AAPL #009E73, GOOGL #C475FD, MSFT #4467A3, SPY #BD8233 (heavier); ochre translucent ribbon from 100 up to SPY; dashed grey line at 100; colored end dots with labels 'SPY 149', 'GOOGL 115', 'AAPL 111', 'MSFT 93'
+      Background: warm off-white #FAF8F1, 3200x1800 landscape.
+      Chrome: bold title "line-stock-comparison · python · plotnine · anyplot.ai" (~63 % width), y axis "Rebased price (start = 100)" with ticks 80-140, x axis "Date" with rotated "Feb '24 … Feb '25" ticks; dark ink text, subtle grid, left/bottom axis lines only; legend "Symbol" in an elevated panel at right. All text readable.
+      Data: four lines from 100 on 2 Jan 2024 — AAPL #009E73, GOOGL #C475FD, MSFT #4467A3, SPY #BD8233 (heavier); dashed INK_SOFT reference at 100; end dots with colored labels MSFT 148, AAPL 124, SPY 115, GOOGL 95.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black
-      Chrome: title and axis titles in light ink #F0EFE8, ticks and legend text in #B8B7B0, legend on #242420 panel; no dark-on-dark text
-      Data: same four series colors as the light render; ribbon reads as a dark ochre tint; dashed reference line light grey and visible; end labels in series colors readable
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light soft gray, grid subtle, legend panel #242420 with light text; no dark-on-dark text anywhere.
+      Data: categorical colors identical to the light render; dashed reference line flips to light gray and stays visible; end labels readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -61,50 +54,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12 pt bold, axis titles 10 pt, ticks 8 pt, legend 8 pt, end
-          labels at legend size; all readable in both themes
+        comment: Explicit sizes (title 12, axis titles 10, ticks/legend 8); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the GOOGL 115 and AAPL 111 end labels sit close
-          but apart; rotated date ticks clean
+        comment: No text collisions; end labels sit clear of each other and of the
+          lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at 1.1 (stocks) and 1.7 (SPY) suit 252 daily points; legend
-          line samples match the series colors in both themes
+        comment: 252 points per series drawn as 1.1/1.7 lines, end dots 2.5; legend
+          line samples match the series in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint green/purple/blue/ochre separate by hue and lightness; no
-          red-green pair
+        comment: Green, violet, blue and ochre separate by hue and lightness; no red-green
+          pair
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the 3200x1800 canvas; legend on the right; padding on
-          the right holds the end labels; nothing clipped
+        comment: Plot uses the 3200x1800 canvas; legend at right; padded x range holds
+          the end labels; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y axis 'Rebased price (start = 100)' names the index; x axis 'Date'
+        comment: Y 'Rebased price (start = 100)' names the index; x 'Date'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order from data order (AAPL #009E73, GOOGL #C475FD,
-          MSFT #4467A3, SPY #BD8233); #FAF8F1 / #1A1A17 backgrounds; chrome flips
-          correctly'
+        comment: 'Canonical Imprint order (AAPL #009E73, GOOGL #C475FD, MSFT #4467A3,
+          SPY #BD8233); #FAF8F1/#1A1A17 backgrounds; chrome flips correctly'
     design_excellence:
       score: 10
       max: 20
@@ -121,17 +113,17 @@ review:
         score: 3
         max: 6
         passed: true
-        comment: Frameless elevated legend panel with key fills matching it, and an
-          x range padded so the end markers have room; beyond the spine and grid rules
+        comment: Frameless elevated legend panel with matching key fills and x range
+          padded for end markers, beyond the spine/grid rules
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Benchmark SPY drawn heavier (1.7 vs 1.1) so the comparison reads
-          against it, a hierarchy the Notes do not prescribe
+        comment: Benchmark SPY drawn heavier (1.7 vs 1.1) so the stocks read against
+          it, a hierarchy the Notes do not prescribe
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,30 +131,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-line rebased comparison chart, correct type
+        comment: Multi-line rebased stock comparison, correct type; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Rebased to 100 at the first date, distinct colors with legend, rebased
-          y axis, dashed reference at 100, major grid: all Notes present; C1-C4 met'
+        comment: Rebased to 100 at the first date, distinct colors with legend, rebased
+          y axis, dashed reference at 100, major grid; C1-C4 met (C5 spans not drawn,
+          optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x, rebased value on y, color by symbol; y axis fitted to
-          86-152, not forced to zero; marks at their values
+        comment: Date on x, rebased value on y, color by symbol; y fitted to ~82-152,
+          not forced to zero; marks at their values
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title exact; legend 'Symbol' with AAPL/GOOGL/MSFT/SPY; the ochre
-          shading between SPY and 100 has no key (defect line)
+        passed: true
+        comment: Title exact; legend 'Symbol' lists AAPL/GOOGL/MSFT/SPY
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -170,22 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows outperformers, a series ending below 100, crossings near the
-          base and a widening spread
+        comment: Outperformer, underperformer ending below 100, crossings near the
+          base and widening spread all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real tickers and 2024 trading days, a neutral portfolio-comparison
+        comment: Real tickers on 2024 business days, neutral portfolio-vs-benchmark
           context
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Values rebase correctly (all start at 100); but SPY, the index, ends
-          at 149, +49 % and 34-56 points above every constituent shown (defect line)
+        passed: true
+        comment: 'Checked: all series start at 100; SPY ends at 115, between its constituents
+          (95-148); annual moves of -5 to +48 % plausible'
     code_quality:
       score: 10
       max: 10
@@ -231,19 +223,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Per-layer data= on geoms, inherit_aes=False, scale_color_manual with
-          limits from the data order, scale_x_date date_breaks/date_labels
+        comment: Per-layer data= on geoms, scale_color_manual with limits from data
+          order, scale_x_date with date_breaks/date_labels/limits
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: true
-        comment: Nothing beyond what the library prompt mandates; the ribbon is an
-          unrequested addition and earns no credit
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-4bf8b8efdf
-  rendered_at: '2026-11-26T13:34:57Z'
+  rendered_at: '2026-11-26T13:42:40Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -254,8 +245,8 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - normalization
-  - cumulative-sum
   - time-series
   styling:
-  - alpha-blending
+  - publication-ready
+  - minimal-chrome
   - grid-styling

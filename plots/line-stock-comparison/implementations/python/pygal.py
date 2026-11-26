@@ -1,10 +1,9 @@
 """ anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-23
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-26
 """
 
-import datetime
 import os
 import sys
 
@@ -15,6 +14,7 @@ if _script_dir in sys.path:
     sys.path.remove(_script_dir)
 
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
@@ -28,45 +28,35 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#AE3030", "#4467A3", "#99B314", "#954477", "#BD8233")
+# Imprint palette: all eight positions, one per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Extended palette: data series use positions 1-4, INK_MUTED reserved for the reference line
-PALETTE_WITH_REF = IMPRINT[:4] + (INK_MUTED,)
+# Constants
+BASE_VALUE = 100  # every series is rebased to this value on the first date
 
-# Data
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+SYMBOL = "Symbol"  # role: symbol
+PRICE = "Closing price (USD)"  # role: price
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv", parse_dates=[DATE])
 np.random.seed(42)
 n_days = 252
+dates = pd.bdate_range("2024-01-02", periods=n_days)
+daily_return = {"AAPL": (0.0012, 0.018), "GOOGL": (0.0015, 0.022), "MSFT": (-0.0002, 0.016), "SPY": (0.0004, 0.010)}
+df = pd.concat(
+    [
+        pd.DataFrame({DATE: dates, SYMBOL: symbol, PRICE: 100 * np.cumprod(1 + np.random.normal(mu, sigma, n_days))})
+        for symbol, (mu, sigma) in daily_return.items()
+    ],
+    ignore_index=True,
+)
 
-start_date = datetime.date(2024, 1, 2)
-dates = []
-current_date = start_date
-while len(dates) < n_days:
-    if current_date.weekday() < 5:
-        dates.append(current_date)
-    current_date += datetime.timedelta(days=1)
-
-returns_aapl = np.random.normal(0.0012, 0.018, n_days)
-returns_googl = np.random.normal(0.0015, 0.022, n_days)
-returns_msft = np.random.normal(-0.0002, 0.016, n_days)
-returns_spy = np.random.normal(0.0004, 0.010, n_days)
-
-price_aapl = 100 * np.cumprod(1 + returns_aapl)
-price_googl = 100 * np.cumprod(1 + returns_googl)
-price_msft = 100 * np.cumprod(1 + returns_msft)
-price_spy = 100 * np.cumprod(1 + returns_spy)
-
-rebased_aapl = price_aapl / price_aapl[0] * 100
-rebased_googl = price_googl / price_googl[0] * 100
-rebased_msft = price_msft / price_msft[0] * 100
-rebased_spy = price_spy / price_spy[0] * 100
-
-# Year-end returns for legend labels (data storytelling)
-final_returns = {
-    "AAPL": rebased_aapl[-1] - 100,
-    "GOOGL": rebased_googl[-1] - 100,
-    "MSFT": rebased_msft[-1] - 100,
-    "SPY": rebased_spy[-1] - 100,
-}
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=DATE, columns=SYMBOL, values=PRICE, sort=False)
+rebased = table / table.bfill().iloc[0] * BASE_VALUE
+dates = rebased.index
+final_returns = rebased.ffill().iloc[-1] - BASE_VALUE
 
 
 def fmt_ret(r):
@@ -75,12 +65,10 @@ def fmt_ret(r):
 
 
 # Best performer gets a thicker stroke for visual emphasis
-best = max(final_returns, key=final_returns.get)
+best = final_returns.idxmax()
 
-
-def series_stroke(name):
-    return {"width": 6} if name == best else {"width": 3}
-
+# Series take the palette in order; the reference line takes the muted ink
+series_colors = [IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i in range(len(rebased.columns))] + [INK_MUTED]
 
 # Style
 custom_style = Style(
@@ -89,7 +77,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=PALETTE_WITH_REF,
+    colors=series_colors,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -99,7 +87,7 @@ custom_style = Style(
     font_family="sans-serif",
 )
 
-# X-axis labels — monthly markers only
+# X-axis labels: monthly markers only
 x_labels_all = [d.strftime("%b %Y") if i == 0 or d.month != dates[i - 1].month else "" for i, d in enumerate(dates)]
 x_labels_major = [label for label in x_labels_all if label]
 
@@ -109,13 +97,13 @@ chart = pygal.Line(
     height=1800,
     style=custom_style,
     title="line-stock-comparison · python · pygal · anyplot.ai",
-    x_title="Date",
-    y_title="Rebased Price (Start = 100)",
+    x_title=DATE,
+    y_title=f"Rebased Price (Start = {BASE_VALUE})",
     show_x_guides=False,
     show_y_guides=True,
     dots_size=2,
     legend_at_bottom=True,
-    legend_at_bottom_columns=5,
+    legend_at_bottom_columns=len(rebased.columns) + 1,
     x_label_rotation=45,
     show_minor_x_labels=False,
     x_labels_major=x_labels_major,
@@ -124,41 +112,23 @@ chart = pygal.Line(
 
 chart.x_labels = x_labels_all
 
-chart.add(
-    f"AAPL ({fmt_ret(final_returns['AAPL'])})",
-    [
-        {"value": val, "label": f"AAPL | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
-        for i, val in enumerate(rebased_aapl.tolist())
-    ],
-    stroke_style=series_stroke("AAPL"),
-)
-chart.add(
-    f"GOOGL ({fmt_ret(final_returns['GOOGL'])})",
-    [
-        {"value": val, "label": f"GOOGL | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
-        for i, val in enumerate(rebased_googl.tolist())
-    ],
-    stroke_style=series_stroke("GOOGL"),
-)
-chart.add(
-    f"MSFT ({fmt_ret(final_returns['MSFT'])})",
-    [
-        {"value": val, "label": f"MSFT | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
-        for i, val in enumerate(rebased_msft.tolist())
-    ],
-    stroke_style=series_stroke("MSFT"),
-)
-chart.add(
-    f"SPY ({fmt_ret(final_returns['SPY'])})",
-    [
-        {"value": val, "label": f"SPY | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
-        for i, val in enumerate(rebased_spy.tolist())
-    ],
-    stroke_style=series_stroke("SPY"),
-)
+for symbol in rebased.columns:
+    chart.add(
+        f"{symbol} ({fmt_ret(final_returns[symbol])})",
+        [
+            {"value": val, "label": f"{symbol} | {d.strftime('%Y-%m-%d')} | {val:.1f}"}
+            for d, val in zip(dates, rebased[symbol].tolist(), strict=True)
+        ],
+        stroke_style={"width": 6 if symbol == best else 3},
+    )
 
-# Horizontal reference line at y=100 anchors the starting baseline visually
-chart.add("Baseline (100)", [100.0] * n_days, show_dots=False, stroke_style={"width": 2, "dasharray": "6,4"})
+# Horizontal reference line at the base value anchors the starting baseline visually
+chart.add(
+    f"Baseline ({BASE_VALUE})",
+    [float(BASE_VALUE)] * len(dates),
+    show_dots=False,
+    stroke_style={"width": 2, "dasharray": "6,4"},
+)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
