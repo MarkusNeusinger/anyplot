@@ -1,26 +1,23 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-basic: Basic Histogram
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-28
 """
 
-import io
 import os
 import sys
 import time
 from pathlib import Path
-
-from PIL import Image
 
 
 # Prevent this file's directory from shadowing the installed bokeh package
 sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(os.path.abspath(__file__))]
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, NumeralTickFormatter
+from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter, Range1d
 from bokeh.plotting import figure
-from bokeh.transform import linear_cmap
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -28,161 +25,76 @@ from selenium.webdriver.chrome.options import Options
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# imprint_seq colormap: brand green (#009E73) → blue (#4467A3), 256 stops
-ANYPLOT_SEQ256 = [
-    "#{:02X}{:02X}{:02X}".format(
-        int(round(68 * t / 255)), int(round(158 - 55 * t / 255)), int(round(115 + 48 * t / 255))
-    )
-    for t in range(256)
-]
+# Imprint palette: all eight positions
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — Marathon finish times (bimodal: main recreational group + slower group)
-np.random.seed(42)
-main_group = np.random.normal(loc=240, scale=30, size=380)
-slower_group = np.random.normal(loc=305, scale=18, size=100)
-outliers = np.random.normal(loc=370, scale=12, size=20)
-values = np.concatenate([main_group, slower_group, outliers])
-values = values[(values > 120) & (values < 420)]
+# Columns: set these to your table's column names
+FINISH_TIME = "Finish time (min)"  # role: values
 
-# Statistics
-median_val = np.median(values)
-mean_val = np.mean(values)
+# Data: replace this block with your own table, for example df = pd.read_csv("times.csv")
+# Marathon finish times: a main recreational group, a slower group and a few stragglers
+rng = np.random.default_rng(42)
+times = np.concatenate(
+    [
+        rng.normal(loc=240, scale=30, size=380),
+        rng.normal(loc=305, scale=18, size=100),
+        rng.normal(loc=370, scale=12, size=20),
+    ]
+)
+df = pd.DataFrame({FINISH_TIME: times[(times > 120) & (times < 420)]})
 
-# Histogram bins
-counts, edges = np.histogram(values, bins=28)
-left_edges = edges[:-1]
-right_edges = edges[1:]
-max_count = int(counts.max())
-
+# Plot: reads only df and the constants above
+counts, edges = np.histogram(df[FINISH_TIME].dropna(), bins=28)
 source = ColumnDataSource(
     data={
-        "left": left_edges,
-        "right": right_edges,
+        "left": edges[:-1],
+        "right": edges[1:],
         "top": counts,
-        "bottom": [0] * len(counts),
-        "count": counts,
-        "bin_start": [f"{e:.0f}" for e in left_edges],
-        "bin_end": [f"{e:.0f}" for e in right_edges],
+        "bottom": np.zeros(len(counts)),
+        "bin_start": [f"{e:.0f}" for e in edges[:-1]],
+        "bin_end": [f"{e:.0f}" for e in edges[1:]],
     }
 )
 
-# imprint_seq color mapper: low count → green, high count → blue
-fill_mapper = linear_cmap(field_name="top", palette=ANYPLOT_SEQ256, low=0, high=max_count)
-
-# Figure — 3200 × 1800 px landscape
+W, H = 3200, 1800
 TITLE = "histogram-basic · python · bokeh · anyplot.ai"
-n = len(TITLE)
-title_pt = max(34, round(50 * (67 / n if n > 67 else 1.0)))
+title_pt = max(34, round(50 * (67 / len(TITLE) if len(TITLE) > 67 else 1.0)))
+pad = (edges[-1] - edges[0]) * 0.03
 p = figure(
-    width=3200,
-    height=1800,
+    width=W,
+    height=H,
     title=TITLE,
-    x_axis_label="Finish Time (min)",
-    y_axis_label="Number of Runners",
+    x_axis_label=FINISH_TIME,
+    y_axis_label="Number of runners",
     toolbar_location=None,
-    x_range=(118, 410),
+    x_range=Range1d(edges[0] - pad, edges[-1] + pad),
+    y_range=Range1d(0, counts.max() * 1.08),
     min_border_bottom=160,
     min_border_left=180,
     min_border_top=110,
-    min_border_right=50,
+    min_border_right=60,
 )
 
-# Histogram bars
 bars = p.quad(
     left="left",
     right="right",
     top="top",
     bottom="bottom",
     source=source,
-    fill_color=fill_mapper,
+    fill_color=IMPRINT_PALETTE[0],
     line_color=PAGE_BG,
-    line_width=1.5,
-    fill_alpha=0.85,
-    hover_fill_color="#DDCC77",
-    hover_fill_alpha=0.95,
-    hover_line_color=PAGE_BG,
+    line_width=2,
+    hover_fill_color=IMPRINT_PALETTE[0],
+    hover_fill_alpha=0.75,
+)
+p.add_tools(
+    HoverTool(renderers=[bars], tooltips=[("Range", "@bin_start–@bin_end min"), ("Runners", "@top")], mode="mouse")
 )
 
-# HoverTool
-hover = HoverTool(
-    renderers=[bars], tooltips=[("Range", "@bin_start–@bin_end min"), ("Runners", "@count")], mode="mouse"
-)
-p.add_tools(hover)
-
-# Median reference line (matte red)
-median_line = p.line(
-    x=[median_val, median_val], y=[0, max_count * 1.05], line_color="#AE3030", line_width=5, line_alpha=0.9
-)
-
-# Mean reference line (ochre, dashed)
-mean_line = p.line(
-    x=[mean_val, mean_val],
-    y=[0, max_count * 1.05],
-    line_color="#BD8233",
-    line_width=5,
-    line_dash=[14, 7],
-    line_alpha=0.9,
-)
-
-# Legend — top-left, closer to the data's left shoulder
-legend = Legend(
-    items=[
-        LegendItem(label=f"Median: {median_val:.0f} min", renderers=[median_line]),
-        LegendItem(label=f"Mean: {mean_val:.0f} min", renderers=[mean_line]),
-    ],
-    location="top_left",
-    label_text_font_size="34pt",
-    label_text_color=INK_SOFT,
-    glyph_width=60,
-    glyph_height=6,
-    spacing=16,
-    padding=24,
-    background_fill_color=ELEVATED_BG,
-    background_fill_alpha=0.85,
-    border_line_color=INK_SOFT,
-    border_line_alpha=0.5,
-)
-p.add_layout(legend, "center")
-
-# Annotations — main distribution peak
-peak_label = Label(
-    x=190,
-    y=max_count * 1.02,
-    text="▼ Main group (~4 hr pace)",
-    text_font_size="28pt",
-    text_color=INK_SOFT,
-    text_font_style="bold",
-)
-p.add_layout(peak_label)
-
-# Annotation — slower group shoulder
-slower_peak = int(counts[np.abs(left_edges - 295) < 15].max())
-shoulder_label = Label(
-    x=278,
-    y=slower_peak + max_count * 0.08,
-    text="▼ Slower group (~5 hr pace)",
-    text_font_size="28pt",
-    text_color=INK_SOFT,
-    text_font_style="bold",
-)
-p.add_layout(shoulder_label)
-
-# Subtitle — x=215 starts right of the legend box
-subtitle = Label(
-    x=215,
-    y=max_count * 1.14,
-    text=f"N = {len(values)} runners  │  Right-skewed bimodal distribution",
-    text_font_size="28pt",
-    text_color=INK_MUTED,
-)
-p.add_layout(subtitle)
-
-# Typography
+# Style
 p.title.text_font_size = f"{title_pt}pt"
 p.title.text_color = INK
 p.title.text_font_style = "bold"
@@ -196,49 +108,46 @@ p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 p.yaxis.formatter = NumeralTickFormatter(format="0,0")
 
-# Grid — y-axis only, very subtle
 p.xgrid.visible = False
-p.ygrid.grid_line_alpha = 0.15
 p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.15
 p.ygrid.grid_line_width = 1
 
-# Chrome
-p.outline_line_color = INK_SOFT
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
-p.xaxis.axis_line_color = INK_SOFT
-p.yaxis.axis_line_color = INK_SOFT
-p.xaxis.minor_tick_line_color = None
-p.yaxis.minor_tick_line_color = None
-p.xaxis.major_tick_line_color = INK_SOFT
-p.yaxis.major_tick_line_color = INK_SOFT
-p.y_range.start = 0
-p.y_range.end = max_count * 1.22
+p.outline_line_color = None
+for axis in (p.xaxis, p.yaxis):
+    axis.axis_line_width = 2
+    axis.axis_line_color = INK_SOFT
+    axis.major_tick_line_color = INK_SOFT
+    axis.minor_tick_line_color = None
 
 # Save HTML (interactive artifact)
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome — window is H+200 tall so bokeh canvas fills
-# exactly W×H; PIL crops to the target rect before saving.
-W, H = 3200, 1800
+# Screenshot with headless Chrome at the exact canvas size
 opts = Options()
 for arg in (
     "--headless=new",
     "--no-sandbox",
     "--disable-dev-shm-usage",
     "--disable-gpu",
-    f"--window-size={W},{H + 200}",
+    f"--window-size={W},{H}",
     "--hide-scrollbars",
-    "--force-device-scale-factor=1",
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
-driver.set_window_size(W, H + 200)
+driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Pin the viewport exactly: headless --window-size still reserves a phantom title bar
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+# Paint the page in the theme color so the anti-aliased canvas edge shows no white line
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
-raw = driver.get_screenshot_as_png()
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-Image.open(io.BytesIO(raw)).crop((0, 0, W, H)).save(f"plot-{THEME}.png")
