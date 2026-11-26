@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-23
@@ -93,7 +93,7 @@ fig.update_layout(
 )
 
 # Subplot title styling
-fig.update_annotations(font={"size": 12, "color": INK_SOFT})
+fig.update_annotations(font={"size": 14, "color": INK})
 
 # Save
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
