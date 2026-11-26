@@ -3281,9 +3281,8 @@ def keep_note(
         note = f"{of} was kept because none of its visible changes fixed a defect the review named or a property the spec asks for."
     elif code == ADAPT_REGRESSION:
         adapt = record.get("adapt")
-        sides = [adapt.get(side) if isinstance(adapt, Mapping) else None for side in ("new", "prev")]
-        if all(isinstance(side, Mapping) for side in sides):
-            new_side, prev_side = sides
+        new_side, prev_side = (adapt.get(side) if isinstance(adapt, Mapping) else None for side in ("new", "prev"))
+        if isinstance(new_side, Mapping) and isinstance(prev_side, Mapping):
             note = (
                 f"{of} was kept because its source fails the adaptability check "
                 f"(static {record_token(new_side.get('static'))}, smoke {record_token(new_side.get('smoke'))}) "

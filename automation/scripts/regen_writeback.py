@@ -239,6 +239,8 @@ def load_gate_record(path: Path) -> dict[str, Any]:
         record = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise WritebackError(f"gate record {path} unreadable: {regen_gate._one_line(str(exc))[:200]}") from exc
+    if not isinstance(record, dict):
+        raise WritebackError(f"gate record {path} is not a JSON object")
     errors = regen_gate.validate_record(record)
     if errors:
         raise WritebackError(f"gate record {path} is invalid: {'; '.join(errors)[:300]}")
