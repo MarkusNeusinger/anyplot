@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 74/100 | Updated: 2026-05-19
@@ -19,6 +19,7 @@ from lets_plot import (
     geom_point,
     geom_polygon,
     geom_segment,
+    gggrid,
     ggplot,
     ggsave,
     ggsize,
@@ -36,143 +37,114 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID_COLOR = "#CCCCCC" if THEME == "light" else "#3D3D3A"
-BRAND = "#009E73"
+GRID_COLOR = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # Imprint palette position 1
 
+# Constants
+CALM_KNOTS = 2.5  # below this, a station is calm: an open circle without a staff
+PENNANT_KNOTS = 50
+FULL_BARB_KNOTS = 10
+HALF_BARB_KNOTS = 5
+MAX_BARB_KNOTS = 195  # four pennants, one full and one half barb
+
+X = "Longitude (°E)"  # role: x
+Y = "Latitude (°N)"  # role: y
+U = "Zonal wind u (kt)"  # role: u
+V = "Meridional wind v (kt)"  # role: v
+
+# Data: replace this block with your own table, for example df = pd.read_csv("stations.csv")
 np.random.seed(42)
-
-# Generate grid of weather stations (8x6 grid = 48 stations)
 n_x, n_y = 8, 6
-x_coords = np.linspace(0, 140, n_x)
-y_coords = np.linspace(0, 100, n_y)
-X, Y = np.meshgrid(x_coords, y_coords)
-x = X.flatten()
-y = Y.flatten()
+grid_x, grid_y = np.meshgrid(np.linspace(0, 140, n_x), np.linspace(0, 100, n_y))
+x_pos = grid_x.flatten()
+y_pos = grid_y.flatten()
+u_wind = 15 * np.sin(x_pos / 30) + np.random.normal(0, 3, len(x_pos))
+v_wind = 10 * np.cos(y_pos / 20) + np.random.normal(0, 3, len(y_pos))
+# Two calm stations and two strong ones (pennants) among the moderate winds
+u_wind[[0, 5]], v_wind[[0, 5]] = 0.5, 0.5
+u_wind[[20, 21]], v_wind[[20, 21]] = 45.0, 30.0
+df = pd.DataFrame({X: x_pos, Y: y_pos, U: u_wind, V: v_wind})
 
-# Generate wind components (u = east-west, v = north-south) in knots
-u = 15 * np.sin(x / 30) + np.random.normal(0, 3, len(x))
-v = 10 * np.cos(y / 20) + np.random.normal(0, 3, len(y))
+# Plot
+speed = np.hypot(df[U], df[V])
+calm = speed < CALM_KNOTS
 
-# Force calm winds at two stations (< 2.5 knots) for demonstration
-calm_indices = [0, 5]
-u[calm_indices] = 0.5
-v[calm_indices] = 0.5
+# Barb geometry scales with the station spacing so neighbours stay apart
+spacing_x = np.diff(np.sort(df[X].unique())).min() if df[X].nunique() > 1 else 1.0
+spacing_y = np.diff(np.sort(df[Y].unique())).min() if df[Y].nunique() > 1 else 1.0
+barb_length = 0.55 * min(spacing_x, spacing_y)
+barb_spacing = barb_length * 0.13
+barb_tick = barb_length * 0.3
 
-# Force high-speed winds at two stations (~54 knots) to demonstrate pennants
-high_indices = [20, 21]
-u[high_indices] = 45.0
-v[high_indices] = 30.0
-
-wind_speed = np.sqrt(u**2 + v**2)
-
-# Wind barb geometry parameters
-barb_length = 8
-barb_spacing = 1.5
-barb_tick_length = 2.5
-
-# Build barb segments and pennant polygons for each station
 segments = []
 pennants = []
-
-for i in range(len(x)):
-    speed = np.sqrt(u[i] ** 2 + v[i] ** 2)
-    angle = np.arctan2(-v[i], -u[i])
-
-    if speed < 2.5:
+for i, (sx, sy, su, sv, knots) in enumerate(zip(df[X], df[Y], df[U], df[V], speed, strict=True)):
+    if not np.isfinite(knots) or knots < CALM_KNOTS:
         continue
-
+    # The staff points toward the direction the wind blows from
+    angle = np.arctan2(-sv, -su)
     cos_a, sin_a = np.cos(angle), np.sin(angle)
-    x_end = x[i] + barb_length * cos_a
-    y_end = y[i] + barb_length * sin_a
+    side_x, side_y = -sin_a, cos_a  # all feathers on the left side of the staff
+    segments.append({"x": sx, "y": sy, "xend": sx + barb_length * cos_a, "yend": sy + barb_length * sin_a})
 
-    # Main staff
-    segments.append({"x": x[i], "y": y[i], "xend": x_end, "yend": y_end})
-
-    remaining_speed = speed
-    barb_position = barb_length - 0.5
-    perp_angle = angle + np.pi / 2
-
-    # Pennants: 50 knots each (filled triangles)
-    while remaining_speed >= 47.5:
-        bx = x[i] + barb_position * cos_a
-        by = y[i] + barb_position * sin_a
-        tip_x = bx + barb_tick_length * np.cos(perp_angle)
-        tip_y = by + barb_tick_length * np.sin(perp_angle)
-        base_x = x[i] + (barb_position - barb_spacing) * cos_a
-        base_y = y[i] + (barb_position - barb_spacing) * sin_a
-        pennants.append({"x": [bx, tip_x, base_x], "y": [by, tip_y, base_y]})
-        remaining_speed -= 50
-        barb_position -= barb_spacing
-
-    # Full barbs: 10 knots each
-    while remaining_speed >= 7.5:
-        bx = x[i] + barb_position * cos_a
-        by = y[i] + barb_position * sin_a
-        segments.append(
+    remaining = min(knots, MAX_BARB_KNOTS)  # feathers must fit on the staff
+    pos = barb_length - 0.06 * barb_length
+    while remaining >= PENNANT_KNOTS - CALM_KNOTS:
+        tip = (sx + pos * cos_a + barb_tick * side_x, sy + pos * sin_a + barb_tick * side_y)
+        base = pos - 2 * barb_spacing
+        pennants.append(
             {
-                "x": bx,
-                "y": by,
-                "xend": bx + barb_tick_length * np.cos(perp_angle),
-                "yend": by + barb_tick_length * np.sin(perp_angle),
+                "pennant": i * 100 + len(pennants),
+                "x": [sx + pos * cos_a, tip[0], sx + base * cos_a],
+                "y": [sy + pos * sin_a, tip[1], sy + base * sin_a],
             }
         )
-        remaining_speed -= 10
-        barb_position -= barb_spacing
-
-    # Half barb: 5 knots
-    if remaining_speed >= 2.5:
-        bx = x[i] + barb_position * cos_a
-        by = y[i] + barb_position * sin_a
+        remaining -= PENNANT_KNOTS
+        pos -= 2.5 * barb_spacing
+    while remaining >= FULL_BARB_KNOTS - CALM_KNOTS:
+        bx, by = sx + pos * cos_a, sy + pos * sin_a
+        segments.append({"x": bx, "y": by, "xend": bx + barb_tick * side_x, "yend": by + barb_tick * side_y})
+        remaining -= FULL_BARB_KNOTS
+        pos -= barb_spacing
+    if remaining >= HALF_BARB_KNOTS - CALM_KNOTS:
+        bx, by = sx + pos * cos_a, sy + pos * sin_a
         segments.append(
-            {
-                "x": bx,
-                "y": by,
-                "xend": bx + barb_tick_length * 0.5 * np.cos(perp_angle),
-                "yend": by + barb_tick_length * 0.5 * np.sin(perp_angle),
-            }
+            {"x": bx, "y": by, "xend": bx + 0.5 * barb_tick * side_x, "yend": by + 0.5 * barb_tick * side_y}
         )
 
-segment_df = pd.DataFrame(segments)
-station_df = pd.DataFrame({"x": x, "y": y, "speed": wind_speed})
-calm_df = station_df[station_df["speed"] < 2.5].copy()
+segment_df = pd.DataFrame(segments, columns=["x", "y", "xend", "yend"])
+pennant_df = pd.DataFrame(
+    [{"pennant": p["pennant"], "x": px, "y": py} for p in pennants for px, py in zip(p["x"], p["y"], strict=True)],
+    columns=["pennant", "x", "y"],
+)
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_line(color=GRID_COLOR, size=0.3),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_title=element_text(color=INK, size=12),
+    axis_text=element_text(color=INK_SOFT, size=10),
     axis_line=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24),
+    plot_title=element_text(color=INK, size=16),
 )
-
-plot = ggplot() + theme_minimal() + anyplot_theme
-
-# Staffs and barb ticks
-if len(segment_df) > 0:
-    plot = plot + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=segment_df, color=BRAND, size=1.2)
-
-# Pennants as filled triangles
-for pennant in pennants:
-    pennant_df = pd.DataFrame({"x": pennant["x"], "y": pennant["y"]})
-    plot = plot + geom_polygon(aes(x="x", y="y"), data=pennant_df, fill=BRAND, color=BRAND, size=0.5)
-
-# Calm wind stations (open circles for speed < 2.5 knots)
-if len(calm_df) > 0:
-    plot = plot + geom_point(aes(x="x", y="y"), data=calm_df, shape=1, size=6, color=BRAND, stroke=1.5)
-
-# Station center dots
-plot = plot + geom_point(aes(x="x", y="y"), data=station_df, size=2, color=BRAND)
 
 plot = (
-    plot
-    + labs(x="Longitude (°E)", y="Latitude (°N)", title="windbarb-basic · python · letsplot · anyplot.ai")
+    ggplot()
+    + theme_minimal()
+    + anyplot_theme
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=segment_df, color=BRAND, size=0.9)
+    + geom_polygon(aes(x="x", y="y", group="pennant"), data=pennant_df, fill=BRAND, color=BRAND, size=0.4)
+    + geom_point(aes(x=X, y=Y), data=df[calm], shape=1, size=5, color=BRAND, stroke=1.2)
+    + geom_point(aes(x=X, y=Y), data=df, size=1.5, color=BRAND)
+    + labs(x=X, y=Y, title="windbarb-basic · python · letsplot · anyplot.ai")
     + coord_fixed(ratio=1)
-    + scale_x_continuous(expand=[0.1, 0])
+    + scale_x_continuous(expand=[0.08, 0])
     + scale_y_continuous(expand=[0.1, 0])
-    + ggsize(1600, 900)
 )
 
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# The one-panel grid paints the whole canvas with the page color around the fixed-aspect plot
+plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
