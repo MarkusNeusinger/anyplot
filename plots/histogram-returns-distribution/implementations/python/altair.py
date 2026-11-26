@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-20
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
@@ -16,7 +16,6 @@ sys.path = [p for p in sys.path if p and os.path.abspath(p) != _script_dir]
 import altair as alt
 import numpy as np
 import pandas as pd
-from PIL import Image
 from scipy import stats
 
 
@@ -26,71 +25,84 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-BRAND = "#009E73"  # Okabe-Ito 1 — main distribution bars
-TAIL_COLOR = "#C475FD"  # Okabe-Ito 2 — tail bars beyond ±2σ
-CURVE_COLOR = "#4467A3"  # Okabe-Ito 3 — fitted normal distribution overlay
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
+# Constants
+BIN_COUNT = 30  # spec Notes: 20-50 bins for 252+ observations
+TAIL_SIGMA = 2  # tail regions lie beyond 2 standard deviations
+SERIES = ["Returns", "Tail (±2σ)", "Normal dist."]  # legend order: bars, tail bars, fitted curve
+
+DATE = "Date"  # role: date
+RETURNS = "Returns (%)"  # role: returns
+# Derived columns of the plot tables below
+BIN_START = "bin start"  # role: extra
+BIN_END = "bin end"  # role: extra
+DENSITY = "Density"  # role: extra
+SERIES_COL = "Series"  # role: extra
+X_COL = "x"  # role: extra
+Y_COL = "y"  # role: extra
+LABEL = "label"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("returns.csv")
 np.random.seed(42)
 n_days = 252
 raw_returns = np.random.standard_t(df=5, size=n_days) * 0.015 + 0.0003
-# Clip at 1st–99th percentile to remove extreme outliers that compress the main distribution
-returns = np.clip(raw_returns, np.percentile(raw_returns, 1), np.percentile(raw_returns, 99))
+# Clip at 1st-99th percentile to remove extreme outliers that compress the main distribution
+clipped = np.clip(raw_returns, np.percentile(raw_returns, 1), np.percentile(raw_returns, 99))
+df = pd.DataFrame({DATE: pd.bdate_range("2024-01-02", periods=n_days), RETURNS: clipped * 100})
 
-mean_ret = np.mean(returns) * 100
-std_ret = np.std(returns) * 100
+# Plot
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+returns = df[RETURNS].dropna()
+mean_ret = returns.mean()
+std_ret = returns.std(ddof=0)
 skewness = stats.skew(returns)
 kurtosis = stats.kurtosis(returns)
 
-df_ret = pd.DataFrame({"returns": returns * 100})
-
-bin_count = 30
-hist_values, bin_edges = np.histogram(df_ret["returns"], bins=bin_count, density=True)
+hist_values, bin_edges = np.histogram(returns, bins=BIN_COUNT, density=True)
+lower_tail = mean_ret - TAIL_SIGMA * std_ret
+upper_tail = mean_ret + TAIL_SIGMA * std_ret
 bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-
+is_tail = (bin_centers < lower_tail) | (bin_centers > upper_tail)
 hist_df = pd.DataFrame(
-    {"bin_center": bin_centers, "density": hist_values, "bin_start": bin_edges[:-1], "bin_end": bin_edges[1:]}
+    {
+        BIN_START: bin_edges[:-1],
+        BIN_END: bin_edges[1:],
+        DENSITY: hist_values,
+        SERIES_COL: np.where(is_tail, SERIES[1], SERIES[0]),
+    }
 )
 
-lower_tail = mean_ret - 2 * std_ret
-upper_tail = mean_ret + 2 * std_ret
-hist_df["is_tail"] = (hist_df["bin_center"] < lower_tail) | (hist_df["bin_center"] > upper_tail)
-hist_df["category"] = np.where(hist_df["is_tail"], "Tail (±2σ)", "Returns")
+x_range = np.linspace(returns.min() - 0.5, returns.max() + 0.5, 300)
+normal_df = pd.DataFrame({X_COL: x_range, DENSITY: stats.norm.pdf(x_range, mean_ret, std_ret), SERIES_COL: SERIES[2]})
 
-x_range = np.linspace(df_ret["returns"].min() - 0.5, df_ret["returns"].max() + 0.5, 300)
-normal_pdf = stats.norm.pdf(x_range, mean_ret, std_ret)
-normal_df = pd.DataFrame({"x": x_range, "density": normal_pdf, "category": "Normal dist."})
-
-# ±2σ reference lines
-sigma_df = pd.DataFrame({"x": [lower_tail, upper_tail]})
+sigma_df = pd.DataFrame({X_COL: [lower_tail, upper_tail]})
 
 stats_text = f"Mean: {mean_ret:.2f}%\nStd Dev: {std_ret:.2f}%\nSkewness: {skewness:.2f}\nKurtosis: {kurtosis:.2f}"
-stats_df = pd.DataFrame({"x": [df_ret["returns"].max() - 0.1], "y": [max(hist_values) * 0.95], "text": [stats_text]})
+stats_df = pd.DataFrame({X_COL: [returns.max() - 0.1], Y_COL: [hist_values.max() * 0.95], LABEL: [stats_text]})
 
 title = "histogram-returns-distribution · python · altair · anyplot.ai"
 
-# Shared color scale — explicit domain shows all 3 entries in the legend even
-# though the histogram data only contains "Returns" and "Tail (±2σ)"
-COLOR_DOMAIN = ["Returns", "Tail (±2σ)", "Normal dist."]
-COLOR_RANGE = [BRAND, TAIL_COLOR, CURVE_COLOR]
-color_scale = alt.Scale(domain=COLOR_DOMAIN, range=COLOR_RANGE)
+# Shared color scale: explicit domain shows all 3 entries in the legend even
+# though the histogram data only contains the first two
+color_scale = alt.Scale(domain=SERIES, range=IMPRINT_PALETTE[: len(SERIES)])
 
-# Plot
 histogram = (
     alt.Chart(hist_df)
     .mark_bar(opacity=0.8)
     .encode(
-        x=alt.X("bin_start:Q", bin="binned", title="Returns (%)"),
-        x2="bin_end:Q",
-        y=alt.Y("density:Q", title="Density"),
+        x=alt.X(BIN_START.translate(ESCAPE), type="quantitative", bin="binned", title=RETURNS),
+        x2=alt.X2(BIN_END.translate(ESCAPE)),
+        y=alt.Y(DENSITY.translate(ESCAPE), type="quantitative", title=DENSITY),
         color=alt.Color(
-            "category:N",
+            SERIES_COL.translate(ESCAPE),
+            type="nominal",
             scale=color_scale,
             legend=alt.Legend(title=None, orient="right", labelFontSize=10, symbolSize=80),
         ),
         tooltip=[
-            alt.Tooltip("bin_center:Q", title="Return (%)", format=".2f"),
-            alt.Tooltip("density:Q", title="Density", format=".4f"),
+            alt.Tooltip(BIN_START.translate(ESCAPE), type="quantitative", title="Bin start (%)", format=".2f"),
+            alt.Tooltip(DENSITY.translate(ESCAPE), type="quantitative", title=DENSITY, format=".4f"),
         ],
     )
 )
@@ -98,32 +110,39 @@ histogram = (
 normal_curve = (
     alt.Chart(normal_df)
     .mark_line(strokeWidth=3, strokeDash=[6, 3])
-    .encode(x=alt.X("x:Q"), y=alt.Y("density:Q"), color=alt.Color("category:N", scale=color_scale, legend=None))
+    .encode(
+        x=alt.X(X_COL, type="quantitative"),
+        y=alt.Y(DENSITY.translate(ESCAPE), type="quantitative"),
+        color=alt.Color(SERIES_COL.translate(ESCAPE), type="nominal", scale=color_scale, legend=None),
+    )
 )
 
 # Subtle ±2σ reference lines to mark tail cutoffs
 sigma_lines = (
     alt.Chart(sigma_df)
     .mark_rule(strokeDash=[4, 4], opacity=0.4, strokeWidth=1.5, color=INK_SOFT)
-    .encode(x=alt.X("x:Q"))
+    .encode(x=alt.X(X_COL, type="quantitative"))
 )
 
 stats_annotation = (
     alt.Chart(stats_df)
     .mark_text(align="right", baseline="top", fontSize=13, color=INK_SOFT, lineBreak="\n")
-    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="text:N")
+    .encode(
+        x=alt.X(X_COL, type="quantitative"), y=alt.Y(Y_COL, type="quantitative"), text=alt.Text(LABEL, type="nominal")
+    )
 )
 
 chart = (
     alt.layer(histogram, sigma_lines, normal_curve, stats_annotation)
     .properties(
-        width=560,
-        height=320,
+        width=800,
+        height=450,
         background=PAGE_BG,
-        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
+        padding=10,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
         title=alt.Title(title, fontSize=16, anchor="middle"),
     )
-    .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=560, continuousHeight=320)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
         labelFontSize=10,
         titleFontSize=12,
@@ -147,19 +166,4 @@ chart = (
 
 # Save
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
-
-TW, TH = 3200, 1800
-_img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
-    _bg_rgb = (250, 248, 241) if THEME == "light" else (26, 26, 23)
-    _canvas = Image.new("RGB", (TW, TH), _bg_rgb)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
-    _canvas.save(f"plot-{THEME}.png")
-
 chart.save(f"plot-{THEME}.html")
