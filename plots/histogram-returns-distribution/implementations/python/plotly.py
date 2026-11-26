@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: pending | Updated: 2026-11-26
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-26
 """
 
 import os
