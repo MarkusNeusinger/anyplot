@@ -1,13 +1,14 @@
 """ anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-21
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-26
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
@@ -17,80 +18,71 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Status colors — imprint semantic anchors (green / amber / red)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+# Status colors: Imprint green, the amber warning anchor, Imprint red
 STATUS_COLORS = {"good": "#009E73", "warning": "#DDCC77", "critical": "#AE3030"}
 STATUS_LABELS = {"good": "GOOD", "warning": "WARNING", "critical": "CRITICAL"}
+STATUS_TEXT = {"good": "white", "warning": "#1A1A17", "critical": "white"}
+LOWER_IS_BETTER = {"CPU Usage", "Memory", "Response Time", "Error Rate"}  # a rise in these is unfavorable
+GRID_COLUMNS = 3
 
-# Data
+# Columns: set these to your table's column names
+METRIC = "Metric"  # role: metric_name
+VALUE = "Current value"  # role: current_value
+UNIT = "Unit"  # role: extra
+STEP = "Period"  # role: extra
+READING = "Reading"  # role: history
+CHANGE = "Change (%)"  # role: change_percent
+STATUS = "Status"  # role: status
+
+# Data: replace this block with your own table, for example df = pd.read_csv("metrics.csv")
 np.random.seed(42)
-metrics = [
-    {
-        "name": "CPU Usage",
-        "value": 45,
-        "unit": "%",
-        "history": np.cumsum(np.random.randn(30) * 2) + 50,
-        "change": -5.2,
-        "status": "good",
-    },
-    {
-        "name": "Memory",
-        "value": 72,
-        "unit": "%",
-        "history": np.cumsum(np.random.randn(30) * 1.5) + 70,
-        "change": 8.1,
-        "status": "warning",
-    },
-    {
-        "name": "Response Time",
-        "value": 120,
-        "unit": "ms",
-        "history": np.cumsum(np.random.randn(30) * 10) + 130,
-        "change": -15.3,
-        "status": "good",
-    },
-    {
-        "name": "Requests/s",
-        "value": 2450,
-        "unit": "",
-        "history": np.cumsum(np.random.randn(30) * 50) + 2400,
-        "change": 12.7,
-        "status": "good",
-    },
-    {
-        "name": "Error Rate",
-        "value": 2.3,
-        "unit": "%",
-        "history": np.cumsum(np.random.randn(30) * 0.3) + 2,
-        "change": 45.0,
-        "status": "critical",
-    },
-    {
-        "name": "Disk I/O",
-        "value": 156,
-        "unit": "MB/s",
-        "history": np.cumsum(np.random.randn(30) * 8) + 150,
-        "change": -3.8,
-        "status": "good",
-    },
+samples = [
+    # name, current value, unit, step scale, change %, status
+    ("CPU Usage", 45, "%", 1.0, -5.2, "good"),
+    ("Memory", 72, "%", 0.8, 8.1, "warning"),
+    ("Response Time", 120, "ms", 5, -15.3, "good"),
+    ("Requests/s", 2450, "", 25, 12.7, "good"),
+    ("Error Rate", 2.3, "%", 0.08, 45.0, "critical"),
+    ("Disk I/O", 156, "MB/s", 4, -3.8, "good"),
 ]
+rows = []
+for name, value, unit, scale, change, status in samples:
+    # The history ends at the current value; the last period's move matches the change percent
+    previous = value / (1 + change / 100)
+    walk = np.cumsum(np.random.randn(29) * scale)
+    history = np.append(previous + walk - walk[-1], value)
+    for step, reading in enumerate(history):
+        rows.append((name, value, unit, step, reading, change, status))
+df = pd.DataFrame(rows, columns=[METRIC, VALUE, UNIT, STEP, READING, CHANGE, STATUS])
 
-# Plot — 3×2 grid of dashboard tiles
-fig, axes = plt.subplots(2, 3, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+# Plot: 3-column grid of dashboard tiles, one per metric
+tiles = df.groupby(METRIC, sort=False)
+n_rows = -(-len(tiles) // GRID_COLUMNS)
+fig, axes = plt.subplots(n_rows, GRID_COLUMNS, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG, squeeze=False)
 fig.subplots_adjust(left=0.04, right=0.96, top=0.88, bottom=0.04, wspace=0.18, hspace=0.25)
 
 fig.suptitle(
     "dashboard-metrics-tiles · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, y=0.96
 )
 
-for ax, metric in zip(axes.flat, metrics, strict=True):
+for ax in axes.flat[len(tiles) :]:
+    ax.axis("off")
+
+for i, (ax, (name, rows_m)) in enumerate(zip(axes.flat, tiles, strict=False)):
+    first = rows_m.iloc[0]
+    status = first[STATUS]
+    status_color = STATUS_COLORS.get(status, IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)])
+
     ax.set_facecolor(ELEVATED_BG)
     for spine in ax.spines.values():
         spine.set_color(INK_SOFT)
         spine.set_linewidth(0.8)
     ax.set_xticks([])
     ax.set_yticks([])
-
-    status_color = STATUS_COLORS[metric["status"]]
 
     # Status bar at top with accessibility text label
     status_ax = ax.inset_axes([0, 0.91, 1, 0.09])
@@ -102,63 +94,56 @@ for ax, metric in zip(axes.flat, metrics, strict=True):
     status_ax.text(
         0.5,
         0.5,
-        STATUS_LABELS[metric["status"]],
+        STATUS_LABELS.get(status, str(status).upper()),
         ha="center",
         va="center",
-        fontsize=7,
+        fontsize=8,
         fontweight="bold",
-        color="white",
+        color=STATUS_TEXT.get(status, "white"),
         transform=status_ax.transAxes,
     )
 
     # Metric name
+    ax.text(0.5, 0.83, name, ha="center", va="top", fontsize=10, fontweight="bold", color=INK, transform=ax.transAxes)
+
+    # Main value: the most prominent element
     ax.text(
         0.5,
-        0.83,
-        metric["name"],
+        0.64,
+        f"{first[VALUE]:g}{first[UNIT]}",
         ha="center",
         va="top",
-        fontsize=10,
+        fontsize=16,
         fontweight="bold",
         color=INK,
         transform=ax.transAxes,
     )
 
-    # Main value — prominent display
-    value_str = f"{metric['value']}{metric['unit']}"
-    ax.text(
-        0.5, 0.64, value_str, ha="center", va="top", fontsize=16, fontweight="bold", color=INK, transform=ax.transAxes
-    )
-
-    # Change indicator with arrow — enlarged for better at-a-glance visibility
-    change = metric["change"]
-    arrow = "▲" if change >= 0 else "▼"
-    if metric["name"] in ["Error Rate", "Response Time"]:
-        change_color = STATUS_COLORS["good"] if change < 0 else STATUS_COLORS["critical"]
-    else:
-        change_color = STATUS_COLORS["good"] if change >= 0 else STATUS_COLORS["critical"]
+    # Change indicator: arrow follows the sign, color follows whether the change is favorable
+    change = first[CHANGE]
+    favorable = (change < 0) == (name in LOWER_IS_BETTER)
     ax.text(
         0.5,
         0.44,
-        f"{arrow} {abs(change):.1f}%",
+        f"{'▲' if change >= 0 else '▼'} {abs(change):.1f}%",
         ha="center",
         va="top",
         fontsize=12,
         fontweight="bold",
-        color=change_color,
+        color=STATUS_COLORS["good"] if favorable else STATUS_COLORS["critical"],
         transform=ax.transAxes,
     )
 
-    # Sparkline
+    # Sparkline scaled to its own range
     sparkline_ax = ax.inset_axes([0.08, 0.05, 0.84, 0.26])
     sparkline_ax.set_facecolor("none")
-    history = metric["history"]
-    x_vals = range(len(history))
+    x_vals = rows_m[STEP].to_numpy(dtype=float)
+    history = rows_m[READING].to_numpy()
     sparkline_ax.fill_between(x_vals, history, alpha=0.3, color=status_color)
     sparkline_ax.plot(x_vals, history, linewidth=2.0, color=status_color)
-    sparkline_ax.set_xlim(0, len(history) - 1)
-    y_range = max(history) - min(history)
-    sparkline_ax.set_ylim(min(history) - 0.1 * y_range, max(history) + 0.1 * y_range)
+    sparkline_ax.set_xlim(np.nanmin(x_vals), np.nanmax(x_vals))
+    y_range = np.nanmax(history) - np.nanmin(history)
+    sparkline_ax.set_ylim(np.nanmin(history) - 0.1 * y_range, np.nanmax(history) + 0.1 * y_range)
     sparkline_ax.axis("off")
 
 # Save
