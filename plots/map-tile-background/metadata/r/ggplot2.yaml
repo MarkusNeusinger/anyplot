@@ -12,100 +12,105 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 79
 review:
   strengths:
-  - Theme-adaptive ocean/land colors (OCEAN_BG, LAND_FILL, LAND_BORDER) create convincing
-    geographic context per theme without external map packages
-  - Dual size+color encoding for visitor count with scale_size_continuous hidden from
-    legend — elegant ggplot2 technique
-  - Dynamic title font scaling formula prevents overflow on the long mandated title
-    format
-  - Hand-tuned nudge offsets with per-city hjust achieve clean label placement for
-    the 6 labeled cities
-  - Subtitle anchors the data story explicitly ('New York leads at 66.6M visitors/yr')
-  - Full theme-adaptive chrome with correct tokens throughout both renders — no dark-on-dark
-    failures
+  - Theme-adaptive ocean and land surface colors keep the map context readable in
+    both renders
+  - Redundant color and size encoding of visitor counts, with the size scale's legend
+    suppressed so one colorbar explains both
+  - Selective labelling of the top 6 destinations with a subtitle naming the leader
+    gives a clear focal point
+  - 'Full theme-token chrome: no dark-on-dark or light-on-light text in either render'
   weaknesses:
-  - Smaller city markers (Sydney, Mumbai, Sao Paulo, Toronto, Cairo, Mexico City)
-    use size ~3 in ggplot2 units — slightly small for a 12-point sparse dataset; increase
-    scale_size_continuous range minimum from 3 to 4-5
-  - NYC visitor count of 66.6M is slightly high versus typical reported figures (~50-60M);
-    adjusting to ~56M would improve factual accuracy
-  - City label text size (geom_text size=2.6 mm) is at the lower end of legibility;
-    bumping to 2.8-3.0 would improve mobile readability
+  - 'SC-01 (both): the background is a hand-drawn set of 7 coarse continent polygons
+    on a flat ocean fill, not tile imagery from a provider, and its outlines misplace
+    cities on the coastlines (Sydney, Sao Paulo and Mumbai sit on polygon edges) ->
+    a street, terrain or satellite tile background covering the whole panel. Likely
+    cause: the `continents` data frame drawn with geom_polygon instead of a tile raster
+    (e.g. maptiles/ggspatial annotation layer, if the runtime has it).'
+  - 'SC-02 (both): no tile provider attribution anywhere on the map -> the provider''s
+    attribution text (e.g. ''(c) OpenStreetMap contributors'') in a map corner. Likely
+    cause: no tile layer, so nothing to attribute.'
+  - 'VQ-07 (both): the visitor fill ramp is a two-stop #009E73 -> #4467A3 identical
+    in both themes, not imprint_seq''s marks stops (light: #009E73 at 0, #4467A3 at
+    0.338, #002850 at 1; dark: #007755 at 0, #009E73 at 0.32, #CDD9FF at 1) -> scale_fill_gradientn
+    with the theme''s marks stops. Likely cause: scale_fill_gradient(low = ''#009E73'',
+    high = ''#4467A3'').'
+  - 'DQ-03 (code): the visitor counts mix metrics: New York''s 66.6M is total visitors
+    incl. domestic (international ~13M), while London 19.1M and Singapore 19.8M are
+    international arrivals, although the code comment calls all of them international
+    -> one consistent measure (New York international about 13M, about -54M). Likely
+    cause: the `visitors_m` vector.'
+  - 'Suggestion: the Tokyo and Singapore labels sit about 9 degrees from their markers;
+    a shorter offset would tie them to their points.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Ocean panel: Light blue #D3E8F5 (OCEAN_BG token)
-      Land polygons: Beige-tan #E5DFC8 (LAND_FILL token)
-      Chrome: Title in bold dark #1A1A17; subtitle in muted gray; axis labels and tick labels in dark gray #4A4A44 — all clearly readable
-      Data: 12 city points using imprint_seq gradient (#009E73 → #4467A3); size proportional to visitor count; New York visually dominant; 6 cities labeled in bold dark text
-      Legend: "Annual Visitors (millions)" colorbar with light elevated background and border
+      Background: warm off-white #FAF8F1 page; panel is a pale blue ocean (#D3E8F5) with beige continent polygons (#E5DFC8, thin tan outline) - a hand-drawn vector basemap, no tile imagery.
+      Chrome: bold dark title 'Global City Tourism . map-tile-background . r . ggplot2 . anyplot.ai' (~78% width), muted subtitle, Longitude/Latitude axis titles and ticks in #4A4A44, faint dotted grid, no caption or attribution. Colorbar 'Annual Visitors (millions)' at right on an elevated off-white box. All readable.
+      Data: 12 city circles with page-colored outline, sized and filled by visitors on a #009E73 -> #4467A3 ramp; New York the largest, blue; top 6 labelled in bold dark text at 2.6 mm.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Ocean panel: Dark navy #1A2835 (OCEAN_BG token dark)
-      Land polygons: Dark greenish-brown #2D2D25 (LAND_FILL token dark)
-      Chrome: Title and subtitle in light cream #F0EFE8; axis labels and tick labels in light gray #B8B7B0 — all clearly readable; no dark-on-dark failures
-      Data: Identical gradient colors to light render (#009E73 → #4467A3) — only chrome flips
-      Legend: Dark elevated background #242420 with light text and visible border
+      Background: warm near-black #1A1A17 page; panel a dark navy ocean (#1A2835) with dark olive continents (#2D2D25).
+      Chrome: title in light cream, subtitle, axis titles and ticks in light grey #B8B7B0; colorbar on #242420 with light frame and text. No dark-on-dark text.
+      Data: same #009E73 -> #4467A3 fill ramp as light; markers outlined in the dark page color; labels in light ink.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set; dynamic title scaling works; city label
-          2.6mm is small but readable in both themes
+        comment: All sizes explicitly set; city labels at 2.6 mm (about 7.4 pt), inside
+          the prompt's 2.5-4 range, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Hand-tuned nudge offsets prevent collisions; London/Paris close but
-          readable
+        comment: No text collisions; Toronto's marker touching New York's is the close-point
+          overlap the spec permits
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 12 sparse points with size range 3-10; New York clearly dominant;
-          smaller cities slightly small
+        comment: 12 sparse points at size 3-10 with a page-colored outline, clearly
+          visible on land and ocean in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe imprint_seq endpoints; PAGE_BG stroke on circles adds separation
+        comment: Green-to-blue ramp plus redundant size encoding; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Map fills landscape canvas well; legend compactly placed; no clipping
+        comment: Map fills the landscape canvas, colorbar compact at right, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude descriptive; title includes descriptive prefix
-          and anyplot format
+        comment: Longitude / Latitude axes and a descriptive title prefix
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'scale_fill_gradient #009E73→#4467A3 is exactly imprint_seq; correct
-          backgrounds; theme-adaptive chrome'
+        comment: 'Backgrounds correct, but the fill ramp is a two-stop #009E73 to
+          #4467A3 in both themes instead of the theme''s imprint_seq marks stops (defect
+          line)'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -113,79 +118,78 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: custom ocean/land per theme, dual
-          encoding, selective labeling, informative subtitle. Not publication-ready
-          but clear design intent.'
+        comment: Theme-adaptive ocean and land surface tokens chosen for this chart,
+          bold labels in INK with muted subtitle hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle dotted grid at 0.12 linewidth; panel border removed; legend
-          with ELEVATED_BG fill and border; generous margins
+        comment: Dotted 0.12-linewidth grid kept faint under the map, legend on an
+          elevated surface with a thin frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtitle explicitly states NYC leads; size encoding makes dominance
-          visually immediate; selective labeling creates hierarchy
+        comment: Selective labelling of the top 6 destinations plus a subtitle naming
+          the leader create a focal point
     spec_compliance:
-      score: 13
+      score: 11
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Geographic map with data points; tile background replaced by polygon
-          continents (best feasible for ggplot2 without ggmap)
+        comment: A point map on a hand-drawn vector continent outline, not a tile
+          background (defect line)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: Lat/lon points, color+size encoding, labels all present; tile providers/attribution
-          infeasible in ggplot2
+        comment: No tile provider and no attribution text anywhere on the map (defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude→x, Latitude→y; all 12 cities plotted; full extent covered
+        comment: Longitude on x, latitude on y, every city at its coordinates, view
+          covers all points
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows {Descriptive Title}·{spec-id}·r·ggplot2·anyplot.ai
-          format; legend label appropriate
+        comment: Title follows the mandated format with a descriptive prefix; colorbar
+          names the variable and unit
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Wide value range 3M-66.6M; multiple continents; dual encoding; selective
-          annotation
+        comment: Wide value range (3M to 66.6M) across six continents, color and size
+          encoding of the optional value
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real international tourism data; real city names and coordinates;
-          neutral topic
+        comment: Real cities with real coordinates, neutral tourism topic
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
         passed: true
-        comment: NYC 66.6M slightly high (typical ~50-60M); London 19.1M slightly
-          low; relative proportions broadly correct
+        comment: Coordinates checked and correct; the visitor counts mix total and
+          international arrivals (defect line)
     code_quality:
       score: 10
       max: 10
@@ -195,13 +199,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: tokens → data → plot → save'
+        comment: 'Flat script: tokens, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; data essentially deterministic
+        comment: Fully deterministic data, set.seed present
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -213,34 +217,34 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-structured; hand-tuned nudges appropriate for geographic label
-          placement
+        comment: Appropriate complexity for a hand-drawn basemap
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf plot-%s.png correct; ragg::agg_png used; modern linewidth=
-          API
+        comment: Saves plot-{THEME}.png via ragg::agg_png, current linewidth API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Multiple geom layers, coord_cartesian, dual scale encoding, theme_minimal
-          + custom theme overlay — idiomatic ggplot2
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Multi-geom layering (polygon+point+text) and hidden scale (guide=none)
-          leverage ggplot2's grammar distinctively
+        comment: 'Layered geoms with coord_cartesian and theme overlay: standard ggplot2,
+          nothing beyond the prompt''s baseline'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; size scale hidden
+          with guide = 'none' is routine
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-9715f26d62
 impl_tags:
   dependencies:
   - ragg

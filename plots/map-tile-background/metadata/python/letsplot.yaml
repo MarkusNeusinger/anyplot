@@ -2,130 +2,128 @@ library: letsplot
 language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:39:27Z'
-updated: '2026-05-27T15:53:38Z'
+updated: '2026-11-26T16:19:49Z'
 generated_by: claude-sonnet
-workflow_run: 26520749453
+workflow_run: 45856832000
 issue: 3756
-language_version: 3.13.13
-library_version: 4.10.1
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/letsplot/plot-dark.html
-quality_score: 91
+quality_score: 85
 review:
   strengths:
-  - geom_livemap with tilesets (CARTO Positron / LETS_PLOT_DARK) is the canonical
-    letsplot approach and uniquely powerful for this spec
-  - 'Dual HTML + PNG output: interactive tiles for HTML, elegant polygon simulation
-    for PNG'
-  - Theme-adaptive tile and land polygon colors that genuinely shift between light
-    and dark renders
-  - Realistic, geographically accurate European tourism data with plausible visitor
-    counts
-  - 'Perfect spec compliance: all required features (tile providers, zoom, attribution,
-    interactive pan/zoom) present'
+  - Interactive HTML uses geom_livemap with real CARTO Positron / Lets-Plot dark tilesets
+    fitted to the data bounds via location=[...], with layer_tooltips showing station
+    name and trips
+  - 'Static basemap is latitude-corrected: coord_fixed(ratio=1/cos(lat)) keeps the
+    map and its tile seams square on screen'
+  - 'Theme-adaptive water, land and park tones with #009E73 markers and page-colored
+    outlines that separate close stations in both themes'
+  - Realistic, neutral bike-share scenario with plausible station coordinates across
+    Manhattan, Brooklyn, Queens and Jersey City
   weaknesses:
-  - Central European city cluster (Amsterdam, Brussels, Zurich, Munich area) shows
-    minor visual crowding due to closely-spaced small bubbles; consider reducing scale_size
-    minimum from [6,22] to [5,20]
-  - Title fontsize=16 sits slightly small at 3200px canvas; bumping to 18 would improve
-    desktop legibility
+  - 'SC-02 (both): the PNG shows a simplified land/water polygon basemap with drawn
+    seams instead of imagery from a tile provider, so the static render has no street-level
+    context (C1) → render real provider tiles in the PNG where the lets-plot export
+    allows it. Likely cause: static branch built from geom_polygon + geom_segment
+    because geom_livemap does not rasterize via ggsave.'
+  - 'Suggestion: place the attribution caption at a corner of the map frame rather
+    than below the legend so it reads as belonging to the basemap.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct surface color
-      Chrome: Title "map-tile-background · python · letsplot · anyplot.ai" in dark (#1A1A17) text at top — readable. Legend title "Visitors (thousands)" and values (10,000 / 20,000 / 30,000) in dark text — readable. Attribution caption at bottom in muted (#6B6A63) text — readable.
-      Data: Simulated tile grid (light-gray rectangles with hairline borders). European landmass polygons (medium gray #D5D1C8 fill, #B5B1A4 border). 20 city bubble markers in brand green #009E73 with warm off-white (#FAF8F1) stroke. Sizes range from small (Oslo/Helsinki ~3-3.5M) to large (Paris 38M, London 32M).
-      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues
+      Background: warm off-white #FAF8F1 page; square 2400x2400 canvas.
+      Chrome: title 'map-tile-background · python · letsplot · anyplot.ai' in dark ink top-left; bottom legend panel (#FFFDF6) titled 'Average daily trips' with seven reference circles 600-1,800 in two rows; caption 'Simplified basemap outline, not provider tiles | HTML version: © OpenStreetMap contributors, © CARTO' in muted ink at the bottom. All readable.
+      Data: simulated basemap of Lower/Midtown Manhattan with the Hudson and East River in pale blue-grey, land in warm grey, Central Park as a pale green strip, square tile seams; 26 #009E73 station markers (alpha 0.85) with page-colored outlines, sized by trips; Penn Station and Grand Central largest.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface
-      Chrome: Title in light (#F0EFE8) text at top — clearly readable. Legend title and values in light/secondary text — readable. Caption in muted light text — readable. No dark-on-dark failures observed.
-      Data: Tile grid shifts to darker fills (#2A2A27) with dark borders (#3A3A37). Land polygons shift to warm dark-gray (#38382F) with #4A4A40 borders. Bubble markers remain in the same #009E73 — identical data colors to light render. Only chrome has flipped.
-      Legibility verdict: PASS — all text is light-on-dark as expected, brand green visible on dark surface
+      Background: warm near-black #1A1A17 page.
+      Chrome: title in light ink, legend panel #242420 with light title and soft-grey value labels, caption in muted light grey. No dark-on-dark text.
+      Data: basemap flips to dark water, dark land and dark-green park; markers the same #009E73 with dark page-colored outlines, identical categorical color to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, legend/caption=10). Readable
-          in both themes. Slight deduction for title being marginally small at 3200px
-          canvas.
+        comment: Title 16 pt, legend title/labels and caption 10 pt explicitly set;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Central-European cluster (Amsterdam, Brussels, Vienna, Munich, Zurich)
-          shows some visual crowding. White stroke borders prevent confusion but close
-          spacing reduces score.
+        comment: No text collisions; close stations (Grand Central / Murray Hill)
+          overlap as C6 permits and stay distinguishable by their outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 20 sparse datapoints with size range [6,22] well-adapted. All markers
-          clearly visible in both renders.
+        comment: 26 sparse markers sized 4-13 with page-color outline, clearly visible;
+          size-legend circles visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, size-encoded. White/PAGE_BG stroke on green markers
-          ensures separation.
+        comment: Single green series on a neutral basemap; size carries the value,
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Map fills canvas well; legend right-aligned close to data; balanced
-          margins; nothing cut off.
+        comment: Square 2400x2400 canvas; map frame, bottom legend and caption fill
+          it; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for map (theme_void appropriate). Title correct,
-          attribution caption included.
+        comment: N/A for axes (theme_void map); legend titled 'Average daily trips'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; background #FAF8F1 light / #1A1A17 dark; all
-          chrome tokens theme-adaptive; data colors identical across renders.'
+        comment: 'Markers #009E73 in both renders; page #FAF8F1 / #1A1A17; chrome
+          theme-correct'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Exceeds well-configured default: custom tile-grid simulation, hand-crafted
-          European polygons, dual HTML+PNG, theme-adaptive tile/land colors.'
+        passed: false
+        comment: Theme-adaptive basemap palette with distinct water, land and park
+          tones; tile seams kept square on screen via cos(latitude)
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: theme_void removes all spines; hairline tile borders; subtle land
-          polygon borders; elevated legend background styling.
+        passed: false
+        comment: 'Style-guide baseline: elevated bottom legend panel, page-colored
+          outlines; nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Paris and London dominate visually through bubble size. Geographic
-          positioning gives instant context. Clear tourism hierarchy.
+        passed: false
+        comment: Size hierarchy is the data itself; no focal point chosen beyond the
+          Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -133,29 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: map with tile-style background, proportional markers over
-          geographic base.'
+        comment: Point map over a tile-style basemap
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Multiple tile providers, zoom/location bounds, white-stroke contrast,
-          OSM attribution, interactive pan/zoom in HTML.
+        passed: false
+        comment: 'HTML: real CARTO / Lets-Plot tiles, auto-fit location, zoom/pan,
+          tooltips. PNG: a simplified polygon basemap instead of provider tiles (C1),
+          now labelled honestly in the caption (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon correctly mapped; size mapped to visitors; all 20 cities
-          visible within bounding box.
+        comment: Markers at their lat/lon; view fitted to data bounds with Mercator-corrected
+          aspect; every point inside the frame
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'map-tile-background · python · letsplot · anyplot.ai';
-          legend 'Visitors (thousands)' with reference bubbles.
+        comment: Mandated title format; size legend names the variable
     data_quality:
       score: 15
       max: 15
@@ -165,22 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows geographic distribution, size variation, all spec-required
-          fields (lat, lon, value, label).
+        comment: Points on a basemap, size encoding of value, fitted view, attribution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: European cities with annual tourist visitor counts — neutral, real-world,
-          no sensitive content.
+        comment: Neutral NYC bike-share stations with real station names and plausible
+          coordinates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Geographically accurate coordinates; visitor counts match real-world
-          tourism figures (Paris ~38M, London ~32M, Berlin ~14M).
+        comment: 520-1,850 average daily trips per station is plausible; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -190,60 +186,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → constants → data → interactive plot → HTML save
-          → polygon data → static plot → PNG save. No functions or classes.'
+        comment: No functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded and deterministic; no random generation required.
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 15 lets_plot symbols, os, and pd are actually used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. Polygon verbosity is inherent to geographic
-          shapes. No over-engineering, no fake UI.
+        comment: No dead code; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct scale=4.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current lets-plot
+          API
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Expertly uses geom_livemap, tilesets, layer_tooltips, scale_size
-          layered correctly in letsplot grammar.
+        passed: false
+        comment: Layered grammar, coord_fixed with Mercator ratio, theme_void, gggrid
+          page-color wrap
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: geom_livemap with tilesets is unique to letsplot; layer_tooltips().title().line()
-          for tooltip config is letsplot-specific.
+        passed: false
+        comment: geom_livemap with tilesets (CARTO_POSITRON / LETS_PLOT_DARK) and
+          layer_tooltips().title().line() in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T16:16:30Z'
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
-  - hover-tooltips
   - layer-composition
-  patterns:
-  - data-generation
+  - hover-tooltips
+  - html-export
+  patterns: []
   dataprep: []
   styling:
   - minimal-chrome
