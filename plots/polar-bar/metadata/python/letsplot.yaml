@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: polar-bar
 created: '2025-12-30T16:36:44Z'
-updated: '2026-11-21T08:08:15Z'
+updated: '2026-11-26T09:58:55Z'
 generated_by: claude-sonnet
-workflow_run: 44882821493
+workflow_run: 45795948334
 issue: 2693
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,35 +12,31 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/letsplot/plot-dark.html
-quality_score: 82
+quality_score: 83
 review:
   strengths:
-  - 'Imprint palette applied in canonical order from #009E73, data colors identical
-    across both renders, chrome threaded from PAGE_BG / INK / INK_SOFT tokens'
-  - Radial scale anchored at zero via scale_y_continuous(limits=[0, None]) so wedge
-    length stays proportional to frequency
-  - Wedge outlines drawn in the page color separate the sectors cleanly on both backgrounds
-  - Ordered pd.Categorical keeps the compass order around the circle; interactive
-    HTML export gives per-wedge tooltips
+  - Native coord_polar() keeps lets-plot's default orientation, so N sits at 12 o'clock
+    and every wedge is centered on its bearing
+  - One-panel gggrid wrapper paints the whole square canvas in the page color in both
+    themes
+  - Page-colored wedge outlines separate adjacent sectors cleanly on either background
+  - Interactive HTML export with lets-plot's native hover tooltips for each direction
   weaknesses:
-  - 'SC-03 (both): coord_polar(start=-pi/8) rotates the whole rose by -22.5 degrees,
-    so N points north-north-west and E sits at 67.5 degrees instead of 90 → N centered
-    at the top (+22.5 degrees). Likely cause: start=-np.pi / n; lets-plot already
-    centers the first category at 12 o''clock, so start should be 0.'
   - 'Suggestion: color repeats the direction already labeled at the rim; a single
-    #009E73 fill, or fill by a wind-speed band as stacked segments, would give color
-    a job.'
+    #009E73 fill, or stacked wind-speed bands with a legend, would give color a job.'
+  - 'Suggestion: the SW wedge (35 %) runs past the outermost 30 % ring; a ring at
+    40 % (scale_y_continuous breaks) would let its length be read against a gridline.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, 2400x2400 square canvas.
-      Chrome: bold title 'polar-bar · python · letsplot · anyplot.ai' top-left in near-black; 'Frequency (%)' vertical axis title and radial ticks 0-35 on the left; compass labels N..NW at the rim in INK_SOFT; thin INK_SOFT concentric rings every 5 % and eight spokes. All readable.
-      Data: eight wedges from the center, colored N #009E73, NE #C475FD, E #4467A3, SE #BD8233, S #AE3030, SW #2ABCCD, W #954477, NW #99B314; SW (35) and S (28) dominate toward the bottom. Page-colored outlines separate wedges. The rose is rotated -22.5 degrees: N wedge centered NNW.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas, no unpainted edge strips
+      Chrome: bold dark title 'polar-bar · python · letsplot · anyplot.ai' top left; 'Frequency (%)' axis title and radial ticks 0/10/20/30 on the left; compass labels N, NE, E, SE, S, SW, W, NW at the rim in dark grey; thin dark grey rings at 10/20/30 and spokes; all readable
+      Data: eight wedges from the center, N (#009E73 green) at 12 o'clock, then purple, blue, ochre, red (S, ~28), cyan (SW, ~35, longest), plum, olive; page-colored outlines between wedges
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title in #F0EFE8, ticks, compass labels and rings in light grey #B8B7B0; no dark-on-dark text.
-      Data: identical wedge colors and geometry to the light render; outlines flip to the dark page color.
+      Background: warm near-black #1A1A17 across the whole canvas
+      Chrome: title in light ink, ticks and compass labels light grey, rings and spokes light grey and subtle; no dark-on-dark text
+      Data: same eight Imprint colors in the same order as the light render; N still at the top
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,47 +48,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 16 pt, axis title 12 pt, ticks 10 pt at the style-guide sizes;
+        comment: Title 16 pt bold, axis title 12 pt, ticks and compass labels 10 pt;
           all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Compass labels clear of the rim and of each other; no text collides
+        comment: Compass labels sit clear of the rim and each other; no text collides
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All eight wedges visible, smallest (N=3) included; page-colored outlines
-          separate the wedges
+        comment: All eight wedges visible including N=3; page-colored outlines separate
+          the wedges
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues, direction also labeled at the rim, so color is never
-          the sole signal
+        comment: Direction is labeled at the rim, so color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas, rose centered, nothing cut off
+        comment: 2400x2400 square, the gggrid wrapper paints the full canvas, rose
+          centered, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Frequency (%)'' with unit; empty angular title is appropriate'
+        comment: '''Frequency (%)'' with unit; compass labels need no angular title'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette in canonical order from #009E73; #FAF8F1 / #1A1A17
-          backgrounds; data colors identical in both renders'
+        comment: 'Imprint palette in canonical order from #009E73; whole canvas #FAF8F1
+          / #1A1A17; data colors identical across renders'
     design_excellence:
       score: 9
       max: 20
@@ -117,7 +113,7 @@ review:
         passed: false
         comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,20 +128,21 @@ review:
         max: 4
         passed: true
         comment: 'C1 bars from a zero center, C2 equal-width bars in compass order
-          labeled at the rim, C3 concentric rings with value labels: all present'
+          with N at the top and labels at the rim, C3 concentric rings with value
+          labels: all present'
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'The whole rose is rotated by -22.5 degrees: N points NNW and E sits
-          at 67.5 degrees (defect line)'
+        passed: true
+        comment: Each wedge centered on its compass bearing (N at 12 o'clock, E at
+          3); radii proportional from zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title exact; legend hidden because direction is labeled
+        comment: Mandated title exact; legend hidden because each direction is labeled
           at the rim
     data_quality:
       score: 15
@@ -169,7 +166,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Frequencies sum to 100 %, range 3-35 %; no Check values in the spec
+        comment: Frequencies sum to 100 %, range 3-35 %; SW read off the render at
+          about 35 and S at about 28; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -179,7 +177,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script; column constants and a clean Data block
+        comment: Flat script with column constants
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -219,19 +217,20 @@ review:
         score: 1
         max: 5
         passed: false
-        comment: Nothing beyond what the library prompt mandates
+        comment: Nothing beyond what the library prompt mandates (the gggrid canvas
+          wrapper is mandated)
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
-  rendered_at: '2026-11-21T08:04:36Z'
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T09:55:22Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - html-export
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - edge-highlighting
   - grid-styling
-  - alpha-blending
