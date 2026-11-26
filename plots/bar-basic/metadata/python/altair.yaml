@@ -2,108 +2,99 @@ library: altair
 language: python
 specification_id: bar-basic
 created: '2025-12-23T00:23:22Z'
-updated: '2026-05-28T09:35:49Z'
+updated: '2026-11-26T18:49:29Z'
 generated_by: claude-sonnet
-workflow_run: 26566242820
+workflow_run: 45878280562
 issue: 612
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 87
 review:
   strengths:
-  - Conditional color encoding via `alt.condition()` highlights the top performer
-    (Electronics) with semantic ochre (#BD8233) — an idiomatic, Altair-specific design
-    choice that creates clear visual hierarchy
-  - Sorted descending order combined with the 'Top seller — $45.2k' callout annotation
-    creates a strong data narrative and clear focal point
-  - 'Fully theme-adaptive chrome: backgrounds (#FAF8F1 / #1A1A17), text tokens (INK
-    / INK_SOFT), and grid colors all adapt correctly — both renders pass the readability
-    check'
-  - Layer composition (bars + labels + annotation) demonstrates idiomatic Altair declarative
-    grammar; alt.condition() for conditional encoding is distinctly Altair
-  - 'Perfect spec compliance: value labels above bars, dollar-formatted axis, sorted
-    categorical data within the 3–15 recommended range, correct title format'
+  - Single Imprint green (#009E73) for all bars with one ochre (#BD8233) accent on
+    the top seller via alt.condition(), the accent the spec's Notes allow, identical
+    in both themes
+  - Bars sorted by value from a zero baseline, with a data-driven domain (max × 1.1)
+    that keeps the $45,200 label clear of the plot top
+  - autosize type='fit' fills the 3200×1800 canvas with the whole chart; horizontal
+    category labels need no rotation
+  - 'Theme tokens threaded through title, axis titles, tick labels, value labels,
+    domain and grid: all text readable on both #FAF8F1 and #1A1A17'
+  - Escaped column constants with explicit type= and title=, dollar-formatted axis
+    and labels, tooltips for the HTML view
   weaknesses:
-  - 'Minor crowding above the Electronics bar: the ''$45,200'' value label (dy=-6),
-    ''Top seller — $45.2k'' annotation (dy=-22), and the $50,000 dashed gridline all
-    converge in the same vertical zone — the annotation text partially overlaps the
-    $50k gridline; consider increasing the y-scale domain to ~58000 or shifting annotation
-    dy to -35 to give more breathing room'
-  - Value labels and annotation use fontSize=10 (40px rendered) which is readable
-    at desktop but may strain legibility when the chart is displayed at mobile widths
-    (~400px); consider fontSize=11 for the annotation
+  - 'Suggestion: a slightly larger band padding (paddingInner around 0.2) would widen
+    the gaps between the bars.'
+  - 'Suggestion: with value labels on every bar, a sparser y-axis tick step ($10,000)
+    would reduce the redundant tick text.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "bar-basic · python · altair · anyplot.ai" in bold dark ink, ~55% of canvas width — clearly readable. Y-axis label "Sales ($)" and X-axis label "Product Category" both in INK color, balanced sizes. Tick labels in INK_SOFT (#4A4A44), 10px, rotated -45° for X-axis categories. Dollar-formatted Y-axis ticks ($0–$50,000).
-      Data: 7 vertical bars sorted descending. Electronics bar is ochre (#BD8233 = palette position 4, semantic top-performer accent); all other 6 bars are brand green (#009E73 = palette position 1). '$45,200' value label above Electronics bar; all bars have dollar-formatted value labels above them. "Top seller — $45.2k" annotation in ochre above Electronics bar. Subtle dashed Y-axis gridlines at opacity 0.15. L-shaped spine frame (left + bottom only).
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background. Minor crowding noted where the annotation, value label, and $50k gridline converge above the Electronics bar, but no text-on-text overlap.
+      Background: warm off-white #FAF8F1 across the whole canvas, no pure white.
+      Chrome: bold dark title "bar-basic · python · altair · anyplot.ai" centred at the top (~35 % of the width); y-axis title "Sales ($)" and x-axis title "Product Category" in dark ink; dollar tick labels $0–$45,000 in $5,000 steps and horizontal category labels in INK_SOFT; subtle dashed horizontal grid; left and bottom axis lines only. All readable.
+      Data: seven vertical bars sorted descending (Electronics $45,200 → Food $13,100) from a zero baseline; Electronics in ochre #BD8233, the other six in brand green #009E73; rounded top corners; dollar value labels in INK_SOFT just above each bar end, none colliding.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — soft gray, readable. No dark-on-dark failures observed.
-      Data: Data colors IDENTICAL to light render — Electronics bar in same ochre (#BD8233), all other bars in same brand green (#009E73). Annotation "Top seller — $45.2k" in ochre clearly visible on dark surface. Value labels in #B8B7B0 (INK_SOFT for dark theme) — readable against dark background.
-      Legibility verdict: PASS — all text readable against the warm near-black background. Data colors are identical between light and dark renders; only chrome (background, text, grid colors) has flipped.
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title and axis titles in light ink #F0EFE8, tick and value labels in #B8B7B0, dark-tinted dashed grid; no dark-on-dark text anywhere.
+      Data: the same bars in the same ochre and green as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; fontSize=10 for value labels renders
-          at 40px — fine at desktop but borderline at 400px mobile scale-down
+        comment: Explicit sizes (title 16, axis titles 12, ticks 10, value labels
+          11); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text overlap; minor crowding where annotation, value label,
-          and $50k gridline converge above Electronics bar
+        comment: No text collisions; value labels clear of bar ends and each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 7 bars clearly visible; brand green and ochre contrast well against
-          both backgrounds
+        comment: Seven wide bars clearly visible on both surfaces
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Palette-defined colors only; Imprint palette is CVD-safe by design
+        comment: Green vs ochre distinguishable under CVD; value labels carry the
+          values
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; 3200x1800; title ~55% width, good proportions,
+        comment: Canvas gate passed; autosize fit fills 3200x1800, balanced axis titles,
           no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Product Category'', Y: ''Sales ($)'' with dollar formatting,
-          title in correct format'
+        comment: '''Product Category'' and ''Sales ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Base series = #009E73 (brand green); top-performer highlight uses
-          ochre #BD8233 (palette position 4, semantic accent); backgrounds #FAF8F1/#1A1A17
-          correct'
+        comment: 'Bars #009E73 with Imprint #BD8233 accent; backgrounds #FAF8F1/#1A1A17'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -111,24 +102,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional visual hierarchy via conditional color encoding; rounded
-          bar corners; callout annotation; sorted ranking — evidence for above-default
-          score
+        comment: Rounded top corners and value labels in INK_SOFT under INK titles
+          give a quiet hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle dashed gridlines (gridDash=[4,4], opacity=0.15); L-shaped
-          spine frame; generous whitespace; theme-adaptive grid color
+        comment: Y-only dashed grid at 0.15, view stroke removed, domain headroom
+          chosen for the labels
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Sorted descending creates clear ranking narrative; highlighted Electronics
-          bar + annotation creates unambiguous focal point and guides viewer to top
-          performer
+        comment: Ochre accent on the top seller gives one focal point in a sorted
+          ranking
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +127,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart
+        comment: 'Vertical bar chart, basic variant: one color plus one accent, no
+          extra layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Value labels above bars, consistent bar widths, adequate spacing,
-          single color base with highlight
+        comment: Consistent widths, value labels, single color with highlight, spacing;
+          C1-C4 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on X, value on Y, all 7 data points displayed
+        comment: Zero baseline, untruncated axis, readable $5,000 ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bar-basic · python · altair · anyplot.ai' is correct; no legend
-          (single-series, annotation explains highlight)
+        comment: Correct title format; no legend needed (N/A, single series)
     data_quality:
       score: 15
       max: 15
@@ -168,22 +157,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Sorted bars, value labels, conditional highlighting, annotation —
-          comprehensive feature demonstration
+        comment: Ranking with dominant leader and close mid-pair shows comparison
+          well
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Retail product sales scenario; neutral categories; plausible dollar
-          values
+        comment: Retail product-category sales, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $0–$55k Y-axis with $10k intervals; 7 categories within 3–15 recommended
-          range
+        comment: $13k-$45k category sales plausible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -193,59 +180,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; direct linear code
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, pandas, PIL.Image — all used
+        comment: os, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: alt.condition() for conditional color is idiomatic; no fake interactivity
+        comment: Domain from data, mandated canvas block, no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; canvas padding applied
-          correctly
+        comment: plot-{THEME}.png and .html, Altair 6 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper encoding types (:N, :Q), configure_* API for theming, alt.Scale/alt.Axis
-          customization, alt.condition() for conditional encoding
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: alt.condition() conditional encoding, layer composition with + operator,
-          declarative grammar, tooltip integration, HTML export — distinctly Altair
-          capabilities
+        comment: Layer derived by bars.mark_text() reusing encodings, alt.condition,
+          configure_axis/axisY theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: alt.condition conditional encoding and Vega-Lite tooltips in HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-7008ecd1e0
+  rendered_at: '2026-11-26T18:46:15Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - annotations
-  - hover-tooltips
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns: []
   dataprep: []
