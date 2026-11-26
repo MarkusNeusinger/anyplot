@@ -36,7 +36,7 @@ anyplot uses the **Imprint palette** — a bespoke, colorblind-safe categorical 
 
 ### Categorical Palette (Imprint, canonical order)
 
-8 hues in hybrid-v3 sort order. First 4 slots span 4 distinct perceptual hue families (green / purple / blue / yellow), then greedy max-min CVD distance for the tail. Slot 5 is the deferred semantic-red anchor (matte red `#AE3030`) — reached intentionally for bad/loss/error roles, not by ordinal position in every chart.
+8 hues in hybrid-v3 sort order. First 4 slots span 4 distinct perceptual hue families (green / purple / blue / yellow), then greedy max-min CVD distance for the tail. Slot 5 is matte red `#AE3030`, placed after the four hue families so that up to four series without meaning leave red unused by default. A fifth series without meaning takes it at its place, like any other slot; a category that means bad, loss or error takes it at any position, also in a chart with fewer series (Semantic exception below).
 
 | # | Hex | Name | Hue family | Role |
 |---|-----|------|------------|------|
@@ -167,7 +167,7 @@ Recommended stroke: 1px solid in the chart's ink color (`palette.neutral(theme)`
 
 ### Colorblind Safety
 
-The Imprint palette is selected via max-min ΔE optimisation across normal, deuteranopia, protanopia, and tritanopia simulations. Slot 5 (matte red `#AE3030`) is the deferred semantic-anchor — reached intentionally for bad/loss/error roles, not by ordinal position in every chart. This keeps red as a free semantic resource rather than spending it as a default categorical color. Never override the palette with custom categorical hexes unless you have a documented reason. The sequential ramps carry their order in lightness, so their low and high ends stay apart under all three simulated deficiencies.
+The Imprint palette is selected via max-min ΔE optimisation across normal, deuteranopia, protanopia, and tritanopia simulations. Slot 5 (matte red `#AE3030`) comes after the four distinct hue families, so red stays free for meaning in a chart with up to four series; from the fifth series on it takes its place in the order. Never override the palette with custom categorical hexes unless you have a documented reason. The sequential ramps carry their order in lightness, so their low and high ends stay apart under all three simulated deficiencies.
 
 ---
 
