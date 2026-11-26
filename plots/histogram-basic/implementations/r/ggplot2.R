@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' histogram-basic: Basic Histogram
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 81/100 | Updated: 2026-11-26
+#' Quality: 82/100 | Updated: 2026-11-26
 
 library(ggplot2)
 library(scales)
@@ -33,7 +33,8 @@ df <- tibble::tibble(!!SALARY := pmax(salaries, 28000))
 # Plot: reads only df and the constants above
 p <- ggplot(df, aes(x = .data[[SALARY]])) +
   geom_histogram(
-    bins      = 35,
+    binwidth  = 5000,
+    boundary  = 0,
     fill      = IMPRINT_PALETTE[1],
     color     = alpha(INK, 0.55),
     linewidth = 0.25
