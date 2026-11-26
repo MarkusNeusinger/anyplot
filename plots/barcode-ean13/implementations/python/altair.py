@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-ean13: EAN-13 Barcode
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-21
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
@@ -80,17 +80,32 @@ FIRST_DIGIT_PATTERNS = {
     "9": "LGGLGL",
 }
 
-# Data - German product EAN-13 code
-code = "4006381333931"
+# Constants
+PAYLOAD_DIGITS = 12  # a code of this length still needs its check digit
+PARITY_TABLES = {"L": L_CODES, "G": G_CODES}
 
-# Inline check digit calculation (no function)
-if len(code) == 12:
+# Columns: set this to your table's column name
+CODE = "EAN-13 code"  # role: code
+
+# Data: replace this block with your own table, for example df = pd.read_csv("codes.csv")
+df = pd.DataFrame({CODE: ["4006381333931"]})  # German product
+
+# Plot: reads only df and the constants above
+code = str(df[CODE].iloc[0])
+
+# Complete a 12 digit code with its check digit
+if len(code) == PAYLOAD_DIGITS:
     _total = sum(int(d) * (1 if i % 2 == 0 else 3) for i, d in enumerate(code))
     code = code + str((10 - (_total % 10)) % 10)
 
 first_digit = code[0]
 left_digits = code[1:7]
 right_digits = code[7:13]
+
+BAR_H = 1.0
+DATA_BOTTOM = 0.1  # digit bars stop above the guard bars, which reach down between the digit groups
+LABEL_Y = -0.14
+ZONE_Y = BAR_H + 0.12
 
 # Build barcode bar data
 bars_data = []
@@ -100,59 +115,66 @@ x_pos = quiet_zone
 # Start guard: 101 (bar, space, bar)
 for i, width in enumerate([1, 1, 1]):
     if i % 2 == 0:
-        bars_data.append({"x": x_pos, "x2": x_pos + width, "y": 0, "y2": 1.1})
+        bars_data.append({"x": x_pos, "x2": x_pos + width, "y": 0, "y2": BAR_H})
     x_pos += width
+left_start = x_pos
 
 # Left 6 digits using L or G codes per first-digit pattern
 encoding_pattern = FIRST_DIGIT_PATTERNS[first_digit]
 is_bar = False
 for i, digit in enumerate(left_digits):
-    widths = L_CODES[digit] if encoding_pattern[i] == "L" else G_CODES[digit]
+    widths = PARITY_TABLES[encoding_pattern[i]][digit]
     for width in widths:
         if is_bar:
-            bars_data.append({"x": x_pos, "x2": x_pos + width, "y": 0, "y2": 1.0})
+            bars_data.append({"x": x_pos, "x2": x_pos + width, "y": DATA_BOTTOM, "y2": BAR_H})
         x_pos += width
         is_bar = not is_bar
+left_end = x_pos
 
 # Center guard: 01010 (space, bar, space, bar, space)
 for i, width in enumerate([1, 1, 1, 1, 1]):
     if i % 2 == 1:
-        bars_data.append({"x": x_pos, "x2": x_pos + width, "y": 0, "y2": 1.1})
+        bars_data.append({"x": x_pos, "x2": x_pos + width, "y": 0, "y2": BAR_H})
     x_pos += width
+right_start = x_pos
 
 # Right 6 digits using R codes
 is_bar = True
 for digit in right_digits:
     for width in R_CODES[digit]:
         if is_bar:
-            bars_data.append({"x": x_pos, "x2": x_pos + width, "y": 0, "y2": 1.0})
+            bars_data.append({"x": x_pos, "x2": x_pos + width, "y": DATA_BOTTOM, "y2": BAR_H})
         x_pos += width
         is_bar = not is_bar
+right_end = x_pos
 
 # End guard: 101 (bar, space, bar)
 for i, width in enumerate([1, 1, 1]):
     if i % 2 == 0:
-        bars_data.append({"x": x_pos, "x2": x_pos + width, "y": 0, "y2": 1.1})
+        bars_data.append({"x": x_pos, "x2": x_pos + width, "y": 0, "y2": BAR_H})
     x_pos += width
 
 total_width = x_pos + quiet_zone
 df_bars = pd.DataFrame(bars_data)
 
-# Human-readable digit labels positioned below barcode
-text_data = [
-    {"x": quiet_zone - 3, "y": -0.12, "text": first_digit},
-    {"x": quiet_zone + 3 + 21, "y": -0.12, "text": left_digits},
-    {"x": quiet_zone + 3 + 42 + 5 + 21, "y": -0.12, "text": right_digits},
-]
-df_text = pd.DataFrame(text_data)
+# Human-readable digit labels below the barcode, first digit outside the left guard
+df_text = pd.DataFrame(
+    [
+        {"x": quiet_zone - 3, "y": LABEL_Y, "text": first_digit},
+        {"x": (left_start + left_end) / 2, "y": LABEL_Y, "text": left_digits},
+        {"x": (right_start + right_end) / 2, "y": LABEL_Y, "text": right_digits},
+    ]
+)
 
-# Structural zone annotations above barcode (EAN-13 anatomy)
-# Left group (x=12–54): country prefix + manufacturer; Right group (x=59–101): product + check
-zone_data = [
-    {"x": 33, "y": 1.20, "text": f"Country · Mfr  ({left_digits})"},
-    {"x": 80, "y": 1.20, "text": f"Product · Check  ({right_digits})"},
-]
-df_zones = pd.DataFrame(zone_data)
+# Structural zone annotations above the barcode (EAN-13 anatomy)
+df_zones = pd.DataFrame(
+    [
+        {"x": (left_start + left_end) / 2, "y": ZONE_Y, "text": f"Country · Mfr  ({left_digits})"},
+        {"x": (right_start + right_end) / 2, "y": ZONE_Y, "text": f"Product · Check  ({right_digits})"},
+    ]
+)
+
+y_domain = [LABEL_Y - 0.14, ZONE_Y + 0.14]
 
 # Barcode bars chart
 bars_chart = (
@@ -161,7 +183,7 @@ bars_chart = (
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, total_width]), axis=None),
         x2="x2:Q",
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.25, 1.38]), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=y_domain), axis=None),
         y2="y2:Q",
     )
 )
@@ -169,22 +191,24 @@ bars_chart = (
 # Digit labels below barcode
 text_chart = (
     alt.Chart(df_text)
-    .mark_text(fontSize=18, font="monospace", fontWeight="bold", color=INK)
+    .mark_text(fontSize=22, font="monospace", fontWeight="bold", color=INK)
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
 # Zone annotation labels above barcode
 zone_chart = (
-    alt.Chart(df_zones).mark_text(fontSize=12, font="monospace", color=INK_SOFT).encode(x="x:Q", y="y:Q", text="text:N")
+    alt.Chart(df_zones).mark_text(fontSize=15, font="monospace", color=INK_SOFT).encode(x="x:Q", y="y:Q", text="text:N")
 )
 
-# Combined chart with canonical landscape canvas
+# Combined chart: the whole chart is exactly 800x450 (3200x1800 at scale 4)
 TITLE = "barcode-ean13 · python · altair · anyplot.ai"
 chart = (
     (bars_chart + text_chart + zone_chart)
     .properties(
-        width=620,
-        height=320,
+        width=800,
+        height=450,
+        padding=10,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
         background=PAGE_BG,
         title=alt.Title(TITLE, fontSize=16, anchor="middle", offset=20, color=INK),
     )
