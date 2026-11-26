@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: pending | Updated: 2026-11-26
+Quality: 88/100 | Updated: 2026-11-26
 """
 
 import os
