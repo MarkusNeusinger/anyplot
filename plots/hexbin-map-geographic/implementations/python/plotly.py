@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-27
@@ -20,31 +20,47 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 MAP_STYLE = "carto-positron" if THEME == "light" else "carto-darkmatter"
 HEX_BORDER = "rgba(30,30,30,0.7)" if THEME == "light" else "rgba(220,220,220,0.5)"
 
-# imprint_seq — the only allowed sequential colormap
-imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+# Imprint sequential ramp for fields (filled cells on a map)
+SEQ_FIELDS = (
+    [[0.0, "#66E2B2"], [0.368, "#009E73"], [0.582, "#4467A3"], [1.0, "#002850"]]
+    if THEME == "light"
+    else [[0.0, "#00573D"], [0.467, "#009E73"], [1.0, "#CDD9FF"]]
+)
 
-# Data: NYC taxi pickup locations with fare values
-np.random.seed(42)
+# Constants
+HEX_SIZE = 0.007  # hexagon size in local-degree units (~0.5 km cells at NYC latitude)
+
+# Columns: set these to your table's column names
+LAT = "lat"  # role: lat
+LON = "lon"  # role: lon
+FARE = "Fare"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("pickups.csv")
+rng = np.random.default_rng(42)
 n_points = 5000
-lat0, lon0 = 40.7580, -73.9855
+cluster_lats = 40.7580 + rng.uniform(-0.08, 0.08, 8)
+cluster_lons = -73.9855 + rng.uniform(-0.10, 0.10, 8)
+assignments = rng.choice(8, n_points, p=rng.dirichlet(np.ones(8)))
+df = pd.DataFrame(
+    {
+        LAT: cluster_lats[assignments] + rng.normal(0, 0.015, n_points),
+        LON: cluster_lons[assignments] + rng.normal(0, 0.020, n_points),
+        FARE: rng.exponential(15, n_points) + 5,
+    }
+)
 
-cluster_lats = lat0 + np.random.uniform(-0.08, 0.08, 8)
-cluster_lons = lon0 + np.random.uniform(-0.10, 0.10, 8)
-assignments = np.random.choice(8, n_points, p=np.random.dirichlet(np.ones(8)))
-lats = cluster_lats[assignments] + np.random.normal(0, 0.015, n_points)
-lons = cluster_lons[assignments] + np.random.normal(0, 0.020, n_points)
-fares = np.random.exponential(15, n_points) + 5
-
-df = pd.DataFrame({"lat": lats, "lon": lons, "fare": fares})
+# Plot
+HEX_ID, COUNT, TOTAL, MEAN = "hex_id", "Trips", "Total fare ($)", "Mean fare ($)"  # derived column names
+lat0, lon0 = df[LAT].mean(), df[LON].mean()
 
 # Hexagonal binning: pointy-top hexagons using axial coordinate system
 cos_lat = np.cos(np.radians(lat0))
-hex_size = 0.007  # local-degree units (~0.5 km cells at NYC latitude)
+hex_size = HEX_SIZE
 sqrt3 = np.sqrt(3)
 
 # Project to flat local coords (lon adjusted for latitude compression)
-xs = (df["lon"].values - lon0) * cos_lat
-ys = df["lat"].values - lat0
+xs = (df[LON].values - lon0) * cos_lat
+ys = df[LAT].values - lat0
 
 # Convert to axial (q, r) — pointy-top hex
 q_frac = (xs * sqrt3 / 3 - ys / 3) / hex_size
@@ -65,15 +81,17 @@ mask_r = (~mask_q) & (dr > ds)
 rq[mask_q] = -rr[mask_q] - rs[mask_q]
 rr[mask_r] = -rq[mask_r] - rs[mask_r]
 
-df["hex_id"] = [f"{q}_{r}" for q, r in zip(rq, rr, strict=False)]
+hex_id = [f"{q}_{r}" for q, r in zip(rq, rr, strict=False)]
 
 # Aggregate by hex cell: count, sum, and mean of fares
 hex_agg = (
-    df.groupby("hex_id")
-    .agg(count=("fare", "size"), total_fare=("fare", "sum"), mean_fare=("fare", "mean"))
+    df.groupby(hex_id)[FARE]
+    .agg(["size", "sum", "mean"])
+    .set_axis([COUNT, TOTAL, MEAN], axis=1)
+    .rename_axis(HEX_ID)
     .reset_index()
 )
-hex_agg[["q", "r"]] = hex_agg["hex_id"].str.split("_", n=1, expand=True).astype(int)
+hex_agg[["q", "r"]] = hex_agg[HEX_ID].str.split("_", n=1, expand=True).astype(int)
 
 # Vectorized GeoJSON polygon construction (no function definitions)
 q_vals = hex_agg["q"].values
@@ -102,7 +120,7 @@ geojson = {
     "features": [
         {
             "type": "Feature",
-            "id": hex_agg["hex_id"].iloc[i],
+            "id": hex_agg[HEX_ID].iloc[i],
             "properties": {},
             "geometry": {"type": "Polygon", "coordinates": [rings[i].tolist()]},
         }
@@ -115,18 +133,17 @@ title = "NYC Taxi Fares · hexbin-map-geographic · python · plotly · anyplot.
 n_chars = len(title)
 title_fontsize = max(11, round(16 * 67 / n_chars)) if n_chars > 67 else 16
 
-# Plot
 fig = px.choropleth_map(
     hex_agg,
     geojson=geojson,
-    locations="hex_id",
-    color="mean_fare",
-    color_continuous_scale=imprint_seq,
+    locations=HEX_ID,
+    color=MEAN,
+    color_continuous_scale=SEQ_FIELDS,
     opacity=0.75,
     center={"lat": lat0, "lon": lon0},
     zoom=11,
     map_style=MAP_STYLE,
-    hover_data={"hex_id": False, "count": ":,", "mean_fare": ":$.2f", "total_fare": ":$,.0f"},
+    hover_data={HEX_ID: False, COUNT: ":,", MEAN: ":$.2f", TOTAL: ":$,.0f"},
 )
 
 fig.update_traces(marker_line_width=1.5, marker_line_color=HEX_BORDER)
@@ -137,7 +154,7 @@ fig.update_layout(
     font={"color": INK},
     title={"text": title, "font": {"size": title_fontsize, "color": INK}, "x": 0.5, "xanchor": "center"},
     coloraxis_colorbar={
-        "title": {"text": "Avg Fare ($)", "font": {"size": 12, "color": INK}},
+        "title": {"text": f"Avg {FARE} ($)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "tickprefix": "$",
         "len": 0.7,
@@ -146,7 +163,7 @@ fig.update_layout(
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 20, "r": 40, "t": 80, "b": 20},
+    margin={"l": 40, "r": 40, "t": 80, "b": 20},
 )
 
 # Save
