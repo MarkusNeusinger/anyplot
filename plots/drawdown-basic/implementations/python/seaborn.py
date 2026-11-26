@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 79/100 | Updated: 2026-11-26
@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.gridspec import GridSpec
 
 
 # Theme tokens
@@ -81,16 +80,14 @@ after_trough = df.loc[max_dd_idx + 1 :]
 first_new_high = after_trough[after_trough[DRAWDOWN] >= 0]
 recovery_days = (first_new_high[DATE].iloc[0] - max_dd_date).days if len(first_new_high) > 0 else None
 
-# Recovery markers: the first new high after each distinct drawdown period
+# Recovery markers: the first new high after each drawdown deeper than 5 %
 in_dd = (df[DRAWDOWN] < 0).to_numpy()
 at_high = ~in_dd
-recovery_dates = df.loc[at_high & np.concatenate([[False], in_dd[:-1]]), DATE]
+period_depth = df.groupby(at_high.cumsum())[DRAWDOWN].transform("min")
+deep_before = (period_depth.shift(1) < -5).to_numpy()
+recovery_dates = df.loc[at_high & np.concatenate([[False], in_dd[:-1]]) & deep_before, DATE]
 
-# Layout: main drawdown chart (wide) + seaborn KDE marginal strip (wider than before)
-fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
-gs = GridSpec(1, 2, figure=fig, width_ratios=[4, 1], wspace=0.09)
-ax = fig.add_subplot(gs[0])
-ax_kde = fig.add_subplot(gs[1], sharey=ax)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
 # Filled drawdown area
 ax.fill_between(df[DATE], df[DRAWDOWN], 0, color=DRAWDOWN_COLOR, alpha=0.30)
@@ -110,7 +107,7 @@ if len(recovery_dates) > 0:
         recovery_dates,
         np.zeros(len(recovery_dates)),
         color=RECOVERY_COLOR,
-        s=45,
+        s=60,
         zorder=5,
         marker="^",
         label="New High",
@@ -144,30 +141,5 @@ ax.yaxis.grid(True, alpha=0.13, linewidth=0.8)
 ax.xaxis.grid(True, alpha=0.08, linewidth=0.6)
 ax.legend(loc="lower right", fontsize=8)
 
-# Seaborn KDE marginal: distribution of drawdown depth values (seaborn-distinctive feature)
-sns.kdeplot(
-    y=df[DRAWDOWN],
-    ax=ax_kde,
-    fill=True,
-    color=DRAWDOWN_COLOR,
-    alpha=0.40,
-    linewidth=1.2,
-    clip=(df[DRAWDOWN].min() * 1.05, 0),
-)
-ax_kde.axhline(y=0, color=INK_SOFT, linewidth=0.8, linestyle="--", alpha=0.6)
-ax_kde.axhline(y=max_dd_value, color=MAX_DD_COLOR, linewidth=0.8, linestyle="--", alpha=0.7)
-
-ax_kde.set_xlabel("Density", fontsize=7, color=INK_SOFT)
-ax_kde.set_ylabel("")
-ax_kde.set_title("Dist.", fontsize=8, color=INK_SOFT)
-ax_kde.tick_params(labelleft=False, labelsize=6)
-ax_kde.tick_params(axis="x", labelsize=6)
-ax_kde.set_xlim(left=0)
-ax_kde.spines["top"].set_visible(False)
-ax_kde.spines["right"].set_visible(False)
-for s in ("left", "bottom"):
-    ax_kde.spines[s].set_color(INK_SOFT)
-ax_kde.yaxis.grid(True, alpha=0.10, linewidth=0.6)
-
-fig.subplots_adjust(left=0.085, right=0.985, top=0.92, bottom=0.12)
+fig.subplots_adjust(left=0.085, right=0.96, top=0.92, bottom=0.12)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
