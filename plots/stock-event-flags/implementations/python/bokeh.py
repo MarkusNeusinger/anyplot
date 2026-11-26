@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-27
@@ -25,50 +25,61 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Imprint palette: all eight positions, position 1 is the price line
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BRAND = IMPRINT_PALETTE[0]  # price line uses position 1
+BRAND = IMPRINT_PALETTE[0]
 
-# Data — 180 trading days of synthetic stock prices via geometric Brownian motion
+# Constants
+EVENT_MARKERS = {"earnings": "triangle", "dividend": "circle", "split": "square", "news": "diamond"}
+EVENT_COLORS = {"earnings": 1, "dividend": 2, "split": 3, "news": 4}  # Imprint positions 2-5
+MARKER_CYCLE = ["triangle", "circle", "square", "diamond", "hex", "inverted_triangle"]
+MAJOR_EVENT_TYPES = {"earnings", "split"}  # drawn larger and higher than the minor ones
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Price (USD)"  # role: close
+EVENT_DATE = "Event date"  # role: event_date
+EVENT_TYPE = "Event type"  # role: event_type
+EVENT_LABEL = "Event"  # role: event_label
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv", parse_dates=[DATE])
+# Event rows carry an event type and label; all other trading days leave both empty.
 np.random.seed(42)
 n_days = 180
 dates = pd.bdate_range(start=pd.Timestamp("2024-01-02"), periods=n_days)
-
-initial_price = 150.0
 daily_returns = np.random.normal(0.0005, 0.018, n_days)
-close_prices = initial_price * np.cumprod(1 + daily_returns)
-
-df = pd.DataFrame({"date": dates, "close": close_prices})
-
-events = [
-    {"date": dates[25], "type": "earnings", "label": "Q4 Earnings"},
-    {"date": dates[50], "type": "dividend", "label": "Dividend $0.50"},
-    {"date": dates[75], "type": "news", "label": "Product Launch"},
-    {"date": dates[95], "type": "earnings", "label": "Q1 Earnings"},
-    {"date": dates[110], "type": "split", "label": "2:1 Split"},
-    {"date": dates[140], "type": "dividend", "label": "Dividend $0.55"},
-    {"date": dates[160], "type": "news", "label": "Partnership"},
-]
-events_df = pd.DataFrame(events)
-
-# Event styling — positions 2–5 (position 1 is the price line)
-event_colors = {
-    "earnings": IMPRINT_PALETTE[1],  # lavender
-    "dividend": IMPRINT_PALETTE[2],  # blue
-    "split": IMPRINT_PALETTE[3],  # ochre
-    "news": IMPRINT_PALETTE[4],  # matte red
+close_prices = 150.0 * np.cumprod(1 + daily_returns)
+event_rows = {
+    25: ("earnings", "Q4 Earnings"),
+    50: ("dividend", "Dividend $0.50"),
+    75: ("news", "Product Launch"),
+    95: ("earnings", "Q1 Earnings"),
+    110: ("split", "2:1 Split"),
+    140: ("dividend", "Dividend $0.55"),
+    160: ("news", "Partnership"),
 }
-event_markers = {"earnings": "triangle", "dividend": "circle", "split": "square", "news": "diamond"}
+df = pd.DataFrame(
+    {
+        DATE: dates,
+        CLOSE: close_prices,
+        EVENT_DATE: [dates[i] if i in event_rows else pd.NaT for i in range(n_days)],
+        EVENT_TYPE: [event_rows.get(i, (None, None))[0] for i in range(n_days)],
+        EVENT_LABEL: [event_rows.get(i, (None, None))[1] for i in range(n_days)],
+    }
+)
 
 # Plot
-title_str = "stock-event-flags · python · bokeh · anyplot.ai"
+events = df.dropna(subset=[EVENT_DATE, EVENT_TYPE, EVENT_LABEL]).reset_index(drop=True)
+event_types = list(dict.fromkeys(events[EVENT_TYPE]))
+price_range = df[CLOSE].max() - df[CLOSE].min()
 
 p = figure(
     width=3200,
     height=1800,
     x_axis_type="datetime",
-    title=title_str,
-    x_axis_label="Date",
-    y_axis_label="Price (USD)",
+    title="stock-event-flags · python · bokeh · anyplot.ai",
+    x_axis_label=DATE,
+    y_axis_label=CLOSE,
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=180,
@@ -95,37 +106,29 @@ p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_color = None  # horizontal price guides only
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.15
 p.ygrid.grid_line_alpha = 0.15
 
 # Price line
 source = ColumnDataSource(df)
-price_line = p.line(x="date", y="close", source=source, line_width=4, line_color=BRAND, alpha=0.9)
+price_line = p.line(x=DATE, y=CLOSE, source=source, line_width=4, line_color=BRAND, alpha=0.9)
 
-# Event flags — vertical connector lines + markers + labels
+# Event flags: vertical connector + marker + label per event
 legend_renderers = {}
 all_event_renderers = []
-price_range = close_prices.max() - close_prices.min()
 
-# Major events (earnings, split) get slightly larger offsets for visual hierarchy
-major_events = {"earnings", "split"}
+for i, event in events.iterrows():
+    event_date = event[EVENT_DATE]
+    event_type = event[EVENT_TYPE]
+    type_index = event_types.index(event_type)
+    color = IMPRINT_PALETTE[EVENT_COLORS.get(event_type, 5 + type_index) % len(IMPRINT_PALETTE)]
+    marker = EVENT_MARKERS.get(event_type, MARKER_CYCLE[type_index % len(MARKER_CYCLE)])
+    is_major = event_type in MAJOR_EVENT_TYPES
 
-for i, event in events_df.iterrows():
-    event_date = event["date"]
-    event_type = event["type"]
-    event_label = event["label"]
-    color = event_colors[event_type]
-    marker = event_markers[event_type]
-
-    idx = df[df["date"] == event_date].index[0]
-    event_price = df.loc[idx, "close"]
-
+    event_price = event[CLOSE]
     offset_dir = 1 if i % 2 == 0 else -1
-    # Major events flagged higher to create visual hierarchy
-    offset_factor = 0.20 if event_type in major_events else 0.13
-    flag_y = event_price + offset_dir * price_range * offset_factor
+    flag_y = event_price + offset_dir * price_range * (0.20 if is_major else 0.13)
 
     p.segment(
         x0=[event_date],
@@ -142,59 +145,63 @@ for i, event in events_df.iterrows():
         data={
             "x": [event_date],
             "y": [flag_y],
-            "event_type": [event_type.capitalize()],
-            "event_label": [event_label],
-            "price": [f"${event_price:.2f}"],
+            EVENT_TYPE: [str(event_type).capitalize()],
+            EVENT_LABEL: [event[EVENT_LABEL]],
+            CLOSE: [event_price],
         }
     )
-    marker_size = 28 if event_type in major_events else 22
     renderer = p.scatter(
         x="x",
         y="y",
         source=flag_source,
-        size=marker_size,
+        size=28 if is_major else 22,
         color=color,
         alpha=0.9,
         line_color=PAGE_BG,
         line_width=2,
         marker=marker,
     )
-
     all_event_renderers.append(renderer)
+    legend_renderers.setdefault(event_type, renderer)
 
-    if event_type not in legend_renderers:
-        legend_renderers[event_type] = renderer
-
-    label = Label(
-        x=event_date,
-        y=flag_y,
-        text=event_label,
-        text_font_size="26pt",
-        text_color=color,
-        x_offset=22,
-        y_offset=8 if offset_dir > 0 else -40,
-        text_font_style="bold",
+    p.add_layout(
+        Label(
+            x=event_date,
+            y=flag_y,
+            text=event[EVENT_LABEL],
+            text_font_size="26pt",
+            text_color=color,
+            x_offset=22,
+            y_offset=8 if offset_dir > 0 else -40,
+            text_font_style="bold",
+        )
     )
-    p.add_layout(label)
 
-# HoverTool on event markers — reveals full event details in the HTML artifact
+# HoverTool on event markers: full event details in the HTML artifact
 hover = HoverTool(
-    renderers=all_event_renderers, tooltips=[("Type", "@event_type"), ("Event", "@event_label"), ("Price", "@price")]
+    renderers=all_event_renderers,
+    tooltips=[
+        ("Type", f"@{{{EVENT_TYPE}}}"),
+        (EVENT_LABEL, f"@{{{EVENT_LABEL}}}"),
+        ("Price", f"@{{{CLOSE}}}{{$0.00}}"),
+    ],
 )
 p.add_tools(hover)
 
 # Legend
 legend_items = [LegendItem(label="Close Price", renderers=[price_line])]
 for event_type, renderer in legend_renderers.items():
-    legend_items.append(LegendItem(label=event_type.capitalize(), renderers=[renderer]))
+    legend_items.append(LegendItem(label=str(event_type).capitalize(), renderers=[renderer]))
 
 legend = Legend(
     items=legend_items,
-    location="top_left",
+    location="bottom_left",
     label_text_font_size="34pt",
     label_text_color=INK_SOFT,
     background_fill_color=ELEVATED_BG,
     border_line_color=INK_SOFT,
+    glyph_width=64,
+    glyph_height=48,
 )
 p.add_layout(legend)
 
@@ -221,6 +228,10 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Paint the page in the theme color so the anti-aliased canvas edge shows no white line
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 screenshot_b64 = driver.execute_cdp_cmd(
     "Page.captureScreenshot", {"format": "png", "fromSurface": True, "captureBeyondViewport": False}
