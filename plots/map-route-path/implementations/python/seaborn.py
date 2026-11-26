@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-26
@@ -81,10 +81,7 @@ df = pd.DataFrame(
 )
 
 # Plot: reads only df and the constants above
-fig, (ax_map, ax_elev) = plt.subplots(
-    2, 1, figsize=(8, 4.5), dpi=400, gridspec_kw={"height_ratios": [3, 1]}, facecolor=PAGE_BG
-)
-fig.subplots_adjust(left=0.08, right=0.90, top=0.93, bottom=0.10, hspace=0.55)
+fig, ax_map = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
 # Connecting path in sequence order
 sns.lineplot(data=df, x=LON, y=LAT, color=INK_SOFT, linewidth=2.8, alpha=0.75, ax=ax_map, sort=False, zorder=1)
@@ -136,13 +133,5 @@ ax_map.legend(fontsize=8, loc="lower right", framealpha=0.9, markerscale=0.5, la
 ax_map.margins(x=0.06, y=0.12)
 sns.despine(ax=ax_map)
 
-# Elevation profile
-sns.lineplot(data=df, x=TIME, y=ELEV, color=BRAND, linewidth=2.2, ax=ax_elev)
-ax_elev.fill_between(df[TIME], df[ELEV].min(), df[ELEV], alpha=0.15, color=BRAND)
-ax_elev.set_xlabel(TIME, fontsize=10, color=INK)
-ax_elev.set_ylabel(ELEV, fontsize=10, color=INK)
-ax_elev.tick_params(axis="both", labelsize=8)
-ax_elev.yaxis.grid(True, alpha=0.10, linewidth=0.8)
-sns.despine(ax=ax_elev)
-
+plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
