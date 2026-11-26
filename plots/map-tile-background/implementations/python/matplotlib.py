@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-27
@@ -23,8 +23,13 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Continuous colormap (imprint_seq: brand green → blue) for visitor density
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+# Continuous colormap (Imprint marks stops) for visitor density
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_MARKS)
 
 # Data: Rome tourist attractions with daily visitor counts (realistic scale)
 locations = {
@@ -44,18 +49,18 @@ locations = {
 
 # Per-attraction label offsets (directional spread to reduce crowding)
 label_offsets = {
-    "Colosseum": (8, -8),
-    "Vatican Museums": (-5, 8),
-    "St. Peter's Basilica": (-5, -12),
-    "Trevi Fountain": (8, 5),
-    "Pantheon": (8, -10),
-    "Roman Forum": (8, -8),
-    "Spanish Steps": (8, 5),
-    "Piazza Navona": (-5, 8),
-    "Castel Sant'Angelo": (8, 8),
-    "Villa Borghese": (8, 4),
-    "Trastevere": (-5, -10),
-    "Campo de' Fiori": (-5, 8),
+    "Colosseum": (12, -14, "left"),
+    "Vatican Museums": (-18, 10, "right"),
+    "St. Peter's Basilica": (-16, -8, "right"),
+    "Trevi Fountain": (16, 4, "left"),
+    "Pantheon": (16, -22, "left"),
+    "Roman Forum": (-14, -12, "right"),
+    "Spanish Steps": (14, 6, "left"),
+    "Piazza Navona": (-16, 12, "right"),
+    "Castel Sant'Angelo": (0, 28, "center"),
+    "Villa Borghese": (14, 6, "left"),
+    "Trastevere": (0, -16, "center"),
+    "Campo de' Fiori": (-12, -14, "right"),
 }
 
 names = list(locations.keys())
@@ -76,8 +81,10 @@ if THEME == "light":
     tile_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
     attribution = "© OpenStreetMap contributors"
 else:
-    tile_url = "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-    attribution = "© OpenStreetMap contributors, © CARTO"
+    tile_url = (
+        "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+    )
+    attribution = "Tiles © Esri — Esri, DeLorme, NAVTEQ"
 
 # Tile index range for the bounding box
 tx_min = int((lon_min + 180) / 360 * n_tiles)
@@ -130,15 +137,17 @@ scatter = ax.scatter(
 
 # Attraction name labels with per-attraction directional offsets
 for name, lon, lat in zip(names, lons, lats, strict=False):
-    dx, dy = label_offsets.get(name, (6, 4))
+    dx, dy, ha = label_offsets[name]
     ax.annotate(
         name,
         (lon, lat),
         xytext=(dx, dy),
         textcoords="offset points",
-        fontsize=6,
+        fontsize=7,
+        ha=ha,
         color=INK,
-        bbox={"boxstyle": "round,pad=0.15", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.75},
+        bbox={"boxstyle": "round,pad=0.15", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.85},
+        arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.6, "shrinkA": 0, "shrinkB": 4},
         zorder=8,
     )
 
