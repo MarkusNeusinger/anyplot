@@ -2,131 +2,117 @@ library: matplotlib
 language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:28:47Z'
-updated: '2026-05-21T02:11:46Z'
+updated: '2026-11-26T11:51:24Z'
 generated_by: claude-sonnet
-workflow_run: 26200365892
+workflow_run: 45813657252
 issue: 3808
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - Correct EAN-13 encoding implemented from scratch with proper L/G/R code tables
-    and first-digit pattern lookup
-  - Guard patterns (start, center, end) correctly distinguished by taller height
-  - Educational anatomy labels (Country, Manufacturer, Product, Check) add genuine
-    storytelling value
-  - Theme adaptation is correct — INK and INK_SOFT tokens used for all chrome elements,
-    PAGE_BG for backgrounds
-  - Check digit auto-calculation from 12-digit input with standard GS1 algorithm
-  - Correct EAN-13 formatted caption (4 006381 333931) displayed above barcode
-  - No bbox_inches=tight — uses subplots_adjust for clean canvas control
-  - No overlapping text elements; digits well-spaced across full barcode width
+  - Correct EAN-13 construction from L/G/R tables with first-digit parity; check digit
+    computed from the 12-digit input
+  - Guard bars drawn longer and the digit row placed in the band between digit-bar
+    bottoms and guard bottoms, so the guards reach down between the digit groups
+  - Theme tokens threaded through every element; bars, digits and labels read cleanly
+    in both themes
+  - Data-unit layout (1 unit = 1 module) keeps every bar at a whole-module width and
+    the 9-module quiet zones exact
   weaknesses:
-  - Section anatomy labels use fontsize=7 which renders very small (~39 source-px)
-    — barely readable at full resolution and likely illegible at mobile (400 px) scale;
-    consider fontsize=8 or 9
-  - Design Excellence is limited by the inherently monochrome barcode format — no
-    Okabe-Ito data colors apply, so palette creativity is absent; anatomy labels partially
-    offset this but DE ceiling is low
-  - 'DE-02 refinement is functional but minimal: axis is correctly off, but no additional
-    visual polish (e.g. subtle separator lines between barcode sections, braces or
-    brackets to demarcate guard zones)'
+  - 'Suggestion: merge adjacent ''1'' modules into single Rectangles (or use ax.broken_barh)
+    so each bar is one shape rather than one patch per module.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "barcode-ean13 · python · matplotlib · anyplot.ai" in dark #1A1A17, centered at fontsize=12 — clearly readable. EAN-13 grouped caption "4 006381 333931" in monospace INK_SOFT below title — readable. Human-readable digits (4, 0, 0, 6, 3, 8, 1, 3, 3, 3, 9, 3, 1) below bars in bold monospace INK at fontsize=10 — clear. Section anatomy labels ("Country (1–3)", "Manufacturer (4–8)", "Product (9–12)", "Check (13)") in INK_SOFT at fontsize=7 — small but legible at full resolution.
-      Data: Black (#1A1A17) bars on warm off-white background. Guard bars (start/end/center) are taller than regular bars — clearly distinguishable. Quiet zones present on both sides. No Okabe-Ito colors (appropriate for monochrome barcode).
-      Legibility verdict: PASS — all text is readable against the light background; fontsize=7 section labels are small but not unreadable at full resolution.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'barcode-ean13 · python · matplotlib · anyplot.ai' centered top in dark ink; grey monospace caption '4 006381 333931' beneath it; grey anatomy labels 'Country (1–3)', 'Manufacturer (4–8)', 'Product (9–12)', 'Check (13)' along the bottom. All readable.
+      Data: near-black EAN-13 bars with start, center and end guards extended below the digit bars; bold monospace digits 4 | 006381 | 333931 sit in the band beneath the digit bars, between the guards, with '4' left of the start guard; quiet zones blank on both sides. Monochrome, no axes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title in light cream #F0EFE8 — clearly readable against dark background. EAN-13 caption and digit labels in light INK — readable. Section anatomy labels in INK_SOFT (#B8B7B0, medium-light gray) — still visible on dark background. No dark-on-dark failures observed.
-      Data: Cream/off-white (#F0EFE8) bars on near-black background. The dark theme correctly inverts the bar color (bars become light-on-dark, which is the expected inversion for dark mode). Guard bars remain taller than regular bars. Data colors are the theme-adapted INK token — consistent with the style guide's monochrome use case.
-      Legibility verdict: PASS — all text is readable against the dark background; no near-black text on near-black background failures.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, caption and anatomy labels in light grey; no dark-on-dark text.
+      Data: same layout with off-white #F0EFE8 bars and digits on the dark page; structure identical to the light render (monochrome, no categorical palette).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, digits, and EAN caption readable in both themes. Section labels
-          at fontsize=7 are small — legible at 3200px but borderline at mobile scale.
+        comment: Title 12 pt, bold monospace digits 10 pt, caption and anatomy labels
+          9 pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or bars. Digits well-spaced across
-          barcode width.
+        comment: No text collides with bars or other text; digits sit cleanly in the
+          gaps between guard bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars are fully visible in both themes. Guard bars clearly distinguished
-          by height. Excellent contrast in both renders.
+        comment: Solid, sharp-edged bars with full contrast in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome barcode — inherently accessible. No CVD issues possible.
+        comment: Monochrome, maximal contrast, no CVD issue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas correct. No bbox_inches=tight. subplots_adjust used.
-          Quiet zones present within axis limits.
+        comment: 3200x1800 canvas; symbol fills the width with 9-module quiet zones;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format. Axis off is appropriate. EAN-13 grouping caption
-          adds useful context.
+        comment: N/A for axes (axis off, permitted by C6); mandated title present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Monochrome barcode — no categorical palette applies. Backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark) correct. INK tokens theme-adaptive throughout.'
+        comment: 'Monochrome INK bars; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Clean professional presentation. Anatomy labels show design intent
-          beyond functional minimum. Monochrome format limits palette creativity ceiling.
+        comment: 'Style-guide baseline: monospace bold digits with INK/INK_SOFT hierarchy;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Axis-off is correct. No unnecessary elements. Minimal visual refinement
-          beyond functional requirements.
+        passed: false
+        comment: Clean axis-off presentation; nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Anatomy labels (Country/Manufacturer/Product/Check) provide clear
-          educational narrative about EAN-13 structure. Guard bar height distinction
-          tells the encoding story.
+        passed: false
+        comment: 'Default: the anatomy row is an unrequested annotation layer and
+          earns no storytelling credit'
     spec_compliance:
       score: 15
       max: 15
@@ -136,55 +122,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EAN-13 barcode with proper encoding from L/G/R code tables
-          and first-digit pattern.
+        comment: Correct EAN-13 symbol
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones (9 modules each side), start guard (101), center guard
-          (01010), end guard (101), human-readable digits, first digit outside left
-          guard — all present.
+        comment: 'All C1–C5 met: three guards, whole-module widths, digits below with
+          first outside left guard, guards reaching down between the digit groups,
+          quiet zones'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 12-digit input with auto-calculated check digit. Valid German product
-          code 4006381333931. All 13 digits visible below barcode.
+        comment: Each module drawn at its position; widths follow from the L/G/R tables
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'barcode-ean13 · python · matplotlib · anyplot.ai'.
-          No legend needed for monochrome barcode.
+        comment: Title matches the mandated format; no legend needed (N/A)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Guard patterns, quiet zones, human-readable digits, anatomy labels
-          all present. Missing explicit legend for L/G/R encoding distinction.
+        comment: First digit 4 drives an LGLLGG parity mix, so L, G and R sets all
+          appear
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world German product barcode 4006381333931 (country code 400
-          = Germany). Plausible, neutral product code.
+        comment: Real German product code from the spec example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 13-digit EAN-13 standard code. Module widths appropriate for visualization.
-          Encoding tables match GS1 specification.
+        comment: 'Checked: weighted sum of 400638133393 = 89 so check digit = 1, matching
+          4006381333931 under the bars; 95 modules; left parity LGLLGG for first digit
+          4'
     code_quality:
       score: 10
       max: 10
@@ -194,59 +177,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear procedural script.
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded input. No randomness.
+        comment: Deterministic input
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.patches, matplotlib.pyplot, os, sys — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Clean encoding table structure. Coordinate system design
-          elegant (1 unit = 1 module width).
+        comment: Digit row drawn by one loop over (x, digit) positions; appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400. No bbox_inches=tight. Correct
-          API usage.
+        comment: Saves plot-{THEME}.png at dpi=400, current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct use of ax.add_patch(), ax.text(), patches.Rectangle, axis
-          limits, subplots_adjust. Axes-based API throughout.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creative use of patches.Rectangle for barcode bars with module-width
-          coordinate system. Manual coordinate geometry for label placement.
+        comment: Axes API with add_patch/text; default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d239d965a9
+  rendered_at: '2026-11-26T11:48:41Z'
 impl_tags:
   dependencies: []
   techniques:
   - patches
   - annotations
   patterns:
-  - explicit-figure
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:

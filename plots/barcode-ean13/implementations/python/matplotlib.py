@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-ean13: EAN-13 Barcode
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-21
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
@@ -110,41 +110,16 @@ for i, bit in enumerate(barcode_pattern):
         y0 = start_y if is_guard else start_y + (guard_height - bar_height)
         ax.add_patch(patches.Rectangle((start_x + i, y0), 1, h, linewidth=0, edgecolor="none", facecolor=INK))
 
-# Style — human-readable digits below bars
-digit_y = start_y - 0.5
+# Human-readable digits sit in the band between the digit-bar bottoms and the guard bottoms,
+# so the longer guards reach down between the digit groups
+digit_y = start_y + (guard_height - bar_height) - 0.4
 digit_fs = 10
-
-# First digit — sits outside the left quiet zone
-ax.text(
-    start_x - 3.5,
-    digit_y,
-    full_code[0],
-    fontsize=digit_fs,
-    ha="center",
-    va="top",
-    fontfamily="monospace",
-    fontweight="bold",
-    color=INK,
+digit_positions = (
+    [(start_x - 3.5, full_code[0])]  # first digit sits left of the start guard
+    + [(start_x + 3 + (i + 0.5) * 7, d) for i, d in enumerate(full_code[1:7])]  # after the 3-module start guard
+    + [(start_x + 50 + (i + 0.5) * 7, d) for i, d in enumerate(full_code[7:13])]  # after start + left + center
 )
-
-# Left-side digits (positions 1–6); each digit spans 7 modules, after 3-bit start guard
-for i, digit in enumerate(full_code[1:7]):
-    dx = start_x + 3 + (i + 0.5) * 7
-    ax.text(
-        dx,
-        digit_y,
-        digit,
-        fontsize=digit_fs,
-        ha="center",
-        va="top",
-        fontfamily="monospace",
-        fontweight="bold",
-        color=INK,
-    )
-
-# Right-side digits (positions 7–12); start after start(3)+left(42)+center(5)=50 modules
-for i, digit in enumerate(full_code[7:13]):
-    dx = start_x + 50 + (i + 0.5) * 7
+for dx, digit in digit_positions:
     ax.text(
         dx,
         digit_y,
@@ -164,7 +139,7 @@ for i, digit in enumerate(full_code[7:13]):
 # Check (13): right digit 13 at x=97.5
 sections = [("Country (1–3)", 14.0), ("Manufacturer (4–8)", 46.0), ("Product (9–12)", 80.0), ("Check (13)", 97.5)]
 for label, cx in sections:
-    ax.text(cx, digit_y - 2.0, label, fontsize=7, ha="center", va="top", color=INK_SOFT)
+    ax.text(cx, start_y - 0.8, label, fontsize=9, ha="center", va="top", color=INK_SOFT)
 
 # Axis bounds and clean presentation
 x_max = start_x + total_modules + quiet_zone  # 9 + 95 + 9 = 113
