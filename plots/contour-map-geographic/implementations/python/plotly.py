@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-20
@@ -17,10 +17,10 @@ import matplotlib
 
 
 matplotlib.use("Agg")
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
+from plotly.colors import sample_colorscale
 
 
 # Theme tokens
@@ -32,6 +32,13 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 LAND_COLOR = "#D8D3BB" if THEME == "light" else "#2A2A25"
 OCEAN_BG = "#C5D8E8" if THEME == "light" else "#19242E"
 COAST_COLOR = "#888880" if THEME == "light" else "#666660"
+
+# Imprint sequential ramp for filled fields (colored cells fill the plot)
+SEQ_FIELDS = (
+    [[0.0, "#66E2B2"], [0.368, "#009E73"], [0.582, "#4467A3"], [1.0, "#002850"]]
+    if THEME == "light"
+    else [[0.0, "#00573D"], [0.467, "#009E73"], [1.0, "#CDD9FF"]]
+)
 
 # Data - Simulated North Atlantic SST
 np.random.seed(42)
@@ -47,30 +54,27 @@ temperature = base_temp + gulf_stream + variation
 T_MIN, T_MAX = 4, 24
 levels = np.arange(T_MIN, T_MAX + 1, 2)
 
-# Viridis colormap — perceptually-uniform, spec-compliant for sequential temperature data
-norm = mcolors.Normalize(vmin=T_MIN, vmax=T_MAX)
-cmap = plt.get_cmap("viridis")
 
 # Compute contour paths using matplotlib off-screen (allsegs API, matplotlib 3.8+)
 _fig, _ax = plt.subplots()
-cs_fill = _ax.contourf(lon_range, lat_range, temperature, levels=levels, cmap=cmap, norm=norm)
+cs_fill = _ax.contourf(lon_range, lat_range, temperature, levels=levels)
 cs_line = _ax.contour(lon_range, lat_range, temperature, levels=levels)
 plt.close("all")
 
 fig = go.Figure()
 
 # Filled contour patches on the geographic map.
-# Plotly's fill='toself' fills the interior for polygons whose top edge touches
-# lat=60 (the data domain top), but fills the exterior for all other polygons.
-# Reversing the vertex order for non-top-touching polygons corrects the winding.
+# Plotly's geo fill='toself' picks the interior from the ring's winding order,
+# so every ring is normalised to clockwise (negative shoelace area).
 for i, segs in enumerate(cs_fill.allsegs):
     mid_val = (levels[i] + levels[i + 1]) / 2
-    r, g, b, _ = cmap(norm(mid_val))
-    fill_color = f"rgba({int(r * 255)},{int(g * 255)},{int(b * 255)},0.85)"
+    fill_color = sample_colorscale(SEQ_FIELDS, [(mid_val - T_MIN) / (T_MAX - T_MIN)])[0]
     for seg in segs:
         if len(seg) < 3:
             continue
-        seg = seg[::-1] if seg[:, 1].max() < 59.9 else seg
+        x, y = seg[:, 0], seg[:, 1]
+        signed_area = np.sum(x * np.roll(y, -1) - np.roll(x, -1) * y) / 2
+        seg = seg[::-1] if signed_area > 0 else seg
         fig.add_trace(
             go.Scattergeo(
                 lon=seg[:, 0].tolist(),
@@ -95,7 +99,7 @@ for i, segs in enumerate(cs_line.allsegs):
                 lon=seg[:, 0].tolist(),
                 lat=seg[:, 1].tolist(),
                 mode="lines",
-                line=dict(width=1, color=INK_SOFT),
+                line=dict(width=1.5, color=INK_SOFT),
                 showlegend=False,
                 hovertemplate=f"{level_val:.0f}°C<extra></extra>",
             )
@@ -117,7 +121,7 @@ for i, segs in enumerate(cs_line.allsegs):
                 lat=[float(seg[mid, 1])],
                 mode="text",
                 text=[f"{level_val:.0f}°C"],
-                textfont=dict(size=9, color=INK),
+                textfont=dict(size=12, color=INK),
                 showlegend=False,
                 hoverinfo="skip",
             )
@@ -131,13 +135,13 @@ fig.add_trace(
         mode="markers",
         marker=dict(
             color=[0],
-            colorscale="viridis",
+            colorscale=SEQ_FIELDS,
             cmin=T_MIN,
             cmax=T_MAX,
             showscale=True,
             colorbar=dict(
                 title=dict(text="Temperature (°C)", font=dict(size=12, color=INK)),
-                tickfont=dict(size=10, color=INK_SOFT),
+                tickfont=dict(size=12, color=INK_SOFT),
                 len=0.75,
                 thickness=20,
                 bgcolor=ELEVATED_BG,
@@ -183,23 +187,27 @@ fig.update_layout(
         xanchor="center",
     ),
     font=dict(color=INK),
-    margin=dict(l=40, r=120, t=80, b=40),
+    margin=dict(l=70, r=120, t=60, b=40),
     annotations=[
         dict(
-            x=0.12,
+            x=0.09,
             y=0.72,
             text="Newfoundland",
             showarrow=False,
-            font=dict(size=10, color=INK_SOFT),
+            font=dict(size=12, color=INK),
+            bgcolor=ELEVATED_BG,
+            borderpad=3,
             xref="paper",
             yref="paper",
         ),
         dict(
-            x=0.85,
-            y=0.68,
+            x=0.80,
+            y=0.62,
             text="Ireland",
             showarrow=False,
-            font=dict(size=10, color=INK_SOFT),
+            font=dict(size=12, color=INK),
+            bgcolor=ELEVATED_BG,
+            borderpad=3,
             xref="paper",
             yref="paper",
         ),
@@ -208,7 +216,9 @@ fig.update_layout(
             y=0.20,
             text="Azores",
             showarrow=False,
-            font=dict(size=10, color=INK_SOFT),
+            font=dict(size=12, color=INK),
+            bgcolor=ELEVATED_BG,
+            borderpad=3,
             xref="paper",
             yref="paper",
         ),
