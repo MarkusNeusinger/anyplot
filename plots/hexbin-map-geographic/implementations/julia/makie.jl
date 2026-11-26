@@ -1,7 +1,7 @@
 # anyplot.ai
 # hexbin-map-geographic: Hexagonal Binning Map
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-05-27
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 82/100 | Updated: 2026-11-26
 
 using CairoMakie
 using Colors
@@ -22,14 +22,16 @@ const GRID_COLOR  = THEME == "light" ?
 
 # Water fill and coastline colors for the geographic base map
 const WATER_FILL  = THEME == "light" ?
-    RGBAf(0.58f0, 0.75f0, 0.88f0, 0.32f0) :
-    RGBAf(0.18f0, 0.35f0, 0.56f0, 0.45f0)
+    RGBAf(0.58f0, 0.75f0, 0.88f0, 0.60f0) :
+    RGBAf(0.18f0, 0.35f0, 0.56f0, 0.70f0)
 const COAST_LINE  = THEME == "light" ?
-    RGBAf(0.27f0, 0.46f0, 0.63f0, 0.65f0) :
-    RGBAf(0.42f0, 0.62f0, 0.80f0, 0.52f0)
+    RGBAf(0.20f0, 0.38f0, 0.55f0, 0.95f0) :
+    RGBAf(0.50f0, 0.70f0, 0.88f0, 0.90f0)
 
-# Anyplot sequential colormap for density (single-polarity)
-const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
+# Imprint sequential ramp for density (fields: colored cells fill the map)
+const ANYPLOT_SEQ_FIELDS = THEME == "light" ?
+    cgrad([colorant"#66E2B2", colorant"#009E73", colorant"#4467A3", colorant"#002850"], [0.0, 0.368, 0.582, 1.0]) :
+    cgrad([colorant"#00573D", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.467, 1.0])
 
 # Data: synthetic bike-share ride starts in San Francisco
 cluster_centers = [
@@ -129,7 +131,8 @@ poly!(ax, pac_pts; color = WATER_FILL, strokecolor = COAST_LINE, strokewidth = 1
 # Hexagonal density map overlaid on base map
 hb = hexbin!(ax, lons, lats;
     cellsize    = 0.009,
-    colormap    = ANYPLOT_SEQ,
+    colormap    = ANYPLOT_SEQ_FIELDS,
+    alpha       = 0.82,
     threshold   = 1,
     strokecolor = PAGE_BG,
     strokewidth = 0.5,
