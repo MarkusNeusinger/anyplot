@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-26
@@ -120,7 +120,7 @@ for i, (ax, (name, tile)) in enumerate(zip(axes.flat, tiles, strict=False)):
         0.93,
         0.84,
         first[STATUS].upper(),
-        fontsize=6.5,
+        fontsize=8,
         fontweight="bold",
         color=INK_SOFT,
         ha="right",
