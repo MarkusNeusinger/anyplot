@@ -1,10 +1,11 @@
 """ anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-20
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 77/100 | Updated: 2026-11-26
 """
 
 import os
+from itertools import pairwise
 
 import numpy as np
 import pandas as pd
@@ -21,7 +22,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
-    scale_color_viridis,
+    scale_color_gradientn,
     scale_size,
     theme,
     theme_void,
@@ -40,7 +41,25 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 CONTINENT_FILL = "#E0DDD6" if THEME == "light" else "#2E2E2B"
 CONTINENT_BORDER = "#C8C5BE" if THEME == "light" else "#4A4A47"
-HUB_COLOR = "#4467A3"
+HUB_COLOR = INK
+
+# Imprint marks ramp for continuous flow volume, sampled at 256 even steps
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+FLOW_COLORS = [ramp_color(SEQ_MARKS, k / 255) for k in range(256)]
 
 # Data
 np.random.seed(42)
@@ -61,12 +80,12 @@ hubs = {
 label_offsets = {
     "Los Angeles": (-5, 4),
     "New York": (4, 2),
-    "London": (-20, 4),
-    "Rotterdam": (4, 2),
+    "London": (-26, 5),
+    "Rotterdam": (24, 7),
     "Dubai": (4, 2),
     "Singapore": (4, -5),
-    "Shanghai": (4, 2),
-    "Tokyo": (4, 2),
+    "Shanghai": (-4, -7),
+    "Tokyo": (6, 7),
     "Sydney": (4, -5),
     "Sao Paulo": (-14, -5),
 }
@@ -228,10 +247,10 @@ plot = (
         curvature=-0.3,
         alpha=0.6,
     )
-    + geom_point(data=df_hubs, mapping=aes(x="lon", y="lat"), size=7, color=HUB_COLOR, fill=HUB_COLOR)
+    + geom_point(data=df_hubs, mapping=aes(x="lon", y="lat"), size=5, color=HUB_COLOR, fill=HUB_COLOR)
     + geom_text(data=df_hubs, mapping=aes(x="label_lon", y="label_lat", label="name"), size=8, color=INK_SOFT)
     + scale_size(range=[1, 6], name="Trade Volume")
-    + scale_color_viridis(option="viridis", name="Trade Volume")
+    + scale_color_gradientn(colors=FLOW_COLORS, name="Trade Volume")
     + labs(title="flowmap-origin-destination · python · letsplot · anyplot.ai")
     + theme_void()
     + anyplot_theme

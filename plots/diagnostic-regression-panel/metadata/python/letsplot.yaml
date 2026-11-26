@@ -12,56 +12,60 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnosti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/letsplot/plot-dark.html
-quality_score: 70
+quality_score: 68
 review:
   strengths:
-  - gggrid composes the four ggplot panels into one 2x2 figure
-  - Consistent point styling across panels with Imprint positions 1-4 for points,
-    smoothers, reference and contours in both themes
-  - LOWESS smoothers follow their own points; Q-Q points at their computed quantiles
-  - Salary regression with injected influential observations gives every panel a diagnostic
-    signal
+  - LOWESS smoothers from statsmodels follow their points in the residual and scale-location
+    panels
+  - gggrid assembles the four panels in a 2x2 grid
+  - Consistent green point styling across all four panels
+  - Theme tokens give readable text in both themes
   weaknesses:
   - 'VQ-05 (both): canvas is 2700x1800, matching neither 3200x1800 nor 2400x2400 →
-    3200x1800 (+500 px width). Likely cause: ggsave scale=3 on the default gggrid
-    size instead of ggsize(800, 450) with scale=4.'
+    3200x1800 (+500 px width). Likely cause: ggsave scale=3 without ggsize(800, 450)
+    on the grid.'
   - 'VQ-05 (both): labels ''2'' (Residuals vs Fitted, Scale-Location) and ''14'' (Scale-Location)
-    are cut by the top panel frame, and the 24 pt panel titles dominate the panels
-    → keep labels inside the panel and bring panel titles to about 12 pt. Likely cause:
-    nudge_y without y-scale expansion; plot_title size=24.'
+    are cut by the top panel frames, and the 24 pt bold panel titles dominate the
+    panels → keep labels inside the panel with y-scale expansion and bring panel titles
+    to about 12 pt. Likely cause: nudge_y without expansion; plot_title size=24.'
   - 'VQ-02 (both): in the Normal Q-Q panel the ''14'' label sits on the reference
-    line and ''123'' touches the upper-tail points → place each label clear of line
-    and points. Likely cause: hard-coded nudge_y of +0.65/-0.55.'
-  - 'VQ-07 (both): the gggrid outer background (credit strip and gutters) is pure
-    white #FFFFFF, not #FAF8F1 / #1A1A17 → fill it with PAGE_BG. Likely cause: gggrid()
-    theme without plot_background.'
+    line, ''123'' touches the upper-tail points, and in Residuals vs Fitted the ''1''
+    label sits on the smoother → clear each label of lines and points. Likely cause:
+    hard-coded nudge_x/nudge_y offsets.'
+  - 'VQ-07 (both): the gggrid gutters and title strip are pure white #FFFFFF instead
+    of #FAF8F1 / #1A1A17 → fill the composite with PAGE_BG. Likely cause: gggrid()
+    without theme(plot_background=...).'
   - 'SC-04 (both): the figure title is a small muted subtitle ''diagnostic-regression-panel
-    · letsplot · anyplot.ai'', missing the ''python'' segment → a bold shared title
-    ''diagnostic-regression-panel · python · letsplot · anyplot.ai''. Likely cause:
-    labs(subtitle=CREDIT) on the grid.'
+    · letsplot · anyplot.ai'' missing the ''python'' segment → a shared title ''diagnostic-regression-panel
+    · python · letsplot · anyplot.ai''. Likely cause: labs(subtitle=CREDIT) on the
+    grid.'
   - 'SC-02 (both): the Q-Q panel labels observations 2, 14 and 123 (largest |std residual|)
-    instead of the top Cook''s distance observations 14, 2 and 1 labeled elsewhere
-    (C5) → label the same observations in every panel. Likely cause: abs_rank from
-    np.abs(sorted_std).'
-  - 'SC-02 (both): the Cook''s contours carry no level and only the D=0.5 pair is
-    visible (C4) → mark each with its level and show the D=1.0 pair. Likely cause:
-    anonymous dashed groups clipped at std_lim.'
-  - 'CQ-04 (code): lines 50-59 hand-roll the OLS fit, hat values, standardized residuals
+    instead of the top Cook''s distance observations 1, 2, 14 labelled elsewhere (C5)
+    → label the same observations in every panel. Likely cause: abs_rank from np.abs(sorted_std).'
+  - 'SC-02 (both): the Cook''s contours carry no level and only the D = 0.5 pair is
+    visible (C4) → label each contour with its level and extend the leverage range
+    so the D = 1 pair shows. Likely cause: anonymous dashed groups, h_seq ending at
+    1.25 × max leverage.'
+  - 'DQ-03 (both): fitted log(Salary) runs from about −9 to 16, a range no log salary
+    takes → generate the response on a realistic log scale. Likely cause: y = 3.0
+    + 2.0*x1 - 1.2*x2 + noise with outliers at 16 and 19.'
+  - 'CQ-04 (code): lines 47-59 hand-roll the OLS fit, hat values, standardized residuals
     and Cook''s distance → statsmodels OLS(y, X).fit().get_influence(). Likely cause:
     manual linear algebra.'
-  - 'Suggestion: dropping the axis lines would match the refined grid treatment.'
+  - 'Suggestion: smaller observation labels (geom_text size 4-5 instead of 12) would
+    sit more lightly on the panels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: panel backgrounds #FAF8F1; outer grid strip and gutters pure white. Canvas 2700x1800.
-      Chrome: small grey credit subtitle 'diagnostic-regression-panel · letsplot · anyplot.ai' top-left; large 24 pt bold panel titles; 20 pt axis titles, 16 pt ticks; all readable. Labels '2' and '14' cut by the top panel frame in panels 1 and 3.
-      Data: 150 #009E73 points at alpha 0.65; violet LOWESS; blue Q-Q line; ochre dashed D=0.5 Cook's contours (unlabeled); Q-Q labels 2/14/123, '14' on the reference line.
-      Legibility verdict: PASS
+      Background: panels on warm off-white #FAF8F1, but the gggrid gutters between panels and the title strip are pure white.
+      Chrome: small muted subtitle 'diagnostic-regression-panel · letsplot · anyplot.ai' at top-left; very large bold panel titles; dark axis titles and tick labels; subtle grid. Readable.
+      Data: green #009E73 points, purple LOWESS smoothers, blue Q-Q line, ochre dashed Cook's contours (only the D = 0.5 pair, unlabelled); large observation labels 1, 2, 14 (123 in the Q-Q panel); '2' and '14' cut by the top frames in panels 1 and 3.
+      Legibility verdict: PASS (text readable; white gutters are a palette defect)
 
     Dark render (plot-dark.png):
-      Background: panels #1A1A17; outer strip and gutters pure white, wrong-theme frame.
-      Chrome: panel titles, axis titles and ticks light ink, readable; grey credit readable on the white strip.
-      Data: colours identical to the light render.
-      Legibility verdict: PASS
+      Background: panels on warm near-black #1A1A17, separated by glaring pure-white gutters.
+      Chrome: light ink titles and ticks, muted grey subtitle; no dark-on-dark text.
+      Data: same colors as the light render; labels in light ink.
+      Legibility verdict: PASS (text readable; white gutters are a palette defect)
   criteria_checklist:
     visual_quality:
       score: 22
@@ -72,52 +76,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; the grey credit subtitle reads
-          on the white strip in both.
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: true
-        comment: In the Q-Q panel the '14' label sits on the reference line and '123'
-          touches the upper-tail points (defect line).
+        passed: false
+        comment: Q-Q '14' label on the reference line, '123' touching tail points,
+          '1' on the smoother in Residuals vs Fitted (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 points at size 3, alpha 0.65; smoothers, reference line and contours
-          visible in both themes.
+        comment: Points at size 3, alpha 0.65 suit 150 observations
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Green points, violet smoothers, blue reference, ochre contours:
-          CVD-safe, no red-green signal.'
+        comment: Distinct Imprint colors, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 0
         max: 4
         passed: false
-        comment: Canvas 2700x1800 matches neither canonical size (3200x1800 / 2400x2400);
-          oversized 24 pt panel titles and labels '2'/'14' cut by the top panel frame
-          (defect line).
+        comment: Canvas 2700x1800 matches neither canonical size; labels cut by panel
+          frames; oversized panel titles (defect lines)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis titles: Fitted log(Salary), Theoretical Quantiles,
-          √|Standardized Residuals|, Leverage (Hat Value).'
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Data colours Imprint 1-4 and panel backgrounds correct, but the gggrid
-          outer background (credit strip and gutters) is pure white in both renders,
-          wrong-theme in dark (defect line).
+        comment: gggrid gutters and title strip are pure white in both themes (defect
+          line)
     design_excellence:
       score: 8
       max: 20
@@ -126,23 +124,20 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: 'Style-guide baseline: theme tokens, explicit sizes, Imprint colours;
-          nothing beyond it.'
+        passed: false
+        comment: Style-guide baseline, nothing beyond
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Subtle grid, minor grid off, panel border off; the axis lines are
-          kept; nothing beyond the baseline.
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Displays the diagnostics; labels are the spec's requirement; no hierarchy
-          chosen beyond the Notes.
+        comment: Data displayed, no hierarchy beyond the Notes
     spec_compliance:
       score: 11
       max: 15
@@ -152,33 +147,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct four-plot regression diagnostic panel.
+        comment: Four-plot regression diagnostic panel
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
-        passed: true
-        comment: 'Missed C5: the Q-Q panel labels the three largest |std residuals|
-          (2, 14, 123) instead of the top Cook''s distance observations (14, 2, 1).
-          Missed C4: the contours carry no level and only the D=0.5 pair is visible,
-          so no contour is identifiable by its level (defect lines).'
+        passed: false
+        comment: 'C5 missed in Q-Q (labels 123 instead of the top Cook''s observations);
+          C4 missed: contours carry no level, D = 1 pair not visible (defect lines)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at their computed values; Q-Q points at their theoretical quantiles;
-          axes show all data.
+        comment: Marks at their data values
       - id: SC-04
         name: Title & Legend
         score: 1
         max: 3
         passed: false
-        comment: Figure title is a small muted subtitle 'diagnostic-regression-panel
-          · letsplot · anyplot.ai', missing the language segment and not a title (defect
-          line).
+        comment: Figure title is a small muted subtitle missing the 'python' segment
+          (defect line)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -186,21 +177,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows heteroscedasticity, non-linearity in the smoother, heavy tail
-          in Q-Q, and three high-leverage/high-Cook observations.
+        comment: Heteroscedasticity, heavy tail and influential points shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Salary regression on experience and education: neutral and plausible.'
+        comment: Neutral salary regression
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'Same data as checked: std residuals about -2.5..3.3, leverage up
-          to 0.13, contour D=0.5 at h≈0.1 ≈ 3.7.'
+        passed: false
+        comment: Fitted log(Salary) spans −9..16, not a plausible log salary (defect
+          line); residual and leverage scales consistent
     code_quality:
       score: 9
       max: 10
@@ -210,34 +200,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions.
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: true
-        comment: Lines 50-59 hand-roll OLS, hat values, standardized residuals and
-          Cook's distance that statsmodels OLS(...).fit().get_influence() computes
-          (defect line).
+        passed: false
+        comment: Hand-rolled OLS and influence measures (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with ggsave; current
-          API.
+        comment: Saves plot-{THEME}.png and .html; current API
     library_mastery:
       score: 5
       max: 10
@@ -246,18 +233,17 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: 'Standard ggplot grammar: geoms, labs, theme, ggsize, ggsave.'
+        passed: false
+        comment: Standard ggplot grammar
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: gggrid assembles the 2x2 with a shared title, a lets-plot-specific
-          composition feature; HTML output keeps native tooltips.
+        comment: gggrid composition; HTML tooltips
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
 impl_tags:
   dependencies:
   - scipy
