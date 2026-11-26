@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-ean13: EAN-13 Barcode
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Created: 2026-05-21
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
@@ -49,21 +49,25 @@ for d in digits[7:]:
     bits += R_CODE[d]
 bits += "101"  # end guard
 
-# Build per-bar data: 9-module quiet zones on each side (spec minimum) + barcode modules
-quiet_zone = [{"value": 1, "color": PAGE_BG}] * 9
-bar_data = (
-    quiet_zone
-    + [{"value": 1, "color": BAR_COLOR} if b == "1" else {"value": 1, "color": PAGE_BG} for b in bits]
-    + quiet_zone
-)
+# Plot: one stacked column per module. The body series rises above the baseline for a dark module;
+# the guard series hangs below it, so the three guard patterns reach down between the digit groups.
+QUIET = 9  # quiet-zone modules on each side (spec minimum)
+GUARD_MODULES = set(range(0, 3)) | set(range(45, 50)) | set(range(92, 95))
+modules = [0] * QUIET + [int(b) for b in bits] + [0] * QUIET
+body = [{"value": 6 if m else 0, "color": BAR_COLOR} for m in modules]
+guard = [
+    {"value": -0.9 if m and (i - QUIET) in GUARD_MODULES else 0, "color": BAR_COLOR} for i, m in enumerate(modules)
+]
 
-# EAN-13 digit grouping with structural annotation: GS1 prefix · manufacturer · product · check
-x_label = (
-    f"GS1 Prefix: {product_code[0:3]} (DE)"
-    f" · Mfr: {product_code[3:7]}"
-    f" · Product: {product_code[7:12]}"
-    f" · Check: {product_code[12]}"
-)
+# Human-readable digits: the first one in the left quiet zone, the rest centered under their 7-module group
+digit_labels = [""] * len(modules)
+digit_labels[QUIET - 5] = str(digits[0])
+for k, d in enumerate(digits[1:]):
+    group_start = QUIET + 3 + 7 * k if k < 6 else QUIET + 3 + 5 + 7 * k
+    digit_labels[group_start + 3] = str(d)
+
+# Caption: the left-half parity pattern chosen by the first digit, and the right half's fixed code
+x_label = f"Left half parity {parity_pattern} (set by first digit {digits[0]}) · right half R-code"
 title = "barcode-ean13 · python · pygal · anyplot.ai"
 
 # Chart style
@@ -73,24 +77,32 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(BAR_COLOR,),
+    colors=(BAR_COLOR, BAR_COLOR),
     title_font_size=66,
-    label_font_size=56,
-    major_label_font_size=44,
+    label_font_size=84,
+    major_label_font_size=84,
     legend_font_size=44,
     value_font_size=36,
     stroke_width=0,
+    opacity=1,
+    opacity_hover=1,
+    guide_stroke_color=PAGE_BG,
+    major_guide_stroke_color=PAGE_BG,
 )
 
 # Chart — landscape 3200×1800 (hard contract)
-chart = pygal.Bar(
+chart = pygal.StackedBar(
     width=3200,
     height=1800,
     style=custom_style,
     title=title,
     x_title=x_label,
     show_legend=False,
-    show_x_labels=False,
+    show_x_labels=True,
+    x_labels=digit_labels,
+    x_label_rotation=0,
+    show_minor_x_labels=True,
+    range=(-1.0, 6.0),
     show_y_labels=False,
     show_x_guides=False,
     show_y_guides=False,
@@ -98,7 +110,8 @@ chart = pygal.Bar(
     print_values=False,
 )
 
-chart.add("modules", bar_data)
+chart.add("bars", body)
+chart.add("guards", guard)
 
 # Save PNG and interactive HTML
 chart.render_to_png(f"plot-{THEME}.png")

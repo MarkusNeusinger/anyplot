@@ -2,51 +2,54 @@ library: pygal
 language: python
 specification_id: barcode-ean13
 created: '2026-05-21T02:09:42Z'
-updated: '2026-05-21T02:26:50Z'
+updated: '2026-11-26T12:00:58Z'
 generated_by: claude-sonnet
-workflow_run: 26200752358
+workflow_run: 45814892451
 issue: 3808
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 82
 review:
   strengths:
-  - Clean theme-adaptive monochrome barcode with proper ink-token contrast in both
-    light and dark renders
-  - 'Complete EAN-13 encoding: start guard (101), left-digit parity encoding, center
-    guard (01010), right digits, end guard (101) — 95 modules total'
-  - Correct 9-module quiet zones on both sides as required by spec
-  - Informative structural x-title annotation breaking down GS1 prefix, manufacturer,
-    product, and check digit
-  - Deterministic hardcoded barcode (4006381333931 German product) — fully reproducible
-  - Explicit font sizes set for all text elements; all readable in both themes
-  - Generates both PNG and interactive HTML outputs as required for pygal
-  - KISS code structure — no classes or functions, clean linear flow
+  - 'Correct EAN-13 encoding: start guard, LGLLGG parity for first digit 4, center
+    guard, R-code right half, end guard — 95 modules with 9-module quiet zones'
+  - Guard patterns hang below the baseline via a signed second StackedBar series,
+    so they stand out from the digit bars
+  - Human-readable digits below the symbol, first digit in the left quiet zone, the
+    others centered under their 7-module groups
+  - Solid ink bars at full opacity in strong contrast with the page in both themes
+  - Parity caption explains how the first digit selects the left-half encoding
+  - Interactive HTML output alongside the PNG
   weaknesses:
-  - 'Missing traditional EAN-13 human-readable digit display: spec requires individual
-    digits rendered below the barcode bars with the first digit positioned outside
-    the left guard — the x_title structural annotation is informative but does not
-    fulfill this requirement visually'
-  - Design storytelling limited to structural annotation; no visual hierarchy or emphasis
-    elements to guide the viewer through the barcode structure
-  - DE-01 aesthetic sophistication is functional but minimal — appropriate for a monochrome
-    barcode but leaves little room for design elevation
+  - 'SC-02 (both): adjacent dark modules are drawn as separate one-module columns
+    with a hairline gap between them, so 2-, 3- and 4-module bars (e.g. the runs in
+    the left half under digits 0 and 6) read as clusters of thin bars instead of solid
+    wide bars → each run of dark modules one solid bar of 2–4 module widths with no
+    internal gap. Likely cause: pygal''s per-bar margin between StackedBar columns;
+    merge consecutive dark modules or remove the bar spacing.'
+  - 'SC-02 (both): guard tails extend only 0.9 of 6 units below the baseline and stop
+    above the digit row, so they do not reach down between the digit groups as C4
+    describes → lengthen the guards (and raise the digit labels) so the tails reach
+    into the digit row between the groups. Likely cause: guard value -0.9 with the
+    digit labels placed as x labels below range=(-1, 6).'
+  - 'Suggestion: hide the thin y-axis rule at the left edge of the plot area, which
+    reads as a stray artifact in the bare barcode composition.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct light theme surface, no pure white.
-      Chrome: Title "barcode-ean13 · python · pygal · anyplot.ai" rendered in near-black at top (~65% canvas width), clearly readable. X-title "GS1 Prefix: 400 (DE) · Mfr: 6381 · Product: 33393 · Check: 1" at bottom in dark text, fully legible. No y-axis labels (intentionally hidden — correct for barcode).
-      Data: 113 bars total (9 quiet-zone modules + 95 barcode modules + 9 quiet-zone modules). Bar color is near-black (#1A1A17) against the warm off-white background. Structure is visually identifiable: dense start guard on far left, left-digit groups, a visible center guard gap, right-digit groups, end guard on far right. Varying apparent bar widths from consecutive same-polarity modules merging.
-      Legibility verdict: PASS — all chrome text readable; barcode bars high-contrast and clearly visible.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'barcode-ean13 · python · pygal · anyplot.ai' in dark ink at top; digit row '4  006381  333931' below the bars in large dark monospace; caption 'Left half parity LGLLGG (set by first digit 4) · right half R-code' at bottom; a thin gray y-axis rule at the left edge. All readable.
+      Data: near-black (#1A1A17) solid bars, 9-module quiet zones each side; start, center and end guards hang below the baseline; adjacent dark modules show hairline gaps between them.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface, no pure black.
-      Chrome: Title same text, now rendered in near-white (#F0EFE8), clearly readable against dark background. X-title also in light text at bottom, fully legible. No dark-on-dark failures detected.
-      Data: Bar colors correctly inverted to near-white (#F0EFE8) — identical barcode pattern as light render, just with swapped ink/background. Data content (bar pattern, structure) is identical between themes as required. Only chrome flipped.
-      Legibility verdict: PASS — no dark-on-dark issues; all text light and readable; barcode bars clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, digits and caption in light ink (#F0EFE8), all readable; no dark-on-dark text; faint y-axis rule at left.
+      Data: identical bar pattern in light ink #F0EFE8 (monochrome ink token flips with theme, as intended); guard tails below baseline; same hairline gaps between adjacent modules plus a faint seam at the baseline of the guard bars.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,81 +60,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44, value=36). Title and x_title readable at full resolution in both
-          themes. No proportional sizing issues.
+        comment: 'Title 66, digit labels 84 and caption set explicitly; all text readable
+          in both themes (dark ink on #FAF8F1, light ink on #1A1A17)'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements — barcode bars uniform, x_title and title
-          do not collide.
+        comment: 'No collisions: digits sit below the guard tails, the first digit
+          ''4'' clear in the left quiet zone, caption below the digit row'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Barcode bars clearly visible in both themes; near-black on off-white
-          (light) and near-white on near-black (dark) provide excellent contrast.
+        comment: Bars at full opacity (opacity=1) in INK, strongly visible in both
+          renders; no legend needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome barcode — maximum contrast, inherently CVD-safe.
+        comment: Monochrome ink on page background, maximum contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Barcode fills ~75% of canvas width and ~65% of canvas height. Quiet
-          zones present. Margin=80 provides generous whitespace. Canvas gate passed
-          (3200x1800 confirmed).
+        comment: Symbol fills about 77% of the width with quiet zones; title, digits
+          and caption fit; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x_title provides meaningful structural annotation (GS1 prefix, manufacturer,
-          product, check digit). Title in required format.
+        comment: Caption names the left-half parity pattern and right-half R-code
+          — reader text; title in the mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Monochrome bars are semantically correct for EAN-13 (barcodes must
-          be black/white). Background #FAF8F1 light / #1A1A17 dark confirmed. Chrome
-          tokens correctly theme-adaptive. Exception to Okabe-Ito rule is valid and
-          documented in code.'
+        comment: 'Bars use the ink token (monochrome barcode, no categorical series);
+          backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Clean minimal barcode execution — purposeful and professional. Theme
-          adaptation is elegant. Above configured defaults but inherently constrained
-          by barcode semantics.
+        passed: false
+        comment: 'Style-guide baseline: clean monospace typography, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: No grid, no y-labels, no x-ticks — maximum cleanliness. Proper quiet
-          zones. margin=80. Refined but no spine removal customization needed (bar
-          chart without axes).
+        passed: false
+        comment: No grid, no y labels — the spec's permitted bare chrome; a stray
+          y-axis rule remains at the left; nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Structural annotation in x_title provides context (GS1, manufacturer,
-          product, check). However, no visual hierarchy guides viewer through barcode
-          structure. Missing traditional digit display below barcode reduces storytelling.
+        passed: false
+        comment: The parity caption ties the left-half pattern to the first digit,
+          explaining how the symbol was built — a reading aid beyond the Notes (+1)
     spec_compliance:
       score: 13
       max: 15
@@ -141,57 +137,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EAN-13 barcode visualization using pygal.Bar with per-module
-          rendering.
+        comment: Correct EAN-13 barcode drawn as one column per module
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: 'Quiet zones (9 modules each side) ✓. Guard patterns (start 101,
-          center 01010, end 101) ✓. Parity encoding ✓. BUT: missing traditional human-readable
-          digit display below barcode with first digit outside left guard — spec explicitly
-          requires this.'
+        comment: 'Quiet zones, guards (101/01010/101), digits below with the first
+          outside the left guard, guards drawn longer: present. Missed: C2/C5 — adjacent
+          dark modules render as separate 1-module bars with hairline gaps, so 2–4-module
+          bars are not solid; C4 partly — guard tails stop above the digit row instead
+          of reaching down between the digit groups'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 4006381333931 correctly encoded with proper parity pattern for first
-          digit 4 (LGLLGG). All 95 modules correct.
+        comment: Every module sits at its position; digits centered under their 7-module
+          groups; encoding verified (parity LGLLGG for first digit 4)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'barcode-ean13 · python · pygal · anyplot.ai' — correct format.
-          No legend (show_legend=False) — correct for single series.
+        comment: Title 'barcode-ean13 · python · pygal · anyplot.ai' correct; no legend
+          needed (N/A)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows complete 95-module EAN-13 structure with all guard patterns
-          and digit encoding. Missing human-readable digit display reduces coverage
-          slightly.
+        comment: 'Whole symbol shown: quiet zones, three guards, both digit halves,
+          human-readable number'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 4006381333931 — real German product barcode. GS1 prefix 400 correctly
-          identified as DE. Neutral consumer product context.
+        comment: 4006381333931 — a real German (GS1 400) retail product code; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 13-digit EAN-13 with verified check digit. 95-module encoding is
-          structurally correct per GS1 standard.
+        comment: 'Check digit verified: weighted sum of the first 12 digits = 89 →
+          check digit 1, matches the 13th digit; 95 modules + 2×9 quiet modules'
     code_quality:
       score: 10
       max: 10
@@ -201,57 +195,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: sys.path fix → theme tokens → EAN-13 tables →
-          encoding → chart config → save.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — hardcoded barcode string, no random elements.
+        comment: Fully deterministic hard-coded code
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, pygal, pygal.style.Style — all used.
+        comment: os, sys, pygal, Style — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. sys.path manipulation is justified (avoids self-import
-          collision) and documented. EAN-13 encoding tables are clear and correct.
+        comment: Encoding tables and loops are proportionate; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html — correct for pygal
-          interactive library.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: 'Uses pygal.Bar with Style object, per-bar dict coloring {''value'':
-          1, ''color'': ...}, correct show_*_labels=False pattern. Idiomatic for pygal.'
+        passed: false
+        comment: StackedBar with a signed second series hanging below the baseline
+          for the guard tails, per-value dict colors and a full Style object — idiomatic
+          pygal composition (+1)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Per-bar color customization via dict format is a pygal-specific pattern.
-          Interactive HTML output is pygal's distinctive feature. Both leveraged here.
+        passed: false
+        comment: Interactive HTML export is mandated; nothing distinctive beyond it
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
+  rendered_at: '2026-11-26T11:57:28Z'
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - layer-composition
   patterns: []
   dataprep: []
   styling:
