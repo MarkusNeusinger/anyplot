@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: roc-curve
 created: '2025-12-26T17:39:54Z'
-updated: '2026-11-21T12:49:15Z'
+updated: '2026-11-26T10:17:58Z'
 generated_by: claude-sonnet
-workflow_run: 44905058235
+workflow_run: 45798799343
 issue: 2273
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,39 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 83
 review:
   strengths:
-  - Draws sklearn's exact operating points with geom_path, so the curves keep their
-    honest stair-step shape (C1)
-  - Dashed theme-adaptive neutral diagonal reads as the reference at a glance in both
+  - Draws sklearn's exact operating points with geom_path, so both curves keep their
+    honest stair-step shape from (0,0) to (1,1) (C1)
+  - Dashed theme-adaptive neutral diagonal reads as the random-classifier reference
+    at a glance in both themes (C2)
+  - AUC computed by sklearn.metrics.auc from the curves and carried in each legend
+    entry, merged from shared color and linetype scales (C3)
+  - coord_fixed on a square canvas with 0-1 limits gives a true 1:1 plot area, and
+    the one-panel gggrid paints the whole canvas in the page color as the library
+    prompt prescribes (C4)
+  - Grid drawn in the 15 % grid token at size 0.3, receding behind the curves in both
     themes
-  - Square 600x600 canvas with coord_fixed gives a true 1:1 plot area spanning 0-1
-    on both axes
-  - Color and linetype scales share breaks and title, producing one merged legend
-    that carries each AUC
-  - Concrete credit-default scenario with named models (gradient boosting vs logistic
-    model)
+  - Mappings and labels read only the column constants; concrete credit-default scenario
+    with named models
   weaknesses:
-  - 'Suggestion: the grid is drawn in opaque INK at size 0.2; a lighter grid (the
-    15 % grid token) would recede further behind the curves, especially in the light
-    render.'
+  - 'DE-02 (both): the panel is framed on all four sides although an ROC plot needs
+    no enclosing box → keep only the left and bottom axis lines (L-shaped frame).
+    Likely cause: the panel border lets-plot draws around the fixed-aspect panel;
+    set panel_border=element_blank() and keep axis_line for left and bottom.'
   - 'Suggestion: the legend key column shows a slightly different background patch
     than the elevated legend card; setting legend_key to the card fill would make
     it seamless.'
-  - 'Suggestion: the panel is framed on all four sides; dropping the top and right
-    edges would match the style guide''s L-shaped default.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
-      Chrome: title 'Credit Default Risk · roc-curve · python · letsplot · anyplot.ai' in dark ink top-left; axis titles 'False positive rate' / 'True positive rate' dark; tick labels 0-1 in steps of 0.1 in soft dark grey; thin dark grid; elevated legend card bottom-right titled 'Classifier'. All readable.
-      Data: Gradient boosting stair-step curve in #009E73 hugging the top-left corner (AUC 0.96), Logistic model in #C475FD (AUC 0.80), dashed grey random diagonal (AUC 0.50) corner to corner.
+      Background: warm off-white #FAF8F1 across the full 2400x2400 square canvas, edges included (no transparent strips).
+      Chrome: title 'Credit Default Risk · roc-curve · python · letsplot · anyplot.ai' in dark ink top-left (~75 % of width); axis titles 'False positive rate' / 'True positive rate' dark; ticks 0-1 in 0.1 steps in soft grey; subtle 15 % grid; panel framed on all four sides; elevated legend card bottom-right titled 'Classifier'. All text readable.
+      Data: Gradient boosting stair-step curve in #009E73 hugging the top-left corner (AUC = 0.96), Logistic model in #C475FD (AUC = 0.80), dashed grey random diagonal corner to corner (AUC = 0.50).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title and axis titles in light ink, ticks in light grey, thin light grid, legend card #242420 with light text. No dark-on-dark text.
-      Data: identical green and purple curves; dashed reference flips to light grey and stays visible.
+      Background: warm near-black #1A1A17 across the full canvas.
+      Chrome: title and axis titles in light ink, ticks light grey, subtle light grid, legend card #242420 with light text. No dark-on-dark text.
+      Data: identical #009E73 and #C475FD curves; dashed reference flips to light grey and stays clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -56,68 +58,65 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 14, axis titles 12, ticks and legend 10 pt, all above the lets-plot
-          references; readable in both themes
+        comment: Title 14, axis titles 12, ticks and legend 10 pt; readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits in the empty bottom-right corner below the diagonal;
-          no text collides with text or curves
+        comment: Legend in the empty bottom-right corner under the diagonal; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stair-step curves at size 1.6 clearly visible; legend line samples
-          match the curves, the dashed sample matches the reference
+        comment: Curves at size 1.6 clearly visible; legend samples match the curves
+          and the dashed reference
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs purple plus dashed neutral reference; distinguishable under
-          CVD
+        comment: Green vs purple plus dashed neutral; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas, square panel fills it, balanced axis titles,
-          no overflow
+        comment: Square panel fills the 2400x2400 canvas, balanced axis titles, no
+          overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''False positive rate'' / ''True positive rate'' taken from readable
-          column names'
+        comment: Readable rate labels (rates are unitless)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 first, #C475FD second, theme-adaptive neutral reference;
-          #FAF8F1 / #1A1A17 backgrounds, chrome flips correctly'
+        comment: '#009E73 first, #C475FD second, neutral reference; page color over
+          the whole canvas; 15 % grid token; chrome flips correctly'
     design_excellence:
-      score: 10
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Descriptive domain title prefix and a single merged color+linetype
-          legend with an elevated card; beyond baseline
+        comment: Style-guide baseline plus descriptive title prefix and elevated legend
+          card; nothing raising it further
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 1
         max: 6
         passed: false
-        comment: Legend moved inside the empty corner under the diagonal and expand
-          trimmed to 1 % so the panel uses the full square
+        comment: Subtle grid and legend in the empty corner, but all four panel sides
+          framed where nothing requires it (defect line)
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -139,21 +138,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: C1 stair-step operating points via geom_path, C2 dashed diagonal,
-          C3 AUC per legend entry, C4 coord_fixed square 0-1 axes, C5 colors + legend
+        comment: C1 operating points via geom_path, C2 dashed diagonal, C3 AUC in
+          legend, C4 coord_fixed 0-1, C5 colors + legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: FPR on x, TPR on y, sklearn operating points drawn in order, no smoothing
+        comment: FPR on x, TPR on y, unsmoothed, 0-1 axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: '''Credit Default Risk · roc-curve · python · letsplot · anyplot.ai'';
-          legend ''Classifier'' with readable entries'
+        comment: Correct title format with prefix; legend 'Classifier' with readable
+          entries
     data_quality:
       score: 15
       max: 15
@@ -163,22 +162,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Strong and moderate classifier against random baseline, multi-model
-          comparison
+        comment: Strong and moderate classifier against random baseline
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit-default scoring with gradient boosting vs logistic model;
-          neutral and plausible
+        comment: Credit-default scoring, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Rates in [0,1]; AUC computed by sklearn.metrics.auc from the curve
-          (0.96, 0.80), not typed
+        comment: Rates in [0,1]; AUC 0.96/0.80 computed by sklearn.metrics.auc, not
+          typed; checked against the curves' shapes
     code_quality:
       score: 10
       max: 10
@@ -188,13 +185,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Flat script; mappings and labs use the column constants
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.default_rng(42)
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -206,8 +203,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Uses sklearn roc_curve and auc instead of a hand-rolled threshold
-          loop
+        comment: sklearn roc_curve and auc instead of a hand-rolled threshold loop
       - id: CQ-05
         name: Output & API
         score: 1
@@ -222,24 +218,25 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: geom_path for ordered operating points, coord_fixed, manual color
-          and linetype scales sharing breaks and title so they merge into one legend
+        passed: true
+        comment: geom_path for ordered operating points, manual color and linetype
+          scales sharing breaks and title so they merge into one legend
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Inside legend via legend_position/justification fractions; HTML export
-          with native tooltips
+        comment: Inside legend via legend_position fractions; HTML export with native
+          tooltips
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
-  rendered_at: '2026-11-21T12:45:36Z'
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T10:14:29Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
+  - custom-legend
   - layer-composition
   - html-export
   patterns:
@@ -247,4 +244,4 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready

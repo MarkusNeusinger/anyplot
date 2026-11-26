@@ -1,13 +1,14 @@
 """ anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-20
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-26
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 
 
 # Theme tokens
@@ -17,6 +18,14 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential ramp for filled fields (low -> high)
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_FIELDS)
 
 # Data: Synthetic elevation data over European Alps
 np.random.seed(42)
@@ -58,23 +67,26 @@ borders = [
 
 # Notable peaks to annotate
 peaks = [
-    {"name": "Mont Blanc\n4808 m", "lon": 6.86, "lat": 45.83},
-    {"name": "Matterhorn\n4478 m", "lon": 7.66, "lat": 45.98},
-    {"name": "Großglockner\n3798 m", "lon": 12.69, "lat": 47.07},
+    {"name": "Mont Blanc\n4808 m", "lon": 6.86, "lat": 45.83, "dx": -0.1, "dy": -0.6},
+    {"name": "Matterhorn\n4478 m", "lon": 7.66, "lat": 45.98, "dx": -1.0, "dy": 0.8},
+    {"name": "Großglockner\n3798 m", "lon": 12.69, "lat": 47.07, "dx": 0.25, "dy": -0.5},
 ]
 
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Filled contours using terrain colormap
+# Filled contours using the Imprint sequential ramp
 levels = np.arange(0, 5000, 200)
-filled = ax.contourf(lon_grid, lat_grid, elevation, levels=levels, cmap="terrain", alpha=0.85, extend="max")
+filled = ax.contourf(lon_grid, lat_grid, elevation, levels=levels, cmap=imprint_seq, extend="max")
 
 # Contour lines every 500 m — heavier weight for high-res visibility
 line_levels = np.arange(500, 5000, 500)
 contour_lines = ax.contour(lon_grid, lat_grid, elevation, levels=line_levels, colors=INK, linewidths=2.0, alpha=0.45)
-ax.clabel(contour_lines, inline=True, fontsize=9, fmt="%d m", colors=INK_MUTED)
+labels = ax.clabel(contour_lines, inline=True, fontsize=9, fmt="%d m", colors=INK)
+for label in labels:
+    label.set_alpha(1.0)
+    label.set_bbox({"facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.8, "pad": 1.0})
 
 # Country border lines
 for border in borders:
@@ -86,14 +98,15 @@ for peak in peaks:
     ax.annotate(
         peak["name"],
         xy=(peak["lon"], peak["lat"]),
-        xytext=(peak["lon"] + 0.25, peak["lat"] - 0.35),
-        fontsize=7,
+        xytext=(peak["lon"] + peak["dx"], peak["lat"] + peak["dy"]),
+        fontsize=9,
         color=INK,
         fontweight="bold",
+        arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.6},
         bbox={
             "facecolor": ELEVATED_BG,
             "edgecolor": INK_SOFT,
-            "alpha": 0.85,
+            "alpha": 0.9,
             "boxstyle": "round,pad=0.2",
             "linewidth": 0.5,
         },
