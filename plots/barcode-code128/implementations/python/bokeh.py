@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-21
@@ -32,6 +32,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 ACCENT = "#009E73"  # Okabe-Ito green for structural zone annotations
 
+# Data: replace CONTENT to encode your own text (Code 128 Subset B, printable ASCII)
 # Code 128 B subset encoding (bar widths per character, 6 elements each)
 CODE128_B = {
     " ": [2, 1, 2, 2, 2, 2],
@@ -346,55 +347,39 @@ CHECKSUM_PATTERNS = [
 
 # Barcode content: shipping label example
 content = "SHIP-2024-ABC123"
-
-# Calculate checksum (needed before zone tracking for the annotation label)
-checksum = 104  # Start B value
-for i, char in enumerate(content):
-    checksum += CODE128_VALUES[char] * (i + 1)
-checksum = checksum % 103
-
-# Build bar positions with zone tracking for structural annotations
 quiet_zone = 10  # standard 10-module quiet zones on each side
+
+# Check character: weighted sum of symbol values, modulo 103
+checksum = (104 + sum(CODE128_VALUES[char] * (i + 1) for i, char in enumerate(content))) % 103
+
+# Symbol parts in reading order: (zone label, hover description, width pattern)
+parts = [
+    ("Start B", "Start Code B", START_B),
+    *[("Data Payload", f"'{char}'  (position {i + 1})", CODE128_B[char]) for i, char in enumerate(content)],
+    ("Check Digit", f"Check Digit  (value {checksum})", CHECKSUM_PATTERNS[checksum]),
+    ("Stop", "Stop Pattern", STOP),
+]
+
+# Walk the patterns: elements alternate bar, space, bar, ... starting with a bar
 x_pos = quiet_zone
-is_bar = True
 bar_lefts, bar_rights, bar_descs = [], [], []
-zones = []  # list of (label, x_start, x_end) for zone bracket annotations
-
-
-def _append_bars(widths, desc):
-    """Consume a pattern of widths, appending bars (not spaces) to the lists."""
-    global x_pos, is_bar
-    for w in widths:
-        if is_bar:
+zones = []  # (label, x_start, x_end) for the zone bracket annotations
+for zone_label, desc, widths in parts:
+    zone_start = x_pos
+    for k, w in enumerate(widths):
+        if k % 2 == 0:
             bar_lefts.append(x_pos)
             bar_rights.append(x_pos + w)
             bar_descs.append(desc)
         x_pos += w
-        is_bar = not is_bar
-
-
-# Zone: Start Code B
-zs = x_pos
-_append_bars(START_B, "Start Code B")
-zones.append(("Start B", zs, x_pos))
-
-# Zone: Data payload — each character tracked individually for HoverTool
-zs = x_pos
-for i, char in enumerate(content):
-    _append_bars(CODE128_B[char], f"'{char}'  (position {i + 1})")
-zones.append(("Data Payload", zs, x_pos))
-
-# Zone: Check digit
-zs = x_pos
-_append_bars(CHECKSUM_PATTERNS[checksum], f"Check Digit  (value {checksum})")
-zones.append(("Check Digit", zs, x_pos))
-
-# Zone: Stop
-zs = x_pos
-_append_bars(STOP, "Stop Pattern")
-zones.append(("Stop", zs, x_pos))
+    if zones and zones[-1][0] == zone_label:
+        zones[-1] = (zone_label, zones[-1][1], x_pos)
+    else:
+        zones.append((zone_label, zone_start, x_pos))
 
 total_modules = x_pos + quiet_zone
+
+# Plot: reads only the bar lists, zones and the constants above
 
 # Layout y-coordinates — expanded canvas to accommodate zone annotations above bars
 BAR_TOP = 570
@@ -490,11 +475,11 @@ p.add_layout(
     Label(
         x=total_modules / 2,
         y=SUBTITLE_Y,
-        text=f"Code 128 Subset B  ·  {len(content)} characters  ·  checksum: mod 103  ·  quiet zones: 10 modules",
+        text=f"Code 128 Subset B  ·  {len(content)} characters  ·  checksum: mod 103  ·  quiet zones: {quiet_zone} modules",
         text_align="center",
         text_baseline="bottom",
         text_font_size="22pt",
-        text_color=INK_SOFT,
+        text_color="#4A4A44",  # sits on the white label tile in both themes
     )
 )
 
