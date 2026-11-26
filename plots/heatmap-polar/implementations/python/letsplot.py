@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-22
 """
 
 import os
+from itertools import pairwise
 
 import numpy as np
 import pandas as pd
@@ -16,10 +17,11 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_tile,
+    gggrid,
     ggplot,
     ggsize,
     labs,
-    scale_fill_gradient,
+    scale_fill_gradientn,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -36,8 +38,23 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint palette: single-polarity sequential ramp for the continuous visit counts
-IMPRINT_SEQ = ["#009E73", "#4467A3"]
+# Imprint palette: single-polarity sequential ramp (fields stops, as colored cells fill the plot)
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
 
 # Constants
 LABEL_EVERY = 6  # hours between angular labels
@@ -100,7 +117,9 @@ plot = (
     ggplot(plot_df, aes(x="hour_mid", y="ring", fill=VISITS))
     + geom_tile(color=PAGE_BG, size=0.4)
     + coord_polar(theta="x")
-    + scale_fill_gradient(low=IMPRINT_SEQ[0], high=IMPRINT_SEQ[1], name=VISITS.replace(" ", "\n", 1))
+    + scale_fill_gradientn(
+        colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)], name=VISITS.replace(" ", "\n", 1)
+    )
     + scale_x_continuous(breaks=[h + 0.5 for h in label_hours], labels=hour_labels, limits=[0, n_hours], expand=[0, 0])
     + scale_y_continuous(
         breaks=list(range(1, len(day_order) + 1)), labels=day_order, limits=[0, len(day_order) + 0.5], expand=[0, 0]
@@ -109,6 +128,9 @@ plot = (
     + anyplot_theme
     + ggsize(600, 600)
 )
+
+# The polar aspect leaves the canvas edges transparent: a one-panel grid paints the page color
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
