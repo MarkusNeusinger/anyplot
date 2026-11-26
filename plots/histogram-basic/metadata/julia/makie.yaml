@@ -2,54 +2,44 @@ library: makie
 language: julia
 specification_id: histogram-basic
 created: '2026-05-28T07:44:36Z'
-updated: '2026-05-28T08:08:31Z'
+updated: '2026-11-26T18:47:00Z'
 generated_by: claude-sonnet
-workflow_run: 26561514622
+workflow_run: 45877801175
 issue: 654
-language_version: 1.11.9
-library_version: 0.22.10
+language_version: 1.13.4
+library_version: 0.24.16
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/julia/makie/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 84
 review:
   strengths:
-  - 'Perfect spec compliance: correct histogram type, all required features (clear
-    bin edges, y-axis from zero, readable labels), and descriptive axis labels'
-  - 'Excellent data choice: bimodal customer age distribution clearly illustrates
-    marketing segmentation — real-world business narrative'
-  - 'Full theme-adaptive implementation: all chrome tokens (INK, INK_SOFT, PAGE_BG)
-    explicitly applied to every axis element, ensuring readable text in both light
-    and dark renders'
-  - 'Clean, idiomatic CairoMakie code: hist!() high-level API, RGBAf for transparent
-    grid, fig[1,1] grid layout, all sizes explicitly set'
-  - 'Good storytelling additions: dashed reference line at valley (x=42) plus text
-    annotations labeling ''Young Adult Segment'' and ''Mid-Career Segment'' guide
-    the viewer to the key insight'
+  - Idiomatic hist! recipe with bins and PAGE_BG strokecolor keeps the 28 equal-width
+    bins contiguous and distinguishable in both themes
+  - Axis limits tuple (nothing, nothing, 0, nothing) pins the zero baseline while
+    the top stays data-driven
+  - 'Theme tokens threaded through every chrome element; text reads cleanly on #FAF8F1
+    and #1A1A17'
+  - Bimodal customer-age data shows two modes, a valley and tails, a realistic neutral
+    scenario
+  - 'Adaptable data block: column constant names the axis title with its unit, df
+    built from it'
   weaknesses:
-  - Segment annotation text (fontsize=12) is quite small relative to the canvas —
-    at the displayed scale the 'Young Adult Segment' and 'Mid-Career Segment' labels
-    are hard to read; increase annotation fontsize to 14-15 and consider using a slightly
-    bolder weight or INK (not INK_SOFT) for the dashed reference line to improve legibility
-  - 'Design excellence ceiling: the plot is clean and correct but stops short of publication-level
-    polish — consider adding a subtle semi-transparent fill or lighter density color
-    band behind each segment to visually reinforce the bimodal story without clutter'
-  - 'LM-02 gap: the implementation uses hist!() and basic primitives but does not
-    leverage any distinctively Makie-specific features (e.g., Makie Theme objects,
-    Band recipe, or interactive-capable composition patterns)'
+  - 'Suggestion: x ticks every 10 years (e.g. xticks = 20:10:70 derived from the data
+    range) would make bin positions easier to read off than the current 20/40/60.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot surface color, not pure white
-      Chrome: Title "histogram-basic · julia · makie · anyplot.ai" in dark ink, clearly visible at top center (~60% of plot width). X-axis label "Customer Age" and Y-axis label "Count" in dark ink, proportionally sized. Tick labels (20, 40, 60 on x; 0, 10, 20, 30 on y) in INK_SOFT (#4A4A44), readable. Subtle horizontal grid lines (y-only) at 15% opacity.
-      Data: Brand green (#009E73) histogram bars clearly visible. Bimodal distribution — left hump peaks ~35 count around age 25-28, valley around age 42, right hump peaks ~16 count around age 57-60. Thin white (PAGE_BG) bin separators visible between bars. Dashed reference line at x=42 in INK_SOFT. Text annotations "Young Adult Segment" and "Mid-Career Segment" in dark ink at fontsize=12 — present but small.
-      Legibility verdict: PASS — all primary text elements clearly readable; annotation text legible at full canvas resolution though small
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: bold title 'histogram-basic · julia · makie · anyplot.ai' in dark ink at top center (~30% width); axis titles 'Customer age (years)' and 'Count' in INK; ticks 20/40/60 and 0/10/20/30 in INK_SOFT; only faint horizontal grid; left and bottom spines only. All text readable.
+      Data: 28 contiguous #009E73 bars over ages 18-75 separated by thin page-colored edges; bimodal outline, tallest bar ~35 near age 26, valley ~3 near age 44, second mode ~16 near age 54, tail down to 2 near 74. Baseline at 0, no reference lines or annotations.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black
-      Chrome: Title in light #F0EFE8 ink clearly visible against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0, light gray) — all readable, no dark-on-dark failures. Grid lines subtle at 15% opacity of light ink.
-      Data: Histogram bars remain identical brand green (#009E73) — data colors unchanged from light render. Bin separators now use dark PAGE_BG for clean separation. Dashed reference line and text annotations use theme-flipped INK/INK_SOFT tokens.
-      Legibility verdict: PASS — no dark-on-dark failures; all text elements light-colored on dark background; data color identity preserved across themes
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title and axis titles in light #F0EFE8, ticks in #B8B7B0, faint light grid; no dark-on-dark text.
+      Data: identical #009E73 bars and bin counts as the light render; bin separators now in the dark page color and still distinguishable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -60,76 +50,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=22, xlabelsize/ylabelsize=14,
-          xticklabelsize/yticklabelsize=12); proportional and readable in both themes
+        comment: All sizes set explicitly (title 24, axis titles 20, ticks 17), above
+          the Makie reference 20/14/12; INK/INK_SOFT read clearly in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; widely spaced tick labels; annotations at
-          distinct positions
+        comment: No text collisions; tick labels widely spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars clearly visible with good height contrast; brand green
-          on both backgrounds
+        comment: 28 green bars clearly visible on both surfaces; PAGE_BG strokes separate
+          the bins
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single-series #009E73 with high contrast on both backgrounds; CVD-safe'
+        comment: 'Single #009E73 series with strong contrast on both backgrounds;
+          no color-only signal'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 confirmed; histogram fills canvas well with balanced margins;
-          no content cut off
+        comment: 3200x1800; bars fill the plot area with balanced margins; title ~30%
+          width, axis titles balanced; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Customer Age (descriptive), Count (appropriate for histogram y-axis);
-          title format correct
+        comment: '''Customer age (years)'' with unit and ''Count''; mandated title'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for single series; #FAF8F1 light / #1A1A17 dark
-          backgrounds; all chrome theme-adaptive'
+        comment: '#009E73 first series; #FAF8F1 / #1A1A17 backgrounds; theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Strong design: L-frame spines, intentional bimodal data choice,
-          annotations add narrative — clearly above defaults but not publication-level
-          polish'
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, L-frame; nothing
+          beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good refinement: top/right spines removed, y-grid only at 15% opacity,
-          bar stroke for bin definition, theme tokens throughout'
+        comment: 'Raised by one: x-grid switched off and only a faint y-grid kept,
+          a grid density chosen for a histogram where only counts are read off; bin
+          separators in the page color'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Good storytelling: bimodal distribution chosen to show customer
-          segmentation, dashed reference line at valley, text annotations labeling
-          segments guide viewer to insight'
+        comment: Data displayed with its bimodal shape; no hierarchy chosen beyond
+          the spec
     spec_compliance:
       score: 15
       max: 15
@@ -139,27 +127,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram using hist!() with proper bin structure
+        comment: Correct basic histogram via hist!; no reference lines, callouts or
+          extra encodings
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Clear bin edges (strokecolor=PAGE_BG), y-axis from 0 (ylims 0-52),
-          readable labels, appropriate bin count (28)
+        comment: Contiguous equal-width bins with thin visible edges (C1, C2), y from
+          zero (C1), 28 bins showing both modes and tails (C3), one color (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values on x-axis, count on y-axis; full age range 18-75 visible
+        comment: Ages on x, counts on y; y-axis from 0 via limits; round ticks 20/40/60
+          and 0-30 span the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'histogram-basic · julia · makie · anyplot.ai' matches required
-          format; no legend needed for single series
+        comment: Title 'histogram-basic · julia · makie · anyplot.ai' correct; single
+          series, legend N/A
     data_quality:
       score: 15
       max: 15
@@ -169,22 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Bimodal distribution shows all histogram features: distribution
-          shape, spread, multiple modes, valley between groups'
+        comment: Bimodal, slightly skewed outline with tails shows shape, spread and
+          two modes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer age distribution for marketing segmentation — real, neutral
-          business scenario
+        comment: 'Customer age demographics for segmentation: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ages 18-75 realistic; young adults centered at 28±5 and mid-career
-          at 55±8 — factually plausible
+        comment: Ages 18-75, modes at ~28 and ~55, n=350 within the 50-1000 range;
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -194,35 +183,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → seed → tokens → data → figure → save;
-          no functions or classes'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all three used
+        comment: CairoMakie, Colors, DataFrames, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic Julia; appropriate complexity; no over-engineering
+        comment: Concise; hist! computes the bins; nothing to remove
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2; current CairoMakie
+        comment: Saves plot-$(THEME).png at px_per_unit=2 with Figure(size=...), current
           API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -230,23 +218,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: hist!() high-level API, declarative Axis keyword configuration, fig[1,1]
-          layout, RGBAf color construction — very good idiomatic usage
+        comment: 'Raised by one: hist! recipe with bins/strokecolor, and the Axis
+          limits tuple (nothing, nothing, 0, nothing) pins the baseline while the
+          top stays data-driven'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: false
-        comment: strokecolor=PAGE_BG for bin separators and RGBAf component access
-          are somewhat Makie-specific; but nothing truly distinctive that couldn't
-          be done generically
+        passed: true
+        comment: Nothing distinctively Makie beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d9c138255d
+  rendered_at: '2026-11-26T18:43:49Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - annotations
+  techniques: []
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - edge-highlighting
+  - grid-styling
