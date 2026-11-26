@@ -1,7 +1,7 @@
 """anyplot.ai
 area-basic: Basic Area Chart
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-28
+Quality: pending | Updated: 2026-05-28
 """
 
 import os
