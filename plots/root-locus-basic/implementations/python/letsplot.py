@@ -1,7 +1,7 @@
 """ anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-06-18
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 78/100 | Updated: 2026-11-26
 """
 
 import os
@@ -27,72 +27,77 @@ GRID_RULE = "rgba(26,26,23,0.18)" if THEME == "light" else "rgba(240,239,232,0.1
 # Imprint categorical palette — hybrid-v3 canonical order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — G(s) = (s + 3) / [s(s+1)(s+2)(s+4)]
-# Open-loop poles: 0, −1, −2, −4 | Open-loop zero: −3
-den_coeffs = np.polymul(np.polymul([1, 0], [1, 1]), np.polymul([1, 2], [1, 4]))
+# Columns: set these to your table's column names
+REAL = "Real axis (σ)"  # role: real
+IMAGINARY = "Imaginary axis (jω)"  # role: imaginary
+GAIN = "Gain K"  # role: gain
+BRANCH = "Locus branch"  # role: branch
 
-open_loop_poles = np.array([0.0, -1.0, -2.0, -4.0])
-open_loop_zeros = np.array([-3.0])
+# Data: replace this block with your own table, for example df = pd.read_csv("locus.csv")
+# G(s) = (s + 3) / [s(s+1)(s+2)(s+4)] — characteristic polynomial den(s) + K·num(s), swept over K
+den_coeffs = np.polymul(np.polymul([1, 0], [1, 1]), np.polymul([1, 2], [1, 4]))
+num_coeffs = np.array([0, 0, 0, 1, 3])
 
 # Gain sweep: dense near origin to capture breakaway, sparser at high gain
 k_values = np.concatenate(
-    [np.linspace(0, 0.5, 200), np.linspace(0.5, 5, 400), np.linspace(5, 30, 400), np.linspace(30, 120, 400)]
+    [
+        np.linspace(0, 0.5, 200),
+        np.linspace(0.5, 5, 400),
+        np.linspace(5, 30, 400),
+        np.linspace(30, 120, 400),
+        np.linspace(120, 1000, 400),
+    ]
 )
 
-all_real, all_imag, all_gain, all_branch = [], [], [], []
+rows = []
 for k in k_values:
-    char_poly = np.polyadd(den_coeffs, k * np.array([0, 0, 0, 1, 3]))
-    roots = np.sort_complex(np.roots(char_poly))
-    for b, root in enumerate(roots):
-        all_real.append(root.real)
-        all_imag.append(root.imag)
-        all_gain.append(k)
-        all_branch.append(f"Branch {b + 1}")
+    roots = np.sort_complex(np.roots(np.polyadd(den_coeffs, k * num_coeffs)))
+    rows += [
+        {REAL: root.real, IMAGINARY: root.imag, GAIN: k, BRANCH: f"Branch {b + 1}"} for b, root in enumerate(roots)
+    ]
+df = pd.DataFrame(rows).round({REAL: 3, IMAGINARY: 3, GAIN: 2})
 
-df = pd.DataFrame({"real": all_real, "imaginary": all_imag, "gain": all_gain, "branch": all_branch})
+# Plot
+branches = list(dict.fromkeys(df[BRANCH]))
 
-# Pole and zero marker data
-poles_df = pd.DataFrame({"real": open_loop_poles, "imaginary": 0.0})
-zeros_df = pd.DataFrame({"real": open_loop_zeros, "imaginary": 0.0})
+# Open-loop poles are the roots at zero gain; at the highest gain the real root nearest the origin sits on the zero
+poles_df = df[df[GAIN] == df[GAIN].min()][[REAL, IMAGINARY]]
+final = df[(df[GAIN] == df[GAIN].max()) & (df[IMAGINARY] == 0)]
+zeros_df = pd.DataFrame({REAL: [final[REAL].max()], IMAGINARY: [0.0]})
 
 # Imaginary-axis stability crossings (real ≈ 0, nonzero imaginary part)
-crossing_mask = (np.abs(df["real"]) < 0.08) & (np.abs(df["imaginary"]) > 0.3)
-crossings = df[crossing_mask].copy()
-if len(crossings) > 0:
-    crossings = crossings.sort_values("imaginary")
-    crossing_pts = pd.concat(
-        [crossings[crossings["imaginary"] > 0].head(1), crossings[crossings["imaginary"] < 0].head(1)]
-    )
-else:
-    crossing_pts = pd.DataFrame(columns=df.columns)
+crossing_mask = (df[REAL].abs() < 0.08) & (df[IMAGINARY].abs() > 0.3)
+crossings = df[crossing_mask].sort_values(IMAGINARY)
+crossing_pts = pd.concat([crossings[crossings[IMAGINARY] > 0].head(1), crossings[crossings[IMAGINARY] < 0].head(1)])
 
 # Direction arrows at selected gain values
 arrow_gains = [5, 15, 50]
 arrow_rows = []
+k_values = np.sort(df[GAIN].unique())
 for ag in arrow_gains:
     idx = np.argmin(np.abs(k_values - ag))
-    subset = df[(df["gain"] >= k_values[max(0, idx - 1)]) & (df["gain"] <= k_values[min(len(k_values) - 1, idx + 1)])]
-    for _, row in subset.drop_duplicates(subset="branch").iterrows():
+    subset = df[(df[GAIN] >= k_values[max(0, idx - 1)]) & (df[GAIN] <= k_values[min(len(k_values) - 1, idx + 1)])]
+    for _, row in subset.drop_duplicates(subset=BRANCH).iterrows():
         k_next = k_values[min(len(k_values) - 1, idx + 5)]
-        next_pts = df[(np.abs(df["gain"] - k_next) < 1.0) & (df["branch"] == row["branch"])]
+        next_pts = df[(np.abs(df[GAIN] - k_next) < 1.0) & (df[BRANCH] == row[BRANCH])]
         if len(next_pts) > 0:
             npt = next_pts.iloc[0]
-            dx, dy = npt["real"] - row["real"], npt["imaginary"] - row["imaginary"]
+            dx, dy = npt[REAL] - row[REAL], npt[IMAGINARY] - row[IMAGINARY]
             mag = np.hypot(dx, dy)
             if mag > 0.01:
                 s = 0.25 / mag
                 arrow_rows.append(
-                    {
-                        "x": row["real"],
-                        "y": row["imaginary"],
-                        "xend": row["real"] + dx * s,
-                        "yend": row["imaginary"] + dy * s,
-                    }
+                    {"x": row[REAL], "y": row[IMAGINARY], "xend": row[REAL] + dx * s, "yend": row[IMAGINARY] + dy * s}
                 )
-arrows_df = pd.DataFrame(arrow_rows) if arrow_rows else pd.DataFrame(columns=["x", "y", "xend", "yend"])
+arrows_df = pd.DataFrame(arrow_rows, columns=["x", "y", "xend", "yend"])
+
+# Axis window and reference-grid extent follow the locus
+x_lo = poles_df[REAL].min() * 1.375
+x_hi = -x_lo * 7 / 11
+y_half = -x_lo * 9 / 11
+r_max = 5.8
 
 # Damping ratio guide lines (ζ = constant), radial from origin in LHP
-r_max = 5.8
 zeta_values = [0.2, 0.4, 0.6, 0.8]
 zeta_segs = []
 for z in zeta_values:
@@ -106,26 +111,21 @@ zeta_df = pd.DataFrame(zeta_segs)
 # Zeta labels — staggered radial distances to avoid crowding in upper LHP
 zeta_labels = pd.DataFrame(
     [
-        {
-            "x": -r_max * (0.36 + i * 0.14) * np.cos(np.arccos(z)),
-            "y": r_max * (0.36 + i * 0.14) * np.sin(np.arccos(z)),
-            "label": f"ζ={z}",
-        }
+        {"x": -r_max * (0.40 + i * 0.14) * z, "y": r_max * (0.40 + i * 0.14) * np.sqrt(1 - z**2), "label": f"ζ={z}"}
         for i, z in enumerate(zeta_values)
     ]
 )
 
 # Natural frequency arcs (ωn = constant semicircles, LHP only)
-wn_values = [1, 2, 3, 4]
 wn_rows = []
-for wn in wn_values:
+for wn in [1, 2, 3, 4]:
     theta = np.linspace(np.pi / 2, 3 * np.pi / 2, 120)
     wn_rows += [{"real": wn * np.cos(t), "imaginary": wn * np.sin(t), "wn": str(wn)} for t in theta]
 wn_df = pd.DataFrame(wn_rows)
 
 # Critical gain annotation at stability boundary
-crit_k = crossing_pts["gain"].iloc[0] if len(crossing_pts) > 0 else None
-crit_y = float(crossing_pts["imaginary"].max()) if len(crossing_pts) > 0 else 2.0
+crit_k = crossing_pts[GAIN].iloc[0] if len(crossing_pts) > 0 else None
+crit_y = float(crossing_pts[IMAGINARY].max()) if len(crossing_pts) > 0 else 2.0
 annot_df = pd.DataFrame(
     {"x": [0.2], "y": [crit_y + 0.45], "label": [f"K ≈ {crit_k:.1f}" if crit_k is not None else ""]}
 )
@@ -163,20 +163,17 @@ plot = (
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.4)  # noqa: F405
     # ── Locus branches (Imprint palette, interactive tooltips) ──────────
     + geom_path(  # noqa: F405
-        aes(x="real", y="imaginary", color="branch"),
+        aes(x=REAL, y=IMAGINARY, color=BRANCH),
         data=df,
-        size=2.0,
+        size=2.8,
         alpha=0.9,
         tooltips=layer_tooltips()  # noqa: F405
-        .format("gain", ".2f")
-        .format("real", ".3f")
-        .format("imaginary", ".3f")
-        .line("Branch @branch")
-        .line("K = @gain")
-        .line("Re = @real")
-        .line("Im = @imaginary"),
+        .line(f"@{{{BRANCH}}}")
+        .line(f"K = @{{{GAIN}}}")
+        .line(f"Re = @{{{REAL}}}")
+        .line(f"Im = @{{{IMAGINARY}}}"),
     )
-    + scale_color_manual(values=IMPRINT_PALETTE[:4], name="Locus branch")  # noqa: F405
+    + scale_color_manual(values=dict(zip(branches, IMPRINT_PALETTE, strict=False)), name=BRANCH)  # noqa: F405
     # ── Direction arrows (increasing gain) ─────────────────────────────
     + geom_segment(  # noqa: F405
         aes(x="x", y="y", xend="xend", yend="yend"),
@@ -189,41 +186,41 @@ plot = (
     )
     # ── Open-loop poles (×) and zero (○) ───────────────────────────────
     + geom_point(  # noqa: F405
-        aes(x="real", y="imaginary"),
+        aes(x=REAL, y=IMAGINARY),
         data=poles_df,
         shape=4,
         size=6,
         color=INK,
         stroke=2.0,
         inherit_aes=False,
-        tooltips=layer_tooltips().line("Pole: s = @real"),  # noqa: F405
+        tooltips=layer_tooltips().line(f"Pole: s = @{{{REAL}}}"),  # noqa: F405
     )
     + geom_point(  # noqa: F405
-        aes(x="real", y="imaginary"),
+        aes(x=REAL, y=IMAGINARY),
         data=zeros_df,
         shape=1,
         size=6,
         color=INK,
         stroke=2.0,
         inherit_aes=False,
-        tooltips=layer_tooltips().line("Zero: s = @real"),  # noqa: F405
+        tooltips=layer_tooltips().line(f"Zero: s = @{{{REAL}}}"),  # noqa: F405
     )
     # ── Stability-boundary crossings ────────────────────────────────────
     + geom_point(  # noqa: F405
-        aes(x="real", y="imaginary"),
+        aes(x=REAL, y=IMAGINARY),
         data=crossing_pts,
         shape=18,
         size=6,
         color=IMPRINT_PALETTE[4],
         inherit_aes=False,
-        tooltips=layer_tooltips().line("Stability boundary").line("K ≈ @gain"),  # noqa: F405
+        tooltips=layer_tooltips().line("Stability boundary").line(f"K ≈ @{{{GAIN}}}"),  # noqa: F405
     )
     # ── Text annotations ────────────────────────────────────────────────
     # Zeta labels — staggered for legibility
     + geom_text(  # noqa: F405
         aes(x="x", y="y", label="label"),
         data=zeta_labels,
-        size=3.5,
+        size=4.0,
         color=INK_MUTED,
         inherit_aes=False,
         family="monospace",
@@ -231,7 +228,7 @@ plot = (
     # Complex-plane axis symbols
     + geom_text(  # noqa: F405
         aes(x="x", y="y", label="label"),
-        data=pd.DataFrame({"x": [0.15], "y": [4.55], "label": ["jω"]}),
+        data=pd.DataFrame({"x": [0.15], "y": [3.95], "label": ["jω"]}),
         size=4.5,
         color=INK_MUTED,
         hjust=0,
@@ -281,20 +278,19 @@ plot = (
     )
     # ── Title, axis labels, layout ──────────────────────────────────────
     + labs(  # noqa: F405
-        x="Real axis (σ)",
-        y="Imaginary axis (jω)",
+        x=REAL,
+        y=IMAGINARY,
         title="root-locus-basic · python · letsplot · anyplot.ai",
         caption="G(s) = (s+3)/[s(s+1)(s+2)(s+4)]  ·  × = poles  ·  ○ = zero  ·  ◆ = stability crossing",
     )
     # Equal-axis scaling preserves geometry (circles stay circular)
-    + coord_fixed(ratio=1, xlim=[-5.5, 3.5], ylim=[-4.5, 4.5])  # noqa: F405
-    + ggsize(600, 600)  # noqa: F405  → 2400 × 2400 at scale=4 (square canvas)
+    + coord_fixed(ratio=1, xlim=[x_lo, x_hi], ylim=[-y_half, y_half])  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
         axis_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
         axis_title=element_text(size=12, color=INK, face="bold"),  # noqa: F405
         plot_title=element_text(size=16, color=INK, face="bold"),  # noqa: F405
-        plot_caption=element_text(size=9, color=INK_MUTED, face="italic"),  # noqa: F405
+        plot_caption=element_text(size=10, color=INK_MUTED, face="italic"),  # noqa: F405
         legend_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
         legend_title=element_text(size=11, color=INK, face="bold"),  # noqa: F405
         legend_position="right",
@@ -306,6 +302,13 @@ plot = (
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
         plot_margin=[20, 25, 15, 15],
     )
+)
+
+# The fixed aspect leaves canvas strips transparent: a one-panel grid paints the whole canvas
+plot = (
+    gggrid([plot])  # noqa: F405
+    + ggsize(600, 600)  # noqa: F405  → 2400 × 2400 at scale=4 (square canvas)
+    + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))  # noqa: F405
 )
 
 # Save PNG (scale=4 → 2400 × 2400) and interactive HTML
