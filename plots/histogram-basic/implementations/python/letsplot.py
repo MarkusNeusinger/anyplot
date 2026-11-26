@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-basic: Basic Histogram
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-26
@@ -70,7 +70,10 @@ plot = (
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
+        axis_line_x=element_line(color=INK_SOFT),
+        axis_line_y=element_line(color=INK_SOFT),
         plot_title=element_text(size=16, face="bold", color=INK),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
