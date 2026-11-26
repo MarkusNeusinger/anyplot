@@ -2,190 +2,197 @@ library: pygal
 language: python
 specification_id: map-projections
 created: '2026-01-20T02:52:02Z'
-updated: '2026-05-23T08:32:05Z'
+updated: '2026-11-26T13:10:47Z'
 generated_by: claude-sonnet
-workflow_run: 26327597261
+workflow_run: 45825592885
 issue: 3771
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 76
 review:
   strengths:
-  - Correct anyplot_seq palette (brand green to dark azure) with brand green as the
-    first/lowest zone
-  - 'Both light and dark themes render correctly with no chrome failures — backgrounds
-    #FAF8F1 and #1A1A17, text correctly adaptive'
-  - Creative and educationally valid use of Mercator distortion zones as choropleth
-    data — effective substitute given pygal's single-projection constraint
-  - Accurate geographic data with realistic distortion factors derived from sec²(latitude);
-    Greenland 14.3× is a memorable focal point
-  - Expert sys.path workaround prevents naming collision between pygal.py script and
-    installed pygal package
-  - Clean, flat code with deterministic data; all output files (plot-light.png, plot-dark.png,
-    plot-light.html, plot-dark.html) generated correctly
-  - Title and legend text correctly formatted and readable in both themes; legend
-    zone labels are descriptive with degree ranges and distortion multipliers
+  - Ordered distortion zones take discrete steps of the imprint_seq fields ramp with
+    each theme's own stops (mint→navy on light, dark green→pale periwinkle on dark),
+    in natural order with the legend in the same order
+  - Title prefix 'Mercator' names the projection, as the single-projection path of
+    the spec asks
+  - Native pygal_maps_world World choropleth with per-country hover values in the
+    HTML output
+  - 'Theme tokens threaded through pygal Style: chrome flips correctly, no dark-on-dark
+    text'
+  - Tidy df with role constants and a ramp_color helper make the data block replaceable
   weaknesses:
-  - 'Missing graticule (latitude/longitude grid lines at regular intervals): the spec
-    explicitly requires these in the Notes section — pygal_maps_world has no graticule
-    API, but even a subtitle or text annotation indicating zone latitude boundaries
-    would partially address this gap'
-  - 'Single projection only (Mercator): the spec''s primary intent is to compare multiple
-    projections; while the single-projection path is explicitly allowed, a more spec-faithful
-    approach would incorporate Cartopy or basemap for alternative projection panels
-    alongside the pygal world map'
+  - 'VQ-03, SC-04 (both): pygal_maps_world scales each country''s fill opacity by
+    its value inside its series, so the lowest country of a zone washes out and no
+    longer matches its legend swatch (light: Russia 3.5x reads pale grey-blue beside
+    the navy ''60°+'' swatch and lighter than the US at 1.9x; India and Australia
+    read paler than their steps) → every country of a zone in its zone''s full color,
+    as its swatch shows. Likely cause: each zone added with its distortion values
+    as the dict values instead of one constant value per zone.'
+  - 'SC-02 (both): no graticule — the C2 bullet and the Notes ask for latitude/longitude
+    lines at regular intervals, transformed by the projection and lighter than the
+    coastlines → draw meridians and parallels every 30°. Likely cause: pygal_maps_world
+    World has no graticule layer; none added.'
+  - 'SC-02, DQ-01 (both): only about 100 of the ~200 countries carry a value; the
+    rest (Libya, Central America, Uruguay, Zimbabwe, Kyrgyzstan, …) render blank,
+    white on the light page and page-colored on the dark one, so that land is not
+    set apart from sea (C1) → a value for every country of the world dataset. Likely
+    cause: the hand-typed country_distortion dict.'
+  - 'DQ-03 (code): the factors are typed by hand and do not follow the sec^2(latitude)
+    the comment states: Norway 2.8 (65°N → 5.6, −2.8), Finland 2.4 (64°N → 5.2, −2.8),
+    Canada 3.0 (60°N → 4.0, −1.0), US 1.9 (38°N → 1.61, +0.29); the legend bounds
+    disagree too (30°–60° gives 1.33–4.0x, not 1.2–2.4x) → compute each factor as
+    1/cos²(latitude) from a latitude column and derive the zone bounds from the same
+    formula. Likely cause: literal values in the data dict and ZONE_LABELS.'
+  - 'Suggestion: the legend entries never say what the ''x'' measures; a subtitle
+    such as ''area exaggeration vs true size'' would make the zones self-explanatory.'
+  - 'Suggestion: the Tissot indicatrices the Notes allow would show the distortion
+    geometrically, not only by color.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "map-projections · python · pygal · anyplot.ai" centered at top in dark ink, clearly readable; legend at bottom in 4 columns with zone labels, readable; no axis labels (appropriate for world map)
-      Data: Four sequential zones — brand green #009E73 (equatorial <1.1×), teal-cyan #007E7E (subtropical 1.1–1.2×), medium blue #005D89 (temperate 1.2–2.4×), dark azure #003D94 (polar ≥2.4×); country borders as subtle white lines; map fills most of canvas with good margins
-      Legibility verdict: PASS — all title and legend text clearly readable against warm off-white background; no light-on-light issues
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'Mercator · map-projections · python · pygal · anyplot.ai' centered at the top in dark ink; legend of four zones across the bottom ('0°–15° · <1.1×' … '60°+ · ≥2.4×') in dark ink; dark grey country outlines; no axes. All readable.
+      Data: pygal world map (Mercator-like, Antarctica stretched along the bottom). Countries filled in four imprint_seq field steps: mint (equatorial South America, Central Africa, SE Asia), green (Egypt, Arabia, southern Africa), slate blue (US, Europe, Kazakhstan), navy (Greenland). Per-value opacity washes the lowest country of each zone out: Russia and Canada pale grey-blue, India/Mexico/Sahel pale mint, Australia and China pale grey, so these no longer match their swatches. About half the countries (Libya, Central America, Uruguay, Kyrgyzstan) are blank white, nearly indistinguishable from the sea. No graticule.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title and legend text rendered in off-white/cream, fully readable against dark background; country borders visible as lighter gray-white lines; no dark-on-dark failures
-      Data: Country zone colors are identical to light render — brand green, teal, blue, dark azure all clearly visible against dark background; brand green #009E73 maintains good contrast on dark surface
-      Legibility verdict: PASS — all text readable; no "dark on dark" issues observed; data colors unchanged between renders confirming only chrome flipped
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title and legend in light ink, light grey country outlines; no dark-on-dark text.
+      Data: same layout; zone steps use the dark stops (dark green → green → grey-teal → pale periwinkle Greenland), as an ordered ramp should. Russia/Canada appear muted grey-lavender, Australia/China dark grey-teal (opacity scaling); countries without a value are page-colored and read as sea except for their outlines. No graticule.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title and legend readable in both themes; legend items could be slightly
-          larger at mobile widths but acceptable
+        comment: Title (66) and legend (44) explicitly sized and readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements; legend columns cleanly spaced
+        comment: No text collisions; legend entries spaced in four columns
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: All country zones clearly colored and distinguishable; map fills
-          canvas well
+        passed: false
+        comment: pygal's per-value fill opacity inside each zone makes fills stop
+          matching the legend swatches (Russia, India, Australia) (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot_seq green to azure is CVD-safe; sequential progression discriminable
-          under common color vision deficiencies
+        comment: Sequential green-to-blue steps, lightness-ordered, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good proportions and margins
+        comment: Map fills the 3200x1800 canvas; legend fits along the bottom
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted; no axis labels needed for world map
+        comment: N/A for axes on a world map; title names the projection
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First zone = #009E73; valid anyplot_seq interpolations; backgrounds
-          #FAF8F1/#1A1A17 correct'
+        comment: 'Ordered zones take steps 0.1/0.4/0.7/1.0 of the imprint_seq fields
+          ramp with each theme''s stops; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Creative distortion-zone choropleth approach; sequential palette
-          reinforces latitude-distortion narrative; limited by pygal world map rendering
-          constraints
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Clean map, minimal clutter; limited customization available in pygal
-          world map renderer
+        passed: false
+        comment: Baseline refinement; library-default borders and legend layout
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Green-to-blue progression reads as low-to-high distortion; zone labels
-          with multipliers add quantitative context; Greenland as visible outlier
-          creates memorable focal point
+        passed: false
+        comment: Own choice to encode Mercator area exaggeration by latitude zone,
+          making the inflated poles (Greenland at the ramp's end) the focal point
     spec_compliance:
       score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: World choropleth map correct; spec allows single projection path;
-          comparison-of-projections aspect absent
+        comment: World map in a single projection, which the Notes allow
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: Missing graticule (lat/lon grid lines — explicitly required in spec
-          Notes); Tissot indicatrices absent (optional); distortion zone coloring
-          is valid creative substitute
+        comment: C3 met (title names Mercator); C2 graticule missing; C1 missed for
+          about half the countries, which are blank land indistinguishable from sea
+          (defect lines)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Countries correctly assigned to distortion zones; latitude-based
-          factors accurate
+        comment: Countries carry their own values; no displaced marks
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title map-projections · python · pygal · anyplot.ai correct; legend
-          labels descriptive with degree ranges and distortion multipliers
+        passed: false
+        comment: Title format correct; legend swatches do not match the opacity-scaled
+          fills (defect line)
     data_quality:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: ~100 countries across 4 latitudinal zones; good global coverage;
-          limited by single-projection approach
+        passed: false
+        comment: About 100 of the ~200 countries the Data section asks for carry a
+          value (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mercator distortion factors derived from sec²(latitude); values geographically
-          accurate; neutral educational context
+        comment: Neutral educational cartography scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Scale from 1.0 (equatorial) to 14.3 (Greenland) is accurate; zone
-          thresholds at sensible cartographic breakpoints
+        passed: false
+        comment: 'Checked the hard-coded factors against the code comment''s sec^2(latitude):
+          Norway 2.8 vs 5.6, Finland 2.4 vs 5.2, Canada 3.0 vs 4.0; zone bound 30°-60°
+          = 1.33-4.0x, not 1.2-2.4x (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -195,57 +202,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script; zone categorization via dict comprehensions is clean
+        comment: Flat script; ramp_color is the helper the library prompt prescribes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; all country distortion values hardcoded
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, pygal.style.Style, pygal_maps_world.maps.World — all imports
-          used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Thoughtful sys.path manipulation to prevent naming conflict; zone
-          dict comprehensions clear
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct use of pygal_maps_world with pygal Style system; legend_at_bottom
-          with columns is idiomatic; sys.path workaround is expert-level
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: pygal-maps-world world choropleth is distinctive to this ecosystem;
-          interactive HTML output leverages pygal's primary strength
+        passed: false
+        comment: pygal_maps_world World with Style and series per zone; baseline
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: pygal-maps-world choropleth with per-country hover values in the
+          HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
+  rendered_at: '2026-11-26T13:06:28Z'
 impl_tags:
-  dependencies:
-  - pygal-maps-world
+  dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
-  patterns: []
-  dataprep: []
-  styling: []
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - minimal-chrome
