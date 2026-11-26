@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-20
@@ -19,9 +19,35 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 MAP_FILL = "#D8D6CE" if THEME == "light" else "#2D2D2A"
 
-# Data: Migration flows between major European cities
-np.random.seed(42)
+# Imprint palette: position 1 colors the city markers
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
+# Imprint sequential ramp for marks (colored lines on the page), low -> high flow
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+# Constants
+ARC_POINTS = 50  # vertices per Bezier arc
+ARC_BEND = 0.3  # control-point offset as a share of the origin-destination vector
+MIN_WIDTH, MAX_WIDTH = 0.5, 6.0  # arc stroke widths for the smallest and largest flow
+LABEL_OFFSET = {"London": (-15, -14), "Paris": (-12, -14), "Amsterdam": (14, -14), "Brussels": (16, 12)}
+DEFAULT_LABEL_OFFSET = (0, -14)  # label above its marker unless the dense cluster needs a nudge
+
+# Columns: set these to your table's column names
+ORIGIN = "Origin"  # role: origin_name
+DEST = "Destination"  # role: dest_name
+ORIGIN_LAT = "Origin latitude"  # role: origin_lat
+ORIGIN_LON = "Origin longitude"  # role: origin_lon
+DEST_LAT = "Destination latitude"  # role: dest_lat
+DEST_LON = "Destination longitude"  # role: dest_lon
+FLOW = "Flow volume"  # role: flow
+
+# Data: replace this block with your own table, for example df = pd.read_csv("flows.csv")
+# Migration flows between major European cities
+np.random.seed(42)
 cities = {
     "London": (51.5074, -0.1278),
     "Paris": (48.8566, 2.3522),
@@ -34,143 +60,132 @@ cities = {
     "Lisbon": (38.7223, -9.1393),
     "Dublin": (53.3498, -6.2603),
 }
-
-flows = []
-city_names = list(cities.keys())
-hub_cities = ["London", "Paris", "Berlin"]
-
-for hub in hub_cities:
-    for dest in city_names:
-        if hub != dest:
-            flows.append(
-                {
-                    "origin": hub,
-                    "origin_lat": cities[hub][0],
-                    "origin_lon": cities[hub][1],
-                    "dest": dest,
-                    "dest_lat": cities[dest][0],
-                    "dest_lon": cities[dest][1],
-                    "flow": np.random.randint(5000, 50000),
-                }
-            )
-
-for origin in ["Madrid", "Rome", "Amsterdam"]:
-    for dest in hub_cities:
-        flows.append(
-            {
-                "origin": origin,
-                "origin_lat": cities[origin][0],
-                "origin_lon": cities[origin][1],
-                "dest": dest,
-                "dest_lat": cities[dest][0],
-                "dest_lon": cities[dest][1],
-                "flow": np.random.randint(2000, 20000),
-            }
-        )
-
-df_flows = pd.DataFrame(flows)
-df_cities = pd.DataFrame([{"city": n, "lat": c[0], "lon": c[1]} for n, c in cities.items()])
-
-# Generate Bezier arc paths; forward/reverse pairs curve in opposite directions
-# to reduce overlap in dense corridors like London–Paris–Berlin
-arc_data = []
-for _, row in df_flows.iterrows():
-    n_points = 50
-    t = np.linspace(0, 1, n_points)
-    x0, y0 = row["origin_lon"], row["origin_lat"]
-    x1, y1 = row["dest_lon"], row["dest_lat"]
-    mid_x, mid_y = (x0 + x1) / 2, (y0 + y1) / 2
-    dx, dy = x1 - x0, y1 - y0
-
-    # Deterministic sign: alphabetically first city curves one way, reverse curves other
-    sign = 1 if sorted([row["origin"], row["dest"]])[0] == row["origin"] else -1
-    ctrl_x = mid_x - dy * 0.3 * sign
-    ctrl_y = mid_y + dx * 0.3 * sign
-
-    x_c = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * ctrl_x + t**2 * x1
-    y_c = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * ctrl_y + t**2 * y1
-
-    fid = f"{row['origin']}-{row['dest']}"
-    for j in range(n_points):
-        arc_data.append(
-            {
-                "flow_id": fid,
-                "order": j,
-                "lon": x_c[j],
-                "lat": y_c[j],
-                "flow": row["flow"],
-                "origin": row["origin"],
-                "dest": row["dest"],
-            }
-        )
-
-df_arcs = pd.DataFrame(arc_data)
-max_flow, min_flow = df_flows["flow"].max(), df_flows["flow"].min()
-df_arcs["stroke_width"] = 0.5 + 5.5 * (df_arcs["flow"] - min_flow) / (max_flow - min_flow)
-
-# Per-city label groups to avoid crowding in the dense London/Paris/Brussels/Amsterdam cluster
-# Brussels placed below its dot; London/Paris/Amsterdam offset horizontally
-dense_cities = {"London", "Paris", "Amsterdam", "Brussels"}
-df_labels_normal = df_cities[~df_cities["city"].isin(dense_cities)]
-df_london = df_cities[df_cities["city"] == "London"]
-df_paris = df_cities[df_cities["city"] == "Paris"]
-df_amsterdam = df_cities[df_cities["city"] == "Amsterdam"]
-df_brussels = df_cities[df_cities["city"] == "Brussels"]
-
-# Plot — geographic projection centered on Europe, tightened to fill canvas
-world_url = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
-world = alt.topo_feature(world_url, "countries")
-proj = {"type": "mercator", "scale": 440, "center": [6, 49], "clipExtent": [[0, 0], [800, 450]]}
-
-base = (
-    alt.Chart(world)
-    .mark_geoshape(fill=MAP_FILL, stroke=PAGE_BG, strokeWidth=0.5)
-    .project(**proj)
-    .properties(width=800, height=450)
+hubs = ["London", "Paris", "Berlin"]
+pairs = [(hub, dest, np.random.randint(5000, 50000)) for hub in hubs for dest in cities if dest != hub]
+pairs += [(origin, hub, np.random.randint(2000, 20000)) for origin in ["Madrid", "Rome", "Amsterdam"] for hub in hubs]
+df = pd.DataFrame(
+    {
+        ORIGIN: [p[0] for p in pairs],
+        DEST: [p[1] for p in pairs],
+        ORIGIN_LAT: [cities[p[0]][0] for p in pairs],
+        ORIGIN_LON: [cities[p[0]][1] for p in pairs],
+        DEST_LAT: [cities[p[1]][0] for p in pairs],
+        DEST_LON: [cities[p[1]][1] for p in pairs],
+        FLOW: [p[2] for p in pairs],
+    }
 )
 
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+flow_min, flow_max = df[FLOW].min(), df[FLOW].max()
+
+# Bezier arc per flow; a pair's two directions bend opposite ways so the corridors separate
+t = np.linspace(0, 1, ARC_POINTS)
+arc_rows = []
+for _, row in df.iterrows():
+    x0, y0, x1, y1 = row[ORIGIN_LON], row[ORIGIN_LAT], row[DEST_LON], row[DEST_LAT]
+    origin, dest, flow = row[ORIGIN], row[DEST], row[FLOW]
+    sign = 1 if origin < dest else -1
+    ctrl_x = (x0 + x1) / 2 - (y1 - y0) * ARC_BEND * sign
+    ctrl_y = (y0 + y1) / 2 + (x1 - x0) * ARC_BEND * sign
+    arc = pd.DataFrame(
+        {
+            "flow_id": f"{origin}-{dest}",
+            "order": np.arange(ARC_POINTS),
+            "lon": (1 - t) ** 2 * x0 + 2 * (1 - t) * t * ctrl_x + t**2 * x1,
+            "lat": (1 - t) ** 2 * y0 + 2 * (1 - t) * t * ctrl_y + t**2 * y1,
+            ORIGIN: origin,
+            DEST: dest,
+            FLOW: flow,
+        }
+    )
+    arc_rows.append(arc)
+arcs_df = pd.concat(arc_rows, ignore_index=True)
+span = max(flow_max - flow_min, 1)
+arcs_df["stroke_width"] = MIN_WIDTH + (MAX_WIDTH - MIN_WIDTH) * (arcs_df[FLOW] - flow_min) / span
+
+# One row per city, with its label offset
+cities_df = (
+    pd.concat(
+        [
+            df[[ORIGIN, ORIGIN_LAT, ORIGIN_LON]].set_axis(["city", "lat", "lon"], axis=1),
+            df[[DEST, DEST_LAT, DEST_LON]].set_axis(["city", "lat", "lon"], axis=1),
+        ]
+    )
+    .drop_duplicates("city")
+    .reset_index(drop=True)
+)
+offsets = cities_df["city"].map(lambda c: LABEL_OFFSET.get(c, DEFAULT_LABEL_OFFSET))
+cities_df["dx"] = [o[0] for o in offsets]
+cities_df["dy"] = [o[1] for o in offsets]
+
+# Geographic projection centered on Europe
+world = alt.topo_feature("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json", "countries")
+proj = {"type": "mercator", "scale": 700, "center": [4.5, 47.5]}
+
+base = alt.Chart(world).mark_geoshape(fill=MAP_FILL, stroke=PAGE_BG, strokeWidth=0.5).project(**proj)
+
 arcs = (
-    alt.Chart(df_arcs)
+    alt.Chart(arcs_df)
     .mark_line(opacity=0.65, strokeCap="round")
     .encode(
-        longitude="lon:Q",
-        latitude="lat:Q",
-        detail="flow_id:N",
-        order="order:O",
-        strokeWidth=alt.StrokeWidth("stroke_width:Q", scale=None, legend=None),
+        longitude=alt.Longitude("lon", type="quantitative"),
+        latitude=alt.Latitude("lat", type="quantitative"),
+        detail=alt.Detail("flow_id", type="nominal"),
+        order=alt.Order("order", type="ordinal"),
+        strokeWidth=alt.StrokeWidth("stroke_width", type="quantitative", scale=None, legend=None),
         color=alt.Color(
-            "flow:Q",
-            scale=alt.Scale(scheme="blues", domain=[min_flow, max_flow]),
-            legend=alt.Legend(title="Flow Volume", titleFontSize=14, labelFontSize=12, orient="bottom-left", offset=10),
+            FLOW.translate(ESCAPE),
+            type="quantitative",
+            title=FLOW,
+            scale=alt.Scale(
+                domain=[flow_min + p * (flow_max - flow_min) for p, _ in SEQ_MARKS],
+                range=[c for _, c in SEQ_MARKS],
+                interpolate="rgb",
+            ),
+            legend=alt.Legend(orient="bottom-right", offset=10, format=",.0f"),
         ),
-        tooltip=["origin:N", "dest:N", "flow:Q"],
+        tooltip=[
+            alt.Tooltip(ORIGIN.translate(ESCAPE), type="nominal", title=ORIGIN),
+            alt.Tooltip(DEST.translate(ESCAPE), type="nominal", title=DEST),
+            alt.Tooltip(FLOW.translate(ESCAPE), type="quantitative", title=FLOW, format=",.0f"),
+        ],
     )
     .project(**proj)
 )
 
 points = (
-    alt.Chart(df_cities)
-    .mark_circle(size=150, color="#009E73", stroke=PAGE_BG, strokeWidth=2)
-    .encode(longitude="lon:Q", latitude="lat:Q", tooltip=["city:N"])
+    alt.Chart(cities_df)
+    .mark_circle(size=150, color=IMPRINT_PALETTE[0], stroke=PAGE_BG, strokeWidth=2)
+    .encode(
+        longitude=alt.Longitude("lon", type="quantitative"),
+        latitude=alt.Latitude("lat", type="quantitative"),
+        tooltip=[alt.Tooltip("city", type="nominal", title="City")],
+    )
     .project(**proj)
 )
 
-lbl_kw = {"fontSize": 11, "fontWeight": "bold", "color": INK}
-lbl_enc = {"longitude": "lon:Q", "latitude": "lat:Q", "text": "city:N"}
-
-labels_normal = alt.Chart(df_labels_normal).mark_text(dy=-14, **lbl_kw).encode(**lbl_enc).project(**proj)
-labels_london = alt.Chart(df_london).mark_text(dx=-15, dy=-14, **lbl_kw).encode(**lbl_enc).project(**proj)
-labels_paris = alt.Chart(df_paris).mark_text(dx=-12, dy=-14, **lbl_kw).encode(**lbl_enc).project(**proj)
-labels_amsterdam = alt.Chart(df_amsterdam).mark_text(dx=14, dy=-14, **lbl_kw).encode(**lbl_enc).project(**proj)
-labels_brussels = alt.Chart(df_brussels).mark_text(dx=16, dy=12, **lbl_kw).encode(**lbl_enc).project(**proj)
+label_layers = [
+    alt.Chart(group)
+    .mark_text(fontSize=12, fontWeight="bold", color=INK, dx=dx, dy=dy)
+    .encode(
+        longitude=alt.Longitude("lon", type="quantitative"),
+        latitude=alt.Latitude("lat", type="quantitative"),
+        text=alt.Text("city", type="nominal"),
+    )
+    .project(**proj)
+    for (dx, dy), group in cities_df.groupby(["dx", "dy"])
+]
 
 chart = (
-    (base + arcs + points + labels_normal + labels_london + labels_paris + labels_amsterdam + labels_brussels)
+    alt.layer(base, arcs, points, *label_layers)
     .properties(
-        title=alt.Title(
-            "flowmap-origin-destination · python · altair · anyplot.ai", fontSize=16, anchor="start", offset=10
-        ),
+        width=800,
+        height=450,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding=10,
         background=PAGE_BG,
+        title=alt.Title("flowmap-origin-destination · python · altair · anyplot.ai", fontSize=16, anchor="start"),
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_title(color=INK)
@@ -181,6 +196,8 @@ chart = (
         titleColor=INK,
         labelFontSize=12,
         titleFontSize=14,
+        gradientLength=160,
+        padding=8,
     )
 )
 
