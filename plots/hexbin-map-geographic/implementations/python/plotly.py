@@ -1,7 +1,7 @@
 """ anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-26
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
@@ -41,11 +41,12 @@ n_points = 5000
 cluster_lats = 40.7580 + rng.uniform(-0.08, 0.08, 8)
 cluster_lons = -73.9855 + rng.uniform(-0.10, 0.10, 8)
 assignments = rng.choice(8, n_points, p=rng.dirichlet(np.ones(8)))
+cluster_fares = rng.uniform(12, 45, 8)  # typical fare level per pickup cluster
 df = pd.DataFrame(
     {
         LAT: cluster_lats[assignments] + rng.normal(0, 0.015, n_points),
         LON: cluster_lons[assignments] + rng.normal(0, 0.020, n_points),
-        FARE: rng.exponential(15, n_points) + 5,
+        FARE: cluster_fares[assignments] * rng.lognormal(0, 0.25, n_points),
     }
 )
 
@@ -133,6 +134,15 @@ title = "NYC Taxi Fares · hexbin-map-geographic · python · plotly · anyplot.
 n_chars = len(title)
 title_fontsize = max(11, round(16 * 67 / n_chars)) if n_chars > 67 else 16
 
+# Fit the map view to the extent of all hexagon corners
+lon_min, lon_max = ring_lons.min(), ring_lons.max()
+lat_min, lat_max = ring_lats.min(), ring_lats.max()
+view_lon, view_lat = (lon_min + lon_max) / 2, (lat_min + lat_max) / 2
+map_w, map_h = 800 - 80, 450 - 100  # approx. pixels left for the map inside the margins
+lon_span = np.radians(lon_max - lon_min)
+lat_span = np.log(np.tan(np.pi / 4 + np.radians(lat_max) / 2)) - np.log(np.tan(np.pi / 4 + np.radians(lat_min) / 2))
+zoom = np.log2(min(map_w / lon_span, map_h / lat_span) * 2 * np.pi / 512) - 0.1
+
 fig = px.choropleth_map(
     hex_agg,
     geojson=geojson,
@@ -140,8 +150,8 @@ fig = px.choropleth_map(
     color=MEAN,
     color_continuous_scale=SEQ_FIELDS,
     opacity=0.75,
-    center={"lat": lat0, "lon": lon0},
-    zoom=11,
+    center={"lat": view_lat, "lon": view_lon},
+    zoom=zoom,
     map_style=MAP_STYLE,
     hover_data={HEX_ID: False, COUNT: ":,", MEAN: ":$.2f", TOTAL: ":$,.0f"},
 )
