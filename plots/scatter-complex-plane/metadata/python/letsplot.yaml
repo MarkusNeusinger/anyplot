@@ -2,115 +2,117 @@ library: letsplot
 language: python
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:23:02Z'
-updated: '2026-06-02T01:33:42Z'
+updated: '2026-11-26T10:29:57Z'
 generated_by: claude-sonnet
-workflow_run: 26792002502
+workflow_run: 45800221732
 issue: 4427
-language_version: 3.13.13
-library_version: 4.10.1
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - Imprint palette applied correctly across all three categories (green/lavender/blue)
-    with proper canonical order
-  - Interactive tooltips via layer_tooltips() with rich multi-field info (rectangular
-    form, polar form, magnitude, angle) leverage lets-plot's distinctive HTML interactivity
-  - Equal-aspect coord_fixed() with dashed unit circle and subtle green fill achieves
-    the spec's geometric intent cleanly
-  - Iterative label repulsion algorithm reduces crowding near the unit circle — goes
-    beyond simple offset placement
-  - Donut-style markers (shape=21, fill=PAGE_BG) allow vector arrowheads to remain
-    visible through the marker body
-  - Both light and dark renders pass theme-adaptive chrome checks with correct backgrounds
-    and readable text
+  - Unit circle is a dashed path over a faint Imprint-green disc, circular thanks
+    to coord_fixed, with all five roots exactly on it
+  - 'Two-level annotation hierarchy: bold category-colored point name above the soft-ink
+    rectangular form'
+  - Hollow page-filled markers let the vectors visibly terminate at each point while
+    keeping the data color
+  - layer_tooltips exposes category, rectangular and polar forms in the interactive
+    HTML version
+  - Theme tokens carried through every chrome element; both renders read cleanly
   weaknesses:
-  - 'Label crowding near the unit circle: rect_form annotations (size=3.5) partially
-    overlap with vector arrows in the dense center region — consider conditionally
-    suppressing rect_form for points within 1.0 units of each other, or increasing
-    label_x/y base_offset for tightly packed roots'
-  - rect_form text size (3.5 mm ≈ 10pt base, ~17px at 2400px) is small and may be
-    unreadable when the image is scaled to mobile widths (~400px); consider raising
-    to size=4.5 and limit annotations to less crowded points
-  - 'DE-01: Design is functional but not publication-ready — the diagram has visual
-    noise from overlapping arrows and labels near origin; thinning arrow alpha further
-    (0.4 instead of 0.6) and using a slightly larger base_offset (0.65 instead of
-    0.5) would reduce clutter'
+  - 'VQ-05 (both): coord_fixed narrows the plot box and leaves transparent strips
+    about 250 px tall across the top and bottom of the 2400x2400 canvas → the whole
+    canvas in the page color. Likely cause: no one-panel gggrid([plot]) + ggsize(600,
+    600) + theme(plot_background=PAGE_BG) wrapper around the fixed-aspect plot.'
+  - 'VQ-02 (both): the vector to z3 runs through the ''0.31+0.95i'' label of omega1,
+    the vector to z2 through ''-0.81−0.59i'' of omega3, and omega2''s ''-0.81+0.59i''
+    touches z6''s ring → labels clear of vectors and markers. Likely cause: the hand-rolled
+    repulsion only separates labels from each other, not from vectors or points.'
+  - 'SC-02 (both): the open arrowheads end inside the hollow markers and are covered
+    by them, showing only as small ticks around each ring, so the vectors do not read
+    as arrows (C3) → heads visible at the point''s edge. Likely cause: geom_segment
+    ends at the exact point while geom_point size=5 with stroke 2 draws over the head.'
+  - 'VQ-03 (both): every legend key shows a stray letter ''a'' over the circle glyph
+    → plain circle-and-line keys. Likely cause: the two geom_text layers mapped to
+    color contribute to the legend; set show_legend=False on them.'
+  - 'CQ-04 (code): lines 65–86 hand-write an O(n²) 20-pass label repulsion loop →
+    geom_text_repel (lets-plot 4) places the labels next to their points. Likely cause:
+    manual label_x/label_y offsets instead of the library''s repel geom.'
+  - 'Suggestion: show the polar form (r, θ) beside the rectangular form, the Notes''
+    option, for the roots of unity.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint surface, no pure white.
-      Chrome: Title "scatter-complex-plane · python · letsplot · anyplot.ai" bold dark (#1A1A17), ~75% canvas width — expected for the long mandated title. Subtitle italic in INK_SOFT, readable. Axis labels "Real Part" / "Imaginary Part" in dark ink at size=12, clearly readable. Tick labels -3..3 on both axes in INK_SOFT at size=10. Legend box with elevated background, category labels readable.
-      Data: 5th Roots of Unity in Imprint green (#009E73), Arbitrary points in lavender (#C475FD), Sum point in blue (#4467A3). Dashed unit circle reference visible with subtle green fill polygon. Vectors (geom_segment with arrowheads) radiate from origin in matching category colors at alpha=0.6. Donut-style markers (shape=21, fill=PAGE_BG) visually anchor each point. Name labels bold near each point; rect_form labels in INK_SOFT below name labels. Some label crowding near the unit circle, but repulsion algorithm has spread labels usably.
-      Legibility verdict: PASS — all primary text elements readable; rect_form annotations slightly small in dense center area.
+      Background: warm off-white #FAF8F1 over the plot box; transparent strips ~250 px across the top and bottom of the canvas (fixed aspect)
+      Chrome: bold title 'scatter-complex-plane · python · letsplot · anyplot.ai', italic subtitle, 'Real Part'/'Imaginary Part' axis titles, integer ticks -3..3 in dark ink; legend 'Category' on elevated box; all readable
+      Data: five #009E73 roots of unity on a dashed unit circle over a faint green disc, six #C475FD arbitrary points, one #4467A3 sum point; vectors from origin with alpha; bold colored names and rectangular forms beside each point
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
-      Chrome: Title, subtitle, axis labels, tick labels all render in light ink (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. Legend box uses elevated dark bg (#242420) with light text. Grid lines subtle (RULE token at rgba(240,239,232,0.15)). No dark-on-dark failures observed.
-      Data: All three category colors identical to light render (#009E73 green, #C475FD lavender, #4467A3 blue) — Imprint palette is theme-independent as required. Unit circle dashed line and fill tint visible on dark surface. Vectors and point markers clearly visible. Labels remain readable.
-      Legibility verdict: PASS — no dark-on-dark text, all elements readable; same minor rect_form density concern as light render.
+      Background: warm near-black #1A1A17 over the plot box; same transparent top/bottom strips
+      Chrome: title, subtitle, axis titles and ticks in light ink, dashed circle light grey; no dark-on-dark text
+      Data: identical categorical colors (#009E73, #C475FD, #4467A3) to the light render; vectors darker blend on dark page
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title/axes/ticks fully readable in
-          both themes. rect_form annotations at size=3.5mm are slightly small in dense
-          area but readable at full canvas size.
+        comment: Explicit sizes (title 14, axis titles 12, ticks 10, annotations 3.5-4
+          mm); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: true
-        comment: Iterative repulsion algorithm spreads labels effectively; some moderate
-          crowding near unit circle where rect_form labels can coincide with vector
-          arrows. No severe text-on-text collision.
+        passed: false
+        comment: Vectors to z3 and z2 cross the rectangular-form labels of omega1
+          and omega3; omega2's label touches z6's ring (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
-        passed: true
-        comment: 12 sparse points at size=5 are visible; donut markers (shape=21)
-          are creative but make point centers ambiguous. Vectors and arrowheads clearly
-          visible at alpha=0.6.
+        passed: false
+        comment: Points and vectors well sized for 12 points; legend keys carry a
+          stray 'a' glyph from the text layers (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Three Imprint palette colors (#009E73, #C475FD, #4467A3) are well-separated
-          under CVD simulations. No red-green sole signal.'
+        comment: Green/purple/blue Imprint hues are CVD-distinguishable, category
+          also carried by labels
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Square 2400×2400 canvas correct for equal-aspect complex plane. Canvas
-          gate passed. Good utilization with balanced margins.
+        passed: false
+        comment: Fixed aspect leaves transparent strips (~250 px) across the top and
+          bottom of the 2400x2400 canvas (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. Axis labels 'Real Part' and 'Imaginary
-          Part' are descriptive and appropriate.
+        comment: '''Real Part'' / ''Imaginary Part'' descriptive; dimensionless, no
+          unit needed'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green) for 5th Roots of Unity; canonical
-          order maintained (#C475FD lavender, #4467A3 blue). Light bg #FAF8F1, dark
-          bg #1A1A17. All theme chrome correct in both renders.'
+        comment: 'Imprint positions 1-3 in order, #009E73 first; plot background #FAF8F1
+          / #1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -118,27 +120,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: donut markers, iterative repulsion, unit circle
-          tint fill. Not yet publication-ready due to visual noise from dense label+arrow
-          overlap near origin.'
+        comment: 'Beyond baseline: subtle green-tinted unit disc, two-level label
+          hierarchy (bold category-colored name over soft-ink rectangular form), italic
+          subtitle'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Spines removed (axis_line=element_blank()), no panel border, subtle
-          RULE grid (0.25 size, 0.15 alpha), proper margins. Clearly above library
-          defaults.
+        comment: 'Beyond baseline: hollow page-filled markers so vectors read into
+          the rings, softened vector alpha, axes drawn through the origin in ink'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Layered composition (circle fill → dashed boundary → axes → vectors
-          → points → labels) creates visual hierarchy. Three categories well-distinguished.
-          Subtitle provides mathematical context.
+        comment: The sum omega1+omega2 gets its own category color, making complex
+          addition a visible focal point beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -146,31 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Argand diagram / complex plane scatter with all required
-          structural elements.
+        comment: Correct Argand diagram
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Real/imaginary axes (geom_hline/vline), dashed unit circle (geom_path),
-          vectors with arrowheads (geom_segment+arrow), equal aspect (coord_fixed),
-          rectangular form annotations, distinct category colors — all present.
+        passed: false
+        comment: Axes through origin, dashed unit circle, equal aspect, rectangular-form
+          labels, colored categories present; arrowheads hidden under the markers
+          (C3, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part → x, imaginary part → y. 12 points (5 roots + 6 arbitrary
-          + 1 sum) within spec 5-50 range.
+        comment: Points at their exact coordinates (only text labels are repelled);
+          axes span the data with integer ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''scatter-complex-plane · python · letsplot · anyplot.ai''
-          — exact required format. Legend labels ''5th Root of Unity'', ''Arbitrary'',
-          ''Sum'' match the data categories.'
+        comment: Title format correct; legend 'Category' with readable entries
     data_quality:
       score: 15
       max: 15
@@ -180,27 +177,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers roots of unity (periodic symmetry), arbitrary points (general
-          complex numbers), complex sum (addition geometry), magnitude+phase in tooltips
-          and polar labels.
+        comment: 'Roots of unity on the circle, arbitrary points in all quadrants,
+          a sum point: all aspects shown'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 5th roots of unity are mathematically exact (cos/sin of 2πk/5). Complex
-          addition shown geometrically. Neutral mathematical context with no controversial
-          content.
+        comment: 'Textbook mathematical content: 5th roots of unity and complex addition,
+          neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Axis range -3 to 3 fits all data with breathing room. Unit circle
-          at radius=1.0 exactly as expected. Arbitrary points appropriately spread
-          across the plane.
+        comment: 'Checked: omega_k at (cos 72k deg, sin 72k deg), e.g. omega1 0.31+0.95i;
+          sum omega1+omega2 = -0.50+1.54i read off render and computed in code'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -208,37 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → DataFrames → plot layers
-          → save. No functions or classes.'
+        comment: Column constants with role comments, Data block and Plot marker;
+          no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is deterministic.
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot — all used. Wildcard import with noqa
-          suppression is idiomatic for lets-plot.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Iterative repulsion loop is appropriately complex for the label placement
-          problem. No fake UI elements, no over-engineering.
+        passed: false
+        comment: Hand-written O(n^2) label repulsion loop where geom_text_repel exists
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4 → 2400×2400) and plot-{THEME}.html.
-          Current API used.
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -246,28 +238,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct ggplot grammar: geom_polygon, geom_path, geom_hline, geom_vline,
-          geom_segment with arrow(), geom_point, geom_text, scale_color_manual, coord_fixed,
-          custom theme. Full idiomatic usage.'
+        comment: Idiomatic layered grammar, coord_fixed, scale_color_manual, theme
+          tokens
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with .title(), .line(), .format() is distinctively
-          lets-plot. HTML export alongside PNG. These features are unique to lets-plot
-          vs other static libraries.
+        comment: layer_tooltips with title, lines and format for the HTML version
+          (rectangular and polar forms on hover)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T10:26:20Z'
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
+  - manual-ticks
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
