@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-route-path: Route Path Map
 Library: plotnine 0.15.9 | Python 3.14.10
-Quality: pending | Updated: 2026-11-26
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
