@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: pending | Updated: 2026-11-26
+Quality: 86/100 | Updated: 2026-11-26
 """
 
 import os
