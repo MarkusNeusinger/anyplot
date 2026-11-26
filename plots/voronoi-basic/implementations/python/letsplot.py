@@ -1,10 +1,11 @@
 """ anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 79/100 | Updated: 2026-11-22
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
+from itertools import combinations
 
 import numpy as np
 import pandas as pd
@@ -18,6 +19,7 @@ from lets_plot import (
     element_text,
     geom_point,
     geom_polygon,
+    gggrid,
     ggplot,
     ggsave,
     ggsize,
@@ -26,6 +28,7 @@ from lets_plot import (
     theme,
     theme_minimal,
 )
+from scipy.spatial import Voronoi
 
 
 LetsPlot.setup_html()
@@ -40,10 +43,10 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Columns: set these to your table's column names
-X = "X Coordinate"  # role: x
-Y = "Y Coordinate"  # role: y
+X = "Easting (km)"  # role: x
+Y = "Northing (km)"  # role: y
 
-# Data: replace this block with your own table, for example df = pd.read_csv("seeds.csv")
+# Data: monitoring-station locations; replace this block with your own table, for example df = pd.read_csv("seeds.csv")
 np.random.seed(42)
 n_points = 20
 df = pd.DataFrame(
@@ -71,40 +74,31 @@ box = np.array(
 )
 
 
-def clip_half_plane(poly, normal, offset):
-    """Keep the part of a convex polygon where normal . p <= offset (Sutherland-Hodgman)."""
-    out = []
-    for cur, prev in zip(poly, np.roll(poly, 1, axis=0), strict=True):
-        d_cur, d_prev = normal @ cur - offset, normal @ prev - offset
-        if (d_cur <= 0) != (d_prev <= 0):
-            out.append(prev + (cur - prev) * d_prev / (d_prev - d_cur))
-        if d_cur <= 0:
-            out.append(cur)
-    return np.array(out)
-
-
 # Each cell is the box cut by the perpendicular bisector against every other seed
 cells = []
 for i, p in enumerate(pts):
     poly = box
     for j, q in enumerate(pts):
-        if i != j and len(poly) >= 3:
-            poly = clip_half_plane(poly, q - p, (q @ q - p @ p) / 2)
+        if i == j or len(poly) < 3:
+            continue
+        normal, offset = q - p, (q @ q - p @ p) / 2
+        clipped = []
+        for cur, prev in zip(poly, np.roll(poly, 1, axis=0), strict=True):
+            d_cur, d_prev = normal @ cur - offset, normal @ prev - offset
+            if (d_cur <= 0) != (d_prev <= 0):
+                clipped.append(prev + (cur - prev) * d_prev / (d_prev - d_cur))
+            if d_cur <= 0:
+                clipped.append(cur)
+        poly = np.array(clipped)
     cells.append(poly)
 
-# Cells that share an edge share two vertices; color them greedily so neighbours differ
-tol = half * 1e-6
-neighbours = [
-    [
-        j
-        for j in range(len(cells))
-        if j != i
-        and len(cells[i]) >= 3
-        and len(cells[j]) >= 3
-        and sum(np.isclose(cells[j], v, atol=tol).all(axis=1).any() for v in cells[i]) >= 2
-    ]
-    for i in range(len(cells))
-]
+# Seeds whose cells share a ridge are neighbours; color them greedily so neighbours differ
+neighbours = [[] for _ in pts]
+# Voronoi needs four points; with fewer, every pair of cells touches
+ridges = Voronoi(pts).ridge_points if len(pts) > 3 else combinations(range(len(pts)), 2)
+for i, j in ridges:
+    neighbours[i].append(j)
+    neighbours[j].append(i)
 slot = {}
 for i in sorted(range(len(cells)), key=lambda k: -len(neighbours[k])):
     taken = {slot[j] for j in neighbours[i] if j in slot}
@@ -138,6 +132,7 @@ plot = (
     )
     + ggsize(600, 600)
 )
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save outputs with theme suffix
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
