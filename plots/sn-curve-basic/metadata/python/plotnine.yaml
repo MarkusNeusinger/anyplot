@@ -2,140 +2,124 @@ library: plotnine
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:47:13Z'
-updated: '2026-05-20T17:41:59Z'
+updated: '2026-11-26T09:33:08Z'
 generated_by: claude-sonnet
-workflow_run: 26178565594
+workflow_run: 45791865435
 issue: 3826
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 85
 review:
   strengths:
-  - 'Full Okabe-Ito compliance: data, fit line, band, and all three reference lines
-    use palette positions 1–4 in order'
-  - geom_rug adds marginal data density visualization — a distinctive ggplot/plotnine
-    feature rarely used elsewhere
-  - ±2σ confidence band via geom_ribbon correctly represents Basquin scatter uncertainty
-  - Shape encoding (circle=failure, triangle=runout) provides redundant coding beyond
-    color — CVD-safe and spec-correct
-  - Endurance limit reference line deliberately made thicker (1.2 vs 0.9) to create
-    focal point hierarchy
-  - 'Theme-adaptive chrome fully implemented: all chrome tokens (INK, INK_SOFT, PAGE_BG)
-    flow through properly in both renders'
-  - 'Perfect spec compliance: log-log axes, all three reference lines, Basquin fit,
-    runout points, and confidence band all present'
-  - 'Clean grammar-of-graphics layer composition: each visual feature is a separate
-    idiomatic geom layer'
-  - np.random.seed(42) ensures full reproducibility; all data generated deterministically
+  - 'Direct labelling: each reference line carries its name and value in the line''s
+    own Imprint color, readable in both themes'
+  - Shape encoding (circle = failure, triangle = runout) separates the run-out specimens
+    without a second color
+  - Basquin fit computed from the failures by np.polyfit in log space and drawn only
+    over their cycle range, so it follows the sloping part of the data
+  - Theme-adaptive chrome fully threaded through (INK, INK_SOFT, PAGE_BG, ELEVATED_BG
+    legend box)
+  - Idiomatic plotnine composition with scale_x_log10/scale_y_log10 and scale_shape_manual
   weaknesses:
-  - Annotation text size (size=10) is the same as axis labels — slightly increasing
-    to 10.5–11pt would improve readability of the reference line labels at mobile
-    widths
-  - geom_rug adds visual complexity to the x-axis margin; could optionally restrict
-    to x-axis only (sides='b') to reduce clutter
-  - DE-01 score limited because the design, while polished and technically correct,
-    relies on relatively conventional ggplot aesthetics without distinctive layout
-    or typographic choices beyond Okabe-Ito
+  - 'Suggestion: the fit line shares the points'' green; a slightly darker or thinner
+    stroke would set it apart from the scatter it runs through.'
+  - 'Suggestion: x tick labels in 1e3 notation could read as 10³ via a label function
+    in scale_x_log10(labels=...).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correctly matched to spec
-      Chrome: Title "sn-curve-basic · python · plotnine · anyplot.ai" bold at 12pt, fully readable in dark ink. X-axis "Number of Cycles to Failure (N)" and Y-axis "Stress Amplitude (MPa)" both clearly labeled in INK (10pt). Tick labels at 8pt in INK_SOFT, all readable. Log10 scale tick marks correctly formatted (1e3, 1e5, 1e7).
-      Data: Green (#009E73) circles for failure data (~40 points), green triangles for runout (3 points near 10^7 cycles / ~250 MPa). Basquin fit line in solid green with ±2σ green ribbon band (alpha=0.12). Orange (#D55E00) dashed line for Ultimate Strength (550 MPa), blue (#0072B2) dashed for Yield Strength (350 MPa), pink (#CC79A7) dashed for Endurance Limit (250 MPa). Each reference line annotated with text in matching color. geom_rug visible at bottom and left margins.
-      Legibility verdict: PASS — all text clearly readable against #FAF8F1 background.
+      Background: warm off-white #FAF8F1.
+      Chrome: bold title 'sn-curve-basic · python · plotnine · anyplot.ai' in dark ink; axis titles 'Number of Cycles to Failure (N)' and 'Stress Amplitude (MPa)'; x ticks 1e3-1e7 every decade, y ticks 300/400/500; subtle major/minor log grid; left and bottom axis lines in INK_SOFT; legend 'Test Result' (failure circle, runout triangle) on the elevated fill, no frame. All readable.
+      Data: ~42 green #009E73 failure circles falling from 500 MPa at ~1e3 cycles to ~255 MPa at ~5e5 cycles, three green runout triangles at 1e7-5e7 cycles near 250 MPa; green Basquin fit line over the failures' range; dashed reference lines in purple (Ultimate 550), blue (Yield 350) and a thicker ochre (Endurance 250), each labeled in its own color.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correctly matched to spec
-      Chrome: Title and axis labels rendered in light text (INK token = #F0EFE8 on dark), clearly readable against near-black surface. Tick labels in INK_SOFT (#B8B7B0) — visible, no dark-on-dark failure. Legend box uses ELEVATED_BG (#242420) fill.
-      Data: Data colors (#009E73, #D55E00, #0072B2, #CC79A7) are identical to light render — only chrome flips. Green band and fit line visible against dark background. Reference lines in orange, blue, and pink remain clearly visible.
-      Legibility verdict: PASS — no dark-on-dark text failures; all elements readable against #1A1A17 surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink; ticks and legend text in INK_SOFT light grey; legend on the #242420 elevated fill; grid subtle. No dark-on-dark text.
+      Data: identical colors to the light render (#009E73 points and fit, #C475FD, #4467A3, #BD8233 reference lines); brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly sized (title=12, axis=10, ticks=8, legend=8);
-          readable in both themes. Minor: annotation text at size=10 is same as axis
-          labels — slightly larger would improve mobile readability.'
+        comment: All sizes set (title 12, axis titles 10, ticks 8, legend 8/9, reference
+          labels 10); every text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Reference line annotations
-          placed at x=1e3 or x=2e5 to avoid clustering with data points.
+        comment: No text collides with text or data; points sitting on the yield line
+          lie at their own 350 MPa value
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ~40 failure points at size=4.2 alpha=0.8 are clearly visible. Runout
-          triangles distinguishable. Confidence band non-intrusive at alpha=0.12.
-          geom_rug visible.
+        comment: ~45 points at size 4.2, alpha 0.8 are prominent for sparse data;
+          circle and triangle legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette throughout — CVD-safe. Shape encoding (circle/triangle)
-          provides redundant coding beyond color.
+        comment: One green hue for data plus purple, blue, ochre reference lines,
+          all with name labels; shape separates runouts from failures
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200×1800 confirmed (8in × 4.5in @ 400dpi). Title fills ~75%
-          of width — expected for mandated title. No overflow. Good proportions.
+        comment: 3200x1800; drawing fills the canvas with title, ticks and legend
+          in balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Number of Cycles to Failure (N)'' — descriptive with units.
-          Y: ''Stress Amplitude (MPa)'' — descriptive with units. Title format correct.'
+        comment: '''Number of Cycles to Failure (N)'' and ''Stress Amplitude (MPa)''
+          are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73. Reference lines use Okabe-Ito positions
-          2-4 in order. Light bg = #FAF8F1, dark bg = #1A1A17. Both renders correct.'
+        comment: 'Data #009E73, reference lines Imprint positions 2-4 in order; backgrounds
+          #FAF8F1/#1A1A17; legend box on the elevated token; chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above default: geom_rug + geom_ribbon + shape encoding + multi-color
-          Okabe-Ito reference lines show genuine design intent. Professional polish
-          in both themes. Not groundbreaking but clearly intentional.'
+        passed: false
+        comment: Style-guide baseline; typography and hierarchy nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: panel_border=element_blank(), ultra-subtle grid (alpha=0.10 major,
-          0.05 minor), legend border removed (color=None), plot_margin for whitespace.
-          Genuine refinement above defaults.
+        passed: false
+        comment: Legend frame removed and set on the elevated fill; reference labels
+          placed clear of the scatter (yield label right of the data, the other two
+          at the left edge)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Endurance limit deliberately made thicker (1.2 vs 0.9) as focal point.
-          Three reference lines create clear regional narrative. geom_rug adds marginal
-          density context. Clear visual hierarchy.
+        passed: false
+        comment: Endurance limit drawn thicker than the other two reference lines
+          as the focal property
     spec_compliance:
       score: 15
       max: 15
@@ -145,27 +129,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct S-N curve: log-log scatter with fit line.'
+        comment: Correct S-N curve on log-log axes; single material with only the
+          three reference lines and the fit the Notes ask for
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log-log axes, all three reference lines (Ultimate/Yield/Endurance),
-          Basquin fit line, runout markers, confidence band all present.
+        comment: C1 log-log axes with every result as a point; C2 three named reference
+          lines at 550/350/250 MPa; C3 Basquin fit through the sloping failures, a
+          line distinct from the points; C4 fall from 500 MPa at ~1e3 cycles to the
+          endurance limit at ~5e5, runouts beyond; C5 single material
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=cycles (log), Y=stress (log). Full data range shown.
+        comment: X = cycles, Y = stress, both log10; axes fitted to the data; x ticks
+          every decade, y ticks 300/400/500; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''sn-curve-basic · python · plotnine · anyplot.ai'' — exact
-          match. Legend ''Test Result'' with failure/runout labels.'
+        comment: Title matches the mandated format; legend 'Test Result' with failure/runout
     data_quality:
       score: 15
       max: 15
@@ -175,22 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers all fatigue curve aspects: failure scatter, runout points,
-          Basquin fit, ±2σ band, three material property reference lines.'
+        comment: Shows low-cycle high-stress failures, the sloping high-cycle region,
+          scatter at each stress level and runouts past the endurance limit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Steel specimen fatigue testing with realistic material properties
-          (550/350/250 MPa). Log-normal scatter (sigma=0.3) is physically appropriate.
+        comment: Steel coupon fatigue test with plausible 550/350/250 MPa properties
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Stress 200-550 MPa and cycles 100-10^7 are textbook-correct for high-strength
-          steel fatigue.
+        comment: Stress 245-500 MPa and lives 1e3-5e7 cycles are sensible for a steel;
+          the spec states no Check values; checked the reference lines read 550, 350
+          and 250 off the log axis
     code_quality:
       score: 10
       max: 10
@@ -200,60 +187,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Flat, linear script.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports are used; no unused imports.
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean grammar-of-graphics composition. No workarounds or fake UI.
+        comment: Fit via one np.polyfit in log space; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via plot.save(). No bare plot.png.
+        comment: plot.save(f'plot-{THEME}.png') with current API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper grammar-of-graphics layer composition. geom_ribbon, geom_rug,
-          scale_shape_manual all used idiomatically.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: geom_rug is distinctively ggplot/plotnine and not available in most
-          other libraries. geom_ribbon for confidence bands is a ggplot strength.
-          Strong demonstration of plotnine's unique capabilities.
+        passed: false
+        comment: 'Idiomatic layered grammar: scale_x_log10/scale_y_log10, scale_shape_manual
+          with limits, a composed theme object added to theme_minimal'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-4bf8b8efdf
+  rendered_at: '2026-11-26T09:28:56Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
+  - grid-styling
