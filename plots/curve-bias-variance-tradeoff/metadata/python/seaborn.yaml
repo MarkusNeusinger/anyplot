@@ -12,121 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 79
 review:
   strengths:
-  - 'All spec requirements met completely: 4 curves, optimal-complexity marker, direct
-    annotations, formula box, shaded underfitting/overfitting zones, Low→High x-axis
-    labeling.'
-  - 'Semantic color assignments are thoughtful and correct: #009E73 for Bias² (improvement
-    direction), #AE3030 for Total Error (semantic error/loss), INK_MUTED as neutral
-    anchor for noise floor.'
-  - Both renders pass the theme-readability check — no dark-on-dark or light-on-light
-    failures.
-  - 'Strong data storytelling: shaded zones + thickest-line focal point + optimal-complexity
-    annotation work together to communicate the concept efficiently.'
-  - Code is clean, deterministic, and fully spec-compliant.
+  - 'Semantic Imprint colors: Bias² brand green, Variance lavender, Total Error matte
+    red, noise floor muted dashed; identical in both themes'
+  - Optimum computed with argmin and marked exactly at the total-error minimum with
+    line, dot and callout
+  - Formula box clear of all curves in the bottom-right corner
+  - Both themes fully readable
   weaknesses:
-  - Annotation and zone label text at fontsize=7 is at the lower limit of readability
-    when scaled to mobile width (~400px); consider increasing to fontsize=8 minimum
-    for all on-plot text.
-  - Seaborn's distinctive features (despine, statistical CI, hue/style encodings)
-    are not leveraged — the plot could be rewritten in pure matplotlib with no visual
-    change. Use sns.despine() instead of manual spine assignments to at least signal
-    seaborn-idiomatic style.
+  - 'VQ-02 (both): the variance curve runs straight through the ''Variance'' label
+    → place the label clear above the curve (about +0.2 in y). Likely cause: annotate
+    at variance[80] + 0.13 at x=8.2, where the curve rises into the text.'
+  - 'VQ-01 (both): zone labels, the Optimal Complexity callout, the Irreducible Error
+    label and the formula are set at 7 pt, below the style guide''s 8 pt → at least
+    8 pt (+1 pt). Likely cause: fontsize=7 on those text calls.'
+  - 'VQ-05 (both): the axes leave wide empty margins (about 12% left, 10% right, 10%
+    top) so the drawing uses only ~78% of the canvas width → let the layout fill the
+    canvas. Likely cause: no plt.tight_layout() before savefig.'
+  - 'CQ-01 (code): line 40 calls sns.set_theme inside the Data block → move the theme
+    setup above # Data so the data block only builds the curves. Likely cause: theme
+    block placed after the data generation.'
+  - 'Suggestion: draw the four curves from one long-form frame with hue/style/size
+    in a single sns.lineplot.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "curve-bias-variance-tradeoff · python · seaborn · anyplot.ai" in dark ink, fully visible. Axis labels "Model Complexity" and "Prediction Error" in dark ink at 10pt. Tick labels in INK_SOFT at 8pt — all readable. Zone annotations in brand colors at fontsize=7 bold, readable. Optimal-complexity annotation with arrow in brand green — readable. Formula box bottom-right with styled border, text in dark ink — readable.
-      Data: Bias² in #009E73 (brand green), Variance in #C475FD (lavender), Irreducible Error as dashed INK_MUTED line, Total Error in #AE3030 (matte red, thickest). Shaded underfitting zone in green, overfitting zone in lavender. Optimal complexity dot in #009E73 with white edge.
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title in dark ink; axis titles 'Model Complexity' / 'Prediction Error'; Low/Medium/High x ticks, 0-3.5 y; legend top-center with four entries. Wide empty margins around the axes. On-plot zone labels, callout and formula at small 7 pt. All readable.
+      Data: Bias² #009E73 falling, Variance #C475FD rising, Irreducible Error dashed muted at 0.3, Total Error #AE3030 thick U-curve; optimum at ~3.4 with dotted line, dot and arrow callout; green/lavender zones with labels. The variance curve runs through its 'Variance' label. Formula box bottom-right, clear of the curves.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title and all axis labels/tick labels rendered in theme-adaptive light tones (#F0EFE8 / #B8B7B0). No dark-on-dark text observed — all labels clearly contrast against the near-black surface. Legend background switches to elevated dark #242420. Formula box adapts correctly with light text.
-      Data: All four data colors are identical to the light render — brand green, lavender, muted dashed, matte red — confirming only chrome flips between themes.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: light ink title, labels and ticks; legend on dark elevated surface. No dark-on-dark.
+      Data: data colors identical to light; muted dashed line takes the dark-theme muted token. Same label/curve collision on 'Variance'.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 7
         max: 8
-        passed: true
-        comment: Font sizes well-set (title 12pt, labels 10pt, ticks 8pt). Annotation/zone
-          labels at fontsize=7 readable at full res but marginal at 400px mobile width.
+        passed: false
+        comment: Zone labels, Optimal Complexity callout, Irreducible Error label
+          and formula at 7 pt, below the 8 pt reference (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: All curve labels, zone annotations, optimal-complexity annotation,
-          legend, and formula box free from overlap.
+        passed: false
+        comment: The variance curve runs through the 'Variance' label (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 4 curves clearly visible. Total Error has thickest stroke (3.5pt)
-          as focal element. Optimal-complexity dot (s=80) prominent.
+        comment: Four lines at 2.0-3.5 width, optimum dot visible; legend samples
+          match in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Palette positions 1/2/5 with semantic intent; dashed linestyle on
-          Irreducible Error provides redundant encoding; CVD-safe.
+        comment: Green/lavender/red/muted plus a dashed style on the noise floor and
+          the thickest stroke on total error; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Canvas 3200x1800 px correct. No bbox_inches=tight. Title ~75% width
-          expected for mandated title. Balanced axis labels.
+        passed: false
+        comment: Without tight_layout the axes leave wide empty margins on all sides;
+          the drawing uses ~78% of the canvas width (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Model Complexity with Low/Medium/High ticks, Prediction Error — descriptive
-          and appropriate.
+        comment: Model Complexity (Low/Medium/High) and Prediction Error
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Variance #C475FD, Total Error #AE3030 (semantic
-          error), Irreducible Error INK_MUTED (semantic baseline). Backgrounds #FAF8F1/#1A1A17
-          correct.'
+        comment: 'Bias² #009E73 first, Variance #C475FD, Total Error #AE3030 semantic
+          loss, Irreducible Error muted token; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic colors, shaded zones, multi-level annotation
-          hierarchy, formula box with styled bbox.
+        comment: 'Raised: semantic color story carried through (bias green = underfitting
+          zone and optimum, lavender = variance and overfitting zone), total error
+          the heaviest stroke'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: L-shaped spines, subtle y-axis-only grid alpha=0.15, legend framealpha=0.9,
-          formula box with edgecolor=INK_SOFT.
+        passed: false
+        comment: 'Default: spines and subtle grid only; loose margins'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Shaded zones frame underfitting/overfitting. Thicker Total Error
-          as focal curve. Optimal-complexity annotation anchors narrative. Direct
-          curve labels eliminate legend hunting.
+        comment: 'Raised: total error made the focal curve by stroke weight, the optimum
+          dot and arrow tie the zones to the minimum'
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-line chart with 4 theoretical curves — correct.
+        comment: Multi-line theoretical curve chart, correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All curves present; optimal-complexity marker; direct annotations;
-          formula; shaded zones.
+        comment: 'All Notes features present: four curves, optimum line and dot, direct
+          labels, formula box clear of the curves, shaded zones'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Model Complexity (Low→High), Y: Prediction Error. All curves
-          across full range.'
+        comment: Curves at their computed values; y from 0, x over full complexity
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact required title format. Legend entries match curve labels.
+        comment: Title matches the mandated format; legend entries match the direct
+          labels
     data_quality:
       score: 15
       max: 15
@@ -166,77 +165,75 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four theoretical curves; optimal point; dual-zone shading; formula.
+        comment: Falling bias², rising variance, flat noise floor, U-shaped total,
+          optimum, both zones
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Canonical neutral ML-education concept. Curve shapes mathematically
-          plausible.
+        comment: Canonical ML-education concept, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Complexity 0.5–10, 100 points; bias starts ~2.0, variance 0→~1.5;
-          irreducible 0.3; Y-range 0–3.8.
+        comment: 'Checked: total = sum of the three components (line 32); optimum
+          from argmin at ~3.4 with ~1.53, matching the dot'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No functions or classes; clean linear script.
+        passed: false
+        comment: sns.set_theme is called inside the Data block (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (mathematical functions, no RNG).
+        comment: Deterministic closed-form curves
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, seaborn — all used, none unused.
+        comment: os, matplotlib.pyplot, numpy, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI.
+        comment: Appropriate complexity; title-scaling block is the mandated formula
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; current seaborn
-          API.
+        comment: Saves plot-{THEME}.png; current API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'sns.set_theme() with rc={} for theming; axes-level sns.lineplot(...,
-          ax=ax); matplotlib used for features seaborn can''t do. Minor: sns.despine()
-          more idiomatic than manual spine assignment.'
+        comment: 'Default: four separate sns.lineplot calls on arrays, manual spine
+          handling'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Plot driven by matplotlib ax methods. Seaborn's distinctive capabilities
-          (CI estimation, hue/style/size encodings, FacetGrid, despine) largely absent.
-          Could be rewritten in pure matplotlib with no visual change.
+        comment: 'Default: nothing beyond the library prompt'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
 impl_tags:
   dependencies: []
   techniques:
