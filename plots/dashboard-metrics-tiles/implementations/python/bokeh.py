@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-21
@@ -17,6 +17,7 @@ sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != _here]
 del _here
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.layouts import column, gridplot
 from bokeh.models import ColumnDataSource, Label
@@ -32,82 +33,62 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito semantic colors for status and change indicators
-STATUS_COLORS = {"good": "#009E73", "warning": "#DDCC77", "critical": "#AE3030"}  # imprint semantic anchors
-SPARKLINE_COLOR = "#4467A3"  # Okabe-Ito position 3
-FAVORABLE_COLOR = "#009E73"  # Okabe-Ito position 1
-UNFAVORABLE_COLOR = "#AE3030"  # imprint red — unfavorable
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Metrics where a positive change is unfavorable
-UNFAVORABLE_WHEN_UP = {"Error Rate", "Response Time"}
+# Constants
+# Status colors are Imprint semantic anchors: green (good), amber (warning), red (critical)
+STATUS_COLORS = {"good": IMPRINT_PALETTE[0], "warning": "#DDCC77", "critical": IMPRINT_PALETTE[4]}
+FAVORABLE_COLOR = IMPRINT_PALETTE[0]
+UNFAVORABLE_COLOR = IMPRINT_PALETTE[4]
+SPARKLINE_COLOR = IMPRINT_PALETTE[2]
+GRID_COLUMNS = 3  # tiles per row
+CANVAS_W, CANVAS_H, TITLE_H = 3200, 1800, 160
 
-# Data - 6 ops monitoring metric tiles
+# Columns: set these to your table's column names
+METRIC = "Metric"  # role: metric_name
+VALUE = "Current value"  # role: current_value
+HISTORY = "History"  # role: history
+CHANGE = "Change (%)"  # role: change_percent
+STATUS = "Status"  # role: status
+UNIT = "Unit"  # role: extra
+LOWER_IS_BETTER = "Lower is better"  # role: extra
+
+# Data: replace this block with your own table, one row per tile; History holds a list per row
 np.random.seed(42)
+df = pd.DataFrame(
+    {
+        METRIC: ["CPU Usage", "Memory", "Response Time", "Error Rate", "Throughput", "Active Users"],
+        VALUE: [45, 72, 120, 2.4, 1250, 8432],
+        UNIT: ["%", "%", "ms", "%", "req/s", ""],
+        HISTORY: [
+            tuple(np.clip(40 + np.cumsum(np.random.randn(30) * 2), 20, 80)),
+            tuple(np.clip(65 + np.cumsum(np.random.randn(30) * 1.5), 50, 90)),
+            tuple(np.clip(100 + np.cumsum(np.random.randn(30) * 10), 50, 200)),
+            tuple(np.clip(2 + np.cumsum(np.random.randn(30) * 0.3), 0.5, 5)),
+            tuple(np.clip(1200 + np.cumsum(np.random.randn(30) * 50), 900, 1500)),
+            tuple(np.clip(8000 + np.cumsum(np.random.randn(30) * 200), 7000, 10000)),
+        ],
+        CHANGE: [-5.2, 8.1, -15.3, 12.5, 3.7, -2.1],
+        STATUS: ["good", "warning", "good", "critical", "good", "warning"],
+        LOWER_IS_BETTER: [False, False, True, True, False, False],
+    }
+)
 
-metrics = [
-    {
-        "name": "CPU Usage",
-        "value": 45,
-        "unit": "%",
-        "history": np.clip(40 + np.cumsum(np.random.randn(30) * 2), 20, 80),
-        "change": -5.2,
-        "status": "good",
-    },
-    {
-        "name": "Memory",
-        "value": 72,
-        "unit": "%",
-        "history": np.clip(65 + np.cumsum(np.random.randn(30) * 1.5), 50, 90),
-        "change": 8.1,
-        "status": "warning",
-    },
-    {
-        "name": "Response Time",
-        "value": 120,
-        "unit": "ms",
-        "history": np.clip(100 + np.cumsum(np.random.randn(30) * 10), 50, 200),
-        "change": -15.3,
-        "status": "good",
-    },
-    {
-        "name": "Error Rate",
-        "value": 2.4,
-        "unit": "%",
-        "history": np.clip(2 + np.cumsum(np.random.randn(30) * 0.3), 0.5, 5),
-        "change": 12.5,
-        "status": "critical",
-    },
-    {
-        "name": "Throughput",
-        "value": 1250,
-        "unit": "req/s",
-        "history": np.clip(1200 + np.cumsum(np.random.randn(30) * 50), 900, 1500),
-        "change": 3.7,
-        "status": "good",
-    },
-    {
-        "name": "Active Users",
-        "value": 8432,
-        "unit": "",
-        "history": np.clip(8000 + np.cumsum(np.random.randn(30) * 200), 7000, 10000),
-        "change": -2.1,
-        "status": "warning",
-    },
-]
-
-# Canvas: 3200x1800 total
-# title_fig=160h, gridplot=2x820h rows × 3x1066w cols → 1640h + 160h = 1800h; 3198w ≈ 3200w
-TILE_WIDTH = 1066
-TILE_HEIGHT = 820
+# Plot: reads only df and the constants above
+n_rows = -(-len(df) // GRID_COLUMNS)
+TILE_WIDTH = CANVAS_W // GRID_COLUMNS
+TILE_HEIGHT = (CANVAS_H - TITLE_H) // n_rows
+FILL_ALPHA = 0.25 if THEME == "light" else 0.45  # keeps the area visible on the darker tile
 
 tiles = []
 
-for metric in metrics:
-    is_positive_change = metric["change"] > 0
-    is_favorable = not is_positive_change if metric["name"] in UNFAVORABLE_WHEN_UP else is_positive_change
+for _, row in df.iterrows():
+    is_positive_change = row[CHANGE] > 0
+    is_favorable = is_positive_change != row[LOWER_IS_BETTER]
     change_color = FAVORABLE_COLOR if is_favorable else UNFAVORABLE_COLOR
     arrow = "▲" if is_positive_change else "▼"
-    status_color = STATUS_COLORS[metric["status"]]
+    status_color = STATUS_COLORS.get(row[STATUS], INK_SOFT)
 
     p = figure(
         width=TILE_WIDTH, height=TILE_HEIGHT, toolbar_location=None, tools="", x_range=(0, 1), y_range=(-0.02, 1.12)
@@ -130,7 +111,7 @@ for metric in metrics:
         Label(
             x=0.5,
             y=0.85,
-            text=metric["name"],
+            text=row[METRIC],
             text_font_size="20pt",
             text_font_style="bold",
             text_color=INK,
@@ -140,7 +121,7 @@ for metric in metrics:
     )
 
     # Prominent current value
-    value_text = f"{metric['value']}{metric['unit']}"
+    value_text = f"{row[VALUE]:g}{row[UNIT]}"
     p.add_layout(
         Label(
             x=0.5,
@@ -155,7 +136,7 @@ for metric in metrics:
     )
 
     # Change indicator with directional arrow
-    change_text = f"{arrow} {abs(metric['change']):.1f}%"
+    change_text = f"{arrow} {abs(row[CHANGE]):.1f}%"
     p.add_layout(
         Label(
             x=0.5,
@@ -170,36 +151,37 @@ for metric in metrics:
     )
 
     # Sparkline — normalize history to [0.05, 0.33]
-    history = np.array(metric["history"])
-    hist_min, hist_max = history.min(), history.max()
-    hist_range = hist_max - hist_min if hist_max != hist_min else 1.0
-    y_norm = 0.05 + (history - hist_min) / hist_range * 0.28
-    x_norm = np.linspace(0.08, 0.92, len(history))
+    history = pd.to_numeric(pd.Series(list(row[HISTORY])), errors="coerce").to_numpy(dtype=float)
+    if np.isfinite(history).any():
+        hist_min, hist_max = np.nanmin(history), np.nanmax(history)
+        hist_range = hist_max - hist_min if hist_max != hist_min else 1.0
+        y_norm = 0.05 + (history - hist_min) / hist_range * 0.28
+        x_norm = np.linspace(0.08, 0.92, len(history))
 
-    # Filled area under sparkline
-    y_fill = np.concatenate([y_norm, [0.05, 0.05]])
-    x_fill = np.concatenate([x_norm, [x_norm[-1], x_norm[0]]])
-    p.patch(x_fill, y_fill, fill_color=SPARKLINE_COLOR, fill_alpha=0.25, line_color=None)
+        # Filled area under sparkline
+        y_fill = np.concatenate([y_norm, [0.05, 0.05]])
+        x_fill = np.concatenate([x_norm, [x_norm[-1], x_norm[0]]])
+        p.patch(x_fill, y_fill, fill_color=SPARKLINE_COLOR, fill_alpha=FILL_ALPHA, line_color=None)
 
-    # Sparkline line (thicker for visibility)
-    source = ColumnDataSource(data={"x": x_norm, "y": y_norm})
-    p.line("x", "y", source=source, line_width=5, line_color=SPARKLINE_COLOR)
+        # Sparkline line (thicker for visibility)
+        source = ColumnDataSource(data={"x": x_norm, "y": y_norm})
+        p.line("x", "y", source=source, line_width=5, line_color=SPARKLINE_COLOR)
 
-    # Endpoint dot marking the current value
-    p.scatter(
-        x=[x_norm[-1]], y=[y_norm[-1]], size=14, fill_color=SPARKLINE_COLOR, line_color=ELEVATED_BG, line_width=2.5
-    )
+        # Endpoint dot marking the current value
+        p.scatter(
+            x=[x_norm[-1]], y=[y_norm[-1]], size=14, fill_color=SPARKLINE_COLOR, line_color=ELEVATED_BG, line_width=2.5
+        )
 
     tiles.append(p)
 
 # 3x2 grid of tiles — toolbar_location=None is critical: gridplot default toolbar
 # adds ~139px above the canvas, shrinking the screenshot height below 1800
 grid = gridplot(
-    [[tiles[0], tiles[1], tiles[2]], [tiles[3], tiles[4], tiles[5]]], merge_tools=False, toolbar_location=None
+    [tiles[i : i + GRID_COLUMNS] for i in range(0, len(tiles), GRID_COLUMNS)], merge_tools=False, toolbar_location=None
 )
 
 # Title figure (full canvas width, 160px tall)
-title_fig = figure(width=3200, height=160, toolbar_location=None, tools="", x_range=(0, 1), y_range=(0, 1))
+title_fig = figure(width=CANVAS_W, height=TITLE_H, toolbar_location=None, tools="", x_range=(0, 1), y_range=(0, 1))
 title_fig.xaxis.visible = False
 title_fig.yaxis.visible = False
 title_fig.xgrid.visible = False
@@ -213,7 +195,7 @@ title_fig.add_layout(
         x=0.5,
         y=0.5,
         text="dashboard-metrics-tiles · python · bokeh · anyplot.ai",
-        text_font_size="28pt",
+        text_font_size="50pt",
         text_font_style="bold",
         text_color=INK,
         text_align="center",
@@ -228,7 +210,7 @@ output_file(f"plot-{THEME}.html")
 save(final_layout)
 
 # Screenshot to PNG via headless Chrome (Selenium 4 / Selenium Manager)
-W, H = 3200, 1800
+W, H = CANVAS_W, CANVAS_H
 opts = Options()
 for arg in (
     "--headless=new",
