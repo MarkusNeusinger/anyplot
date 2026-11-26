@@ -239,7 +239,7 @@ plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight')  # THEME = os.get
 ```
 
 **Header format:** 4-line docstring with anyplot.ai branding, spec-id, library version, quality score.
-**Rules:** No functions, no classes, no `if __name__ == '__main__'`. Just: imports → data → plot → save.
+**Rules:** The script reads top to bottom, cell by cell: imports → data → plot → save. No `main()`, no class, no function that wraps the plot or the save, no function inside a function, no `if __name__ == '__main__'`. A short helper above its first use is fine (CQ-01 in `prompts/quality-criteria.md`).
 
 ### Anti-Patterns to Avoid
 

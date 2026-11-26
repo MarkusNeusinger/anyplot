@@ -114,7 +114,7 @@ class TestPromptStructure:
     def test_plot_generator_has_code_template(self, plot_generator_content: str) -> None:
         """Plot generator should include a code template."""
         assert "```python" in plot_generator_content, "Missing Python code template"
-        # KISS style: simple scripts with comments, not functions
+        # KISS style: a top-down script with comments, not a main() function
         assert "plt.savefig" in plot_generator_content, "Missing plot save example"
 
     def test_plot_generator_has_fake_functionality_section(self, plot_generator_content: str) -> None:
@@ -1011,7 +1011,10 @@ class TestLeanCode:
         assert "``CQ-04 (code): lines A–B" in cq04 and "→ `<call>` (<package>)" in cq04
         assert "Without a concrete replacement it is a `Suggestion:` line" in cq04
         assert "never takes CQ-04 to 0" in cq04
-        assert "never a new helper function" in cq04
+        # A short helper is a valid replacement since CQ-01 allows it; a wrapper of the plot never is.
+        assert "a short helper above its first use (CQ-01)" in cq04
+        assert "A function that wraps the plot or the save is never a replacement" in cq04
+        assert "never a new helper function" not in criteria
         assert "never credit a hand-roll for avoiding one" in cq04
         assert "ok but slightly verbose" not in criteria
 
@@ -1029,7 +1032,9 @@ class TestLeanCode:
         content = (PROMPTS_DIR / "plot-generator.md").read_text()
         section = content[content.index("### Lean code") : content.index("## Visual Quality")]
         assert "never by hand" in section
-        assert "never a new helper function" in section
+        assert "a short helper above its first use (CQ-01)" in section
+        assert "A function that wraps the plot or the save is never a replacement" in section
+        assert "never a new helper function" not in content
         assert "no code golf" in section
         assert 'Installed packages are not "dependencies" to avoid' in section
         assert "(CQ-04 includes the lean-code rule below)" in content
@@ -1297,7 +1302,11 @@ class TestFirstReviewScoring:
         caps = self._section(criteria, "## Score Caps", "## Anti-Inflation")
         assert "this cap never fires on a compliant implementation" in caps
         assert "A hierarchy the spec's Notes prescribe" in self._section(criteria, "### DE-03", "## Spec Compliance")
-        assert "Compliance is not mastery" in self._section(criteria, "## Library Mastery", "## Plot-Type")
+        mastery = self._section(criteria, "## Library Mastery", "## Plot-Type")
+        assert "Compliance is not mastery" in mastery
+        # An addition the variant excludes earns no LM credit, in the re-score of the live file too.
+        assert "No credit for what the variant excludes" in mastery
+        assert "range selector buttons" in mastery and "(`prev_checklist`)" in mastery
 
     def test_a_gap_that_fits_two_rows_follows_its_fix(self) -> None:
         criteria = CRITERIA_PROMPT.read_text()

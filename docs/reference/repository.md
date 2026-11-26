@@ -530,7 +530,7 @@ plt.savefig('plot.png', dpi=300)
 4. `Quality: {score}/100 | Created: {date}` - Quality + date
 
 **Rules**:
-- No functions, no classes
+- No `main()`, no class, no function that wraps the plot or the save, no function inside a function; a short helper above its first use is fine (CQ-01 in `prompts/quality-criteria.md`)
 - No `if __name__ == '__main__':`
 - Only imports → data → plot → save
 

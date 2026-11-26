@@ -350,7 +350,7 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 
 **Related but different form.** A related chart type that is not the one the spec names — a donut for a pie, split-violin halves that do not meet — scores SC-01 partially (typically 3) on any spec, not only on `-basic` ones.
 
-**Variant creep on `-basic` specs.** When the spec id ends in `-basic`, encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not) — a color channel driven by a derived fourth variable, per-group fits or trend lines, reference or mean lines, highlighted marks or bands, callouts or other annotation layers; one such addition is enough — make it the wrong variant: score SC-01 partially (typically 3) and give that addition **no** DE-03 or LM-02 credit. When the spec's characteristic section lists what its variant excludes, the list names the likeliest additions, not all of them: anything the spec neither requires nor offers as optional is still creep. A basic chart earns storytelling through its data and design, not through extra channels (see `prompts/plot-generator.md` → "Respect the spec variant").
+**Variant creep on `-basic` specs.** When the spec id ends in `-basic`, encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not) — a color channel driven by a derived fourth variable, per-group fits or trend lines, reference or mean lines, highlighted marks or bands, callouts or other annotation layers; one such addition is enough — make it the wrong variant: score SC-01 partially (typically 3) and give that addition **no** DE-03, LM-01 or LM-02 credit (see LM-02 → "No credit for what the variant excludes"). When the spec's characteristic section lists what its variant excludes, the list names the likeliest additions, not all of them: anything the spec neither requires nor offers as optional is still creep. A basic chart earns storytelling through its data and design, not through extra channels (see `prompts/plot-generator.md` → "Respect the spec variant").
 
 ### SC-02: Required Features (4 Points)
 
@@ -462,11 +462,30 @@ A clearly fictional parliament (invented party names that carry no real-world id
 
 | ID | Criterion | Max | Description |
 |----|-----------|-----|-------------|
-| CQ-01 | KISS Structure | 3 | Imports → Data → Plot → Save (no functions/classes) |
+| CQ-01 | KISS Structure | 3 | Reads top to bottom, cell by cell: Imports → Data → Plot → Save; no `main()`, class, wrapper or nesting (a short helper is fine) |
 | CQ-02 | Reproducibility | 2 | `np.random.seed(42)` or deterministic data |
 | CQ-03 | Clean Imports | 2 | Only used imports (including data utilities like `sns.load_dataset()`) |
 | CQ-04 | Code Elegance | 2 | Appropriate complexity, no algorithm written out that an available call computes, no over-engineering, no fake functionality |
 | CQ-05 | Output & API | 1 | Saves as `plot.png`, no deprecated functions |
+
+### CQ-01: KISS Structure (3 Points)
+
+The file reads like a notebook: top to bottom, one cell after the other (Imports → Data → Plot → Save), with every step of the plot at the top level, where the reader meets it.
+
+| Points | Criterion |
+|--------|-----------|
+| 3 | Top to bottom, cell by cell; any helper is short and sits above its first use |
+| 2 | One function hides a large part of the drawing: it builds a whole panel or a stack of layers, or a helper has grown well past a few lines |
+| 0 | The plot is not at the top level: a `main()` or a builder function holds the figure or the save, a class holds the code, or functions are nested inside functions |
+
+**A short helper costs nothing.** A function defined at the top level above its first use, a few lines long so the reader takes it in at a glance, for a formula or a step the code uses more than once: `def skew_x(t, p): ...` for the skew-T transform that the isotherms, the adiabats and both profiles use, `def sat_vapour_pressure(t): ...`, or `def rgba(hex_color, alpha): ...`. It may draw when it is one small step repeated for several elements, such as `add_ref(ax, value, label)` for each reference line or a haloed text call for each label. A short helper called only once is no deduction either; inlining it is at most a `Suggestion:`. Neither is a callback, formatter or component that the library's API or the harness asks for (a tick formatter, a sort key, the default-exported React component of muix). The number of helpers is not the test, and there is no line threshold.
+
+**What CQ-01 deducts.** A `main()` or any other entry-point function, with the `if __name__ == "__main__":` guard that calls it; a class; a function that wraps the plot creation or the save, such as a `build_chart()` that holds the whole figure, a `make_panel()` that holds each panel's whole drawing, or a `save_plot()`; and nesting: a function defined inside another function, or helpers stacked on helpers so that one step of the plot takes several jumps to follow. A loop over the panel values, with the drawing written out in its body, is the top-down form of a panel builder.
+
+How to score it:
+
+- Deduct in proportion to how much of the plot the reader can no longer follow from top to bottom. The whole plot inside a `main()` or a builder function loses most of CQ-01; one function that builds a panel or a large part of the drawing, or a helper that has grown well past a few lines, costs one point.
+- The defect line names the function and its line: ``CQ-01 (code): line N `def main()` holds the figure and the save → move its body to the top level, cell by cell. Likely cause: an entry-point function.``
 
 ### CQ-04: Code Elegance (2 Points)
 
@@ -517,7 +536,7 @@ How to score it:
 - A leanness deduction is a defect line only when it names the replacement and the lines: ``CQ-04 (code): lines A–B <what is written out, with the saving in lines> → `<call>` (<package>). Likely cause: ….``, or `→ remove` for dead or duplicated code. The call names the arguments that reproduce the output (a bandwidth, `ddof`, a `method`, a window): a library default that gives different numbers is not the same computation. Without a concrete replacement it is a `Suggestion:` line.
 - "Clearly shorter" is proportional: a block that shrinks to a fraction of its length is a defect, and a few lines of taste is a suggestion. A block of a handful of lines (a closed-form slope and intercept, a four-line loop) is a suggestion whatever the ratio. There is no line threshold.
 - Not deducted: the mandated header, theme and palette token blocks, the `sys.path` self-shadowing guard, and a hand-roll whose output no available call reproduces.
-- A replacement is a call or a removal, never a new helper function (CQ-01), and never code golf: a shorter version that reads worse is not leaner.
+- A replacement is a call, a loop over the repeated values, a short helper above its first use (CQ-01), or a removal, and never code golf: a shorter version that reads worse is not leaner. A function that wraps the plot or the save is never a replacement.
 - Installed packages are not dependencies to avoid: never credit a hand-roll for avoiding one.
 - Leanness costs 1 point at most, however many blocks it names, and never takes CQ-04 to 0. CQ-04 = 0 stays reserved for fake functionality and gross over-engineering.
 
@@ -549,6 +568,8 @@ How to score it:
 **Calibration:** LM-02 = 1 is the default. To score 3+, the implementation must use a feature distinctive to this specific library.
 
 **Compliance is not mastery.** Evidence that raises an LM item above its default is use of the library **beyond** what the spec's Notes require and what `prompts/library/{library}.md` and the style guide mandate (the theme and palette token blocks, the canvas contract, the save call). Name the feature or the idiom in the item's comment; a feature the Notes ask for by name, drawn with the call every implementation of that library would use, raises nothing.
+
+**No credit for what the variant excludes.** A feature that is itself an addition the spec's variant excludes earns no LM-01 or LM-02 credit, however distinctive the library makes it. On a `-basic` spec, that is anything the spec neither requires nor offers as optional, by the test of "Variant creep on `-basic` specs" under SC-01, and interactive controls drawn on the chart count as well: range selector buttons, sliders, dropdown menus. How the library draws what the spec asks for still earns credit as before. Negative example: on `area-basic`, range selector buttons above the chart and a dotted trend line raise neither LM item. Positive example: a gradient fill of the required area, or a hover template written for the values the chart shows, can raise LM-02. On a spec that asks for or allows a control, the control is scored like any other feature. The re-score of the live file on a regeneration (`prev_checklist`) applies this exactly as the review of the new file does. This paragraph withholds LM credit only; what an addition costs SC-01 stays with the variant-creep paragraph.
 
 **Note:** Basic library usage is checked by AR-05. Library Mastery evaluates *quality* of usage.
 
@@ -653,7 +674,7 @@ DATA QUALITY (13/15)
   DQ-03: 4/4   (good values)
 
 CODE QUALITY (9/10)
-  CQ-01: 3/3   (KISS)
+  CQ-01: 3/3   (top to bottom; one short helper above its first use)
   CQ-02: 2/2   (seed set)
   CQ-03: 2/2   (clean imports)
   CQ-04: 1/2   (lines 39–60 write out ACF/PACF → `statsmodels.tsa.stattools.acf`/`pacf`)
