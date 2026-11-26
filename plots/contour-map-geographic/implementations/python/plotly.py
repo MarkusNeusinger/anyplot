@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 78/100 | Updated: 2026-11-26
 """
 
 import os
+import re
 import sys
 
 
@@ -32,6 +33,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 LAND_COLOR = "#D8D3BB" if THEME == "light" else "#2A2A25"
 OCEAN_BG = "#C5D8E8" if THEME == "light" else "#19242E"
 COAST_COLOR = "#888880" if THEME == "light" else "#666660"
+
+FIELD_ALPHA = 0.55  # translucent bands keep the coastlines beneath legible
 
 # Imprint sequential ramp for filled fields (colored cells fill the plot)
 SEQ_FIELDS = (
@@ -69,6 +72,8 @@ fig = go.Figure()
 for i, segs in enumerate(cs_fill.allsegs):
     mid_val = (levels[i] + levels[i + 1]) / 2
     fill_color = sample_colorscale(SEQ_FIELDS, [(mid_val - T_MIN) / (T_MAX - T_MIN)])[0]
+    r, g, b = (int(v) for v in re.findall(r"\d+", fill_color)[:3])
+    fill_color = f"rgba({r},{g},{b},{FIELD_ALPHA})"
     for seg in segs:
         if len(seg) < 3:
             continue
@@ -107,6 +112,8 @@ for i, segs in enumerate(cs_line.allsegs):
 
 # Isoline value labels at midpoints of selected levels (every 4°C)
 label_levels = {8.0, 12.0, 16.0, 20.0}
+PLACES = [("Newfoundland", 48.5, -56.0), ("Ireland", 53.3, -8.0), ("Azores", 38.0, -28.0)]
+label_lon, label_lat, label_text = [], [], []
 for i, segs in enumerate(cs_line.allsegs):
     level_val = float(cs_line.levels[i])
     if level_val not in label_levels:
@@ -115,17 +122,53 @@ for i, segs in enumerate(cs_line.allsegs):
         if len(seg) < 10:
             continue
         mid = len(seg) // 2
-        fig.add_trace(
-            go.Scattergeo(
-                lon=[float(seg[mid, 0])],
-                lat=[float(seg[mid, 1])],
-                mode="text",
-                text=[f"{level_val:.0f}°C"],
-                textfont=dict(size=12, color=INK),
-                showlegend=False,
-                hoverinfo="skip",
-            )
+        label_lon.append(float(seg[mid, 0]))
+        label_lat.append(float(seg[mid, 1]))
+        label_text.append(f"{level_val:.0f}°C")
+
+
+def add_haloed_text(lons, lats, texts, position):
+    """Text with a page-colored halo (offset copies underneath) so lines never strike through it."""
+    offsets = [(dx, dy) for dx in (-0.2, 0, 0.2) for dy in (-0.15, 0, 0.15) if (dx, dy) != (0, 0)]
+    fig.add_trace(
+        go.Scattergeo(
+            lon=[x + dx for dx, _ in offsets for x in lons],
+            lat=[y + dy for _, dy in offsets for y in lats],
+            mode="text",
+            text=texts * len(offsets),
+            textposition=position,
+            textfont=dict(size=12, color=ELEVATED_BG),
+            showlegend=False,
+            hoverinfo="skip",
         )
+    )
+    fig.add_trace(
+        go.Scattergeo(
+            lon=lons,
+            lat=lats,
+            mode="text",
+            text=texts,
+            textposition=position,
+            textfont=dict(size=12, color=INK),
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+
+
+add_haloed_text(label_lon, label_lat, label_text, "middle center")
+# Place names at their own coordinates, set to the right of their dots
+add_haloed_text([p[2] + 0.8 for p in PLACES], [p[1] for p in PLACES], [p[0] for p in PLACES], "middle right")
+fig.add_trace(
+    go.Scattergeo(
+        lon=[p[2] for p in PLACES],
+        lat=[p[1] for p in PLACES],
+        mode="markers",
+        marker=dict(size=7, color=INK, line=dict(width=1.5, color=ELEVATED_BG)),
+        showlegend=False,
+        hoverinfo="skip",
+    )
+)
 
 # Dummy trace for standalone colorbar
 fig.add_trace(
@@ -157,8 +200,8 @@ fig.add_trace(
 # Native Plotly geographic basemap with Natural Earth coastlines and borders
 fig.update_geos(
     projection_type="mercator",
-    lataxis_range=[27, 63],
-    lonaxis_range=[-64, 4],
+    lataxis_range=[28, 62],
+    lonaxis_range=[-72, 12],
     showcoastlines=True,
     coastlinecolor=COAST_COLOR,
     coastlinewidth=1.5,
@@ -187,42 +230,7 @@ fig.update_layout(
         xanchor="center",
     ),
     font=dict(color=INK),
-    margin=dict(l=70, r=120, t=60, b=40),
-    annotations=[
-        dict(
-            x=0.09,
-            y=0.72,
-            text="Newfoundland",
-            showarrow=False,
-            font=dict(size=12, color=INK),
-            bgcolor=ELEVATED_BG,
-            borderpad=3,
-            xref="paper",
-            yref="paper",
-        ),
-        dict(
-            x=0.80,
-            y=0.62,
-            text="Ireland",
-            showarrow=False,
-            font=dict(size=12, color=INK),
-            bgcolor=ELEVATED_BG,
-            borderpad=3,
-            xref="paper",
-            yref="paper",
-        ),
-        dict(
-            x=0.60,
-            y=0.20,
-            text="Azores",
-            showarrow=False,
-            font=dict(size=12, color=INK),
-            bgcolor=ELEVATED_BG,
-            borderpad=3,
-            xref="paper",
-            yref="paper",
-        ),
-    ],
+    margin=dict(l=20, r=110, t=50, b=20),
 )
 
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
