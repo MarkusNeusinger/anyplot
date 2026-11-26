@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' line-stock-comparison: Stock Price Comparison Chart
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 82/100 | Updated: 2026-11-26
+#' Quality: pending | Updated: 2026-11-26
 
 library(ggplot2)
 library(ragg)
