@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-08
@@ -17,6 +17,7 @@ from lets_plot import (
     element_text,
     geom_path,
     geom_polygon,
+    gggrid,
     ggplot,
     ggsize,
     guide_legend,
@@ -30,7 +31,6 @@ from lets_plot import (
     theme_minimal,
 )
 from lets_plot.export import ggsave
-from PIL import Image as PILImage
 
 
 LetsPlot.setup_html()
@@ -491,13 +491,9 @@ plot = (
     + ggsize(600, 600)
 )
 
+# The fixed map aspect leaves the canvas outside the plot box transparent; a one-panel grid paints it
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+
 # Save
 ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, filename=f"plot-{THEME}.html", path=".")
-
-# Flatten transparent margins to solid PAGE_BG: with the map's fixed aspect, lets-plot leaves
-# the canvas outside the plot transparent
-img = PILImage.open(f"plot-{THEME}.png").convert("RGBA")
-bg = PILImage.new("RGBA", img.size, PAGE_BG)
-bg.paste(img, mask=img.split()[3])
-bg.convert("RGB").save(f"plot-{THEME}.png")
