@@ -167,12 +167,12 @@ p <- ggplot() +
   geom_path(
     data = moist_df,
     aes(x = x, y = y, group = group, color = series, linetype = series),
-    linewidth = 0.28, alpha = 0.55
+    linewidth = 0.4, alpha = 0.7
   ) +
   geom_path(
     data = mix_df,
     aes(x = x, y = y, group = group, color = series, linetype = series),
-    linewidth = 0.28, alpha = 0.55
+    linewidth = 0.4, alpha = 0.7
   ) +
   # Main sounding profiles with legend (Temperature = first/brand colour)
   geom_path(
@@ -195,8 +195,8 @@ p <- ggplot() +
     labels = y_labels,
     limits = c(y_lo, y_hi)
   ) +
-  scale_x_continuous(breaks = seq(-30, 60, by = 10)) +
-  coord_cartesian(xlim = c(-42, 62)) +
+  scale_x_continuous(breaks = seq(-50, 60, by = 10)) +
+  coord_cartesian(xlim = c(-52, 62)) +
   labs(
     x     = "Temperature (°C)",
     y     = "Pressure (hPa)",
@@ -218,7 +218,8 @@ p <- ggplot() +
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
                                      linewidth = 0.3),
     legend.text       = element_text(color = INK_SOFT, size = 8),
-    legend.position.inside = c(0.88, 0.05),
+    legend.position        = "inside",
+    legend.position.inside = c(0.98, 0.03),
     legend.justification   = c(1, 0),
     plot.margin       = margin(20, 30, 15, 20)
   ) +
