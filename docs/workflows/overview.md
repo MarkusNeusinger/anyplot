@@ -383,7 +383,7 @@ Then one rule per setting that a library prompt states as mandatory, as a hard r
 | `bokeh-toolbar` | bokeh | The figure keeps its toolbar (`toolbar_location=None` as a keyword or as a key of a keyword dict). |
 | `pygal-tick-sizes` | pygal | The style sets only one of `label_font_size` and `major_label_font_size`, or the two to different numbers (a name the code assigns a number counts as that number). |
 | `pygal-grid-colour` | pygal | A chart that draws guide lines leaves `guide_stroke_color` or `major_guide_stroke_color` at pygal's black. Pie, treemap, gauge and funnel charts and the world maps draw none. |
-| `altair-autosize` | altair | A single or layered chart doesn't fit its size with `autosize` type `fit`. Compound charts can't fit and are exempt. |
+| `altair-autosize` | altair | A single or layered chart doesn't fit its size with `autosize` type `fit`. Compound charts can't fit and are exempt, and so is any file with an `|` or `&` between spaces, which may be a chart operator or a pandas mask: the rule misses some files rather than flag a compliant one. |
 | `plotly-autosize` | plotly | The layout turns `autosize` on. |
 | `letsplot-wrap` | letsplot | A plot with a fixed aspect isn't wrapped in a `gggrid` or `ggbunch` that paints the canvas. |
 | `bbox-tight` | matplotlib, seaborn | The figure is saved with `bbox_inches="tight"`. |
