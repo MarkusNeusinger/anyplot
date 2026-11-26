@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-27
@@ -44,72 +44,85 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"  # Imprint palette position 1
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"  # INK at 15 %
 
-# Data
-np.random.seed(42)
-n_days = 180
-dates = pd.date_range(start="2024-01-02", periods=n_days, freq="B")
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-returns = np.random.normal(0.0005, 0.018, n_days)
-close_prices = 150 * np.cumprod(1 + returns)
-df_price = pd.DataFrame({"date": dates, "close": close_prices})
+# Constants
+# Semantic Imprint colors and marker shapes per event type (shapes back the colors up for color-blind readers)
+EVENT_COLORS = {
+    "Earnings": IMPRINT_PALETTE[2],
+    "Dividend": IMPRINT_PALETTE[0],
+    "News": IMPRINT_PALETTE[3],
+    "Split": IMPRINT_PALETTE[4],
+}
+EVENT_SHAPES = {"Earnings": 18, "Dividend": 16, "News": 17, "Split": 15}
+HOLIDAY_SEASON = ("2023-11-24", "2023-12-26")  # Black Friday to the day after Christmas, the extended event
 
-events = [
-    {"date": "2024-01-25", "type": "Earnings", "label": "Q4 Beat"},
-    {"date": "2024-02-15", "type": "Dividend", "label": "Div $0.25"},
-    {"date": "2024-03-20", "type": "News", "label": "Product Launch"},
-    {"date": "2024-04-25", "type": "Earnings", "label": "Q1 Earnings"},
-    {"date": "2024-05-10", "type": "Dividend", "label": "Div $0.25"},
-    {"date": "2024-06-05", "type": "News", "label": "Analyst Upgrade"},
-    {"date": "2024-07-25", "type": "Earnings", "label": "Q2 Miss"},
-    {"date": "2024-08-15", "type": "Dividend", "label": "Div $0.28"},
-    {"date": "2024-09-12", "type": "Split", "label": "2:1 Split"},
-]
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close ($)"  # role: close
+EVENT_DATE = "Event date"  # role: event_date
+EVENT_TYPE = "Event type"  # role: event_type
+EVENT_LABEL = "Event label"  # role: event_label
 
-df_events = pd.DataFrame(events)
-df_events["date"] = pd.to_datetime(df_events["date"])
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
+# One row per trading day; the event columns are filled only on the days an event falls on
+rng = np.random.default_rng(7)
+dates = pd.date_range(start="2023-09-01", periods=170, freq="B")
+daily_returns = rng.normal(0.0004, 0.014, len(dates))
+event_calendar = {
+    "2023-09-14": ("Dividend", "Div $0.50"),
+    "2023-10-12": ("News", "Comp Sales Up"),
+    "2023-11-16": ("Earnings", "Q3 Beat"),
+    "2023-11-24": ("News", "Black Friday"),
+    "2023-12-14": ("Dividend", "Div $0.50"),
+    "2024-01-11": ("News", "Holiday Warning"),
+    "2024-02-29": ("Earnings", "Q4 Miss"),
+    "2024-03-14": ("Dividend", "Div $0.55"),
+    "2024-04-04": ("Split", "3:1 Split"),
+}
+jump_by_type = {"Earnings": 0.04, "News": 0.025, "Dividend": 0.0, "Split": 0.0}
+for day, (kind, _) in event_calendar.items():
+    sign = -1 if day in ("2024-01-11", "2024-02-29") else 1
+    daily_returns[dates.get_loc(pd.Timestamp(day))] += sign * jump_by_type[kind]
+df = pd.DataFrame({DATE: dates, CLOSE: 82 * np.cumprod(1 + daily_returns)})
+df[EVENT_DATE] = [d if d.strftime("%Y-%m-%d") in event_calendar else pd.NaT for d in dates]
+df[EVENT_TYPE] = [event_calendar.get(d.strftime("%Y-%m-%d"), (None, None))[0] for d in dates]
+df[EVENT_LABEL] = [event_calendar.get(d.strftime("%Y-%m-%d"), (None, None))[1] for d in dates]
 
-# Match each event to the nearest trading day
-event_prices = []
-event_dates_matched = []
-for event_date in df_events["date"]:
-    idx = np.abs(df_price["date"] - event_date).argmin()
-    event_prices.append(df_price.iloc[idx]["close"])
-    event_dates_matched.append(df_price.iloc[idx]["date"])
+# Plot: reads only df and the constants above
+events = df.dropna(subset=[EVENT_DATE]).reset_index(drop=True)
 
-df_events["price"] = event_prices
-df_events["date_matched"] = event_dates_matched
+# Three-tier staggered flag heights keep neighboring flags and their labels apart
+price_range = df[CLOSE].max() - df[CLOSE].min()
+tier_offsets = [price_range * 0.2, price_range * 0.4, price_range * 0.6]
+events["Flag y"] = [price + tier_offsets[i % 3] for i, price in enumerate(events[CLOSE])]
 
-# Three-tier staggered flag heights — wider spacing reduces Jan/Feb crowding
-price_range = close_prices.max() - close_prices.min()
-tier_offsets = [price_range * 0.18, price_range * 0.36, price_range * 0.54]
-df_events["flag_y"] = [p + tier_offsets[i % 3] for i, p in enumerate(event_prices)]
+y_min = df[CLOSE].min() - price_range * 0.05
+y_max = events["Flag y"].max() + price_range * 0.14
 
-# Y axis limits: give 10% headroom above highest flag and 5% below price floor
-y_min = close_prices.min() - price_range * 0.05
-y_max = df_events["flag_y"].max() + price_range * 0.12
-
-# Shaded band for Q2 Miss period — connects the earnings event to the price drop
-df_q2_band = pd.DataFrame(
-    {"xmin": [pd.Timestamp("2024-06-25")], "xmax": [pd.Timestamp("2024-08-10")], "ymin": [y_min], "ymax": [y_max]}
+band = pd.DataFrame(
+    {
+        "xmin": [pd.Timestamp(HOLIDAY_SEASON[0])],
+        "xmax": [pd.Timestamp(HOLIDAY_SEASON[1])],
+        "ymin": [y_min],
+        "ymax": [y_max],
+    }
+)
+band_label = pd.DataFrame(
+    {"x": [pd.Timestamp(HOLIDAY_SEASON[0])], "y": [y_min + price_range * 0.04], "label": ["Holiday season"]}
 )
 
-# Plot
 title = "stock-event-flags · python · letsplot · anyplot.ai"
 n_title = len(title)
 title_fontsize = round(16 * 67 / n_title) if n_title > 67 else 16
 
-# Semantic color mapping — Imprint palette with finance semantics
-# Dividend→green (income), Earnings→blue (reporting), News→ochre, Split→red (major change)
-event_color_map = {"Earnings": "#4467A3", "Dividend": BRAND, "News": "#BD8233", "Split": "#AE3030"}
-# Distinct shapes per event type: diamond, circle, triangle, square
-event_shape_map = {"Earnings": 18, "Dividend": 16, "News": 17, "Split": 15}
-
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK_SOFT, size=0.2),
+    panel_grid_major=element_line(color=GRID, size=0.3),
     panel_grid_minor=element_blank(),
     axis_title=element_text(color=INK, size=12),
     axis_text=element_text(color=INK_SOFT, size=10),
@@ -125,40 +138,45 @@ plot = (
     ggplot()
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
-        data=df_q2_band,
-        fill="#AE3030",
-        alpha=0.07,
-        color="#AE3030",
+        data=band,
+        fill=IMPRINT_PALETTE[3],
+        alpha=0.12,
+        color=IMPRINT_PALETTE[3],
         size=0,
     )
-    + geom_area(aes(x="date", y="close"), data=df_price, fill=INK_SOFT, alpha=0.12)
+    + geom_text(aes(x="x", y="y", label="label"), data=band_label, hjust=0, size=5, color=INK_SOFT, fontface="italic")
+    + geom_area(aes(x=DATE, y=CLOSE), data=df, fill=INK_SOFT, alpha=0.12)
     + geom_line(
-        aes(x="date", y="close"),
-        data=df_price,
+        aes(x=DATE, y=CLOSE),
+        data=df,
         color=INK_SOFT,
         size=1.3,
-        tooltips=layer_tooltips().line("@date").line("Price: $@close"),
+        tooltips=layer_tooltips().line(f"@{{{DATE}}}").line(f"Price: $@{{{CLOSE}}}"),
     )
     + geom_segment(
-        aes(x="date_matched", y="price", xend="date_matched", yend="flag_y"),
-        data=df_events,
+        aes(x=EVENT_DATE, y=CLOSE, xend=EVENT_DATE, yend="Flag y"),
+        data=events,
         color=INK_MUTED,
         size=0.5,
         linetype="dashed",
     )
     + geom_point(
-        aes(x="date_matched", y="flag_y", color="type", shape="type"),
-        data=df_events,
+        aes(x=EVENT_DATE, y="Flag y", color=EVENT_TYPE, shape=EVENT_TYPE),
+        data=events,
         size=6,
-        tooltips=layer_tooltips().title("@type").line("@label").line("Date: @date_matched").line("Price: $@{price}"),
+        tooltips=layer_tooltips()
+        .title(f"@{{{EVENT_TYPE}}}")
+        .line(f"@{{{EVENT_LABEL}}}")
+        .line(f"Date: @{{{EVENT_DATE}}}")
+        .line(f"Price: $@{{{CLOSE}}}"),
     )
-    + geom_text(aes(x="date_matched", y="flag_y", label="label"), data=df_events, vjust=-1.5, size=4, color=INK)
-    + geom_point(aes(x="date_matched", y="price"), data=df_events, color=INK_MUTED, size=2.5)
-    + scale_color_manual(values=event_color_map, name="Event Type")
-    + scale_shape_manual(values=event_shape_map, name="Event Type")
-    + scale_x_datetime(format="%b %Y")
+    + geom_text(aes(x=EVENT_DATE, y="Flag y", label=EVENT_LABEL), data=events, vjust=-1.5, size=6, color=INK)
+    + geom_point(aes(x=EVENT_DATE, y=CLOSE), data=events, color=INK_MUTED, size=2.5)
+    + scale_color_manual(values=EVENT_COLORS)
+    + scale_shape_manual(values=EVENT_SHAPES)
+    + scale_x_datetime(format="%b %Y", expand=[0.04, 0.04])
     + scale_y_continuous(limits=[y_min, y_max])
-    + labs(x="Date", y="Stock Price ($)", title=title)
+    + labs(x=DATE, y=CLOSE, title=title)
     + theme_minimal()
     + anyplot_theme
     + ggsize(800, 450)
