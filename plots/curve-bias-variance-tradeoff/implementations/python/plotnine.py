@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 75/100 | Updated: 2026-11-26
@@ -68,7 +68,7 @@ long_df = df.melt(id_vars=COMPLEXITY, value_vars=curves, var_name=CURVE, value_n
 long_df[CURVE] = pd.Categorical(long_df[CURVE], categories=curves)
 
 colors = dict(zip(curves, IMPRINT_PALETTE, strict=False))
-linetypes = dict(zip(curves, ["dashed", "dashed", "dotted", "solid"], strict=True))
+linetypes = dict(zip(curves, ["dashed", "dashdot", "dotted", "solid"], strict=True))
 line_sizes = dict(zip(curves, [0.9, 0.9, 0.7, 1.3], strict=True))
 
 x_min, x_max = df[COMPLEXITY].min(), df[COMPLEXITY].max()
@@ -80,7 +80,7 @@ opt_y = df.loc[opt_idx, TOTAL]
 
 
 # Direct curve labels, each placed on its own curve at a well-separated position
-label_x = x_min + x_span * np.array([0.21, 0.79, 0.64, 0.57])
+label_x = x_min + x_span * np.array([0.21, 0.84, 0.64, 0.57])
 label_y = [
     np.interp(label_x[0], df[COMPLEXITY], df[BIAS]) + 0.06,
     np.interp(label_x[1], df[COMPLEXITY], df[VARIANCE]) + 0.05,
@@ -110,41 +110,52 @@ plot = (
     + annotate(
         "rect",
         xmin=[x_min, opt_x],
-        xmax=[opt_x, x_max * 1.15],
+        xmax=[opt_x, x_max],
         ymin=[0.0, 0.0],
         ymax=[y_top, y_top],
         fill=INK_MUTED,
-        alpha=0.07,
+        alpha=[0.04, 0.12],
+    )
+    + annotate(
+        "text", x=x_min + 0.02 * x_span, y=y_top * 0.97, label="Underfitting", color=INK_MUTED, size=9, ha="left"
+    )
+    + annotate(
+        "text", x=x_max - 0.02 * x_span, y=y_top * 0.97, label="Overfitting", color=INK_MUTED, size=9, ha="right"
     )
     + geom_line()
     + geom_vline(xintercept=opt_x, color=INK_MUTED, linetype="dashed", size=0.5)
-    + annotate("text", x=label_x, y=label_y, label=curves, color=[colors[c] for c in curves], size=3.5, ha="left")
+    + annotate(
+        "text",
+        x=label_x,
+        y=label_y,
+        label=curves,
+        color=[colors[c] for c in curves],
+        size=9,
+        ha=["left", "right", "left", "left"],
+    )
     + annotate(
         "text",
         x=opt_x + 0.025 * x_span,
         y=opt_y - 0.07,
         label="Optimal\nComplexity",
         color=INK_MUTED,
-        size=3.2,
+        size=8.5,
         ha="left",
     )
     + annotate(
         "text",
-        x=x_min + 0.55 * x_span,
+        x=opt_x + 0.04 * x_span,
         y=y_top * 0.93 / 1.05,
         label=f"{TOTAL} = {BIAS} + {VARIANCE} + {IRREDUCIBLE}",
         color=INK_SOFT,
-        size=3.2,
-        ha="center",
+        size=8.5,
+        ha="left",
     )
     + scale_color_manual(values=colors)
     + scale_linetype_manual(values=linetypes)
     + scale_size_manual(values=line_sizes)
     + scale_x_continuous(
-        name=COMPLEXITY,
-        breaks=np.linspace(0, x_max, 6),
-        labels=["Low", "", "", "", "", "High"],
-        limits=(x_min, x_max * 1.15),
+        name=COMPLEXITY, breaks=[x_min, x_max], labels=["Low", "High"], limits=(x_min, x_max), expand=(0, 0)
     )
     + scale_y_continuous(name=ERROR, limits=(0.0, y_top))
     + labs(title="curve-bias-variance-tradeoff · python · plotnine · anyplot.ai")
