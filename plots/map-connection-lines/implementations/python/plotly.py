@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-28
@@ -66,6 +66,9 @@ else:
     coast_color = "#4A4A44"
     country_color = "#383835"
 
+# Low-volume routes need a higher opacity floor to stand out from the dark page
+OPACITY_MIN = 0.45 if THEME == "light" else 0.65
+
 # Create figure
 fig = go.Figure()
 
@@ -80,7 +83,7 @@ for origin, dest, passengers in routes:
     bc = int(0x73 + t * (0xA3 - 0x73))
     route_color = f"#{rc:02X}{gc:02X}{bc:02X}"
     line_width = 2 + t * 7  # 2–9 px
-    opacity = 0.45 + t * 0.35  # 0.45–0.80
+    opacity = OPACITY_MIN + t * 0.35  # translucent so overlaps build up; higher floor on the dark page
 
     fig.add_trace(
         go.Scattergeo(
@@ -108,7 +111,7 @@ for leg_label, leg_pass in [("Low (1.6M/yr)", 1600), ("Medium (2.9M/yr)", 2900),
             lat=[None],
             mode="lines",
             line={"width": 2 + t * 7, "color": leg_color},
-            opacity=0.45 + t * 0.35,
+            opacity=OPACITY_MIN + t * 0.35,
             name=leg_label,
             showlegend=True,
         )
