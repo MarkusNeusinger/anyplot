@@ -1,10 +1,12 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-28
 """
 
+import math
 import os
+from itertools import pairwise
 
 import numpy as np
 import pandas as pd
@@ -23,7 +25,7 @@ from lets_plot import (
     ggsize,
     guide_legend,
     labs,
-    scale_color_gradient,
+    scale_color_gradientn,
     scale_size,
     theme,
     theme_void,
@@ -42,6 +44,26 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 LAND_FILL = "#E8E4DF" if THEME == "light" else "#2D2D29"
 LAND_BORDER = "#C5C0BA" if THEME == "light" else "#404040"
+
+# Imprint sequential ramp for marks (lines on the page), as (position, hex) stops
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    if not math.isfinite(t):
+        return "none"
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
 
 # Data: Major flight routes between world cities
 np.random.seed(42)
@@ -203,7 +225,7 @@ plot = (
             x="origin_lon", y="origin_lat", xend="dest_lon", yend="dest_lat", size="passengers", color="passengers"
         ),
         curvature=-0.3,
-        alpha=0.5,
+        alpha=0.6,
     )
     + geom_point(
         data=df_airports, mapping=aes(x="lon", y="lat"), size=6, color=PAGE_BG, fill="#009E73", shape=21, stroke=2
@@ -222,7 +244,9 @@ plot = (
         data=df_callout, mapping=aes(x="x", y="y", label="label"), size=3.5, color=INK, hjust=0.5, fontface="bold"
     )
     + scale_size(range=[0.5, 6], name="Passengers (millions)", guide=guide_legend())
-    + scale_color_gradient(low="#009E73", high="#4467A3", name="Passengers (millions)", guide=guide_legend())
+    + scale_color_gradientn(
+        colors=[ramp_color(SEQ_MARKS, k / 255) for k in range(256)], name="Passengers (millions)", guide=guide_legend()
+    )
     + labs(title=title)
     + theme_void()
     + theme(
