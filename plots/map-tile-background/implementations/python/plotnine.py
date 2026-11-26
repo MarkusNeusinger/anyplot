@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-27
@@ -32,6 +32,8 @@ from plotnine import (  # noqa: E402
     geom_polygon,
     geom_rect,
     ggplot,
+    guide_legend,
+    guides,
     labs,
     scale_color_manual,
     scale_fill_manual,
@@ -191,7 +193,7 @@ category_colors = {cat: IMPRINT_PALETTE[i] for i, cat in enumerate(categories_so
 # Labels for top 3 most-visited landmarks (well-separated geographically)
 top3 = df.nlargest(3, "visitors")  # Union Square, Fisherman's Wharf, Golden Gate Bridge
 label_positions = {
-    "Union Square": {"nudge_x": 0.025, "nudge_y": 0.012},
+    "Union Square": {"nudge_x": 0.008, "nudge_y": 0.012},
     "Fisherman's Wharf": {"nudge_x": -0.035, "nudge_y": 0.014},
     "Golden Gate Bridge": {"nudge_x": 0.015, "nudge_y": 0.014},
 }
@@ -216,12 +218,12 @@ plot = (
     + scale_fill_manual(values={"water": water_color, "land": land_color}, guide=None)
     + geom_polygon(aes(x="lon", y="lat", group="region"), data=df_coast, fill="none", color=coast_color, size=0.8)
     + geom_point(aes(x="lon", y="lat", color="category", size="visitors"), data=df, alpha=0.88, stroke=0.4)
-    + scale_size_continuous(range=(2, 10), name="Visitors\n(K/yr)")
+    + scale_size_continuous(range=(3, 12), name="Visitors\n(K/yr)")
     + scale_color_manual(values=category_colors, name="Category")
     + geom_label(
         aes(x="lon", y="lat", label="name"),
         data=label_df,
-        size=3.5,
+        size=5,
         alpha=0.92,
         fill=ELEVATED_BG,
         color=INK,
@@ -232,11 +234,12 @@ plot = (
         x=lon_max - 0.003,
         y=lat_min + 0.003,
         label="Simulated tiles · SF landmarks",
-        size=2.5,
+        size=5,
         ha="right",
         va="bottom",
         color=INK_MUTED,
     )
+    + guides(size=guide_legend(override_aes={"color": INK_SOFT}))
     + coord_fixed(ratio=1.06, xlim=(lon_min, lon_max), ylim=(lat_min, lat_max))
     + labs(title=title, x="Longitude (°)", y="Latitude (°)")
     + theme_minimal()
@@ -252,7 +255,8 @@ plot = (
         axis_text=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=9, color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
         legend_position="right",
         legend_key_size=10,
         plot_margin=0.01,
