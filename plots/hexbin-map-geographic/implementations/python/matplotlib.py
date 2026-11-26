@@ -1,15 +1,16 @@
 """ anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-27
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Polygon
 
 
 # Theme tokens
@@ -20,14 +21,97 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Continuous colormap — imprint_seq (green → blue, single-polarity)
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+# Continuous colormap — imprint_seq, fields stops (colored cells fill the map)
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_FIELDS)
 
 # Base map surface colors
 WATER_BG = "#C8DFF0" if THEME == "light" else "#1C2D3A"
 LAND_BG = "#E8E5DB" if THEME == "light" else "#282820"
 
-# Data: NYC taxi pickup locations (5,000 simulated points)
+# Constants
+GRIDSIZE = 35  # hexagons across the map's width: detail vs. aggregation
+# Map window (lon_min, lon_max, lat_min, lat_max) and simplified land outlines (lon, lat)
+EXTENT = (-74.05, -73.70, 40.58, 40.90)
+LAND = [
+    # New Jersey, west of the Hudson
+    [
+        (-74.06, 40.57),
+        (-74.04, 40.645),
+        (-74.02, 40.70),
+        (-74.025, 40.72),
+        (-74.015, 40.745),
+        (-74.0, 40.77),
+        (-73.985, 40.80),
+        (-73.96, 40.85),
+        (-73.945, 40.89),
+        (-73.94, 40.91),
+        (-74.06, 40.91),
+    ],
+    # Manhattan
+    [
+        (-74.017, 40.703),
+        (-74.012, 40.725),
+        (-74.003, 40.745),
+        (-73.997, 40.765),
+        (-73.985, 40.79),
+        (-73.972, 40.815),
+        (-73.95, 40.845),
+        (-73.93, 40.87),
+        (-73.922, 40.87),
+        (-73.928, 40.85),
+        (-73.94, 40.825),
+        (-73.955, 40.80),
+        (-73.965, 40.785),
+        (-73.972, 40.765),
+        (-73.975, 40.745),
+        (-73.972, 40.728),
+        (-73.977, 40.712),
+        (-73.997, 40.708),
+    ],
+    # The Bronx and the mainland to the north
+    [
+        (-73.93, 40.80),
+        (-73.91, 40.80),
+        (-73.795, 40.82),
+        (-73.78, 40.9),
+        (-73.93, 40.9),
+        (-73.925, 40.87),
+        (-73.935, 40.835),
+    ],
+    # Brooklyn and Queens on western Long Island
+    [
+        (-74.04, 40.645),
+        (-74.015, 40.66),
+        (-74.0, 40.69),
+        (-73.99, 40.70),
+        (-73.97, 40.705),
+        (-73.955, 40.725),
+        (-73.945, 40.74),
+        (-73.925, 40.76),
+        (-73.905, 40.785),
+        (-73.88, 40.79),
+        (-73.85, 40.795),
+        (-73.79, 40.81),
+        (-73.70, 40.80),
+        (-73.70, 40.58),
+        (-74.0, 40.58),
+        (-74.04, 40.61),
+    ],
+]
+LANDMARKS = [("Manhattan", -73.985, 40.758), ("Brooklyn", -73.960, 40.680), ("Queens", -73.850, 40.730)]
+
+# Columns: set these to your table's column names
+LON = "Longitude"  # role: lon
+LAT = "Latitude"  # role: lat
+FARE = "Trip fare ($)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("trips.csv")
+# NYC taxi pickup locations (5,000 simulated trips) with the fare of each trip
 np.random.seed(42)
 n_points = 5000
 
@@ -38,23 +122,29 @@ lon_brooklyn = np.random.normal(-73.960, 0.030, 1500)
 lat_queens = np.random.normal(40.730, 0.030, 1000)
 lon_queens = np.random.normal(-73.850, 0.040, 1000)
 
-lat = np.concatenate([lat_manhattan, lat_brooklyn, lat_queens])
-lon = np.concatenate([lon_manhattan, lon_brooklyn, lon_queens])
-values = np.random.exponential(15, n_points) + 5
+df = pd.DataFrame(
+    {
+        LON: np.concatenate([lon_manhattan, lon_brooklyn, lon_queens]),
+        LAT: np.concatenate([lat_manhattan, lat_brooklyn, lat_queens]),
+        FARE: np.random.exponential(15, n_points) + 5,
+    }
+)
 
 # Plot — landscape 3200 × 1800 px
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Base map: water background + land area rectangle
+# Base map: water background + simplified land outlines
 ax.set_facecolor(WATER_BG)
-ax.add_patch(Rectangle((-74.05, 40.58), 0.35, 0.32, linewidth=0, facecolor=LAND_BG, zorder=0))
+for outline in LAND:
+    ax.add_patch(Polygon(outline, closed=True, facecolor=LAND_BG, edgecolor=INK_MUTED, linewidth=0.6, zorder=0))
 
 # Hexbin: mean trip fare aggregated per hex cell
 hb = ax.hexbin(
-    lon,
-    lat,
-    C=values,
-    gridsize=35,
+    df[LON],
+    df[LAT],
+    C=df[FARE],
+    gridsize=GRIDSIZE,
+    extent=EXTENT,
     reduce_C_function=np.mean,
     cmap=imprint_seq,
     alpha=0.85,
@@ -66,19 +156,19 @@ hb = ax.hexbin(
 
 # Colorbar
 cbar = fig.colorbar(hb, ax=ax, shrink=0.90, pad=0.02, aspect=28, fraction=0.030)
-cbar.set_label("Mean Trip Fare ($)", fontsize=9, color=INK, labelpad=8)
-cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+cbar.set_label(f"Mean {FARE}", fontsize=10, color=INK, labelpad=8)
+cbar.ax.tick_params(labelsize=9, colors=INK_SOFT, labelcolor=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
 # Axis limits and coordinate formatters
-ax.set_xlim(-74.05, -73.70)
-ax.set_ylim(40.58, 40.90)
+ax.set_xlim(EXTENT[0], EXTENT[1])
+ax.set_ylim(EXTENT[2], EXTENT[3])
 ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{abs(x):.2f}°W"))
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, p: f"{y:.2f}°N"))
 
 # Style
-ax.set_xlabel("Longitude", fontsize=10, color=INK)
-ax.set_ylabel("Latitude", fontsize=10, color=INK)
+ax.set_xlabel(LON, fontsize=10, color=INK)
+ax.set_ylabel(LAT, fontsize=10, color=INK)
 
 title = "hexbin-map-geographic · python · matplotlib · anyplot.ai"
 n = len(title)
@@ -91,17 +181,24 @@ for spine in ax.spines.values():
     spine.set_color(INK_SOFT)
     spine.set_linewidth(0.5)
 
-# Borough annotations
-for x, y, name in [(-73.985, 40.758, "Manhattan"), (-73.960, 40.680, "Brooklyn"), (-73.850, 40.730, "Queens")]:
+# Borough annotations, offset in points from each borough's center
+for name, x, y in LANDMARKS:
     ax.annotate(
         name,
         xy=(x, y),
-        xytext=(x + 0.020, y + 0.025),
+        xytext=(25, 19),
+        textcoords="offset points",
         fontsize=9,
         fontweight="bold",
         color=INK,
         ha="left",
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "alpha": 0.88, "edgecolor": INK_SOFT, "linewidth": 0.5},
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": ELEVATED_BG,
+            "alpha": 0.88,
+            "edgecolor": INK_SOFT,
+            "linewidth": 0.5,
+        },
         zorder=5,
     )
 
